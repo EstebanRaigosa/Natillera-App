@@ -36,7 +36,7 @@ export const useSociosStore = defineStore('socios', () => {
     }
   }
 
-  async function agregarSocio(natilleraId, datosSocio, valorCuota, cantidadCuotas = 1) {
+  async function agregarSocio(natilleraId, datosSocio, valorCuota, periodicidad = 'mensual') {
     try {
       loading.value = true
       error.value = null
@@ -124,7 +124,7 @@ export const useSociosStore = defineStore('socios', () => {
           natillera_id: natilleraId,
           socio_id: socioId,
           valor_cuota_individual: valorCuota,
-          cantidad_cuotas: cantidadCuotas,
+          periodicidad: periodicidad,
           estado: 'activo',
           fecha_ingreso: new Date().toISOString()
         })

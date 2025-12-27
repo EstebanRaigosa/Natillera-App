@@ -3,15 +3,18 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <router-link :to="`/natilleras/${id}`" class="text-natillera-600 hover:text-natillera-700 font-medium inline-flex items-center gap-1 mb-2">
-          <ArrowLeftIcon class="w-4 h-4" />
+        <router-link 
+          :to="`/natilleras/${id}`" 
+          class="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-white text-natillera-700 font-semibold rounded-lg border border-natillera-200 shadow-sm hover:bg-natillera-50 hover:border-natillera-300 transition-all mb-2 sm:mb-3 text-sm sm:text-base"
+        >
+          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           Volver a natillera
         </router-link>
-        <h1 class="text-3xl font-display font-bold text-gray-800">
+        <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
           Cuotas y Pagos
         </h1>
-        <p class="text-gray-500 mt-1">
-          Gestiona los cobros y registra pagos
+        <p class="text-gray-500 mt-1 text-sm sm:text-base">
+          Gestiona los cobros y registra pagos por mes
         </p>
       </div>
       <button @click="modalGenerarCuotas = true" class="btn-primary inline-flex items-center gap-2">
@@ -20,23 +23,318 @@
       </button>
     </div>
 
-    <!-- Resumen -->
+    <!-- Tabs de meses - Diseño elegante tipo calendario -->
+    <div v-if="mesesNatillera.length > 0" class="relative">
+      <!-- Contenedor con scroll -->
+      <div class="overflow-x-auto pb-4 -mb-4" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <div class="flex gap-4 px-1 py-2" style="min-width: max-content;">
+          <button
+            v-for="(mes, index) in mesesNatillera"
+            :key="mes.value"
+            @click="mesSeleccionado = mes.value"
+            :class="[
+              'group relative flex flex-col items-center w-20 sm:w-24 rounded-2xl transition-all duration-500 ease-out cursor-pointer overflow-hidden',
+              mesSeleccionado === mes.value 
+                ? 'scale-110 z-10' 
+                : 'hover:scale-105 hover:-translate-y-1'
+            ]"
+          >
+            <!-- Fondo con efecto -->
+            <div 
+              :class="[
+                'absolute inset-0 rounded-2xl transition-all duration-500',
+                mesSeleccionado === mes.value 
+                  ? 'bg-gradient-to-br from-emerald-400 via-natillera-500 to-teal-600 shadow-2xl shadow-natillera-500/40' 
+                  : 'bg-white shadow-lg shadow-gray-200/50 group-hover:shadow-xl group-hover:shadow-natillera-200/50'
+              ]"
+            ></div>
+            
+            <!-- Patrón decorativo para el seleccionado -->
+            <div 
+              v-if="mesSeleccionado === mes.value"
+              class="absolute inset-0 opacity-30"
+              style="background-image: radial-gradient(circle at 20% 80%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 40%);"
+            ></div>
+
+            <!-- Contenido -->
+            <div class="relative z-10 py-4 px-3 flex flex-col items-center">
+              <!-- Emoji o icono del mes -->
+              <span class="text-xl sm:text-2xl mb-1">{{ getMesEmoji(mes.value) }}</span>
+              
+              <!-- Número del mes -->
+              <span 
+                :class="[
+                  'text-3xl sm:text-4xl font-black leading-none tracking-tight transition-all duration-300',
+                  mesSeleccionado === mes.value 
+                    ? 'text-white drop-shadow-lg' 
+                    : 'text-natillera-600 group-hover:text-natillera-700'
+                ]"
+              >
+                {{ String(mes.value).padStart(2, '0') }}
+              </span>
+              
+              <!-- Nombre del mes -->
+              <span 
+                :class="[
+                  'text-[11px] sm:text-xs font-bold uppercase tracking-widest mt-1 transition-colors',
+                  mesSeleccionado === mes.value ? 'text-white/90' : 'text-gray-500 group-hover:text-natillera-600'
+                ]"
+              >
+                {{ mes.label.substring(0, 3) }}
+              </span>
+
+              <!-- Indicador de estado con animación -->
+              <div class="mt-3 flex items-center justify-center">
+                <!-- Pendientes/Mora -->
+                <span 
+                  v-if="getResumenMes(mes.value).pendientes + getResumenMes(mes.value).enMora > 0"
+                  :class="[
+                    'flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-bold transition-all',
+                    mesSeleccionado === mes.value 
+                      ? 'bg-white/30 text-white backdrop-blur-sm' 
+                      : 'bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-md shadow-amber-200'
+                  ]"
+                >
+                  {{ getResumenMes(mes.value).pendientes + getResumenMes(mes.value).enMora }}
+                </span>
+                <!-- Completo -->
+                <span 
+                  v-else-if="getResumenMes(mes.value).pagadas > 0"
+                  :class="[
+                    'flex items-center justify-center w-6 h-6 rounded-full transition-all',
+                    mesSeleccionado === mes.value 
+                      ? 'bg-white/30 text-white' 
+                      : 'bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-md shadow-green-200'
+                  ]"
+                >
+                  ✓
+                </span>
+                <!-- Sin datos -->
+                <span 
+                  v-else
+                  :class="[
+                    'flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-medium transition-all',
+                    mesSeleccionado === mes.value 
+                      ? 'bg-white/20 text-white/70' 
+                      : 'bg-gray-100 text-gray-400 border border-dashed border-gray-300'
+                  ]"
+                >
+                  —
+                </span>
+              </div>
+            </div>
+
+            <!-- Línea inferior decorativa -->
+            <div 
+              :class="[
+                'absolute bottom-0 left-1/2 -translate-x-1/2 h-1 rounded-full transition-all duration-500',
+                mesSeleccionado === mes.value 
+                  ? 'w-12 bg-white/50' 
+                  : 'w-0 bg-natillera-400'
+              ]"
+            ></div>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Indicadores de scroll (flechas sutiles) -->
+      <div class="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-full bg-gradient-to-r from-slate-100 to-transparent pointer-events-none opacity-50"></div>
+      <div class="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-full bg-gradient-to-l from-slate-100 to-transparent pointer-events-none opacity-50"></div>
+    </div>
+
+    <!-- Resumen del mes seleccionado (clickeable para filtrar) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="stat-card">
-        <p class="stat-value text-natillera-600">{{ resumen.pagadas }}</p>
+      <button 
+        @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'"
+        :class="[
+          'stat-card cursor-pointer transition-all duration-300',
+          filtroEstado === 'pagada' 
+            ? 'ring-2 ring-natillera-500 shadow-lg shadow-natillera-500/20 scale-105' 
+            : 'hover:shadow-xl hover:-translate-y-1'
+        ]"
+      >
+        <p class="stat-value text-natillera-600">{{ resumenMesActual.pagadas }}</p>
         <p class="stat-label">Pagadas</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-value text-amber-600">{{ resumen.pendientes }}</p>
+        <p v-if="filtroEstado === 'pagada'" class="text-xs text-natillera-600 font-semibold mt-1">✓ Filtrado</p>
+      </button>
+      <button 
+        @click="filtroEstado = filtroEstado === 'pendiente' ? 'todos' : 'pendiente'"
+        :class="[
+          'stat-card cursor-pointer transition-all duration-300',
+          filtroEstado === 'pendiente' 
+            ? 'ring-2 ring-amber-500 shadow-lg shadow-amber-500/20 scale-105' 
+            : 'hover:shadow-xl hover:-translate-y-1'
+        ]"
+      >
+        <p class="stat-value text-amber-600">{{ resumenMesActual.pendientes }}</p>
         <p class="stat-label">Pendientes</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-value text-red-600">{{ resumen.enMora }}</p>
+        <p v-if="filtroEstado === 'pendiente'" class="text-xs text-amber-600 font-semibold mt-1">✓ Filtrado</p>
+      </button>
+      <button 
+        @click="filtroEstado = filtroEstado === 'mora' ? 'todos' : 'mora'"
+        :class="[
+          'stat-card cursor-pointer transition-all duration-300',
+          filtroEstado === 'mora' 
+            ? 'ring-2 ring-red-500 shadow-lg shadow-red-500/20 scale-105' 
+            : 'hover:shadow-xl hover:-translate-y-1'
+        ]"
+      >
+        <p class="stat-value text-red-600">{{ resumenMesActual.enMora }}</p>
         <p class="stat-label">En Mora</p>
-      </div>
+        <p v-if="filtroEstado === 'mora'" class="text-xs text-red-600 font-semibold mt-1">✓ Filtrado</p>
+      </button>
       <div class="stat-card">
-        <p class="stat-value text-purple-600">{{ resumen.porcentajeRecaudado.toFixed(0) }}%</p>
+        <p class="stat-value text-purple-600">{{ resumenMesActual.porcentajeRecaudado.toFixed(0) }}%</p>
         <p class="stat-label">Recaudado</p>
+      </div>
+    </div>
+
+    <!-- Filtros elegantes con desplegable -->
+    <div class="card bg-gradient-to-r from-slate-50 to-gray-50 border-0 shadow-inner">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <!-- Selector de tipo de filtro -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <FunnelIcon class="w-5 h-5 text-gray-400" />
+          <div class="relative">
+            <select 
+              v-model="tipoFiltro"
+              class="px-4 py-2.5 bg-white border-2 border-gray-200 rounded-xl font-semibold text-sm text-gray-700 hover:border-natillera-300 focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all cursor-pointer appearance-none pr-10"
+            >
+              <option value="estado">Por Estado</option>
+              <option value="periodicidad">Por Periodicidad</option>
+              <option value="ambos">Ambos</option>
+            </select>
+            <ChevronDownIcon class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        <!-- Botones de filtro dinámicos -->
+        <div class="flex flex-wrap gap-2 flex-1">
+          <!-- Botón Todos (siempre visible) -->
+          <button
+            @click="filtroEstado = 'todos'; filtroPeriodicidad = 'todos'"
+            :class="[
+              'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+              filtroEstado === 'todos' && filtroPeriodicidad === 'todos'
+                ? 'text-white shadow-lg'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:shadow-md'
+            ]"
+          >
+            <div 
+              v-if="filtroEstado === 'todos' && filtroPeriodicidad === 'todos'"
+              class="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900"
+            ></div>
+            <span class="relative flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" :class="filtroEstado === 'todos' && filtroPeriodicidad === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
+              Todos
+              <span 
+                :class="[
+                  'px-2 py-0.5 rounded-full text-xs font-bold',
+                  filtroEstado === 'todos' && filtroPeriodicidad === 'todos' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                ]"
+              >
+                {{ cuotasMesActual.length }}
+              </span>
+            </span>
+          </button>
+
+          <!-- Filtros de Estado (si tipoFiltro es 'estado' o 'ambos') -->
+          <template v-if="tipoFiltro === 'estado' || tipoFiltro === 'ambos'">
+            <!-- Parciales -->
+            <button
+              @click="filtroEstado = filtroEstado === 'parcial' ? 'todos' : 'parcial'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroEstado === 'parcial'
+                  ? 'text-white shadow-lg shadow-purple-500/30'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroEstado === 'parcial'"
+                class="absolute inset-0 bg-gradient-to-r from-purple-500 via-violet-500 to-purple-600"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="w-4 h-4 flex items-center justify-center">
+                  <span 
+                    :class="[
+                      'block w-3 h-3 rounded-full border-2',
+                      filtroEstado === 'parcial' ? 'border-white bg-white/30' : 'border-purple-500 bg-purple-200'
+                    ]"
+                  ></span>
+                </span>
+                Parciales
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroEstado === 'parcial' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
+                  ]"
+                >
+                  {{ resumenMesActual.parciales }}
+                </span>
+              </span>
+            </button>
+          </template>
+
+          <!-- Filtros de Periodicidad (si tipoFiltro es 'periodicidad' o 'ambos') -->
+          <template v-if="tipoFiltro === 'periodicidad' || tipoFiltro === 'ambos'">
+            <!-- Mensual -->
+            <button
+              @click="filtroPeriodicidad = filtroPeriodicidad === 'mensual' ? 'todos' : 'mensual'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroPeriodicidad === 'mensual'
+                  ? 'text-white shadow-lg shadow-natillera-500/30'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-natillera-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroPeriodicidad === 'mensual'"
+                class="absolute inset-0 bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="text-lg">📅</span>
+                Mensual
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroPeriodicidad === 'mensual' ? 'bg-white/20 text-white' : 'bg-natillera-100 text-natillera-600'
+                  ]"
+                >
+                  {{ cuotasMesActual.filter(c => !c.quincena).length }}
+                </span>
+              </span>
+            </button>
+
+            <!-- Quincenal -->
+            <button
+              @click="filtroPeriodicidad = filtroPeriodicidad === 'quincenal' ? 'todos' : 'quincenal'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroPeriodicidad === 'quincenal'
+                  ? 'text-white shadow-lg shadow-purple-500/30'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroPeriodicidad === 'quincenal'"
+                class="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="text-lg">🗓️</span>
+                Quincenal
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroPeriodicidad === 'quincenal' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
+                  ]"
+                >
+                  {{ cuotasMesActual.filter(c => c.quincena).length }}
+                </span>
+              </span>
+            </button>
+          </template>
+        </div>
       </div>
     </div>
 
@@ -46,30 +344,68 @@
       <p class="text-gray-400 mt-4">Cargando cuotas...</p>
     </div>
 
-    <div v-else-if="cuotasStore.cuotas.length === 0" class="card text-center py-12">
+    <!-- Estado vacío: Sin cuotas generadas para el mes -->
+    <div v-else-if="cuotasMesActual.length === 0" class="card text-center py-12">
       <CurrencyDollarIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
       <h3 class="font-display font-semibold text-gray-800 text-lg">
-        No hay cuotas generadas
+        No hay cuotas para {{ mesSeleccionadoLabel }}
       </h3>
       <p class="text-gray-500 mt-2 mb-6">
-        Genera las cuotas del período para comenzar a registrar pagos
+        Genera las cuotas de este mes para comenzar a registrar pagos
       </p>
       <button @click="modalGenerarCuotas = true" class="btn-primary inline-flex items-center gap-2">
         <PlusIcon class="w-5 h-5" />
-        Generar Cuotas
+        Generar Cuotas de {{ mesSeleccionadoLabel }}
       </button>
     </div>
 
+    <!-- Estado vacío: Sin resultados con el filtro actual -->
+    <div v-else-if="cuotasFiltradas.length === 0" class="card text-center py-12">
+      <FunnelIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <h3 class="font-display font-semibold text-gray-800 text-lg">
+        No hay cuotas con los filtros seleccionados
+      </h3>
+      <p class="text-gray-500 mt-2 mb-6">
+        No se encontraron cuotas que coincidan con los filtros aplicados
+      </p>
+      <button 
+        @click="filtroEstado = 'todos'; filtroPeriodicidad = 'todos'" 
+        class="btn-secondary inline-flex items-center gap-2"
+      >
+        Limpiar filtros
+      </button>
+    </div>
+
+    <!-- Lista de cuotas filtradas -->
     <div v-else class="space-y-4">
+      <!-- Contador de resultados -->
+      <div class="flex items-center justify-between">
+        <p class="text-sm text-gray-500">
+          Mostrando <span class="font-semibold text-gray-700">{{ cuotasFiltradas.length }}</span> 
+          {{ cuotasFiltradas.length === 1 ? 'cuota' : 'cuotas' }}
+          <span v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos'" class="text-natillera-600">
+            (
+            <span v-if="filtroEstado !== 'todos'">
+              {{ filtroEstado === 'pagada' ? 'pagadas' : filtroEstado === 'pendiente' ? 'pendientes' : filtroEstado === 'mora' ? 'en mora' : 'parciales' }}
+            </span>
+            <span v-if="filtroEstado !== 'todos' && filtroPeriodicidad !== 'todos'"> • </span>
+            <span v-if="filtroPeriodicidad !== 'todos'">
+              {{ filtroPeriodicidad === 'mensual' ? 'mensuales' : 'quincenales' }}
+            </span>
+            )
+          </span>
+        </p>
+      </div>
+
       <div 
-        v-for="cuota in cuotasStore.cuotas" 
+        v-for="cuota in cuotasFiltradas" 
         :key="cuota.id"
         class="card flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
         <div class="flex items-center gap-4">
           <div 
             :class="[
-              'w-12 h-12 rounded-xl flex items-center justify-center',
+              'w-12 h-12 rounded-xl flex items-center justify-center relative',
               cuota.estado === 'pagada' ? 'bg-green-100' : 
               cuota.estado === 'mora' ? 'bg-red-100' : 
               cuota.estado === 'parcial' ? 'bg-amber-100' : 'bg-gray-100'
@@ -85,14 +421,37 @@
                 cuota.estado === 'parcial' ? 'text-amber-600' : 'text-gray-400'
               ]"
             />
+            <!-- Badge de quincena (solo para quincenales) -->
+            <span 
+              v-if="cuota.quincena"
+              class="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-full shadow"
+            >
+              Q{{ cuota.quincena }}
+            </span>
           </div>
           <div>
-            <p class="font-medium text-gray-800">
-              {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
-            </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="font-medium text-gray-800">
+                {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
+              </p>
+              <!-- Badge de periodicidad -->
+              <span 
+                v-if="cuota.quincena" 
+                class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 text-[10px] font-bold rounded-full border border-purple-200"
+              >
+                <span class="text-purple-500">🗓️</span>
+                {{ cuota.quincena === 1 ? '1ra Quincena' : '2da Quincena' }}
+              </span>
+              <span 
+                v-else
+                class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-natillera-100 to-emerald-100 text-natillera-700 text-[10px] font-bold rounded-full border border-natillera-200"
+              >
+                <span class="text-natillera-500">📅</span>
+                Mensual
+              </span>
+            </div>
             <p class="text-sm text-gray-500">
               Vence: {{ formatDate(cuota.fecha_limite) }}
-              <span v-if="cuota.descripcion" class="ml-2 text-gray-400">• {{ cuota.descripcion }}</span>
             </p>
           </div>
         </div>
@@ -140,37 +499,92 @@
     <!-- Modal Generar Cuotas -->
     <div v-if="modalGenerarCuotas" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/50" @click="modalGenerarCuotas = false"></div>
-      <div class="card relative max-w-md w-full">
-        <h3 class="text-xl font-display font-bold text-gray-800 mb-6">
-          Generar Cuotas del Período
+      <div class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-display font-bold text-gray-800 mb-2">
+          Generar Cuotas del Mes
         </h3>
+        <p class="text-gray-500 text-sm mb-6">
+          Define las fechas límite de pago para cada quincena
+        </p>
 
-        <form @submit.prevent="handleGenerarCuotas" class="space-y-4">
+        <form @submit.prevent="handleGenerarCuotas" class="space-y-5">
+          <!-- Mes -->
           <div>
-            <label class="label">Fecha límite de pago *</label>
-            <input 
-              v-model="formCuotas.fecha_limite"
-              type="date" 
+            <label class="label">Mes a generar *</label>
+            <select 
+              v-model.number="formCuotas.mes"
               class="input-field"
               required
-            />
+            >
+              <option v-for="mes in mesesNatillera" :key="mes.value" :value="mes.value">
+                {{ mes.label }}
+              </option>
+            </select>
           </div>
 
-          <div>
-            <label class="label">Descripción del período</label>
-            <input 
-              v-model="formCuotas.descripcion"
-              type="text" 
-              class="input-field"
-              placeholder="Ej: Cuota Enero 2025"
-            />
+          <!-- Fechas de pago por quincena -->
+          <div class="p-5 bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 rounded-2xl border border-purple-200 shadow-inner">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                <CalendarIcon class="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p class="font-semibold text-gray-800">Fechas Límite de Pago</p>
+                <p class="text-xs text-gray-500">La fecha de la 2da quincena aplica también para socios mensuales</p>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- 1ra Quincena -->
+              <div class="bg-white rounded-xl p-4 shadow-sm border border-purple-100">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-7 h-7 bg-purple-100 text-purple-700 rounded-lg flex items-center justify-center text-sm font-bold">1</span>
+                  <span class="font-medium text-purple-800">1ra Quincena</span>
+                </div>
+                <DatePicker 
+                  v-model="formCuotas.fecha_quincena1"
+                  placeholder="Seleccionar fecha"
+                  input-class="bg-purple-50 border-purple-200 hover:border-purple-300"
+                />
+              </div>
+
+              <!-- 2da Quincena -->
+              <div class="bg-white rounded-xl p-4 shadow-sm border border-indigo-100">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="w-7 h-7 bg-indigo-100 text-indigo-700 rounded-lg flex items-center justify-center text-sm font-bold">2</span>
+                  <span class="font-medium text-indigo-800">2da Quincena</span>
+                </div>
+                <DatePicker 
+                  v-model="formCuotas.fecha_quincena2"
+                  placeholder="Seleccionar fecha"
+                  input-class="bg-indigo-50 border-indigo-200 hover:border-indigo-300"
+                />
+              </div>
+            </div>
+
+            <!-- Info de mensual -->
+            <div class="mt-4 p-3 bg-white/70 rounded-xl border border-dashed border-gray-300 flex items-start gap-2">
+              <span class="text-lg">💡</span>
+              <p class="text-xs text-gray-600">
+                <strong class="text-gray-700">Socios mensuales:</strong> Su fecha límite será la de la 2da quincena 
+                <span v-if="formCuotas.fecha_quincena2" class="text-indigo-600 font-semibold">({{ formatearFechaCorta(formCuotas.fecha_quincena2) }})</span>
+              </p>
+            </div>
           </div>
 
-          <p class="text-sm text-gray-500 bg-gray-50 p-3 rounded-xl">
-            Se generarán cuotas para todos los socios activos según su valor de cuota individual.
-          </p>
+          <!-- Resumen -->
+          <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <p class="text-sm font-medium text-gray-700 mb-2">📋 Resumen de cuotas a generar:</p>
+            <div class="space-y-1 text-sm text-gray-600">
+              <p>• <strong>{{ conteoSociosMensuales }}</strong> socio(s) mensual(es) → 1 cuota c/u</p>
+              <p>• <strong>{{ conteoSociosQuincenales }}</strong> socio(s) quincenal(es) → 2 cuotas c/u</p>
+              <p class="pt-1 border-t border-gray-200 mt-2 font-semibold text-gray-800">
+                Total: {{ conteoSociosMensuales + (conteoSociosQuincenales * 2) }} cuotas para {{ mesesNatillera.find(m => m.value === formCuotas.mes)?.label }}
+              </p>
+            </div>
+          </div>
 
-          <div class="flex gap-3 pt-4">
+          <div class="flex gap-3 pt-2">
             <button 
               type="button"
               @click="modalGenerarCuotas = false"
@@ -183,7 +597,7 @@
               class="btn-primary flex-1"
               :disabled="cuotasStore.loading"
             >
-              {{ cuotasStore.loading ? 'Generando...' : 'Generar' }}
+              {{ cuotasStore.loading ? 'Generando...' : 'Generar Cuotas' }}
             </button>
           </div>
         </form>
@@ -345,7 +759,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { supabase } from '../../lib/supabase'
@@ -359,8 +773,12 @@ import {
   ExclamationCircleIcon,
   ChatBubbleLeftIcon,
   ArrowDownTrayIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CalendarIcon,
+  FunnelIcon,
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline'
+import DatePicker from '../../components/DatePicker.vue'
 
 const props = defineProps({
   id: String
@@ -378,10 +796,123 @@ const natilleraNombre = ref('')
 const comprobanteRef = ref(null)
 const generandoImagen = ref(false)
 
-const formCuotas = reactive({
-  fecha_limite: '',
-  descripcion: ''
+// Configuración de meses de la natillera
+const mesInicio = ref(1)
+const mesFin = ref(11)
+const anioNatillera = ref(new Date().getFullYear())
+const mesSeleccionado = ref(null)
+const filtroEstado = ref('todos')
+const filtroPeriodicidad = ref('todos')
+const tipoFiltro = ref('ambos') // 'estado', 'periodicidad', 'ambos'
+
+// Lista de todos los meses
+const todosMeses = [
+  { value: 1, label: 'Enero' },
+  { value: 2, label: 'Febrero' },
+  { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Mayo' },
+  { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' }
+]
+
+// Meses configurados para esta natillera
+const mesesNatillera = computed(() => {
+  const meses = []
+  let inicio = mesInicio.value
+  let fin = mesFin.value
+  
+  if (inicio <= fin) {
+    for (let i = inicio; i <= fin; i++) {
+      meses.push(todosMeses[i - 1])
+    }
+  } else {
+    // Caso donde el período cruza el año (ej: Octubre a Febrero)
+    for (let i = inicio; i <= 12; i++) {
+      meses.push(todosMeses[i - 1])
+    }
+    for (let i = 1; i <= fin; i++) {
+      meses.push(todosMeses[i - 1])
+    }
+  }
+  
+  return meses
 })
+
+// Label del mes seleccionado
+const mesSeleccionadoLabel = computed(() => {
+  return todosMeses.find(m => m.value === mesSeleccionado.value)?.label || ''
+})
+
+// Cuotas del mes actual (sin filtro de estado)
+const cuotasMesActual = computed(() => {
+  if (!mesSeleccionado.value) return cuotasStore.cuotas
+  return cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioNatillera.value)
+})
+
+// Cuotas filtradas por estado y periodicidad (para mostrar en la lista)
+const cuotasFiltradas = computed(() => {
+  let filtradas = cuotasMesActual.value
+
+  // Filtro por estado
+  if (filtroEstado.value !== 'todos') {
+    filtradas = filtradas.filter(c => c.estado === filtroEstado.value)
+  }
+
+  // Filtro por periodicidad
+  if (filtroPeriodicidad.value === 'mensual') {
+    filtradas = filtradas.filter(c => !c.quincena)
+  } else if (filtroPeriodicidad.value === 'quincenal') {
+    filtradas = filtradas.filter(c => c.quincena)
+  }
+
+  return filtradas
+})
+
+// Resumen del mes actual
+const resumenMesActual = computed(() => {
+  if (!mesSeleccionado.value) return cuotasStore.calcularResumenCuotas()
+  return cuotasStore.getResumenPorMes(mesSeleccionado.value, anioNatillera.value)
+})
+
+// Función para obtener resumen de un mes específico (para los badges de los tabs)
+function getResumenMes(mes) {
+  return cuotasStore.getResumenPorMes(mes, anioNatillera.value)
+}
+
+// Emoji representativo de cada mes
+function getMesEmoji(mes) {
+  const emojis = {
+    1: '❄️',   // Enero - invierno/nuevo año
+    2: '💝',   // Febrero - amor
+    3: '🌸',   // Marzo - primavera
+    4: '🌧️',   // Abril - lluvias
+    5: '🌺',   // Mayo - flores
+    6: '☀️',   // Junio - sol
+    7: '🏖️',   // Julio - vacaciones
+    8: '🌴',   // Agosto - verano
+    9: '🍂',   // Septiembre - otoño
+    10: '🎃',  // Octubre - halloween
+    11: '🦃',  // Noviembre - acción de gracias
+    12: '🎄'   // Diciembre - navidad
+  }
+  return emojis[mes] || '📅'
+}
+
+const formCuotas = reactive({
+  fecha_quincena1: '',
+  fecha_quincena2: '',
+  mes: 1
+})
+
+// Conteo de socios por periodicidad
+const conteoSociosMensuales = ref(0)
+const conteoSociosQuincenales = ref(0)
 
 const formPago = reactive({
   valor: 0
@@ -391,17 +922,29 @@ const id = props.id || route.params.id
 
 const resumen = computed(() => cuotasStore.calcularResumenCuotas())
 
+// Cuando cambia el mes seleccionado, actualizar el formulario y resetear filtros
+watch(mesSeleccionado, (nuevoMes) => {
+  if (nuevoMes) {
+    formCuotas.mes = nuevoMes
+    filtroEstado.value = 'todos' // Resetear filtro al cambiar de mes
+    filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
+  }
+})
+
+// Cuando cambia el tipo de filtro, mantener los filtros actuales
+// El usuario puede usar "Todos" para resetear ambos filtros
+
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
 function formatDate(date) {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function abrirModalPago(cuota) {
@@ -411,21 +954,40 @@ function abrirModalPago(cuota) {
 }
 
 async function handleGenerarCuotas() {
+  const mesLabel = todosMeses.find(m => m.value === formCuotas.mes)?.label || ''
+  
+  // La fecha mensual es la misma que la 2da quincena
   const result = await cuotasStore.generarCuotasPeriodo(
     id,
-    formCuotas.fecha_limite,
-    formCuotas.descripcion
+    {
+      mensual: formCuotas.fecha_quincena2, // Mensual = 2da quincena
+      quincena1: formCuotas.fecha_quincena1,
+      quincena2: formCuotas.fecha_quincena2
+    },
+    mesLabel,
+    formCuotas.mes,
+    anioNatillera.value
   )
 
   if (result.success) {
     modalGenerarCuotas.value = false
-    formCuotas.fecha_limite = ''
-    formCuotas.descripcion = ''
-    // Recargar cuotas
+    formCuotas.fecha_quincena1 = ''
+    formCuotas.fecha_quincena2 = ''
+    // Cambiar al mes generado
+    mesSeleccionado.value = formCuotas.mes
+    // Recargar cuotas y conteo
     cuotasStore.fetchCuotasNatillera(id)
+    cargarConteoSocios()
   } else {
     alert('Error: ' + result.error)
   }
+}
+
+// Función para mostrar la fecha en formato corto dd/mm/yyyy
+function formatearFechaCorta(dateStr) {
+  if (!dateStr) return ''
+  const [year, month, day] = dateStr.split('-')
+  return `${day}/${month}/${year}`
 }
 
 async function handleRegistrarPago() {
@@ -799,18 +1361,51 @@ function reenviarComprobante(cuota) {
 async function cargarNatillera() {
   const { data } = await supabase
     .from('natilleras')
-    .select('nombre')
+    .select('nombre, mes_inicio, mes_fin, anio')
     .eq('id', id)
     .single()
   
   if (data) {
     natilleraNombre.value = data.nombre
+    mesInicio.value = data.mes_inicio || 1
+    mesFin.value = data.mes_fin || 11
+    anioNatillera.value = data.anio || new Date().getFullYear()
+    
+    // Seleccionar el mes actual si está en el rango, sino el primero
+    const mesActual = new Date().getMonth() + 1
+    const mesesDisponibles = mesesNatillera.value.map(m => m.value)
+    
+    if (mesesDisponibles.includes(mesActual)) {
+      mesSeleccionado.value = mesActual
+    } else {
+      mesSeleccionado.value = mesesDisponibles[0] || 1
+    }
+    
+    // Actualizar el formulario con el mes seleccionado
+    formCuotas.mes = mesSeleccionado.value
+  }
+  
+  // Cargar conteo de socios por periodicidad
+  await cargarConteoSocios()
+}
+
+async function cargarConteoSocios() {
+  const { data: socios } = await supabase
+    .from('socios_natillera')
+    .select('periodicidad')
+    .eq('natillera_id', id)
+    .eq('estado', 'activo')
+  
+  if (socios) {
+    conteoSociosMensuales.value = socios.filter(s => s.periodicidad !== 'quincenal').length
+    conteoSociosQuincenales.value = socios.filter(s => s.periodicidad === 'quincenal').length
   }
 }
 
 onMounted(() => {
-  cuotasStore.fetchCuotasNatillera(id)
-  cargarNatillera()
+  cargarNatillera().then(() => {
+    cuotasStore.fetchCuotasNatillera(id)
+  })
 })
 </script>
 

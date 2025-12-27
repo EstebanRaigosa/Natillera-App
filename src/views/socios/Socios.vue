@@ -115,9 +115,11 @@
             <p class="text-xs text-gray-500">Cuota Individual</p>
             <p class="font-bold text-natillera-700">${{ formatMoney(sn.valor_cuota_individual) }}</p>
           </div>
-          <div class="p-3 bg-gray-50 rounded-xl">
-            <p class="text-xs text-gray-500">Cantidad de Cuotas</p>
-            <p class="font-bold text-gray-700">{{ sn.cantidad_cuotas || 1 }}</p>
+          <div class="p-3 rounded-xl" :class="sn.periodicidad === 'quincenal' ? 'bg-purple-50' : 'bg-gray-50'">
+            <p class="text-xs text-gray-500">Periodicidad</p>
+            <p class="font-bold" :class="sn.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+              {{ sn.periodicidad === 'quincenal' ? '🗓️ Quincenal' : '📅 Mensual' }}
+            </p>
           </div>
         </div>
 
@@ -328,14 +330,21 @@
             <div v-show="seccionActiva === 'config'" class="p-4 border-t border-gray-100 bg-white">
               <div class="grid grid-cols-2 gap-3">
                 <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-100">
-                  <p class="text-xs text-gray-500 mb-1">Cuota mensual</p>
+                  <p class="text-xs text-gray-500 mb-1">Cuota por período</p>
                   <p class="text-xl font-bold text-natillera-700">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  <p class="text-xs text-gray-500 mb-1">Cuotas por período</p>
-                  <p class="text-xl font-bold text-gray-700">{{ socioSeleccionado?.cantidad_cuotas || 1 }}</p>
+                <div class="p-4 rounded-xl border" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'">
+                  <p class="text-xs text-gray-500 mb-1">Periodicidad</p>
+                  <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+                    {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+                  </p>
                 </div>
               </div>
+              <p class="text-xs text-gray-500 mt-3 bg-gray-50 p-2 rounded-lg">
+                {{ socioSeleccionado?.periodicidad === 'quincenal' 
+                  ? '💡 Este socio paga 2 cuotas por mes (una cada quincena)' 
+                  : '💡 Este socio paga 1 cuota por mes' }}
+              </p>
             </div>
           </div>
 
@@ -563,20 +572,49 @@
             </p>
           </div>
 
-          <!-- Cantidad de cuotas -->
+          <!-- Periodicidad -->
           <div>
             <label class="label">
-              Cantidad de cuotas
-              <span class="text-gray-400 font-normal">(si tiene más de una)</span>
+              Periodicidad de pago
             </label>
-            <input 
-              v-model.number="formSocio.cantidad_cuotas"
-              type="number" 
-              class="input-field"
-              placeholder="1"
-              min="1"
-              max="10"
-            />
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                @click="formSocio.periodicidad = 'mensual'"
+                :class="[
+                  'p-4 rounded-xl border-2 transition-all text-left',
+                  formSocio.periodicidad === 'mensual'
+                    ? 'border-natillera-500 bg-natillera-50 ring-2 ring-natillera-200'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                ]"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xl">📅</span>
+                  <span class="font-semibold" :class="formSocio.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'">
+                    Mensual
+                  </span>
+                </div>
+                <p class="text-xs text-gray-500">1 cuota por mes</p>
+              </button>
+              <button
+                type="button"
+                @click="formSocio.periodicidad = 'quincenal'"
+                :class="[
+                  'p-4 rounded-xl border-2 transition-all text-left',
+                  formSocio.periodicidad === 'quincenal'
+                    ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                ]"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-xl">🗓️</span>
+                  <span class="font-semibold" :class="formSocio.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+                    Quincenal
+                  </span>
+                </div>
+                <p class="text-xs text-gray-500">2 cuotas por mes</p>
+              </button>
+            </div>
           </div>
 
           <!-- Información de contacto (colapsable) -->
@@ -734,7 +772,7 @@ const formSocio = reactive({
   email: '',
   telefono: '',
   valor_cuota: 50000,
-  cantidad_cuotas: 1,
+  periodicidad: 'mensual',
   avatar_seed: ''
 })
 
@@ -817,7 +855,7 @@ function editarSocio(sn) {
   formSocio.email = sn.socio?.email || ''
   formSocio.telefono = sn.socio?.telefono || ''
   formSocio.valor_cuota = sn.valor_cuota_individual
-  formSocio.cantidad_cuotas = sn.cantidad_cuotas || 1
+  formSocio.periodicidad = sn.periodicidad || 'mensual'
   formSocio.avatar_seed = sn.socio?.avatar_seed || ''
   mostrarAvatares.value = false
   modalAgregar.value = true
@@ -835,7 +873,7 @@ function cerrarModal() {
     email: '',
     telefono: '',
     valor_cuota: 50000,
-    cantidad_cuotas: 1,
+    periodicidad: 'mensual',
     avatar_seed: ''
   })
 }
@@ -847,7 +885,7 @@ async function handleGuardarSocio() {
     // Actualizar cuota del socio en socios_natillera
     const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
       valor_cuota_individual: formSocio.valor_cuota,
-      cantidad_cuotas: formSocio.cantidad_cuotas
+      periodicidad: formSocio.periodicidad
     })
 
     // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
@@ -888,7 +926,7 @@ async function handleGuardarSocio() {
       id,
       datosSocio,
       formSocio.valor_cuota,
-      formSocio.cantidad_cuotas
+      formSocio.periodicidad
     )
 
     if (result.success) {

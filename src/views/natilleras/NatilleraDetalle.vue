@@ -28,9 +28,20 @@
           <p class="text-gray-500 mt-1 text-sm sm:text-base">
             {{ natillera.periodicidad }} • Desde {{ formatDate(natillera.fecha_inicio) }}
           </p>
+          <p class="text-natillera-600 font-medium text-sm mt-1 flex items-center gap-1">
+            <CalendarDaysIcon class="w-4 h-4" />
+            Período: {{ rangoMesesTexto }}
+          </p>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 w-full lg:w-auto lg:flex">
+        <div class="grid grid-cols-3 gap-2 w-full lg:w-auto lg:flex">
+          <button 
+            @click="abrirConfigMeses"
+            class="btn-secondary py-2 px-2 sm:px-4 inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm lg:text-base"
+          >
+            <Cog6ToothIcon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span>Período</span>
+          </button>
           <button 
             @click="modalWhatsApp = true"
             class="btn-secondary py-2 px-2 sm:px-4 inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm lg:text-base"
@@ -43,7 +54,7 @@
             @click="handleCerrarNatillera"
             class="px-2 sm:px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-xs sm:text-sm lg:text-base text-center"
           >
-            Cerrar Natillera
+            Cerrar
           </button>
         </div>
       </div>
@@ -438,6 +449,97 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Configurar Período de Meses -->
+    <div v-if="modalConfigMeses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="absolute inset-0 bg-black/50" @click="modalConfigMeses = false"></div>
+      <div class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-natillera-700 rounded-xl flex items-center justify-center">
+            <CalendarDaysIcon class="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 class="text-xl font-display font-bold text-gray-800">
+              Configurar Período
+            </h3>
+            <p class="text-sm text-gray-500">
+              Define los meses de duración de la natillera
+            </p>
+          </div>
+        </div>
+
+        <form @submit.prevent="guardarConfigMeses" class="space-y-4">
+          <div>
+            <label class="label">Año</label>
+            <input 
+              v-model.number="formConfigMeses.anio"
+              type="number"
+              class="input-field"
+              :min="2020"
+              :max="2100"
+              required
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="label">Mes de inicio</label>
+              <select 
+                v-model.number="formConfigMeses.mes_inicio"
+                class="input-field"
+                required
+              >
+                <option v-for="mes in meses" :key="mes.value" :value="mes.value">
+                  {{ mes.label }}
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label class="label">Mes de cierre</label>
+              <select 
+                v-model.number="formConfigMeses.mes_fin"
+                class="input-field"
+                required
+              >
+                <option v-for="mes in meses" :key="mes.value" :value="mes.value">
+                  {{ mes.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="bg-natillera-50 border border-natillera-200 rounded-xl p-4">
+            <p class="text-sm text-natillera-700 font-medium">
+              📅 La natillera tendrá cuotas desde <strong>{{ meses.find(m => m.value === formConfigMeses.mes_inicio)?.label }}</strong> 
+              hasta <strong>{{ meses.find(m => m.value === formConfigMeses.mes_fin)?.label }}</strong> de <strong>{{ formConfigMeses.anio }}</strong>
+            </p>
+            <p class="text-xs text-natillera-600 mt-1">
+              Total: {{ formConfigMeses.mes_fin >= formConfigMeses.mes_inicio 
+                ? formConfigMeses.mes_fin - formConfigMeses.mes_inicio + 1 
+                : 12 - formConfigMeses.mes_inicio + formConfigMeses.mes_fin + 1 }} meses
+            </p>
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button 
+              type="button"
+              @click="modalConfigMeses = false"
+              class="btn-secondary flex-1"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              class="btn-primary flex-1"
+              :disabled="natillerasStore.loading"
+            >
+              {{ natillerasStore.loading ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -461,7 +563,9 @@ import {
   PhoneIcon,
   EnvelopeIcon,
   IdentificationIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  Cog6ToothIcon,
+  CalendarDaysIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -478,10 +582,67 @@ const configStore = useConfiguracionStore()
 
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
+const modalConfigMeses = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
 const seccionActiva = ref('finanzas')
 const busquedaSocio = ref('')
+
+// Configuración de meses
+const meses = [
+  { value: 1, label: 'Enero' },
+  { value: 2, label: 'Febrero' },
+  { value: 3, label: 'Marzo' },
+  { value: 4, label: 'Abril' },
+  { value: 5, label: 'Mayo' },
+  { value: 6, label: 'Junio' },
+  { value: 7, label: 'Julio' },
+  { value: 8, label: 'Agosto' },
+  { value: 9, label: 'Septiembre' },
+  { value: 10, label: 'Octubre' },
+  { value: 11, label: 'Noviembre' },
+  { value: 12, label: 'Diciembre' }
+]
+
+const formConfigMeses = ref({
+  mes_inicio: 1,
+  mes_fin: 11,
+  anio: new Date().getFullYear()
+})
+
+function abrirConfigMeses() {
+  formConfigMeses.value = {
+    mes_inicio: natillera.value?.mes_inicio || 1,
+    mes_fin: natillera.value?.mes_fin || 11,
+    anio: natillera.value?.anio || new Date().getFullYear()
+  }
+  modalConfigMeses.value = true
+}
+
+async function guardarConfigMeses() {
+  const result = await natillerasStore.actualizarNatillera(props.id || route.params.id, {
+    mes_inicio: formConfigMeses.value.mes_inicio,
+    mes_fin: formConfigMeses.value.mes_fin,
+    anio: formConfigMeses.value.anio
+  })
+  
+  if (result.success) {
+    modalConfigMeses.value = false
+    // Recargar la natillera para ver los cambios
+    natillerasStore.fetchNatillera(props.id || route.params.id)
+  } else {
+    alert('Error al guardar la configuración: ' + result.error)
+  }
+}
+
+// Computed para mostrar el rango de meses
+const rangoMesesTexto = computed(() => {
+  if (!natillera.value) return ''
+  const inicio = meses.find(m => m.value === (natillera.value.mes_inicio || 1))?.label || 'Enero'
+  const fin = meses.find(m => m.value === (natillera.value.mes_fin || 11))?.label || 'Noviembre'
+  const anio = natillera.value.anio || new Date().getFullYear()
+  return `${inicio} - ${fin} ${anio}`
+})
 
 // Socios filtrados por búsqueda en el modal de WhatsApp
 const sociosFiltrados = computed(() => {
@@ -573,11 +734,11 @@ function getAvatarUrl(seed, avatarSeed = null) {
 
 function formatDate(date) {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  })
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function cerrarModalWhatsApp() {

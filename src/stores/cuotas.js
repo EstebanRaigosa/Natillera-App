@@ -56,15 +56,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
-  async function generarCuotasPeriodo(natilleraId, fechaLimite, descripcion = '') {
+  async function generarCuotasPeriodo(natilleraId, fechasLimite, mesLabel = '', mes = null, anio = null) {
     try {
       loading.value = true
       error.value = null
 
-      // Obtener todos los socios activos de la natillera
+      // Obtener todos los socios activos de la natillera con su periodicidad
       const { data: sociosNatillera, error: sociosError } = await supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, cantidad_cuotas')
+        .select('id, valor_cuota_individual, periodicidad')
         .eq('natillera_id', natilleraId)
         .eq('estado', 'activo')
 
@@ -72,23 +72,58 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       console.log('=== GENERANDO CUOTAS ===')
       console.log('Socios encontrados:', sociosNatillera)
+      console.log('Mes:', mes, 'Año:', anio)
+      console.log('Fechas:', fechasLimite)
 
       if (!sociosNatillera || sociosNatillera.length === 0) {
         console.log('No hay socios activos para generar cuotas')
         return { success: false, error: 'No hay socios activos en la natillera' }
       }
 
-      // Crear cuotas para cada socio según su valor individual
+      // Crear cuotas para cada socio según su periodicidad
       const cuotasACrear = sociosNatillera.flatMap(socio => {
-        const cantidad = socio.cantidad_cuotas || 1
-        return Array(cantidad).fill().map((_, i) => ({
-          socio_natillera_id: socio.id,
-          valor_cuota: socio.valor_cuota_individual,
-          valor_pagado: 0,
-          fecha_limite: fechaLimite,
-          estado: 'pendiente',
-          descripcion: cantidad > 1 ? `${descripcion} (${i + 1}/${cantidad})` : descripcion
-        }))
+        const periodicidad = socio.periodicidad || 'mensual'
+        
+        if (periodicidad === 'quincenal') {
+          // Socios quincenales: 2 cuotas por mes
+          return [
+            {
+              socio_natillera_id: socio.id,
+              valor_cuota: socio.valor_cuota_individual,
+              valor_pagado: 0,
+              fecha_limite: fechasLimite.quincena1,
+              mes: mes,
+              anio: anio,
+              quincena: 1,
+              estado: 'pendiente',
+              descripcion: `${mesLabel} - 1ra Quincena`
+            },
+            {
+              socio_natillera_id: socio.id,
+              valor_cuota: socio.valor_cuota_individual,
+              valor_pagado: 0,
+              fecha_limite: fechasLimite.quincena2,
+              mes: mes,
+              anio: anio,
+              quincena: 2,
+              estado: 'pendiente',
+              descripcion: `${mesLabel} - 2da Quincena`
+            }
+          ]
+        } else {
+          // Socios mensuales: 1 cuota por mes
+          return [{
+            socio_natillera_id: socio.id,
+            valor_cuota: socio.valor_cuota_individual,
+            valor_pagado: 0,
+            fecha_limite: fechasLimite.mensual,
+            mes: mes,
+            anio: anio,
+            quincena: null,
+            estado: 'pendiente',
+            descripcion: `Cuota ${mesLabel}`
+          }]
+        }
       })
 
       console.log('Cuotas a crear:', cuotasACrear)
@@ -192,14 +227,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
-  function calcularResumenCuotas() {
-    const pendientes = cuotas.value.filter(c => c.estado === 'pendiente')
-    const pagadas = cuotas.value.filter(c => c.estado === 'pagada')
-    const parciales = cuotas.value.filter(c => c.estado === 'parcial')
-    const enMora = cuotas.value.filter(c => c.estado === 'mora')
+  function calcularResumenCuotas(cuotasFiltradas = null) {
+    const lista = cuotasFiltradas || cuotas.value
+    const pendientes = lista.filter(c => c.estado === 'pendiente')
+    const pagadas = lista.filter(c => c.estado === 'pagada')
+    const parciales = lista.filter(c => c.estado === 'parcial')
+    const enMora = lista.filter(c => c.estado === 'mora')
 
-    const totalRecaudado = cuotas.value.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
-    const totalEsperado = cuotas.value.reduce((sum, c) => sum + c.valor_cuota, 0)
+    const totalRecaudado = lista.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    const totalEsperado = lista.reduce((sum, c) => sum + c.valor_cuota, 0)
 
     return {
       pendientes: pendientes.length,
@@ -212,6 +248,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // Obtener cuotas filtradas por mes
+  function getCuotasPorMes(mes, anio = null) {
+    return cuotas.value.filter(c => {
+      if (anio) {
+        return c.mes === mes && c.anio === anio
+      }
+      return c.mes === mes
+    })
+  }
+
+  // Obtener resumen de cuotas por mes específico
+  function getResumenPorMes(mes, anio = null) {
+    const cuotasMes = getCuotasPorMes(mes, anio)
+    return calcularResumenCuotas(cuotasMes)
+  }
+
   return {
     cuotas,
     loading,
@@ -220,7 +272,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     generarCuotasPeriodo,
     registrarPago,
     marcarEnMora,
-    calcularResumenCuotas
+    calcularResumenCuotas,
+    getCuotasPorMes,
+    getResumenPorMes
   }
 })
 
