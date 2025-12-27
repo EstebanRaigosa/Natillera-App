@@ -79,6 +79,20 @@ export const useSociosStore = defineStore('socios', () => {
 
       if (socioExistente) {
         socioId = socioExistente.id
+        
+        // Actualizar datos del socio existente si hay nuevos datos
+        const datosActualizar = {}
+        if (datosSocio.telefono) datosActualizar.telefono = datosSocio.telefono
+        if (datosSocio.email) datosActualizar.email = datosSocio.email
+        if (datosSocio.avatar_seed) datosActualizar.avatar_seed = datosSocio.avatar_seed
+        if (datosSocio.nombre) datosActualizar.nombre = datosSocio.nombre
+        
+        if (Object.keys(datosActualizar).length > 0) {
+          await supabase
+            .from('socios')
+            .update(datosActualizar)
+            .eq('id', socioId)
+        }
       } else {
         // Crear nuevo socio
         const { data: nuevoSocio, error: socioError } = await supabase

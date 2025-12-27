@@ -850,11 +850,21 @@ async function handleGuardarSocio() {
       cantidad_cuotas: formSocio.cantidad_cuotas
     })
 
-    // Actualizar avatar del socio en la tabla socios
-    if (formSocio.avatar_seed && socioEditando.value.socio?.id) {
-      await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, {
-        avatar_seed: formSocio.avatar_seed
-      })
+    // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
+    if (socioEditando.value.socio?.id) {
+      const datosActualizados = {
+        nombre: formSocio.nombre,
+        telefono: formSocio.telefono || null,
+        email: formSocio.email || null,
+        documento: formSocio.documento || null
+      }
+      
+      // Solo incluir avatar_seed si se seleccionó uno
+      if (formSocio.avatar_seed) {
+        datosActualizados.avatar_seed = formSocio.avatar_seed
+      }
+      
+      await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
     }
 
     if (result.success) {

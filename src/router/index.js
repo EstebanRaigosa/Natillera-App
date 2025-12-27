@@ -16,6 +16,7 @@ import Socios from '../views/socios/Socios.vue'
 import Cuotas from '../views/cuotas/Cuotas.vue'
 import Prestamos from '../views/prestamos/Prestamos.vue'
 import Actividades from '../views/actividades/Actividades.vue'
+import Configuracion from '../views/configuracion/Configuracion.vue'
 
 const routes = [
   {
@@ -87,6 +88,11 @@ const routes = [
         name: 'Actividades',
         component: Actividades,
         props: true
+      },
+      {
+        path: 'configuracion',
+        name: 'Configuracion',
+        component: Configuracion
       }
     ]
   }

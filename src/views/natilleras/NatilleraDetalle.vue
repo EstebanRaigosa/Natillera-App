@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-8">
+  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden">
     <!-- Loading -->
     <div v-if="natillerasStore.loading" class="text-center py-12">
       <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
@@ -30,18 +30,18 @@
           </p>
         </div>
 
-        <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+        <div class="grid grid-cols-2 gap-2 w-full lg:w-auto lg:flex">
           <button 
             @click="modalWhatsApp = true"
-            class="btn-secondary py-2 px-3 sm:px-4 inline-flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base flex-1 lg:flex-none justify-center"
+            class="btn-secondary py-2 px-2 sm:px-4 inline-flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm lg:text-base"
           >
-            <ChatBubbleLeftIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-            Notificar
+            <ChatBubbleLeftIcon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span>Notificar</span>
           </button>
           <button 
             v-if="natillera.estado === 'activa'"
             @click="handleCerrarNatillera"
-            class="px-3 sm:px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-sm sm:text-base flex-1 lg:flex-none"
+            class="px-2 sm:px-4 py-2 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors text-xs sm:text-sm lg:text-base text-center"
           >
             Cerrar Natillera
           </button>
@@ -49,69 +49,71 @@
       </div>
 
       <!-- Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
         <div class="stat-card">
-          <p class="stat-value text-xl sm:text-2xl lg:text-3xl">{{ estadisticas.totalSocios }}</p>
-          <p class="stat-label text-xs sm:text-sm">Socios</p>
+          <p class="stat-value">{{ estadisticas.totalSocios }}</p>
+          <p class="stat-label">Socios</p>
         </div>
         <div class="stat-card">
-          <p class="stat-value text-xl sm:text-2xl lg:text-3xl text-natillera-600">${{ formatMoney(estadisticas.totalAportado) }}</p>
-          <p class="stat-label text-xs sm:text-sm">Recaudado</p>
+          <p class="stat-value text-natillera-600">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
+          <p class="stat-label">Recaudado</p>
         </div>
         <div class="stat-card">
-          <p class="stat-value text-xl sm:text-2xl lg:text-3xl text-amber-600">${{ formatMoney(estadisticas.totalPendiente) }}</p>
-          <p class="stat-label text-xs sm:text-sm">Pendiente</p>
+          <p class="stat-value text-amber-600">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
+          <p class="stat-label">Pendiente</p>
         </div>
         <div class="stat-card">
-          <p class="stat-value text-xl sm:text-2xl lg:text-3xl text-purple-600">${{ formatMoney(estadisticas.fondoTotal) }}</p>
-          <p class="stat-label text-xs sm:text-sm">Fondo Total</p>
+          <p class="stat-value text-purple-600">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
+          <p class="stat-label">Fondo Total</p>
         </div>
       </div>
 
       <!-- Navegación tabs -->
-      <div class="flex gap-2 sm:gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-        <router-link 
-          :to="`/natilleras/${id}/socios`"
-          class="py-2 px-3 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1.5 sm:gap-2 bg-white text-gray-700 font-semibold text-sm sm:text-base rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
-        >
-          <UsersIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-          Socios
-        </router-link>
-        <router-link 
-          :to="`/natilleras/${id}/cuotas`"
-          class="py-2 px-3 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1.5 sm:gap-2 bg-white text-gray-700 font-semibold text-sm sm:text-base rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
-        >
-          <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-          Cuotas
-        </router-link>
-        <router-link 
-          :to="`/natilleras/${id}/prestamos`"
-          class="py-2 px-3 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1.5 sm:gap-2 bg-white text-gray-700 font-semibold text-sm sm:text-base rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
-        >
-          <BanknotesIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-          Préstamos
-        </router-link>
-        <router-link 
-          :to="`/natilleras/${id}/actividades`"
-          class="py-2 px-3 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1.5 sm:gap-2 bg-white text-gray-700 font-semibold text-sm sm:text-base rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
-        >
-          <CalendarIcon class="w-4 h-4 sm:w-5 sm:h-5" />
-          Actividades
-        </router-link>
+      <div class="w-full overflow-x-auto scrollbar-hide">
+        <div class="flex gap-2 sm:gap-3 pb-2 min-w-min">
+          <router-link 
+            :to="`/natilleras/${id}/socios`"
+            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+          >
+            <UsersIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            Socios
+          </router-link>
+          <router-link 
+            :to="`/natilleras/${id}/cuotas`"
+            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+          >
+            <CurrencyDollarIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            Cuotas
+          </router-link>
+          <router-link 
+            :to="`/natilleras/${id}/prestamos`"
+            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+          >
+            <BanknotesIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            Préstamos
+          </router-link>
+          <router-link 
+            :to="`/natilleras/${id}/actividades`"
+            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+          >
+            <CalendarIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            Actividades
+          </router-link>
+        </div>
       </div>
 
       <!-- Socios resumen -->
       <div class="card">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-display font-bold text-gray-800">
+        <div class="flex items-center justify-between gap-2 mb-4 sm:mb-6">
+          <h2 class="text-base sm:text-xl font-display font-bold text-gray-800">
             Socios Recientes
           </h2>
           <router-link 
             :to="`/natilleras/${id}/socios`"
-            class="inline-flex items-center gap-1.5 px-4 py-2 bg-natillera-600 text-white hover:bg-natillera-700 font-semibold text-sm rounded-lg shadow-md hover:shadow-lg transition-all"
+            class="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-natillera-600 text-white hover:bg-natillera-700 font-semibold text-xs sm:text-sm rounded-lg shadow-md hover:shadow-lg transition-all whitespace-nowrap flex-shrink-0"
           >
             Ver todos
-            <ArrowRightIcon class="w-4 h-4" />
+            <ArrowRightIcon class="w-3 h-3 sm:w-4 sm:h-4" />
           </router-link>
         </div>
 
@@ -126,27 +128,29 @@
           </router-link>
         </div>
 
-        <div v-else class="space-y-3">
+        <div v-else class="space-y-2 sm:space-y-3">
           <div 
             v-for="sn in sociosRecientes" 
             :key="sn.id"
-            @click="verDetalleSocio(sn)"
-            class="flex items-center justify-between p-4 bg-white rounded-xl cursor-pointer hover:bg-natillera-50 border border-gray-200 shadow-sm hover:shadow-md hover:border-natillera-200 transition-all"
+            class="flex items-center justify-between gap-2 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-natillera-200 transition-all"
           >
-            <div class="flex items-center gap-3">
+            <div 
+              @click="verDetalleSocio(sn)"
+              class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-80"
+            >
               <img 
                 :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
                 :alt="sn.socio?.nombre"
-                class="w-10 h-10 rounded-full bg-natillera-100"
+                class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-natillera-100 flex-shrink-0"
               />
-              <div>
-                <p class="font-medium text-gray-800">{{ sn.socio?.nombre }}</p>
-                <p class="text-sm text-gray-500">Cuota: ${{ formatMoney(sn.valor_cuota_individual) }}</p>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-800 text-sm sm:text-base truncate">{{ sn.socio?.nombre }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 truncate">Cuota: ${{ formatMoney(sn.valor_cuota_individual) }}</p>
               </div>
             </div>
             <span 
               :class="[
-                'badge',
+                'badge text-[10px] sm:text-xs flex-shrink-0',
                 sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
               ]"
             >
@@ -166,35 +170,68 @@
 
     <!-- Modal WhatsApp -->
     <div v-if="modalWhatsApp" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50" @click="modalWhatsApp = false"></div>
-      <div class="card relative w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl">
-        <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-3 sm:mb-4">
+      <div class="absolute inset-0 bg-black/50" @click="cerrarModalWhatsApp"></div>
+      <div class="card relative w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col">
+        <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-2 sm:mb-3">
           Enviar Recordatorio por WhatsApp
         </h3>
-        <p class="text-gray-500 text-xs sm:text-sm mb-4">
-          Selecciona un socio para enviarle un recordatorio de pago. Se abrirá WhatsApp con el mensaje prellenado.
+        <p class="text-gray-500 text-xs sm:text-sm mb-3">
+          Selecciona un socio para enviarle un recordatorio de pago.
         </p>
         
-        <div class="space-y-2 max-h-[50vh] sm:max-h-60 overflow-y-auto">
+        <!-- Barra de búsqueda -->
+        <div class="relative mb-3">
+          <MagnifyingGlassIcon class="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input 
+            v-model="busquedaSocio"
+            type="text"
+            placeholder="Buscar socio por nombre o teléfono..."
+            class="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 bg-gray-100 border-0 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
+          />
+        </div>
+        
+        <!-- Lista de socios -->
+        <div class="space-y-2 overflow-y-auto flex-1 max-h-[45vh] sm:max-h-60">
           <button 
-            v-for="sn in natillera?.socios_natillera" 
+            v-for="sn in sociosFiltrados" 
             :key="sn.id"
             @click="enviarWhatsApp(sn)"
-            class="w-full flex items-center gap-3 p-3 bg-gray-50 hover:bg-green-50 rounded-xl transition-colors text-left active:bg-green-100"
+            :disabled="!sn.socio?.telefono"
+            :class="[
+              'w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left',
+              sn.socio?.telefono 
+                ? 'bg-gray-50 hover:bg-green-50 active:bg-green-100 cursor-pointer' 
+                : 'bg-gray-100 opacity-50 cursor-not-allowed'
+            ]"
           >
-            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white flex-shrink-0">
-              <ChatBubbleLeftIcon class="w-5 h-5" />
-            </div>
+            <img 
+              :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
+              :alt="sn.socio?.nombre"
+              :class="[
+                'w-10 h-10 rounded-full flex-shrink-0 border-2',
+                sn.socio?.telefono ? 'border-green-400' : 'border-gray-300 grayscale'
+              ]"
+            />
             <div class="min-w-0 flex-1">
-              <p class="font-medium text-gray-800 truncate">{{ sn.socio?.nombre }}</p>
-              <p class="text-sm text-gray-500 truncate">{{ sn.socio?.telefono || 'Sin teléfono' }}</p>
+              <p class="font-medium text-gray-800 truncate text-sm sm:text-base">{{ sn.socio?.nombre }}</p>
+              <p class="text-xs sm:text-sm text-gray-500 truncate">{{ sn.socio?.telefono || 'Sin teléfono registrado' }}</p>
+            </div>
+            <div v-if="sn.socio?.telefono" class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+              <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
             </div>
           </button>
+          
+          <!-- Mensaje cuando no hay resultados -->
+          <div v-if="sociosFiltrados.length === 0" class="text-center py-6">
+            <p class="text-gray-400 text-sm">No se encontraron socios</p>
+          </div>
         </div>
 
         <button 
-          @click="modalWhatsApp = false"
-          class="btn-secondary w-full mt-4"
+          @click="cerrarModalWhatsApp"
+          class="btn-secondary w-full mt-4 flex-shrink-0"
         >
           Cerrar
         </button>
@@ -423,9 +460,11 @@ import {
   UserIcon,
   PhoneIcon,
   EnvelopeIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
+import { useConfiguracionStore } from '../../stores/configuracion'
 
 const props = defineProps({
   id: String
@@ -435,12 +474,26 @@ const route = useRoute()
 const router = useRouter()
 const natillerasStore = useNatillerasStore()
 const sociosStore = useSociosStore()
+const configStore = useConfiguracionStore()
 
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
 const seccionActiva = ref('finanzas')
+const busquedaSocio = ref('')
+
+// Socios filtrados por búsqueda en el modal de WhatsApp
+const sociosFiltrados = computed(() => {
+  if (!natillera.value?.socios_natillera) return []
+  if (!busquedaSocio.value.trim()) return natillera.value.socios_natillera
+  
+  const busqueda = busquedaSocio.value.toLowerCase().trim()
+  return natillera.value.socios_natillera.filter(sn => 
+    sn.socio?.nombre?.toLowerCase().includes(busqueda) ||
+    sn.socio?.telefono?.includes(busqueda)
+  )
+})
 
 const natillera = computed(() => natillerasStore.natilleraActual)
 
@@ -500,6 +553,17 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
+function formatMoneyShort(value) {
+  const num = value || 0
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace('.0', '') + 'M'
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(0) + 'K'
+  }
+  return new Intl.NumberFormat('es-CO').format(num)
+}
+
 function getAvatarUrl(seed, avatarSeed = null) {
   // Usar DiceBear Avatars con estilo "adventurer"
   const finalSeed = avatarSeed || seed || 'default'
@@ -516,24 +580,29 @@ function formatDate(date) {
   })
 }
 
-function enviarWhatsApp(socioNatillera) {
+function cerrarModalWhatsApp() {
+  modalWhatsApp.value = false
+  busquedaSocio.value = ''
+}
+
+function enviarWhatsApp(socioNatillera, cerrarModal = true) {
   const telefono = socioNatillera.socio?.telefono?.replace(/\D/g, '')
   if (!telefono) {
     alert('Este socio no tiene teléfono registrado')
     return
   }
 
-  const mensaje = `Hola ${socioNatillera.socio?.nombre} 👋
-
-Te recordamos que tienes pendiente la cuota de la natillera "${natillera.value?.nombre}".
-
-💰 Valor: $${formatMoney(socioNatillera.valor_cuota_individual)}
-
-Gracias por apoyar la natillera 🙌`
+  // Usar el mensaje configurado con las variables reemplazadas
+  const mensaje = configStore.generarMensajeIndividual(
+    socioNatillera.socio?.nombre,
+    formatMoney(socioNatillera.valor_cuota_individual)
+  )
 
   const url = `https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`
   window.open(url, '_blank')
-  modalWhatsApp.value = false
+  if (cerrarModal) {
+    cerrarModalWhatsApp()
+  }
 }
 
 async function handleCerrarNatillera() {
@@ -566,6 +635,7 @@ async function verDetalleSocio(sn) {
 onMounted(() => {
   const natilleraId = props.id || route.params.id
   natillerasStore.fetchNatillera(natilleraId)
+  configStore.cargarConfiguracion()
 })
 </script>
 

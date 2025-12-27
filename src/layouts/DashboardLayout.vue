@@ -54,6 +54,19 @@
             <PlusCircleIcon class="w-5 h-5" />
             <span>Nueva Natillera</span>
           </router-link>
+
+          <div class="pt-4 pb-2">
+            <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ajustes</p>
+          </div>
+
+          <router-link 
+            to="/configuracion" 
+            class="nav-link"
+            :class="{ 'nav-link-active': $route.path === '/configuracion' }"
+          >
+            <Cog6ToothIcon class="w-5 h-5" />
+            <span>Configuración</span>
+          </router-link>
         </nav>
 
         <!-- Usuario -->
@@ -88,7 +101,7 @@
     ></div>
 
     <!-- Contenido principal -->
-    <main class="flex-1 flex flex-col min-h-screen">
+    <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
       <!-- Header móvil -->
       <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
         <div class="flex items-center justify-between">
@@ -104,7 +117,7 @@
       </header>
 
       <!-- Contenido de la página -->
-      <div class="flex-1 p-4 lg:p-8">
+      <div class="flex-1 p-3 sm:p-4 lg:p-8 w-full overflow-x-hidden">
         <router-view />
       </div>
     </main>
@@ -120,7 +133,8 @@ import {
   BanknotesIcon, 
   PlusCircleIcon,
   ArrowRightOnRectangleIcon,
-  Bars3Icon
+  Bars3Icon,
+  Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
