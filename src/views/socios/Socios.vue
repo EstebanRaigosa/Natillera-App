@@ -1,0 +1,1044 @@
+<template>
+  <div class="max-w-7xl mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <router-link :to="`/natilleras/${id}`" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-natillera-700 font-semibold rounded-lg border border-natillera-200 shadow-sm hover:bg-natillera-50 hover:border-natillera-300 transition-all mb-3">
+          <ArrowLeftIcon class="w-4 h-4" />
+          Volver a natillera
+        </router-link>
+        <h1 class="text-3xl font-display font-bold text-gray-800">
+          Socios
+        </h1>
+        <p class="text-gray-500 mt-1">
+          Gestiona los participantes y sus cuotas personalizadas
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <button @click="modalImportar = true" class="btn-secondary inline-flex items-center gap-2">
+          <ArrowUpTrayIcon class="w-5 h-5" />
+          Importar CSV
+        </button>
+        <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+          <PlusIcon class="w-5 h-5" />
+          Agregar Socio
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div v-if="sociosStore.sociosNatillera.length > 0" class="relative">
+      <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+      <input 
+        v-model="busqueda"
+        type="text"
+        placeholder="Buscar socio por nombre..."
+        class="input-field pl-12 w-full"
+        @keydown.esc="busqueda = ''"
+      />
+      <button 
+        v-if="busqueda"
+        @click="busqueda = ''"
+        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      >
+        <XMarkIcon class="w-5 h-5" />
+      </button>
+    </div>
+
+    <!-- Lista de socios -->
+    <div v-if="sociosStore.loading" class="text-center py-12">
+      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
+      <p class="text-gray-400 mt-4">Cargando socios...</p>
+    </div>
+
+    <div v-else-if="sociosStore.sociosNatillera.length === 0" class="card text-center py-12">
+      <UsersIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <h3 class="font-display font-semibold text-gray-800 text-lg">
+        No hay socios registrados
+      </h3>
+      <p class="text-gray-500 mt-2 mb-6">
+        Agrega el primer socio para comenzar
+      </p>
+      <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+        <PlusIcon class="w-5 h-5" />
+        Agregar Socio
+      </button>
+    </div>
+
+    <!-- Sin resultados de búsqueda -->
+    <div v-else-if="sociosFiltrados.length === 0" class="card text-center py-12">
+      <MagnifyingGlassIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <h3 class="font-display font-semibold text-gray-800 text-lg">
+        No se encontraron socios
+      </h3>
+      <p class="text-gray-500 mt-2">
+        No hay socios que coincidan con "{{ busqueda }}"
+      </p>
+      <button @click="busqueda = ''" class="btn-secondary mt-4">
+        Limpiar búsqueda
+      </button>
+    </div>
+
+    <div v-else class="grid gap-4 lg:grid-cols-2">
+      <div 
+        v-for="sn in sociosFiltrados" 
+        :key="sn.id"
+        class="card-hover cursor-pointer"
+        @click="verDetalleSocio(sn)"
+      >
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-4">
+            <img 
+              :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
+              :alt="sn.socio?.nombre"
+              class="w-14 h-14 rounded-xl bg-natillera-100"
+            />
+            <div>
+              <h3 class="font-display font-semibold text-gray-800 text-lg">
+                {{ sn.socio?.nombre }}
+              </h3>
+              <p class="text-sm text-gray-500">{{ sn.socio?.email || 'Sin correo' }}</p>
+            </div>
+          </div>
+          <span 
+            :class="[
+              'badge',
+              sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
+            ]"
+          >
+            {{ sn.estado }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div class="p-3 bg-natillera-50 rounded-xl">
+            <p class="text-xs text-gray-500">Cuota Individual</p>
+            <p class="font-bold text-natillera-700">${{ formatMoney(sn.valor_cuota_individual) }}</p>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-xl">
+            <p class="text-xs text-gray-500">Cantidad de Cuotas</p>
+            <p class="font-bold text-gray-700">{{ sn.cantidad_cuotas || 1 }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div class="text-sm text-gray-500">
+            <PhoneIcon class="w-4 h-4 inline mr-1" />
+            {{ sn.socio?.telefono || 'Sin teléfono' }}
+          </div>
+          <div class="flex gap-2">
+            <button 
+              @click.stop="editarSocio(sn)"
+              class="p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-colors"
+              title="Editar"
+            >
+              <PencilIcon class="w-5 h-5" />
+            </button>
+            <button 
+              @click.stop="toggleEstado(sn)"
+              :class="[
+                'p-2 rounded-lg transition-colors',
+                sn.estado === 'activo' 
+                  ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
+                  : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+              ]"
+              :title="sn.estado === 'activo' ? 'Desactivar' : 'Activar'"
+            >
+              <component 
+                :is="sn.estado === 'activo' ? XCircleIcon : CheckCircleIcon" 
+                class="w-5 h-5" 
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detalle Socio -->
+    <div v-if="modalDetalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="modalDetalle = false"></div>
+      <div class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <!-- Header del modal -->
+        <div class="flex items-center gap-4 mb-6">
+          <img 
+            :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed)" 
+            :alt="socioSeleccionado?.socio?.nombre"
+            class="w-16 h-16 rounded-2xl bg-natillera-100 shadow-lg"
+          />
+          <div class="flex-1">
+            <h3 class="text-xl font-display font-bold text-gray-800">
+              {{ socioSeleccionado?.socio?.nombre }}
+            </h3>
+            <span 
+              :class="[
+                'badge mt-1',
+                socioSeleccionado?.estado === 'activo' ? 'badge-success' : 'badge-warning'
+              ]"
+            >
+              {{ socioSeleccionado?.estado }}
+            </span>
+          </div>
+          <button 
+            @click="modalDetalle = false"
+            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+
+        <!-- Indicador de estado (siempre visible) -->
+        <div 
+          :class="[
+            'p-4 rounded-xl mb-4 flex items-center gap-3',
+            resumenSocio.alDia 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          ]"
+        >
+          <component 
+            :is="resumenSocio.alDia ? CheckCircleIcon : ExclamationCircleIcon"
+            :class="[
+              'w-8 h-8',
+              resumenSocio.alDia ? 'text-green-500' : 'text-red-500'
+            ]"
+          />
+          <div>
+            <p :class="['font-semibold', resumenSocio.alDia ? 'text-green-700' : 'text-red-700']">
+              {{ resumenSocio.alDia ? '¡Al día con los pagos!' : 'Tiene pagos pendientes' }}
+            </p>
+            <p class="text-sm text-gray-600">
+              {{ resumenSocio.alDia 
+                ? 'Este socio ha cumplido con todas sus cuotas' 
+                : `Debe ${resumenSocio.cuotasPendientes + resumenSocio.cuotasMora} cuota(s)` 
+              }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Secciones desplegables -->
+        <div class="space-y-3">
+          
+          <!-- Sección: Resumen Financiero (abierta por defecto) -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <button 
+              type="button"
+              @click="toggleSeccion('finanzas')"
+              class="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors text-left"
+            >
+              <span class="font-semibold text-gray-800 flex items-center gap-2">
+                <BanknotesIcon class="w-5 h-5 text-green-600" />
+                Resumen Financiero
+              </span>
+              <ChevronDownIcon 
+                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'finanzas' ? 'rotate-180' : '']" 
+              />
+            </button>
+            <div v-show="seccionActiva === 'finanzas'" class="p-4 border-t border-gray-100 bg-white">
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
+                  <p class="text-xs font-medium text-green-600 mb-1">TOTAL APORTADO</p>
+                  <p class="text-2xl font-bold text-green-700">${{ formatMoney(resumenSocio.totalAportado) }}</p>
+                </div>
+                <div class="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
+                  <p class="text-xs font-medium text-amber-600 mb-1">PENDIENTE</p>
+                  <p class="text-2xl font-bold text-amber-700">${{ formatMoney(resumenSocio.totalPendiente) }}</p>
+                </div>
+              </div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Cuotas</p>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                  <p class="text-xl font-bold text-green-600">{{ resumenSocio.cuotasPagadas }}</p>
+                  <p class="text-xs text-gray-500">Pagadas</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                  <p class="text-xl font-bold text-amber-600">{{ resumenSocio.cuotasPendientes }}</p>
+                  <p class="text-xs text-gray-500">Pendientes</p>
+                </div>
+                <div class="text-center p-3 bg-gray-50 rounded-xl">
+                  <p class="text-xl font-bold text-red-600">{{ resumenSocio.cuotasMora }}</p>
+                  <p class="text-xs text-gray-500">En Mora</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Información de Contacto -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <button 
+              type="button"
+              @click="toggleSeccion('contacto')"
+              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            >
+              <span class="font-semibold text-gray-800 flex items-center gap-2">
+                <UserIcon class="w-5 h-5 text-gray-600" />
+                Información de Contacto
+              </span>
+              <ChevronDownIcon 
+                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'contacto' ? 'rotate-180' : '']" 
+              />
+            </button>
+            <div v-show="seccionActiva === 'contacto'" class="p-4 border-t border-gray-100 bg-white space-y-2">
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <PhoneIcon class="w-5 h-5 text-gray-400" />
+                <div class="flex-1">
+                  <p class="text-xs text-gray-500">Teléfono / WhatsApp</p>
+                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
+                </div>
+                <a 
+                  v-if="socioSeleccionado?.socio?.telefono"
+                  :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
+                  target="_blank"
+                  class="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
+                >
+                  Enviar mensaje
+                </a>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <EnvelopeIcon class="w-5 h-5 text-gray-400" />
+                <div>
+                  <p class="text-xs text-gray-500">Correo electrónico</p>
+                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.email || 'No registrado' }}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <IdentificationIcon class="w-5 h-5 text-gray-400" />
+                <div>
+                  <p class="text-xs text-gray-500">Documento de identidad</p>
+                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.documento || 'No registrado' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Configuración en la Natillera -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <button 
+              type="button"
+              @click="toggleSeccion('config')"
+              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            >
+              <span class="font-semibold text-gray-800 flex items-center gap-2">
+                <CurrencyDollarIcon class="w-5 h-5 text-gray-600" />
+                Configuración de Cuotas
+              </span>
+              <ChevronDownIcon 
+                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'config' ? 'rotate-180' : '']" 
+              />
+            </button>
+            <div v-show="seccionActiva === 'config'" class="p-4 border-t border-gray-100 bg-white">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-100">
+                  <p class="text-xs text-gray-500 mb-1">Cuota mensual</p>
+                  <p class="text-xl font-bold text-natillera-700">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p class="text-xs text-gray-500 mb-1">Cuotas por período</p>
+                  <p class="text-xl font-bold text-gray-700">{{ socioSeleccionado?.cantidad_cuotas || 1 }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+          <button 
+            @click="modalDetalle = false; editarSocio(socioSeleccionado)"
+            class="btn-secondary flex-1 inline-flex items-center justify-center gap-2"
+          >
+            <PencilIcon class="w-4 h-4" />
+            Editar
+          </button>
+          <button 
+            @click="modalDetalle = false"
+            class="btn-primary flex-1"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Importar CSV -->
+    <div v-if="modalImportar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="cerrarModalImportar"></div>
+      <div class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-display font-bold text-gray-800">
+            Importar Socios desde CSV
+          </h3>
+          <button @click="cerrarModalImportar" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Paso 1: Descargar ejemplo -->
+        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div class="flex items-start gap-3">
+            <DocumentArrowDownIcon class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div class="flex-1">
+              <p class="font-semibold text-blue-800">Paso 1: Descarga el archivo de ejemplo</p>
+              <p class="text-sm text-blue-700 mt-1">
+                Descarga el archivo CSV de ejemplo para ver el formato correcto de los datos.
+              </p>
+              <button 
+                @click="descargarEjemploCSV"
+                class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <ArrowDownTrayIcon class="w-4 h-4" />
+                Descargar ejemplo.csv
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 2: Subir archivo -->
+        <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+          <div class="flex items-start gap-3">
+            <ArrowUpTrayIcon class="w-6 h-6 text-gray-600 flex-shrink-0 mt-0.5" />
+            <div class="flex-1">
+              <p class="font-semibold text-gray-800">Paso 2: Sube tu archivo CSV</p>
+              <p class="text-sm text-gray-600 mt-1">
+                Selecciona el archivo CSV con los datos de los socios a importar.
+              </p>
+              <div class="mt-3">
+                <input 
+                  type="file" 
+                  ref="inputCSV"
+                  accept=".csv"
+                  @change="handleArchivoCSV"
+                  class="hidden"
+                />
+                <button 
+                  @click="$refs.inputCSV.click()"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border-2 border-dashed border-gray-300 hover:border-natillera-400 hover:text-natillera-700 transition-colors"
+                >
+                  <DocumentTextIcon class="w-4 h-4" />
+                  {{ archivoCSV ? archivoCSV.name : 'Seleccionar archivo...' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista previa de datos -->
+        <div v-if="sociosPreview.length > 0" class="mb-6">
+          <p class="font-semibold text-gray-800 mb-3">
+            Vista previa ({{ sociosPreview.length }} socios encontrados)
+          </p>
+          <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-100 sticky top-0">
+                <tr>
+                  <th class="text-left p-3 font-semibold text-gray-700">Nombre</th>
+                  <th class="text-left p-3 font-semibold text-gray-700">Cuota</th>
+                  <th class="text-left p-3 font-semibold text-gray-700">Teléfono</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(socio, index) in sociosPreview" :key="index" class="border-t border-gray-100">
+                  <td class="p-3 text-gray-800">{{ socio.nombre }}</td>
+                  <td class="p-3 text-natillera-600 font-medium">${{ formatMoney(socio.valor_cuota) }}</td>
+                  <td class="p-3 text-gray-500">{{ socio.telefono || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div v-if="errorImportar" class="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          {{ errorImportar }}
+        </div>
+
+        <!-- Éxito -->
+        <div v-if="exitoImportar" class="mb-6 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
+          {{ exitoImportar }}
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-3">
+          <button 
+            @click="cerrarModalImportar"
+            class="btn-secondary flex-1"
+          >
+            Cancelar
+          </button>
+          <button 
+            @click="importarSocios"
+            :disabled="sociosPreview.length === 0 || importando"
+            class="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ importando ? 'Importando...' : `Importar ${sociosPreview.length} socios` }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Agregar Socio -->
+    <div v-if="modalAgregar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="modalAgregar = false"></div>
+      <div class="card relative max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <h3 class="text-xl font-display font-bold text-gray-800 mb-6">
+          {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
+        </h3>
+
+        <form @submit.prevent="handleGuardarSocio" class="space-y-4">
+          <!-- Selector de Avatar -->
+          <div>
+            <label class="label">Selecciona un avatar</label>
+            <div class="flex items-center gap-4 mb-3">
+              <img 
+                :src="getAvatarUrl(formSocio.avatar_seed || formSocio.nombre || 'nuevo')" 
+                alt="Avatar seleccionado"
+                class="w-16 h-16 rounded-xl bg-natillera-100 border-2 border-natillera-300"
+              />
+              <button 
+                type="button"
+                @click="mostrarAvatares = !mostrarAvatares"
+                class="text-sm text-natillera-600 hover:text-natillera-700 font-medium"
+              >
+                {{ mostrarAvatares ? 'Ocultar opciones' : 'Cambiar avatar' }}
+              </button>
+            </div>
+            <div v-show="mostrarAvatares" class="bg-gray-50 rounded-xl overflow-hidden">
+              <!-- Grid de avatares -->
+              <div class="grid grid-cols-5 gap-2 p-3 max-h-52 overflow-y-auto">
+                <button
+                  v-for="seed in avatarSeeds"
+                  :key="seed"
+                  type="button"
+                  @click="formSocio.avatar_seed = seed"
+                  :class="[
+                    'p-1 rounded-lg transition-all',
+                    formSocio.avatar_seed === seed 
+                      ? 'ring-2 ring-natillera-500 bg-natillera-100' 
+                      : 'hover:bg-gray-100'
+                  ]"
+                >
+                  <img 
+                    :src="getAvatarUrl(seed)" 
+                    :alt="seed"
+                    class="w-10 h-10 rounded-lg"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Nombre (obligatorio) -->
+          <div>
+            <label class="label">
+              Nombre completo <span class="text-red-500">*</span>
+            </label>
+            <input 
+              v-model="formSocio.nombre"
+              type="text" 
+              class="input-field"
+              placeholder="Ej: María García"
+              required
+            />
+          </div>
+
+          <!-- Cuota (obligatorio) - Lo más importante -->
+          <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-200">
+            <label class="label text-natillera-700">
+              💰 Valor de la cuota mensual <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+              <input 
+                v-model.number="formSocio.valor_cuota"
+                type="number" 
+                class="input-field pl-8 text-lg font-semibold"
+                placeholder="50000"
+                min="1000"
+                step="1000"
+                required
+              />
+            </div>
+            <p class="text-xs text-natillera-600 mt-2">
+              Este es el valor que el socio aportará en cada período
+            </p>
+          </div>
+
+          <!-- Cantidad de cuotas -->
+          <div>
+            <label class="label">
+              Cantidad de cuotas
+              <span class="text-gray-400 font-normal">(si tiene más de una)</span>
+            </label>
+            <input 
+              v-model.number="formSocio.cantidad_cuotas"
+              type="number" 
+              class="input-field"
+              placeholder="1"
+              min="1"
+              max="10"
+            />
+          </div>
+
+          <!-- Información de contacto (colapsable) -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <button 
+              type="button"
+              @click="mostrarContacto = !mostrarContacto"
+              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+            >
+              <span class="font-medium text-gray-700">
+                📱 Información de contacto
+                <span class="text-gray-400 font-normal text-sm">(opcional)</span>
+              </span>
+              <ChevronDownIcon 
+                :class="['w-5 h-5 text-gray-400 transition-transform', mostrarContacto ? 'rotate-180' : '']" 
+              />
+            </button>
+            
+            <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-gray-200">
+              <div>
+                <label class="label">Teléfono / WhatsApp</label>
+                <input 
+                  v-model="formSocio.telefono"
+                  type="tel" 
+                  class="input-field"
+                  placeholder="3001234567"
+                />
+                <p class="text-xs text-gray-400 mt-1">Para enviar recordatorios de pago</p>
+              </div>
+
+              <div>
+                <label class="label">Correo electrónico</label>
+                <input 
+                  v-model="formSocio.email"
+                  type="email" 
+                  class="input-field"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+
+              <div>
+                <label class="label">Documento de identidad</label>
+                <input 
+                  v-model="formSocio.documento"
+                  type="text" 
+                  class="input-field"
+                  placeholder="Cédula (opcional)"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="errorSocio" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {{ errorSocio }}
+          </div>
+
+          <div class="flex gap-3 pt-4">
+            <button 
+              type="button"
+              @click="cerrarModal"
+              class="btn-secondary flex-1"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit" 
+              class="btn-primary flex-1"
+              :disabled="sociosStore.loading"
+            >
+              {{ sociosStore.loading ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { useSociosStore } from '../../stores/socios'
+import { 
+  ArrowLeftIcon,
+  PlusIcon,
+  UsersIcon,
+  PhoneIcon,
+  PencilIcon,
+  XCircleIcon,
+  CheckCircleIcon,
+  ChevronDownIcon,
+  XMarkIcon,
+  BanknotesIcon,
+  ClockIcon,
+  UserIcon,
+  EnvelopeIcon,
+  IdentificationIcon,
+  CurrencyDollarIcon,
+  ExclamationCircleIcon,
+  MagnifyingGlassIcon,
+  ArrowUpTrayIcon,
+  ArrowDownTrayIcon,
+  DocumentArrowDownIcon,
+  DocumentTextIcon
+} from '@heroicons/vue/24/outline'
+
+const props = defineProps({
+  id: String
+})
+
+const route = useRoute()
+const sociosStore = useSociosStore()
+
+const modalAgregar = ref(false)
+const modalDetalle = ref(false)
+const modalImportar = ref(false)
+const socioEditando = ref(null)
+const socioSeleccionado = ref(null)
+const errorSocio = ref('')
+const mostrarContacto = ref(false)
+const cuotasSocio = ref([])
+const loadingDetalle = ref(false)
+const busqueda = ref('')
+
+// Variables para importación CSV
+const archivoCSV = ref(null)
+const sociosPreview = ref([])
+const errorImportar = ref('')
+const exitoImportar = ref('')
+const importando = ref(false)
+
+// Sección activa del modal de detalle (solo una a la vez)
+const seccionActiva = ref('finanzas')  // 'finanzas', 'contacto', 'config' o null
+
+// Socios filtrados por búsqueda
+const sociosFiltrados = computed(() => {
+  if (!busqueda.value.trim()) {
+    return sociosStore.sociosNatillera
+  }
+  const termino = busqueda.value.toLowerCase().trim()
+  return sociosStore.sociosNatillera.filter(sn => 
+    sn.socio?.nombre?.toLowerCase().includes(termino) ||
+    sn.socio?.documento?.toLowerCase().includes(termino) ||
+    sn.socio?.telefono?.includes(termino)
+  )
+})
+
+function toggleSeccion(seccion) {
+  seccionActiva.value = seccionActiva.value === seccion ? null : seccion
+}
+
+const formSocio = reactive({
+  nombre: '',
+  documento: '',
+  email: '',
+  telefono: '',
+  valor_cuota: 50000,
+  cantidad_cuotas: 1,
+  avatar_seed: ''
+})
+
+const mostrarAvatares = ref(false)
+
+// Lista de seeds para avatares predefinidos (100 opciones)
+const avatarSeeds = [
+  'Sofia', 'Luna', 'Valentina', 'Camila', 'Isabella',
+  'Mariana', 'Lucia', 'Gabriela', 'Daniela', 'Paula',
+  'Andrea', 'Carolina', 'Natalia', 'Alejandra', 'Victoria',
+  'Fernanda', 'Catalina', 'Sara', 'Laura', 'Maria',
+  'Ana', 'Elena', 'Rosa', 'Carmen', 'Julia',
+  'Claudia', 'Patricia', 'Monica', 'Sandra', 'Diana',
+  'Adriana', 'Gloria', 'Teresa', 'Liliana', 'Rocio',
+  'Paola', 'Angelica', 'Marcela', 'Lorena', 'Viviana',
+  'Johana', 'Tatiana', 'Yolanda', 'Pilar', 'Beatriz',
+  'Clara', 'Marta', 'Silvia', 'Esperanza', 'Blanca',
+  'Carlos', 'Juan', 'Miguel', 'Andres', 'Luis',
+  'Jorge', 'David', 'Daniel', 'Felipe', 'Santiago',
+  'Sebastian', 'Alejandro', 'Ricardo', 'Fernando', 'Diego',
+  'Pablo', 'Eduardo', 'Gustavo', 'Oscar', 'Sergio',
+  'Roberto', 'Javier', 'Antonio', 'Manuel', 'Pedro',
+  'Francisco', 'Raul', 'Mario', 'Jaime', 'Hector',
+  'Alberto', 'Cesar', 'Hugo', 'Ivan', 'Rodrigo',
+  'Enrique', 'Gabriel', 'Nicolas', 'Camilo', 'Fabian',
+  'Leonardo', 'Cristian', 'Mauricio', 'Julian', 'Arturo',
+  'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon'
+]
+
+// Resumen financiero del socio seleccionado
+const resumenSocio = computed(() => {
+  if (!cuotasSocio.value.length) {
+    return {
+      totalAportado: 0,
+      totalPendiente: 0,
+      cuotasPagadas: 0,
+      cuotasPendientes: 0,
+      cuotasMora: 0,
+      alDia: true
+    }
+  }
+
+  const pagadas = cuotasSocio.value.filter(c => c.estado === 'pagada')
+  const pendientes = cuotasSocio.value.filter(c => c.estado === 'pendiente' || c.estado === 'parcial')
+  const enMora = cuotasSocio.value.filter(c => c.estado === 'mora')
+
+  const totalAportado = cuotasSocio.value.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  const totalPendiente = cuotasSocio.value
+    .filter(c => c.estado !== 'pagada')
+    .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
+
+  return {
+    totalAportado,
+    totalPendiente,
+    cuotasPagadas: pagadas.length,
+    cuotasPendientes: pendientes.length,
+    cuotasMora: enMora.length,
+    alDia: pendientes.length === 0 && enMora.length === 0
+  }
+})
+
+const id = props.id || route.params.id
+
+function formatMoney(value) {
+  return new Intl.NumberFormat('es-CO').format(value || 0)
+}
+
+function getAvatarUrl(seed, avatarSeed = null) {
+  // Usar DiceBear Avatars con estilo "adventurer"
+  // Si hay un avatar_seed guardado, usarlo; si no, usar el nombre
+  const finalSeed = avatarSeed || seed || 'default'
+  const encodedSeed = encodeURIComponent(finalSeed)
+  return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`
+}
+
+function editarSocio(sn) {
+  socioEditando.value = sn
+  formSocio.nombre = sn.socio?.nombre || ''
+  formSocio.documento = sn.socio?.documento || ''
+  formSocio.email = sn.socio?.email || ''
+  formSocio.telefono = sn.socio?.telefono || ''
+  formSocio.valor_cuota = sn.valor_cuota_individual
+  formSocio.cantidad_cuotas = sn.cantidad_cuotas || 1
+  formSocio.avatar_seed = sn.socio?.avatar_seed || ''
+  mostrarAvatares.value = false
+  modalAgregar.value = true
+}
+
+function cerrarModal() {
+  modalAgregar.value = false
+  socioEditando.value = null
+  errorSocio.value = ''
+  mostrarContacto.value = false
+  mostrarAvatares.value = false
+  Object.assign(formSocio, {
+    nombre: '',
+    documento: '',
+    email: '',
+    telefono: '',
+    valor_cuota: 50000,
+    cantidad_cuotas: 1,
+    avatar_seed: ''
+  })
+}
+
+async function handleGuardarSocio() {
+  errorSocio.value = ''
+
+  if (socioEditando.value) {
+    // Actualizar cuota del socio en socios_natillera
+    const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
+      valor_cuota_individual: formSocio.valor_cuota,
+      cantidad_cuotas: formSocio.cantidad_cuotas
+    })
+
+    // Actualizar avatar del socio en la tabla socios
+    if (formSocio.avatar_seed && socioEditando.value.socio?.id) {
+      await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, {
+        avatar_seed: formSocio.avatar_seed
+      })
+    }
+
+    if (result.success) {
+      // Recargar la lista para ver los cambios
+      await sociosStore.fetchSociosNatillera(id)
+      cerrarModal()
+    } else {
+      errorSocio.value = result.error
+    }
+  } else {
+    // Agregar nuevo socio
+    const datosSocio = {
+      nombre: formSocio.nombre,
+      documento: formSocio.documento,
+      email: formSocio.email || null,
+      telefono: formSocio.telefono || null,
+      avatar_seed: formSocio.avatar_seed || null
+    }
+
+    const result = await sociosStore.agregarSocio(
+      id,
+      datosSocio,
+      formSocio.valor_cuota,
+      formSocio.cantidad_cuotas
+    )
+
+    if (result.success) {
+      cerrarModal()
+    } else {
+      errorSocio.value = result.error
+    }
+  }
+}
+
+async function toggleEstado(sn) {
+  const nuevoEstado = sn.estado === 'activo' ? 'inactivo' : 'activo'
+  await sociosStore.cambiarEstadoSocio(sn.id, nuevoEstado)
+}
+
+// Funciones para importación CSV
+function descargarEjemploCSV() {
+  const contenido = `nombre,valor_cuota,cantidad_cuotas,telefono,email,documento
+Juan Pérez,50000,1,3001234567,juan@email.com,1234567890
+María García,75000,2,3009876543,maria@email.com,0987654321
+Carlos López,50000,1,3005551234,,
+Ana Martínez,100000,1,,,`
+
+  const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = 'ejemplo_socios.csv'
+  link.click()
+  URL.revokeObjectURL(link.href)
+}
+
+function handleArchivoCSV(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  archivoCSV.value = file
+  errorImportar.value = ''
+  exitoImportar.value = ''
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const contenido = e.target.result
+      const lineas = contenido.split('\n').filter(l => l.trim())
+      
+      if (lineas.length < 2) {
+        errorImportar.value = 'El archivo debe tener al menos una fila de encabezados y una fila de datos'
+        sociosPreview.value = []
+        return
+      }
+
+      // Parsear encabezados
+      const encabezados = lineas[0].split(',').map(h => h.trim().toLowerCase())
+      
+      // Validar encabezados requeridos
+      if (!encabezados.includes('nombre') || !encabezados.includes('valor_cuota')) {
+        errorImportar.value = 'El archivo debe tener las columnas "nombre" y "valor_cuota"'
+        sociosPreview.value = []
+        return
+      }
+
+      // Parsear datos
+      const socios = []
+      for (let i = 1; i < lineas.length; i++) {
+        const valores = lineas[i].split(',').map(v => v.trim())
+        const socio = {}
+        
+        encabezados.forEach((header, index) => {
+          socio[header] = valores[index] || ''
+        })
+
+        // Validar datos mínimos
+        if (socio.nombre && socio.valor_cuota) {
+          socios.push({
+            nombre: socio.nombre,
+            valor_cuota: parseInt(socio.valor_cuota) || 50000,
+            cantidad_cuotas: parseInt(socio.cantidad_cuotas) || 1,
+            telefono: socio.telefono || null,
+            email: socio.email || null,
+            documento: socio.documento || null
+          })
+        }
+      }
+
+      sociosPreview.value = socios
+      
+      if (socios.length === 0) {
+        errorImportar.value = 'No se encontraron socios válidos en el archivo'
+      }
+    } catch (err) {
+      errorImportar.value = 'Error al leer el archivo: ' + err.message
+      sociosPreview.value = []
+    }
+  }
+  reader.readAsText(file)
+}
+
+async function importarSocios() {
+  if (sociosPreview.value.length === 0) return
+
+  importando.value = true
+  errorImportar.value = ''
+  exitoImportar.value = ''
+
+  let importados = 0
+  let errores = 0
+
+  for (const socio of sociosPreview.value) {
+    const result = await sociosStore.agregarSocio(
+      id,
+      {
+        nombre: socio.nombre,
+        documento: socio.documento,
+        email: socio.email,
+        telefono: socio.telefono
+      },
+      socio.valor_cuota,
+      socio.cantidad_cuotas
+    )
+
+    if (result.success) {
+      importados++
+    } else {
+      errores++
+    }
+  }
+
+  importando.value = false
+
+  if (errores === 0) {
+    exitoImportar.value = `Se importaron ${importados} socios exitosamente`
+    sociosPreview.value = []
+    archivoCSV.value = null
+  } else {
+    exitoImportar.value = `Se importaron ${importados} socios. ${errores} tuvieron errores.`
+  }
+}
+
+function cerrarModalImportar() {
+  modalImportar.value = false
+  archivoCSV.value = null
+  sociosPreview.value = []
+  errorImportar.value = ''
+  exitoImportar.value = ''
+}
+
+async function verDetalleSocio(sn) {
+  socioSeleccionado.value = sn
+  loadingDetalle.value = true
+  modalDetalle.value = true
+  seccionActiva.value = 'finanzas'  // Reiniciar a la sección de finanzas
+  
+  // Cargar cuotas del socio
+  const resumen = await sociosStore.obtenerResumenSocio(sn.id)
+  cuotasSocio.value = resumen?.cuotas || []
+  loadingDetalle.value = false
+}
+
+onMounted(() => {
+  sociosStore.fetchSociosNatillera(id)
+})
+</script>
+
