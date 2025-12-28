@@ -108,15 +108,15 @@
   }
   
   .stat-card {
-    @apply bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl shadow-gray-900/5 border border-white/50 p-2 sm:p-4 lg:p-6 flex flex-col items-center justify-center text-center min-w-0 overflow-hidden;
+    @apply bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl shadow-gray-900/5 border border-white/50 p-4 sm:p-5 lg:p-6 flex flex-col items-center justify-center text-center min-w-0 overflow-hidden;
   }
   
   .stat-value {
-    @apply text-sm sm:text-xl lg:text-3xl font-semibold text-natillera-700 w-full leading-tight;
+    @apply text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-natillera-700 w-full leading-tight break-words;
   }
   
   .stat-label {
-    @apply text-[10px] sm:text-xs lg:text-sm text-gray-500 mt-0.5 sm:mt-2 leading-tight;
+    @apply text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2 sm:mt-2.5 leading-tight;
   }
 }
 

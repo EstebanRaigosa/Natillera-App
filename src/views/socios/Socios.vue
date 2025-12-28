@@ -553,17 +553,16 @@
           <!-- Cuota (obligatorio) - Lo más importante -->
           <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-200">
             <label class="label text-natillera-700">
-              💰 Valor de la cuota mensual <span class="text-red-500">*</span>
+              💰 {{ textoLabelCuota }} <span class="text-red-500">*</span>
             </label>
             <div class="relative">
               <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
               <input 
-                v-model.number="formSocio.valor_cuota"
-                type="number" 
+                :value="formatearValorCuota(formSocio.valor_cuota)"
+                @input="handleValorCuotaInput($event)"
+                type="text" 
                 class="input-field pl-8 text-lg font-semibold"
-                placeholder="50000"
-                min="1000"
-                step="1000"
+                placeholder="50.000"
                 required
               />
             </div>
@@ -802,6 +801,18 @@ const avatarSeeds = [
   'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon'
 ]
 
+// Texto del label de cuota según periodicidad
+const textoLabelCuota = computed(() => {
+  const periodicidad = formSocio.periodicidad
+  if (periodicidad === 'quincenal') {
+    return 'Valor de la cuota quincenal'
+  } else if (periodicidad === 'semanal') {
+    return 'Valor de la cuota semanal'
+  } else {
+    return 'Valor de la cuota mensual'
+  }
+})
+
 // Resumen financiero del socio seleccionado
 const resumenSocio = computed(() => {
   if (!cuotasSocio.value.length) {
@@ -838,6 +849,26 @@ const id = props.id || route.params.id
 
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
+}
+
+// Formatear valor de cuota con separadores de miles
+function formatearValorCuota(value) {
+  if (!value && value !== 0) return ''
+  const numero = typeof value === 'string' ? value.replace(/\./g, '') : value
+  return new Intl.NumberFormat('es-CO').format(numero)
+}
+
+// Manejar input del valor de cuota
+function handleValorCuotaInput(event) {
+  const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
+  if (valor === '') {
+    formSocio.valor_cuota = 0
+  } else {
+    const numero = parseInt(valor, 10)
+    if (!isNaN(numero) && numero >= 0) {
+      formSocio.valor_cuota = numero
+    }
+  }
 }
 
 function getAvatarUrl(seed, avatarSeed = null) {

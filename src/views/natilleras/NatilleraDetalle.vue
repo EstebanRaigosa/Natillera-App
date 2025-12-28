@@ -26,7 +26,7 @@
             </span>
           </h1>
           <p class="text-gray-500 mt-1 text-sm sm:text-base">
-            {{ natillera.periodicidad }} • Desde {{ formatDate(natillera.fecha_inicio) }}
+            Desde {{ formatDate(natillera.fecha_inicio) }}
           </p>
           <p class="text-natillera-600 font-medium text-sm mt-1 flex items-center gap-1">
             <CalendarDaysIcon class="w-4 h-4" />
@@ -60,7 +60,7 @@
       </div>
 
       <!-- Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-5">
         <div class="stat-card">
           <p class="stat-value">{{ estadisticas.totalSocios }}</p>
           <p class="stat-label">Socios</p>
@@ -80,35 +80,35 @@
       </div>
 
       <!-- Navegación tabs -->
-      <div class="w-full overflow-x-auto scrollbar-hide">
-        <div class="flex gap-2 sm:gap-3 pb-2 min-w-min">
+      <div class="w-full">
+        <div class="flex gap-2 sm:gap-3 w-full">
           <router-link 
             :to="`/natilleras/${id}/socios`"
-            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
           >
-            <UsersIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            Socios
+            <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
+            <span class="text-center">Socios</span>
           </router-link>
           <router-link 
             :to="`/natilleras/${id}/cuotas`"
-            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
           >
-            <CurrencyDollarIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            Cuotas
+            <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
+            <span class="text-center">Cuotas</span>
           </router-link>
           <router-link 
             :to="`/natilleras/${id}/prestamos`"
-            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
           >
-            <BanknotesIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            Préstamos
+            <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
+            <span class="text-center">Préstamos</span>
           </router-link>
           <router-link 
             :to="`/natilleras/${id}/actividades`"
-            class="py-1.5 px-2.5 sm:py-2.5 sm:px-5 whitespace-nowrap inline-flex items-center gap-1 sm:gap-2 bg-white text-gray-700 font-semibold text-xs sm:text-base rounded-lg sm:rounded-xl border-2 border-gray-200 shadow-sm hover:border-natillera-400 hover:text-natillera-700 hover:shadow-md transition-all flex-shrink-0"
+            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
           >
-            <CalendarIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5" />
-            Actividades
+            <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
+            <span class="text-center">Actividades</span>
           </router-link>
         </div>
       </div>
@@ -139,29 +139,29 @@
           </router-link>
         </div>
 
-        <div v-else class="space-y-2 sm:space-y-3">
+        <div v-else class="space-y-2.5 sm:space-y-3">
           <div 
             v-for="sn in sociosRecientes" 
             :key="sn.id"
-            class="flex items-center justify-between gap-2 p-3 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-natillera-200 transition-all"
+            class="flex items-center justify-between gap-2.5 sm:gap-3 p-3.5 sm:p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-natillera-200 transition-all"
           >
             <div 
               @click="verDetalleSocio(sn)"
-              class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-80"
+              class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-80"
             >
               <img 
                 :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
                 :alt="sn.socio?.nombre"
-                class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-natillera-100 flex-shrink-0"
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-natillera-100 flex-shrink-0 border border-natillera-200"
               />
               <div class="min-w-0 flex-1">
-                <p class="font-medium text-gray-800 text-sm sm:text-base truncate">{{ sn.socio?.nombre }}</p>
-                <p class="text-xs sm:text-sm text-gray-500 truncate">Cuota: ${{ formatMoney(sn.valor_cuota_individual) }}</p>
+                <p class="font-semibold text-gray-800 text-sm sm:text-base truncate">{{ sn.socio?.nombre }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 truncate mt-0.5">Cuota: ${{ formatMoney(sn.valor_cuota_individual) }}</p>
               </div>
             </div>
             <span 
               :class="[
-                'badge text-[10px] sm:text-xs flex-shrink-0',
+                'badge text-[11px] sm:text-xs px-2 py-1 flex-shrink-0',
                 sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
               ]"
             >
@@ -587,6 +587,9 @@ const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
 const seccionActiva = ref('finanzas')
 const busquedaSocio = ref('')
+
+// Obtener el ID de la natillera
+const id = computed(() => props.id || route.params.id)
 
 // Configuración de meses
 const meses = [
