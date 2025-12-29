@@ -12,6 +12,18 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
 
   const mensajeGeneral = ref('¡Hola a todos! 👋\n\nLes recordamos que las cuotas de la natillera están próximas a vencer.\n\nPor favor, no olviden realizar sus aportes a tiempo para evitar multas.\n\n¡Gracias por su compromiso! 🙌')
 
+  // Configuración de período por defecto
+  const configPeriodo = ref({
+    mes_inicio: 1,
+    mes_fin: 11,
+    anio: new Date().getFullYear()
+  })
+
+  // Configuración de días de gracia
+  const configDiasGracia = ref({
+    dias_gracia: 3
+  })
+
   // Cargar configuración del usuario desde Supabase o localStorage
   async function cargarConfiguracion() {
     try {
@@ -39,6 +51,12 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       if (data) {
         mensajeIndividual.value = data.mensaje_individual || mensajeIndividual.value
         mensajeGeneral.value = data.mensaje_general || mensajeGeneral.value
+        if (data.config_periodo) {
+          configPeriodo.value = { ...configPeriodo.value, ...data.config_periodo }
+        }
+        if (data.config_dias_gracia) {
+          configDiasGracia.value = { ...configDiasGracia.value, ...data.config_dias_gracia }
+        }
       } else {
         cargarDesdeLocalStorage()
       }
@@ -57,6 +75,12 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
         const config = JSON.parse(guardado)
         mensajeIndividual.value = config.mensajeIndividual || mensajeIndividual.value
         mensajeGeneral.value = config.mensajeGeneral || mensajeGeneral.value
+        if (config.configPeriodo) {
+          configPeriodo.value = { ...configPeriodo.value, ...config.configPeriodo }
+        }
+        if (config.configDiasGracia) {
+          configDiasGracia.value = { ...configDiasGracia.value, ...config.configDiasGracia }
+        }
       } catch (e) {
         console.error('Error parseando config:', e)
       }
@@ -73,7 +97,9 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       // Guardar en localStorage siempre como respaldo
       localStorage.setItem('natillera_config', JSON.stringify({
         mensajeIndividual: mensajeIndividual.value,
-        mensajeGeneral: mensajeGeneral.value
+        mensajeGeneral: mensajeGeneral.value,
+        configPeriodo: configPeriodo.value,
+        configDiasGracia: configDiasGracia.value
       }))
 
       if (!authStore.user?.id) {
@@ -87,6 +113,8 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
           user_id: authStore.user.id,
           mensaje_individual: mensajeIndividual.value,
           mensaje_general: mensajeGeneral.value,
+          config_periodo: configPeriodo.value,
+          config_dias_gracia: configDiasGracia.value,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id'
@@ -120,13 +148,27 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       .replace(/\{\{monto\}\}/g, monto || '0')
   }
 
+  async function guardarConfigPeriodo(periodo) {
+    configPeriodo.value = { ...configPeriodo.value, ...periodo }
+    return await guardarConfiguracion()
+  }
+
+  async function guardarConfigDiasGracia(diasGracia) {
+    configDiasGracia.value = { ...configDiasGracia.value, ...diasGracia }
+    return await guardarConfiguracion()
+  }
+
   return {
     loading,
     error,
     mensajeIndividual,
     mensajeGeneral,
+    configPeriodo,
+    configDiasGracia,
     cargarConfiguracion,
     guardarConfiguracion,
+    guardarConfigPeriodo,
+    guardarConfigDiasGracia,
     restaurarValoresPorDefecto,
     generarMensajeIndividual
   }

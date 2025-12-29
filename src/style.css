@@ -144,6 +144,28 @@
   display: none;
 }
 
+/* Subtle scrollbar for horizontal scrolling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #86efac #f3f4f6;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-natillera-300 rounded-full transition-colors;
+}
+
+.scrollbar-thin:hover::-webkit-scrollbar-thumb {
+  @apply bg-natillera-400;
+}
+
 /* Animations */
 @keyframes fadeInUp {
   from {
@@ -209,4 +231,18 @@ input[type="date"]:hover::-webkit-calendar-picker-indicator {
 input[type="date"]:focus::-webkit-calendar-picker-indicator {
   opacity: 1;
   filter: invert(45%) sepia(80%) saturate(600%) hue-rotate(100deg);
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
 }

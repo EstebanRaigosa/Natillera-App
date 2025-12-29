@@ -14,8 +14,10 @@ import NatilleraDetalle from '../views/natilleras/NatilleraDetalle.vue'
 import NatilleraCrear from '../views/natilleras/NatilleraCrear.vue'
 import Socios from '../views/socios/Socios.vue'
 import Cuotas from '../views/cuotas/Cuotas.vue'
+import CuotasMeses from '../views/cuotas/CuotasMeses.vue'
 import Prestamos from '../views/prestamos/Prestamos.vue'
 import Actividades from '../views/actividades/Actividades.vue'
+import NatilleraConfiguracion from '../views/natilleras/NatilleraConfiguracion.vue'
 import Configuracion from '../views/configuracion/Configuracion.vue'
 
 const routes = [
@@ -73,6 +75,12 @@ const routes = [
       },
       {
         path: 'natilleras/:id/cuotas',
+        name: 'CuotasMeses',
+        component: CuotasMeses,
+        props: true
+      },
+      {
+        path: 'natilleras/:id/cuotas/:mes',
         name: 'Cuotas',
         component: Cuotas,
         props: true
@@ -87,6 +95,12 @@ const routes = [
         path: 'natilleras/:id/actividades',
         name: 'Actividades',
         component: Actividades,
+        props: true
+      },
+      {
+        path: 'natilleras/:id/configuracion',
+        name: 'NatilleraConfiguracion',
+        component: NatilleraConfiguracion,
         props: true
       },
       {

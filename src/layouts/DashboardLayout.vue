@@ -29,6 +29,7 @@
             to="/dashboard" 
             class="nav-link"
             :class="{ 'nav-link-active': $route.path === '/dashboard' }"
+            @click="cerrarSidebar"
           >
             <HomeIcon class="w-5 h-5" />
             <span>Inicio</span>
@@ -37,7 +38,8 @@
           <router-link 
             to="/natilleras" 
             class="nav-link"
-            :class="{ 'nav-link-active': $route.path.startsWith('/natilleras') }"
+            :class="{ 'nav-link-active': $route.path === '/natilleras' }"
+            @click="cerrarSidebar"
           >
             <BanknotesIcon class="w-5 h-5" />
             <span>Mis Natilleras</span>
@@ -47,26 +49,125 @@
             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Accesos Rápidos</p>
           </div>
 
+          <!-- Natilleras Activas -->
+          <div v-if="natillerasStore.loading" class="px-4 py-2">
+            <p class="text-xs text-gray-400">Cargando...</p>
+          </div>
+          <template v-else-if="natillerasStore.natillerasActivas.length > 0">
+            <div 
+              v-for="natillera in natillerasStore.natillerasActivas" 
+              :key="natillera.id"
+              class="space-y-1"
+            >
+              <!-- Contenedor principal de la natillera -->
+              <div class="flex items-center gap-2 pr-1">
+                <!-- Link a la vista de detalle -->
+                <router-link
+                  :to="`/natilleras/${natillera.id}`"
+                  class="nav-link flex-1 min-w-0"
+                  :class="{ 'nav-link-active': $route.params.id === String(natillera.id) && $route.path === `/natilleras/${natillera.id}` }"
+                  @click="cerrarSidebar"
+                >
+                  <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
+                  <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
+                </router-link>
+                
+                <!-- Botón para abrir/cerrar desplegable -->
+                <button
+                  @click.stop="toggleNatillera(natillera.id)"
+                  :class="[
+                    'p-2.5 rounded-xl transition-all duration-300 flex-shrink-0 shadow-lg border-2 relative z-10',
+                    natilleraExpandida === natillera.id
+                      ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white hover:from-natillera-600 hover:to-natillera-700 border-natillera-400 shadow-natillera-500/40'
+                      : 'bg-white text-natillera-600 hover:bg-natillera-50 border-natillera-200 hover:border-natillera-300 hover:shadow-xl'
+                  ]"
+                  title="Ver opciones"
+                >
+                  <ChevronDownIcon 
+                    :class="['w-5 h-5 transition-transform duration-300', natilleraExpandida === natillera.id ? 'rotate-180' : '']" 
+                  />
+                </button>
+              </div>
+              
+              <!-- Opciones desplegables -->
+              <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="opacity-0 -translate-y-4 max-h-0"
+                enter-to-class="opacity-100 translate-y-0 max-h-96"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="opacity-100 translate-y-0 max-h-96"
+                leave-to-class="opacity-0 -translate-y-4 max-h-0"
+              >
+                <div 
+                  v-if="natilleraExpandida === natillera.id" 
+                  class="ml-2 mr-2 mt-2 mb-2 p-3 bg-gradient-to-br from-natillera-50 via-white to-gray-50 rounded-xl border-2 border-natillera-200 shadow-lg space-y-1.5 overflow-hidden"
+                >
+                  <div class="text-xs font-semibold text-natillera-700 uppercase tracking-wider mb-2 px-2">
+                    Opciones
+                  </div>
+                  <router-link
+                    :to="`/natilleras/${natillera.id}/socios`"
+                    class="nav-link-sub"
+                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/socios` }"
+                    @click="cerrarDesplegable"
+                  >
+                    <UsersIcon class="w-5 h-5" />
+                    <span>Socios</span>
+                  </router-link>
+                  <router-link
+                    :to="`/natilleras/${natillera.id}/cuotas`"
+                    class="nav-link-sub"
+                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/cuotas` }"
+                    @click="cerrarDesplegable"
+                  >
+                    <CurrencyDollarIcon class="w-5 h-5" />
+                    <span>Cuotas</span>
+                  </router-link>
+                  <router-link
+                    :to="`/natilleras/${natillera.id}/prestamos`"
+                    class="nav-link-sub"
+                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/prestamos` }"
+                    @click="cerrarDesplegable"
+                  >
+                    <BanknotesIcon class="w-5 h-5" />
+                    <span>Préstamos</span>
+                  </router-link>
+                  <router-link
+                    :to="`/natilleras/${natillera.id}/actividades`"
+                    class="nav-link-sub"
+                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/actividades` }"
+                    @click="cerrarDesplegable"
+                  >
+                    <CalendarIcon class="w-5 h-5" />
+                    <span>Actividades</span>
+                  </router-link>
+                  <router-link
+                    :to="`/natilleras/${natillera.id}/configuracion`"
+                    class="nav-link-sub"
+                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/configuracion` }"
+                    @click="cerrarDesplegable"
+                  >
+                    <Cog6ToothIcon class="w-5 h-5" />
+                    <span>Configuración</span>
+                  </router-link>
+                </div>
+              </Transition>
+            </div>
+          </template>
+          <div v-else class="px-4 py-2">
+            <p class="text-xs text-gray-400 italic">No hay natilleras activas</p>
+          </div>
+
+          <!-- Nueva Natillera -->
           <router-link 
             to="/natilleras/crear" 
             class="nav-link"
+            @click="cerrarSidebar"
           >
             <PlusCircleIcon class="w-5 h-5" />
             <span>Nueva Natillera</span>
           </router-link>
 
-          <div class="pt-4 pb-2">
-            <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ajustes</p>
-          </div>
-
-          <router-link 
-            to="/configuracion" 
-            class="nav-link"
-            :class="{ 'nav-link-active': $route.path === '/configuracion' }"
-          >
-            <Cog6ToothIcon class="w-5 h-5" />
-            <span>Configuración</span>
-          </router-link>
         </nav>
 
         <!-- Usuario -->
@@ -125,31 +226,63 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useNatillerasStore } from '../stores/natilleras'
 import { 
   HomeIcon, 
   BanknotesIcon, 
   PlusCircleIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  ChevronDownIcon,
+  UsersIcon,
+  CurrencyDollarIcon,
+  CalendarIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const natillerasStore = useNatillerasStore()
 const sidebarOpen = ref(false)
+const natilleraExpandida = ref(null)
 
 function getAvatarUrl(seed) {
   const encodedSeed = encodeURIComponent(seed || 'default')
   return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`
 }
 
+function cerrarSidebar() {
+  // Solo cerrar en móvil (cuando el sidebar está en modo overlay)
+  if (window.innerWidth < 1024) {
+    sidebarOpen.value = false
+  }
+}
+
+function toggleNatillera(natilleraId) {
+  if (natilleraExpandida.value === natilleraId) {
+    natilleraExpandida.value = null
+  } else {
+    natilleraExpandida.value = natilleraId
+  }
+}
+
+function cerrarDesplegable() {
+  natilleraExpandida.value = null
+  cerrarSidebar()
+}
+
 async function handleLogout() {
   await authStore.logout()
   router.push('/auth/login')
 }
+
+onMounted(async () => {
+  // Cargar natilleras al montar el componente
+  await natillerasStore.fetchNatilleras()
+})
 </script>
 
 <style scoped>
@@ -161,6 +294,14 @@ async function handleLogout() {
 
 .nav-link-active {
   @apply bg-gradient-to-r from-natillera-500 to-natillera-600 text-white shadow-lg shadow-natillera-500/25 hover:bg-natillera-600 hover:text-white;
+}
+
+.nav-link-sub {
+  @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-natillera-100 hover:text-natillera-700 transition-all duration-200 border border-transparent hover:border-natillera-200;
+}
+
+.nav-link-sub-active {
+  @apply bg-natillera-100 text-natillera-700 font-semibold border-natillera-300 shadow-sm;
 }
 </style>
 

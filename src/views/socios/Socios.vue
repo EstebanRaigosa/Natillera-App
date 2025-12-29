@@ -1,48 +1,75 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-8">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-      <div>
-        <router-link :to="`/natilleras/${id}`" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-natillera-700 font-semibold rounded-lg border border-natillera-200 shadow-sm hover:bg-natillera-50 hover:border-natillera-300 transition-all mb-3">
-          <ArrowLeftIcon class="w-4 h-4" />
-          Volver a natillera
-        </router-link>
-        <h1 class="text-3xl font-display font-bold text-gray-800">
-          Socios
-        </h1>
-        <p class="text-gray-500 mt-1">
-          Gestiona los participantes y sus cuotas personalizadas
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button @click="modalImportar = true" class="btn-secondary inline-flex items-center gap-2">
-          <ArrowUpTrayIcon class="w-5 h-5" />
-          Importar CSV
-        </button>
-        <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
-          <PlusIcon class="w-5 h-5" />
-          Agregar Socio
-        </button>
+  <div class="max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
+    <!-- Efectos decorativos de fondo -->
+    <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Header estilizado -->
+    <div class="relative">
+      <router-link :to="`/natilleras/${id}`" class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm">
+        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
+          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
+        </div>
+        <span class="whitespace-nowrap">Volver a natillera</span>
+      </router-link>
+      
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Círculos decorativos -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
+                <UsersIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
+                  Socios
+                </h1>
+                <p class="text-gray-600 mt-1 text-sm sm:text-base font-medium">
+                  Gestiona los participantes y sus cuotas personalizadas
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button @click="modalImportar = true" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
+                <ArrowUpTrayIcon class="w-5 h-5" />
+                <span class="hidden sm:inline">Importar CSV</span>
+              </button>
+              <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+                <PlusIcon class="w-5 h-5" />
+                <span>Agregar Socio</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Barra de búsqueda -->
     <div v-if="sociosStore.sociosNatillera.length > 0" class="relative">
-      <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-      <input 
-        v-model="busqueda"
-        type="text"
-        placeholder="Buscar socio por nombre..."
-        class="input-field pl-12 w-full"
-        @keydown.esc="busqueda = ''"
-      />
-      <button 
-        v-if="busqueda"
-        @click="busqueda = ''"
-        class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-      >
-        <XMarkIcon class="w-5 h-5" />
-      </button>
+      <div class="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-4 shadow-lg">
+        <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-6 top-1/2 -translate-y-1/2" />
+        <input 
+          v-model="busqueda"
+          type="text"
+          placeholder="Buscar socio por nombre, documento o teléfono..."
+          class="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-700 placeholder-gray-400"
+          @keydown.esc="busqueda = ''"
+        />
+        <button 
+          v-if="busqueda"
+          @click="busqueda = ''"
+          class="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Limpiar búsqueda"
+        >
+          <XMarkIcon class="w-5 h-5" />
+        </button>
+      </div>
     </div>
 
     <!-- Lista de socios -->
@@ -51,106 +78,128 @@
       <p class="text-gray-400 mt-4">Cargando socios...</p>
     </div>
 
-    <div v-else-if="sociosStore.sociosNatillera.length === 0" class="card text-center py-12">
-      <UsersIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 class="font-display font-semibold text-gray-800 text-lg">
-        No hay socios registrados
-      </h3>
-      <p class="text-gray-500 mt-2 mb-6">
-        Agrega el primer socio para comenzar
-      </p>
-      <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
-        <PlusIcon class="w-5 h-5" />
-        Agregar Socio
-      </button>
+    <div v-else-if="sociosStore.sociosNatillera.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+      <!-- Círculos decorativos -->
+      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+      
+      <div class="relative z-10">
+        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
+          <UsersIcon class="w-10 h-10 text-white" />
+        </div>
+        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
+          No hay socios registrados
+        </h3>
+        <p class="text-gray-500 mb-8 text-sm sm:text-base">
+          Agrega el primer socio para comenzar a gestionar las cuotas
+        </p>
+        <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+          <PlusIcon class="w-5 h-5" />
+          Agregar Primer Socio
+        </button>
+      </div>
     </div>
 
     <!-- Sin resultados de búsqueda -->
-    <div v-else-if="sociosFiltrados.length === 0" class="card text-center py-12">
-      <MagnifyingGlassIcon class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 class="font-display font-semibold text-gray-800 text-lg">
-        No se encontraron socios
-      </h3>
-      <p class="text-gray-500 mt-2">
-        No hay socios que coincidan con "{{ busqueda }}"
-      </p>
-      <button @click="busqueda = ''" class="btn-secondary mt-4">
-        Limpiar búsqueda
-      </button>
+    <div v-else-if="sociosFiltrados.length === 0" class="relative bg-gradient-to-br from-white via-gray-50/30 to-gray-50/20 rounded-3xl p-8 sm:p-12 border border-gray-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+      <!-- Círculos decorativos -->
+      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-gray-400/10 to-gray-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-gray-400/10 to-gray-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+      
+      <div class="relative z-10">
+        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-400 to-gray-500 rounded-3xl flex items-center justify-center shadow-lg">
+          <MagnifyingGlassIcon class="w-10 h-10 text-white" />
+        </div>
+        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
+          No se encontraron socios
+        </h3>
+        <p class="text-gray-500 mb-8 text-sm sm:text-base">
+          No hay socios que coincidan con "{{ busqueda }}"
+        </p>
+        <button @click="busqueda = ''" class="btn-secondary inline-flex items-center gap-2">
+          <XMarkIcon class="w-4 h-4" />
+          Limpiar búsqueda
+        </button>
+      </div>
     </div>
 
-    <div v-else class="grid gap-4 lg:grid-cols-2">
+    <div v-else class="grid gap-4 sm:gap-5 lg:grid-cols-2">
       <div 
         v-for="sn in sociosFiltrados" 
         :key="sn.id"
-        class="card-hover cursor-pointer"
+        class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-2xl p-5 sm:p-6 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/10 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden group"
         @click="verDetalleSocio(sn)"
       >
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-4">
-            <img 
-              :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
-              :alt="sn.socio?.nombre"
-              class="w-14 h-14 rounded-xl bg-natillera-100"
-            />
-            <div>
-              <h3 class="font-display font-semibold text-gray-800 text-lg">
-                {{ sn.socio?.nombre }}
-              </h3>
-              <p class="text-sm text-gray-500">{{ sn.socio?.email || 'Sin correo' }}</p>
+        <!-- Círculo decorativo -->
+        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
+        
+        <div class="relative z-10">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex items-center gap-4 flex-1 min-w-0">
+              <img 
+                :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
+                :alt="sn.socio?.nombre"
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-natillera-200 shadow-md flex-shrink-0 object-cover group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300"
+              />
+              <div class="flex-1 min-w-0">
+                <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1 truncate">
+                  {{ sn.socio?.nombre }}
+                </h3>
+                <p class="text-sm text-gray-500 truncate">{{ sn.socio?.email || 'Sin correo' }}</p>
+              </div>
+            </div>
+            <span 
+              :class="[
+                'badge flex-shrink-0',
+                sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
+              ]"
+            >
+              {{ sn.estado }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
+            <div class="relative p-4 bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl border border-natillera-200/50 shadow-sm group-hover:shadow-md transition-shadow">
+              <p class="text-xs text-gray-500 mb-1.5 font-medium">Cuota Individual</p>
+              <p class="font-bold text-natillera-700 text-lg sm:text-xl">${{ formatMoney(sn.valor_cuota_individual) }}</p>
+            </div>
+            <div class="relative p-4 rounded-xl border shadow-sm group-hover:shadow-md transition-shadow" :class="sn.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200/50' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200/50'">
+              <p class="text-xs text-gray-500 mb-1.5 font-medium">Periodicidad</p>
+              <p class="font-bold text-lg sm:text-xl" :class="sn.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+                {{ sn.periodicidad === 'quincenal' ? '🗓️ Quincenal' : '📅 Mensual' }}
+              </p>
             </div>
           </div>
-          <span 
-            :class="[
-              'badge',
-              sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
-            ]"
-          >
-            {{ sn.estado }}
-          </span>
-        </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          <div class="p-3 bg-natillera-50 rounded-xl">
-            <p class="text-xs text-gray-500">Cuota Individual</p>
-            <p class="font-bold text-natillera-700">${{ formatMoney(sn.valor_cuota_individual) }}</p>
-          </div>
-          <div class="p-3 rounded-xl" :class="sn.periodicidad === 'quincenal' ? 'bg-purple-50' : 'bg-gray-50'">
-            <p class="text-xs text-gray-500">Periodicidad</p>
-            <p class="font-bold" :class="sn.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
-              {{ sn.periodicidad === 'quincenal' ? '🗓️ Quincenal' : '📅 Mensual' }}
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div class="text-sm text-gray-500">
-            <PhoneIcon class="w-4 h-4 inline mr-1" />
-            {{ sn.socio?.telefono || 'Sin teléfono' }}
-          </div>
-          <div class="flex gap-2">
-            <button 
-              @click.stop="editarSocio(sn)"
-              class="p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-colors"
-              title="Editar"
-            >
-              <PencilIcon class="w-5 h-5" />
-            </button>
-            <button 
-              @click.stop="toggleEstado(sn)"
-              :class="[
-                'p-2 rounded-lg transition-colors',
-                sn.estado === 'activo' 
-                  ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
-                  : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-              ]"
-              :title="sn.estado === 'activo' ? 'Desactivar' : 'Activar'"
-            >
-              <component 
-                :is="sn.estado === 'activo' ? XCircleIcon : CheckCircleIcon" 
-                class="w-5 h-5" 
-              />
-            </button>
+          <div class="flex items-center justify-between pt-4 border-t border-gray-200/50">
+            <div class="text-sm text-gray-500 flex items-center gap-1.5">
+              <PhoneIcon class="w-4 h-4" />
+              <span class="truncate">{{ sn.socio?.telefono || 'Sin teléfono' }}</span>
+            </div>
+            <div class="flex gap-2 flex-shrink-0">
+              <button 
+                @click.stop="editarSocio(sn)"
+                class="p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-all hover:scale-110"
+                title="Editar"
+              >
+                <PencilIcon class="w-5 h-5" />
+              </button>
+              <button 
+                @click.stop="toggleEstado(sn)"
+                :class="[
+                  'p-2 rounded-lg transition-all hover:scale-110',
+                  sn.estado === 'activo' 
+                    ? 'text-gray-400 hover:text-red-600 hover:bg-red-50' 
+                    : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                ]"
+                :title="sn.estado === 'activo' ? 'Desactivar' : 'Activar'"
+              >
+                <component 
+                  :is="sn.estado === 'activo' ? XCircleIcon : CheckCircleIcon" 
+                  class="w-5 h-5" 
+                />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -30,6 +30,7 @@
         v-if="isOpen"
         class="absolute z-50 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-72"
         :class="dropdownPosition"
+        :style="dropdownStyle"
       >
         <!-- Header del calendario -->
         <div class="flex items-center justify-between mb-4">
@@ -154,6 +155,38 @@ const weekDays = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
 
 const dropdownPosition = computed(() => {
   return 'left-0'
+})
+
+const dropdownStyle = ref({})
+
+// Calcular posición del calendario cuando se abre
+watch(isOpen, (open) => {
+  if (open) {
+    setTimeout(() => {
+      if (!containerRef.value) return
+      
+      const rect = containerRef.value.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const calendarWidth = 288 // w-72 = 18rem = 288px
+      const spaceOnRight = viewportWidth - rect.right
+      const spaceOnLeft = rect.left
+      
+      // Si no hay espacio a la derecha, posicionar a la izquierda
+      if (spaceOnRight < calendarWidth && spaceOnLeft > calendarWidth) {
+        dropdownStyle.value = {
+          left: 'auto',
+          right: '0'
+        }
+      } else {
+        dropdownStyle.value = {
+          left: '0',
+          right: 'auto'
+        }
+      }
+    }, 10)
+  } else {
+    dropdownStyle.value = {}
+  }
 })
 
 // Mostrar la fecha en formato dd/mm/yyyy

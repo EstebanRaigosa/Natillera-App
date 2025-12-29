@@ -3,9 +3,11 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <router-link :to="`/natilleras/${id}`" class="text-natillera-600 hover:text-natillera-700 font-medium inline-flex items-center gap-1 mb-2">
-          <ArrowLeftIcon class="w-4 h-4" />
-          Volver a natillera
+        <router-link :to="`/natilleras/${id}`" class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm">
+          <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
+            <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
+          </div>
+          <span class="whitespace-nowrap">Volver a natillera</span>
         </router-link>
         <h1 class="text-3xl font-display font-bold text-gray-800">
           Actividades

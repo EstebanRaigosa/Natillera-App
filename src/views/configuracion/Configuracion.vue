@@ -127,26 +127,6 @@
         {{ mensaje.texto }}
       </div>
     </div>
-
-    <!-- Próximamente -->
-    <div class="card opacity-60">
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-400 rounded-xl flex items-center justify-center">
-          <WrenchScrewdriverIcon class="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 class="text-lg font-display font-bold text-gray-800">
-            Más Configuraciones
-          </h2>
-          <p class="text-sm text-gray-500">
-            Próximamente...
-          </p>
-        </div>
-      </div>
-      <p class="text-gray-500 text-sm">
-        Aquí podrás configurar notificaciones, preferencias de la aplicación, temas y más.
-      </p>
-    </div>
   </div>
 </template>
 
@@ -161,8 +141,7 @@ import {
   ArrowPathIcon,
   CheckIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
-  WrenchScrewdriverIcon
+  ExclamationCircleIcon
 } from '@heroicons/vue/24/outline'
 
 const configStore = useConfiguracionStore()
