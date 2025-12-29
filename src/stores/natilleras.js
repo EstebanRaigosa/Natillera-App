@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
+import { useAuditoria } from '../composables/useAuditoria'
 
 export const useNatillerasStore = defineStore('natilleras', () => {
   const natilleras = ref([])
@@ -138,6 +139,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       if (createError) throw createError
 
       natilleras.value.unshift(data)
+
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      await auditoria.registrarCreacion(
+        'natillera',
+        data.id,
+        `Se creó la natillera "${datos.nombre}"`,
+        data,
+        data.id,
+        { admin_id: user.id }
+      )
+
       return { success: true, data }
     } catch (e) {
       error.value = e.message
@@ -151,6 +164,13 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     try {
       loading.value = true
       error.value = null
+
+      // Obtener datos anteriores para auditoría
+      const { data: datosAnteriores } = await supabase
+        .from('natilleras')
+        .select('*')
+        .eq('id', id)
+        .single()
 
       const { data, error: updateError } = await supabase
         .from('natilleras')
@@ -170,6 +190,19 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         natilleraActual.value = { ...natilleraActual.value, ...data }
       }
 
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      // La descripción se generará automáticamente con los detalles de los cambios
+      await auditoria.registrarActualizacion(
+        'natillera',
+        id,
+        null, // null para generar descripción automática
+        datosAnteriores,
+        data,
+        id, // natilleraId es el mismo id
+        { campos_modificados: Object.keys(datos) }
+      )
+
       return { success: true, data }
     } catch (e) {
       error.value = e.message
@@ -180,10 +213,13 @@ export const useNatillerasStore = defineStore('natilleras', () => {
   }
 
   async function cerrarNatillera(id) {
-    return actualizarNatillera(id, { 
+    const resultado = await actualizarNatillera(id, { 
       estado: 'cerrada',
       fecha_cierre: new Date().toISOString()
     })
+    
+    // La auditoría ya se registra en actualizarNatillera
+    return resultado
   }
 
   function calcularEstadisticas(natillera) {

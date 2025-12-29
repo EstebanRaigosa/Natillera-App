@@ -45,6 +45,16 @@
             <span>Mis Natilleras</span>
           </router-link>
 
+          <router-link 
+            to="/auditoria" 
+            class="nav-link"
+            :class="{ 'nav-link-active': $route.path === '/auditoria' }"
+            @click="cerrarSidebar"
+          >
+            <ClipboardDocumentListIcon class="w-5 h-5" />
+            <span>Auditoría</span>
+          </router-link>
+
           <div class="pt-4 pb-2">
             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Accesos Rápidos</p>
           </div>
@@ -240,7 +250,8 @@ import {
   ChevronDownIcon,
   UsersIcon,
   CurrencyDollarIcon,
-  CalendarIcon
+  CalendarIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()

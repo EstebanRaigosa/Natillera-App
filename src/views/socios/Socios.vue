@@ -137,7 +137,7 @@
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <img 
-                :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
+                :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)" 
                 :alt="sn.socio?.nombre"
                 class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-natillera-200 shadow-md flex-shrink-0 object-cover group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300"
               />
@@ -212,7 +212,7 @@
         <!-- Header del modal -->
         <div class="flex items-center gap-4 mb-6">
           <img 
-            :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed)" 
+            :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed, socioSeleccionado?.socio?.avatar_style)" 
             :alt="socioSeleccionado?.socio?.nombre"
             class="w-16 h-16 rounded-2xl bg-natillera-100 shadow-lg"
           />
@@ -576,7 +576,7 @@
                   ]"
                 >
                   <img 
-                    :src="getAvatarUrl(seed)" 
+                    :src="getAvatarUrl(seed, null, formSocio.avatar_style)" 
                     :alt="seed"
                     class="w-10 h-10 rounded-lg"
                   />
@@ -821,12 +821,13 @@ const formSocio = reactive({
   telefono: '',
   valor_cuota: 50000,
   periodicidad: 'mensual',
-  avatar_seed: ''
+  avatar_seed: '',
+  avatar_style: 'adventurer'
 })
 
 const mostrarAvatares = ref(false)
 
-// Lista de seeds para avatares predefinidos (100 opciones)
+// Lista de seeds para avatares predefinidos
 const avatarSeeds = [
   'Sofia', 'Luna', 'Valentina', 'Camila', 'Isabella',
   'Mariana', 'Lucia', 'Gabriela', 'Daniela', 'Paula',
@@ -838,6 +839,12 @@ const avatarSeeds = [
   'Paola', 'Angelica', 'Marcela', 'Lorena', 'Viviana',
   'Johana', 'Tatiana', 'Yolanda', 'Pilar', 'Beatriz',
   'Clara', 'Marta', 'Silvia', 'Esperanza', 'Blanca',
+  'Isabel', 'Cristina', 'Mercedes', 'Dolores', 'Amparo',
+  'Angela', 'Cecilia', 'Elisa', 'Francisca', 'Gisela',
+  'Helena', 'Ines', 'Jimena', 'Karina', 'Leticia',
+  'Magdalena', 'Nora', 'Olga', 'Rebeca', 'Susana',
+  'Ursula', 'Veronica', 'Wendy', 'Ximena', 'Zoe',
+  'Alicia', 'Bianca', 'Carla', 'Estefania', 'Fabiola',
   'Carlos', 'Juan', 'Miguel', 'Andres', 'Luis',
   'Jorge', 'David', 'Daniel', 'Felipe', 'Santiago',
   'Sebastian', 'Alejandro', 'Ricardo', 'Fernando', 'Diego',
@@ -847,7 +854,14 @@ const avatarSeeds = [
   'Alberto', 'Cesar', 'Hugo', 'Ivan', 'Rodrigo',
   'Enrique', 'Gabriel', 'Nicolas', 'Camilo', 'Fabian',
   'Leonardo', 'Cristian', 'Mauricio', 'Julian', 'Arturo',
-  'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon'
+  'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon',
+  'Emilio', 'Rafael', 'Alfredo', 'Jose', 'Esteban',
+  'Adrian', 'Bruno', 'Cristobal', 'Dario', 'Federico',
+  'Gonzalo', 'Hernan', 'Ignacio', 'Joaquin', 'Kevin',
+  'Lucas', 'Mateo', 'Orlando', 'Patricio', 'Ramiro',
+  'Samuel', 'Tomas', 'Ulises', 'Valentin', 'Walter',
+  'Xavier', 'Yago', 'Zacarias', 'Agustin', 'Benjamin',
+  'Domingo', 'Efrain', 'Felix', 'Gerardo', 'Horacio'
 ]
 
 // Texto del label de cuota según periodicidad
@@ -920,12 +934,28 @@ function handleValorCuotaInput(event) {
   }
 }
 
-function getAvatarUrl(seed, avatarSeed = null) {
-  // Usar DiceBear Avatars con estilo "adventurer"
+function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
+  // Usar DiceBear Avatars con el estilo seleccionado
   // Si hay un avatar_seed guardado, usarlo; si no, usar el nombre
   const finalSeed = avatarSeed || seed || 'default'
   const encodedSeed = encodeURIComponent(finalSeed)
-  return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`
+  const avatarStyle = style || 'adventurer'
+  
+  // Colores de fondo según el estilo
+  const backgroundColors = {
+    'adventurer': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'avataaars': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'big-smile': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'bottts': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'lorelei': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'micah': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'miniavs': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'open-peeps': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'personas': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf'
+  }
+  
+  const bgColors = backgroundColors[avatarStyle] || backgroundColors['adventurer']
+  return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
 }
 
 function editarSocio(sn) {
@@ -954,7 +984,8 @@ function cerrarModal() {
     telefono: '',
     valor_cuota: 50000,
     periodicidad: 'mensual',
-    avatar_seed: ''
+    avatar_seed: '',
+    avatar_style: 'adventurer'
   })
 }
 

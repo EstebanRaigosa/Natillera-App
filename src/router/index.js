@@ -19,6 +19,7 @@ import Prestamos from '../views/prestamos/Prestamos.vue'
 import Actividades from '../views/actividades/Actividades.vue'
 import NatilleraConfiguracion from '../views/natilleras/NatilleraConfiguracion.vue'
 import Configuracion from '../views/configuracion/Configuracion.vue'
+import Auditoria from '../views/auditoria/Auditoria.vue'
 
 const routes = [
   {
@@ -107,6 +108,11 @@ const routes = [
         path: 'configuracion',
         name: 'Configuracion',
         component: Configuracion
+      },
+      {
+        path: 'auditoria',
+        name: 'Auditoria',
+        component: Auditoria
       }
     ]
   }

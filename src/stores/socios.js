@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
+import { useAuditoria } from '../composables/useAuditoria'
 
 export const useSociosStore = defineStore('socios', () => {
   const socios = ref([])
@@ -50,7 +51,8 @@ export const useSociosStore = defineStore('socios', () => {
         documento: documento,
         telefono: datosSocio.telefono || null,
         email: datosSocio.email || null,
-        avatar_seed: datosSocio.avatar_seed || null
+        avatar_seed: datosSocio.avatar_seed || null,
+        avatar_style: datosSocio.avatar_style || 'adventurer'
       }
 
       // Primero crear o buscar el socio
@@ -85,6 +87,7 @@ export const useSociosStore = defineStore('socios', () => {
         if (datosSocio.telefono) datosActualizar.telefono = datosSocio.telefono
         if (datosSocio.email) datosActualizar.email = datosSocio.email
         if (datosSocio.avatar_seed) datosActualizar.avatar_seed = datosSocio.avatar_seed
+        if (datosSocio.avatar_style) datosActualizar.avatar_style = datosSocio.avatar_style
         if (datosSocio.nombre) datosActualizar.nombre = datosSocio.nombre
         
         if (Object.keys(datosActualizar).length > 0) {
@@ -151,6 +154,16 @@ export const useSociosStore = defineStore('socios', () => {
       loading.value = true
       error.value = null
 
+      // Obtener datos anteriores para auditoría
+      const { data: datosAnteriores } = await supabase
+        .from('socios_natillera')
+        .select(`
+          *,
+          socio:socios(*)
+        `)
+        .eq('id', id)
+        .single()
+
       const { data, error: updateError } = await supabase
         .from('socios_natillera')
         .update(datos)
@@ -168,6 +181,20 @@ export const useSociosStore = defineStore('socios', () => {
         sociosNatillera.value[index] = data
       }
 
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      const nombreSocio = data.socio?.nombre || datosAnteriores?.socio?.nombre || 'Socio'
+      // La descripción se generará automáticamente con los detalles de los cambios
+      await auditoria.registrarActualizacion(
+        'socio_natillera',
+        id,
+        null, // null para generar descripción automática
+        datosAnteriores,
+        data,
+        datosAnteriores?.natillera_id || data.natillera_id,
+        { campos_modificados: Object.keys(datos) }
+      )
+
       return { success: true, data }
     } catch (e) {
       error.value = e.message
@@ -181,8 +208,15 @@ export const useSociosStore = defineStore('socios', () => {
     return actualizarSocioNatillera(id, { estado })
   }
 
-  async function actualizarDatosSocio(socioId, datos) {
+  async function actualizarDatosSocio(socioId, datos, natilleraId = null) {
     try {
+      // Obtener datos anteriores para auditoría
+      const { data: datosAnteriores } = await supabase
+        .from('socios')
+        .select('*')
+        .eq('id', socioId)
+        .single()
+
       const { data, error: updateError } = await supabase
         .from('socios')
         .update(datos)
@@ -191,6 +225,19 @@ export const useSociosStore = defineStore('socios', () => {
         .single()
 
       if (updateError) throw updateError
+
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      // La descripción se generará automáticamente con los detalles de los cambios
+      await auditoria.registrarActualizacion(
+        'socio',
+        socioId,
+        null, // null para generar descripción automática
+        datosAnteriores,
+        data,
+        natilleraId,
+        { campos_modificados: Object.keys(datos) }
+      )
 
       return { success: true, data }
     } catch (e) {

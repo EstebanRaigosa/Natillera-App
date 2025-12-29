@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
+import { useAuditoria } from '../composables/useAuditoria'
 
 export const useCuotasStore = defineStore('cuotas', () => {
   const cuotas = ref([])
@@ -210,12 +211,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
               ? fechasLimite.quincena1 
               : { vencimiento: fechasLimite.quincena1, limite: fechasLimite.quincena1 }
             
+            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
+            const valorPagado = cuotaQuincena1.valor_pagado || 0
+            const nuevoValorCuota = socio.valor_cuota_individual
+            
+            let nuevoEstado = cuotaQuincena1.estado
+            // Recalcular el estado basado en el nuevo valor de la cuota
+            if (valorPagado >= nuevoValorCuota) {
+              // Si lo pagado cubre o supera el nuevo valor, está pagada
+              nuevoEstado = 'pagada'
+            } else if (valorPagado > 0) {
+              // Si hay un pago pero no cubre el nuevo valor, está parcial
+              nuevoEstado = 'parcial'
+            } else {
+              // Si no hay pago, mantener el estado original o calcular según fecha
+              const fechaActual = new Date()
+              fechaActual.setHours(0, 0, 0, 0)
+              const [year, month, day] = fechaQuincena1.vencimiento.split('-').map(Number)
+              const fechaVencimiento = new Date(year, month - 1, day)
+              fechaVencimiento.setHours(0, 0, 0, 0)
+              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+            }
+            
             const { data: updated1, error: updateError1 } = await supabase
               .from('cuotas')
               .update({
                 fecha_vencimiento: fechaQuincena1.vencimiento,
                 fecha_limite: fechaQuincena1.limite,
-                valor_cuota: socio.valor_cuota_individual,
+                valor_cuota: nuevoValorCuota,
+                estado: nuevoEstado,
                 descripcion: `${mesLabel} - 1ra Quincena`
               })
               .eq('id', cuotaQuincena1.id)
@@ -271,12 +295,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
               ? fechasLimite.quincena2 
               : { vencimiento: fechasLimite.quincena2, limite: fechasLimite.quincena2 }
             
+            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
+            const valorPagado = cuotaQuincena2.valor_pagado || 0
+            const nuevoValorCuota = socio.valor_cuota_individual
+            
+            let nuevoEstado = cuotaQuincena2.estado
+            // Recalcular el estado basado en el nuevo valor de la cuota
+            if (valorPagado >= nuevoValorCuota) {
+              // Si lo pagado cubre o supera el nuevo valor, está pagada
+              nuevoEstado = 'pagada'
+            } else if (valorPagado > 0) {
+              // Si hay un pago pero no cubre el nuevo valor, está parcial
+              nuevoEstado = 'parcial'
+            } else {
+              // Si no hay pago, mantener el estado original o calcular según fecha
+              const fechaActual = new Date()
+              fechaActual.setHours(0, 0, 0, 0)
+              const [year, month, day] = fechaQuincena2.vencimiento.split('-').map(Number)
+              const fechaVencimiento = new Date(year, month - 1, day)
+              fechaVencimiento.setHours(0, 0, 0, 0)
+              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+            }
+            
             const { data: updated2, error: updateError2 } = await supabase
               .from('cuotas')
               .update({
                 fecha_vencimiento: fechaQuincena2.vencimiento,
                 fecha_limite: fechaQuincena2.limite,
-                valor_cuota: socio.valor_cuota_individual,
+                valor_cuota: nuevoValorCuota,
+                estado: nuevoEstado,
                 descripcion: `${mesLabel} - 2da Quincena`
               })
               .eq('id', cuotaQuincena2.id)
@@ -332,12 +379,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
               ? fechasLimite.mensual 
               : { vencimiento: fechasLimite.mensual, limite: fechasLimite.mensual }
             
+            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
+            const valorPagado = cuotaMensual.valor_pagado || 0
+            const nuevoValorCuota = socio.valor_cuota_individual
+            
+            let nuevoEstado = cuotaMensual.estado
+            // Recalcular el estado basado en el nuevo valor de la cuota
+            if (valorPagado >= nuevoValorCuota) {
+              // Si lo pagado cubre o supera el nuevo valor, está pagada
+              nuevoEstado = 'pagada'
+            } else if (valorPagado > 0) {
+              // Si hay un pago pero no cubre el nuevo valor, está parcial
+              nuevoEstado = 'parcial'
+            } else {
+              // Si no hay pago, mantener el estado original o calcular según fecha
+              const fechaActual = new Date()
+              fechaActual.setHours(0, 0, 0, 0)
+              const [year, month, day] = fechaMensual.vencimiento.split('-').map(Number)
+              const fechaVencimiento = new Date(year, month - 1, day)
+              fechaVencimiento.setHours(0, 0, 0, 0)
+              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+            }
+            
             const { data: updated, error: updateError } = await supabase
               .from('cuotas')
               .update({
                 fecha_vencimiento: fechaMensual.vencimiento,
                 fecha_limite: fechaMensual.limite,
-                valor_cuota: socio.valor_cuota_individual,
+                valor_cuota: nuevoValorCuota,
+                estado: nuevoEstado,
                 descripcion: `Cuota ${mesLabel}`
               })
               .eq('id', cuotaMensual.id)
@@ -477,6 +547,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Generar código único de comprobante solo si se está registrando un pago (no si ya existe)
       let codigoComprobante = cuotaActual.codigo_comprobante || null
+      const codigoAnterior = codigoComprobante // Guardar el código anterior antes de generar uno nuevo
       if (!codigoComprobante) {
         try {
           // Intentar generar un código único (máximo 5 intentos)
@@ -520,10 +591,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // Preparar objeto de actualización
+      // Actualizar fecha_pago cuando se registra un pago (parcial o completo)
+      const fechaPagoActualizada = nuevoValorPagado > 0 ? new Date().toISOString() : null
+      
       const updateData = {
         valor_pagado: nuevoValorPagado,
         estado: nuevaEstado,
-        fecha_pago: nuevaEstado === 'pagada' ? new Date().toISOString() : null,
+        fecha_pago: fechaPagoActualizada,
         comprobante_url: comprobante
       }
       
@@ -588,6 +662,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
         throw new Error('No se pudo actualizar la cuota')
       }
 
+      // Si se generó un nuevo código y había uno anterior, guardar en historial
+      // Nota: En registrarPago solo se genera código si no existe, así que no debería haber historial aquí
+      // El historial se guarda principalmente en guardarEdicionCuota cuando se actualiza un código existente
+
       // Actualizar en el array local
       const index = cuotas.value.findIndex(c => c.id === cuotaId)
       if (index !== -1) {
@@ -596,6 +674,38 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Verificar y actualizar otras cuotas en mora después de registrar un pago
       await actualizarEstadoMoraAutomatico()
+
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < cuotaActual.valor_cuota
+      const descripcion = esPagoParcial
+        ? `Se registró un pago parcial de $${valorPagado.toLocaleString('es-CO')} a una cuota (Total pagado: $${nuevoValorPagado.toLocaleString('es-CO')} de $${cuotaActual.valor_cuota.toLocaleString('es-CO')})`
+        : nuevaEstado === 'pagada'
+          ? `Se registró el pago completo de una cuota por $${valorPagado.toLocaleString('es-CO')}`
+          : `Se registró un pago de $${valorPagado.toLocaleString('es-CO')} a una cuota`
+      
+      // Obtener natillera_id desde la cuota
+      const { data: socioNatillera } = await supabase
+        .from('socios_natillera')
+        .select('natillera_id')
+        .eq('id', cuotaActual.socio_natillera_id)
+        .single()
+      
+      await auditoria.registrarPago(
+        cuotaId,
+        descripcion,
+        data,
+        socioNatillera?.natillera_id,
+        {
+          valor_pagado_anterior: cuotaActual.valor_pagado || 0,
+          valor_pagado_nuevo: nuevoValorPagado,
+          valor_pagado_agregado: valorPagado,
+          estado_anterior: cuotaActual.estado,
+          estado_nuevo: nuevaEstado,
+          codigo_comprobante: codigoComprobante,
+          codigo_comprobante_anterior: codigoAnterior
+        }
+      )
 
       return { success: true, data }
     } catch (e) {
@@ -863,7 +973,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const socioNatilleraIds = sociosNatillera.map(s => s.id)
 
-      // Buscar la cuota por código de comprobante
+      // Primero buscar en cuotas actuales
       const { data: cuota, error: fetchError } = await supabase
         .from('cuotas')
         .select(`
@@ -879,11 +989,74 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       if (fetchError) throw fetchError
 
-      if (!cuota) {
-        return { success: false, error: 'No se encontró ningún comprobante con ese código' }
+      // Si se encuentra en cuotas actuales, retornar
+      if (cuota) {
+        return { success: true, data: cuota, esAntiguo: false }
       }
 
-      return { success: true, data: cuota }
+      // Si no se encuentra, buscar en historial
+      try {
+        const { data: historial, error: historialError } = await supabase
+          .from('historial_comprobantes')
+          .select(`
+            *,
+            cuota:cuotas!historial_comprobantes_cuota_id_fkey(
+              *,
+              socio_natillera:socios_natillera(
+                id,
+                socio:socios(*)
+              )
+            )
+          `)
+          .eq('codigo_comprobante_anterior', codigo.toUpperCase())
+          .order('fecha_actualizacion', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (historialError && !historialError.message.includes('historial_comprobantes')) {
+          throw historialError
+        }
+
+        // Si se encuentra en historial, obtener la cuota actualizada
+        if (historial) {
+          // Obtener la cuota actual usando el cuota_id del historial
+          const { data: cuotaActual, error: cuotaError } = await supabase
+            .from('cuotas')
+            .select(`
+              *,
+              socio_natillera:socios_natillera(
+                id,
+                socio:socios(*)
+              )
+            `)
+            .eq('id', historial.cuota_id)
+            .maybeSingle()
+
+          if (cuotaError) throw cuotaError
+
+          if (cuotaActual) {
+            return {
+              success: true,
+              data: cuotaActual,
+              esAntiguo: true,
+              historial: {
+                codigoAnterior: historial.codigo_comprobante_anterior,
+                codigoNuevo: historial.codigo_comprobante_nuevo,
+                fechaActualizacion: historial.fecha_actualizacion,
+                valorPagadoAnterior: historial.valor_pagado_anterior,
+                valorPagadoNuevo: historial.valor_pagado_nuevo
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // Si la tabla de historial no existe, continuar sin error
+        if (!e.message || !e.message.includes('historial_comprobantes')) {
+          console.warn('Error buscando en historial:', e.message)
+        }
+      }
+
+      return { success: false, error: 'No se encontró ningún comprobante con ese código' }
     } catch (e) {
       error.value = e.message
       return { success: false, error: e.message }
@@ -897,6 +1070,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
     try {
       loading.value = true
       error.value = null
+
+      // Obtener datos anteriores para auditoría
+      const { data: datosAnteriores } = await supabase
+        .from('cuotas')
+        .select('*')
+        .eq('id', cuotaId)
+        .single()
 
       const { data, error: updateError } = await supabase
         .from('cuotas')
@@ -917,6 +1097,27 @@ export const useCuotasStore = defineStore('cuotas', () => {
           socio_natillera: cuotaOriginal.socio_natillera
         }
       }
+
+      // Registrar auditoría
+      const auditoria = useAuditoria()
+      
+      // Obtener natillera_id desde la cuota
+      const { data: socioNatillera } = await supabase
+        .from('socios_natillera')
+        .select('natillera_id')
+        .eq('id', datosAnteriores?.socio_natillera_id || data.socio_natillera_id)
+        .single()
+      
+      // La descripción se generará automáticamente con los detalles de los cambios
+      await auditoria.registrarActualizacion(
+        'cuota',
+        cuotaId,
+        null, // null para generar descripción automática
+        datosAnteriores,
+        data,
+        socioNatillera?.natillera_id,
+        { campos_modificados: Object.keys(datos) }
+      )
 
       return { success: true, data }
     } catch (e) {

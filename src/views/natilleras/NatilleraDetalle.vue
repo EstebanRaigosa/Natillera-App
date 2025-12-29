@@ -224,7 +224,7 @@
                   class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   <img 
-                    :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
+                    :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)" 
                     :alt="sn.socio?.nombre"
                     class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-natillera-100 flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
                   />
@@ -344,7 +344,7 @@
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-3">
                 <img 
-                  :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed)" 
+                  :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed, socioSeleccionado?.socio?.avatar_style)" 
                   :alt="socioSeleccionado?.socio?.nombre"
                   class="w-14 h-14 rounded-2xl border-2 border-white/30 shadow-lg object-cover"
                 />
@@ -455,121 +455,190 @@
 
     <!-- Modal Buscar Comprobante -->
     <div v-if="modalBuscarComprobante" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50" @click="cerrarModalBuscarComprobante"></div>
-      <div class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col">
-        <div class="flex items-center gap-3 mb-4">
-          <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-natillera-700 rounded-xl flex items-center justify-center">
-            <MagnifyingGlassIcon class="w-6 h-6 text-white" />
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalBuscarComprobante"></div>
+      <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <MagnifyingGlassIcon class="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 class="text-2xl font-display font-bold">
+                  Buscar Comprobante
+                </h3>
+                <p class="text-white/90 text-sm">
+                  Ingresa el código del comprobante
+                </p>
+              </div>
+            </div>
+            <button 
+              @click="cerrarModalBuscarComprobante"
+              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
           </div>
-          <div>
-            <h3 class="text-xl font-display font-bold text-gray-800">
-              Buscar Comprobante
-            </h3>
-            <p class="text-sm text-gray-500">
-              Ingresa el código del comprobante
-            </p>
-          </div>
-          <button 
-            @click="cerrarModalBuscarComprobante"
-            class="ml-auto p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
-            <XMarkIcon class="w-5 h-5" />
-          </button>
         </div>
 
-        <div class="space-y-4 flex-1 overflow-y-auto">
+        <!-- Contenido -->
+        <div class="overflow-y-auto flex-1 p-6 space-y-6">
           <!-- Campo de búsqueda -->
           <div>
-            <label class="label">Código del Comprobante</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Código del Comprobante</label>
             <div class="relative">
               <input 
+                ref="inputBusquedaRef"
                 v-model="codigoBusqueda"
                 type="text"
                 placeholder="Ej: ABC12345"
-                class="input-field pr-12 uppercase"
-                @keyup.enter="buscarComprobante"
+                class="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 uppercase font-mono text-sm transition-all"
+                @keydown.enter.prevent="buscarComprobante"
                 maxlength="20"
+                :disabled="buscandoComprobante"
               />
               <button
                 @click="buscarComprobante"
                 :disabled="!codigoBusqueda.trim() || buscandoComprobante"
-                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-natillera-600 text-white rounded-lg hover:bg-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-natillera-600 text-white rounded-lg hover:bg-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
               >
-                <MagnifyingGlassIcon class="w-5 h-5" />
+                <MagnifyingGlassIcon v-if="!buscandoComprobante" class="w-5 h-5" />
+                <svg v-else class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
               </button>
             </div>
           </div>
 
           <!-- Resultado de la búsqueda -->
-          <div v-if="comprobanteEncontrado" class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 space-y-3">
-            <div class="flex items-center gap-2">
-              <CheckCircleIcon class="w-6 h-6 text-green-600" />
-              <h4 class="font-bold text-green-800">Comprobante Encontrado</h4>
+          <div v-if="comprobanteEncontrado" class="space-y-4">
+            <!-- Alerta si es un comprobante antiguo -->
+            <div v-if="infoComprobanteAntiguo" class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-5 shadow-sm">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <ExclamationCircleIcon class="w-6 h-6 text-white" />
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-amber-900 mb-1">⚠️ Comprobante Actualizado</h4>
+                  <p class="text-sm text-amber-700">
+                    Este código corresponde a un comprobante antiguo que fue actualizado.
+                  </p>
+                </div>
+              </div>
+              
+              <div class="bg-white rounded-lg p-4 border border-amber-200 space-y-3 mb-4">
+                <div class="flex items-center justify-between py-2 border-b border-amber-100">
+                  <span class="text-sm text-amber-700 font-medium">Código Anterior:</span>
+                  <span class="font-mono font-bold text-amber-900 text-lg">{{ infoComprobanteAntiguo.codigoAnterior }}</span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                  <span class="text-sm text-green-700 font-medium">Código Actual:</span>
+                  <span class="font-mono font-bold text-green-800 text-lg">{{ infoComprobanteAntiguo.codigoNuevo }}</span>
+                </div>
+                <div v-if="infoComprobanteAntiguo.fechaActualizacion" class="pt-3 border-t border-amber-100">
+                  <span class="text-xs text-amber-600">Actualizado el: {{ formatDate(infoComprobanteAntiguo.fechaActualizacion) }}</span>
+                </div>
+              </div>
+              
+              <!-- Botón para buscar el nuevo código -->
+              <button
+                @click="buscarPorCodigoNuevo"
+                class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <MagnifyingGlassIcon class="w-5 h-5" />
+                Consultar Comprobante Actual
+              </button>
             </div>
             
-            <div class="bg-white rounded-lg p-4 space-y-3 border border-green-200">
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Código</p>
-                <p class="font-mono font-bold text-lg text-gray-800">{{ comprobanteEncontrado.codigo_comprobante }}</p>
-              </div>
-              
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Socio</p>
-                <p class="font-semibold text-gray-800">{{ comprobanteEncontrado.socio_natillera?.socio?.nombre || 'N/A' }}</p>
-              </div>
-              
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Descripción</p>
-                <p class="text-gray-800">{{ comprobanteEncontrado.descripcion || 'N/A' }}</p>
-              </div>
-              
-              <div class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
-                <div>
-                  <p class="text-xs text-gray-500 mb-1">Valor Cuota</p>
-                  <p class="font-bold text-gray-800">${{ formatMoney(comprobanteEncontrado.valor_cuota) }}</p>
+            <!-- Card de información del comprobante -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-5 shadow-sm">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                  <CheckCircleIcon class="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <p class="text-xs text-gray-500 mb-1">Valor Pagado</p>
-                  <p class="font-bold text-green-600">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                <h4 class="font-bold text-green-800 text-lg">Comprobante Encontrado</h4>
+              </div>
+              
+              <div class="bg-white rounded-lg p-5 space-y-4 border border-green-200">
+                <div class="pb-3 border-b border-gray-100">
+                  <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Código {{ infoComprobanteAntiguo ? 'Actual' : 'del Comprobante' }}</p>
+                  <p class="font-mono font-bold text-xl text-gray-800">{{ comprobanteEncontrado.codigo_comprobante }}</p>
                 </div>
-              </div>
-              
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Estado</p>
-                <span 
-                  :class="[
-                    'badge',
-                    comprobanteEncontrado.estado === 'pagada' ? 'badge-success' :
-                    comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 text-blue-800' :
-                    comprobanteEncontrado.estado === 'mora' ? 'badge-danger' :
-                    comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' :
-                    'bg-gray-100 text-gray-700'
-                  ]"
-                >
-                  {{ comprobanteEncontrado.estado?.toUpperCase() || 'N/A' }}
-                </span>
-              </div>
-              
-              <div v-if="comprobanteEncontrado.fecha_pago">
-                <p class="text-xs text-gray-500 mb-1">Fecha de Pago</p>
-                <p class="text-gray-800">{{ formatDate(comprobanteEncontrado.fecha_pago) }}</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Socio</p>
+                    <p class="font-semibold text-gray-800">{{ comprobanteEncontrado.socio_natillera?.socio?.nombre || 'N/A' }}</p>
+                  </div>
+                  
+                  <div>
+                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Descripción</p>
+                    <p class="text-gray-800">{{ comprobanteEncontrado.descripcion || 'N/A' }}</p>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Cuota</p>
+                    <p class="font-bold text-gray-800 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota) }}</p>
+                  </div>
+                  <div class="bg-green-50 rounded-lg p-3">
+                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Pagado</p>
+                    <p class="font-bold text-green-600 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                  </div>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-200">
+                  <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-semibold">Estado</p>
+                  <span 
+                    :class="[
+                      'inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-sm',
+                      comprobanteEncontrado.estado === 'pagada' ? 'bg-green-100 text-green-800' :
+                      comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 text-blue-800' :
+                      comprobanteEncontrado.estado === 'mora' ? 'bg-red-100 text-red-800' :
+                      comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' :
+                      'bg-gray-100 text-gray-700'
+                    ]"
+                  >
+                    {{ comprobanteEncontrado.estado?.toUpperCase() || 'N/A' }}
+                  </span>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-200">
+                  <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Fecha de Pago</p>
+                    <p v-if="comprobanteEncontrado.fecha_pago" class="text-green-800 font-bold text-lg">
+                      {{ formatDateWithTime(comprobanteEncontrado.fecha_pago) }}
+                    </p>
+                    <p v-else class="text-gray-500 font-medium">No registrada</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Error -->
-          <div v-if="errorBusqueda" class="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-            <div class="flex items-center gap-2">
-              <ExclamationCircleIcon class="w-6 h-6 text-red-600" />
+          <div v-if="errorBusqueda" class="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-300 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <ExclamationCircleIcon class="w-6 h-6 text-white" />
+              </div>
               <p class="text-red-800 font-semibold">{{ errorBusqueda }}</p>
             </div>
           </div>
         </div>
 
-        <div class="flex gap-3 pt-4 border-t border-gray-100 mt-4">
+        <!-- Footer -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
           <button 
             @click="cerrarModalBuscarComprobante"
-            class="btn-secondary flex-1"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
           >
             Cerrar
           </button>
@@ -671,7 +740,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { 
@@ -720,8 +789,11 @@ const seccionActiva = ref('finanzas')
 const busquedaSocio = ref('')
 const codigoBusqueda = ref('')
 const comprobanteEncontrado = ref(null)
+const infoComprobanteAntiguo = ref(null)
+const comprobanteNuevo = ref(null) // Guardar el comprobante nuevo cuando se encuentra uno antiguo
 const errorBusqueda = ref('')
 const buscandoComprobante = ref(false)
+const inputBusquedaRef = ref(null)
 
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
@@ -803,12 +875,30 @@ async function buscarComprobante() {
   buscandoComprobante.value = true
   errorBusqueda.value = ''
   comprobanteEncontrado.value = null
+  infoComprobanteAntiguo.value = null
+  comprobanteNuevo.value = null
   
   try {
     const result = await cuotasStore.buscarCuotaPorCodigo(id.value, codigoBusqueda.value.trim())
     
     if (result.success) {
-      comprobanteEncontrado.value = result.data
+      // Si es un comprobante antiguo, mostrar información del código anterior
+      if (result.esAntiguo && result.historial) {
+        infoComprobanteAntiguo.value = result.historial
+        comprobanteNuevo.value = result.data // Guardar el nuevo comprobante para cuando se consulte
+        
+        // Crear un objeto con la información del comprobante antiguo basado en el historial
+        // Mostramos la información como era antes de la actualización
+        comprobanteEncontrado.value = {
+          ...result.data, // Mantener toda la información de la cuota (socio, descripción, etc.)
+          codigo_comprobante: result.historial.codigoAnterior, // Código anterior
+          valor_pagado: result.historial.valorPagadoAnterior, // Valor pagado anterior
+          fecha_pago: null // No hay fecha de pago para el código anterior ya que fue actualizado
+        }
+      } else {
+        // Si no es antiguo, mostrar normalmente
+        comprobanteEncontrado.value = result.data
+      }
     } else {
       errorBusqueda.value = result.error || 'No se encontró el comprobante'
     }
@@ -819,10 +909,22 @@ async function buscarComprobante() {
   }
 }
 
+// Función para buscar por el código nuevo cuando se encuentra un comprobante antiguo
+async function buscarPorCodigoNuevo() {
+  if (!comprobanteNuevo.value) return
+  
+  // Mostrar el comprobante nuevo que ya tenemos guardado
+  comprobanteEncontrado.value = comprobanteNuevo.value
+  infoComprobanteAntiguo.value = null // Ocultar la alerta de comprobante antiguo
+  codigoBusqueda.value = comprobanteNuevo.value.codigo_comprobante // Actualizar el campo de búsqueda
+}
+
 function cerrarModalBuscarComprobante() {
   modalBuscarComprobante.value = false
   codigoBusqueda.value = ''
   comprobanteEncontrado.value = null
+  infoComprobanteAntiguo.value = null
+  comprobanteNuevo.value = null
   errorBusqueda.value = ''
 }
 
@@ -893,11 +995,27 @@ function formatMoneyShort(value) {
   return new Intl.NumberFormat('es-CO').format(num)
 }
 
-function getAvatarUrl(seed, avatarSeed = null) {
-  // Usar DiceBear Avatars con estilo "adventurer"
+function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
+  // Usar DiceBear Avatars con el estilo seleccionado
   const finalSeed = avatarSeed || seed || 'default'
   const encodedSeed = encodeURIComponent(finalSeed)
-  return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodedSeed}&backgroundColor=c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf`
+  const avatarStyle = style || 'adventurer'
+  
+  // Colores de fondo según el estilo
+  const backgroundColors = {
+    'adventurer': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'avataaars': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'big-smile': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'bottts': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'lorelei': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'micah': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'miniavs': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'open-peeps': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
+    'personas': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf'
+  }
+  
+  const bgColors = backgroundColors[avatarStyle] || backgroundColors['adventurer']
+  return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
 }
 
 function formatDate(date) {
@@ -907,6 +1025,17 @@ function formatDate(date) {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const year = d.getFullYear()
   return `${day}/${month}/${year}`
+}
+
+function formatDateWithTime(date) {
+  if (!date) return 'No registrada'
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
 function cerrarModalWhatsApp() {
@@ -960,6 +1089,17 @@ async function verDetalleSocio(sn) {
   const resumen = await sociosStore.obtenerResumenSocio(sn.id)
   cuotasSocio.value = resumen?.cuotas || []
 }
+
+// Observar cuando se abre la modal para poner el foco en el input
+watch(modalBuscarComprobante, async (isOpen) => {
+  if (isOpen) {
+    // Esperar a que el DOM se actualice y luego poner el foco
+    await nextTick()
+    if (inputBusquedaRef.value) {
+      inputBusquedaRef.value.focus()
+    }
+  }
+})
 
 onMounted(() => {
   const natilleraId = props.id || route.params.id
