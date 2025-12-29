@@ -432,122 +432,180 @@
         <div 
           v-for="cuota in cuotasFiltradas" 
           :key="cuota.id"
-          class="card hover:shadow-2xl hover:shadow-natillera-500/10 hover:-translate-y-0.5 transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          @click="abrirModalDetalleCuota(cuota)"
+          class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          :class="[
+            cuota.estado === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
+            cuota.estado === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' : 
+            cuota.estado === 'parcial' ? 'bg-gradient-to-br from-white via-blue-50/40 to-cyan-50/30 border-blue-200/60 hover:border-blue-300' : 
+            cuota.estado === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
+            'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
+          ]"
         >
-        <div class="flex items-center gap-4">
+          <!-- Efectos decorativos de fondo más sutiles -->
           <div 
             :class="[
-              'w-14 h-14 rounded-2xl flex items-center justify-center relative shadow-lg transition-all duration-300',
-              cuota.estado === 'pagada' ? 'bg-gradient-to-br from-green-100 to-emerald-100' : 
-              cuota.estado === 'mora' ? 'bg-gradient-to-br from-red-100 to-rose-100' : 
-              cuota.estado === 'parcial' ? 'bg-gradient-to-br from-blue-100 to-cyan-100' : 
-              cuota.estado === 'programada' ? 'bg-gradient-to-br from-gray-100 to-slate-100' : 'bg-gradient-to-br from-orange-100 to-amber-100'
+              'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
+              cuota.estado === 'pagada' ? 'bg-green-300' : 
+              cuota.estado === 'mora' ? 'bg-red-300' : 
+              cuota.estado === 'parcial' ? 'bg-blue-300' : 
+              cuota.estado === 'programada' ? 'bg-gray-300' : 
+              'bg-orange-300'
             ]"
-          >
-            <component 
-              :is="cuota.estado === 'pagada' ? CheckCircleIcon : 
-                   cuota.estado === 'mora' ? ExclamationCircleIcon : 
-                   cuota.estado === 'programada' ? CalendarIcon : ClockIcon"
-              :class="[
-                'w-7 h-7',
-                cuota.estado === 'pagada' ? 'text-green-600' : 
-                cuota.estado === 'mora' ? 'text-red-600' : 
-                cuota.estado === 'parcial' ? 'text-blue-600' : 
-                cuota.estado === 'programada' ? 'text-gray-500' : 'text-orange-600'
-              ]"
-            />
-            <!-- Badge de quincena (solo para quincenales) -->
-            <span 
-              v-if="cuota.quincena"
-              class="absolute -top-1 -right-1 w-6 h-6 flex items-center justify-center bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-[10px] font-bold rounded-full shadow-lg"
-            >
-              Q{{ cuota.quincena }}
-            </span>
-          </div>
-          <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="font-medium text-gray-800">
-                {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
-              </p>
-              <!-- Badge de periodicidad -->
-              <span 
-                v-if="cuota.quincena" 
-                class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700 text-[10px] font-bold rounded-full border border-purple-200"
-              >
-                <span class="text-purple-500">🗓️</span>
-                {{ cuota.quincena === 1 ? '1ra Quincena' : '2da Quincena' }}
-              </span>
-              <span 
-                v-else
-                class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-natillera-100 to-emerald-100 text-natillera-700 text-[10px] font-bold rounded-full border border-natillera-200"
-              >
-                <span class="text-natillera-500">📅</span>
-                Mensual
-              </span>
-            </div>
-            <p class="text-sm text-gray-500">
-              Vence: {{ formatDate(cuota.fecha_limite) }}
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-4">
-          <div class="text-right">
-            <template v-if="cuota.estado === 'parcial'">
-              <p class="font-bold text-gray-800">${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</p>
-              <p class="text-xs text-gray-500 mt-1">
-                Valor inicial: ${{ formatMoney(cuota.valor_cuota) }}
-              </p>
-            </template>
-            <template v-else>
-              <p class="font-bold text-gray-800">${{ formatMoney(cuota.valor_cuota) }}</p>
-            </template>
-            <p class="text-sm" :class="cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400'">
-              Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
-            </p>
-          </div>
+          ></div>
           
-          <span 
+          <!-- Línea decorativa superior más sutil -->
+          <div 
             :class="[
-              'badge',
-              cuota.estado === 'pagada' ? 'badge-success' : 
-              cuota.estado === 'mora' ? 'badge-danger' : 
-              cuota.estado === 'parcial' ? 'bg-blue-100 text-blue-800' : 
-              cuota.estado === 'programada' ? 'bg-gray-100 text-gray-700' : 'bg-orange-100 text-orange-800'
+              'absolute top-0 left-0 right-0 h-0.5',
+              cuota.estado === 'pagada' ? 'bg-green-400/60' : 
+              cuota.estado === 'mora' ? 'bg-red-400/60' : 
+              cuota.estado === 'parcial' ? 'bg-blue-400/60' : 
+              cuota.estado === 'programada' ? 'bg-gray-400/60' : 
+              'bg-orange-400/60'
             ]"
-          >
-            {{ cuota.estado === 'programada' ? 'Programada' : cuota.estado }}
-          </span>
+          ></div>
+          
+          <div class="relative z-10">
+            <!-- Layout para móvil: más ordenado y vertical -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <!-- Sección superior en móvil / izquierda en desktop: Avatar y nombre del socio -->
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <!-- Avatar del socio más compacto -->
+                <div class="relative flex-shrink-0">
+                  <img 
+                    :src="getAvatarUrl(cuota.socio_natillera?.socio?.nombre || cuota.socio_natillera?.id, cuota.socio_natillera?.socio?.avatar_seed)" 
+                    :alt="cuota.socio_natillera?.socio?.nombre"
+                    class="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl border-2 shadow-md object-cover group-hover:scale-105 transition-transform duration-300"
+                    :class="[
+                      cuota.estado === 'pagada' ? 'border-green-300' : 
+                      cuota.estado === 'mora' ? 'border-red-300' : 
+                      cuota.estado === 'parcial' ? 'border-blue-300' : 
+                      cuota.estado === 'programada' ? 'border-gray-300' : 'border-orange-300'
+                    ]"
+                  />
+                  <!-- Badge de estado en el avatar más pequeño -->
+                  <div 
+                    :class="[
+                      'absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center shadow-md border-2 border-white',
+                      cuota.estado === 'pagada' ? 'bg-green-500' : 
+                      cuota.estado === 'mora' ? 'bg-red-500' : 
+                      cuota.estado === 'parcial' ? 'bg-blue-500' : 
+                      cuota.estado === 'programada' ? 'bg-gray-400' : 'bg-orange-500'
+                    ]"
+                  >
+                    <component 
+                      :is="cuota.estado === 'pagada' ? CheckCircleIcon : 
+                           cuota.estado === 'mora' ? ExclamationCircleIcon : 
+                           cuota.estado === 'programada' ? CalendarIcon : ClockIcon"
+                      class="w-3.5 h-3.5 text-white"
+                    />
+                  </div>
+                  <!-- Badge de quincena más pequeño -->
+                  <span 
+                    v-if="cuota.quincena"
+                    class="absolute -top-1 -left-1 w-6 h-6 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-lg shadow-md border-2 border-white"
+                  >
+                    Q{{ cuota.quincena }}
+                  </span>
+                </div>
+                
+                <!-- Información del socio más compacta -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                    <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900 group-hover:text-natillera-700 transition-colors">
+                      {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
+                    </h3>
+                    <!-- Badge de periodicidad más pequeño -->
+                    <span 
+                      v-if="cuota.quincena" 
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg border border-purple-200"
+                    >
+                      <span>🗓️</span>
+                      <span class="hidden sm:inline">{{ cuota.quincena === 1 ? '1ra' : '2da' }}</span>
+                    </span>
+                    <span 
+                      v-else
+                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-natillera-100 text-natillera-700 text-xs font-semibold rounded-lg border border-natillera-200"
+                    >
+                      <span>📅</span>
+                      <span class="hidden sm:inline">Mensual</span>
+                    </span>
+                  </div>
+                  <p class="text-xs text-gray-600 flex items-center gap-1.5">
+                    <CalendarIcon class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>Vence: <span class="font-semibold">{{ formatDate(cuota.fecha_limite) }}</span></span>
+                  </p>
+                </div>
+              </div>
 
-          <button 
-            v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
-            @click="abrirModalEditar(cuota)"
-            class="flex items-center gap-1 py-2 px-3 text-sm font-medium text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-            title="Editar cuota"
-          >
-            <PencilIcon class="w-4 h-4" />
-            <span class="hidden sm:inline">Editar</span>
-          </button>
+              <!-- Sección inferior en móvil / derecha en desktop: Valores, estado y acciones -->
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3">
+                <!-- Valores y estado en una fila en móvil -->
+                <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                  <!-- Valores más compactos -->
+                  <div class="text-left sm:text-right flex-shrink-0">
+                    <template v-if="cuota.estado === 'parcial'">
+                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</p>
+                      <p class="text-xs text-gray-500 mt-0.5">
+                        Inicial: ${{ formatMoney(cuota.valor_cuota) }}
+                      </p>
+                    </template>
+                    <template v-else>
+                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">${{ formatMoney(cuota.valor_cuota) }}</p>
+                    </template>
+                    <p class="text-xs font-medium mt-1" :class="cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400'">
+                      Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                    </p>
+                  </div>
+                  
+                  <!-- Badge de estado más compacto -->
+                  <span 
+                    :class="[
+                      'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap',
+                      cuota.estado === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
+                      cuota.estado === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
+                      cuota.estado === 'parcial' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
+                      cuota.estado === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
+                      'bg-orange-100 text-orange-800 border border-orange-200'
+                    ]"
+                  >
+                    {{ cuota.estado === 'programada' ? 'Programada' : cuota.estado === 'parcial' ? 'Parcial' : cuota.estado }}
+                  </span>
+                </div>
 
-          <button 
-            v-if="cuota.estado !== 'pagada'"
-            @click="abrirModalPago(cuota)"
-            class="btn-primary py-2 px-4 text-sm"
-          >
-            Registrar Pago
-          </button>
+                <!-- Botones de acción en una fila en móvil -->
+                <div class="flex items-center justify-end gap-2" @click.stop>
+                  <button 
+                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
+                    @click="abrirModalEditar(cuota)"
+                    class="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Editar cuota"
+                  >
+                    <PencilIcon class="w-4 h-4" />
+                  </button>
 
-          <button 
-            v-if="cuota.estado === 'pagada'"
-            @click="reenviarComprobante(cuota)"
-            class="flex items-center gap-1 py-2 px-3 text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-            title="Reenviar comprobante"
-          >
-            <ArrowPathIcon class="w-4 h-4" />
-            Reenviar
-          </button>
+                  <button 
+                    v-if="cuota.estado !== 'pagada'"
+                    @click="abrirModalPago(cuota)"
+                    class="px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap"
+                  >
+                    Pagar
+                  </button>
+
+                  <button 
+                    v-if="cuota.estado === 'pagada'"
+                    @click="reenviarComprobante(cuota)"
+                    class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                    title="Reenviar comprobante"
+                  >
+                    <ArrowPathIcon class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
       </template>
 
       <!-- Vista Excel (Tabla) -->
@@ -723,6 +781,194 @@
             :disabled="cuotasStore.loading"
           >
             {{ cuotasStore.loading ? 'Eliminando...' : 'Sí, Eliminar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detalle de Cuota -->
+    <div v-if="modalDetalleCuota" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalleCuota = false"></div>
+      <div class="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-4">
+                <img 
+                  v-if="cuotaDetalle"
+                  :src="getAvatarUrl(cuotaDetalle.socio_natillera?.socio?.nombre || cuotaDetalle.socio_natillera?.id, cuotaDetalle.socio_natillera?.socio?.avatar_seed)" 
+                  :alt="cuotaDetalle.socio_natillera?.socio?.nombre"
+                  class="w-16 h-16 rounded-2xl border-2 border-white/30 shadow-lg object-cover"
+                />
+                <div>
+                  <h3 class="text-2xl font-display font-bold">
+                    {{ cuotaDetalle?.socio_natillera?.socio?.nombre || 'Socio' }}
+                  </h3>
+                  <p class="text-white/90 text-sm">Detalle de la cuota</p>
+                </div>
+              </div>
+              <button 
+                @click="modalDetalleCuota = false"
+                class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
+              >
+                <XMarkIcon class="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="p-6 space-y-5" v-if="cuotaDetalle">
+          <!-- Estado de la cuota -->
+          <div 
+            :class="[
+              'relative p-5 rounded-xl border-2 shadow-sm',
+              cuotaDetalle.estado === 'pagada' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 
+              cuotaDetalle.estado === 'mora' ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 
+              cuotaDetalle.estado === 'parcial' ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200' : 
+              cuotaDetalle.estado === 'programada' ? 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200' : 
+              'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
+            ]"
+          >
+            <div class="flex items-center gap-3">
+              <div 
+                :class="[
+                  'w-12 h-12 rounded-xl flex items-center justify-center shadow-md',
+                  cuotaDetalle.estado === 'pagada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
+                  cuotaDetalle.estado === 'mora' ? 'bg-gradient-to-br from-red-500 to-rose-600' : 
+                  cuotaDetalle.estado === 'parcial' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' : 
+                  cuotaDetalle.estado === 'programada' ? 'bg-gradient-to-br from-gray-400 to-slate-500' : 
+                  'bg-gradient-to-br from-orange-500 to-amber-600'
+                ]"
+              >
+                <component 
+                  :is="cuotaDetalle.estado === 'pagada' ? CheckCircleIcon : 
+                       cuotaDetalle.estado === 'mora' ? ExclamationCircleIcon : 
+                       cuotaDetalle.estado === 'programada' ? CalendarIcon : ClockIcon"
+                  class="w-6 h-6 text-white"
+                />
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 font-medium mb-1">Estado</p>
+                <p 
+                  :class="[
+                    'text-lg font-bold',
+                    cuotaDetalle.estado === 'pagada' ? 'text-green-700' : 
+                    cuotaDetalle.estado === 'mora' ? 'text-red-700' : 
+                    cuotaDetalle.estado === 'parcial' ? 'text-blue-700' : 
+                    cuotaDetalle.estado === 'programada' ? 'text-gray-700' : 'text-orange-700'
+                  ]"
+                >
+                  {{ cuotaDetalle.estado === 'programada' ? 'Programada' : cuotaDetalle.estado === 'parcial' ? 'Pago Parcial' : cuotaDetalle.estado === 'pagada' ? 'Pagada' : cuotaDetalle.estado === 'mora' ? 'En Mora' : 'Pendiente' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Información financiera -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
+              <p class="text-xs text-gray-500 font-medium mb-2">Valor de la Cuota</p>
+              <p class="text-2xl font-bold text-natillera-700">${{ formatMoney(cuotaDetalle.valor_cuota) }}</p>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm">
+              <p class="text-xs text-gray-500 font-medium mb-2">Valor Pagado</p>
+              <p class="text-2xl font-bold text-green-700">${{ formatMoney(cuotaDetalle.valor_pagado || 0) }}</p>
+            </div>
+            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200 shadow-sm">
+              <p class="text-xs text-gray-500 font-medium mb-2">Valor Pendiente</p>
+              <p class="text-2xl font-bold text-amber-700">${{ formatMoney(cuotaDetalle.valor_cuota - (cuotaDetalle.valor_pagado || 0)) }}</p>
+            </div>
+          </div>
+
+          <!-- Información de fechas -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+              <div class="flex items-center gap-3 mb-2">
+                <CalendarIcon class="w-5 h-5 text-gray-500" />
+                <p class="text-xs text-gray-500 font-medium">Fecha de Vencimiento</p>
+              </div>
+              <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_vencimiento) || 'N/A' }}</p>
+              <p class="text-xs text-gray-500 mt-1">Sin días de gracia</p>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
+              <div class="flex items-center gap-3 mb-2">
+                <ExclamationCircleIcon class="w-5 h-5 text-purple-500" />
+                <p class="text-xs text-gray-500 font-medium">Fecha Límite</p>
+              </div>
+              <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_limite) }}</p>
+              <p class="text-xs text-gray-500 mt-1">Con días de gracia</p>
+            </div>
+          </div>
+
+          <!-- Periodicidad y descripción -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-2xl">{{ cuotaDetalle.quincena ? '🗓️' : '📅' }}</span>
+                <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
+              </div>
+              <p class="text-lg font-bold text-gray-800">
+                {{ cuotaDetalle.quincena ? `Quincenal - Q${cuotaDetalle.quincena}` : 'Mensual' }}
+              </p>
+            </div>
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl border border-blue-200 shadow-sm">
+              <div class="flex items-center gap-3 mb-2">
+                <DocumentTextIcon class="w-5 h-5 text-blue-500" />
+                <p class="text-xs text-gray-500 font-medium">Descripción</p>
+              </div>
+              <p class="text-lg font-semibold text-gray-800">{{ cuotaDetalle.descripcion || 'Cuota' }}</p>
+            </div>
+          </div>
+
+          <!-- Información del socio -->
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+            <p class="text-xs text-gray-500 font-medium mb-3">Información del Socio</p>
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <UserIcon class="w-5 h-5 text-gray-400" />
+                <div>
+                  <p class="text-xs text-gray-500">Nombre</p>
+                  <p class="font-semibold text-gray-800">{{ cuotaDetalle.socio_natillera?.socio?.nombre || 'N/A' }}</p>
+                </div>
+              </div>
+              <div v-if="cuotaDetalle.socio_natillera?.socio?.telefono" class="flex items-center gap-3">
+                <PhoneIcon class="w-5 h-5 text-gray-400" />
+                <div>
+                  <p class="text-xs text-gray-500">Teléfono</p>
+                  <p class="font-semibold text-gray-800">{{ cuotaDetalle.socio_natillera?.socio?.telefono }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con acciones -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
+          <button 
+            @click="modalDetalleCuota = false"
+            class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            Cerrar
+          </button>
+          <button 
+            v-if="cuotaDetalle?.estado !== 'pagada'"
+            @click="modalDetalleCuota = false; abrirModalPago(cuotaDetalle)"
+            class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl"
+          >
+            Registrar Pago
+          </button>
+          <button 
+            v-if="cuotaDetalle?.estado === 'pagada'"
+            @click="reenviarComprobante(cuotaDetalle)"
+            class="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/25 hover:shadow-xl"
+          >
+            Reenviar Comprobante
           </button>
         </div>
       </div>
@@ -1428,7 +1674,10 @@ import {
   TableCellsIcon,
   Squares2X2Icon,
   XMarkIcon,
-  PencilIcon
+  PencilIcon,
+  DocumentTextIcon,
+  UserIcon,
+  PhoneIcon
 } from '@heroicons/vue/24/outline'
 import DatePicker from '../../components/DatePicker.vue'
 import * as XLSX from 'xlsx-js-style'
@@ -1451,6 +1700,8 @@ const exportando = ref(false)
 const cuotaSeleccionada = ref(null)
 const cuotaEditando = ref(null)
 const pagoRegistrado = ref(null)
+const modalDetalleCuota = ref(false)
+const cuotaDetalle = ref(null)
 const natilleraNombre = ref('')
 const comprobanteRef = ref(null)
 const generandoImagen = ref(false)
@@ -2063,6 +2314,11 @@ function formatDate(date) {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const year = d.getFullYear()
   return `${day}/${month}/${year}`
+}
+
+function abrirModalDetalleCuota(cuota) {
+  cuotaDetalle.value = cuota
+  modalDetalleCuota.value = true
 }
 
 function abrirModalPago(cuota) {

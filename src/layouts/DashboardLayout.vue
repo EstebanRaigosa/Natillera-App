@@ -202,9 +202,9 @@
     ></div>
 
     <!-- Contenido principal -->
-    <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
+    <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden overflow-y-auto">
       <!-- Header móvil -->
-      <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3">
+      <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between">
           <button 
             @click="sidebarOpen = true"
@@ -218,7 +218,7 @@
       </header>
 
       <!-- Contenido de la página -->
-      <div class="flex-1 p-3 sm:p-4 lg:p-8 w-full overflow-x-hidden">
+      <div class="flex-1 p-3 sm:p-4 lg:p-8 w-full min-h-0">
         <router-view />
       </div>
     </main>
