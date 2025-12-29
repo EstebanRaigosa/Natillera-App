@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Fondo con gradiente verde natillera -->
+  <rect width="64" height="64" rx="14" fill="url(#gradient)"/>
+  
+  <!-- Billetera/Alcancía -->
+  <g transform="translate(12, 16)">
+    <!-- Cuerpo de la billetera -->
+    <rect x="8" y="12" width="32" height="20" rx="3" fill="#ffffff" opacity="0.95"/>
+    <rect x="8" y="12" width="32" height="20" rx="3" stroke="#16a34a" stroke-width="1.5"/>
+    
+    <!-- Banda superior -->
+    <rect x="8" y="12" width="32" height="6" rx="3" fill="#22c55e"/>
+    
+    <!-- Monedas/Billetes dentro -->
+    <circle cx="16" cy="24" r="2.5" fill="#16a34a"/>
+    <circle cx="24" cy="24" r="2.5" fill="#16a34a"/>
+    <circle cx="32" cy="24" r="2.5" fill="#16a34a"/>
+    
+    <!-- Líneas de billetes -->
+    <rect x="14" y="28" width="8" height="1.5" rx="0.75" fill="#22c55e"/>
+    <rect x="14" y="30.5" width="10" height="1.5" rx="0.75" fill="#22c55e"/>
+    
+    <!-- Cierre/Clip -->
+    <rect x="36" y="16" width="2" height="8" rx="1" fill="#16a34a"/>
+  </g>
+  
+  <!-- Gradiente de fondo -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>
+
