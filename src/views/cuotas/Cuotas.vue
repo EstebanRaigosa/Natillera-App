@@ -546,7 +546,24 @@
                 <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                   <!-- Valores más compactos -->
                   <div class="text-left sm:text-right flex-shrink-0">
-                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota">
+                    <!-- Estado mora con multa -->
+                    <template v-if="cuota.estado === 'mora'">
+                      <p class="text-xs text-gray-500 mb-0.5">Total a Pagar</p>
+                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
+                        ${{ formatMoney(getTotalAPagar(cuota)) }}
+                      </p>
+                      <p class="text-xs text-gray-500 mt-1">
+                        Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                      </p>
+                      <p v-if="getSancionCuota(cuota) > 0" class="text-xs font-semibold mt-0.5 text-red-600">
+                        + Multa: ${{ formatMoney(getSancionCuota(cuota)) }}
+                      </p>
+                      <p v-if="cuota.valor_pagado > 0" class="text-xs font-medium mt-0.5 text-green-600">
+                        Pagado: ${{ formatMoney(cuota.valor_pagado) }}
+                      </p>
+                    </template>
+                    <!-- Estado parcial -->
+                    <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota">
                       <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</p>
                       <p class="text-xs text-gray-500 mt-1">
@@ -556,6 +573,7 @@
                         Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                       </p>
                     </template>
+                    <!-- Estado normal -->
                     <template v-else>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">${{ formatMoney(cuota.valor_cuota) }}</p>
                       <p class="text-xs font-medium mt-1" :class="cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400'">
@@ -654,13 +672,23 @@
                   Mensual
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm font-semibold text-gray-800 text-right">
-                <template v-if="cuota.estado === 'parcial'">
+              <td class="px-4 py-3 text-sm font-semibold text-right" :class="cuota.estado === 'mora' ? 'text-red-600' : 'text-gray-800'">
+                <!-- Estado mora con multa -->
+                <template v-if="cuota.estado === 'mora'">
+                  <div class="space-y-0.5">
+                    <div>${{ formatMoney(getTotalAPagar(cuota)) }}</div>
+                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div v-if="getSancionCuota(cuota) > 0" class="text-xs text-red-500 font-semibold">+ Multa: ${{ formatMoney(getSancionCuota(cuota)) }}</div>
+                  </div>
+                </template>
+                <!-- Estado parcial -->
+                <template v-else-if="cuota.estado === 'parcial'">
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Inicial: ${{ formatMoney(cuota.valor_cuota) }}</div>
                   </div>
                 </template>
+                <!-- Estado normal -->
                 <div v-else>
                   ${{ formatMoney(cuota.valor_cuota) }}
                 </div>
@@ -885,9 +913,47 @@
               <p class="text-xs text-gray-500 font-medium mb-2">Valor Pagado</p>
               <p class="text-2xl font-bold text-green-700">${{ formatMoney(cuotaDetalle.valor_pagado || 0) }}</p>
             </div>
-            <div class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-200 shadow-sm">
-              <p class="text-xs text-gray-500 font-medium mb-2">Valor Pendiente</p>
-              <p class="text-2xl font-bold text-amber-700">${{ formatMoney(cuotaDetalle.valor_cuota - (cuotaDetalle.valor_pagado || 0)) }}</p>
+            <div :class="[
+              'p-5 rounded-xl border shadow-sm',
+              cuotaDetalle.estado === 'mora' 
+                ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
+                : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
+            ]">
+              <p class="text-xs text-gray-500 font-medium mb-2">
+                {{ cuotaDetalle.estado === 'mora' ? 'Total a Pagar' : 'Valor Pendiente' }}
+              </p>
+              <p :class="[
+                'text-2xl font-bold',
+                cuotaDetalle.estado === 'mora' ? 'text-red-700' : 'text-amber-700'
+              ]">
+                ${{ formatMoney(getTotalAPagar(cuotaDetalle)) }}
+              </p>
+              <p v-if="getSancionCuota(cuotaDetalle) > 0" class="text-xs text-red-600 font-semibold mt-1">
+                Incluye multa de ${{ formatMoney(getSancionCuota(cuotaDetalle)) }}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Detalle de multa si está en mora -->
+          <div v-if="cuotaDetalle.estado === 'mora' && getSancionCuota(cuotaDetalle) > 0" class="bg-gradient-to-br from-red-50 to-rose-50 p-5 rounded-xl border border-red-200 shadow-sm">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <ExclamationCircleIcon class="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <p class="font-bold text-red-800">Sanción por Mora</p>
+                <p class="text-xs text-red-600">Calculada en tiempo real según configuración</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs text-gray-500 mb-1">Valor de la multa</p>
+                <p class="text-lg font-bold text-red-700">${{ formatMoney(getSancionCuota(cuotaDetalle)) }}</p>
+              </div>
+              <div v-if="cuotaDetalle.fecha_mora || cuotaDetalle.fecha_limite">
+                <p class="text-xs text-gray-500 mb-1">En mora desde</p>
+                <p class="text-lg font-bold text-gray-700">{{ formatDate(cuotaDetalle.fecha_mora) }}</p>
+              </div>
             </div>
           </div>
 
@@ -1351,6 +1417,9 @@
                 <p class="font-bold text-gray-800 text-lg">
                   ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
                 </p>
+                <p v-if="getSancionCuota(cuotaSeleccionada) > 0" class="text-xs text-red-600 font-semibold">
+                  + Multa: ${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}
+                </p>
               </div>
               <div v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
                 <p class="text-xs text-gray-500 mb-1">Ya Pagado</p>
@@ -1359,9 +1428,9 @@
                 </p>
               </div>
               <div>
-                <p class="text-xs text-gray-500 mb-1">Pendiente</p>
-                <p class="font-bold text-orange-600 text-lg">
-                  ${{ formatMoney((cuotaSeleccionada?.valor_cuota || 0) - (cuotaSeleccionada?.valor_pagado || 0)) }}
+                <p class="text-xs text-gray-500 mb-1">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
+                <p :class="['font-bold text-lg', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                  ${{ formatMoney(getTotalAPagar(cuotaSeleccionada)) }}
                 </p>
               </div>
             </div>
@@ -1387,13 +1456,16 @@
                   @input="handleValorPagoInput($event)"
                   type="text" 
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
-                  :placeholder="`Máx: ${formatMoney((cuotaSeleccionada?.valor_cuota || 0) - (cuotaSeleccionada?.valor_pagado || 0))}`"
+                  :placeholder="`Máx: ${formatMoney(getTotalAPagar(cuotaSeleccionada))}`"
                   required
                 />
               </div>
               <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
                 <span>Máximo disponible:</span>
-                <span class="font-semibold text-orange-600">${{ formatMoney((cuotaSeleccionada?.valor_cuota || 0) - (cuotaSeleccionada?.valor_pagado || 0)) }}</span>
+                <span :class="['font-semibold', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                  ${{ formatMoney(getTotalAPagar(cuotaSeleccionada)) }}
+                </span>
+                <span v-if="getSancionCuota(cuotaSeleccionada) > 0" class="text-red-500 text-xs">(incluye multa)</span>
               </p>
             </div>
 
@@ -2163,15 +2235,22 @@
                 type="button"
                 @click="cerrarModalEditarSocio"
                 class="btn-secondary flex-1"
+                :disabled="estadoGuardadoSocio !== ''"
               >
                 Cancelar
               </button>
               <button 
                 type="submit" 
-                class="btn-primary flex-1"
-                :disabled="sociosStore.loading"
+                class="btn-primary flex-1 flex items-center justify-center gap-2"
+                :disabled="estadoGuardadoSocio !== ''"
               >
-                {{ sociosStore.loading ? 'Guardando...' : 'Guardar Cambios' }}
+                <svg v-if="estadoGuardadoSocio !== ''" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span v-if="estadoGuardadoSocio === 'guardando'">Guardando datos...</span>
+                <span v-else-if="estadoGuardadoSocio === 'generando'">Generando cuotas...</span>
+                <span v-else>Guardar Cambios</span>
               </button>
             </div>
           </form>
@@ -2310,6 +2389,7 @@ import { useRoute } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
 import { supabase } from '../../lib/supabase'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 // Ya no necesitamos html2canvas, dibujamos directamente en canvas
 import { 
   ArrowLeftIcon,
@@ -2372,6 +2452,7 @@ const cuotasSocio = ref([])
 const mostrarAvatares = ref(false)
 const mostrarContacto = ref(false)
 const errorSocio = ref('')
+const estadoGuardadoSocio = ref('') // '', 'guardando', 'generando'
 const natilleraNombre = ref('')
 const comprobanteRef = ref(null)
 const generandoImagen = ref(false)
@@ -2380,6 +2461,7 @@ const mostrarIndicadorScroll = ref(false)
 const scrollContainerGenerarCuotas = ref(null)
 const dropdownMesAbierto = ref(false)
 const dropdownMesRef = ref(null)
+const sancionesDinamicas = ref({}) // Sanciones calculadas dinámicamente
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -2909,7 +2991,8 @@ function handleValorPagoInput(event) {
   } else {
     const numero = parseInt(valor, 10)
     if (!isNaN(numero) && numero >= 0) {
-      const maxValor = (cuotaSeleccionada.value?.valor_cuota || 0) - (cuotaSeleccionada.value?.valor_pagado || 0)
+      // Usar la función getTotalAPagar que incluye la sanción dinámica
+      const maxValor = getTotalAPagar(cuotaSeleccionada.value)
       // Limitar al máximo disponible
       formPago.valor = Math.min(numero, maxValor)
     }
@@ -2977,6 +3060,20 @@ watch(mostrarFiltros, (mostrar) => {
 
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
+}
+
+// Obtener la sanción dinámica de una cuota (calculada en tiempo real)
+function getSancionCuota(cuota) {
+  if (!cuota || cuota.estado !== 'mora') return 0
+  // Usar la sanción calculada dinámicamente, si no existe usar la guardada en BD
+  return sancionesDinamicas.value[cuota.id] || cuota.valor_multa || 0
+}
+
+// Obtener el total a pagar de una cuota (valor_cuota + sanción - valor_pagado)
+function getTotalAPagar(cuota) {
+  if (!cuota) return 0
+  const sancion = getSancionCuota(cuota)
+  return (cuota.valor_cuota || 0) + sancion - (cuota.valor_pagado || 0)
 }
 
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
@@ -3126,6 +3223,7 @@ function cerrarModalEditarSocio() {
   modalEditarSocio.value = false
   socioEditando.value = null
   errorSocio.value = ''
+  estadoGuardadoSocio.value = ''
   mostrarContacto.value = false
   mostrarAvatares.value = false
   Object.assign(formSocio, {
@@ -3162,105 +3260,117 @@ function handleValorCuotaInput(event) {
 
 async function handleGuardarSocio() {
   errorSocio.value = ''
+  estadoGuardadoSocio.value = 'guardando'
 
   if (socioEditando.value) {
-    // Actualizar cuota del socio en socios_natillera
-    const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
-      valor_cuota_individual: formSocio.valor_cuota,
-      periodicidad: formSocio.periodicidad
-    })
+    try {
+      // Actualizar cuota del socio en socios_natillera
+      const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
+        valor_cuota_individual: formSocio.valor_cuota,
+        periodicidad: formSocio.periodicidad
+      })
 
-    // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
-    if (socioEditando.value.socio?.id) {
-      const datosActualizados = {
-        nombre: formSocio.nombre,
-        telefono: formSocio.telefono || null,
-        email: formSocio.email || null,
-        documento: formSocio.documento || null
-      }
-      
-      // Solo incluir avatar_seed si se seleccionó uno
-      if (formSocio.avatar_seed) {
-        datosActualizados.avatar_seed = formSocio.avatar_seed
-      }
-      
-      // Incluir avatar_style si se seleccionó uno
-      if (formSocio.avatar_style) {
-        datosActualizados.avatar_style = formSocio.avatar_style
-      }
-      
-      await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
-    }
-
-    if (result.success) {
-      // Obtener mes y año actuales
-      const fechaActual = new Date()
-      const mesActual = fechaActual.getMonth() + 1 // 1-12
-      const anioActual = fechaActual.getFullYear()
-      
-      // Obtener días de gracia de la natillera
-      const { data: natillera } = await supabase
-        .from('natilleras')
-        .select('reglas_multas')
-        .eq('id', id)
-        .single()
-      
-      const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
-      
-      // Calcular fechas por defecto para el mes actual
-      const fechasPorDefecto = calcularFechasPorDefecto(mesActual, anioActual, diasGracia)
-      
-      // Obtener el nombre del mes para el label
-      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
-                     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-      const mesLabel = meses[mesActual - 1]
-      
-      // Función para calcular fecha de vencimiento (restando días de gracia de la fecha límite)
-      function calcularFechaVencimiento(fechaLimiteStr) {
-        if (!fechaLimiteStr) return fechaLimiteStr
-        const fechaLimite = new Date(fechaLimiteStr)
-        fechaLimite.setDate(fechaLimite.getDate() - diasGracia)
-        return fechaLimite.toISOString().split('T')[0]
-      }
-      
-      // Generar cuotas solo para el socio editado
-      try {
-        const resultGenerar = await cuotasStore.generarCuotasPeriodo(
-          id,
-          {
-            mensual: { 
-              vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
-              limite: fechasPorDefecto.fecha_quincena2 
-            },
-            quincena1: { 
-              vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena1), 
-              limite: fechasPorDefecto.fecha_quincena1 
-            },
-            quincena2: { 
-              vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
-              limite: fechasPorDefecto.fecha_quincena2 
-            }
-          },
-          mesLabel,
-          mesActual,
-          anioActual,
-          socioEditando.value.id // Solo para el socio editado
-        )
-        
-        if (resultGenerar.success) {
-          console.log(`✅ Cuotas regeneradas para el socio en el mes ${mesActual}`)
+      // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
+      if (socioEditando.value.socio?.id) {
+        const datosActualizados = {
+          nombre: formSocio.nombre,
+          telefono: formSocio.telefono || null,
+          email: formSocio.email || null,
+          documento: formSocio.documento || null
         }
-      } catch (error) {
-        console.error('Error regenerando cuotas:', error)
-        // No mostrar error al usuario, solo loguear
+        
+        // Solo incluir avatar_seed si se seleccionó uno
+        if (formSocio.avatar_seed) {
+          datosActualizados.avatar_seed = formSocio.avatar_seed
+        }
+        
+        // Incluir avatar_style si se seleccionó uno
+        if (formSocio.avatar_style) {
+          datosActualizados.avatar_style = formSocio.avatar_style
+        }
+        
+        await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
       }
-      
-      // Recargar cuotas para ver los cambios
-      await cuotasStore.fetchCuotasNatillera(id)
-      cerrarModalEditarSocio()
-    } else {
-      errorSocio.value = result.error
+
+      if (result.success) {
+        // Cambiar estado a "generando cuotas"
+        estadoGuardadoSocio.value = 'generando'
+        
+        // Usar el mes seleccionado en la vista de cuotas (como si se usara el menú de generar cuotas)
+        const mesParaGenerar = mesSeleccionado.value || (new Date().getMonth() + 1)
+        const anioParaGenerar = anioNatillera.value || new Date().getFullYear()
+        
+        // Obtener días de gracia de la natillera
+        const { data: natillera } = await supabase
+          .from('natilleras')
+          .select('reglas_multas')
+          .eq('id', id)
+          .single()
+        
+        const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+        
+        // Calcular fechas por defecto para el mes seleccionado
+        const fechasPorDefecto = calcularFechasPorDefecto(mesParaGenerar, anioParaGenerar, diasGracia)
+        
+        // Obtener el nombre del mes para el label
+        const mesLabel = todosMeses.find(m => m.value === mesParaGenerar)?.label || ''
+        
+        // Función para calcular fecha de vencimiento (restando días de gracia de la fecha límite)
+        function calcularFechaVencimiento(fechaLimiteStr) {
+          if (!fechaLimiteStr) return fechaLimiteStr
+          const fechaLimite = new Date(fechaLimiteStr)
+          fechaLimite.setDate(fechaLimite.getDate() - diasGracia)
+          return fechaLimite.toISOString().split('T')[0]
+        }
+        
+        // Generar cuotas solo para el socio editado (mismo proceso que el menú "Generar Cuotas")
+        try {
+          const resultGenerar = await cuotasStore.generarCuotasPeriodo(
+            id,
+            {
+              mensual: { 
+                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
+                limite: fechasPorDefecto.fecha_quincena2 
+              },
+              quincena1: { 
+                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena1), 
+                limite: fechasPorDefecto.fecha_quincena1 
+              },
+              quincena2: { 
+                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
+                limite: fechasPorDefecto.fecha_quincena2 
+              }
+            },
+            mesLabel,
+            mesParaGenerar,
+            anioParaGenerar,
+            socioEditando.value.id // Solo para el socio editado
+          )
+          
+          if (resultGenerar.success) {
+            console.log(`✅ Cuotas regeneradas para el socio ${formSocio.nombre} en ${mesLabel} ${anioParaGenerar}`)
+          }
+        } catch (error) {
+          console.error('Error regenerando cuotas:', error)
+          // No mostrar error al usuario, solo loguear
+        }
+        
+        // Recargar cuotas para ver los cambios
+        await cuotasStore.fetchCuotasNatillera(id)
+        cargarConteoSocios() // Recargar conteo de socios también
+        estadoGuardadoSocio.value = ''
+        cerrarModalEditarSocio()
+      } else {
+        estadoGuardadoSocio.value = ''
+        errorSocio.value = result.error
+      }
+    } catch (error) {
+      console.error('Error en handleGuardarSocio:', error)
+      estadoGuardadoSocio.value = ''
+      errorSocio.value = 'Error al guardar los cambios. Por favor, intenta nuevamente.'
     }
+  } else {
+    estadoGuardadoSocio.value = ''
   }
 }
 
@@ -4277,10 +4387,10 @@ async function borrarCuotasMes() {
   try {
     cuotasStore.loading = true
     
-    // Obtener los IDs de socios_natillera de esta natillera
+    // Obtener los IDs de socios_natillera de esta natillera (incluyendo nombres para auditoría)
     const { data: sociosNatillera, error: sociosError } = await supabase
       .from('socios_natillera')
-      .select('id')
+      .select('id, socio:socios(nombre)')
       .eq('natillera_id', id)
 
     if (sociosError) throw sociosError
@@ -4289,7 +4399,24 @@ async function borrarCuotasMes() {
       return
     }
 
+    // Crear mapeo de socio_natillera_id a nombre
+    const socioNombreMap = {}
+    sociosNatillera.forEach(s => {
+      socioNombreMap[s.id] = s.socio?.nombre || 'Socio desconocido'
+    })
+
     const socioNatilleraIds = sociosNatillera.map(s => s.id)
+
+    // Obtener las cuotas que se van a eliminar para registrar en auditoría
+    const { data: cuotasAEliminar, error: fetchError } = await supabase
+      .from('cuotas')
+      .select('*')
+      .in('socio_natillera_id', socioNatilleraIds)
+      .eq('mes', mesSeleccionado.value)
+      .eq('anio', anioNatillera.value)
+      .in('estado', ['pendiente', 'mora', 'programada'])
+
+    if (fetchError) throw fetchError
 
     // Eliminar solo las cuotas pendientes y en mora del mes y año seleccionados
     // NO eliminar las pagadas ni parciales
@@ -4302,6 +4429,46 @@ async function borrarCuotasMes() {
       .in('estado', ['pendiente', 'mora', 'programada'])
 
     if (deleteError) throw deleteError
+
+    // Registrar auditoría de eliminación masiva
+    const auditoria = useAuditoria()
+    const mesLabel = todosMeses.find(m => m.value === mesSeleccionado.value)?.label || mesSeleccionado.value
+    const cantidadEliminadas = cuotasAEliminar?.length || 0
+    
+    if (cantidadEliminadas > 0) {
+      // Obtener lista de nombres de socios afectados
+      const sociosAfectados = [...new Set(cuotasAEliminar.map(c => socioNombreMap[c.socio_natillera_id]))]
+      const sociosTexto = sociosAfectados.length <= 3 
+        ? sociosAfectados.join(', ')
+        : `${sociosAfectados.slice(0, 3).join(', ')} y ${sociosAfectados.length - 3} más`
+      
+      // Registrar auditoría de eliminación masiva (en segundo plano)
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
+        'cuota',
+        null, // No hay un ID específico para eliminación masiva
+        `Se eliminaron ${cantidadEliminadas} cuota(s) de ${mesLabel} ${anioNatillera.value} para: ${sociosTexto}`,
+        {
+          cuotas_eliminadas: cuotasAEliminar.map(c => ({
+            id: c.id,
+            valor_cuota: c.valor_cuota,
+            estado: c.estado,
+            socio_natillera_id: c.socio_natillera_id,
+            socio_nombre: socioNombreMap[c.socio_natillera_id]
+          })),
+          socios_afectados: sociosAfectados,
+          total_eliminadas: cantidadEliminadas,
+          mes: mesSeleccionado.value,
+          anio: anioNatillera.value
+        },
+        id, // natilleraId
+        {
+          accion: 'eliminacion_masiva',
+          mes: mesLabel,
+          anio: anioNatillera.value,
+          socios: sociosAfectados
+        }
+      ))
+    }
 
     // Recargar cuotas
     await cuotasStore.fetchCuotasNatillera(id)
@@ -4324,10 +4491,17 @@ function handleClickOutside(event) {
   }
 }
 
-onMounted(() => {
-  cargarNatillera().then(() => {
-    cuotasStore.fetchCuotasNatillera(id)
-  })
+onMounted(async () => {
+  await cargarNatillera()
+  await cuotasStore.fetchCuotasNatillera(id)
+  
+  // Calcular sanciones dinámicas para las cuotas en mora
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
+  if (resultSanciones.success) {
+    sancionesDinamicas.value = resultSanciones.sanciones || {}
+    console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+  }
+  
   document.addEventListener('click', handleClickOutside)
 })
 

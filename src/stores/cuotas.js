@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
-import { useAuditoria } from '../composables/useAuditoria'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 
 export const useCuotasStore = defineStore('cuotas', () => {
   const cuotas = ref([])
@@ -48,8 +48,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       cuotas.value = cuotasConSocio
       
-      // Actualizar automáticamente el estado de cuotas en mora
-      await actualizarEstadoMoraAutomatico(cuotasConSocio)
+      // Actualizar automáticamente el estado de cuotas en mora y aplicar sanciones
+      await actualizarEstadoMoraAutomatico(cuotasConSocio, natilleraId)
+      
+      // Recalcular multas para cuotas que ya están en mora pero no tienen multa aplicada
+      await recalcularMultasCuotasMora(natilleraId)
       
       return cuotasConSocio
     } catch (e) {
@@ -61,8 +64,167 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // Función para calcular la multa según la configuración de sanciones
+  function calcularMulta(configSanciones, cantidadCuotasMora = 1) {
+    if (!configSanciones || !configSanciones.activa) {
+      return 0
+    }
+
+    let multa = 0
+
+    if (configSanciones.tipo === 'simple') {
+      // Multa fija simple
+      multa = configSanciones.valorFijo || 0
+    } else if (configSanciones.tipo === 'escalonada') {
+      // Multa escalonada según cantidad de cuotas en mora
+      const niveles = configSanciones.niveles || []
+      
+      // Ordenar niveles por cantidad de cuotas (descendente) para encontrar el nivel aplicable
+      const nivelesOrdenados = [...niveles].sort((a, b) => b.cuotas - a.cuotas)
+      
+      // Buscar el nivel que corresponde a la cantidad de cuotas en mora
+      for (const nivel of nivelesOrdenados) {
+        if (cantidadCuotasMora >= nivel.cuotas) {
+          multa = nivel.valor || 0
+          break
+        }
+      }
+      
+      // Si no encontró nivel, usar el primer nivel (menor)
+      if (multa === 0 && niveles.length > 0) {
+        multa = niveles[0].valor || 0
+      }
+    }
+
+    return multa
+  }
+
+  // Función para calcular la multa dinámica de una cuota considerando la fecha actual
+  // y la configuración de intereses adicionales por días de mora
+  function calcularMultaDinamica(cuota, configSanciones, cantidadCuotasMoraSocio = 1) {
+    if (!configSanciones || !configSanciones.activa) {
+      return 0
+    }
+
+    if (cuota.estado !== 'mora') {
+      return 0
+    }
+
+    // Calcular multa base según el tipo de sanción
+    let multaBase = calcularMulta(configSanciones, cantidadCuotasMoraSocio)
+
+    // Calcular días en mora (desde fecha_limite, no desde fecha_mora)
+    // La fecha_limite es cuando debió pagar, después de eso está en mora
+    const fechaLimiteStr = cuota.fecha_limite
+    if (!fechaLimiteStr) {
+      console.warn('Cuota sin fecha_limite:', cuota.id)
+      return multaBase
+    }
+
+    // Parsear fecha correctamente (YYYY-MM-DD)
+    const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+    const fechaLimite = new Date(anio, mes - 1, dia)
+    fechaLimite.setHours(0, 0, 0, 0)
+    
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+
+    const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+
+    // Calcular intereses adicionales por días de mora
+    let interesesAdicionales = 0
+    const interesesConfig = configSanciones.interesesAdicionales
+    
+    if (interesesConfig && interesesConfig.activo) {
+      const diasParaInteres = interesesConfig.dias || 2
+      const valorInteres = interesesConfig.valor || 0
+
+      // Calcular cuántos períodos de interés adicional han pasado
+      if (diasEnMora > 0 && diasParaInteres > 0 && valorInteres > 0) {
+        const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+        interesesAdicionales = periodosInteres * valorInteres
+        
+        console.log(`📊 Cálculo intereses cuota ${cuota.id}:`, {
+          fechaLimite: fechaLimiteStr,
+          diasEnMora,
+          diasParaInteres,
+          valorInteres,
+          periodosInteres,
+          interesesAdicionales
+        })
+      }
+    }
+
+    const totalSancion = multaBase + interesesAdicionales
+    
+    console.log(`💰 Sanción cuota ${cuota.id}: Base $${multaBase.toLocaleString()} + Intereses $${interesesAdicionales.toLocaleString()} = $${totalSancion.toLocaleString()}`)
+
+    return totalSancion
+  }
+
+  // Función para calcular el total de sanciones de un conjunto de cuotas
+  async function calcularSancionesTotales(natilleraId, cuotasLista = null) {
+    try {
+      // Obtener configuración de sanciones
+      const { data: natillera } = await supabase
+        .from('natilleras')
+        .select('reglas_multas')
+        .eq('id', natilleraId)
+        .single()
+
+      const configSanciones = natillera?.reglas_multas?.sanciones || null
+
+      console.log('🔧 Configuración de sanciones:', JSON.stringify(configSanciones, null, 2))
+
+      if (!configSanciones?.activa) {
+        console.log('⚠️ Sanciones no activas')
+        return { 
+          success: true, 
+          sanciones: {},
+          configActiva: false 
+        }
+      }
+
+      console.log('✅ Sanciones activas:', {
+        tipo: configSanciones.tipo,
+        valorFijo: configSanciones.valorFijo,
+        niveles: configSanciones.niveles,
+        interesesAdicionales: configSanciones.interesesAdicionales
+      })
+
+      const lista = cuotasLista || cuotas.value
+      
+      // Contar cuotas en mora por socio para el escalonamiento
+      const cuotasMoraPorSocio = {}
+      lista.filter(c => c.estado === 'mora').forEach(c => {
+        cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+      })
+
+      console.log('📋 Cuotas en mora por socio:', cuotasMoraPorSocio)
+
+      // Calcular sanción dinámica para cada cuota en mora
+      const sanciones = {}
+      lista.filter(c => c.estado === 'mora').forEach(cuota => {
+        const cantidadMora = cuotasMoraPorSocio[cuota.socio_natillera_id] || 1
+        const sancion = calcularMultaDinamica(cuota, configSanciones, cantidadMora)
+        sanciones[cuota.id] = sancion
+      })
+
+      return { 
+        success: true, 
+        sanciones,
+        configSanciones,
+        configActiva: true
+      }
+    } catch (e) {
+      console.error('Error calculando sanciones:', e)
+      return { success: false, error: e.message, sanciones: {} }
+    }
+  }
+
   // Función para actualizar automáticamente el estado de cuotas (programada -> pendiente -> mora)
-  async function actualizarEstadoMoraAutomatico(cuotasLista = null) {
+  // y aplicar sanciones según la configuración de la natillera
+  async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null) {
     try {
       const lista = cuotasLista || cuotas.value
       if (!lista || lista.length === 0) return
@@ -74,7 +236,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Separar cuotas por estado a actualizar
       const cuotasAPendiente = [] // programada -> pendiente
-      const cuotasAMora = [] // pendiente/parcial -> mora
+      const cuotasAMora = [] // pendiente/parcial -> mora (solo las que no tienen multa ya aplicada)
 
       lista.forEach(cuota => {
         // Solo procesar cuotas que no estén pagadas
@@ -90,8 +252,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
           cuotasAPendiente.push(cuota.id)
         }
         // Si está pendiente o parcial y la fecha actual > fecha_limite, pasa a mora
+        // Solo si no está ya en mora (evitar reprocesar)
         else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaLimite) {
-          cuotasAMora.push(cuota.id)
+          cuotasAMora.push({
+            id: cuota.id,
+            socio_natillera_id: cuota.socio_natillera_id,
+            yaTeníaMulta: (cuota.valor_multa || 0) > 0
+          })
         }
       })
 
@@ -112,18 +279,89 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
 
-      // Actualizar cuotas a mora
+      // Actualizar cuotas a mora con aplicación de sanciones
       if (cuotasAMora.length > 0) {
-        const { data: actualizadasMora, error: errorMora } = await supabase
-          .from('cuotas')
-          .update({ estado: 'mora' })
-          .in('id', cuotasAMora)
-          .select()
+        // Obtener la configuración de sanciones de la natillera
+        let configSanciones = null
+        
+        if (natilleraId) {
+          const { data: natillera } = await supabase
+            .from('natilleras')
+            .select('reglas_multas')
+            .eq('id', natilleraId)
+            .single()
+          
+          configSanciones = natillera?.reglas_multas?.sanciones || null
+        } else if (cuotasAMora.length > 0) {
+          // Obtener natillera_id desde el primer socio_natillera
+          const { data: socioNatillera } = await supabase
+            .from('socios_natillera')
+            .select('natillera_id')
+            .eq('id', cuotasAMora[0].socio_natillera_id)
+            .single()
+          
+          if (socioNatillera?.natillera_id) {
+            const { data: natillera } = await supabase
+              .from('natilleras')
+              .select('reglas_multas')
+              .eq('id', socioNatillera.natillera_id)
+              .single()
+            
+            configSanciones = natillera?.reglas_multas?.sanciones || null
+          }
+        }
 
-        if (errorMora) {
-          console.error('Error actualizando cuotas en mora:', errorMora)
-        } else if (actualizadasMora) {
-          actualizaciones.push(...actualizadasMora)
+        // Si las sanciones están activas, contar cuotas en mora por socio para escalonamiento
+        let cuotasMoraPorSocio = {}
+        if (configSanciones?.activa && configSanciones?.tipo === 'escalonada') {
+          // Obtener todas las cuotas en mora actuales por socio
+          const socioIds = [...new Set(cuotasAMora.map(c => c.socio_natillera_id))]
+          
+          const { data: cuotasMoraExistentes } = await supabase
+            .from('cuotas')
+            .select('socio_natillera_id')
+            .in('socio_natillera_id', socioIds)
+            .eq('estado', 'mora')
+
+          // Contar cuotas en mora por socio
+          ;(cuotasMoraExistentes || []).forEach(c => {
+            cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+          })
+        }
+
+        // Actualizar cada cuota a mora individualmente para aplicar la multa correcta
+        for (const cuotaInfo of cuotasAMora) {
+          // Calcular la multa si las sanciones están activas y la cuota no tenía multa
+          let valorMulta = 0
+          if (configSanciones?.activa && !cuotaInfo.yaTeníaMulta) {
+            const cantidadMora = (cuotasMoraPorSocio[cuotaInfo.socio_natillera_id] || 0) + 1
+            valorMulta = calcularMulta(configSanciones, cantidadMora)
+            
+            console.log(`💰 Aplicando multa de $${valorMulta.toLocaleString('es-CO')} a cuota ${cuotaInfo.id} (${cantidadMora} cuotas en mora)`)
+          }
+
+          const datosActualizar = {
+            estado: 'mora',
+            fecha_mora: fechaActualStr
+          }
+
+          // Solo actualizar valor_multa si hay multa que aplicar
+          if (valorMulta > 0) {
+            datosActualizar.valor_multa = valorMulta
+          }
+
+          const { data: actualizadaMora, error: errorMora } = await supabase
+            .from('cuotas')
+            .update(datosActualizar)
+            .eq('id', cuotaInfo.id)
+            .select()
+            .single()
+
+          if (errorMora) {
+            console.error('Error actualizando cuota en mora:', errorMora)
+          } else if (actualizadaMora) {
+            actualizaciones.push(actualizadaMora)
+          }
         }
       }
 
@@ -154,15 +392,102 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // Función para recalcular multas de cuotas que ya están en mora pero no tienen multa aplicada
+  async function recalcularMultasCuotasMora(natilleraId) {
+    try {
+      // Obtener configuración de sanciones
+      const { data: natillera } = await supabase
+        .from('natilleras')
+        .select('reglas_multas')
+        .eq('id', natilleraId)
+        .single()
+
+      const configSanciones = natillera?.reglas_multas?.sanciones || null
+
+      // Si las sanciones no están activas, no hacer nada
+      if (!configSanciones?.activa) {
+        return { success: true, recalculadas: 0 }
+      }
+
+      // Obtener cuotas en mora sin multa aplicada
+      const cuotasMoraSinMulta = cuotas.value.filter(c => 
+        c.estado === 'mora' && (!c.valor_multa || c.valor_multa === 0)
+      )
+
+      if (cuotasMoraSinMulta.length === 0) {
+        return { success: true, recalculadas: 0 }
+      }
+
+      console.log(`🔄 Recalculando multas para ${cuotasMoraSinMulta.length} cuota(s) en mora sin multa...`)
+
+      // Para el tipo escalonado, necesitamos contar cuotas en mora por socio
+      let cuotasMoraPorSocio = {}
+      if (configSanciones.tipo === 'escalonada') {
+        cuotas.value
+          .filter(c => c.estado === 'mora')
+          .forEach(c => {
+            cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+          })
+      }
+
+      const actualizaciones = []
+      const fechaActualStr = new Date().toISOString().split('T')[0]
+
+      for (const cuota of cuotasMoraSinMulta) {
+        const cantidadMora = cuotasMoraPorSocio[cuota.socio_natillera_id] || 1
+        const valorMulta = calcularMulta(configSanciones, cantidadMora)
+
+        if (valorMulta > 0) {
+          const { data: cuotaActualizada, error: updateError } = await supabase
+            .from('cuotas')
+            .update({ 
+              valor_multa: valorMulta,
+              fecha_mora: cuota.fecha_mora || fechaActualStr
+            })
+            .eq('id', cuota.id)
+            .select()
+            .single()
+
+          if (!updateError && cuotaActualizada) {
+            actualizaciones.push(cuotaActualizada)
+            
+            // Actualizar en el array local
+            const index = cuotas.value.findIndex(c => c.id === cuota.id)
+            if (index !== -1) {
+              cuotas.value[index] = {
+                ...cuotaActualizada,
+                socio_natillera: cuotas.value[index].socio_natillera
+              }
+            }
+
+            const nombreSocio = cuota.socio_natillera?.socio?.nombre || 'Socio'
+            console.log(`💰 Multa de $${valorMulta.toLocaleString('es-CO')} aplicada a ${nombreSocio}`)
+          }
+        }
+      }
+
+      if (actualizaciones.length > 0) {
+        console.log(`✅ ${actualizaciones.length} multa(s) recalculada(s) y aplicada(s)`)
+      }
+
+      return { success: true, recalculadas: actualizaciones.length }
+    } catch (e) {
+      console.error('Error recalculando multas:', e)
+      return { success: false, error: e.message }
+    }
+  }
+
   async function generarCuotasPeriodo(natilleraId, fechasLimite, mesLabel = '', mes = null, anio = null, socioId = null) {
     try {
       loading.value = true
       error.value = null
 
-      // Construir query para obtener socios activos
+      const tiempoInicio = performance.now()
+
+      // Construir query para obtener socios activos (incluyendo nombre para auditoría)
       let query = supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, periodicidad')
+        .select('id, valor_cuota_individual, periodicidad, socio:socios(id, nombre)')
         .eq('natillera_id', natilleraId)
         .eq('estado', 'activo')
 
@@ -175,293 +500,343 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       if (sociosError) throw sociosError
 
-      console.log('=== GENERANDO CUOTAS ===')
+      console.log('=== GENERANDO CUOTAS (OPTIMIZADO) ===')
       console.log('SocioId filtro:', socioId)
-      console.log('Socios encontrados:', sociosNatillera)
-      console.log('Mes:', mes, 'Año:', anio)
-      console.log('Fechas:', fechasLimite)
+      console.log('Socios encontrados:', sociosNatillera?.length || 0)
 
       if (!sociosNatillera || sociosNatillera.length === 0) {
         console.log('No hay socios activos para generar cuotas')
         return { success: false, error: socioId ? 'El socio seleccionado no está activo' : 'No hay socios activos en la natillera' }
       }
 
-      // Para cada socio, verificar si ya tiene cuotas y actualizar o crear
-      const cuotasActualizadas = []
-      const cuotasACrear = []
+      // OPTIMIZACIÓN: Obtener TODAS las cuotas existentes del mes/año en UNA sola consulta
+      const socioNatilleraIds = sociosNatillera.map(s => s.id)
+      const { data: cuotasExistentes, error: cuotasError } = await supabase
+        .from('cuotas')
+        .select('*')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .eq('mes', mes)
+        .eq('anio', anio)
 
+      if (cuotasError) throw cuotasError
+
+      // Crear mapa de cuotas existentes para búsqueda O(1)
+      const mapaCuotasExistentes = {}
+      ;(cuotasExistentes || []).forEach(cuota => {
+        const key = `${cuota.socio_natillera_id}-${cuota.quincena || 'mensual'}`
+        mapaCuotasExistentes[key] = cuota
+      })
+
+      console.log('Cuotas existentes encontradas:', cuotasExistentes?.length || 0)
+
+      // Preparar fechas normalizadas una sola vez
+      const fechaMensual = typeof fechasLimite.mensual === 'object' 
+        ? fechasLimite.mensual 
+        : { vencimiento: fechasLimite.mensual, limite: fechasLimite.mensual }
+      const fechaQuincena1 = typeof fechasLimite.quincena1 === 'object' 
+        ? fechasLimite.quincena1 
+        : { vencimiento: fechasLimite.quincena1, limite: fechasLimite.quincena1 }
+      const fechaQuincena2 = typeof fechasLimite.quincena2 === 'object' 
+        ? fechasLimite.quincena2 
+        : { vencimiento: fechasLimite.quincena2, limite: fechasLimite.quincena2 }
+
+      // Fecha actual para calcular estado (una sola vez)
+      const fechaActual = new Date()
+      fechaActual.setHours(0, 0, 0, 0)
+
+      // Helper para calcular estado inicial
+      const calcularEstadoInicial = (fechaVencimientoStr) => {
+        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(year, month - 1, day)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+      }
+
+      // Helper para calcular nuevo estado basado en pagos
+      const calcularNuevoEstado = (valorPagado, nuevoValorCuota, estadoActual, fechaVencimientoStr) => {
+        if (valorPagado >= nuevoValorCuota) return 'pagada'
+        if (valorPagado > 0) return 'parcial'
+        // Si no hay pago, calcular según fecha
+        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(year, month - 1, day)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+      }
+
+      // Arrays para operaciones batch
+      const cuotasACrear = []
+      const cuotasAActualizar = []
+      const cuotasAEliminar = [] // Para cambios de periodicidad
+      const datosAnterioresPorId = {} // Para auditoría
+      const migracionesPago = [] // Para auditoría de migraciones
+
+      // Procesar cada socio (solo lógica, sin consultas a BD)
       for (const socio of sociosNatillera) {
         const periodicidad = socio.periodicidad || 'mensual'
+        const nuevoValorCuota = socio.valor_cuota_individual
+        
+        // Verificar cuotas existentes del socio
+        const keyQ1 = `${socio.id}-1`
+        const keyQ2 = `${socio.id}-2`
+        const keyMensual = `${socio.id}-mensual`
+        const cuotaQ1 = mapaCuotasExistentes[keyQ1]
+        const cuotaQ2 = mapaCuotasExistentes[keyQ2]
+        const cuotaMensual = mapaCuotasExistentes[keyMensual]
+        
+        // Detectar cambio de periodicidad
+        const teniaQuincenales = cuotaQ1 || cuotaQ2
+        const teniaMensual = cuotaMensual
+        const cambioAQuincenal = periodicidad === 'quincenal' && teniaMensual && !teniaQuincenales
+        const cambioAMensual = periodicidad === 'mensual' && teniaQuincenales && !teniaMensual
         
         if (periodicidad === 'quincenal') {
-          // Buscar cuota de 1ra quincena específicamente
-          const { data: cuotaQuincena1, error: fetchError1 } = await supabase
-            .from('cuotas')
-            .select('*')
-            .eq('socio_natillera_id', socio.id)
-            .eq('mes', mes)
-            .eq('anio', anio)
-            .eq('quincena', 1)
-            .maybeSingle()
-
-          if (fetchError1) throw fetchError1
-          if (cuotaQuincena1) {
-            // Actualizar cuota existente
-            const fechaQuincena1 = typeof fechasLimite.quincena1 === 'object' 
-              ? fechasLimite.quincena1 
-              : { vencimiento: fechasLimite.quincena1, limite: fechasLimite.quincena1 }
+          // CASO: Cambio de mensual a quincenal
+          if (cambioAQuincenal) {
+            console.log(`📋 Cambio de periodicidad: ${socio.socio?.nombre || 'Socio'} de MENSUAL a QUINCENAL`)
             
-            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
-            const valorPagado = cuotaQuincena1.valor_pagado || 0
-            const nuevoValorCuota = socio.valor_cuota_individual
+            // Migrar el pago de la cuota mensual a la primera quincena
+            const pagoMigrado = cuotaMensual.valor_pagado || 0
             
-            let nuevoEstado = cuotaQuincena1.estado
-            // Recalcular el estado basado en el nuevo valor de la cuota
-            if (valorPagado >= nuevoValorCuota) {
-              // Si lo pagado cubre o supera el nuevo valor, está pagada
-              nuevoEstado = 'pagada'
-            } else if (valorPagado > 0) {
-              // Si hay un pago pero no cubre el nuevo valor, está parcial
-              nuevoEstado = 'parcial'
-            } else {
-              // Si no hay pago, mantener el estado original o calcular según fecha
-              const fechaActual = new Date()
-              fechaActual.setHours(0, 0, 0, 0)
-              const [year, month, day] = fechaQuincena1.vencimiento.split('-').map(Number)
-              const fechaVencimiento = new Date(year, month - 1, day)
-              fechaVencimiento.setHours(0, 0, 0, 0)
-              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
-            }
+            // Guardar para auditoría
+            datosAnterioresPorId[cuotaMensual.id] = { ...cuotaMensual, socio }
+            migracionesPago.push({
+              tipo: 'mensual_a_quincenal',
+              socio: socio.socio?.nombre || 'Socio desconocido',
+              pagoMigrado,
+              cuotaEliminada: cuotaMensual.id
+            })
             
-            const { data: updated1, error: updateError1 } = await supabase
-              .from('cuotas')
-              .update({
+            // Marcar cuota mensual para eliminar
+            cuotasAEliminar.push(cuotaMensual.id)
+            
+            // Crear primera quincena CON el pago migrado
+            const estadoQ1 = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaQuincena1.vencimiento)
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: nuevoValorCuota,
+              valor_pagado: pagoMigrado,
+              fecha_vencimiento: fechaQuincena1.vencimiento,
+              fecha_limite: fechaQuincena1.limite,
+              mes, anio, quincena: 1,
+              estado: estadoQ1,
+              descripcion: `${mesLabel} - 1ra Quincena`
+            })
+            
+            // Crear segunda quincena SIN pago
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: nuevoValorCuota,
+              valor_pagado: 0,
+              fecha_vencimiento: fechaQuincena2.vencimiento,
+              fecha_limite: fechaQuincena2.limite,
+              mes, anio, quincena: 2,
+              estado: calcularEstadoInicial(fechaQuincena2.vencimiento),
+              descripcion: `${mesLabel} - 2da Quincena`
+            })
+          } else {
+            // Caso normal: ya era quincenal o no tenía cuotas
+            
+            // Primera quincena
+            if (cuotaQ1) {
+              const valorPagado = cuotaQ1.valor_pagado || 0
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ1.estado, fechaQuincena1.vencimiento)
+              datosAnterioresPorId[cuotaQ1.id] = { ...cuotaQ1, socio }
+              cuotasAActualizar.push({
+                id: cuotaQ1.id,
                 fecha_vencimiento: fechaQuincena1.vencimiento,
                 fecha_limite: fechaQuincena1.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
                 descripcion: `${mesLabel} - 1ra Quincena`
               })
-              .eq('id', cuotaQuincena1.id)
-              .select()
-              .single()
-
-            if (updateError1) throw updateError1
-            cuotasActualizadas.push(updated1)
-          } else {
-            // Crear nueva cuota
-            const fechaQuincena1 = typeof fechasLimite.quincena1 === 'object' 
-              ? fechasLimite.quincena1 
-              : { vencimiento: fechasLimite.quincena1, limite: fechasLimite.quincena1 }
-            
-            // Determinar estado inicial: programada si la fecha de vencimiento es futura
-            // Usar solo la fecha sin hora para evitar problemas de zona horaria
-            const fechaActual = new Date()
-            fechaActual.setHours(0, 0, 0, 0)
-            // Parsear la fecha manualmente para evitar problemas de zona horaria
-            const [year, month, day] = fechaQuincena1.vencimiento.split('-').map(Number)
-            const fechaVencimiento = new Date(year, month - 1, day)
-            fechaVencimiento.setHours(0, 0, 0, 0)
-            const estadoInicial = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
-            
-            cuotasACrear.push({
-              socio_natillera_id: socio.id,
-              valor_cuota: socio.valor_cuota_individual,
-              valor_pagado: 0,
-              fecha_vencimiento: fechaQuincena1.vencimiento,
-              fecha_limite: fechaQuincena1.limite,
-              mes: mes,
-              anio: anio,
-              quincena: 1,
-              estado: estadoInicial,
-              descripcion: `${mesLabel} - 1ra Quincena`
-            })
-          }
-
-          // Buscar cuota de 2da quincena específicamente
-          const { data: cuotaQuincena2, error: fetchError2 } = await supabase
-            .from('cuotas')
-            .select('*')
-            .eq('socio_natillera_id', socio.id)
-            .eq('mes', mes)
-            .eq('anio', anio)
-            .eq('quincena', 2)
-            .maybeSingle()
-
-          if (fetchError2) throw fetchError2
-          if (cuotaQuincena2) {
-            // Actualizar cuota existente
-            const fechaQuincena2 = typeof fechasLimite.quincena2 === 'object' 
-              ? fechasLimite.quincena2 
-              : { vencimiento: fechasLimite.quincena2, limite: fechasLimite.quincena2 }
-            
-            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
-            const valorPagado = cuotaQuincena2.valor_pagado || 0
-            const nuevoValorCuota = socio.valor_cuota_individual
-            
-            let nuevoEstado = cuotaQuincena2.estado
-            // Recalcular el estado basado en el nuevo valor de la cuota
-            if (valorPagado >= nuevoValorCuota) {
-              // Si lo pagado cubre o supera el nuevo valor, está pagada
-              nuevoEstado = 'pagada'
-            } else if (valorPagado > 0) {
-              // Si hay un pago pero no cubre el nuevo valor, está parcial
-              nuevoEstado = 'parcial'
             } else {
-              // Si no hay pago, mantener el estado original o calcular según fecha
-              const fechaActual = new Date()
-              fechaActual.setHours(0, 0, 0, 0)
-              const [year, month, day] = fechaQuincena2.vencimiento.split('-').map(Number)
-              const fechaVencimiento = new Date(year, month - 1, day)
-              fechaVencimiento.setHours(0, 0, 0, 0)
-              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+              cuotasACrear.push({
+                socio_natillera_id: socio.id,
+                valor_cuota: nuevoValorCuota,
+                valor_pagado: 0,
+                fecha_vencimiento: fechaQuincena1.vencimiento,
+                fecha_limite: fechaQuincena1.limite,
+                mes, anio, quincena: 1,
+                estado: calcularEstadoInicial(fechaQuincena1.vencimiento),
+                descripcion: `${mesLabel} - 1ra Quincena`
+              })
             }
-            
-            const { data: updated2, error: updateError2 } = await supabase
-              .from('cuotas')
-              .update({
+
+            // Segunda quincena
+            if (cuotaQ2) {
+              const valorPagado = cuotaQ2.valor_pagado || 0
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ2.estado, fechaQuincena2.vencimiento)
+              datosAnterioresPorId[cuotaQ2.id] = { ...cuotaQ2, socio }
+              cuotasAActualizar.push({
+                id: cuotaQ2.id,
                 fecha_vencimiento: fechaQuincena2.vencimiento,
                 fecha_limite: fechaQuincena2.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
                 descripcion: `${mesLabel} - 2da Quincena`
               })
-              .eq('id', cuotaQuincena2.id)
-              .select()
-              .single()
-
-            if (updateError2) throw updateError2
-            cuotasActualizadas.push(updated2)
-          } else {
-            // Crear nueva cuota
-            const fechaQuincena2 = typeof fechasLimite.quincena2 === 'object' 
-              ? fechasLimite.quincena2 
-              : { vencimiento: fechasLimite.quincena2, limite: fechasLimite.quincena2 }
-            
-            // Determinar estado inicial: programada si la fecha de vencimiento es futura
-            // Usar solo la fecha sin hora para evitar problemas de zona horaria
-            const fechaActual = new Date()
-            fechaActual.setHours(0, 0, 0, 0)
-            // Parsear la fecha manualmente para evitar problemas de zona horaria
-            const [year, month, day] = fechaQuincena2.vencimiento.split('-').map(Number)
-            const fechaVencimiento = new Date(year, month - 1, day)
-            fechaVencimiento.setHours(0, 0, 0, 0)
-            const estadoInicial = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
-            
-            cuotasACrear.push({
-              socio_natillera_id: socio.id,
-              valor_cuota: socio.valor_cuota_individual,
-              valor_pagado: 0,
-              fecha_vencimiento: fechaQuincena2.vencimiento,
-              fecha_limite: fechaQuincena2.limite,
-              mes: mes,
-              anio: anio,
-              quincena: 2,
-              estado: estadoInicial,
-              descripcion: `${mesLabel} - 2da Quincena`
-            })
+            } else {
+              cuotasACrear.push({
+                socio_natillera_id: socio.id,
+                valor_cuota: nuevoValorCuota,
+                valor_pagado: 0,
+                fecha_vencimiento: fechaQuincena2.vencimiento,
+                fecha_limite: fechaQuincena2.limite,
+                mes, anio, quincena: 2,
+                estado: calcularEstadoInicial(fechaQuincena2.vencimiento),
+                descripcion: `${mesLabel} - 2da Quincena`
+              })
+            }
           }
         } else {
-          // Socio mensual - buscar cuota con quincena null
-          const { data: cuotaMensual, error: fetchErrorMensual } = await supabase
-            .from('cuotas')
-            .select('*')
-            .eq('socio_natillera_id', socio.id)
-            .eq('mes', mes)
-            .eq('anio', anio)
-            .is('quincena', null)
-            .maybeSingle()
-
-          if (fetchErrorMensual) throw fetchErrorMensual
-          if (cuotaMensual) {
-            // Actualizar cuota existente
-            const fechaMensual = typeof fechasLimite.mensual === 'object' 
-              ? fechasLimite.mensual 
-              : { vencimiento: fechasLimite.mensual, limite: fechasLimite.mensual }
+          // CASO: Socio mensual
+          
+          // CASO: Cambio de quincenal a mensual
+          if (cambioAMensual) {
+            console.log(`📋 Cambio de periodicidad: ${socio.socio?.nombre || 'Socio'} de QUINCENAL a MENSUAL`)
             
-            // Calcular nuevo estado basado en valor_pagado vs nuevo valor_cuota
-            const valorPagado = cuotaMensual.valor_pagado || 0
-            const nuevoValorCuota = socio.valor_cuota_individual
+            // Sumar los pagos de ambas quincenas
+            const pagoQ1 = cuotaQ1?.valor_pagado || 0
+            const pagoQ2 = cuotaQ2?.valor_pagado || 0
+            const pagoMigrado = pagoQ1 + pagoQ2
             
-            let nuevoEstado = cuotaMensual.estado
-            // Recalcular el estado basado en el nuevo valor de la cuota
-            if (valorPagado >= nuevoValorCuota) {
-              // Si lo pagado cubre o supera el nuevo valor, está pagada
-              nuevoEstado = 'pagada'
-            } else if (valorPagado > 0) {
-              // Si hay un pago pero no cubre el nuevo valor, está parcial
-              nuevoEstado = 'parcial'
-            } else {
-              // Si no hay pago, mantener el estado original o calcular según fecha
-              const fechaActual = new Date()
-              fechaActual.setHours(0, 0, 0, 0)
-              const [year, month, day] = fechaMensual.vencimiento.split('-').map(Number)
-              const fechaVencimiento = new Date(year, month - 1, day)
-              fechaVencimiento.setHours(0, 0, 0, 0)
-              nuevoEstado = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+            // Guardar para auditoría y marcar para eliminar
+            if (cuotaQ1) {
+              datosAnterioresPorId[cuotaQ1.id] = { ...cuotaQ1, socio }
+              cuotasAEliminar.push(cuotaQ1.id)
+            }
+            if (cuotaQ2) {
+              datosAnterioresPorId[cuotaQ2.id] = { ...cuotaQ2, socio }
+              cuotasAEliminar.push(cuotaQ2.id)
             }
             
-            const { data: updated, error: updateError } = await supabase
-              .from('cuotas')
-              .update({
+            migracionesPago.push({
+              tipo: 'quincenal_a_mensual',
+              socio: socio.socio?.nombre || 'Socio desconocido',
+              pagoMigrado,
+              pagoQ1,
+              pagoQ2,
+              cuotasEliminadas: [cuotaQ1?.id, cuotaQ2?.id].filter(Boolean)
+            })
+            
+            // Crear cuota mensual CON los pagos migrados
+            const estadoMensual = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaMensual.vencimiento)
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: nuevoValorCuota,
+              valor_pagado: pagoMigrado,
+              fecha_vencimiento: fechaMensual.vencimiento,
+              fecha_limite: fechaMensual.limite,
+              mes, anio, quincena: null,
+              estado: estadoMensual,
+              descripcion: `Cuota ${mesLabel}`
+            })
+          } else {
+            // Caso normal: ya era mensual o no tenía cuotas
+            
+            if (cuotaMensual) {
+              const valorPagado = cuotaMensual.valor_pagado || 0
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaMensual.estado, fechaMensual.vencimiento)
+              datosAnterioresPorId[cuotaMensual.id] = { ...cuotaMensual, socio }
+              cuotasAActualizar.push({
+                id: cuotaMensual.id,
                 fecha_vencimiento: fechaMensual.vencimiento,
                 fecha_limite: fechaMensual.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
                 descripcion: `Cuota ${mesLabel}`
               })
-              .eq('id', cuotaMensual.id)
-              .select()
-              .single()
-
-            if (updateError) throw updateError
-            cuotasActualizadas.push(updated)
-          } else {
-            // Crear nueva cuota
-            const fechaMensual = typeof fechasLimite.mensual === 'object' 
-              ? fechasLimite.mensual 
-              : { vencimiento: fechasLimite.mensual, limite: fechasLimite.mensual }
-            
-            // Determinar estado inicial: programada si la fecha de vencimiento es futura
-            // Usar solo la fecha sin hora para evitar problemas de zona horaria
-            const fechaActual = new Date()
-            fechaActual.setHours(0, 0, 0, 0)
-            // Parsear la fecha manualmente para evitar problemas de zona horaria
-            const [year, month, day] = fechaMensual.vencimiento.split('-').map(Number)
-            const fechaVencimiento = new Date(year, month - 1, day)
-            fechaVencimiento.setHours(0, 0, 0, 0)
-            const estadoInicial = fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
-            
-            cuotasACrear.push({
-              socio_natillera_id: socio.id,
-              valor_cuota: socio.valor_cuota_individual,
-              valor_pagado: 0,
-              fecha_vencimiento: fechaMensual.vencimiento,
-              fecha_limite: fechaMensual.limite,
-              mes: mes,
-              anio: anio,
-              quincena: null,
-              estado: estadoInicial,
-              descripcion: `Cuota ${mesLabel}`
-            })
+            } else {
+              cuotasACrear.push({
+                socio_natillera_id: socio.id,
+                valor_cuota: nuevoValorCuota,
+                valor_pagado: 0,
+                fecha_vencimiento: fechaMensual.vencimiento,
+                fecha_limite: fechaMensual.limite,
+                mes, anio, quincena: null,
+                estado: calcularEstadoInicial(fechaMensual.vencimiento),
+                descripcion: `Cuota ${mesLabel}`
+              })
+            }
           }
         }
       }
 
-      // Crear las cuotas nuevas si hay alguna
+      // PRIMERO: Eliminar cuotas por cambio de periodicidad (antes de crear nuevas)
+      let cuotasEliminadas = []
+      if (cuotasAEliminar.length > 0) {
+        console.log(`🗑️ Eliminando ${cuotasAEliminar.length} cuotas por cambio de periodicidad...`)
+        
+        const { data: eliminadas, error: deleteError } = await supabase
+          .from('cuotas')
+          .delete()
+          .in('id', cuotasAEliminar)
+          .select()
+        
+        if (deleteError) {
+          console.error('Error eliminando cuotas:', deleteError)
+          throw deleteError
+        }
+        cuotasEliminadas = eliminadas || []
+        
+        // Registrar auditoría de eliminación por cambio de periodicidad
+        const auditoriaMigracion = useAuditoria()
+        for (const migracion of migracionesPago) {
+          const descripcionMigracion = migracion.tipo === 'mensual_a_quincenal'
+            ? `Cambio de periodicidad de ${migracion.socio}: Mensual → Quincenal. Pago de $${migracion.pagoMigrado.toLocaleString('es-CO')} migrado a 1ra quincena.`
+            : `Cambio de periodicidad de ${migracion.socio}: Quincenal → Mensual. Pagos migrados: Q1=$${migracion.pagoQ1?.toLocaleString('es-CO') || 0} + Q2=$${migracion.pagoQ2?.toLocaleString('es-CO') || 0} = $${migracion.pagoMigrado.toLocaleString('es-CO')}`
+          
+          registrarAuditoriaEnSegundoPlano(auditoriaMigracion.registrar({
+            tipoAccion: 'cambio_periodicidad',
+            entidad: 'cuota',
+            entidadId: null,
+            descripcion: descripcionMigracion,
+            datosAnteriores: migracion.tipo === 'mensual_a_quincenal' 
+              ? datosAnterioresPorId[migracion.cuotaEliminada] 
+              : null,
+            datosNuevos: null,
+            natilleraId: String(natilleraId),
+            detalles: migracion
+          }))
+        }
+      }
+
+      // OPTIMIZACIÓN: Ejecutar actualizaciones en paralelo usando Promise.all
+      let cuotasActualizadas = []
+      if (cuotasAActualizar.length > 0) {
+        console.log(`Actualizando ${cuotasAActualizar.length} cuotas en paralelo...`)
+        
+        const promesasActualizacion = cuotasAActualizar.map(cuota => 
+          supabase
+            .from('cuotas')
+            .update({
+              fecha_vencimiento: cuota.fecha_vencimiento,
+              fecha_limite: cuota.fecha_limite,
+              valor_cuota: cuota.valor_cuota,
+              estado: cuota.estado,
+              descripcion: cuota.descripcion
+            })
+            .eq('id', cuota.id)
+            .select()
+            .single()
+        )
+        
+        const resultados = await Promise.all(promesasActualizacion)
+        cuotasActualizadas = resultados
+          .filter(r => !r.error && r.data)
+          .map(r => r.data)
+        
+        // Verificar errores
+        const errores = resultados.filter(r => r.error)
+        if (errores.length > 0) {
+          console.warn('Errores en algunas actualizaciones:', errores.map(e => e.error.message))
+        }
+      }
+
+      // OPTIMIZACIÓN: Insertar todas las cuotas nuevas en UN solo batch
       let cuotasCreadas = []
       if (cuotasACrear.length > 0) {
-        // Log para depuración: mostrar las fechas que se van a insertar
-        console.log('=== INSERTANDO CUOTAS ===')
-        cuotasACrear.forEach((cuota, index) => {
-          console.log(`Cuota ${index + 1}:`, {
-            fecha_vencimiento: cuota.fecha_vencimiento,
-            fecha_limite: cuota.fecha_limite,
-            mes: cuota.mes,
-            quincena: cuota.quincena
-          })
-        })
-        console.log('==========================')
+        console.log(`Insertando ${cuotasACrear.length} cuotas nuevas...`)
         
         const { data, error: insertError } = await supabase
           .from('cuotas')
@@ -470,24 +845,64 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
         if (insertError) throw insertError
         cuotasCreadas = data || []
-        
-        // Log para depuración: mostrar las fechas que se insertaron
-        console.log('=== CUOTAS INSERTADAS ===')
-        cuotasCreadas.forEach((cuota, index) => {
-          console.log(`Cuota ${index + 1}:`, {
-            fecha_vencimiento: cuota.fecha_vencimiento,
-            fecha_limite: cuota.fecha_limite,
-            mes: cuota.mes,
-            quincena: cuota.quincena
-          })
-        })
-        console.log('==========================')
       }
+
+      // OPTIMIZACIÓN: Registrar auditoría en segundo plano (sin bloquear)
+      const auditoria = useAuditoria()
+      const natilleraIdStr = String(natilleraId || '')
+      
+      // Crear mapeo de socio_natillera_id a nombre del socio
+      const socioNombreMap = {}
+      sociosNatillera.forEach(s => {
+        socioNombreMap[s.id] = s.socio?.nombre || 'Socio desconocido'
+      })
+
+      // Auditoría para cuotas actualizadas (en segundo plano, sin await)
+      cuotasActualizadas.forEach(cuotaActualizada => {
+        const datosAnteriores = datosAnterioresPorId[cuotaActualizada.id]
+        if (datosAnteriores) {
+          const nombreSocio = datosAnteriores.socio?.socio?.nombre || socioNombreMap[cuotaActualizada.socio_natillera_id] || 'Socio desconocido'
+          const tipoQuincena = cuotaActualizada.quincena === 1 ? '1ra quincena' : cuotaActualizada.quincena === 2 ? '2da quincena' : 'mensual'
+          
+          registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
+            'cuota',
+            String(cuotaActualizada.id),
+            `Se actualizó cuota ${tipoQuincena} de ${mesLabel || `${mes}/${anio}`} para ${nombreSocio}`,
+            datosAnteriores,
+            cuotaActualizada,
+            natilleraIdStr,
+            { socio_nombre: nombreSocio, socio_natillera_id: cuotaActualizada.socio_natillera_id }
+          ))
+        }
+      })
+
+      // Auditoría para cuotas creadas (en segundo plano, sin await)
+      cuotasCreadas.forEach(cuotaCreada => {
+        const nombreSocio = socioNombreMap[cuotaCreada.socio_natillera_id] || 'Socio desconocido'
+        const descripcion = cuotaCreada.quincena 
+          ? `Se generó cuota ${cuotaCreada.quincena === 1 ? '1ra' : '2da'} quincena de ${mesLabel || `${cuotaCreada.mes}/${cuotaCreada.anio}`} para ${nombreSocio}`
+          : `Se generó cuota mensual de ${mesLabel || `${cuotaCreada.mes}/${cuotaCreada.anio}`} para ${nombreSocio}`
+        
+        registrarAuditoriaEnSegundoPlano(auditoria.registrarGeneracion(
+          'cuota',
+          String(cuotaCreada.id),
+          descripcion,
+          cuotaCreada,
+          natilleraIdStr,
+          {
+            socio_nombre: nombreSocio,
+            socio_natillera_id: cuotaCreada.socio_natillera_id,
+            mes: cuotaCreada.mes,
+            anio: cuotaCreada.anio,
+            quincena: cuotaCreada.quincena,
+            valor_cuota: cuotaCreada.valor_cuota
+          }
+        ))
+      })
 
       // Actualizar el array local de cuotas
       const todasLasCuotas = [...cuotasActualizadas, ...cuotasCreadas]
       
-      // Actualizar cuotas en el array local
       todasLasCuotas.forEach(cuota => {
         const index = cuotas.value.findIndex(c => c.id === cuota.id)
         if (index !== -1) {
@@ -497,16 +912,29 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       })
 
-      // Actualizar automáticamente el estado de cuotas en mora
-      await actualizarEstadoMoraAutomatico(todasLasCuotas)
+      // Actualizar estado de mora (no bloquear, ejecutar en segundo plano)
+      actualizarEstadoMoraAutomatico(todasLasCuotas).catch(console.error)
 
-      console.log('Cuotas actualizadas:', cuotasActualizadas.length)
-      console.log('Cuotas creadas:', cuotasCreadas.length)
+      const tiempoFin = performance.now()
+      console.log('=== RESUMEN GENERACIÓN ===')
+      if (cuotasEliminadas.length > 0) {
+        console.log(`🗑️ Cuotas eliminadas (cambio periodicidad): ${cuotasEliminadas.length}`)
+      }
+      console.log(`📝 Cuotas actualizadas: ${cuotasActualizadas.length}`)
+      console.log(`✅ Cuotas creadas: ${cuotasCreadas.length}`)
+      if (migracionesPago.length > 0) {
+        console.log(`💰 Pagos migrados:`)
+        migracionesPago.forEach(m => {
+          console.log(`   - ${m.socio}: $${m.pagoMigrado.toLocaleString('es-CO')} (${m.tipo})`)
+        })
+      }
+      console.log(`⏱️ Tiempo total: ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
       console.log('=========================')
 
       return { success: true, data: todasLasCuotas }
     } catch (e) {
       error.value = e.message
+      console.error('Error generando cuotas:', e)
       return { success: false, error: e.message }
     } finally {
       loading.value = false
@@ -539,7 +967,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (fetchError) throw fetchError
 
       const nuevoValorPagado = (cuotaActual.valor_pagado || 0) + valorPagado
-      const nuevaEstado = nuevoValorPagado >= cuotaActual.valor_cuota 
+      // Considerar la multa en el total a pagar para determinar si está completamente pagada
+      const totalAPagar = (cuotaActual.valor_cuota || 0) + (cuotaActual.valor_multa || 0)
+      const nuevaEstado = nuevoValorPagado >= totalAPagar 
         ? 'pagada' 
         : nuevoValorPagado > 0 
           ? 'parcial' 
@@ -677,35 +1107,55 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Registrar auditoría
       const auditoria = useAuditoria()
-      const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < cuotaActual.valor_cuota
-      const descripcion = esPagoParcial
-        ? `Se registró un pago parcial de $${valorPagado.toLocaleString('es-CO')} a una cuota (Total pagado: $${nuevoValorPagado.toLocaleString('es-CO')} de $${cuotaActual.valor_cuota.toLocaleString('es-CO')})`
-        : nuevaEstado === 'pagada'
-          ? `Se registró el pago completo de una cuota por $${valorPagado.toLocaleString('es-CO')}`
-          : `Se registró un pago de $${valorPagado.toLocaleString('es-CO')} a una cuota`
       
-      // Obtener natillera_id desde la cuota
+      // Obtener natillera_id y nombre del socio desde la cuota
       const { data: socioNatillera } = await supabase
         .from('socios_natillera')
-        .select('natillera_id')
+        .select('natillera_id, socio:socios(nombre)')
         .eq('id', cuotaActual.socio_natillera_id)
         .single()
       
-      await auditoria.registrarPago(
-        cuotaId,
+      const nombreSocio = socioNatillera?.socio?.nombre || 'Socio desconocido'
+      const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < totalAPagar
+      const tieneMulta = (cuotaActual.valor_multa || 0) > 0
+      let descripcion
+      if (esPagoParcial) {
+        descripcion = tieneMulta
+          ? `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')} incl. multa)`
+          : `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')})`
+      } else if (nuevaEstado === 'pagada') {
+        descripcion = tieneMulta
+          ? `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (incluye multa de $${cuotaActual.valor_multa.toLocaleString('es-CO')})`
+          : `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
+      } else {
+        descripcion = `Se registró pago de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
+      }
+      
+      // Asegurar que los IDs sean strings válidos
+      const cuotaIdStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
+      const natilleraIdStr = socioNatillera?.natillera_id ? String(socioNatillera.natillera_id) : null
+      
+      // Registrar auditoría en segundo plano
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarPago(
+        cuotaIdStr,
         descripcion,
         data,
-        socioNatillera?.natillera_id,
+        natilleraIdStr,
         {
+          socio_nombre: nombreSocio,
+          socio_natillera_id: cuotaActual.socio_natillera_id,
           valor_pagado_anterior: cuotaActual.valor_pagado || 0,
           valor_pagado_nuevo: nuevoValorPagado,
           valor_pagado_agregado: valorPagado,
+          valor_cuota: cuotaActual.valor_cuota,
+          valor_multa: cuotaActual.valor_multa || 0,
+          total_a_pagar: totalAPagar,
           estado_anterior: cuotaActual.estado,
           estado_nuevo: nuevaEstado,
           codigo_comprobante: codigoComprobante,
           codigo_comprobante_anterior: codigoAnterior
         }
-      )
+      ))
 
       return { success: true, data }
     } catch (e) {
@@ -1101,23 +1551,33 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Registrar auditoría
       const auditoria = useAuditoria()
       
-      // Obtener natillera_id desde la cuota
+      // Obtener natillera_id y nombre del socio desde la cuota
       const { data: socioNatillera } = await supabase
         .from('socios_natillera')
-        .select('natillera_id')
+        .select('natillera_id, socio:socios(nombre)')
         .eq('id', datosAnteriores?.socio_natillera_id || data.socio_natillera_id)
         .single()
       
-      // La descripción se generará automáticamente con los detalles de los cambios
-      await auditoria.registrarActualizacion(
+      const nombreSocio = socioNatillera?.socio?.nombre || 'Socio desconocido'
+      
+      // Asegurar que los IDs sean strings válidos
+      const cuotaIdStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
+      const natilleraIdStr = socioNatillera?.natillera_id ? String(socioNatillera.natillera_id) : null
+      
+      // Generar descripción con el nombre del socio (en segundo plano)
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
         'cuota',
-        cuotaId,
-        null, // null para generar descripción automática
+        cuotaIdStr,
+        `Se actualizó cuota de ${nombreSocio}`,
         datosAnteriores,
         data,
-        socioNatillera?.natillera_id,
-        { campos_modificados: Object.keys(datos) }
-      )
+        natilleraIdStr,
+        { 
+          campos_modificados: Object.keys(datos),
+          socio_nombre: nombreSocio,
+          socio_natillera_id: datosAnteriores?.socio_natillera_id || data.socio_natillera_id
+        }
+      ))
 
       return { success: true, data }
     } catch (e) {
@@ -1138,6 +1598,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     registrarPago,
     marcarEnMora,
     actualizarEstadoMoraAutomatico,
+    recalcularMultasCuotasMora,
+    calcularMultaDinamica,
+    calcularSancionesTotales,
     calcularResumenCuotas,
     getCuotasPorMes,
     getResumenPorMes,

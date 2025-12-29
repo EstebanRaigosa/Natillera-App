@@ -19,137 +19,50 @@
       </p>
     </div>
 
-    <!-- Tarjetas de opciones -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-      <!-- Tarjeta Mensajes -->
+    <!-- Opciones de configuración con contenido expandible -->
+    <div class="space-y-4">
+      
+      <!-- === MENSAJES === -->
+      <div class="space-y-3">
       <button
         @click="seccionActiva = seccionActiva === 'mensajes' ? null : 'mensajes'"
         :class="[
-          'relative overflow-hidden rounded-2xl shadow-xl border-2 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl',
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
           seccionActiva === 'mensajes'
-            ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 border-green-400 shadow-green-500/30 scale-105'
-            : 'bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 border-green-100/50 shadow-green-500/10 hover:border-green-300'
-        ]"
-      >
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-        <div class="relative p-6 sm:p-8 text-left">
-          <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <ChatBubbleLeftRightIcon :class="['w-8 h-8', seccionActiva === 'mensajes' ? 'text-white' : 'text-green-600']" />
+              ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 border-green-400 shadow-green-500/30'
+              : 'bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 border-green-100/50 shadow-green-500/10 hover:border-green-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-gradient-to-br from-green-500 to-emerald-500']">
+              <ChatBubbleLeftRightIcon class="w-6 h-6 text-white" />
           </div>
-          <h3 :class="['text-xl font-display font-bold mb-2', seccionActiva === 'mensajes' ? 'text-white' : 'text-gray-800']">
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'mensajes' ? 'text-white' : 'text-gray-800']">
             Mensajes
           </h3>
-          <p :class="['text-sm mb-4', seccionActiva === 'mensajes' ? 'text-white/90' : 'text-gray-600']">
-            Personaliza los mensajes de WhatsApp para recordatorios
+              <p :class="['text-sm', seccionActiva === 'mensajes' ? 'text-white/80' : 'text-gray-500']">
+                Personaliza los mensajes de WhatsApp
           </p>
-          <div v-if="seccionActiva === 'mensajes'" class="flex items-center gap-2 text-white/90 text-sm font-medium">
-            <span>Expandido</span>
-            <ChevronUpIcon class="w-4 h-4" />
           </div>
-          <div v-else class="flex items-center gap-2 text-green-600 text-sm font-medium">
-            <span>Haz clic para configurar</span>
-            <ChevronDownIcon class="w-4 h-4" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-green-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'mensajes' ? 'text-white rotate-180' : 'text-green-600']" />
           </div>
         </div>
       </button>
 
-      <!-- Tarjeta Período -->
-      <button
-        @click="seccionActiva = seccionActiva === 'periodo' ? null : 'periodo'"
-        :class="[
-          'relative overflow-hidden rounded-2xl shadow-xl border-2 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl',
-          seccionActiva === 'periodo'
-            ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 border-blue-400 shadow-blue-500/30 scale-105'
-            : 'bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 border-blue-100/50 shadow-blue-500/10 hover:border-blue-300'
-        ]"
-      >
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-        <div class="relative p-6 sm:p-8 text-left">
-          <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <CalendarDaysIcon :class="['w-8 h-8', seccionActiva === 'periodo' ? 'text-white' : 'text-blue-600']" />
-          </div>
-          <h3 :class="['text-xl font-display font-bold mb-2', seccionActiva === 'periodo' ? 'text-white' : 'text-gray-800']">
-            Período
-          </h3>
-          <p :class="['text-sm mb-4', seccionActiva === 'periodo' ? 'text-white/90' : 'text-gray-600']">
-            Define el período de cuotas para esta natillera
-          </p>
-          <div v-if="seccionActiva === 'periodo'" class="flex items-center gap-2 text-white/90 text-sm font-medium">
-            <span>Expandido</span>
-            <ChevronUpIcon class="w-4 h-4" />
-          </div>
-          <div v-else class="flex items-center gap-2 text-blue-600 text-sm font-medium">
-            <span>Haz clic para configurar</span>
-            <ChevronDownIcon class="w-4 h-4" />
-          </div>
-        </div>
-      </button>
-
-      <!-- Tarjeta Días de Gracia -->
-      <button
-        @click="seccionActiva = seccionActiva === 'diasGracia' ? null : 'diasGracia'"
-        :class="[
-          'relative overflow-hidden rounded-2xl shadow-xl border-2 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl',
-          seccionActiva === 'diasGracia'
-            ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 border-amber-400 shadow-amber-500/30 scale-105'
-            : 'bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 border-amber-100/50 shadow-amber-500/10 hover:border-amber-300'
-        ]"
-      >
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-        <div class="relative p-6 sm:p-8 text-left">
-          <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-            <ClockIcon :class="['w-8 h-8', seccionActiva === 'diasGracia' ? 'text-white' : 'text-amber-600']" />
-          </div>
-          <h3 :class="['text-xl font-display font-bold mb-2', seccionActiva === 'diasGracia' ? 'text-white' : 'text-gray-800']">
-            Días de Gracia
-          </h3>
-          <p :class="['text-sm mb-4', seccionActiva === 'diasGracia' ? 'text-white/90' : 'text-gray-600']">
-            Configura los días de gracia para pagos en mora
-          </p>
-          <div v-if="seccionActiva === 'diasGracia'" class="flex items-center gap-2 text-white/90 text-sm font-medium">
-            <span>Expandido</span>
-            <ChevronUpIcon class="w-4 h-4" />
-          </div>
-          <div v-else class="flex items-center gap-2 text-amber-600 text-sm font-medium">
-            <span>Haz clic para configurar</span>
-            <ChevronDownIcon class="w-4 h-4" />
-          </div>
-        </div>
-      </button>
-    </div>
-
-    <!-- Sección Mensajes por Defecto -->
+        <!-- Contenido Mensajes -->
     <Transition
-      enter-active-class="transition duration-500 ease-out"
-      enter-from-class="opacity-0 -translate-y-4"
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
       enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-300 ease-in"
+          leave-active-class="transition duration-200 ease-in"
       leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-4"
-    >
-      <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-green-500/10 border-2 border-green-100/50">
-      <!-- Decoración de fondo -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-green-200/20 to-emerald-200/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-green-100/30 to-transparent rounded-full -ml-24 -mb-24 blur-2xl"></div>
-      
-      <div class="relative p-6 sm:p-8">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-14 h-14 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 transform hover:scale-105 transition-transform">
-            <ChatBubbleLeftRightIcon class="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h2 class="text-xl sm:text-2xl font-display font-bold text-gray-800">
-              Mensajes por Defecto
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-              Personaliza los mensajes de WhatsApp para recordatorios de pago
-            </p>
-          </div>
-        </div>
-
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-green-500/10 border-2 border-green-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-green-500 to-emerald-500"></div>
+            <div class="relative p-5 sm:p-6">
       <!-- Mensaje Individual -->
       <div class="mb-6">
         <div class="flex items-center justify-between mb-3">
@@ -161,247 +74,397 @@
             <button 
               @click="insertarVariable('nombre')"
               class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-              title="Insertar nombre del socio"
             >
               {{nombre}}
             </button>
             <button 
               @click="insertarVariable('monto')"
               class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-              title="Insertar monto de la cuota"
             >
               {{monto}}
             </button>
           </div>
         </div>
-        <p class="text-xs text-gray-500 mb-2">
-          Este mensaje se envía a cada socio individualmente. Usa <code class="bg-gray-100 px-1 rounded">{{nombre}}</code> y <code class="bg-gray-100 px-1 rounded">{{monto}}</code> para personalizar.
-        </p>
         <textarea
           ref="textareaIndividual"
           v-model="mensajeIndividual"
-          class="input-field min-h-[150px] font-mono text-sm bg-white/80 backdrop-blur-sm border-2 border-green-200/50 focus:border-green-400 focus:ring-2 focus:ring-green-500/20"
+                  class="input-field min-h-[120px] font-mono text-sm"
           placeholder="Escribe el mensaje individual..."
         ></textarea>
-        
-        <!-- Vista previa -->
-        <div class="mt-4 p-4 bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200/50 rounded-xl backdrop-blur-sm">
-          <p class="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1.5">
-            <EyeIcon class="w-4 h-4" />
-            Vista previa (ejemplo)
-          </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewIndividual }}</p>
+                <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p class="text-xs font-semibold text-green-700 mb-1">Vista previa</p>
+                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewIndividual }}</p>
         </div>
       </div>
-
-      <div class="my-8 h-px bg-gradient-to-r from-transparent via-green-200 to-transparent"></div>
 
       <!-- Mensaje General -->
       <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
+                <label class="font-semibold text-gray-700 flex items-center gap-2 mb-3">
             <UsersIcon class="w-4 h-4 text-purple-600" />
             Mensaje General
           </label>
-        </div>
-        <p class="text-xs text-gray-500 mb-2">
-          Este mensaje se puede enviar a todos los socios a la vez. No usa variables personalizadas.
-        </p>
         <textarea
           v-model="mensajeGeneral"
-          class="input-field min-h-[150px] font-mono text-sm bg-white/80 backdrop-blur-sm border-2 border-green-200/50 focus:border-green-400 focus:ring-2 focus:ring-green-500/20"
+                  class="input-field min-h-[120px] font-mono text-sm"
           placeholder="Escribe el mensaje general..."
         ></textarea>
-        
-        <!-- Vista previa -->
-        <div class="mt-4 p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 border-2 border-purple-200/50 rounded-xl backdrop-blur-sm">
-          <p class="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1.5">
-            <EyeIcon class="w-4 h-4" />
-            Vista previa
-          </p>
-          <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ mensajeGeneral }}</p>
-        </div>
       </div>
 
-        <!-- Botones de acción -->
-        <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-green-200/50">
-          <button 
-            @click="restaurarDefectoMensajes"
-            class="btn-secondary inline-flex items-center justify-center gap-2 bg-white/80 backdrop-blur-sm hover:bg-white"
-          >
+              <!-- Botones -->
+              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-green-200">
+                <button @click="restaurarDefectoMensajes" class="btn-secondary text-sm">
             <ArrowPathIcon class="w-4 h-4" />
-            Restaurar valores por defecto
+                  Restaurar
           </button>
           <button 
             @click="guardarMensajes"
             :disabled="guardandoMensajes"
-            class="btn-primary flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/30"
+                  class="btn-primary flex-1 sm:flex-none text-sm bg-gradient-to-r from-green-500 to-emerald-600"
           >
-            <CheckIcon class="w-4 h-4" />
             {{ guardandoMensajes ? 'Guardando...' : 'Guardar Mensajes' }}
           </button>
         </div>
       </div>
       </div>
     </Transition>
+      </div>
 
-    <!-- Sección Configuración de Período -->
-    <Transition
-      enter-active-class="transition duration-500 ease-out"
-      enter-from-class="opacity-0 -translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-300 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-4"
-    >
-      <div v-if="seccionActiva === 'periodo'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-100/50">
-      <!-- Decoración de fondo -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-200/20 to-indigo-200/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-100/30 to-transparent rounded-full -ml-24 -mb-24 blur-2xl"></div>
-      
-      <div class="relative p-6 sm:p-8">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-14 h-14 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 transform hover:scale-105 transition-transform">
-            <CalendarDaysIcon class="w-7 h-7 text-white" />
+      <!-- === PERÍODO === -->
+      <div class="space-y-3">
+      <button
+        @click="seccionActiva = seccionActiva === 'periodo' ? null : 'periodo'"
+        :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+          seccionActiva === 'periodo'
+              ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 border-blue-400 shadow-blue-500/30'
+              : 'bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 border-blue-100/50 shadow-blue-500/10 hover:border-blue-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'periodo' ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-indigo-500']">
+              <CalendarDaysIcon class="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h2 class="text-xl sm:text-2xl font-display font-bold text-gray-800">
-              Configuración de Período
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-              Define el período de cuotas para esta natillera
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'periodo' ? 'text-white' : 'text-gray-800']">
+            Período
+          </h3>
+              <p :class="['text-sm', seccionActiva === 'periodo' ? 'text-white/80' : 'text-gray-500']">
+                Define el período de cuotas
             </p>
           </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'periodo' ? 'bg-white/20' : 'bg-blue-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'periodo' ? 'text-white rotate-180' : 'text-blue-600']" />
+          </div>
         </div>
+      </button>
 
+        <!-- Contenido Período -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'periodo'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+            <div class="relative p-5 sm:p-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="label font-semibold text-gray-700">Mes de Inicio *</label>
-            <select 
-              v-model.number="configPeriodo.mes_inicio" 
-              class="input-field bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option v-for="mes in meses" :key="mes.value" :value="mes.value">
-                {{ mes.label }}
-              </option>
+                  <select v-model.number="configPeriodo.mes_inicio" class="input-field">
+                    <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
             </select>
           </div>
-
           <div>
             <label class="label font-semibold text-gray-700">Mes de Fin *</label>
-            <select 
-              v-model.number="configPeriodo.mes_fin" 
-              class="input-field bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option v-for="mes in meses" :key="mes.value" :value="mes.value">
-                {{ mes.label }}
-              </option>
+                  <select v-model.number="configPeriodo.mes_fin" class="input-field">
+                    <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
             </select>
           </div>
-
           <div>
             <label class="label font-semibold text-gray-700">Año *</label>
-            <input 
-              v-model.number="configPeriodo.anio" 
-              type="number" 
-              class="input-field bg-white/80 backdrop-blur-sm border-2 border-blue-200/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20"
-              :min="new Date().getFullYear()"
-              :max="new Date().getFullYear() + 10"
-            />
+                  <input v-model.number="configPeriodo.anio" type="number" class="input-field" :min="new Date().getFullYear()" />
           </div>
         </div>
 
-        <div class="mt-6 p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200/50 rounded-xl backdrop-blur-sm">
-          <p class="text-sm text-gray-700 font-medium">
-            📅 El período será desde <strong class="text-blue-700">{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }}</strong> 
-            hasta <strong class="text-blue-700">{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }}</strong> de <strong class="text-blue-700">{{ configPeriodo.anio }}</strong>
-          </p>
-          <p class="text-xs text-gray-600 mt-2 font-semibold">
-            Total: {{ configPeriodo.mes_fin >= configPeriodo.mes_inicio 
-              ? configPeriodo.mes_fin - configPeriodo.mes_inicio + 1 
-              : 12 - configPeriodo.mes_inicio + configPeriodo.mes_fin + 1 }} meses
+              <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <p class="text-sm text-gray-700">
+                  📅 <strong>{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }}</strong> a 
+                  <strong>{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }}</strong> de 
+                  <strong>{{ configPeriodo.anio }}</strong>
+                  <span class="text-xs text-gray-500 ml-2">
+                    ({{ configPeriodo.mes_fin >= configPeriodo.mes_inicio ? configPeriodo.mes_fin - configPeriodo.mes_inicio + 1 : 12 - configPeriodo.mes_inicio + configPeriodo.mes_fin + 1 }} meses)
+                  </span>
           </p>
         </div>
 
-        <div class="flex justify-end pt-6 border-t border-blue-200/50 mt-6">
+              <div class="flex justify-end pt-4 border-t border-blue-200 mt-4">
           <button 
             @click="guardarConfigPeriodo"
-            :disabled="guardandoPeriodo || natillerasStore.loading"
-            class="btn-primary inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg shadow-blue-500/30"
+                  :disabled="guardandoPeriodo"
+                  class="btn-primary text-sm bg-gradient-to-r from-blue-500 to-indigo-600"
           >
-            <CheckIcon class="w-4 h-4" />
-            {{ guardandoPeriodo || natillerasStore.loading ? 'Guardando...' : 'Guardar Período' }}
+                  {{ guardandoPeriodo ? 'Guardando...' : 'Guardar Período' }}
           </button>
         </div>
       </div>
       </div>
     </Transition>
+      </div>
 
-    <!-- Sección Configuración de Días de Gracia -->
-    <Transition
-      enter-active-class="transition duration-500 ease-out"
-      enter-from-class="opacity-0 -translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-300 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-4"
-    >
-      <div v-if="seccionActiva === 'diasGracia'" class="relative overflow-hidden bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 rounded-2xl shadow-xl shadow-amber-500/10 border-2 border-amber-100/50">
-      <!-- Decoración de fondo -->
-      <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-orange-200/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-amber-100/30 to-transparent rounded-full -ml-24 -mb-24 blur-2xl"></div>
-      
-      <div class="relative p-6 sm:p-8">
-        <div class="flex items-center gap-4 mb-6">
-          <div class="w-14 h-14 bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 transform hover:scale-105 transition-transform">
-            <ClockIcon class="w-7 h-7 text-white" />
+      <!-- === DÍAS DE GRACIA === -->
+      <div class="space-y-3">
+      <button
+        @click="seccionActiva = seccionActiva === 'diasGracia' ? null : 'diasGracia'"
+        :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+          seccionActiva === 'diasGracia'
+              ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 border-amber-400 shadow-amber-500/30'
+              : 'bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 border-amber-100/50 shadow-amber-500/10 hover:border-amber-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'diasGracia' ? 'bg-white/20' : 'bg-gradient-to-br from-amber-500 to-orange-500']">
+              <ClockIcon class="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h2 class="text-xl sm:text-2xl font-display font-bold text-gray-800">
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'diasGracia' ? 'text-white' : 'text-gray-800']">
               Días de Gracia
-            </h2>
-            <p class="text-sm text-gray-600 mt-1">
-              Configura los días de gracia para pagos en mora
+          </h3>
+              <p :class="['text-sm', seccionActiva === 'diasGracia' ? 'text-white/80' : 'text-gray-500']">
+                Tiempo extra antes de mora
             </p>
           </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'diasGracia' ? 'bg-white/20' : 'bg-amber-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'diasGracia' ? 'text-white rotate-180' : 'text-amber-600']" />
+          </div>
         </div>
+      </button>
 
-      <div class="space-y-4">
+        <!-- Contenido Días de Gracia -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'diasGracia'" class="relative overflow-hidden bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 rounded-2xl shadow-xl shadow-amber-500/10 border-2 border-amber-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-500 to-orange-500"></div>
+            <div class="relative p-5 sm:p-6">
         <div>
           <label class="label font-semibold text-gray-700">Días de Gracia *</label>
           <input 
             v-model.number="configDiasGracia.dias_gracia" 
             type="number" 
-            class="input-field bg-white/80 backdrop-blur-sm border-2 border-amber-200/50 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
+                  class="input-field w-32"
             min="0"
             max="30"
-            placeholder="Ej: 3"
           />
           <p class="text-xs text-gray-500 mt-2">
-            Número de días después de la fecha límite antes de considerar una cuota en mora.
+                  Días después de la fecha límite antes de considerar una cuota en mora.
           </p>
         </div>
 
-        <div class="p-5 bg-gradient-to-r from-amber-50 via-orange-50 to-red-50 border-2 border-amber-200/50 rounded-xl backdrop-blur-sm">
-          <p class="text-sm text-gray-700 font-medium">
-            ⏰ Las cuotas tendrán <strong class="text-amber-700">{{ configDiasGracia.dias_gracia }}</strong> día(s) de gracia después de la fecha límite antes de pasar a estado "en mora".
+              <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p class="text-sm text-gray-700">
+                  ⏰ Las cuotas tendrán <strong>{{ configDiasGracia.dias_gracia }}</strong> día(s) de gracia.
           </p>
         </div>
+
+              <div class="flex justify-end pt-4 border-t border-amber-200 mt-4">
+                <button 
+                  @click="guardarConfigDiasGracia"
+                  :disabled="guardandoDiasGracia"
+                  class="btn-primary text-sm bg-gradient-to-r from-amber-500 to-orange-600"
+                >
+                  {{ guardandoDiasGracia ? 'Guardando...' : 'Guardar Días de Gracia' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
 
-      <div class="flex justify-end pt-6 border-t border-amber-200/50 mt-6">
+      <!-- === SANCIONES === -->
+      <div class="space-y-3">
         <button 
-          @click="guardarConfigDiasGracia"
-          :disabled="guardandoDiasGracia || natillerasStore.loading"
-          class="btn-primary inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/30"
+          @click="seccionActiva = seccionActiva === 'sanciones' ? null : 'sanciones'"
+          :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            seccionActiva === 'sanciones'
+              ? 'bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 border-red-400 shadow-red-500/30'
+              : 'bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 border-red-100/50 shadow-red-500/10 hover:border-red-300 hover:shadow-xl'
+          ]"
         >
-          <CheckIcon class="w-4 h-4" />
-          {{ guardandoDiasGracia || natillerasStore.loading ? 'Guardando...' : 'Guardar Días de Gracia' }}
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'sanciones' ? 'bg-white/20' : 'bg-gradient-to-br from-red-500 to-rose-500']">
+              <ExclamationTriangleIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'sanciones' ? 'text-white' : 'text-gray-800']">
+                Sanciones por Mora
+              </h3>
+              <p :class="['text-sm', seccionActiva === 'sanciones' ? 'text-white/80' : 'text-gray-500']">
+                Multas e intereses por mora
+              </p>
+            </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'sanciones' ? 'bg-white/20' : 'bg-red-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'sanciones' ? 'text-white rotate-180' : 'text-red-600']" />
+            </div>
+          </div>
+        </button>
+
+        <!-- Contenido Sanciones -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'sanciones'" class="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 rounded-2xl shadow-xl shadow-red-500/10 border-2 border-red-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-rose-500"></div>
+            <div class="relative p-5 sm:p-6">
+              <!-- Activar/Desactivar -->
+              <div class="mb-5">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <div class="relative">
+                    <input type="checkbox" v-model="configSanciones.activa" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                  </div>
+                  <span class="font-semibold text-gray-700">Activar sanciones por mora</span>
+                </label>
+              </div>
+
+              <div v-if="configSanciones.activa" class="space-y-5">
+                <!-- Tipo de sanción -->
+                <div>
+                  <label class="label font-semibold text-gray-700 mb-3 block">Tipo de Sanción</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button 
+                      type="button"
+                      @click="configSanciones.tipo = 'simple'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'simple' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                    >
+                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'simple' ? 'text-red-500' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Simple</p>
+                      <p class="text-xs text-gray-500">Valor fijo</p>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="configSanciones.tipo = 'escalonada'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'escalonada' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                    >
+                      <ChartBarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'escalonada' ? 'text-red-500' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
+                      <p class="text-xs text-gray-500">Progresiva</p>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Simple -->
+                <div v-if="configSanciones.tipo === 'simple'" class="p-4 bg-white rounded-xl border border-gray-200">
+                  <label class="label font-semibold text-gray-700">Valor de multa por mora</label>
+                  <div class="relative mt-2">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <input v-model.number="configSanciones.valorFijo" type="number" min="0" class="input-field pl-8 w-40" />
+                  </div>
+                </div>
+
+                <!-- Escalonada -->
+                <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
+                  <!-- Tabla niveles -->
+                  <div class="p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="label font-semibold text-gray-700 mb-3 block">Intereses por cuotas vencidas</label>
+                    <div class="space-y-2">
+                      <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-3">
+                        <span class="text-sm text-gray-600 w-20">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                        <div class="relative flex-1 max-w-[120px]">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <input v-model.number="nivel.valor" type="number" min="0" class="input-field pl-7 py-1.5 text-sm" />
+                        </div>
+                        <button v-if="configSanciones.niveles.length > 1" @click="eliminarNivel(index)" class="text-red-500 hover:text-red-700 p-1">
+                          <XMarkIcon class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <button v-if="configSanciones.niveles.length < 10" @click="agregarNivel" class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1">
+                      <PlusIcon class="w-4 h-4" /> Agregar nivel
+                    </button>
+                  </div>
+
+                  <!-- Intereses adicionales -->
+                  <div class="p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="flex items-center gap-3 cursor-pointer mb-3">
+                      <input type="checkbox" v-model="configSanciones.interesesAdicionales.activo" class="w-4 h-4 text-red-500 rounded" />
+                      <span class="font-semibold text-gray-700 text-sm">Intereses adicionales por días</span>
+                    </label>
+                    <div v-if="configSanciones.interesesAdicionales.activo" class="flex items-center gap-2 text-sm">
+                      <span>Cada</span>
+                      <input v-model.number="configSanciones.interesesAdicionales.dias" type="number" min="1" max="30" class="input-field w-16 py-1 text-center" />
+                      <span>días, sumar</span>
+                      <div class="relative">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">$</span>
+                        <input v-model.number="configSanciones.interesesAdicionales.valor" type="number" min="0" class="input-field w-24 py-1 pl-6" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Devolución -->
+                  <div class="p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="flex items-center gap-3 cursor-pointer mb-3">
+                      <input type="checkbox" v-model="configSanciones.devolucion.activo" class="w-4 h-4 text-red-500 rounded" />
+                      <span class="font-semibold text-gray-700 text-sm">Devolución por mora excesiva</span>
+                    </label>
+                    <div v-if="configSanciones.devolucion.activo" class="space-y-3">
+                      <div class="flex items-center gap-2 text-sm flex-wrap">
+                        <span>Después de</span>
+                        <input v-model.number="configSanciones.devolucion.cuotasLimite" type="number" min="1" max="12" class="input-field w-16 py-1 text-center" />
+                        <span>cuotas, multa del</span>
+                        <input v-model.number="configSanciones.devolucion.porcentajeMulta" type="number" min="0" max="100" class="input-field w-16 py-1 text-center" />
+                        <span>%</span>
+                      </div>
+                      <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" v-model="configSanciones.devolucion.sinUtilidades" class="w-4 h-4 text-red-500 rounded" />
+                        <span>Devolución sin utilidades</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Resumen -->
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p class="text-xs font-semibold text-red-700 mb-2">📋 Resumen</p>
+                  <div v-if="configSanciones.tipo === 'simple'" class="text-sm text-gray-700">
+                    Multa fija: <strong>${{ formatMoney(configSanciones.valorFijo) }}</strong>
+                  </div>
+                  <div v-else class="text-sm text-gray-700 space-y-1">
+                    <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
+                      {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-4 border-t border-red-200 mt-4">
+                <button 
+                  @click="guardarConfigSanciones"
+                  :disabled="guardandoSanciones"
+                  class="btn-primary text-sm bg-gradient-to-r from-red-500 to-rose-600"
+                >
+                  {{ guardandoSanciones ? 'Guardando...' : 'Guardar Sanciones' }}
         </button>
       </div>
       </div>
       </div>
     </Transition>
+      </div>
+    </div>
 
     <!-- Mensaje de éxito/error -->
     <div v-if="mensaje" :class="[
@@ -426,13 +489,18 @@ import {
   CheckIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   ChatBubbleLeftRightIcon,
   UserIcon,
   UsersIcon,
   EyeIcon,
   ArrowPathIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  CurrencyDollarIcon,
+  ChartBarIcon,
+  XMarkIcon,
+  PlusIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -441,9 +509,10 @@ const configStore = useConfiguracionStore()
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
 const guardandoMensajes = ref(false)
+const guardandoSanciones = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
-const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia' o null
+const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia', 'sanciones' o null
 
 // Mensajes
 const mensajeIndividual = ref('')
@@ -479,6 +548,52 @@ const configPeriodo = ref({
 const configDiasGracia = ref({
   dias_gracia: 3
 })
+
+// Configuración de sanciones por mora
+const configSanciones = ref({
+  activa: false,
+  tipo: 'simple', // 'simple' o 'escalonada'
+  valorFijo: 5000, // Para tipo simple
+  niveles: [ // Para tipo escalonada
+    { cuotas: 1, valor: 4000 },
+    { cuotas: 2, valor: 4500 },
+    { cuotas: 3, valor: 5000 },
+    { cuotas: 4, valor: 6000 }
+  ],
+  interesesAdicionales: {
+    activo: false,
+    dias: 2,
+    valor: 500
+  },
+  devolucion: {
+    activo: false,
+    cuotasLimite: 5,
+    porcentajeMulta: 25,
+    sinUtilidades: true
+  }
+})
+
+// Formatear dinero
+function formatMoney(value) {
+  if (!value && value !== 0) return '0'
+  return new Intl.NumberFormat('es-CO').format(value)
+}
+
+// Agregar nivel de sanción
+function agregarNivel() {
+  const ultimoNivel = configSanciones.value.niveles[configSanciones.value.niveles.length - 1]
+  configSanciones.value.niveles.push({
+    cuotas: ultimoNivel.cuotas + 1,
+    valor: ultimoNivel.valor + 500
+  })
+}
+
+// Eliminar nivel de sanción
+function eliminarNivel(index) {
+  if (configSanciones.value.niveles.length > 1) {
+    configSanciones.value.niveles.splice(index, 1)
+  }
+}
 
 async function guardarConfigPeriodo() {
   guardandoPeriodo.value = true
@@ -563,6 +678,49 @@ async function guardarConfigDiasGracia() {
   guardandoDiasGracia.value = false
 }
 
+async function guardarConfigSanciones() {
+  guardandoSanciones.value = true
+  mensaje.value = null
+  
+  // Obtener las reglas de multas actuales
+  const reglasMultasActuales = natillera.value?.reglas_multas || {}
+  
+  const result = await natillerasStore.actualizarNatillera(id.value, {
+    reglas_multas: {
+      ...reglasMultasActuales,
+      sanciones: {
+        activa: configSanciones.value.activa,
+        tipo: configSanciones.value.tipo,
+        valorFijo: configSanciones.value.valorFijo,
+        niveles: configSanciones.value.niveles,
+        interesesAdicionales: configSanciones.value.interesesAdicionales,
+        devolucion: configSanciones.value.devolucion
+      }
+    }
+  })
+  
+  if (result.success) {
+    mensaje.value = {
+      tipo: 'exito',
+      texto: 'Configuración de sanciones guardada correctamente'
+    }
+    // Recargar la natillera para ver los cambios
+    await natillerasStore.fetchNatillera(id.value)
+    // Cerrar la sección después de guardar
+    seccionActiva.value = null
+  } else {
+    mensaje.value = {
+      tipo: 'error',
+      texto: result.error || 'Error al guardar la configuración de sanciones'
+    }
+  }
+  
+  setTimeout(() => {
+    mensaje.value = null
+  }, 5000)
+  guardandoSanciones.value = false
+}
+
 // Vista previa del mensaje individual con datos de ejemplo
 const vistaPreviewIndividual = computed(() => {
   return mensajeIndividual.value
@@ -642,6 +800,33 @@ function actualizarValoresDesdeNatillera() {
     const reglasMultas = natillera.value.reglas_multas || {}
     configDiasGracia.value = {
       dias_gracia: reglasMultas.dias_gracia || 3
+    }
+    
+    // Cargar configuración de sanciones
+    const sanciones = reglasMultas.sanciones || {}
+    if (Object.keys(sanciones).length > 0) {
+      configSanciones.value = {
+        activa: sanciones.activa || false,
+        tipo: sanciones.tipo || 'simple',
+        valorFijo: sanciones.valorFijo || 5000,
+        niveles: sanciones.niveles || [
+          { cuotas: 1, valor: 4000 },
+          { cuotas: 2, valor: 4500 },
+          { cuotas: 3, valor: 5000 },
+          { cuotas: 4, valor: 6000 }
+        ],
+        interesesAdicionales: sanciones.interesesAdicionales || {
+          activo: false,
+          dias: 2,
+          valor: 500
+        },
+        devolucion: sanciones.devolucion || {
+          activo: false,
+          cuotasLimite: 5,
+          porcentajeMulta: 25,
+          sinUtilidades: true
+        }
+      }
     }
   }
 }

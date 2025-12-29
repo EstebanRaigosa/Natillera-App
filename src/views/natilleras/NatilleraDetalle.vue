@@ -170,85 +170,169 @@
         </div>
       </div>
 
-      <!-- Socios resumen estilizado -->
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+      <!-- SECCIÓN DE ALERTAS DE MORA - Muy visible si hay problemas -->
+      <div 
+        v-if="sociosEnMora.length > 0"
+        ref="seccionAlertasRef"
+        class="relative rounded-3xl p-6 sm:p-8 border-2 shadow-2xl overflow-hidden animate-pulse-slow"
+        :class="[
+          sociosEnMora.length >= 3 
+            ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30' 
+            : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30'
+        ]"
+      >
+        <!-- Efecto de alerta pulsante -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+        
         <!-- Círculos decorativos -->
-        <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+        <div :class="['absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2', sociosEnMora.length >= 3 ? 'bg-red-400/20' : 'bg-amber-400/20']"></div>
+        <div :class="['absolute bottom-0 left-0 w-40 h-40 rounded-full blur-xl translate-y-1/2 -translate-x-1/2', sociosEnMora.length >= 3 ? 'bg-rose-400/20' : 'bg-orange-400/20']"></div>
         
         <div class="relative z-10">
-          <div class="flex items-center justify-between gap-2 mb-4 sm:mb-6">
+          <!-- Header de alerta -->
+          <div class="flex items-center justify-between gap-3 mb-5">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-natillera-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-natillera-500/30">
-                <UsersIcon class="w-5 h-5 text-white" />
+              <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/40' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/40']">
+                <ExclamationTriangleIcon class="w-6 h-6 text-white" />
               </div>
-              <h2 class="text-base sm:text-xl font-display font-bold bg-gradient-to-r from-gray-800 to-natillera-700 bg-clip-text text-transparent">
-                Socios Recientes
-              </h2>
+              <div>
+                <h2 :class="['text-lg sm:text-xl font-display font-bold', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
+                  ⚠️ Atención: Socios en Mora
+                </h2>
+                <p :class="['text-sm', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
+                  {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
+                </p>
+              </div>
             </div>
             <router-link 
-              :to="`/natilleras/${id}/socios`"
-              class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white hover:from-natillera-600 hover:to-emerald-700 font-semibold text-xs sm:text-sm rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap flex-shrink-0"
+              :to="`/natilleras/${id}/cuotas`"
+              :class="['inline-flex items-center gap-1.5 px-4 py-2.5 text-white font-semibold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap flex-shrink-0', sociosEnMora.length >= 3 ? 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700' : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700']"
             >
-              Ver todos
-              <ArrowRightIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              Gestionar
+              <ArrowRightIcon class="w-4 h-4" />
             </router-link>
           </div>
 
-          <div v-if="natillera.socios_natillera?.length === 0" class="text-center py-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-              <UsersIcon class="w-8 h-8 text-gray-400" />
+          <!-- Resumen rápido -->
+          <div :class="['grid gap-3 mb-5', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3']">
+            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-red-200/50">
+              <p class="text-2xl font-bold text-red-600">{{ totalCuotasMora }}</p>
+              <p class="text-xs text-red-700 font-medium">Cuotas en mora</p>
             </div>
-            <p class="text-gray-600 font-medium mb-4">No hay socios registrados</p>
-            <router-link 
-              :to="`/natilleras/${id}/socios`"
-              class="btn-primary inline-flex items-center gap-2 shadow-lg"
-            >
-              <PlusIcon class="w-4 h-4" />
-              Agregar socios
-            </router-link>
+            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-amber-200/50">
+              <p class="text-2xl font-bold text-amber-600">{{ totalCuotasPendientes }}</p>
+              <p class="text-xs text-amber-700 font-medium">Cuotas pendientes</p>
+            </div>
+            <!-- Sanciones (solo si hay) -->
+            <div v-if="totalSancionesMora > 0" class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-rose-200/50">
+              <p class="text-2xl font-bold text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
+              <p class="text-xs text-rose-700 font-medium">Total sanciones</p>
+            </div>
+            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-orange-200/50">
+              <p class="text-2xl font-bold text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
+              <p class="text-xs text-orange-700 font-medium">Total a cobrar</p>
+            </div>
           </div>
 
-          <div v-else class="space-y-3">
+          <!-- Lista de socios en mora -->
+          <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
             <div 
-              v-for="sn in sociosRecientes" 
-              :key="sn.id"
-              class="relative overflow-hidden rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/50 shadow-md hover:shadow-xl hover:border-natillera-300 hover:-translate-y-0.5 transition-all duration-300 p-4"
+              v-for="socioMora in sociosEnMora.slice(0, 5)" 
+              :key="socioMora.id"
+              class="relative overflow-hidden rounded-xl bg-white/80 backdrop-blur-sm border-l-4 shadow-md hover:shadow-lg transition-all duration-300 p-4"
+              :class="[socioMora.cuotasMora > 0 ? 'border-l-red-500' : 'border-l-amber-500']"
             >
-              <!-- Efecto decorativo sutil -->
-              <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-natillera-100/30 to-emerald-100/20 rounded-full blur-lg -translate-y-1/2 translate-x-1/2"></div>
-              
-              <div class="relative flex items-center justify-between gap-3">
-                <div 
-                  @click="verDetalleSocio(sn)"
-                  class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
-                >
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
                   <img 
-                    :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)" 
-                    :alt="sn.socio?.nombre"
-                    class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-natillera-100 flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                    :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
+                    :alt="socioMora.nombre"
+                    class="w-11 h-11 rounded-lg flex-shrink-0 border-2 shadow-md object-cover"
+                    :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-amber-300']"
                   />
                   <div class="min-w-0 flex-1">
-                    <p class="font-bold text-gray-800 text-sm sm:text-base truncate">{{ sn.socio?.nombre }}</p>
-                    <p class="text-xs sm:text-sm text-gray-600 truncate mt-1 flex items-center gap-1.5">
-                      <CurrencyDollarIcon class="w-3.5 h-3.5 text-natillera-500" />
-                      <span class="font-semibold text-natillera-600">${{ formatMoney(sn.valor_cuota_individual) }}</span>
-                    </p>
+                    <p class="font-bold text-gray-800 text-sm truncate">{{ socioMora.nombre }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                        🔴 {{ socioMora.cuotasMora }} en mora
+                      </span>
+                      <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                        🟡 {{ socioMora.cuotasPendientes }} pendiente{{ socioMora.cuotasPendientes > 1 ? 's' : '' }}
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <span 
-                  :class="[
-                    'px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-bold shadow-sm flex-shrink-0',
-                    sn.estado === 'activo' 
-                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                      : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                  ]"
-                >
-                  {{ sn.estado }}
-                </span>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-lg font-bold" :class="[socioMora.cuotasMora > 0 ? 'text-red-600' : 'text-amber-600']">
+                    ${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}
+                  </p>
+                  <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-rose-600 font-semibold">
+                    +${{ formatMoney(socioMora.totalSanciones) }} sanción
+                  </p>
+                  <p class="text-[10px] text-gray-500 mb-2">{{ socioMora.totalSanciones > 0 ? 'total a cobrar' : 'adeudado' }}</p>
+                </div>
               </div>
             </div>
+            
+            <!-- Mostrar más si hay -->
+            <div v-if="sociosEnMora.length > 5" class="text-center py-2">
+              <router-link 
+                :to="`/natilleras/${id}/cuotas`"
+                class="text-sm font-semibold text-red-600 hover:text-red-700"
+              >
+                Ver {{ sociosEnMora.length - 5 }} más...
+              </router-link>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Mensaje de todo en orden (cuando no hay mora) -->
+      <div 
+        v-else-if="natillera.socios_natillera?.length > 0"
+        class="relative bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 rounded-3xl p-6 sm:p-8 border border-green-200/50 shadow-xl backdrop-blur-sm overflow-hidden"
+      >
+        <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-green-400/15 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        
+        <div class="relative z-10 flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+            <CheckCircleIcon class="w-8 h-8 text-white" />
+          </div>
+          <div class="flex-1">
+            <h2 class="text-lg sm:text-xl font-display font-bold text-green-800">
+              ✅ Todo en orden
+            </h2>
+            <p class="text-sm text-green-600">
+              No hay socios con cuotas en mora o pendientes vencidas
+            </p>
+          </div>
+          <router-link 
+            :to="`/natilleras/${id}/cuotas`"
+            class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 font-semibold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap"
+          >
+            Ver cuotas
+            <ArrowRightIcon class="w-4 h-4" />
+          </router-link>
+        </div>
+      </div>
+
+      <!-- Mensaje cuando no hay socios -->
+      <div 
+        v-else
+        class="relative bg-gradient-to-br from-white via-gray-50/30 to-slate-50/20 rounded-3xl p-6 sm:p-8 border border-gray-200/50 shadow-xl backdrop-blur-sm overflow-hidden"
+      >
+        <div class="relative z-10 text-center py-4">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
+            <UsersIcon class="w-8 h-8 text-gray-400" />
+          </div>
+          <p class="text-gray-600 font-medium mb-4">No hay socios registrados</p>
+          <router-link 
+            :to="`/natilleras/${id}/socios`"
+            class="btn-primary inline-flex items-center gap-2 shadow-lg"
+          >
+            <PlusIcon class="w-4 h-4" />
+            Agregar socios
+          </router-link>
         </div>
       </div>
     </template>
@@ -754,6 +838,7 @@ import {
   XMarkIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   ChevronDownIcon,
   UserIcon,
   PhoneIcon,
@@ -794,6 +879,10 @@ const comprobanteNuevo = ref(null) // Guardar el comprobante nuevo cuando se enc
 const errorBusqueda = ref('')
 const buscandoComprobante = ref(false)
 const inputBusquedaRef = ref(null)
+const seccionAlertasRef = ref(null)
+const cuotasNatillera = ref([])
+const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
+const configSancionesActiva = ref(false)
 
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
@@ -928,13 +1017,105 @@ function cerrarModalBuscarComprobante() {
   errorBusqueda.value = ''
 }
 
-// Socios ordenados por fecha de ingreso (más recientes primero)
-const sociosRecientes = computed(() => {
-  if (!natillera.value?.socios_natillera) return []
+// Socios con problemas de mora o pendientes vencidos
+const sociosEnMora = computed(() => {
+  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return []
   
-  return [...natillera.value.socios_natillera]
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-    .slice(0, 5)
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  
+  // Agrupar cuotas por socio
+  const sociosMap = {}
+  
+  cuotasNatillera.value.forEach(cuota => {
+    if (!cuota) return
+    
+    const socioId = cuota.socio_natillera_id
+    if (!socioId) return
+    
+    const socioInfo = cuota.socio_natillera?.socio
+    
+    if (!sociosMap[socioId]) {
+      sociosMap[socioId] = {
+        id: socioId,
+        nombre: socioInfo?.nombre || 'Sin nombre',
+        avatar_seed: socioInfo?.avatar_seed || null,
+        avatar_style: socioInfo?.avatar_style || 'adventurer',
+        cuotasMora: 0,
+        cuotasPendientes: 0,
+        totalDeuda: 0,
+        totalSanciones: 0 // Nuevo: sanciones calculadas dinámicamente
+      }
+    }
+    
+    // Contar cuotas en mora
+    if (cuota.estado === 'mora') {
+      sociosMap[socioId].cuotasMora++
+      const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+      // Obtener la sanción calculada dinámicamente para esta cuota
+      const sancionCuota = sancionesPorCuota.value[cuota.id] || 0
+      sociosMap[socioId].totalDeuda += deudaCuota
+      sociosMap[socioId].totalSanciones += sancionCuota
+    }
+    // Contar cuotas pendientes vencidas
+    else if (cuota.estado === 'pendiente' || cuota.estado === 'parcial') {
+      if (cuota.fecha_limite) {
+        const fechaLimite = new Date(cuota.fecha_limite)
+        fechaLimite.setHours(0, 0, 0, 0)
+        
+        if (hoy > fechaLimite) {
+          sociosMap[socioId].cuotasPendientes++
+          sociosMap[socioId].totalDeuda += (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+        }
+      }
+    }
+  })
+  
+  // Filtrar solo los que tienen problemas y ordenar por gravedad
+  return Object.values(sociosMap)
+    .filter(s => s.cuotasMora > 0 || s.cuotasPendientes > 0)
+    .map(s => ({
+      ...s,
+      // Total incluyendo sanciones
+      totalConSanciones: s.totalDeuda + s.totalSanciones
+    }))
+    .sort((a, b) => {
+      // Primero los que tienen más cuotas en mora
+      if (b.cuotasMora !== a.cuotasMora) return b.cuotasMora - a.cuotasMora
+      // Luego por total de deuda con sanciones
+      return b.totalConSanciones - a.totalConSanciones
+    })
+})
+
+// Estadísticas de mora
+const totalCuotasMora = computed(() => {
+  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
+  return cuotasNatillera.value.filter(c => c && c.estado === 'mora').length
+})
+
+const totalCuotasPendientes = computed(() => {
+  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
+  
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  
+  return cuotasNatillera.value.filter(c => {
+    if (!c || (c.estado !== 'pendiente' && c.estado !== 'parcial')) return false
+    if (!c.fecha_limite) return false
+    const fechaLimite = new Date(c.fecha_limite)
+    fechaLimite.setHours(0, 0, 0, 0)
+    return hoy > fechaLimite
+  }).length
+})
+
+const totalDeudaMora = computed(() => {
+  if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
+  return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalConSanciones || s?.totalDeuda || 0), 0)
+})
+
+const totalSancionesMora = computed(() => {
+  if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
+  return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalSanciones || 0), 0)
 })
 
 // Resumen financiero del socio seleccionado
@@ -1090,6 +1271,13 @@ async function verDetalleSocio(sn) {
   cuotasSocio.value = resumen?.cuotas || []
 }
 
+// Función para obtener el nombre del mes
+function getMesLabel(mes) {
+  const mesObj = meses.find(m => m.value === mes)
+  return mesObj ? mesObj.label : `Mes ${mes}`
+}
+
+
 // Observar cuando se abre la modal para poner el foco en el input
 watch(modalBuscarComprobante, async (isOpen) => {
   if (isOpen) {
@@ -1101,10 +1289,77 @@ watch(modalBuscarComprobante, async (isOpen) => {
   }
 })
 
-onMounted(() => {
-  const natilleraId = props.id || route.params.id
-  natillerasStore.fetchNatillera(natilleraId)
-  configStore.cargarConfiguracion()
+onMounted(async () => {
+  try {
+    const natilleraId = props.id || route.params.id
+    await natillerasStore.fetchNatillera(natilleraId)
+    configStore.cargarConfiguracion()
+    
+    // Cargar cuotas para verificar mora
+    const cuotas = await cuotasStore.fetchCuotasNatillera(natilleraId)
+    cuotasNatillera.value = cuotas || []
+    
+    // Calcular sanciones dinámicas para las cuotas en mora
+    const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
+    if (resultSanciones.success) {
+      sancionesPorCuota.value = resultSanciones.sanciones || {}
+      configSancionesActiva.value = resultSanciones.configActiva || false
+      console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
+    }
+    
+    // Si hay socios en mora, hacer scroll a la sección de alertas
+    await nextTick()
+    if (sociosEnMora.value && sociosEnMora.value.length > 0 && seccionAlertasRef.value) {
+      setTimeout(() => {
+        seccionAlertasRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 500)
+    }
+  } catch (error) {
+    console.error('Error cargando datos de natillera:', error)
+  }
 })
 </script>
 
+<style scoped>
+/* Animación de pulso lento para la sección de alertas */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.92;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Animación de rebote lento para el icono */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}
+
+/* Efecto shimmer para llamar la atención */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+</style>

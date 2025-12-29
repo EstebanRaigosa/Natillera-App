@@ -745,6 +745,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSociosStore } from '../../stores/socios'
+import { useCuotasStore } from '../../stores/cuotas'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -766,7 +767,8 @@ import {
   ArrowUpTrayIcon,
   ArrowDownTrayIcon,
   DocumentArrowDownIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CalendarIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -775,6 +777,7 @@ const props = defineProps({
 
 const route = useRoute()
 const sociosStore = useSociosStore()
+const cuotasStore = useCuotasStore()
 
 const modalAgregar = ref(false)
 const modalDetalle = ref(false)
@@ -1195,6 +1198,7 @@ async function verDetalleSocio(sn) {
   cuotasSocio.value = resumen?.cuotas || []
   loadingDetalle.value = false
 }
+
 
 onMounted(() => {
   sociosStore.fetchSociosNatillera(id)

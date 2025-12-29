@@ -88,15 +88,23 @@
 
           <!-- Indicador de estado mejorado -->
           <div class="mt-1.5 sm:mt-3 flex items-center justify-center gap-1 flex-wrap">
-            <!-- Pendientes/Mora -->
+            <!-- En Mora (rojo - más urgente) -->
             <span 
-              v-if="getResumenMes(mes.value).pendientes + getResumenMes(mes.value).enMora > 0"
-              class="flex items-center justify-center min-w-[24px] h-5 sm:min-w-[28px] sm:h-7 px-1.5 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-white shadow-md sm:shadow-lg shadow-amber-300/50 group-hover:shadow-xl group-hover:shadow-amber-400/60 group-hover:scale-110 transition-all duration-300"
+              v-if="getResumenMes(mes.value).enMora > 0"
+              class="flex items-center justify-center min-w-[24px] h-5 sm:min-w-[28px] sm:h-7 px-1.5 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-red-500 via-rose-500 to-red-600 text-white shadow-md sm:shadow-lg shadow-red-300/50 group-hover:shadow-xl group-hover:shadow-red-400/60 group-hover:scale-110 transition-all duration-300 animate-pulse"
             >
-              {{ getResumenMes(mes.value).pendientes + getResumenMes(mes.value).enMora }}
+              {{ getResumenMes(mes.value).enMora }}
             </span>
             
-            <!-- Pagadas -->
+            <!-- Pendientes (naranja) -->
+            <span 
+              v-if="getResumenMes(mes.value).pendientes > 0"
+              class="flex items-center justify-center min-w-[24px] h-5 sm:min-w-[28px] sm:h-7 px-1.5 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-white shadow-md sm:shadow-lg shadow-amber-300/50 group-hover:shadow-xl group-hover:shadow-amber-400/60 group-hover:scale-110 transition-all duration-300"
+            >
+              {{ getResumenMes(mes.value).pendientes }}
+            </span>
+            
+            <!-- Pagadas (verde) -->
             <span 
               v-if="getResumenMes(mes.value).pagadas > 0"
               class="flex items-center justify-center min-w-[24px] h-5 sm:min-w-[28px] sm:h-7 px-1.5 sm:px-2.5 rounded-full text-[10px] sm:text-xs font-bold bg-gradient-to-r from-green-400 via-emerald-500 to-green-500 text-white shadow-md sm:shadow-lg shadow-green-300/50 group-hover:shadow-xl group-hover:shadow-green-400/60 group-hover:scale-110 transition-all duration-300"

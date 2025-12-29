@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
-import { useAuditoria } from '../composables/useAuditoria'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 
 export const useSociosStore = defineStore('socios', () => {
   const socios = ref([])
@@ -181,11 +181,11 @@ export const useSociosStore = defineStore('socios', () => {
         sociosNatillera.value[index] = data
       }
 
-      // Registrar auditoría
+      // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
       const nombreSocio = data.socio?.nombre || datosAnteriores?.socio?.nombre || 'Socio'
       // La descripción se generará automáticamente con los detalles de los cambios
-      await auditoria.registrarActualizacion(
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
         'socio_natillera',
         id,
         null, // null para generar descripción automática
@@ -193,7 +193,7 @@ export const useSociosStore = defineStore('socios', () => {
         data,
         datosAnteriores?.natillera_id || data.natillera_id,
         { campos_modificados: Object.keys(datos) }
-      )
+      ))
 
       return { success: true, data }
     } catch (e) {
@@ -226,10 +226,10 @@ export const useSociosStore = defineStore('socios', () => {
 
       if (updateError) throw updateError
 
-      // Registrar auditoría
+      // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
       // La descripción se generará automáticamente con los detalles de los cambios
-      await auditoria.registrarActualizacion(
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
         'socio',
         socioId,
         null, // null para generar descripción automática
@@ -237,7 +237,7 @@ export const useSociosStore = defineStore('socios', () => {
         data,
         natilleraId,
         { campos_modificados: Object.keys(datos) }
-      )
+      ))
 
       return { success: true, data }
     } catch (e) {

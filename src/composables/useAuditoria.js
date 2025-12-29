@@ -1,11 +1,117 @@
 import { supabase } from '../lib/supabase'
 
 /**
+ * Ejecuta una promesa de auditoría en segundo plano sin bloquear
+ * @param {Promise} promesaAuditoria - La promesa de auditoría a ejecutar
+ */
+export function registrarAuditoriaEnSegundoPlano(promesaAuditoria) {
+  // Ejecutar sin await, capturando errores silenciosamente
+  promesaAuditoria
+    .then(result => {
+      if (!result.success) {
+        console.warn('[Auditoría Background] Registro fallido:', result.error)
+      }
+    })
+    .catch(error => {
+      console.error('[Auditoría Background] Error:', error)
+    })
+}
+
+/**
  * Composable para registrar acciones de auditoría
  * Facilita el registro de todas las acciones realizadas en el sistema
  */
 export function useAuditoria() {
   
+  /**
+   * Valida si un string es un UUID válido
+   * @param {any} value - Valor a validar
+   * @returns {boolean} - true si es un UUID válido
+   */
+  function isValidUUID(value) {
+    if (!value) return false
+    if (typeof value !== 'string') return false
+    // Regex para UUID v4 (el más común usado por Supabase)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    return uuidRegex.test(value)
+  }
+
+  /**
+   * Extrae el UUID de un valor que puede ser un string, objeto o valor inválido
+   * @param {any} value - Valor del que extraer el UUID
+   * @param {string} fieldName - Nombre del campo para logs de depuración
+   * @returns {string|null} - UUID válido o null
+   */
+  function extractUUID(value, fieldName = 'campo') {
+    // Si es null o undefined, retornar null
+    if (value === null || value === undefined) {
+      return null
+    }
+
+    // Si ya es un UUID válido, retornarlo
+    if (typeof value === 'string' && isValidUUID(value)) {
+      return value
+    }
+
+    // Si es un objeto JavaScript (no string), intentar extraer el ID directamente
+    if (typeof value === 'object' && value !== null) {
+      console.warn(`[Auditoría] ${fieldName} recibido como OBJETO JavaScript, extrayendo ID...`)
+      
+      // Intentar extraer ID del objeto
+      const possibleId = value.id || value.uuid || value._id
+      if (possibleId && typeof possibleId === 'string' && isValidUUID(possibleId)) {
+        console.warn(`[Auditoría] Se extrajo ID del objeto: ${possibleId}`)
+        return possibleId
+      }
+      
+      console.error(`[Auditoría] No se pudo extraer UUID válido del objeto ${fieldName}`)
+      return null
+    }
+
+    // Si es un string pero no es UUID válido
+    if (typeof value === 'string') {
+      // Limpiar el string (quitar comillas extras, espacios)
+      let cleanValue = value.trim()
+      
+      // Quitar comillas envolventes si existen (caso de doble serialización)
+      if ((cleanValue.startsWith('"') && cleanValue.endsWith('"')) ||
+          (cleanValue.startsWith("'") && cleanValue.endsWith("'"))) {
+        cleanValue = cleanValue.slice(1, -1)
+      }
+      
+      // Verificar si después de limpiar es un UUID válido
+      if (isValidUUID(cleanValue)) {
+        return cleanValue
+      }
+      
+      // Intentar parsear como JSON
+      try {
+        const parsed = JSON.parse(cleanValue)
+        if (parsed && typeof parsed === 'object') {
+          const possibleId = parsed.id || parsed.uuid || parsed._id
+          if (possibleId && typeof possibleId === 'string' && isValidUUID(possibleId)) {
+            console.warn(`[Auditoría] Se extrajo ID de JSON string: ${possibleId}`)
+            return possibleId
+          }
+        }
+      } catch (e) {
+        // No es un JSON válido, continuar
+      }
+      
+      // Si es [object Object] o similar, es un objeto que fue convertido a string incorrectamente
+      if (cleanValue.includes('[object') || cleanValue.includes('Object]')) {
+        console.error(`[Auditoría] ${fieldName} es un objeto convertido a string incorrectamente: "${cleanValue}"`)
+        return null
+      }
+      
+      console.error(`[Auditoría] ${fieldName} es string pero no UUID válido: "${cleanValue.substring(0, 50)}"`)
+      return null
+    }
+
+    console.error(`[Auditoría] ${fieldName} tiene tipo inesperado:`, typeof value)
+    return null
+  }
+
   /**
    * Obtiene el usuario actual autenticado
    */
@@ -220,23 +326,91 @@ export function useAuditoria() {
         return { success: false, error: 'Usuario no autenticado' }
       }
 
-      // Obtener nombre de la natillera si existe (solo si tenemos natilleraId)
+      // Log para debugging - versión 3 con validación estricta
+      console.log('[Auditoría v3] === INICIO REGISTRO ===')
+      console.log('[Auditoría v3] Acción:', tipoAccion, entidad)
+      
+      // Función local para validación estricta de UUID
+      const esUUIDValido = (val) => {
+        if (!val || typeof val !== 'string') return false
+        const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        return regex.test(val)
+      }
+      
+      // Extraer UUID de forma segura
+      const extraerUUIDSeguro = (valor, nombre) => {
+        console.log(`[Auditoría v3] ${nombre} - tipo:`, typeof valor)
+        
+        // Si es null/undefined, retornar null
+        if (valor === null || valor === undefined) {
+          return null
+        }
+        
+        // Si es string y es UUID válido, retornarlo
+        if (typeof valor === 'string' && esUUIDValido(valor)) {
+          console.log(`[Auditoría v3] ${nombre} es UUID válido:`, valor)
+          return valor
+        }
+        
+        // Si es objeto, intentar extraer .id
+        if (typeof valor === 'object' && valor !== null) {
+          console.log(`[Auditoría v3] ${nombre} es OBJETO, intentando extraer .id`)
+          const id = valor.id
+          if (id && typeof id === 'string' && esUUIDValido(id)) {
+            console.log(`[Auditoría v3] ${nombre} - extraído ID del objeto:`, id)
+            return id
+          }
+          console.error(`[Auditoría v3] ${nombre} - NO se pudo extraer UUID del objeto`)
+          return null
+        }
+        
+        // Si es string pero no UUID, intentar parsear JSON
+        if (typeof valor === 'string') {
+          console.log(`[Auditoría v3] ${nombre} es string no-UUID, intentando parsear`)
+          try {
+            const parsed = JSON.parse(valor)
+            if (parsed && parsed.id && esUUIDValido(parsed.id)) {
+              console.log(`[Auditoría v3] ${nombre} - extraído ID de JSON:`, parsed.id)
+              return parsed.id
+            }
+          } catch (e) {
+            // Ignorar error de parseo
+          }
+          console.error(`[Auditoría v3] ${nombre} - string inválido:`, valor.substring(0, 50))
+          return null
+        }
+        
+        console.error(`[Auditoría v3] ${nombre} - tipo no soportado:`, typeof valor)
+        return null
+      }
+      
+      // Extraer UUIDs de forma segura
+      const entidadIdFinal = extraerUUIDSeguro(entidadId, 'entidadId')
+      const natilleraIdFinal = extraerUUIDSeguro(natilleraId, 'natilleraId')
+      
+      console.log('[Auditoría v3] Resultados finales:')
+      console.log('[Auditoría v3] - entidadIdFinal:', entidadIdFinal)
+      console.log('[Auditoría v3] - natilleraIdFinal:', natilleraIdFinal)
+
+      // Obtener nombre de la natillera si existe (SOLO si tenemos un UUID válido verificado)
       let natilleraNombre = null
-      if (natilleraId) {
+      if (natilleraIdFinal !== null && esUUIDValido(natilleraIdFinal)) {
         try {
+          console.log('[Auditoría v3] Obteniendo nombre de natillera con ID:', natilleraIdFinal)
           const { data: natillera } = await supabase
             .from('natilleras')
             .select('nombre')
-            .eq('id', natilleraId)
+            .eq('id', natilleraIdFinal)
             .single()
           
           if (natillera) {
             natilleraNombre = natillera.nombre
           }
         } catch (e) {
-          // Si no se puede obtener el nombre, continuar sin él
-          console.warn('No se pudo obtener el nombre de la natillera:', e)
+          console.warn('[Auditoría v3] No se pudo obtener el nombre de la natillera:', e)
         }
+      } else if (natilleraIdFinal !== null) {
+        console.error('[Auditoría v3] ALERTA: natilleraIdFinal no es null pero no es UUID válido:', natilleraIdFinal)
       }
 
       // Calcular cambios si hay datos anteriores y nuevos
@@ -244,15 +418,23 @@ export function useAuditoria() {
         ? calcularCambios(datosAnteriores, datosNuevos)
         : null
 
+      // Verificación final de UUIDs antes de insertar
+      const entidadIdParaInsertar = (entidadIdFinal && esUUIDValido(entidadIdFinal)) ? entidadIdFinal : null
+      const natilleraIdParaInsertar = (natilleraIdFinal && esUUIDValido(natilleraIdFinal)) ? natilleraIdFinal : null
+      
+      console.log('[Auditoría v3] Valores a insertar:')
+      console.log('[Auditoría v3] - entidad_id:', entidadIdParaInsertar)
+      console.log('[Auditoría v3] - natillera_id:', natilleraIdParaInsertar)
+      
       // Preparar datos para insertar
       const auditoriaData = {
         usuario_id: user.id,
         usuario_email: user.email || null,
-        natillera_id: natilleraId,
+        natillera_id: natilleraIdParaInsertar,
         natillera_nombre: natilleraNombre,
         tipo_accion: tipoAccion,
         entidad: entidad,
-        entidad_id: entidadId,
+        entidad_id: entidadIdParaInsertar,
         descripcion: descripcion,
         datos_anteriores: datosAnteriores ? JSON.parse(JSON.stringify(datosAnteriores)) : null,
         datos_nuevos: datosNuevos ? JSON.parse(JSON.stringify(datosNuevos)) : null,
@@ -263,6 +445,8 @@ export function useAuditoria() {
         metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null
       }
 
+      console.log('[Auditoría v3] auditoriaData preparado, insertando...')
+
       // Insertar registro de auditoría
       const { data, error } = await supabase
         .from('auditoria')
@@ -271,10 +455,11 @@ export function useAuditoria() {
         .single()
 
       if (error) {
-        console.error('Error registrando auditoría:', error)
+        console.error('[Auditoría v3] Error insertando:', error)
         return { success: false, error: error.message }
       }
 
+      console.log('[Auditoría v3] === REGISTRO EXITOSO ===', data.id)
       return { success: true, id: data.id }
     } catch (error) {
       console.error('Error en registrar auditoría:', error)
@@ -354,10 +539,11 @@ export function useAuditoria() {
   /**
    * Registra la generación de algo (cuotas, comprobantes, etc.)
    */
-  async function registrarGeneracion(entidad, descripcion, datosNuevos, natilleraId = null, detalles = null) {
+  async function registrarGeneracion(entidad, entidadId, descripcion, datosNuevos, natilleraId = null, detalles = null) {
     return registrar({
       tipoAccion: 'GENERATE',
       entidad,
+      entidadId,
       descripcion,
       natilleraId,
       datosNuevos,

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
-import { useAuditoria } from '../composables/useAuditoria'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 
 export const useNatillerasStore = defineStore('natilleras', () => {
   const natilleras = ref([])
@@ -140,16 +140,16 @@ export const useNatillerasStore = defineStore('natilleras', () => {
 
       natilleras.value.unshift(data)
 
-      // Registrar auditoría
+      // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
-      await auditoria.registrarCreacion(
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarCreacion(
         'natillera',
         data.id,
         `Se creó la natillera "${datos.nombre}"`,
         data,
         data.id,
         { admin_id: user.id }
-      )
+      ))
 
       return { success: true, data }
     } catch (e) {
@@ -190,10 +190,10 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         natilleraActual.value = { ...natilleraActual.value, ...data }
       }
 
-      // Registrar auditoría
+      // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
       // La descripción se generará automáticamente con los detalles de los cambios
-      await auditoria.registrarActualizacion(
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
         'natillera',
         id,
         null, // null para generar descripción automática
@@ -201,7 +201,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         data,
         id, // natilleraId es el mismo id
         { campos_modificados: Object.keys(datos) }
-      )
+      ))
 
       return { success: true, data }
     } catch (e) {
