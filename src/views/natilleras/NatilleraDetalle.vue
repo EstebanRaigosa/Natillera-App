@@ -170,225 +170,43 @@
         </div>
       </div>
 
-      <!-- SECCIÓN DE ALERTAS DE MORA - Muy visible si hay problemas -->
+      <!-- BANNER DE ALERTA DE MORA - Click para abrir modal -->
       <div 
         v-if="sociosEnMora.length > 0"
-        ref="seccionAlertasRef"
-        class="relative rounded-3xl p-6 sm:p-8 border-2 shadow-2xl overflow-hidden animate-fade-in-alerta group"
+        @click="modalSociosEnMora = true"
+        class="relative rounded-2xl p-4 sm:p-5 border-2 shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 group animate-fade-in-alerta"
         :class="[
           sociosEnMora.length >= 3 
-            ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30' 
-            : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30'
+            ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30 hover:border-red-500 hover:-translate-y-0.5' 
+            : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30 hover:border-amber-500 hover:-translate-y-0.5'
         ]"
       >
-        <!-- Efecto de barrido automático (como hover periódico) -->
+        <!-- Efecto de barrido automático -->
         <div 
           :class="[
-            'absolute inset-0 rounded-3xl animate-sweep-hover pointer-events-none',
+            'absolute inset-0 rounded-2xl animate-sweep-hover pointer-events-none',
             sociosEnMora.length >= 3 
               ? 'bg-gradient-to-r from-transparent via-red-300/70 to-transparent' 
               : 'bg-gradient-to-r from-transparent via-amber-300/70 to-transparent'
           ]"
         ></div>
         
-        <!-- Círculos decorativos -->
-        <div :class="['absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2', sociosEnMora.length >= 3 ? 'bg-red-400/20' : 'bg-amber-400/20']"></div>
-        <div :class="['absolute bottom-0 left-0 w-40 h-40 rounded-full blur-xl translate-y-1/2 -translate-x-1/2', sociosEnMora.length >= 3 ? 'bg-rose-400/20' : 'bg-orange-400/20']"></div>
-        
-        <div class="relative z-10">
-          <!-- Header de alerta -->
-          <div class="mb-6">
-            <div class="mb-4">
-              <h2 :class="['text-xl sm:text-2xl font-display font-bold mb-1', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
-                Socios en Mora
+        <div class="relative z-10 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 sm:gap-4 flex-1">
+            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/50' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/50']">
+              <ExclamationTriangleIcon :class="['w-6 h-6 sm:w-7 sm:h-7 text-white']" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2 :class="['text-lg sm:text-xl font-display font-bold mb-0.5', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
+                Hay {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio' : 'socios' }} en mora
               </h2>
-              <p :class="['text-sm sm:text-base font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
-                {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
+              <p :class="['text-sm font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
+                {{ totalCuotasMora }} {{ totalCuotasMora === 1 ? 'cuota' : 'cuotas' }} en mora • Total: ${{ formatMoneyShort(totalDeudaMora) }}
               </p>
             </div>
           </div>
-
-          <!-- Resumen rápido -->
-          <div :class="['grid gap-3 sm:gap-4 mb-6', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1" :class="sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'">{{ totalCuotasMora }}</p>
-              <p class="text-xs sm:text-sm font-semibold" :class="sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'">Cuotas en mora</p>
-            </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-amber-300/60 hover:border-amber-400' : 'border-orange-300/60 hover:border-orange-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-amber-600">{{ totalCuotasPendientes }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-amber-700">Cuotas pendientes</p>
-            </div>
-            <!-- Sanciones (solo si hay) -->
-            <div v-if="totalSancionesMora > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-rose-700">Total sanciones</p>
-            </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-orange-700">Total a cobrar</p>
-            </div>
-          </div>
-
-          <!-- Lista de socios en mora -->
-          <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
-            <div 
-              v-for="socioMora in sociosEnMora.slice(0, 5)" 
-              :key="socioMora.id"
-              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
-              :class="[
-                socioMora.cuotasMora > 0 
-                  ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' 
-                  : 'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
-              ]"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div 
-                :class="[
-                  'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
-                  socioMora.cuotasMora > 0 ? 'bg-red-300' : 'bg-orange-300'
-                ]"
-              ></div>
-              
-              <!-- Línea decorativa superior -->
-              <div 
-                :class="[
-                  'absolute top-0 left-0 right-0 h-0.5',
-                  socioMora.cuotasMora > 0 ? 'bg-red-400/60' : 'bg-orange-400/60'
-                ]"
-              ></div>
-              <div class="relative z-10">
-                <!-- Layout móvil: datos financieros arriba -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <!-- Primera fila en móvil: Avatar y nombre -->
-                  <div class="flex items-start gap-3 min-w-0 flex-1">
-                    <img 
-                      :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
-                      :alt="socioMora.nombre"
-                      class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 border-2 shadow-md object-cover group-hover:scale-105 transition-transform duration-300"
-                      :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-orange-300']"
-                    />
-                    <div class="flex-1 min-w-0">
-                      <p class="font-bold text-gray-900 text-base sm:text-lg group-hover:text-natillera-700 transition-colors truncate">{{ socioMora.nombre }}</p>
-                      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
-                          {{ socioMora.cuotasMora }} en mora
-                        </span>
-                        <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 font-semibold whitespace-nowrap">
-                          {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
-                        </span>
-                        <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">
-                          {{ socioMora.cuotasPendientes }} {{ socioMora.cuotasPendientes === 1 ? 'pend.' : 'pend.' }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Datos financieros en móvil: debajo del nombre, en una sola línea compacta -->
-                  <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
-                    <div class="flex items-center justify-between gap-3">
-                      <!-- Total a cobrar - destacado -->
-                      <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
-                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar</p>
-                        <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
-                      </div>
-                      
-                      <!-- Valor cuota y Sanción - lado derecho compacto -->
-                      <div class="flex flex-col gap-1.5 text-right">
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] text-gray-500">Cuota:</span>
-                          <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] text-gray-500">Sanción:</span>
-                          <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Si solo tiene pendientes (sin mora) en móvil -->
-                  <div v-else class="sm:hidden w-full -mt-2">
-                    <div class="text-left">
-                      <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
-                      <p class="text-[10px] text-gray-500">adeudado</p>
-                    </div>
-                  </div>
-                
-                <!-- Botón en móvil: abajo -->
-                <div class="sm:hidden">
-                  <button
-                    @click="verCuotasSocio(socioMora)"
-                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg"
-                  >
-                    Ver cuotas
-                  </button>
-                </div>
-                
-                <!-- Layout desktop: lado derecho con datos financieros y botón -->
-                <div v-if="socioMora.cuotasMora > 0" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-start gap-3">
-                  <div class="flex items-start gap-3 sm:gap-4">
-                    <!-- Columna de etiquetas -->
-                    <div class="text-right space-y-1">
-                      <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Total a cobrar</p>
-                      </div>
-                      <div class="mb-1">
-                        <p class="text-[10px] text-gray-500">Valor cuota</p>
-                      </div>
-                      <div>
-                        <p class="text-[10px] text-gray-500">Sanción</p>
-                      </div>
-                    </div>
-                    
-                    <!-- Columna de valores -->
-                    <div class="text-right space-y-1 min-w-[100px]">
-                      <div class="mb-1">
-                        <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
-                      </div>
-                      <div class="mb-1">
-                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
-                      </div>
-                      <div>
-                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Botón Ver cuotas -->
-                  <button
-                    @click="verCuotasSocio(socioMora)"
-                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
-                  >
-                    Ver cuotas
-                  </button>
-                </div>
-                
-                <!-- Si solo tiene pendientes (sin mora) en desktop -->
-                <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
-                  <div class="text-right">
-                    <p class="text-sm sm:text-base font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
-                    <p class="text-xs text-gray-500">adeudado</p>
-                  </div>
-                  <button
-                    @click="verCuotasSocio(socioMora)"
-                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
-                  >
-                    Ver cuotas
-                  </button>
-                </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Mostrar más si hay -->
-            <div v-if="sociosEnMora.length > 5" class="text-center py-2">
-              <router-link 
-                :to="`/natilleras/${id}/cuotas`"
-                class="text-sm font-semibold text-red-600 hover:text-red-700"
-              >
-                Ver {{ sociosEnMora.length - 5 }} más...
-              </router-link>
-            </div>
+          <div class="flex-shrink-0">
+            <ChevronRightIcon :class="['w-6 h-6 transition-transform duration-300 group-hover:translate-x-1', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']" />
           </div>
         </div>
       </div>
@@ -837,7 +655,7 @@
     </div>
 
     <!-- Modal Cuotas del Socio por Mes -->
-    <div v-if="modalCuotasSocio" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalCuotasSocio" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalCuotasSocio"></div>
       <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         <!-- Header con gradiente -->
@@ -1192,6 +1010,217 @@
       </div>
     </div>
   </div>
+
+    <!-- Modal Socios en Mora -->
+    <div v-if="modalSociosEnMora" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSociosEnMora = false"></div>
+      <div class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br p-4 sm:p-6 text-white relative overflow-hidden" :class="sociosEnMora.length >= 3 ? 'from-red-500 via-rose-600 to-red-700' : 'from-amber-500 via-orange-600 to-amber-700'">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg', sociosEnMora.length >= 3 ? 'bg-white/20 backdrop-blur-sm border border-white/30' : 'bg-white/20 backdrop-blur-sm border border-white/30']">
+                <ExclamationTriangleIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-lg sm:text-2xl font-display font-bold truncate">
+                  Socios en Mora
+                </h3>
+                <p class="text-white/90 text-xs sm:text-sm">
+                  {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
+                </p>
+              </div>
+            </div>
+            <button 
+              @click="modalSociosEnMora = false"
+              class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 flex items-center justify-center transition-all flex-shrink-0"
+            >
+              <XMarkIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+          <!-- Resumen rápido -->
+          <div :class="['grid gap-3 sm:gap-4', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1" :class="sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'">{{ totalCuotasMora }}</p>
+              <p class="text-xs sm:text-sm font-semibold" :class="sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'">Cuotas en mora</p>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-amber-300/60 hover:border-amber-400' : 'border-orange-300/60 hover:border-orange-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-amber-600">{{ totalCuotasPendientes }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-amber-700">Cuotas pendientes</p>
+            </div>
+            <!-- Sanciones (solo si hay) -->
+            <div v-if="totalSancionesMora > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-rose-700">Total sanciones</p>
+            </div>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-orange-700">Total a cobrar</p>
+            </div>
+          </div>
+
+          <!-- Lista de socios en mora -->
+          <div class="space-y-3">
+            <div 
+              v-for="socioMora in sociosEnMora" 
+              :key="socioMora.id"
+              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+              :class="[
+                socioMora.cuotasMora > 0 
+                  ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' 
+                  : 'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
+              ]"
+            >
+              <!-- Efectos decorativos de fondo -->
+              <div 
+                :class="[
+                  'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
+                  socioMora.cuotasMora > 0 ? 'bg-red-300' : 'bg-orange-300'
+                ]"
+              ></div>
+              
+              <!-- Línea decorativa superior -->
+              <div 
+                :class="[
+                  'absolute top-0 left-0 right-0 h-0.5',
+                  socioMora.cuotasMora > 0 ? 'bg-red-400/60' : 'bg-orange-400/60'
+                ]"
+              ></div>
+              <div class="relative z-10">
+                <!-- Layout móvil: datos financieros arriba -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <!-- Primera fila en móvil: Avatar y nombre -->
+                  <div class="flex items-start gap-3 min-w-0 flex-1">
+                    <img 
+                      :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
+                      :alt="socioMora.nombre"
+                      class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 border-2 shadow-md object-cover group-hover:scale-105 transition-transform duration-300"
+                      :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-orange-300']"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-gray-900 text-base sm:text-lg group-hover:text-natillera-700 transition-colors truncate">{{ socioMora.nombre }}</p>
+                      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
+                          {{ socioMora.cuotasMora }} en mora
+                        </span>
+                        <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 font-semibold whitespace-nowrap">
+                          {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
+                        </span>
+                        <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">
+                          {{ socioMora.cuotasPendientes }} {{ socioMora.cuotasPendientes === 1 ? 'pend.' : 'pend.' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Datos financieros en móvil: debajo del nombre, en una sola línea compacta -->
+                  <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
+                    <div class="flex items-center justify-between gap-3">
+                      <!-- Total a cobrar - destacado -->
+                      <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
+                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar</p>
+                        <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                      </div>
+                      
+                      <!-- Valor cuota y Sanción - lado derecho compacto -->
+                      <div class="flex flex-col gap-1.5 text-right">
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] text-gray-500">Cuota:</span>
+                          <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] text-gray-500">Sanción:</span>
+                          <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Si solo tiene pendientes (sin mora) en móvil -->
+                  <div v-else class="sm:hidden w-full -mt-2">
+                    <div class="text-left">
+                      <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                      <p class="text-[10px] text-gray-500">adeudado</p>
+                    </div>
+                  </div>
+                
+                <!-- Botón en móvil: abajo -->
+                <div class="sm:hidden">
+                  <button
+                    @click.stop="verCuotasSocio(socioMora)"
+                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg"
+                  >
+                    Ver cuotas
+                  </button>
+                </div>
+                
+                <!-- Layout desktop: lado derecho con datos financieros y botón -->
+                <div v-if="socioMora.cuotasMora > 0" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-start gap-3">
+                  <div class="flex items-start gap-3 sm:gap-4">
+                    <!-- Columna de etiquetas -->
+                    <div class="text-right space-y-1">
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Total a cobrar</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Valor cuota</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-gray-500">Sanción</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Columna de valores -->
+                    <div class="text-right space-y-1 min-w-[100px]">
+                      <div class="mb-1">
+                        <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Botón Ver cuotas -->
+                  <button
+                    @click.stop="verCuotasSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver cuotas
+                  </button>
+                </div>
+                
+                <!-- Si solo tiene pendientes (sin mora) en desktop -->
+                <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <div class="text-right">
+                    <p class="text-sm sm:text-base font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                    <p class="text-xs text-gray-500">adeudado</p>
+                  </div>
+                  <button
+                    @click.stop="verCuotasSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver cuotas
+                  </button>
+                </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script setup>
@@ -1211,6 +1240,7 @@ import {
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   UserIcon,
   PhoneIcon,
   EnvelopeIcon,
@@ -1241,6 +1271,7 @@ const modalDetalle = ref(false)
 const modalConfigMeses = ref(false)
 const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
+const modalSociosEnMora = ref(false)
 const loadingCuotasSocio = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
@@ -1255,7 +1286,7 @@ const comprobanteNuevo = ref(null) // Guardar el comprobante nuevo cuando se enc
 const errorBusqueda = ref('')
 const buscandoComprobante = ref(false)
 const inputBusquedaRef = ref(null)
-const seccionAlertasRef = ref(null)
+const seccionAlertasRef = ref(null) // Ya no se usa, pero se mantiene por compatibilidad
 const cuotasNatillera = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
 const configSancionesActiva = ref(false)
@@ -2027,11 +2058,11 @@ onMounted(async () => {
       console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
     }
     
-    // Si hay socios en mora, hacer scroll a la sección de alertas
+    // Si hay socios en mora, abrir la modal automáticamente
     await nextTick()
-    if (sociosEnMora.value && sociosEnMora.value.length > 0 && seccionAlertasRef.value) {
+    if (sociosEnMora.value && sociosEnMora.value.length > 0) {
       setTimeout(() => {
-        seccionAlertasRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        modalSociosEnMora.value = true
       }, 500)
     }
   } catch (error) {
