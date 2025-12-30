@@ -174,15 +174,22 @@
       <div 
         v-if="sociosEnMora.length > 0"
         ref="seccionAlertasRef"
-        class="relative rounded-3xl p-6 sm:p-8 border-2 shadow-2xl overflow-hidden animate-pulse-slow"
+        class="relative rounded-3xl p-6 sm:p-8 border-2 shadow-2xl overflow-hidden animate-fade-in-alerta group"
         :class="[
           sociosEnMora.length >= 3 
             ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30' 
             : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30'
         ]"
       >
-        <!-- Efecto de alerta pulsante -->
-        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+        <!-- Efecto de barrido automático (como hover periódico) -->
+        <div 
+          :class="[
+            'absolute inset-0 rounded-3xl animate-sweep-hover pointer-events-none',
+            sociosEnMora.length >= 3 
+              ? 'bg-gradient-to-r from-transparent via-red-300/70 to-transparent' 
+              : 'bg-gradient-to-r from-transparent via-amber-300/70 to-transparent'
+          ]"
+        ></div>
         
         <!-- Círculos decorativos -->
         <div :class="['absolute top-0 right-0 w-48 h-48 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2', sociosEnMora.length >= 3 ? 'bg-red-400/20' : 'bg-amber-400/20']"></div>
@@ -190,47 +197,40 @@
         
         <div class="relative z-10">
           <!-- Header de alerta -->
-          <div class="flex items-center justify-between gap-3 mb-5">
-            <div class="flex items-center gap-3">
-              <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/40' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/40']">
-                <ExclamationTriangleIcon class="w-6 h-6 text-white" />
+          <div class="mb-6">
+            <div class="flex items-center gap-4 mb-4">
+              <div :class="['w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/50' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/50']">
+                <ExclamationTriangleIcon :class="['w-7 h-7 sm:w-8 sm:h-8 text-white']" />
               </div>
-              <div>
-                <h2 :class="['text-lg sm:text-xl font-display font-bold', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
+              <div class="flex-1">
+                <h2 :class="['text-xl sm:text-2xl font-display font-bold mb-1', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
                   ⚠️ Atención: Socios en Mora
                 </h2>
-                <p :class="['text-sm', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
+                <p :class="['text-sm sm:text-base font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
                   {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
                 </p>
               </div>
             </div>
-            <router-link 
-              :to="`/natilleras/${id}/cuotas`"
-              :class="['inline-flex items-center gap-1.5 px-4 py-2.5 text-white font-semibold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap flex-shrink-0', sociosEnMora.length >= 3 ? 'bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700' : 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700']"
-            >
-              Gestionar
-              <ArrowRightIcon class="w-4 h-4" />
-            </router-link>
           </div>
 
           <!-- Resumen rápido -->
-          <div :class="['grid gap-3 mb-5', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3']">
-            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-red-200/50">
-              <p class="text-2xl font-bold text-red-600">{{ totalCuotasMora }}</p>
-              <p class="text-xs text-red-700 font-medium">Cuotas en mora</p>
+          <div :class="['grid gap-3 sm:gap-4 mb-6', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1" :class="sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'">{{ totalCuotasMora }}</p>
+              <p class="text-xs sm:text-sm font-semibold" :class="sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'">Cuotas en mora</p>
             </div>
-            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-amber-200/50">
-              <p class="text-2xl font-bold text-amber-600">{{ totalCuotasPendientes }}</p>
-              <p class="text-xs text-amber-700 font-medium">Cuotas pendientes</p>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-amber-300/60 hover:border-amber-400' : 'border-orange-300/60 hover:border-orange-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-amber-600">{{ totalCuotasPendientes }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-amber-700">Cuotas pendientes</p>
             </div>
             <!-- Sanciones (solo si hay) -->
-            <div v-if="totalSancionesMora > 0" class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-rose-200/50">
-              <p class="text-2xl font-bold text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
-              <p class="text-xs text-rose-700 font-medium">Total sanciones</p>
+            <div v-if="totalSancionesMora > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-rose-700">Total sanciones</p>
             </div>
-            <div class="bg-white/60 backdrop-blur-sm rounded-xl p-3 text-center border border-orange-200/50">
-              <p class="text-2xl font-bold text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
-              <p class="text-xs text-orange-700 font-medium">Total a cobrar</p>
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-orange-700">Total a cobrar</p>
             </div>
           </div>
 
@@ -239,37 +239,156 @@
             <div 
               v-for="socioMora in sociosEnMora.slice(0, 5)" 
               :key="socioMora.id"
-              class="relative overflow-hidden rounded-xl bg-white/80 backdrop-blur-sm border-l-4 shadow-md hover:shadow-lg transition-all duration-300 p-4"
-              :class="[socioMora.cuotasMora > 0 ? 'border-l-red-500' : 'border-l-amber-500']"
+              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group"
+              :class="[
+                socioMora.cuotasMora > 0 
+                  ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' 
+                  : 'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
+              ]"
             >
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex items-center gap-3 min-w-0 flex-1">
-                  <img 
-                    :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
-                    :alt="socioMora.nombre"
-                    class="w-11 h-11 rounded-lg flex-shrink-0 border-2 shadow-md object-cover"
-                    :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-amber-300']"
-                  />
-                  <div class="min-w-0 flex-1">
-                    <p class="font-bold text-gray-800 text-sm truncate">{{ socioMora.nombre }}</p>
-                    <div class="flex items-center gap-2 mt-1">
-                      <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
-                        🔴 {{ socioMora.cuotasMora }} en mora
-                      </span>
-                      <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
-                        🟡 {{ socioMora.cuotasPendientes }} pendiente{{ socioMora.cuotasPendientes > 1 ? 's' : '' }}
-                      </span>
+              <!-- Efectos decorativos de fondo -->
+              <div 
+                :class="[
+                  'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
+                  socioMora.cuotasMora > 0 ? 'bg-red-300' : 'bg-orange-300'
+                ]"
+              ></div>
+              
+              <!-- Línea decorativa superior -->
+              <div 
+                :class="[
+                  'absolute top-0 left-0 right-0 h-0.5',
+                  socioMora.cuotasMora > 0 ? 'bg-red-400/60' : 'bg-orange-400/60'
+                ]"
+              ></div>
+              <div class="relative z-10">
+                <!-- Layout móvil: datos financieros arriba -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <!-- Primera fila en móvil: Avatar, nombre y datos financieros -->
+                  <div class="flex items-start gap-3 min-w-0 flex-1">
+                    <img 
+                      :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
+                      :alt="socioMora.nombre"
+                      class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex-shrink-0 border-2 shadow-md object-cover group-hover:scale-105 transition-transform duration-300"
+                      :class="[socioMora.cuotasMora > 0 ? 'border-red-300' : 'border-orange-300']"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <p class="font-bold text-gray-900 text-base sm:text-lg group-hover:text-natillera-700 transition-colors truncate">{{ socioMora.nombre }}</p>
+                      <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span v-if="socioMora.cuotasMora > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
+                          {{ socioMora.cuotasMora }} en mora
+                        </span>
+                        <span v-if="socioMora.cuotasMora > 0 && socioMora.diasMora > 0" class="text-xs text-red-600 font-semibold whitespace-nowrap">
+                          {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
+                        </span>
+                        <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">
+                          {{ socioMora.cuotasPendientes }} {{ socioMora.cuotasPendientes === 1 ? 'pend.' : 'pend.' }}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- Datos financieros en móvil: arriba a la derecha -->
+                    <div v-if="socioMora.cuotasMora > 0" class="flex-shrink-0 sm:hidden">
+                      <div class="flex items-start gap-2">
+                        <!-- Columna de etiquetas -->
+                        <div class="text-right space-y-1">
+                          <div class="mb-1">
+                            <p class="text-[10px] text-gray-500">Total a cobrar</p>
+                          </div>
+                          <div class="mb-1">
+                            <p class="text-[10px] text-gray-500">Valor cuota</p>
+                          </div>
+                          <div>
+                            <p class="text-[10px] text-gray-500">Sanción</p>
+                          </div>
+                        </div>
+                        
+                        <!-- Columna de valores -->
+                        <div class="text-right space-y-1 min-w-[80px]">
+                          <div class="mb-1">
+                            <p class="font-bold text-red-600 text-xs">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                          </div>
+                          <div class="mb-1">
+                            <p class="font-semibold text-gray-700 text-[10px]">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
+                          </div>
+                          <div>
+                            <p class="font-semibold text-rose-600 text-[10px]">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Si solo tiene pendientes (sin mora) en móvil -->
+                    <div v-else class="flex-shrink-0 sm:hidden">
+                      <div class="text-right">
+                        <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                        <p class="text-[10px] text-gray-500">adeudado</p>
+                      </div>
                     </div>
                   </div>
+                
+                <!-- Botón en móvil: abajo -->
+                <div class="sm:hidden">
+                  <button
+                    @click="verCuotasSocio(socioMora)"
+                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg"
+                  >
+                    Ver cuotas
+                  </button>
                 </div>
-                <div class="text-right flex-shrink-0">
-                  <p class="text-lg font-bold" :class="[socioMora.cuotasMora > 0 ? 'text-red-600' : 'text-amber-600']">
-                    ${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}
-                  </p>
-                  <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-rose-600 font-semibold">
-                    +${{ formatMoney(socioMora.totalSanciones) }} sanción
-                  </p>
-                  <p class="text-[10px] text-gray-500 mb-2">{{ socioMora.totalSanciones > 0 ? 'total a cobrar' : 'adeudado' }}</p>
+                
+                <!-- Layout desktop: lado derecho con datos financieros y botón -->
+                <div v-if="socioMora.cuotasMora > 0" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-start gap-3">
+                  <div class="flex items-start gap-3 sm:gap-4">
+                    <!-- Columna de etiquetas -->
+                    <div class="text-right space-y-1">
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Total a cobrar</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Valor cuota</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-gray-500">Sanción</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Columna de valores -->
+                    <div class="text-right space-y-1 min-w-[100px]">
+                      <div class="mb-1">
+                        <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Botón Ver cuotas -->
+                  <button
+                    @click="verCuotasSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver cuotas
+                  </button>
+                </div>
+                
+                <!-- Si solo tiene pendientes (sin mora) en desktop -->
+                <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <div class="text-right">
+                    <p class="text-sm sm:text-base font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                    <p class="text-xs text-gray-500">adeudado</p>
+                  </div>
+                  <button
+                    @click="verCuotasSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver cuotas
+                  </button>
+                </div>
                 </div>
               </div>
             </div>
@@ -472,7 +591,7 @@
               </div>
               <div>
                 <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
-                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
                   {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                 </p>
               </div>
@@ -730,6 +849,274 @@
       </div>
     </div>
 
+    <!-- Modal Cuotas del Socio por Mes -->
+    <div v-if="modalCuotasSocio" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalCuotasSocio"></div>
+      <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <img 
+                v-if="socioParaCuotas"
+                :src="getAvatarUrl(socioParaCuotas.nombre || socioParaCuotas.id, socioParaCuotas.avatar_seed, socioParaCuotas.avatar_style)" 
+                :alt="socioParaCuotas.nombre"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-white/30 shadow-md object-cover flex-shrink-0"
+              />
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0" v-else>
+                <CalendarDaysIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-lg sm:text-2xl font-display font-bold truncate">
+                  Cuotas de {{ socioParaCuotas?.nombre }}
+                </h3>
+                <p class="text-white/90 text-xs sm:text-sm">
+                  Historial de cuotas por mes
+                </p>
+              </div>
+            </div>
+            <button 
+              @click="cerrarModalCuotasSocio"
+              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <!-- Estado de carga -->
+          <div v-if="loadingCuotasSocio" class="text-center py-12">
+            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-500 text-sm">Cargando cuotas...</p>
+          </div>
+          
+          <!-- Sin cuotas -->
+          <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-12">
+            <p class="text-gray-400 text-base sm:text-lg">No hay cuotas registradas</p>
+          </div>
+          
+          <!-- Lista de cuotas individuales -->
+          <div v-else-if="!loadingCuotasSocio" class="space-y-3">
+            <div
+              v-for="(cuotaData, index) in cuotasSocioPorMes"
+              :key="cuotaData.id"
+              class="relative overflow-hidden rounded-xl border-l-4 border-t-2 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm animate-fade-in-up"
+              :style="{ animationDelay: `${index * 0.05}s` }"
+              :class="[
+                (cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono
+                  ? 'h-auto sm:h-auto' 
+                  : 'h-[91px] sm:h-auto',
+                cuotaData.estado === 'pagada' 
+                  ? 'border-l-green-500 border-t-green-500 bg-gradient-to-br from-green-100 via-green-50 to-white' :
+                cuotaData.estado === 'mora' 
+                  ? 'border-l-red-500 border-t-red-500 bg-gradient-to-br from-red-100 via-red-50 to-white animate-mora-highlight' :
+                cuotaData.estado === 'pendiente'
+                  ? 'border-l-amber-500 border-t-amber-500 bg-gradient-to-br from-orange-100 via-amber-50 to-white' :
+                'border-l-gray-400 border-t-gray-400 bg-gradient-to-br from-gray-100 via-gray-50 to-white'
+              ]"
+            >
+              <!-- Efecto de resaltado para cuotas en mora -->
+              <div 
+                v-if="cuotaData.estado === 'mora'"
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
+              ></div>
+              <!-- Borde pulsante para cuotas en mora -->
+              <div 
+                v-if="cuotaData.estado === 'mora'"
+                class="absolute inset-0 border-2 border-red-500 rounded-xl animate-pulse pointer-events-none z-0"
+                style="animation-duration: 1.5s;"
+              ></div>
+              <div class="p-2 sm:p-2.5 h-full flex flex-col">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 flex-1 min-h-0">
+                  <!-- Lado izquierdo: Emoji y nombre del mes -->
+                  <div class="flex items-center gap-2.5 flex-1 min-w-0">
+                    <!-- Avatar del mes (emoji) -->
+                    <div class="relative flex-shrink-0">
+                      <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-pink-200 flex items-center justify-center text-xl sm:text-2xl shadow-md">
+                        {{ getMesEmoji(cuotaData.mes) }}
+                      </div>
+                      <!-- Badge de quincena si aplica -->
+                      <div v-if="cuotaData.quincena" class="absolute -top-1 -left-1 w-5 h-5 bg-purple-500 text-white text-[10px] font-bold rounded-lg flex items-center justify-center border-2 border-white shadow-md">
+                        Q{{ cuotaData.quincena }}
+                      </div>
+                      <!-- Badge de estado pagada -->
+                      <div v-if="cuotaData.estado === 'pagada'" class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                        <CheckCircleIcon class="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
+                      </div>
+                    </div>
+                    
+                    <!-- Nombre del mes, monto y detalles -->
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center justify-between sm:block gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <p class="font-bold text-gray-800 text-sm sm:text-base">
+                            {{ getMesLabel(cuotaData.mes) }} {{ cuotaData.anio }}
+                            <span v-if="cuotaData.quincena" class="text-purple-600">- Q{{ cuotaData.quincena }}</span>
+                          </p>
+                          <!-- Badge de estado en móvil (junto al mes) -->
+                          <span 
+                            v-if="cuotaData.estado === 'pagada'"
+                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm sm:hidden"
+                          >
+                            pagada
+                          </span>
+                          <span 
+                            v-else-if="cuotaData.estado === 'mora'"
+                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm sm:hidden"
+                          >
+                            en mora
+                            <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                              ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                            </span>
+                          </span>
+                          <span 
+                            v-else-if="cuotaData.estado === 'pendiente'"
+                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm sm:hidden"
+                          >
+                            pendiente
+                          </span>
+                          <span 
+                            v-else
+                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm sm:hidden"
+                          >
+                            programada
+                          </span>
+                        </div>
+                        <!-- Monto en móvil -->
+                        <div class="text-right sm:hidden">
+                          <p class="text-base font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'">
+                            ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
+                          </p>
+                          <div class="flex flex-col items-end gap-0.5 mt-0.5">
+                            <p class="text-[9px] text-gray-600 font-medium">
+                              Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
+                            </p>
+                            <p v-if="cuotaData.sancion > 0" class="text-[9px] text-gray-700 font-semibold">
+                              + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Monto en desktop -->
+                      <div class="hidden sm:block">
+                        <p class="text-base sm:text-lg font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'">
+                          ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
+                        </p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                          <p class="text-[10px] text-gray-600 font-medium">
+                            Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
+                          </p>
+                          <p v-if="cuotaData.sancion > 0" class="text-[10px] text-gray-700 font-semibold">
+                            + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div class="flex flex-wrap items-center gap-1 sm:gap-1.5 mt-0.5">
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                          <CalendarDaysIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-500 flex-shrink-0" />
+                          <span class="text-[9px] sm:text-[10px] text-gray-500 whitespace-nowrap">
+                            Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
+                          </span>
+                        </div>
+                        <p v-if="cuotaData.estado === 'mora' && cuotaData.diasMora > 0" class="text-[9px] sm:text-[10px] font-semibold text-red-600 flex-shrink-0 whitespace-nowrap">
+                          {{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }} en mora
+                        </p>
+                        <p class="text-[9px] sm:text-[10px] font-semibold text-green-600 flex-shrink-0">
+                          Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
+                        </p>
+                        <!-- Badge de periodicidad (píldora compacta) -->
+                        <span 
+                          :class="[
+                            'inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-semibold border whitespace-nowrap flex-shrink-0 self-start',
+                            cuotaData.periodicidad === 'quincenal' 
+                              ? 'bg-purple-100 text-purple-700 border-purple-200'
+                              : 'bg-blue-100 text-blue-700 border-blue-200'
+                          ]"
+                        >
+                          <CalendarDaysIcon class="w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0" />
+                          <span class="whitespace-nowrap">{{ cuotaData.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Lado derecho: Estado y botón WhatsApp (solo en desktop) -->
+                  <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
+                    <!-- Badge de estado -->
+                    <span 
+                      v-if="cuotaData.estado === 'pagada'"
+                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                    >
+                      pagada
+                    </span>
+                    <span 
+                      v-else-if="cuotaData.estado === 'mora'"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                    >
+                      en mora
+                      <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                        ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                      </span>
+                    </span>
+                    <span 
+                      v-else-if="cuotaData.estado === 'pendiente'"
+                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                    >
+                      pendiente
+                    </span>
+                    <span 
+                      v-else
+                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                    >
+                      programada
+                    </span>
+                    
+                    <!-- Botón WhatsApp (solo para pendiente o mora) -->
+                    <button
+                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                      @click="enviarWhatsAppCuota(cuotaData)"
+                      class="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0"
+                      title="Enviar recordatorio por WhatsApp"
+                    >
+                      <ChatBubbleLeftIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Botón WhatsApp en móvil (solo para pendiente o mora) - esquina inferior izquierda -->
+                <button
+                  v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                  @click="enviarWhatsAppCuota(cuotaData)"
+                  class="sm:hidden absolute bottom-2 left-2 p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0 z-10"
+                  title="Enviar recordatorio por WhatsApp"
+                >
+                  <ChatBubbleLeftIcon class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+          <button 
+            @click="cerrarModalCuotasSocio"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all text-sm sm:text-base"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Configurar Período de Meses -->
     <div v-if="modalConfigMeses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50" @click="modalConfigMeses = false"></div>
@@ -847,7 +1234,8 @@ import {
   MagnifyingGlassIcon,
   Cog6ToothIcon,
   CalendarDaysIcon,
-  PlusIcon
+  PlusIcon,
+  ArrowPathIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -868,8 +1256,12 @@ const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
 const modalConfigMeses = ref(false)
 const modalBuscarComprobante = ref(false)
+const modalCuotasSocio = ref(false)
+const loadingCuotasSocio = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
+const cuotasSocioPorMes = ref([])
+const socioParaCuotas = ref(null)
 const seccionActiva = ref('finanzas')
 const busquedaSocio = ref('')
 const codigoBusqueda = ref('')
@@ -1041,10 +1433,15 @@ const sociosEnMora = computed(() => {
         nombre: socioInfo?.nombre || 'Sin nombre',
         avatar_seed: socioInfo?.avatar_seed || null,
         avatar_style: socioInfo?.avatar_style || 'adventurer',
+        periodicidad: cuota.socio_natillera?.periodicidad || 'mensual',
         cuotasMora: 0,
         cuotasPendientes: 0,
         totalDeuda: 0,
-        totalSanciones: 0 // Nuevo: sanciones calculadas dinámicamente
+        totalSanciones: 0,
+        valorCuotaPromedio: 0,
+        diasMora: 0,
+        cuotasMoraList: [], // Para calcular días de mora
+        socio: socioInfo || null // Guardar el objeto socio completo para acceder al teléfono
       }
     }
     
@@ -1056,6 +1453,10 @@ const sociosEnMora = computed(() => {
       const sancionCuota = sancionesPorCuota.value[cuota.id] || 0
       sociosMap[socioId].totalDeuda += deudaCuota
       sociosMap[socioId].totalSanciones += sancionCuota
+      // Guardar cuota para calcular días de mora
+      sociosMap[socioId].cuotasMoraList.push(cuota)
+      // Acumular valor de cuota para promedio
+      sociosMap[socioId].valorCuotaPromedio += cuota.valor_cuota || 0
     }
     // Contar cuotas pendientes vencidas
     else if (cuota.estado === 'pendiente' || cuota.estado === 'parcial') {
@@ -1071,14 +1472,66 @@ const sociosEnMora = computed(() => {
     }
   })
   
-  // Filtrar solo los que tienen problemas y ordenar por gravedad
+  // Filtrar solo los que tienen problemas y calcular información adicional
   return Object.values(sociosMap)
     .filter(s => s.cuotasMora > 0 || s.cuotasPendientes > 0)
-    .map(s => ({
-      ...s,
-      // Total incluyendo sanciones
-      totalConSanciones: s.totalDeuda + s.totalSanciones
-    }))
+    .map(s => {
+      // Calcular días de mora (basado en la cuota más antigua en mora)
+      // Los días se calculan desde fecha_limite porque esa es la fecha desde la cual está en mora
+      let diasMora = 0
+      if (s.cuotasMoraList.length > 0) {
+        const hoy = new Date()
+        hoy.setHours(0, 0, 0, 0)
+        
+        // Encontrar la fecha_limite más antigua de todas las cuotas en mora
+        const fechasLimite = s.cuotasMoraList
+          .filter(c => c.fecha_limite) // Solo cuotas con fecha_limite
+          .map(c => {
+            // Parsear fecha_limite correctamente (puede venir como string YYYY-MM-DD)
+            const fechaStr = c.fecha_limite
+            let fechaLimite
+            if (typeof fechaStr === 'string') {
+              const [anio, mes, dia] = fechaStr.split('-').map(Number)
+              fechaLimite = new Date(anio, mes - 1, dia)
+            } else {
+              fechaLimite = new Date(fechaStr)
+            }
+            fechaLimite.setHours(0, 0, 0, 0)
+            return fechaLimite
+          })
+          .filter(f => !isNaN(f.getTime())) // Filtrar fechas inválidas
+          .sort((a, b) => a - b) // Ordenar de más antigua a más reciente
+        
+        if (fechasLimite.length > 0) {
+          const fechaMasAntigua = fechasLimite[0] // La más antigua
+          diasMora = Math.floor((hoy - fechaMasAntigua) / (1000 * 60 * 60 * 24))
+          diasMora = Math.max(0, diasMora) // No permitir negativos
+        }
+      }
+      
+      // Calcular valor promedio de cuota
+      const valorCuotaPromedio = s.cuotasMora > 0 
+        ? Math.round(s.valorCuotaPromedio / s.cuotasMora)
+        : 0
+      
+      // Obtener información completa del socio desde la primera cuota (si no existe ya)
+      const socioCompleto = s.socio || (() => {
+        const primeraCuota = s.cuotasMoraList[0] || cuotasNatillera.value.find(c => c.socio_natillera_id === s.id)
+        return primeraCuota?.socio_natillera?.socio || null
+      })()
+      
+      return {
+        ...s,
+        // Total incluyendo sanciones
+        totalConSanciones: s.totalDeuda + s.totalSanciones,
+        // Días de mora
+        diasMora,
+        // Valor promedio de cuota
+        valorCuotaPromedio,
+        // Información completa del socio (usar el que ya existe o buscar uno nuevo)
+        socio: socioCompleto
+      }
+    })
     .sort((a, b) => {
       // Primero los que tienen más cuotas en mora
       if (b.cuotasMora !== a.cuotasMora) return b.cuotasMora - a.cuotasMora
@@ -1277,6 +1730,289 @@ function getMesLabel(mes) {
   return mesObj ? mesObj.label : `Mes ${mes}`
 }
 
+// Función para obtener el emoji del mes
+function getMesEmoji(mes) {
+  const emojis = {
+    1: '❄️',   // Enero - invierno/nuevo año
+    2: '💝',   // Febrero - amor
+    3: '🌸',   // Marzo - primavera
+    4: '🌧️',   // Abril - lluvias
+    5: '🌺',   // Mayo - flores
+    6: '☀️',   // Junio - sol
+    7: '🏖️',   // Julio - vacaciones
+    8: '🌴',   // Agosto - verano
+    9: '🍂',   // Septiembre - otoño
+    10: '🎃',  // Octubre - halloween
+    11: '🦃',  // Noviembre - acción de gracias
+    12: '🎄'   // Diciembre - navidad
+  }
+  return emojis[mes] || '📅'
+}
+
+// Función para calcular el estado real de una cuota basándose en la fecha actual y días de gracia
+// Reglas según REGLAS.md:
+// - Programada: fecha_actual < (fecha_limite - dias_gracia)
+// - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
+// - En Mora: fecha_actual > fecha_limite
+// - Pagada: valor_pagado >= valor_cuota
+function calcularEstadoRealCuota(cuota, diasGracia) {
+  // Si está pagada completamente, siempre es pagada
+  if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) {
+    return 'pagada'
+  }
+  
+  if (!cuota.fecha_limite) return cuota.estado || 'programada'
+  
+  const fechaActual = new Date()
+  fechaActual.setHours(0, 0, 0, 0)
+  
+  // Parsear fecha_limite correctamente para evitar problemas de zona horaria
+  // Si viene como string "YYYY-MM-DD", crear la fecha en hora local, no UTC
+  let fechaLimite
+  if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+    const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+    fechaLimite = new Date(anio, mes - 1, dia) // mes - 1 porque Date usa 0-11 para meses
+  } else {
+    fechaLimite = new Date(cuota.fecha_limite)
+  }
+  fechaLimite.setHours(0, 0, 0, 0)
+  
+  // Calcular fecha límite - días de gracia (inicio del período pendiente)
+  const fechaInicioPendiente = new Date(fechaLimite)
+  fechaInicioPendiente.setDate(fechaInicioPendiente.getDate() - diasGracia)
+  
+  // Programada: fecha_actual < (fecha_limite - dias_gracia)
+  if (fechaActual < fechaInicioPendiente) {
+    return 'programada'
+  }
+  
+  // Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
+  if (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) {
+    return 'pendiente'
+  }
+  
+  // En Mora: fecha_actual > fecha_limite
+  if (fechaActual > fechaLimite) {
+    return 'mora'
+  }
+  
+  // Por defecto, mantener el estado original
+  return cuota.estado || 'programada'
+}
+
+// Función para abrir el modal de cuotas del socio
+async function verCuotasSocio(socioMora) {
+  // Abrir la modal inmediatamente para una respuesta rápida
+  socioParaCuotas.value = socioMora
+  cuotasSocioPorMes.value = []
+  loadingCuotasSocio.value = true
+  modalCuotasSocio.value = true
+  
+  // Cargar datos de forma asíncrona después de abrir la modal
+  try {
+    // Obtener las cuotas del socio (todas las cuotas, sin filtro de año)
+    const resumen = await sociosStore.obtenerResumenSocio(socioMora.id)
+    const cuotas = resumen?.cuotas || []
+  
+    // Obtener días de gracia de la natillera
+    const diasGracia = natillera.value?.reglas_multas?.dias_gracia || 3
+    
+    // Calcular sanciones dinámicas para las cuotas del socio
+    const natilleraId = props.id || route.params.id
+    const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
+    const sancionesSocio = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
+  
+    // Procesar cada cuota individualmente
+    const cuotasIndividuales = []
+    
+    cuotas.forEach(cuota => {
+      if (!cuota.fecha_limite) return
+      
+      // Calcular el estado real de la cuota basándose en la fecha actual y días de gracia
+      const estadoReal = calcularEstadoRealCuota(cuota, diasGracia)
+      
+      // Usar el campo mes de la cuota directamente (no calcular desde fecha_limite)
+      const mes = cuota.mes || (() => {
+        // Si no tiene campo mes, calcular desde fecha_limite como fallback
+        let fecha
+        if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+          const [anio, mesNum, dia] = cuota.fecha_limite.split('-').map(Number)
+          fecha = new Date(anio, mesNum - 1, dia)
+        } else {
+          fecha = new Date(cuota.fecha_limite)
+        }
+        return fecha.getMonth() + 1
+      })()
+      
+      // Usar el campo anio de la cuota directamente, o calcular desde fecha_limite como fallback
+      const anio = cuota.anio || (() => {
+        let fecha
+        if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+          const [anioNum, mesNum, dia] = cuota.fecha_limite.split('-').map(Number)
+          fecha = new Date(anioNum, mesNum - 1, dia)
+        } else {
+          fecha = new Date(cuota.fecha_limite)
+        }
+        return fecha.getFullYear()
+      })()
+      
+      // Parsear fecha_limite correctamente para la fecha de vencimiento
+      let fechaVencimiento
+      if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+        const [anioNum, mesNum, dia] = cuota.fecha_limite.split('-').map(Number)
+        fechaVencimiento = new Date(anioNum, mesNum - 1, dia)
+      } else {
+        fechaVencimiento = new Date(cuota.fecha_limite)
+      }
+      
+      // Obtener sanción de esta cuota
+      const sancionCuota = sancionesSocio[cuota.id] || cuota.valor_multa || 0
+      
+      // Calcular total con sanciones para esta cuota
+      const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+      let totalConSanciones = 0
+      if (estadoReal !== 'pagada' && deudaCuota > 0) {
+        totalConSanciones = deudaCuota + sancionCuota
+      } else if (estadoReal === 'pagada') {
+        totalConSanciones = 0
+      } else {
+        totalConSanciones = (cuota.valor_cuota || 0) + sancionCuota
+      }
+      
+      // Calcular días en mora si está en mora
+      let diasMora = 0
+      if (estadoReal === 'mora' && fechaVencimiento) {
+        const fechaActual = new Date()
+        fechaActual.setHours(0, 0, 0, 0)
+        const fechaVenc = new Date(fechaVencimiento)
+        fechaVenc.setHours(0, 0, 0, 0)
+        const diffTime = fechaActual.getTime() - fechaVenc.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        diasMora = Math.max(0, diffDays)
+      }
+      
+      // Crear objeto de cuota individual para mostrar
+      const cuotaIndividual = {
+        id: cuota.id,
+        mes, // Usar el campo mes de la cuota
+        anio, // Usar el campo anio de la cuota
+        estado: estadoReal, // Usar el estado real calculado
+        valorCuota: cuota.valor_cuota || 0,
+        valorPagado: cuota.valor_pagado || 0,
+        sancion: sancionCuota,
+        totalConSanciones: totalConSanciones,
+        fechaVencimiento: fechaVencimiento, // Fecha de vencimiento parseada correctamente
+        diasMora: diasMora,
+        periodicidad: socioMora.periodicidad || 'mensual',
+        quincena: cuota.quincena || null,
+        descripcion: cuota.descripcion || null
+      }
+      
+      cuotasIndividuales.push(cuotaIndividual)
+    })
+  
+    // Ordenar por año, mes y fecha de vencimiento (más antiguo primero)
+    cuotasSocioPorMes.value = cuotasIndividuales.sort((a, b) => {
+      const anioA = a.anio || new Date(a.fechaVencimiento).getFullYear()
+      const anioB = b.anio || new Date(b.fechaVencimiento).getFullYear()
+      if (anioA !== anioB) return anioA - anioB
+      
+      const mesA = a.mes || new Date(a.fechaVencimiento).getMonth() + 1
+      const mesB = b.mes || new Date(b.fechaVencimiento).getMonth() + 1
+      if (mesA !== mesB) return mesA - mesB
+      
+      const fechaA = new Date(a.fechaVencimiento)
+      const fechaB = new Date(b.fechaVencimiento)
+      return fechaA.getTime() - fechaB.getTime()
+    })
+  } catch (error) {
+    console.error('Error al cargar cuotas del socio:', error)
+  } finally {
+    loadingCuotasSocio.value = false
+  }
+}
+
+function cerrarModalCuotasSocio() {
+  modalCuotasSocio.value = false
+  socioParaCuotas.value = null
+  cuotasSocioPorMes.value = []
+  loadingCuotasSocio.value = false
+}
+
+// Función para enviar WhatsApp de una cuota específica
+function enviarWhatsAppCuota(cuotaData) {
+  // Obtener el teléfono del socio - puede venir de diferentes formas según el contexto
+  let telefono = null
+  let nombreSocio = 'Socio'
+  
+  if (socioParaCuotas.value) {
+    // Si viene de la sección de alertas de mora (tiene socio.telefono)
+    if (socioParaCuotas.value.socio?.telefono) {
+      telefono = socioParaCuotas.value.socio.telefono
+      nombreSocio = socioParaCuotas.value.socio.nombre || socioParaCuotas.value.nombre
+    } 
+    // Si viene directamente con telefono en el objeto raíz
+    else if (socioParaCuotas.value.telefono) {
+      telefono = socioParaCuotas.value.telefono
+      nombreSocio = socioParaCuotas.value.nombre
+    }
+    // Si solo tiene nombre
+    else {
+      nombreSocio = socioParaCuotas.value.nombre || socioParaCuotas.value.socio?.nombre || 'Socio'
+    }
+  }
+  
+  if (!telefono) {
+    alert('Este socio no tiene teléfono registrado')
+    return
+  }
+  
+  const telefonoLimpio = telefono.replace(/\D/g, '')
+  const mesLabel = getMesLabel(cuotaData.mes)
+  const valorCuota = formatMoney(cuotaData.valorCuota)
+  const sancion = formatMoney(cuotaData.sancion || 0)
+  const totalAPagar = formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota)
+  const fechaVencimiento = formatDate(cuotaData.fechaVencimiento)
+  
+  // Calcular días en mora si está en mora
+  let diasMora = '0'
+  if (cuotaData.estado === 'mora' && cuotaData.fechaVencimiento) {
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const fechaVenc = new Date(cuotaData.fechaVencimiento)
+    fechaVenc.setHours(0, 0, 0, 0)
+    const diff = Math.floor((hoy - fechaVenc) / (1000 * 60 * 60 * 24))
+    diasMora = Math.max(0, diff).toString()
+  }
+  
+  // Usar mensajes personalizados del store
+  let mensaje
+  if (cuotaData.estado === 'mora') {
+    mensaje = configStore.generarMensajeCuotaMora(
+      nombreSocio,
+      mesLabel,
+      cuotaData.anio?.toString() || '',
+      valorCuota,
+      sancion,
+      totalAPagar,
+      fechaVencimiento,
+      diasMora
+    )
+  } else {
+    mensaje = configStore.generarMensajeCuotaPendiente(
+      nombreSocio,
+      mesLabel,
+      cuotaData.anio?.toString() || '',
+      valorCuota,
+      totalAPagar,
+      fechaVencimiento
+    )
+  }
+  
+  const url = `https://wa.me/57${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`
+  window.open(url, '_blank')
+}
+
 
 // Observar cuando se abre la modal para poner el foco en el input
 watch(modalBuscarComprobante, async (isOpen) => {
@@ -1361,5 +2097,101 @@ onMounted(async () => {
 
 .animate-shimmer {
   animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Animación de entrada para las cuotas */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+/* Animación de resaltado para cuotas en mora */
+@keyframes mora-highlight {
+  0%, 100% {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.6), 0 10px 10px -5px rgba(239, 68, 68, 0.4), 0 0 0 4px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.5);
+    transform: scale(1.03);
+  }
+}
+
+.animate-mora-highlight {
+  animation: mora-highlight 1.5s ease-in-out infinite;
+}
+
+/* Efecto shimmer especial para cuotas en mora */
+@keyframes shimmer-mora {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+.animate-shimmer-mora {
+  animation: shimmer-mora 2s ease-in-out infinite;
+}
+
+/* Animación de entrada elegante para la sección de alerta */
+@keyframes fade-in-alerta {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-alerta {
+  animation: fade-in-alerta 0.6s ease-out forwards;
+}
+
+/* Efecto de barrido automático (como hover periódico) */
+@keyframes sweep-hover {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.8;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(100%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+.animate-sweep-hover {
+  animation: sweep-hover 3.5s ease-in-out infinite;
+  width: 80%;
 }
 </style>

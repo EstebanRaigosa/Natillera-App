@@ -99,6 +99,168 @@
         </div>
       </div>
 
+      <hr class="border-gray-200 my-6" />
+
+      <!-- Mensaje Cuota en Mora -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <label class="font-semibold text-gray-700 flex items-center gap-2">
+            <ExclamationTriangleIcon class="w-4 h-4 text-red-600" />
+            Mensaje Cuota en Mora
+          </label>
+          <div class="flex gap-1 flex-wrap">
+            <button 
+              @click="insertarVariableCuota('nombre', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              title="Insertar nombre del socio"
+            >
+              {{nombre}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('mes', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar mes"
+            >
+              {{mes}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('anio', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar año"
+            >
+              {{anio}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar valor de la cuota"
+            >
+              {{valor_cuota}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('sancion', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+              title="Insertar sanción"
+            >
+              {{sancion}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('total', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              title="Insertar total a pagar"
+            >
+              {{total}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Insertar fecha de vencimiento"
+            >
+              {{fecha_vencimiento}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('dias_mora', 'mensajeCuotaMora')"
+              class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              title="Insertar días en mora"
+            >
+              {{dias_mora}}
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-2">
+          Mensaje que se envía cuando una cuota está en mora. Variables disponibles: <code class="bg-gray-100 px-1 rounded">{{nombre}}</code>, <code class="bg-gray-100 px-1 rounded">{{mes}}</code>, <code class="bg-gray-100 px-1 rounded">{{anio}}</code>, <code class="bg-gray-100 px-1 rounded">{{valor_cuota}}</code>, <code class="bg-gray-100 px-1 rounded">{{sancion}}</code>, <code class="bg-gray-100 px-1 rounded">{{total}}</code>, <code class="bg-gray-100 px-1 rounded">{{fecha_vencimiento}}</code>, <code class="bg-gray-100 px-1 rounded">{{dias_mora}}</code>
+        </p>
+        <textarea
+          ref="textareaCuotaMora"
+          v-model="configStore.mensajeCuotaMora"
+          class="input-field min-h-[150px] font-mono text-sm"
+          placeholder="Escribe el mensaje para cuota en mora..."
+        ></textarea>
+        
+        <!-- Vista previa -->
+        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <p class="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
+            <EyeIcon class="w-3.5 h-3.5" />
+            Vista previa (ejemplo)
+          </p>
+          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewCuotaMora }}</p>
+        </div>
+      </div>
+
+      <hr class="border-gray-200 my-6" />
+
+      <!-- Mensaje Cuota Pendiente -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-3">
+          <label class="font-semibold text-gray-700 flex items-center gap-2">
+            <ClockIcon class="w-4 h-4 text-amber-600" />
+            Mensaje Cuota Pendiente
+          </label>
+          <div class="flex gap-1 flex-wrap">
+            <button 
+              @click="insertarVariableCuota('nombre', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              title="Insertar nombre del socio"
+            >
+              {{nombre}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('mes', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar mes"
+            >
+              {{mes}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('anio', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar año"
+            >
+              {{anio}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              title="Insertar valor de la cuota"
+            >
+              {{valor_cuota}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('total', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              title="Insertar total a pagar"
+            >
+              {{total}}
+            </button>
+            <button 
+              @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaPendiente')"
+              class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              title="Insertar fecha de vencimiento"
+            >
+              {{fecha_vencimiento}}
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mb-2">
+          Mensaje que se envía cuando una cuota está pendiente. Variables disponibles: <code class="bg-gray-100 px-1 rounded">{{nombre}}</code>, <code class="bg-gray-100 px-1 rounded">{{mes}}</code>, <code class="bg-gray-100 px-1 rounded">{{anio}}</code>, <code class="bg-gray-100 px-1 rounded">{{valor_cuota}}</code>, <code class="bg-gray-100 px-1 rounded">{{total}}</code>, <code class="bg-gray-100 px-1 rounded">{{fecha_vencimiento}}</code>
+        </p>
+        <textarea
+          ref="textareaCuotaPendiente"
+          v-model="configStore.mensajeCuotaPendiente"
+          class="input-field min-h-[150px] font-mono text-sm"
+          placeholder="Escribe el mensaje para cuota pendiente..."
+        ></textarea>
+        
+        <!-- Vista previa -->
+        <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+          <p class="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+            <EyeIcon class="w-3.5 h-3.5" />
+            Vista previa (ejemplo)
+          </p>
+          <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewCuotaPendiente }}</p>
+        </div>
+      </div>
+
       <!-- Botones de acción -->
       <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
         <button 
@@ -141,11 +303,15 @@ import {
   ArrowPathIcon,
   CheckIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  ClockIcon
 } from '@heroicons/vue/24/outline'
 
 const configStore = useConfiguracionStore()
 const textareaIndividual = ref(null)
+const textareaCuotaMora = ref(null)
+const textareaCuotaPendiente = ref(null)
 const mensaje = ref(null)
 
 // Vista previa del mensaje individual con datos de ejemplo
@@ -153,6 +319,30 @@ const vistaPreviewIndividual = computed(() => {
   return configStore.mensajeIndividual
     .replace(/\{\{nombre\}\}/g, 'María García')
     .replace(/\{\{monto\}\}/g, '50.000')
+})
+
+// Vista previa del mensaje de cuota en mora
+const vistaPreviewCuotaMora = computed(() => {
+  return configStore.mensajeCuotaMora
+    .replace(/\{\{nombre\}\}/g, 'María García')
+    .replace(/\{\{mes\}\}/g, 'Diciembre')
+    .replace(/\{\{anio\}\}/g, '2024')
+    .replace(/\{\{valor_cuota\}\}/g, '50.000')
+    .replace(/\{\{sancion\}\}/g, '5.000')
+    .replace(/\{\{total\}\}/g, '55.000')
+    .replace(/\{\{fecha_vencimiento\}\}/g, '15/12/2024')
+    .replace(/\{\{dias_mora\}\}/g, '10')
+})
+
+// Vista previa del mensaje de cuota pendiente
+const vistaPreviewCuotaPendiente = computed(() => {
+  return configStore.mensajeCuotaPendiente
+    .replace(/\{\{nombre\}\}/g, 'María García')
+    .replace(/\{\{mes\}\}/g, 'Diciembre')
+    .replace(/\{\{anio\}\}/g, '2024')
+    .replace(/\{\{valor_cuota\}\}/g, '50.000')
+    .replace(/\{\{total\}\}/g, '50.000')
+    .replace(/\{\{fecha_vencimiento\}\}/g, '15/12/2024')
 })
 
 function insertarVariable(variable) {
@@ -165,6 +355,39 @@ function insertarVariable(variable) {
   const variableText = `{{${variable}}}`
   
   configStore.mensajeIndividual = text.substring(0, start) + variableText + text.substring(end)
+  
+  // Posicionar cursor después de la variable insertada
+  setTimeout(() => {
+    textarea.focus()
+    textarea.setSelectionRange(start + variableText.length, start + variableText.length)
+  }, 0)
+}
+
+function insertarVariableCuota(variable, tipo) {
+  let textarea
+  let texto
+  
+  if (tipo === 'mensajeCuotaMora') {
+    textarea = textareaCuotaMora.value
+    texto = configStore.mensajeCuotaMora
+  } else if (tipo === 'mensajeCuotaPendiente') {
+    textarea = textareaCuotaPendiente.value
+    texto = configStore.mensajeCuotaPendiente
+  }
+  
+  if (!textarea) return
+  
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const variableText = `{{${variable}}}`
+  
+  const nuevoTexto = texto.substring(0, start) + variableText + texto.substring(end)
+  
+  if (tipo === 'mensajeCuotaMora') {
+    configStore.mensajeCuotaMora = nuevoTexto
+  } else if (tipo === 'mensajeCuotaPendiente') {
+    configStore.mensajeCuotaPendiente = nuevoTexto
+  }
   
   // Posicionar cursor después de la variable insertada
   setTimeout(() => {

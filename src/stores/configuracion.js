@@ -12,6 +12,10 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
 
   const mensajeGeneral = ref('¡Hola a todos! 👋\n\nLes recordamos que las cuotas de la natillera están próximas a vencer.\n\nPor favor, no olviden realizar sus aportes a tiempo para evitar multas.\n\n¡Gracias por su compromiso! 🙌')
 
+  const mensajeCuotaMora = ref('Hola {{nombre}} 👋\n\nTe recordamos que tienes una cuota en mora:\n\n📅 Mes: {{mes}} {{anio}}\n💰 Valor cuota: ${{valor_cuota}}\n⚠️ Sanción: ${{sancion}}\n💵 Total a pagar: ${{total}}\n📆 Fecha de vencimiento: {{fecha_vencimiento}}\n\n⚠️ Esta cuota está en mora. Por favor realiza el pago lo antes posible para evitar mayores sanciones.\n\nGracias por apoyar la natillera 🙌')
+
+  const mensajeCuotaPendiente = ref('Hola {{nombre}} 👋\n\nTe recordamos que tienes una cuota pendiente:\n\n📅 Mes: {{mes}} {{anio}}\n💰 Valor cuota: ${{valor_cuota}}\n💵 Total a pagar: ${{total}}\n📆 Fecha de vencimiento: {{fecha_vencimiento}}\n\nPor favor, no olvides realizar tu aporte a tiempo.\n\nGracias por apoyar la natillera 🙌')
+
   // Configuración de período por defecto
   const configPeriodo = ref({
     mes_inicio: 1,
@@ -51,6 +55,8 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       if (data) {
         mensajeIndividual.value = data.mensaje_individual || mensajeIndividual.value
         mensajeGeneral.value = data.mensaje_general || mensajeGeneral.value
+        mensajeCuotaMora.value = data.mensaje_cuota_mora || mensajeCuotaMora.value
+        mensajeCuotaPendiente.value = data.mensaje_cuota_pendiente || mensajeCuotaPendiente.value
         if (data.config_periodo) {
           configPeriodo.value = { ...configPeriodo.value, ...data.config_periodo }
         }
@@ -75,6 +81,8 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
         const config = JSON.parse(guardado)
         mensajeIndividual.value = config.mensajeIndividual || mensajeIndividual.value
         mensajeGeneral.value = config.mensajeGeneral || mensajeGeneral.value
+        mensajeCuotaMora.value = config.mensajeCuotaMora || mensajeCuotaMora.value
+        mensajeCuotaPendiente.value = config.mensajeCuotaPendiente || mensajeCuotaPendiente.value
         if (config.configPeriodo) {
           configPeriodo.value = { ...configPeriodo.value, ...config.configPeriodo }
         }
@@ -98,6 +106,8 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       localStorage.setItem('natillera_config', JSON.stringify({
         mensajeIndividual: mensajeIndividual.value,
         mensajeGeneral: mensajeGeneral.value,
+        mensajeCuotaMora: mensajeCuotaMora.value,
+        mensajeCuotaPendiente: mensajeCuotaPendiente.value,
         configPeriodo: configPeriodo.value,
         configDiasGracia: configDiasGracia.value
       }))
@@ -113,6 +123,8 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
           user_id: authStore.user.id,
           mensaje_individual: mensajeIndividual.value,
           mensaje_general: mensajeGeneral.value,
+          mensaje_cuota_mora: mensajeCuotaMora.value,
+          mensaje_cuota_pendiente: mensajeCuotaPendiente.value,
           config_periodo: configPeriodo.value,
           config_dias_gracia: configDiasGracia.value,
           updated_at: new Date().toISOString()
@@ -139,6 +151,10 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
     mensajeIndividual.value = 'Hola {{nombre}} 👋\n\nTe recordamos que tienes pendiente la cuota de la natillera.\n\n💰 Valor: ${{monto}}\n\nGracias por apoyar la natillera 🙌'
 
     mensajeGeneral.value = '¡Hola a todos! 👋\n\nLes recordamos que las cuotas de la natillera están próximas a vencer.\n\nPor favor, no olviden realizar sus aportes a tiempo para evitar multas.\n\n¡Gracias por su compromiso! 🙌'
+
+    mensajeCuotaMora.value = 'Hola {{nombre}} 👋\n\nTe recordamos que tienes una cuota en mora:\n\n📅 Mes: {{mes}} {{anio}}\n💰 Valor cuota: ${{valor_cuota}}\n⚠️ Sanción: ${{sancion}}\n💵 Total a pagar: ${{total}}\n📆 Fecha de vencimiento: {{fecha_vencimiento}}\n\n⚠️ Esta cuota está en mora. Por favor realiza el pago lo antes posible para evitar mayores sanciones.\n\nGracias por apoyar la natillera 🙌'
+
+    mensajeCuotaPendiente.value = 'Hola {{nombre}} 👋\n\nTe recordamos que tienes una cuota pendiente:\n\n📅 Mes: {{mes}} {{anio}}\n💰 Valor cuota: ${{valor_cuota}}\n💵 Total a pagar: ${{total}}\n📆 Fecha de vencimiento: {{fecha_vencimiento}}\n\nPor favor, no olvides realizar tu aporte a tiempo.\n\nGracias por apoyar la natillera 🙌'
   }
 
   // Función helper para reemplazar variables en el mensaje
@@ -158,11 +174,37 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
     return await guardarConfiguracion()
   }
 
+  // Función para generar mensaje de cuota en mora
+  function generarMensajeCuotaMora(nombre, mes, anio, valorCuota, sancion, total, fechaVencimiento, diasMora) {
+    return mensajeCuotaMora.value
+      .replace(/\{\{nombre\}\}/g, nombre || 'Socio')
+      .replace(/\{\{mes\}\}/g, mes || '')
+      .replace(/\{\{anio\}\}/g, anio || '')
+      .replace(/\{\{valor_cuota\}\}/g, valorCuota || '0')
+      .replace(/\{\{sancion\}\}/g, sancion || '0')
+      .replace(/\{\{total\}\}/g, total || '0')
+      .replace(/\{\{fecha_vencimiento\}\}/g, fechaVencimiento || '')
+      .replace(/\{\{dias_mora\}\}/g, diasMora || '0')
+  }
+
+  // Función para generar mensaje de cuota pendiente
+  function generarMensajeCuotaPendiente(nombre, mes, anio, valorCuota, total, fechaVencimiento) {
+    return mensajeCuotaPendiente.value
+      .replace(/\{\{nombre\}\}/g, nombre || 'Socio')
+      .replace(/\{\{mes\}\}/g, mes || '')
+      .replace(/\{\{anio\}\}/g, anio || '')
+      .replace(/\{\{valor_cuota\}\}/g, valorCuota || '0')
+      .replace(/\{\{total\}\}/g, total || '0')
+      .replace(/\{\{fecha_vencimiento\}\}/g, fechaVencimiento || '')
+  }
+
   return {
     loading,
     error,
     mensajeIndividual,
     mensajeGeneral,
+    mensajeCuotaMora,
+    mensajeCuotaPendiente,
     configPeriodo,
     configDiasGracia,
     cargarConfiguracion,
@@ -170,7 +212,9 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
     guardarConfigPeriodo,
     guardarConfigDiasGracia,
     restaurarValoresPorDefecto,
-    generarMensajeIndividual
+    generarMensajeIndividual,
+    generarMensajeCuotaMora,
+    generarMensajeCuotaPendiente
   }
 })
 

@@ -124,7 +124,7 @@
         <!-- Círculo decorativo -->
         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-          <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{{ resumenMesActual.porcentajeRecaudado.toFixed(0) }}%</p>
+          <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{{ (resumenMesActual.porcentajeRecaudado || 0).toFixed(0) }}%</p>
           <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Recaudado</p>
         </div>
       </div>
@@ -435,21 +435,31 @@
           @click="abrirModalDetalleCuota(cuota)"
           class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
           :class="[
-            cuota.estado === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
-            cuota.estado === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300' : 
-            cuota.estado === 'parcial' ? 'bg-gradient-to-br from-white via-blue-50/40 to-cyan-50/30 border-blue-200/60 hover:border-blue-300' : 
-            cuota.estado === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
+            (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
+            (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
+            (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
             'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
           ]"
         >
+          <!-- Efecto de resaltado para cuotas en mora -->
+          <div 
+            v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
+            class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
+          ></div>
+          <!-- Borde pulsante para cuotas en mora -->
+          <div 
+            v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
+            class="absolute inset-0 border-2 border-red-500 rounded-2xl animate-pulse pointer-events-none z-0"
+            style="animation-duration: 1.5s;"
+          ></div>
+          
           <!-- Efectos decorativos de fondo más sutiles -->
           <div 
             :class="[
               'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
-              cuota.estado === 'pagada' ? 'bg-green-300' : 
-              cuota.estado === 'mora' ? 'bg-red-300' : 
-              cuota.estado === 'parcial' ? 'bg-blue-300' : 
-              cuota.estado === 'programada' ? 'bg-gray-300' : 
+              (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-300' : 
+              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
+              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
               'bg-orange-300'
             ]"
           ></div>
@@ -458,10 +468,9 @@
           <div 
             :class="[
               'absolute top-0 left-0 right-0 h-0.5',
-              cuota.estado === 'pagada' ? 'bg-green-400/60' : 
-              cuota.estado === 'mora' ? 'bg-red-400/60' : 
-              cuota.estado === 'parcial' ? 'bg-blue-400/60' : 
-              cuota.estado === 'programada' ? 'bg-gray-400/60' : 
+              (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-400/60' : 
+              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
+              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
               'bg-orange-400/60'
             ]"
           ></div>
@@ -547,7 +556,7 @@
                   <!-- Valores más compactos -->
                   <div class="text-left sm:text-right flex-shrink-0">
                     <!-- Estado mora con multa -->
-                    <template v-if="cuota.estado === 'mora'">
+                    <template v-if="(cuota.estadoReal || cuota.estado) === 'mora'">
                       <p class="text-xs text-gray-500 mb-0.5">Total a Pagar</p>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
                         ${{ formatMoney(getTotalAPagar(cuota)) }}
@@ -586,14 +595,13 @@
                   <span 
                     :class="[
                       'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap',
-                      cuota.estado === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                      cuota.estado === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
-                      cuota.estado === 'parcial' ? 'bg-blue-100 text-blue-800 border border-blue-200' : 
-                      cuota.estado === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
+                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
+                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
+                      (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
                       'bg-orange-100 text-orange-800 border border-orange-200'
                     ]"
                   >
-                    {{ cuota.estado === 'programada' ? 'Programada' : cuota.estado === 'parcial' ? 'Parcial' : cuota.estado }}
+                    {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 'Pendiente' }}
                   </span>
                 </div>
 
@@ -949,10 +957,14 @@
               <div>
                 <p class="text-xs text-gray-500 mb-1">Valor de la multa</p>
                 <p class="text-lg font-bold text-red-700">${{ formatMoney(getSancionCuota(cuotaDetalle)) }}</p>
+                <div v-if="getDiasMora(cuotaDetalle) > 0" class="mt-3">
+                  <p class="text-xs text-gray-500 mb-1">Días en mora</p>
+                  <p class="text-lg font-bold text-red-700">{{ getDiasMora(cuotaDetalle) }} {{ getDiasMora(cuotaDetalle) === 1 ? 'día' : 'días' }}</p>
+                </div>
               </div>
               <div v-if="cuotaDetalle.fecha_mora || cuotaDetalle.fecha_limite">
                 <p class="text-xs text-gray-500 mb-1">En mora desde</p>
-                <p class="text-lg font-bold text-gray-700">{{ formatDate(cuotaDetalle.fecha_mora) }}</p>
+                <p class="text-lg font-bold text-gray-700">{{ formatDate(cuotaDetalle.fecha_mora || cuotaDetalle.fecha_limite) }}</p>
               </div>
             </div>
           </div>
@@ -1176,7 +1188,7 @@
                             'text-xs font-semibold px-2 py-0.5 rounded-lg',
                             socio.periodicidad === 'quincenal' 
                               ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                              : 'bg-gray-100 text-gray-700 border border-gray-200'
+                              : 'bg-blue-100 text-blue-700 border border-blue-200'
                           ]"
                         >
                           {{ socio.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
@@ -2316,7 +2328,7 @@
               </div>
               <div>
                 <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
-                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
+                <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
                   {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
                 </p>
               </div>
@@ -2823,15 +2835,19 @@ const cuotasMesActual = computed(() => {
 
 // Cuotas filtradas por estado, periodicidad y búsqueda (para mostrar en la lista)
 const cuotasFiltradas = computed(() => {
-  let filtradas = cuotasMesActual.value
+  let filtradas = cuotasMesActual.value.map(cuota => {
+    // Calcular el estado real de cada cuota según las reglas
+    const estadoReal = calcularEstadoRealCuota(cuota)
+    return { ...cuota, estadoReal }
+  })
 
-  // Filtro por estado
+  // Filtro por estado (usando estadoReal)
   if (filtroEstado.value !== 'todos') {
     if (filtroEstado.value === 'pendiente') {
-      // Pendientes incluye tanto 'pendiente' como 'parcial'
-      filtradas = filtradas.filter(c => c.estado === 'pendiente' || c.estado === 'parcial' || c.estado === 'programada')
+      // Pendientes incluye tanto 'pendiente' como 'programada' (según las reglas)
+      filtradas = filtradas.filter(c => c.estadoReal === 'pendiente' || c.estadoReal === 'programada')
     } else {
-      filtradas = filtradas.filter(c => c.estado === filtroEstado.value)
+      filtradas = filtradas.filter(c => c.estadoReal === filtroEstado.value)
     }
   }
 
@@ -2864,13 +2880,12 @@ const cuotasFiltradas = computed(() => {
     const prioridadEstado = {
       'mora': 1,
       'pendiente': 2,
-      'parcial': 2, // Parcial tiene la misma prioridad que pendiente
       'programada': 3,
       'pagada': 4
     }
     
-    const prioridadA = prioridadEstado[a.estado] || 5
-    const prioridadB = prioridadEstado[b.estado] || 5
+    const prioridadA = prioridadEstado[a.estadoReal] || 5
+    const prioridadB = prioridadEstado[b.estadoReal] || 5
     
     // Primero ordenar por estado (prioridad)
     if (prioridadA !== prioridadB) {
@@ -2902,10 +2917,30 @@ const totalesExcel = computed(() => {
   }
 })
 
-// Resumen del mes actual
+// Resumen del mes actual (usando estados reales calculados)
 const resumenMesActual = computed(() => {
-  if (!mesSeleccionado.value) return cuotasStore.calcularResumenCuotas()
-  return cuotasStore.getResumenPorMes(mesSeleccionado.value, anioNatillera.value)
+  const cuotas = mesSeleccionado.value 
+    ? cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioNatillera.value)
+    : cuotasStore.cuotas
+  
+  // Calcular estados reales y contar por estado
+  const cuotasConEstadoReal = cuotas.map(c => ({
+    ...c,
+    estadoReal: calcularEstadoRealCuota(c)
+  }))
+  
+  // Calcular totales financieros
+  const totalValor = cuotasConEstadoReal.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
+  const totalPagado = cuotasConEstadoReal.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  const porcentajeRecaudado = totalValor > 0 ? (totalPagado / totalValor) * 100 : 0
+  
+  return {
+    pagadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'pagada').length,
+    pendientes: cuotasConEstadoReal.filter(c => c.estadoReal === 'pendiente' || c.estadoReal === 'programada').length,
+    enMora: cuotasConEstadoReal.filter(c => c.estadoReal === 'mora').length,
+    total: cuotasConEstadoReal.length,
+    porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado
+  }
 })
 
 // Función para obtener resumen de un mes específico (para los badges de los tabs)
@@ -3000,6 +3035,79 @@ function handleValorPagoInput(event) {
 }
 
 const id = props.id || route.params.id
+
+// Días de gracia de la natillera (se cargará en onMounted)
+const diasGracia = ref(3)
+
+// Función para calcular el estado real de una cuota basándose en la fecha actual y días de gracia
+// Reglas según REGLAS.md:
+// - Programada: fecha_actual < (fecha_limite - dias_gracia)
+// - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
+// - En Mora: fecha_actual > fecha_limite
+// - Pagada: valor_pagado >= valor_cuota
+function calcularEstadoRealCuota(cuota) {
+  // Si está pagada completamente, siempre es pagada
+  if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) {
+    return 'pagada'
+  }
+  
+  if (!cuota.fecha_limite) return cuota.estado || 'programada'
+  
+  const fechaActual = new Date()
+  fechaActual.setHours(0, 0, 0, 0)
+  
+  // Parsear fecha_limite correctamente para evitar problemas de zona horaria
+  // Si viene como string "YYYY-MM-DD", crear la fecha en hora local, no UTC
+  let fechaLimite
+  if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+    const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+    fechaLimite = new Date(anio, mes - 1, dia) // mes - 1 porque Date usa 0-11 para meses
+  } else {
+    fechaLimite = new Date(cuota.fecha_limite)
+  }
+  fechaLimite.setHours(0, 0, 0, 0)
+  
+  // Calcular fecha límite - días de gracia (inicio del período pendiente)
+  const fechaInicioPendiente = new Date(fechaLimite)
+  fechaInicioPendiente.setDate(fechaInicioPendiente.getDate() - diasGracia.value)
+  
+  // Debug: para cuotas con fecha límite 05/01/2026
+  if (cuota.fecha_limite && cuota.fecha_limite.includes('2026-01-05')) {
+    console.log('🔍 Debug estado cuota:', {
+      nombre: cuota.socio_natillera?.socio?.nombre,
+      fechaActual: fechaActual.toISOString().split('T')[0],
+      fechaLimite: fechaLimite.toISOString().split('T')[0],
+      diasGracia: diasGracia.value,
+      fechaInicioPendiente: fechaInicioPendiente.toISOString().split('T')[0],
+      comparacion: {
+        'fechaActual < fechaInicioPendiente': fechaActual < fechaInicioPendiente,
+        'fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite': fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite,
+        'fechaActual > fechaLimite': fechaActual > fechaLimite
+      },
+      estadoCalculado: fechaActual < fechaInicioPendiente ? 'programada' : 
+                       (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) ? 'pendiente' : 'mora'
+    })
+  }
+  
+  // Programada: fecha_actual < (fecha_limite - dias_gracia)
+  if (fechaActual < fechaInicioPendiente) {
+    return 'programada'
+  }
+  
+  // Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
+  if (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) {
+    return 'pendiente'
+  }
+  
+  // En Mora: fecha_actual > fecha_limite
+  if (fechaActual > fechaLimite) {
+    return 'mora'
+  }
+  
+  // Por defecto, mantener el estado original
+  return cuota.estado || 'programada'
+}
+
 const mesParam = computed(() => {
   const mes = route.params.mes
   return mes ? parseInt(mes, 10) : null
@@ -3033,6 +3141,9 @@ watch(mesSeleccionado, async (nuevoMes) => {
         // No mostrar error al usuario, solo loguear
       }
     }
+    
+    // Recalcular sanciones dinámicas cuando se cambia de mes
+    await recalcularSancionesMes()
   }
 })
 
@@ -3062,6 +3173,32 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
+// Función para recalcular sanciones del mes actual
+async function recalcularSancionesMes() {
+  if (!mesSeleccionado.value) return
+  
+  // Obtener las cuotas del mes actual
+  const cuotasDelMes = cuotasStore.cuotas.filter(c => {
+    if (!c.fecha_limite) return false
+    const fecha = new Date(c.fecha_limite)
+    const mes = fecha.getMonth() + 1
+    const anio = fecha.getFullYear()
+    return mes === mesSeleccionado.value && anio === anioNatillera.value
+  })
+  
+  if (cuotasDelMes.length === 0) return
+  
+  // Recalcular sanciones dinámicas para las cuotas del mes
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasDelMes)
+  if (resultSanciones.success) {
+    // Actualizar solo las sanciones de las cuotas del mes actual
+    Object.keys(resultSanciones.sanciones || {}).forEach(cuotaId => {
+      sancionesDinamicas.value[cuotaId] = resultSanciones.sanciones[cuotaId]
+    })
+    console.log('💰 Sanciones recalculadas para el mes:', Object.keys(resultSanciones.sanciones || {}).length, 'cuotas')
+  }
+}
+
 // Obtener la sanción dinámica de una cuota (calculada en tiempo real)
 function getSancionCuota(cuota) {
   if (!cuota || cuota.estado !== 'mora') return 0
@@ -3074,6 +3211,30 @@ function getTotalAPagar(cuota) {
   if (!cuota) return 0
   const sancion = getSancionCuota(cuota)
   return (cuota.valor_cuota || 0) + sancion - (cuota.valor_pagado || 0)
+}
+
+// Calcular días en mora desde fecha_limite
+function getDiasMora(cuota) {
+  if (!cuota || cuota.estado !== 'mora') return 0
+  
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  
+  // Usar fecha_limite como referencia (fecha desde la cual está en mora)
+  const fechaReferencia = cuota.fecha_limite
+  if (!fechaReferencia) return 0
+  
+  let fechaLimite
+  if (typeof fechaReferencia === 'string') {
+    const [anio, mes, dia] = fechaReferencia.split('-').map(Number)
+    fechaLimite = new Date(anio, mes - 1, dia)
+  } else {
+    fechaLimite = new Date(fechaReferencia)
+  }
+  fechaLimite.setHours(0, 0, 0, 0)
+  
+  const diasMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+  return Math.max(0, diasMora)
 }
 
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
@@ -3525,6 +3686,9 @@ async function guardarEdicionCuota() {
       cuotaEditando.value = null
       // Recargar cuotas para asegurar que todo esté actualizado
       await cuotasStore.fetchCuotasNatillera(id)
+      
+      // Recalcular sanciones dinámicas después de actualizar la cuota
+      await recalcularSancionesMes()
     } else {
       alert('Error al actualizar la cuota: ' + (result.error || 'Error desconocido'))
     }
@@ -3663,7 +3827,10 @@ async function handleRegistrarPago() {
     cuotaSeleccionada.value = null
     
     // Recargar cuotas para actualizar el resumen
-    cuotasStore.fetchCuotasNatillera(id)
+    await cuotasStore.fetchCuotasNatillera(id)
+    
+    // Recalcular sanciones dinámicas después de registrar el pago
+    await recalcularSancionesMes()
   } else {
     alert('Error: ' + result.error)
   }
@@ -4473,6 +4640,9 @@ async function borrarCuotasMes() {
     // Recargar cuotas
     await cuotasStore.fetchCuotasNatillera(id)
     
+    // Recalcular sanciones dinámicas después de borrar cuotas
+    await recalcularSancionesMes()
+    
     modalConfirmarBorrar.value = false
   } catch (error) {
     console.error('Error borrando cuotas:', error)
@@ -4493,6 +4663,22 @@ function handleClickOutside(event) {
 
 onMounted(async () => {
   await cargarNatillera()
+  
+  // Cargar días de gracia de la natillera
+  try {
+    const { data: natillera } = await supabase
+      .from('natilleras')
+      .select('reglas_multas')
+      .eq('id', id)
+      .single()
+    
+    diasGracia.value = natillera?.reglas_multas?.dias_gracia || 3
+    console.log('📅 Días de gracia cargados:', diasGracia.value)
+  } catch (error) {
+    console.error('Error cargando días de gracia:', error)
+    diasGracia.value = 3 // Valor por defecto
+  }
+  
   await cuotasStore.fetchCuotasNatillera(id)
   
   // Calcular sanciones dinámicas para las cuotas en mora
@@ -4500,6 +4686,11 @@ onMounted(async () => {
   if (resultSanciones.success) {
     sancionesDinamicas.value = resultSanciones.sanciones || {}
     console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+  }
+  
+  // Si hay un mes seleccionado, recalcular sanciones para ese mes
+  if (mesSeleccionado.value) {
+    await recalcularSancionesMes()
   }
   
   document.addEventListener('click', handleClickOutside)
@@ -4543,6 +4734,41 @@ onUnmounted(() => {
     opacity: 0;
     transform: scale(0.95);
   }
+}
+
+/* Animación de resaltado para cuotas en mora */
+@keyframes mora-highlight {
+  0%, 100% {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.6), 0 10px 10px -5px rgba(239, 68, 68, 0.4), 0 0 0 4px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.5);
+    transform: scale(1.03);
+  }
+}
+
+.animate-mora-highlight {
+  animation: mora-highlight 1.5s ease-in-out infinite;
+}
+
+/* Efecto shimmer especial para cuotas en mora */
+@keyframes shimmer-mora {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+.animate-shimmer-mora {
+  animation: shimmer-mora 2s ease-in-out infinite;
 }
 </style>
 

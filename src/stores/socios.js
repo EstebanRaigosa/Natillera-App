@@ -278,21 +278,45 @@ export const useSociosStore = defineStore('socios', () => {
       console.log('=== OBTENIENDO RESUMEN SOCIO ===')
       console.log('socio_natillera_id:', socioNatilleraId)
       
-      // Obtener cuotas del socio en esta natillera
-      const { data: cuotas, error: fetchError } = await supabase
-        .from('cuotas')
-        .select('*')
-        .eq('socio_natillera_id', socioNatilleraId)
-        .order('fecha_limite', { ascending: true })
+      // Obtener TODAS las cuotas del socio en esta natillera (sin filtro de año)
+      // Usar paginación para asegurar que se obtengan todas las cuotas
+      let todasLasCuotas = []
+      let desde = 0
+      const limitePorPagina = 1000
+      let hayMas = true
+      
+      while (hayMas) {
+        const { data: cuotas, error: fetchError } = await supabase
+          .from('cuotas')
+          .select('*')
+          .eq('socio_natillera_id', socioNatilleraId)
+          .order('fecha_limite', { ascending: true })
+          .range(desde, desde + limitePorPagina - 1)
+        
+        if (fetchError) throw fetchError
+        
+        if (cuotas && cuotas.length > 0) {
+          todasLasCuotas = [...todasLasCuotas, ...cuotas]
+          desde += limitePorPagina
+          hayMas = cuotas.length === limitePorPagina // Si obtuvimos menos que el límite, no hay más
+        } else {
+          hayMas = false
+        }
+      }
 
-      console.log('Cuotas encontradas:', cuotas?.length || 0)
-      console.log('Cuotas:', cuotas)
+      console.log('Cuotas encontradas:', todasLasCuotas.length)
+      console.log('Cuotas:', todasLasCuotas.map(c => ({
+        id: c.id,
+        fecha_limite: c.fecha_limite,
+        mes: c.mes,
+        anio: c.anio,
+        estado: c.estado,
+        valor_cuota: c.valor_cuota
+      })))
       console.log('================================')
 
-      if (fetchError) throw fetchError
-
       return {
-        cuotas: cuotas || [],
+        cuotas: todasLasCuotas,
         success: true
       }
     } catch (e) {

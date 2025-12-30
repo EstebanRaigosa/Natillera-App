@@ -224,10 +224,44 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
   // Función para actualizar automáticamente el estado de cuotas (programada -> pendiente -> mora)
   // y aplicar sanciones según la configuración de la natillera
+  // Reglas según REGLAS.md:
+  // - Programada: fecha_actual < (fecha_limite - dias_gracia)
+  // - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
+  // - En Mora: fecha_actual > fecha_limite
+  // - Pagada: valor_pagado >= valor_cuota
   async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null) {
     try {
       const lista = cuotasLista || cuotas.value
       if (!lista || lista.length === 0) return
+
+      // Obtener días de gracia de la natillera
+      let diasGracia = 3 // Valor por defecto
+      if (natilleraId) {
+        const { data: natillera } = await supabase
+          .from('natilleras')
+          .select('reglas_multas')
+          .eq('id', natilleraId)
+          .single()
+        
+        diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+      } else if (lista.length > 0) {
+        // Obtener natillera_id desde el primer socio_natillera
+        const { data: socioNatillera } = await supabase
+          .from('socios_natillera')
+          .select('natillera_id')
+          .eq('id', lista[0].socio_natillera_id)
+          .single()
+        
+        if (socioNatillera?.natillera_id) {
+          const { data: natillera } = await supabase
+            .from('natilleras')
+            .select('reglas_multas')
+            .eq('id', socioNatillera.natillera_id)
+            .single()
+          
+          diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+        }
+      }
 
       // Obtener fecha actual (solo fecha, sin hora)
       const fechaActual = new Date()
@@ -239,21 +273,28 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const cuotasAMora = [] // pendiente/parcial -> mora (solo las que no tienen multa ya aplicada)
 
       lista.forEach(cuota => {
-        // Solo procesar cuotas que no estén pagadas
-        if (cuota.estado === 'pagada') return
+        // Solo procesar cuotas que no estén pagadas completamente
+        if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) return
 
-        const fechaVencimiento = cuota.fecha_vencimiento || cuota.fecha_limite
         const fechaLimite = cuota.fecha_limite
+        if (!fechaLimite) return
 
-        if (!fechaVencimiento || !fechaLimite) return
+        const fechaLimiteDate = new Date(fechaLimite)
+        fechaLimiteDate.setHours(0, 0, 0, 0)
+        
+        // Calcular fecha límite - días de gracia (inicio del período pendiente)
+        const fechaInicioPendiente = new Date(fechaLimiteDate)
+        fechaInicioPendiente.setDate(fechaInicioPendiente.getDate() - diasGracia)
+        const fechaInicioPendienteStr = fechaInicioPendiente.toISOString().split('T')[0]
+        const fechaLimiteStr = fechaLimiteDate.toISOString().split('T')[0]
 
-        // Si está programada y la fecha actual >= fecha_vencimiento, pasa a pendiente
-        if (cuota.estado === 'programada' && fechaActualStr >= fechaVencimiento) {
+        // Programada -> Pendiente: cuando fecha_actual >= (fecha_limite - dias_gracia)
+        if (cuota.estado === 'programada' && fechaActualStr >= fechaInicioPendienteStr) {
           cuotasAPendiente.push(cuota.id)
         }
-        // Si está pendiente o parcial y la fecha actual > fecha_limite, pasa a mora
+        // Pendiente/Parcial -> Mora: cuando fecha_actual > fecha_limite
         // Solo si no está ya en mora (evitar reprocesar)
-        else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaLimite) {
+        else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaLimiteStr) {
           cuotasAMora.push({
             id: cuota.id,
             socio_natillera_id: cuota.socio_natillera_id,

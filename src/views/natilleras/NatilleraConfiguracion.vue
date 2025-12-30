@@ -63,52 +63,326 @@
           <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-green-500/10 border-2 border-green-200/50 ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-green-500 to-emerald-500"></div>
             <div class="relative p-5 sm:p-6">
-      <!-- Mensaje Individual -->
-      <div class="mb-6">
-        <div class="flex items-center justify-between mb-3">
-          <label class="font-semibold text-gray-700 flex items-center gap-2">
-            <UserIcon class="w-4 h-4 text-natillera-600" />
-            Mensaje Individual
-          </label>
-          <div class="flex gap-1">
-            <button 
-              @click="insertarVariable('nombre')"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-            >
-              {{nombre}}
-            </button>
-            <button 
-              @click="insertarVariable('monto')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-            >
-              {{monto}}
-            </button>
-          </div>
-        </div>
-        <textarea
-          ref="textareaIndividual"
-          v-model="mensajeIndividual"
-                  class="input-field min-h-[120px] font-mono text-sm"
-          placeholder="Escribe el mensaje individual..."
-        ></textarea>
-                <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p class="text-xs font-semibold text-green-700 mb-1">Vista previa</p>
-                  <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ vistaPreviewIndividual }}</p>
-        </div>
-      </div>
+              <!-- Tabs para tipos de mensajes - Destacado -->
+              <div class="mb-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border-2 border-gray-200 shadow-lg p-4">
+                <div class="mb-2">
+                  <h3 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Tipo de Mensaje
+                  </h3>
+                  <p class="text-xs text-gray-500 mt-0.5">Selecciona el tipo de mensaje que deseas configurar</p>
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                  <button
+                    @click="tipoMensajeActivo = 'individual'"
+                    :class="[
+                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      tipoMensajeActivo === 'individual'
+                        ? 'border-green-500 text-green-700 bg-green-50 shadow-md scale-105'
+                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                    ]"
+                  >
+                    <UserIcon class="w-5 h-5" />
+                    <span>Individual</span>
+                  </button>
+                  <button
+                    @click="tipoMensajeActivo = 'general'"
+                    :class="[
+                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      tipoMensajeActivo === 'general'
+                        ? 'border-purple-500 text-purple-700 bg-purple-50 shadow-md scale-105'
+                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                    ]"
+                  >
+                    <UsersIcon class="w-5 h-5" />
+                    <span>General</span>
+                  </button>
+                  <button
+                    @click="tipoMensajeActivo = 'mora'"
+                    :class="[
+                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      tipoMensajeActivo === 'mora'
+                        ? 'border-red-500 text-red-700 bg-red-50 shadow-md scale-105'
+                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                    ]"
+                  >
+                    <ExclamationTriangleIcon class="w-5 h-5" />
+                    <span>En Mora</span>
+                  </button>
+                  <button
+                    @click="tipoMensajeActivo = 'pendiente'"
+                    :class="[
+                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      tipoMensajeActivo === 'pendiente'
+                        ? 'border-amber-500 text-amber-700 bg-amber-50 shadow-md scale-105'
+                        : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
+                    ]"
+                  >
+                    <ClockIcon class="w-5 h-5" />
+                    <span>Pendiente</span>
+                  </button>
+                </div>
+              </div>
 
-      <!-- Mensaje General -->
-      <div class="mb-6">
-                <label class="font-semibold text-gray-700 flex items-center gap-2 mb-3">
-            <UsersIcon class="w-4 h-4 text-purple-600" />
-            Mensaje General
-          </label>
-        <textarea
-          v-model="mensajeGeneral"
-                  class="input-field min-h-[120px] font-mono text-sm"
-          placeholder="Escribe el mensaje general..."
-        ></textarea>
-      </div>
+              <!-- Contenido según tab activo -->
+              <div class="space-y-4">
+                <!-- Mensaje Individual -->
+                <div v-if="tipoMensajeActivo === 'individual'" class="space-y-4">
+                  <p class="text-xs text-gray-500">
+                    Mensaje enviado a cada socio individualmente.
+                  </p>
+                  
+                  <!-- Variables disponibles para Individual -->
+                  <div class="p-3 bg-green-50/50 rounded-lg border border-green-200">
+                    <h5 class="text-xs font-semibold text-green-700 mb-2">Variables Disponibles</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button 
+                        type="button"
+                        @click="insertarVariable('nombre')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
+                      </button>
+                      <button 
+                        type="button"
+                        @click="insertarVariable('monto')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{monto}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Monto de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-green-600 transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    ref="textareaIndividual"
+                    v-model="mensajeIndividual"
+                    @keydown.enter.stop
+                    class="input-field min-h-[140px] font-mono text-sm"
+                    placeholder="Escribe el mensaje individual..."
+                  ></textarea>
+                  <div class="p-3 bg-green-50/50 border border-green-200 rounded-lg">
+                    <p class="text-xs font-semibold text-green-700 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewIndividual }}</p>
+                  </div>
+                </div>
+
+                <!-- Mensaje General -->
+                <div v-if="tipoMensajeActivo === 'general'" class="space-y-4">
+                  <p class="text-xs text-gray-500">
+                    Mensaje que se puede enviar a todos los socios a la vez. No usa variables personalizadas.
+                  </p>
+                  <textarea
+                    v-model="mensajeGeneral"
+                    @keydown.enter.stop
+                    class="input-field min-h-[140px] font-mono text-sm"
+                    placeholder="Escribe el mensaje general..."
+                  ></textarea>
+                  <div class="p-3 bg-purple-50/50 border border-purple-200 rounded-lg">
+                    <p class="text-xs font-semibold text-purple-700 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ mensajeGeneral }}</p>
+                  </div>
+                </div>
+
+                <!-- Mensaje Cuota en Mora -->
+                <div v-if="tipoMensajeActivo === 'mora'" class="space-y-4">
+                  <p class="text-xs text-gray-500">
+                    Mensaje que se envía cuando una cuota está en mora.
+                  </p>
+                  
+                  <!-- Variables disponibles para Cuota en Mora -->
+                  <div class="p-3 bg-red-50/50 rounded-lg border border-red-200">
+                    <h5 class="text-xs font-semibold text-red-700 mb-2">Variables Disponibles</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button 
+                        @click="insertarVariableCuota('nombre', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('mes', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{mes}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Mes de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('anio', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{anio}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Año de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{valor_cuota}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Valor de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('sancion', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-orange-600 font-semibold">{{sancion}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Sanción aplicada</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('total', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-purple-600 font-semibold">{{total}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Total a pagar (cuota + sanción)</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-gray-600 font-semibold">{{fecha_vencimiento}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Fecha de vencimiento</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('dias_mora', 'mensajeCuotaMora')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-red-200 hover:border-red-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-red-600 font-semibold">{{dias_mora}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Días en mora</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-red-600 transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    ref="textareaCuotaMora"
+                    v-model="mensajeCuotaMora"
+                    @keydown.enter.stop
+                    class="input-field min-h-[140px] font-mono text-sm"
+                    placeholder="Escribe el mensaje para cuota en mora..."
+                  ></textarea>
+                  <div class="p-3 bg-red-50/50 border border-red-200 rounded-lg">
+                    <p class="text-xs font-semibold text-red-700 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaMora }}</p>
+                  </div>
+                </div>
+
+                <!-- Mensaje Cuota Pendiente -->
+                <div v-if="tipoMensajeActivo === 'pendiente'" class="space-y-4">
+                  <p class="text-xs text-gray-500">
+                    Mensaje que se envía cuando una cuota está pendiente.
+                  </p>
+                  
+                  <!-- Variables disponibles para Cuota Pendiente -->
+                  <div class="p-3 bg-amber-50/50 rounded-lg border border-amber-200">
+                    <h5 class="text-xs font-semibold text-amber-700 mb-2">Variables Disponibles</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button 
+                        @click="insertarVariableCuota('nombre', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-blue-600 font-semibold">{{nombre}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Nombre del socio</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('mes', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{mes}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Mes de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('anio', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{anio}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Año de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-green-600 font-semibold">{{valor_cuota}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Valor de la cuota</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('total', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-purple-600 font-semibold">{{total}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Total a pagar</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                      <button 
+                        @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaPendiente')"
+                        class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-amber-200 hover:border-amber-300 hover:shadow-sm transition-all text-left group"
+                      >
+                        <div>
+                          <code class="text-xs font-mono text-gray-600 font-semibold">{{fecha_vencimiento}}</code>
+                          <p class="text-[10px] text-gray-500 mt-0.5">Fecha de vencimiento</p>
+                        </div>
+                        <PlusIcon class="w-4 h-4 text-gray-400 group-hover:text-amber-600 transition-colors" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <textarea
+                    ref="textareaCuotaPendiente"
+                    v-model="mensajeCuotaPendiente"
+                    @keydown.enter.stop
+                    class="input-field min-h-[140px] font-mono text-sm"
+                    placeholder="Escribe el mensaje para cuota pendiente..."
+                  ></textarea>
+                  <div class="p-3 bg-amber-50/50 border border-amber-200 rounded-lg">
+                    <p class="text-xs font-semibold text-amber-700 mb-1.5">Vista previa</p>
+                    <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ vistaPreviewCuotaPendiente }}</p>
+                  </div>
+                </div>
+              </div>
 
               <!-- Botones -->
               <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-green-200">
@@ -513,10 +787,15 @@ const guardandoSanciones = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
 const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia', 'sanciones' o null
+const tipoMensajeActivo = ref('individual') // 'individual', 'general', 'mora', 'pendiente'
 
 // Mensajes
 const mensajeIndividual = ref('')
 const mensajeGeneral = ref('')
+const mensajeCuotaMora = ref('')
+const mensajeCuotaPendiente = ref('')
+const textareaCuotaMora = ref(null)
+const textareaCuotaPendiente = ref(null)
 
 const id = computed(() => route.params.id)
 const natillera = computed(() => natillerasStore.natilleraActual)
@@ -728,6 +1007,30 @@ const vistaPreviewIndividual = computed(() => {
     .replace(/\{\{monto\}\}/g, '50.000')
 })
 
+// Vista previa del mensaje de cuota en mora
+const vistaPreviewCuotaMora = computed(() => {
+  return mensajeCuotaMora.value
+    .replace(/\{\{nombre\}\}/g, 'María García')
+    .replace(/\{\{mes\}\}/g, 'Diciembre')
+    .replace(/\{\{anio\}\}/g, '2024')
+    .replace(/\{\{valor_cuota\}\}/g, '50.000')
+    .replace(/\{\{sancion\}\}/g, '5.000')
+    .replace(/\{\{total\}\}/g, '55.000')
+    .replace(/\{\{fecha_vencimiento\}\}/g, '15/12/2024')
+    .replace(/\{\{dias_mora\}\}/g, '10')
+})
+
+// Vista previa del mensaje de cuota pendiente
+const vistaPreviewCuotaPendiente = computed(() => {
+  return mensajeCuotaPendiente.value
+    .replace(/\{\{nombre\}\}/g, 'María García')
+    .replace(/\{\{mes\}\}/g, 'Diciembre')
+    .replace(/\{\{anio\}\}/g, '2024')
+    .replace(/\{\{valor_cuota\}\}/g, '50.000')
+    .replace(/\{\{total\}\}/g, '50.000')
+    .replace(/\{\{fecha_vencimiento\}\}/g, '15/12/2024')
+})
+
 function insertarVariable(variable) {
   const textarea = textareaIndividual.value
   if (!textarea) return
@@ -746,6 +1049,51 @@ function insertarVariable(variable) {
   }, 0)
 }
 
+function insertarVariableCuota(variable, tipo) {
+  let textarea
+  let texto
+  
+  if (tipo === 'mensajeCuotaMora') {
+    textarea = textareaCuotaMora.value
+    texto = mensajeCuotaMora.value
+  } else if (tipo === 'mensajeCuotaPendiente') {
+    textarea = textareaCuotaPendiente.value
+    texto = mensajeCuotaPendiente.value
+  }
+  
+  if (!textarea) return
+  
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const variableText = `{{${variable}}}`
+  
+  const nuevoTexto = texto.substring(0, start) + variableText + texto.substring(end)
+  
+  if (tipo === 'mensajeCuotaMora') {
+    mensajeCuotaMora.value = nuevoTexto
+  } else if (tipo === 'mensajeCuotaPendiente') {
+    mensajeCuotaPendiente.value = nuevoTexto
+  }
+  
+  // Posicionar cursor después de la variable insertada
+  setTimeout(() => {
+    textarea.focus()
+    textarea.setSelectionRange(start + variableText.length, start + variableText.length)
+  }, 0)
+}
+
+// Función para insertar variable según el tipo de mensaje activo
+function insertarVariableEnActivo(variable) {
+  if (tipoMensajeActivo.value === 'individual') {
+    insertarVariable(variable)
+  } else if (tipoMensajeActivo.value === 'mora') {
+    insertarVariableCuota(variable, 'mensajeCuotaMora')
+  } else if (tipoMensajeActivo.value === 'pendiente') {
+    insertarVariableCuota(variable, 'mensajeCuotaPendiente')
+  }
+  // 'general' no usa variables, así que no hace nada
+}
+
 async function guardarMensajes() {
   guardandoMensajes.value = true
   mensaje.value = null
@@ -753,6 +1101,8 @@ async function guardarMensajes() {
   // Guardar en el store de configuración
   configStore.mensajeIndividual = mensajeIndividual.value
   configStore.mensajeGeneral = mensajeGeneral.value
+  configStore.mensajeCuotaMora = mensajeCuotaMora.value
+  configStore.mensajeCuotaPendiente = mensajeCuotaPendiente.value
   
   const result = await configStore.guardarConfiguracion()
   
@@ -781,6 +1131,8 @@ function restaurarDefectoMensajes() {
     configStore.restaurarValoresPorDefecto()
     mensajeIndividual.value = configStore.mensajeIndividual
     mensajeGeneral.value = configStore.mensajeGeneral
+    mensajeCuotaMora.value = configStore.mensajeCuotaMora
+    mensajeCuotaPendiente.value = configStore.mensajeCuotaPendiente
     mensaje.value = {
       tipo: 'exito',
       texto: 'Valores restaurados. No olvides guardar los cambios.'
@@ -843,6 +1195,8 @@ onMounted(async () => {
   await configStore.cargarConfiguracion()
   mensajeIndividual.value = configStore.mensajeIndividual
   mensajeGeneral.value = configStore.mensajeGeneral
+  mensajeCuotaMora.value = configStore.mensajeCuotaMora
+  mensajeCuotaPendiente.value = configStore.mensajeCuotaPendiente
   
   // Cargar la natillera
   await natillerasStore.fetchNatillera(id.value)
