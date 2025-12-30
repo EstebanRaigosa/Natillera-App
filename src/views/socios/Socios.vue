@@ -923,9 +923,6 @@
                             Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                           </span>
                         </div>
-                        <p v-if="cuotaData.estado === 'mora' && cuotaData.diasMora > 0" class="text-[9px] sm:text-[10px] font-semibold text-red-600 flex-shrink-0 whitespace-nowrap">
-                          {{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }} en mora
-                        </p>
                         <p class="text-[9px] sm:text-[10px] font-semibold text-green-600 flex-shrink-0">
                           Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                         </p>

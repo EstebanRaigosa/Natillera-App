@@ -198,18 +198,13 @@
         <div class="relative z-10">
           <!-- Header de alerta -->
           <div class="mb-6">
-            <div class="flex items-center gap-4 mb-4">
-              <div :class="['w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-xl animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/50' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/50']">
-                <ExclamationTriangleIcon :class="['w-7 h-7 sm:w-8 sm:h-8 text-white']" />
-              </div>
-              <div class="flex-1">
-                <h2 :class="['text-xl sm:text-2xl font-display font-bold mb-1', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
-                  ⚠️ Atención: Socios en Mora
-                </h2>
-                <p :class="['text-sm sm:text-base font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
-                  {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
-                </p>
-              </div>
+            <div class="mb-4">
+              <h2 :class="['text-xl sm:text-2xl font-display font-bold mb-1', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
+                Socios en Mora
+              </h2>
+              <p :class="['text-sm sm:text-base font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
+                {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
+              </p>
             </div>
           </div>
 
@@ -264,7 +259,7 @@
               <div class="relative z-10">
                 <!-- Layout móvil: datos financieros arriba -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <!-- Primera fila en móvil: Avatar, nombre y datos financieros -->
+                  <!-- Primera fila en móvil: Avatar y nombre -->
                   <div class="flex items-start gap-3 min-w-0 flex-1">
                     <img 
                       :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
@@ -286,44 +281,36 @@
                         </span>
                       </div>
                     </div>
-                    
-                    <!-- Datos financieros en móvil: arriba a la derecha -->
-                    <div v-if="socioMora.cuotasMora > 0" class="flex-shrink-0 sm:hidden">
-                      <div class="flex items-start gap-2">
-                        <!-- Columna de etiquetas -->
-                        <div class="text-right space-y-1">
-                          <div class="mb-1">
-                            <p class="text-[10px] text-gray-500">Total a cobrar</p>
-                          </div>
-                          <div class="mb-1">
-                            <p class="text-[10px] text-gray-500">Valor cuota</p>
-                          </div>
-                          <div>
-                            <p class="text-[10px] text-gray-500">Sanción</p>
-                          </div>
+                  </div>
+                  
+                  <!-- Datos financieros en móvil: debajo del nombre, en una sola línea compacta -->
+                  <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
+                    <div class="flex items-center justify-between gap-3">
+                      <!-- Total a cobrar - destacado -->
+                      <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
+                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar</p>
+                        <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                      </div>
+                      
+                      <!-- Valor cuota y Sanción - lado derecho compacto -->
+                      <div class="flex flex-col gap-1.5 text-right">
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] text-gray-500">Cuota:</span>
+                          <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
                         </div>
-                        
-                        <!-- Columna de valores -->
-                        <div class="text-right space-y-1 min-w-[80px]">
-                          <div class="mb-1">
-                            <p class="font-bold text-red-600 text-xs">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
-                          </div>
-                          <div class="mb-1">
-                            <p class="font-semibold text-gray-700 text-[10px]">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
-                          </div>
-                          <div>
-                            <p class="font-semibold text-rose-600 text-[10px]">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
-                          </div>
+                        <div class="flex items-center gap-1.5">
+                          <span class="text-[9px] text-gray-500">Sanción:</span>
+                          <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
                         </div>
                       </div>
                     </div>
-                    
-                    <!-- Si solo tiene pendientes (sin mora) en móvil -->
-                    <div v-else class="flex-shrink-0 sm:hidden">
-                      <div class="text-right">
-                        <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
-                        <p class="text-[10px] text-gray-500">adeudado</p>
-                      </div>
+                  </div>
+                  
+                  <!-- Si solo tiene pendientes (sin mora) en móvil -->
+                  <div v-else class="sm:hidden w-full -mt-2">
+                    <div class="text-left">
+                      <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                      <p class="text-[10px] text-gray-500">adeudado</p>
                     </div>
                   </div>
                 
@@ -1026,9 +1013,6 @@
                             Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
                           </span>
                         </div>
-                        <p v-if="cuotaData.estado === 'mora' && cuotaData.diasMora > 0" class="text-[9px] sm:text-[10px] font-semibold text-red-600 flex-shrink-0 whitespace-nowrap">
-                          {{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }} en mora
-                        </p>
                         <p class="text-[9px] sm:text-[10px] font-semibold text-green-600 flex-shrink-0">
                           Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
                         </p>
