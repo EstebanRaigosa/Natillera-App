@@ -100,8 +100,115 @@
         </div>
       </div>
 
-      <!-- Stats mejoradas -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <!-- Menú de Navegación -->
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Efectos decorativos -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <!-- Título del menú -->
+          <div class="flex items-center gap-2 mb-4 sm:mb-5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
+              <Bars3Icon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
+              Menú de Opciones
+            </h2>
+          </div>
+          
+          <!-- Grid de opciones: 2 columnas en móvil, 4 en desktop -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <router-link 
+              :to="`/natilleras/${id}/socios`"
+              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-blue-50/50 to-indigo-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-blue-200/60 shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 hover:-translate-y-1.5 hover:border-blue-400 hover:from-blue-50 hover:via-indigo-50/70 hover:to-blue-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-400/30 group-hover:to-indigo-400/25 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-indigo-300/15 to-blue-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-indigo-300/25 group-hover:to-blue-300/20 transition-all duration-300"></div>
+              
+              <!-- Efecto de brillo al hover -->
+              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
+              
+              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 group-hover:shadow-xl group-hover:shadow-blue-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
+                <UsersIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              </div>
+              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">Socios</span>
+            </router-link>
+            
+            <router-link 
+              :to="`/natilleras/${id}/cuotas`"
+              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-green-50/50 to-emerald-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-green-200/60 shadow-xl hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-1.5 hover:border-green-400 hover:from-green-50 hover:via-emerald-50/70 hover:to-green-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-400/30 group-hover:to-emerald-400/25 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-emerald-300/15 to-green-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-emerald-300/25 group-hover:to-green-300/20 transition-all duration-300"></div>
+              
+              <!-- Efecto de brillo al hover -->
+              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
+              
+              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40 group-hover:shadow-xl group-hover:shadow-green-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
+                <CurrencyDollarIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              </div>
+              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-green-700 transition-colors duration-300">Cuotas</span>
+            </router-link>
+            
+            <router-link 
+              :to="`/natilleras/${id}/prestamos`"
+              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-amber-200/60 shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 hover:-translate-y-1.5 hover:border-amber-400 hover:from-amber-50 hover:via-orange-50/70 hover:to-amber-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-orange-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-400/30 group-hover:to-orange-400/25 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-orange-300/15 to-amber-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-orange-300/25 group-hover:to-amber-300/20 transition-all duration-300"></div>
+              
+              <!-- Efecto de brillo al hover -->
+              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
+              
+              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/40 group-hover:shadow-xl group-hover:shadow-amber-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
+                <BanknotesIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              </div>
+              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-amber-700 transition-colors duration-300">Préstamos</span>
+            </router-link>
+            
+            <router-link 
+              :to="`/natilleras/${id}/actividades`"
+              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-purple-50/50 to-indigo-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-purple-200/60 shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 hover:-translate-y-1.5 hover:border-purple-400 hover:from-purple-50 hover:via-indigo-50/70 hover:to-purple-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-400/30 group-hover:to-indigo-400/25 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-indigo-300/15 to-purple-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-indigo-300/25 group-hover:to-purple-300/20 transition-all duration-300"></div>
+              
+              <!-- Efecto de brillo al hover -->
+              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
+              
+              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 group-hover:shadow-xl group-hover:shadow-purple-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
+                <CalendarIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              </div>
+              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-purple-700 transition-colors duration-300">Actividades</span>
+            </router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicadores -->
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Efectos decorativos -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <!-- Título del contenedor -->
+          <div class="flex items-center gap-2 mb-4 sm:mb-5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
+              <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
+              Indicadores
+            </h2>
+          </div>
+          
+          <!-- Grid de indicadores -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
@@ -134,44 +241,13 @@
             <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Fondo Total</p>
           </div>
         </div>
-      </div>
-
-      <!-- Navegación tabs -->
-      <div class="w-full">
-        <div class="flex gap-2 sm:gap-3 w-full">
-          <router-link 
-            :to="`/natilleras/${id}/socios`"
-            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
-          >
-            <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
-            <span class="text-center">Socios</span>
-          </router-link>
-          <router-link 
-            :to="`/natilleras/${id}/cuotas`"
-            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
-          >
-            <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
-            <span class="text-center">Cuotas</span>
-          </router-link>
-          <router-link 
-            :to="`/natilleras/${id}/prestamos`"
-            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
-          >
-            <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
-            <span class="text-center">Préstamos</span>
-          </router-link>
-          <router-link 
-            :to="`/natilleras/${id}/actividades`"
-            class="group flex flex-col items-center justify-center gap-2 flex-1 px-2 py-4 sm:px-4 sm:py-5 lg:py-3 bg-gradient-to-b from-natillera-50 to-natillera-100 text-gray-800 font-semibold text-xs sm:text-sm rounded-xl border border-natillera-200 shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-natillera-500/25 hover:-translate-y-1 hover:from-natillera-100 hover:to-natillera-200 transition-all duration-300 cursor-pointer"
-          >
-            <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6 lg:w-6 lg:h-6 text-natillera-700 group-hover:scale-110 transition-transform duration-300" />
-            <span class="text-center">Actividades</span>
-          </router-link>
+          </div>
         </div>
       </div>
 
       <!-- BANNER DE ALERTA DE MORA - Click para abrir modal -->
       <div 
+        ref="bannerSociosEnMoraRef"
         v-if="sociosEnMora.length > 0"
         @click="modalSociosEnMora = true"
         class="relative rounded-2xl p-4 sm:p-5 border-2 shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 group animate-fade-in-alerta"
@@ -684,12 +760,23 @@
                 </p>
               </div>
             </div>
-            <button 
-              @click="cerrarModalCuotasSocio"
-              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-            >
-              <XMarkIcon class="w-5 h-5" />
-            </button>
+            <div class="flex items-center gap-2">
+              <!-- Toggle Vista Simplificada -->
+              <button 
+                @click="vistaSimplificadaCuotas = !vistaSimplificadaCuotas"
+                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+                :title="vistaSimplificadaCuotas ? 'Vista completa' : 'Vista simplificada'"
+              >
+                <Squares2X2Icon v-if="!vistaSimplificadaCuotas" class="w-5 h-5" />
+                <Bars3Icon v-else class="w-5 h-5" />
+              </button>
+              <button 
+                @click="cerrarModalCuotasSocio"
+                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              >
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -708,24 +795,26 @@
           
           <!-- Lista de cuotas individuales -->
           <div v-else-if="!loadingCuotasSocio" class="space-y-3">
-            <div
-              v-for="(cuotaData, index) in cuotasSocioPorMes"
-              :key="cuotaData.id"
-              class="relative overflow-hidden rounded-xl border-l-4 border-t-2 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm animate-fade-in-up"
-              :style="{ animationDelay: `${index * 0.05}s` }"
-              :class="[
-                (cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono
-                  ? 'h-auto sm:h-auto' 
-                  : 'h-[91px] sm:h-auto',
-                cuotaData.estado === 'pagada' 
-                  ? 'border-l-green-500 border-t-green-500 bg-gradient-to-br from-green-100 via-green-50 to-white' :
-                cuotaData.estado === 'mora' 
-                  ? 'border-l-red-500 border-t-red-500 bg-gradient-to-br from-red-100 via-red-50 to-white animate-mora-highlight' :
-                cuotaData.estado === 'pendiente'
-                  ? 'border-l-amber-500 border-t-amber-500 bg-gradient-to-br from-orange-100 via-amber-50 to-white' :
-                'border-l-gray-400 border-t-gray-400 bg-gradient-to-br from-gray-100 via-gray-50 to-white'
-              ]"
-            >
+            <!-- Vista Completa -->
+            <template v-if="!vistaSimplificadaCuotas">
+              <div
+                v-for="(cuotaData, index) in cuotasSocioPorMes"
+                :key="cuotaData.id"
+                class="relative overflow-hidden rounded-xl border-l-4 border-t-2 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm animate-fade-in-up"
+                :style="{ animationDelay: `${index * 0.05}s` }"
+                :class="[
+                  (cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono
+                    ? 'h-auto sm:h-auto' 
+                    : 'h-[91px] sm:h-auto',
+                  cuotaData.estado === 'pagada' 
+                    ? 'border-l-green-500 border-t-green-500 bg-gradient-to-br from-green-100 via-green-50 to-white' :
+                  cuotaData.estado === 'mora' 
+                    ? 'border-l-red-500 border-t-red-500 bg-gradient-to-br from-red-100 via-red-50 to-white animate-mora-highlight' :
+                  cuotaData.estado === 'pendiente'
+                    ? 'border-l-amber-500 border-t-amber-500 bg-gradient-to-br from-orange-100 via-amber-50 to-white' :
+                  'border-l-gray-400 border-t-gray-400 bg-gradient-to-br from-gray-100 via-gray-50 to-white'
+                ]"
+              >
               <!-- Efecto de resaltado para cuotas en mora -->
               <div 
                 v-if="cuotaData.estado === 'mora'"
@@ -906,6 +995,108 @@
                 </button>
               </div>
             </div>
+            </template>
+            
+            <!-- Vista Simplificada -->
+            <template v-else>
+              <div
+                v-for="(cuotaData, index) in cuotasSocioPorMes"
+                :key="cuotaData.id"
+                class="relative overflow-hidden rounded-xl border-l-4 shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in-up"
+                :style="{ animationDelay: `${index * 0.03}s` }"
+                :class="[
+                  cuotaData.estado === 'pagada' 
+                    ? 'border-l-green-500 bg-gradient-to-r from-green-50 to-white' :
+                  cuotaData.estado === 'mora' 
+                    ? 'border-l-red-500 bg-gradient-to-r from-red-50 to-white animate-mora-highlight' :
+                  cuotaData.estado === 'pendiente'
+                    ? 'border-l-amber-500 bg-gradient-to-r from-amber-50 to-white' :
+                  'border-l-gray-400 bg-gradient-to-r from-gray-50 to-white'
+                ]"
+              >
+                <!-- Efecto de resaltado para cuotas en mora -->
+                <div 
+                  v-if="cuotaData.estado === 'mora'"
+                  class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
+                ></div>
+                
+                <div class="p-3 sm:p-4 flex items-center justify-between gap-3 relative z-10">
+                  <!-- Lado izquierdo: Emoji y mes -->
+                  <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="relative flex-shrink-0">
+                      <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-pink-50 to-purple-50 border-2 border-pink-200 flex items-center justify-center text-xl sm:text-2xl shadow-sm">
+                        {{ getMesEmoji(cuotaData.mes) }}
+                      </div>
+                      <div v-if="cuotaData.quincena" class="absolute -top-1 -left-1 w-4 h-4 bg-purple-500 text-white text-[9px] font-bold rounded-lg flex items-center justify-center border border-white shadow-sm">
+                        Q{{ cuotaData.quincena }}
+                      </div>
+                      <div v-if="cuotaData.estado === 'pagada'" class="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-green-500 rounded-full flex items-center justify-center border border-white shadow-sm">
+                        <CheckCircleIcon class="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" />
+                      </div>
+                    </div>
+                    
+                    <div class="min-w-0 flex-1">
+                      <p class="font-bold text-gray-800 text-sm sm:text-base truncate">
+                        {{ getMesLabel(cuotaData.mes) }} {{ cuotaData.anio }}
+                        <span v-if="cuotaData.quincena" class="text-purple-600">- Q{{ cuotaData.quincena }}</span>
+                      </p>
+                      <!-- Badge de estado -->
+                      <div class="flex items-center gap-2 mt-1">
+                        <span 
+                          v-if="cuotaData.estado === 'pagada'"
+                          class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-green-100 text-green-700 border border-green-200"
+                        >
+                          pagada
+                        </span>
+                        <span 
+                          v-else-if="cuotaData.estado === 'mora'"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-red-100 text-red-700 border border-red-200"
+                        >
+                          en mora
+                          <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                            ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                          </span>
+                        </span>
+                        <span 
+                          v-else-if="cuotaData.estado === 'pendiente'"
+                          class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200"
+                        >
+                          pendiente
+                        </span>
+                        <span 
+                          v-else
+                          class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200"
+                        >
+                          programada
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Lado derecho: Monto y botón WhatsApp -->
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <div class="text-right">
+                      <p class="text-base sm:text-lg font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'">
+                        ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
+                      </p>
+                      <p v-if="cuotaData.sancion > 0" class="text-[10px] sm:text-xs text-gray-600 mt-0.5">
+                        +${{ formatMoney(cuotaData.sancion) }} sanción
+                      </p>
+                    </div>
+                    
+                    <!-- Botón WhatsApp (solo para pendiente o mora) -->
+                    <button
+                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                      @click="enviarWhatsAppCuota(cuotaData)"
+                      class="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0"
+                      title="Enviar recordatorio por WhatsApp"
+                    >
+                      <ChatBubbleLeftIcon class="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -1023,25 +1214,25 @@
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
           
-          <div class="relative z-10 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg', sociosEnMora.length >= 3 ? 'bg-white/20 backdrop-blur-sm border border-white/30' : 'bg-white/20 backdrop-blur-sm border border-white/30']">
-                <ExclamationTriangleIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          <div class="relative z-10 flex items-start sm:items-center justify-between gap-2 sm:gap-3">
+            <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div :class="['w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl flex items-center justify-center shadow-lg mt-0.5 sm:mt-0', sociosEnMora.length >= 3 ? 'bg-white/20 backdrop-blur-sm border border-white/30' : 'bg-white/20 backdrop-blur-sm border border-white/30']">
+                <ExclamationTriangleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="text-lg sm:text-2xl font-display font-bold truncate">
+                <h3 class="text-base sm:text-xl font-display font-bold mb-0.5 sm:mb-1">
                   Socios en Mora
                 </h3>
-                <p class="text-white/90 text-xs sm:text-sm">
+                <p class="text-white/90 text-xs sm:text-sm leading-tight line-clamp-2">
                   {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio requiere' : 'socios requieren' }} atención inmediata
                 </p>
               </div>
             </div>
             <button 
               @click="modalSociosEnMora = false"
-              class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 flex items-center justify-center transition-all flex-shrink-0"
+              class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 flex items-center justify-center transition-all mt-0.5 sm:mt-0"
             >
-              <XMarkIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <XMarkIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
           </div>
         </div>
@@ -1251,7 +1442,10 @@ import {
   Cog6ToothIcon,
   CalendarDaysIcon,
   PlusIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  Bars3Icon,
+  ChartBarIcon,
+  Squares2X2Icon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -1275,6 +1469,7 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const modalSociosEnMora = ref(false)
 const loadingCuotasSocio = ref(false)
+const vistaSimplificadaCuotas = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
 const cuotasSocioPorMes = ref([])
@@ -1289,6 +1484,7 @@ const errorBusqueda = ref('')
 const buscandoComprobante = ref(false)
 const inputBusquedaRef = ref(null)
 const seccionAlertasRef = ref(null) // Ya no se usa, pero se mantiene por compatibilidad
+const bannerSociosEnMoraRef = ref(null)
 const cuotasNatillera = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
 const configSancionesActiva = ref(false)
@@ -1838,6 +2034,7 @@ async function verCuotasSocio(socioMora) {
     const natilleraId = props.id || route.params.id
     const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
     const sancionesSocio = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
+    const sancionesActivas = resultSanciones.configActiva !== false // Verificar si las sanciones están activas
   
     // Procesar cada cuota individualmente
     const cuotasIndividuales = []
@@ -1882,8 +2079,15 @@ async function verCuotasSocio(socioMora) {
         fechaVencimiento = new Date(cuota.fecha_limite)
       }
       
-      // Obtener sanción de esta cuota
-      const sancionCuota = sancionesSocio[cuota.id] || cuota.valor_multa || 0
+      // Obtener sanción de esta cuota - solo usar valor_multa si las sanciones están activas
+      // Si las sanciones están inactivas, siempre usar 0
+      let sancionCuota = 0
+      if (sancionesActivas) {
+        sancionCuota = sancionesSocio[cuota.id] || cuota.valor_multa || 0
+      } else {
+        // Si las sanciones están inactivas, no usar valor_multa antiguo
+        sancionCuota = 0
+      }
       
       // Calcular total con sanciones para esta cuota
       const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
@@ -1954,6 +2158,43 @@ function cerrarModalCuotasSocio() {
   socioParaCuotas.value = null
   cuotasSocioPorMes.value = []
   loadingCuotasSocio.value = false
+}
+
+// Funciones para controlar la visualización de la modal de socios en mora (máximo 2 veces por día)
+function obtenerClaveModalSociosEnMora() {
+  const fechaHoy = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+  return `modalSociosEnMora_${id.value}_${fechaHoy}`
+}
+
+function puedeMostrarModalSociosEnMora() {
+  const clave = obtenerClaveModalSociosEnMora()
+  const contador = parseInt(localStorage.getItem(clave) || '0', 10)
+  return contador < 2
+}
+
+function incrementarContadorModalSociosEnMora() {
+  const clave = obtenerClaveModalSociosEnMora()
+  const contador = parseInt(localStorage.getItem(clave) || '0', 10)
+  localStorage.setItem(clave, (contador + 1).toString())
+}
+
+// Función de debug para reiniciar el contador (solo para desarrollo)
+function reiniciarContadorModalSociosEnMora() {
+  const clave = obtenerClaveModalSociosEnMora()
+  localStorage.removeItem(clave)
+  console.log('✅ Contador de modal de socios en mora reiniciado para esta natillera')
+  alert('Contador reiniciado. La modal se mostrará automáticamente la próxima vez que ingreses.')
+}
+
+// Exponer la función en window para acceso desde la consola (solo en desarrollo)
+if (import.meta.env.DEV) {
+  window.reiniciarContadorModalSociosEnMora = reiniciarContadorModalSociosEnMora
+  window.verContadorModalSociosEnMora = () => {
+    const clave = obtenerClaveModalSociosEnMora()
+    const contador = parseInt(localStorage.getItem(clave) || '0', 10)
+    console.log(`📊 Contador actual: ${contador}/2`)
+    return contador
+  }
 }
 
 // Función para enviar WhatsApp de una cuota específica
@@ -2047,34 +2288,92 @@ function handleModalBack(modalRef, modalName) {
 
 // Listener para el botón atrás del navegador
 function handlePopState(event) {
-  // Verificar si hay alguna modal abierta
-  if (modalWhatsApp.value) {
-    modalWhatsApp.value = false
-    history.pushState(null, '', window.location.href)
-    return
-  }
-  if (modalDetalle.value) {
-    modalDetalle.value = false
-    history.pushState(null, '', window.location.href)
-    return
-  }
-  if (modalConfigMeses.value) {
-    modalConfigMeses.value = false
-    history.pushState(null, '', window.location.href)
-    return
-  }
-  if (modalBuscarComprobante.value) {
-    modalBuscarComprobante.value = false
-    history.pushState(null, '', window.location.href)
-    return
-  }
+  // Verificar modales en orden de z-index (las más altas primero)
+  // Esto asegura que se cierre primero la modal superior cuando hay modales anidadas
+  
+  // Modal de cuotas del socio (z-60 - más alta)
   if (modalCuotasSocio.value) {
     cerrarModalCuotasSocio()
-    history.pushState(null, '', window.location.href)
+    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    if (modalSociosEnMora.value) {
+      history.pushState({ modal: 'sociosEnMora' }, '', window.location.href)
+    } else if (modalWhatsApp.value) {
+      history.pushState({ modal: 'whatsapp' }, '', window.location.href)
+    } else if (modalDetalle.value) {
+      history.pushState({ modal: 'detalle' }, '', window.location.href)
+    } else if (modalConfigMeses.value) {
+      history.pushState({ modal: 'configMeses' }, '', window.location.href)
+    } else if (modalBuscarComprobante.value) {
+      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
+    } else {
+      history.pushState(null, '', window.location.href)
+    }
     return
   }
+  
+  // Modal de socios en mora (z-50)
   if (modalSociosEnMora.value) {
     modalSociosEnMora.value = false
+    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    if (modalWhatsApp.value) {
+      history.pushState({ modal: 'whatsapp' }, '', window.location.href)
+    } else if (modalDetalle.value) {
+      history.pushState({ modal: 'detalle' }, '', window.location.href)
+    } else if (modalConfigMeses.value) {
+      history.pushState({ modal: 'configMeses' }, '', window.location.href)
+    } else if (modalBuscarComprobante.value) {
+      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
+    } else {
+      history.pushState(null, '', window.location.href)
+    }
+    return
+  }
+  
+  // Modal WhatsApp (z-50)
+  if (modalWhatsApp.value) {
+    modalWhatsApp.value = false
+    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    if (modalDetalle.value) {
+      history.pushState({ modal: 'detalle' }, '', window.location.href)
+    } else if (modalConfigMeses.value) {
+      history.pushState({ modal: 'configMeses' }, '', window.location.href)
+    } else if (modalBuscarComprobante.value) {
+      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
+    } else {
+      history.pushState(null, '', window.location.href)
+    }
+    return
+  }
+  
+  // Modal Detalle (z-50)
+  if (modalDetalle.value) {
+    modalDetalle.value = false
+    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    if (modalConfigMeses.value) {
+      history.pushState({ modal: 'configMeses' }, '', window.location.href)
+    } else if (modalBuscarComprobante.value) {
+      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
+    } else {
+      history.pushState(null, '', window.location.href)
+    }
+    return
+  }
+  
+  // Modal Config Meses (z-50)
+  if (modalConfigMeses.value) {
+    modalConfigMeses.value = false
+    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    if (modalBuscarComprobante.value) {
+      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
+    } else {
+      history.pushState(null, '', window.location.href)
+    }
+    return
+  }
+  
+  // Modal Buscar Comprobante (z-50)
+  if (modalBuscarComprobante.value) {
+    modalBuscarComprobante.value = false
     history.pushState(null, '', window.location.href)
     return
   }
@@ -2098,6 +2397,31 @@ watch(modalBuscarComprobante, async (isOpen) => {
   }
 })
 
+// Función para hacer scroll al banner
+async function scrollToBannerSociosEnMora() {
+  if (!bannerSociosEnMoraRef.value) return
+  
+  await nextTick()
+  
+  // Hacer scroll suave al banner
+  bannerSociosEnMoraRef.value.scrollIntoView({ 
+    behavior: 'smooth', 
+    block: 'center' 
+  })
+}
+
+// Watch para detectar cuando hay socios en mora
+watch(sociosEnMora, async (newValue, oldValue) => {
+  // Solo hacer scroll si antes no había socios en mora y ahora sí hay
+  if ((!oldValue || oldValue.length === 0) && newValue && newValue.length > 0) {
+    // Esperar un poco para que el DOM se actualice
+    await nextTick()
+    setTimeout(() => {
+      scrollToBannerSociosEnMora()
+    }, 300)
+  }
+}, { deep: true })
+
 onMounted(async () => {
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
@@ -2119,12 +2443,20 @@ onMounted(async () => {
       console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
     }
     
-    // Si hay socios en mora, abrir la modal automáticamente
+    // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
     await nextTick()
     if (sociosEnMora.value && sociosEnMora.value.length > 0) {
+      if (puedeMostrarModalSociosEnMora()) {
+        setTimeout(() => {
+          modalSociosEnMora.value = true
+          incrementarContadorModalSociosEnMora()
+        }, 500)
+      }
+      
+      // Hacer scroll al banner
       setTimeout(() => {
-        modalSociosEnMora.value = true
-      }, 500)
+        scrollToBannerSociosEnMora()
+      }, 800)
     }
   } catch (error) {
     console.error('Error cargando datos de natillera:', error)
