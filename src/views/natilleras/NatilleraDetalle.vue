@@ -799,11 +799,12 @@
                             ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                           </p>
                           <div class="flex flex-col items-end gap-0.5 mt-0.5">
-                            <p class="text-[9px] text-gray-600 font-medium">
+                            <p class="text-[9px] text-black font-medium">
                               Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                             </p>
-                            <p v-if="cuotaData.sancion > 0" class="text-[9px] text-gray-700 font-semibold">
-                              + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                            <p v-if="cuotaData.sancion > 0" class="text-[9px] text-black font-semibold flex items-center gap-1">
+                              <span>Sanción:</span>
+                              <span>${{ formatMoney(cuotaData.sancion) }}</span>
                             </p>
                           </div>
                         </div>
@@ -815,11 +816,12 @@
                           ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                         </p>
                         <div class="flex items-center gap-2 mt-0.5">
-                          <p class="text-[10px] text-gray-600 font-medium">
+                          <p class="text-xs sm:text-sm text-black font-medium">
                             Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                           </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-[10px] text-gray-700 font-semibold">
-                            + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                          <p v-if="cuotaData.sancion > 0" class="text-xs sm:text-sm text-black font-semibold flex items-center gap-1">
+                            <span>Sanción:</span>
+                            <span>${{ formatMoney(cuotaData.sancion) }}</span>
                           </p>
                         </div>
                       </div>
@@ -1224,7 +1226,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { 
@@ -2030,6 +2032,62 @@ function enviarWhatsAppCuota(cuotaData) {
 
 
 // Observar cuando se abre la modal para poner el foco en el input
+// Función para manejar el botón atrás del navegador en móvil
+let modalHistoryState = null
+
+function handleModalBack(modalRef, modalName) {
+  watch(modalRef, (isOpen) => {
+    if (isOpen) {
+      // Agregar entrada al historial cuando se abre la modal
+      modalHistoryState = { modal: modalName }
+      history.pushState(modalHistoryState, '', window.location.href)
+    }
+  })
+}
+
+// Listener para el botón atrás del navegador
+function handlePopState(event) {
+  // Verificar si hay alguna modal abierta
+  if (modalWhatsApp.value) {
+    modalWhatsApp.value = false
+    history.pushState(null, '', window.location.href)
+    return
+  }
+  if (modalDetalle.value) {
+    modalDetalle.value = false
+    history.pushState(null, '', window.location.href)
+    return
+  }
+  if (modalConfigMeses.value) {
+    modalConfigMeses.value = false
+    history.pushState(null, '', window.location.href)
+    return
+  }
+  if (modalBuscarComprobante.value) {
+    modalBuscarComprobante.value = false
+    history.pushState(null, '', window.location.href)
+    return
+  }
+  if (modalCuotasSocio.value) {
+    cerrarModalCuotasSocio()
+    history.pushState(null, '', window.location.href)
+    return
+  }
+  if (modalSociosEnMora.value) {
+    modalSociosEnMora.value = false
+    history.pushState(null, '', window.location.href)
+    return
+  }
+}
+
+// Registrar watchers para cada modal
+handleModalBack(modalWhatsApp, 'whatsapp')
+handleModalBack(modalDetalle, 'detalle')
+handleModalBack(modalConfigMeses, 'configMeses')
+handleModalBack(modalBuscarComprobante, 'buscarComprobante')
+handleModalBack(modalCuotasSocio, 'cuotasSocio')
+handleModalBack(modalSociosEnMora, 'sociosEnMora')
+
 watch(modalBuscarComprobante, async (isOpen) => {
   if (isOpen) {
     // Esperar a que el DOM se actualice y luego poner el foco
@@ -2041,6 +2099,9 @@ watch(modalBuscarComprobante, async (isOpen) => {
 })
 
 onMounted(async () => {
+  // Agregar listener para el botón atrás
+  window.addEventListener('popstate', handlePopState)
+  
   try {
     const natilleraId = props.id || route.params.id
     await natillerasStore.fetchNatillera(natilleraId)
@@ -2068,6 +2129,11 @@ onMounted(async () => {
   } catch (error) {
     console.error('Error cargando datos de natillera:', error)
   }
+})
+
+onUnmounted(() => {
+  // Remover listener del botón atrás
+  window.removeEventListener('popstate', handlePopState)
 })
 </script>
 

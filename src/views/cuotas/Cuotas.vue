@@ -2474,6 +2474,7 @@ const scrollContainerGenerarCuotas = ref(null)
 const dropdownMesAbierto = ref(false)
 const dropdownMesRef = ref(null)
 const sancionesDinamicas = ref({}) // Sanciones calculadas dinámicamente
+const sancionesActivas = ref(false) // Indica si las sanciones están activadas
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -3177,6 +3178,13 @@ function formatMoney(value) {
 async function recalcularSancionesMes() {
   if (!mesSeleccionado.value) return
   
+  // Si las sanciones no están activadas, no calcular
+  if (!sancionesActivas.value) {
+    // Limpiar sanciones dinámicas si están desactivadas
+    sancionesDinamicas.value = {}
+    return
+  }
+  
   // Obtener las cuotas del mes actual
   const cuotasDelMes = cuotasStore.cuotas.filter(c => {
     if (!c.fecha_limite) return false
@@ -3201,6 +3209,8 @@ async function recalcularSancionesMes() {
 
 // Obtener la sanción dinámica de una cuota (calculada en tiempo real)
 function getSancionCuota(cuota) {
+  // Si las sanciones no están activadas, retornar 0
+  if (!sancionesActivas.value) return 0
   if (!cuota || cuota.estado !== 'mora') return 0
   // Usar la sanción calculada dinámicamente, si no existe usar la guardada en BD
   return sancionesDinamicas.value[cuota.id] || cuota.valor_multa || 0
@@ -4673,19 +4683,29 @@ onMounted(async () => {
       .single()
     
     diasGracia.value = natillera?.reglas_multas?.dias_gracia || 3
+    // Verificar si las sanciones están activadas
+    sancionesActivas.value = natillera?.reglas_multas?.sanciones?.activa || false
     console.log('📅 Días de gracia cargados:', diasGracia.value)
+    console.log('⚙️ Sanciones activas:', sancionesActivas.value)
   } catch (error) {
     console.error('Error cargando días de gracia:', error)
     diasGracia.value = 3 // Valor por defecto
+    sancionesActivas.value = false
   }
   
   await cuotasStore.fetchCuotasNatillera(id)
   
-  // Calcular sanciones dinámicas para las cuotas en mora
-  const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
-  if (resultSanciones.success) {
-    sancionesDinamicas.value = resultSanciones.sanciones || {}
-    console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+  // Calcular sanciones dinámicas solo si están activadas
+  if (sancionesActivas.value) {
+    const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
+    if (resultSanciones.success) {
+      sancionesDinamicas.value = resultSanciones.sanciones || {}
+      console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+    }
+  } else {
+    // Limpiar sanciones si están desactivadas
+    sancionesDinamicas.value = {}
+    console.log('⚠️ Sanciones desactivadas - no se calcularán multas')
   }
   
   // Si hay un mes seleccionado, recalcular sanciones para ese mes

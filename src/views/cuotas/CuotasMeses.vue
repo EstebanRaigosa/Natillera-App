@@ -18,7 +18,7 @@
         <span class="whitespace-nowrap">Volver a natillera</span>
       </router-link>
       
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-lg sm:shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
@@ -29,10 +29,10 @@
               <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <div>
-              <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
+              <h1 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
                 Cuotas y Pagos
               </h1>
-              <p class="text-gray-600 mt-1 text-sm sm:text-base font-medium">
+              <p class="text-gray-600 mt-1 text-xs sm:text-sm md:text-base font-medium">
                 Selecciona un mes para gestionar las cuotas y pagos
               </p>
             </div>
@@ -42,16 +42,16 @@
     </div>
 
     <!-- Grid de meses mejorado -->
-    <div v-if="mesesNatillera.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5 sm:gap-5 lg:gap-6">
+    <div v-if="mesesNatillera.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
       <router-link
         v-for="mes in mesesNatillera"
         :key="mes.value"
         :to="`/natilleras/${id}/cuotas/${mes.value}`"
-        class="group relative flex flex-col items-center justify-center rounded-3xl transition-all duration-500 cursor-pointer overflow-hidden min-h-[110px] sm:min-h-[180px] lg:min-h-[200px]"
+        class="group relative flex flex-col items-center justify-center rounded-2xl sm:rounded-3xl transition-all duration-500 cursor-pointer overflow-hidden min-h-[130px] sm:min-h-[160px] md:min-h-[180px] lg:min-h-[200px] active:scale-95"
       >
         <!-- Fondo principal con gradiente mejorado -->
         <div 
-          class="absolute inset-0 rounded-3xl transition-all duration-500 bg-gradient-to-br from-white via-natillera-50/80 to-emerald-50/60 shadow-lg shadow-gray-200/40 group-hover:shadow-2xl group-hover:shadow-natillera-400/40 group-hover:scale-[1.03] border border-natillera-100/50 group-hover:border-natillera-300"
+          class="absolute inset-0 rounded-2xl sm:rounded-3xl transition-all duration-500 bg-gradient-to-br from-white via-natillera-50/80 to-emerald-50/60 shadow-md sm:shadow-lg shadow-gray-200/40 group-hover:shadow-2xl group-hover:shadow-natillera-400/40 group-hover:scale-[1.03] border border-natillera-100/50 group-hover:border-natillera-300"
         ></div>
         
         <!-- Círculos decorativos con blur -->
@@ -69,19 +69,19 @@
         ></div>
 
         <!-- Contenido -->
-        <div class="relative z-10 py-2.5 sm:py-5 lg:py-6 px-3 sm:px-4 flex flex-col items-center w-full">
+        <div class="relative z-10 py-4 sm:py-5 lg:py-6 px-3 sm:px-4 flex flex-col items-center w-full">
           <!-- Emoji del mes con animación -->
-          <div class="relative mb-1.5 sm:mb-3">
-            <span class="text-2xl sm:text-5xl lg:text-6xl block transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+          <div class="relative mb-2 sm:mb-3">
+            <span class="text-4xl sm:text-5xl md:text-6xl lg:text-6xl block transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
               {{ getMesEmoji(mes.value) }}
             </span>
             <!-- Efecto de brillo en hover -->
             <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shimmer transition-opacity duration-500"></div>
           </div>
           
-          <!-- Nombre del mes con mejor tipografía -->
+          <!-- Nombre del mes con mejor tipografía - Más grande en móvil -->
           <span 
-            class="text-xs sm:text-lg lg:text-xl font-bold text-gray-800 group-hover:text-natillera-700 transition-colors duration-300 mb-0.5 sm:mb-1"
+            class="text-lg sm:text-xl md:text-2xl lg:text-2xl font-bold text-gray-800 group-hover:text-natillera-700 transition-colors duration-300 mb-1 sm:mb-1.5 leading-tight"
           >
             {{ mes.label }}
           </span>

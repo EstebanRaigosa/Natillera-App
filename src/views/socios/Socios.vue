@@ -891,11 +891,12 @@
                             ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                           </p>
                           <div class="flex flex-col items-end gap-0.5 mt-0.5">
-                            <p class="text-[9px] text-gray-600 font-medium">
+                            <p class="text-[9px] text-black font-medium">
                               Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                             </p>
-                            <p v-if="cuotaData.sancion > 0" class="text-[9px] text-gray-700 font-semibold">
-                              + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                            <p v-if="cuotaData.sancion > 0" class="text-[9px] text-black font-semibold flex items-center gap-1">
+                              <span>Sanción:</span>
+                              <span>${{ formatMoney(cuotaData.sancion) }}</span>
                             </p>
                           </div>
                         </div>
@@ -907,11 +908,12 @@
                           ${{ formatMoney(cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota) }}
                         </p>
                         <div class="flex items-center gap-2 mt-0.5">
-                          <p class="text-[10px] text-gray-600 font-medium">
+                          <p class="text-xs sm:text-sm text-black font-medium">
                             Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
                           </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-[10px] text-gray-700 font-semibold">
-                            + Sanción: ${{ formatMoney(cuotaData.sancion) }}
+                          <p v-if="cuotaData.sancion > 0" class="text-xs sm:text-sm text-black font-semibold flex items-center gap-1">
+                            <span>Sanción:</span>
+                            <span>${{ formatMoney(cuotaData.sancion) }}</span>
                           </p>
                         </div>
                       </div>
