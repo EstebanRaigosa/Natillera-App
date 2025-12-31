@@ -567,6 +567,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const key = `${cuota.socio_natillera_id}-${cuota.quincena || 'mensual'}`
         mapaCuotasExistentes[key] = cuota
       })
+      
+      console.log('📋 Fechas recibidas en store:', fechasLimite)
 
       console.log('Cuotas existentes encontradas:', cuotasExistentes?.length || 0)
 
@@ -580,6 +582,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const fechaQuincena2 = typeof fechasLimite.quincena2 === 'object' 
         ? fechasLimite.quincena2 
         : { vencimiento: fechasLimite.quincena2, limite: fechasLimite.quincena2 }
+      
+      console.log('📋 Fechas normalizadas en store:', {
+        mensual: fechaMensual,
+        quincena1: fechaQuincena1,
+        quincena2: fechaQuincena2
+      })
 
       // Fecha actual para calcular estado (una sola vez)
       const fechaActual = new Date()

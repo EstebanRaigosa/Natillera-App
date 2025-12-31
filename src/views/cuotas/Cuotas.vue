@@ -544,7 +544,7 @@
                   </div>
                   <p class="text-xs text-gray-600 flex items-center gap-1.5">
                     <CalendarIcon class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                    <span>Vence: <span class="font-semibold">{{ formatDate(cuota.fecha_limite) }}</span></span>
+                    <span>Vence: <span class="font-semibold">{{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}</span></span>
                   </p>
                 </div>
               </div>
@@ -1681,7 +1681,7 @@
               v-if="pagoRegistrado?.socioTelefono"
               @click="compartirWhatsApp"
               :disabled="generandoImagen"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
               {{ generandoImagen ? 'Preparando...' : '📲 Compartir por WhatsApp' }}
@@ -3486,12 +3486,18 @@ async function handleGuardarSocio() {
         // Obtener el nombre del mes para el label
         const mesLabel = todosMeses.find(m => m.value === mesParaGenerar)?.label || ''
         
-        // Función para calcular fecha de vencimiento (restando días de gracia de la fecha límite)
+        // Función para calcular fecha de vencimiento (sumando días de gracia a la fecha límite)
         function calcularFechaVencimiento(fechaLimiteStr) {
           if (!fechaLimiteStr) return fechaLimiteStr
-          const fechaLimite = new Date(fechaLimiteStr)
-          fechaLimite.setDate(fechaLimite.getDate() - diasGracia)
-          return fechaLimite.toISOString().split('T')[0]
+          // Parsear la fecha manualmente para evitar problemas de zona horaria
+          const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+          const fechaLimite = new Date(anio, mes - 1, dia)
+          fechaLimite.setDate(fechaLimite.getDate() + diasGracia)
+          // Formatear manualmente para evitar problemas de zona horaria
+          const year = fechaLimite.getFullYear()
+          const month = String(fechaLimite.getMonth() + 1).padStart(2, '0')
+          const day = String(fechaLimite.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
         }
         
         // Generar cuotas solo para el socio editado (mismo proceso que el menú "Generar Cuotas")
@@ -3732,28 +3738,48 @@ async function handleGenerarCuotas() {
 
   const mesLabel = todosMeses.find(m => m.value === formCuotas.mes)?.label || ''
   
-  // Calcular fecha de vencimiento (restando días de gracia de la fecha límite)
+  // Calcular fecha de vencimiento (sumando días de gracia a la fecha límite)
   function calcularFechaVencimiento(fechaLimiteStr) {
     if (!fechaLimiteStr) return fechaLimiteStr
-    const fechaLimite = new Date(fechaLimiteStr)
-    fechaLimite.setDate(fechaLimite.getDate() - diasGracia)
-    return fechaLimite.toISOString().split('T')[0]
+    // Parsear la fecha manualmente para evitar problemas de zona horaria
+    const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+    const fechaLimite = new Date(anio, mes - 1, dia)
+    fechaLimite.setDate(fechaLimite.getDate() + diasGracia)
+    // Formatear manualmente para evitar problemas de zona horaria
+    const year = fechaLimite.getFullYear()
+    const month = String(fechaLimite.getMonth() + 1).padStart(2, '0')
+    const day = String(fechaLimite.getDate()).padStart(2, '0')
+    const fechaVencimiento = `${year}-${month}-${day}`
+    console.log(`📅 Calculando fecha vencimiento: ${fechaLimiteStr} + ${diasGracia} días = ${fechaVencimiento}`)
+    return fechaVencimiento
   }
+  
+  // Calcular fechas de vencimiento
+  const fechaVencimientoMensual = calcularFechaVencimiento(formCuotas.fecha_quincena2)
+  const fechaVencimientoQ1 = calcularFechaVencimiento(formCuotas.fecha_quincena1)
+  const fechaVencimientoQ2 = calcularFechaVencimiento(formCuotas.fecha_quincena2)
+  
+  console.log('📋 Fechas calculadas:', {
+    mensual: { vencimiento: fechaVencimientoMensual, limite: formCuotas.fecha_quincena2 },
+    quincena1: { vencimiento: fechaVencimientoQ1, limite: formCuotas.fecha_quincena1 },
+    quincena2: { vencimiento: fechaVencimientoQ2, limite: formCuotas.fecha_quincena2 },
+    diasGracia
+  })
   
   // La fecha mensual es la misma que la 2da quincena
   const result = await cuotasStore.generarCuotasPeriodo(
     id,
     {
       mensual: { 
-        vencimiento: calcularFechaVencimiento(formCuotas.fecha_quincena2), 
+        vencimiento: fechaVencimientoMensual, 
         limite: formCuotas.fecha_quincena2 
       },
       quincena1: { 
-        vencimiento: calcularFechaVencimiento(formCuotas.fecha_quincena1), 
+        vencimiento: fechaVencimientoQ1, 
         limite: formCuotas.fecha_quincena1 
       },
       quincena2: { 
-        vencimiento: calcularFechaVencimiento(formCuotas.fecha_quincena2), 
+        vencimiento: fechaVencimientoQ2, 
         limite: formCuotas.fecha_quincena2 
       }
     },
@@ -4457,15 +4483,15 @@ async function cargarFechasDelMes(mes) {
   }
 }
 
-// Función para calcular fechas por defecto basadas en el mes y días de gracia
+// Función para calcular fechas por defecto basadas en el mes (sin días de gracia)
 function calcularFechasPorDefecto(mes, anio, diasGracia) {
-  // Primera quincena: día 15 + días de gracia
-  const fechaQuincena1 = new Date(anio, mes - 1, 15 + diasGracia)
+  // Primera quincena: día 15 (sin días de gracia)
+  const fechaQuincena1 = new Date(anio, mes - 1, 15)
   
-  // Segunda quincena: último día del mes + días de gracia
+  // Segunda quincena: último día del mes (30 o 31, sin días de gracia)
   // Obtener el último día del mes
   const ultimoDiaMes = new Date(anio, mes, 0).getDate() // 0 = último día del mes anterior (que es el último del mes actual)
-  const fechaQuincena2 = new Date(anio, mes - 1, ultimoDiaMes + diasGracia)
+  const fechaQuincena2 = new Date(anio, mes - 1, ultimoDiaMes)
   
   // Formatear a YYYY-MM-DD
   const formatearFecha = (fecha) => {
