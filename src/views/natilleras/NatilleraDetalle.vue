@@ -2294,8 +2294,9 @@ function handlePopState(event) {
   // Modal de cuotas del socio (z-60 - más alta)
   if (modalCuotasSocio.value) {
     cerrarModalCuotasSocio()
-    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    // Si hay otra modal abierta debajo, agregar su estado al historial
     if (modalSociosEnMora.value) {
+      // Agregar nueva entrada al historial para que el siguiente "atrás" cierre modalSociosEnMora
       history.pushState({ modal: 'sociosEnMora' }, '', window.location.href)
     } else if (modalWhatsApp.value) {
       history.pushState({ modal: 'whatsapp' }, '', window.location.href)
@@ -2306,7 +2307,8 @@ function handlePopState(event) {
     } else if (modalBuscarComprobante.value) {
       history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
     } else {
-      history.pushState(null, '', window.location.href)
+      // No hay otras modales, volver a la página anterior
+      router.back()
     }
     return
   }
@@ -2314,7 +2316,7 @@ function handlePopState(event) {
   // Modal de socios en mora (z-50)
   if (modalSociosEnMora.value) {
     modalSociosEnMora.value = false
-    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    // Si hay otra modal abierta debajo, agregar su estado al historial
     if (modalWhatsApp.value) {
       history.pushState({ modal: 'whatsapp' }, '', window.location.href)
     } else if (modalDetalle.value) {
@@ -2324,7 +2326,8 @@ function handlePopState(event) {
     } else if (modalBuscarComprobante.value) {
       history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
     } else {
-      history.pushState(null, '', window.location.href)
+      // No hay otras modales, volver a la página anterior
+      router.back()
     }
     return
   }
@@ -2332,7 +2335,7 @@ function handlePopState(event) {
   // Modal WhatsApp (z-50)
   if (modalWhatsApp.value) {
     modalWhatsApp.value = false
-    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    // Si hay otra modal abierta debajo, agregar su estado al historial
     if (modalDetalle.value) {
       history.pushState({ modal: 'detalle' }, '', window.location.href)
     } else if (modalConfigMeses.value) {
@@ -2340,7 +2343,8 @@ function handlePopState(event) {
     } else if (modalBuscarComprobante.value) {
       history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
     } else {
-      history.pushState(null, '', window.location.href)
+      // No hay otras modales, volver a la página anterior
+      router.back()
     }
     return
   }
@@ -2348,13 +2352,14 @@ function handlePopState(event) {
   // Modal Detalle (z-50)
   if (modalDetalle.value) {
     modalDetalle.value = false
-    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    // Si hay otra modal abierta debajo, agregar su estado al historial
     if (modalConfigMeses.value) {
       history.pushState({ modal: 'configMeses' }, '', window.location.href)
     } else if (modalBuscarComprobante.value) {
       history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
     } else {
-      history.pushState(null, '', window.location.href)
+      // No hay otras modales, volver a la página anterior
+      router.back()
     }
     return
   }
@@ -2362,11 +2367,12 @@ function handlePopState(event) {
   // Modal Config Meses (z-50)
   if (modalConfigMeses.value) {
     modalConfigMeses.value = false
-    // Si hay otra modal abierta debajo, restaurar su estado en el historial
+    // Si hay otra modal abierta debajo, agregar su estado al historial
     if (modalBuscarComprobante.value) {
       history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
     } else {
-      history.pushState(null, '', window.location.href)
+      // No hay otras modales, volver a la página anterior
+      router.back()
     }
     return
   }
@@ -2374,7 +2380,8 @@ function handlePopState(event) {
   // Modal Buscar Comprobante (z-50)
   if (modalBuscarComprobante.value) {
     modalBuscarComprobante.value = false
-    history.pushState(null, '', window.location.href)
+    // No hay otras modales, volver a la página anterior
+    router.back()
     return
   }
 }

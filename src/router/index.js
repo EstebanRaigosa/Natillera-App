@@ -151,5 +151,25 @@ router.beforeEach(async (to, from, next) => {
   next()
 })
 
+// Guard para hacer scroll al inicio en cada navegación (excepto NatilleraDetalle que tiene su lógica especial)
+router.afterEach((to, from) => {
+  // No hacer scroll si es la misma ruta (solo cambio de query params)
+  if (to.path === from.path) {
+    return
+  }
+  
+  // No hacer scroll en NatilleraDetalle (tiene su lógica especial para scroll a socios en mora)
+  if (to.name === 'NatilleraDetalle') {
+    return
+  }
+  
+  // Hacer scroll al inicio para todas las demás rutas
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'instant' // Usar 'instant' para evitar animaciones raras
+  })
+})
+
 export default router
 

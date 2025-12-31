@@ -886,6 +886,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
       let cuotasCreadas = []
       if (cuotasACrear.length > 0) {
         console.log(`Insertando ${cuotasACrear.length} cuotas nuevas...`)
+        // Log de las primeras 3 cuotas para verificar fechas
+        console.log('📋 Primeras cuotas a insertar (verificando fechas):', cuotasACrear.slice(0, 3).map(c => ({
+          socio: c.socio_natillera_id,
+          fecha_vencimiento: c.fecha_vencimiento,
+          fecha_limite: c.fecha_limite,
+          quincena: c.quincena
+        })))
         
         const { data, error: insertError } = await supabase
           .from('cuotas')
@@ -1361,8 +1368,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
         return { success: true, message: 'Las cuotas de este mes ya existen', yaExisten: true }
       }
 
-      // Calcular fechas de vencimiento (sin días de gracia) y fechas límite (con días de gracia)
-      // Usando la misma lógica que calcularFechasPorDefecto
+      // Calcular fechas límite (sin días de gracia) y fechas de vencimiento (con días de gracia)
+      // La fecha límite es el día base (15 o último día del mes)
+      // La fecha de vencimiento es la fecha límite + días de gracia
       const ultimoDia = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)
       
       // Función helper para formatear fecha sin problemas de zona horaria
@@ -1370,55 +1378,51 @@ export const useCuotasStore = defineStore('cuotas', () => {
         return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
       }
       
-      // Primera quincena
-      // Fecha de vencimiento: día 15 (sin días de gracia)
-      const fechaVencimientoQuincena1Str = formatearFecha(anioAGenerar, mesAGenerar, 15)
-      
-      // Fecha límite: día 15 + días de gracia
-      // Calcular directamente sin usar Date para evitar problemas de zona horaria
-      const diasEnMes = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)
-      const diaQuincena1 = 15 + diasGracia
-      let anioQuincena1 = anioAGenerar
-      let mesQuincena1 = mesAGenerar
-      let diaFinalQuincena1 = diaQuincena1
-      
-      // Si el día excede los días del mes, ajustar al mes siguiente
-      if (diaFinalQuincena1 > diasEnMes) {
-        diaFinalQuincena1 = diaFinalQuincena1 - diasEnMes
-        mesQuincena1 = mesAGenerar + 1
-        if (mesQuincena1 > 12) {
-          mesQuincena1 = 1
-          anioQuincena1 = anioAGenerar + 1
+      // Función helper para calcular fecha sumando días de gracia
+      const calcularFechaConDiasGracia = (anio, mes, dia, diasGracia) => {
+        const diasEnMes = obtenerUltimoDiaDelMes(mes, anio)
+        const diaFinal = dia + diasGracia
+        let anioFinal = anio
+        let mesFinal = mes
+        let diaResultado = diaFinal
+        
+        console.log(`  Calculando fecha con días de gracia: ${dia}/${mes}/${anio} + ${diasGracia} días`)
+        console.log(`  Días en mes: ${diasEnMes}, Día final calculado: ${diaFinal}`)
+        
+        // Si el día excede los días del mes, ajustar al mes siguiente
+        if (diaResultado > diasEnMes) {
+          diaResultado = diaResultado - diasEnMes
+          mesFinal = mes + 1
+          if (mesFinal > 12) {
+            mesFinal = 1
+            anioFinal = anio + 1
+          }
+          console.log(`  Ajustando al mes siguiente: ${diaResultado}/${mesFinal}/${anioFinal}`)
         }
+        const fechaResultado = formatearFecha(anioFinal, mesFinal, diaResultado)
+        console.log(`  Fecha resultado: ${fechaResultado}`)
+        return fechaResultado
       }
-      const fechaQuincena1Str = formatearFecha(anioQuincena1, mesQuincena1, diaFinalQuincena1)
+      
+      // Primera quincena
+      // Fecha límite: día 15 (sin días de gracia)
+      const fechaLimiteQuincena1Str = formatearFecha(anioAGenerar, mesAGenerar, 15)
+      
+      // Fecha de vencimiento: día 15 + días de gracia
+      const fechaVencimientoQuincena1Str = calcularFechaConDiasGracia(anioAGenerar, mesAGenerar, 15, diasGracia)
       
       console.log('=== CÁLCULO FECHAS AUTOMÁTICAS ===')
       console.log('Días de gracia:', diasGracia)
-      console.log('Primera quincena - Día calculado:', diaQuincena1, 'Día final:', diaFinalQuincena1, 'Fecha:', fechaQuincena1Str)
+      console.log('Primera quincena - Límite:', fechaLimiteQuincena1Str, 'Vencimiento:', fechaVencimientoQuincena1Str)
 
       // Segunda quincena / Mensual
-      // Fecha de vencimiento: último día del mes (sin días de gracia)
-      const fechaVencimientoQuincena2Str = formatearFecha(anioAGenerar, mesAGenerar, ultimoDia)
+      // Fecha límite: último día del mes (sin días de gracia)
+      const fechaLimiteQuincena2Str = formatearFecha(anioAGenerar, mesAGenerar, ultimoDia)
       
-      // Fecha límite: último día del mes + días de gracia
-      // Calcular directamente sin usar Date para evitar problemas de zona horaria
-      const diaQuincena2 = ultimoDia + diasGracia
-      let anioQuincena2 = anioAGenerar
-      let mesQuincena2 = mesAGenerar
-      let diaFinalQuincena2 = diaQuincena2
+      // Fecha de vencimiento: último día del mes + días de gracia
+      const fechaVencimientoQuincena2Str = calcularFechaConDiasGracia(anioAGenerar, mesAGenerar, ultimoDia, diasGracia)
       
-      // Si el día excede los días del mes, ajustar al mes siguiente
-      if (diaFinalQuincena2 > diasEnMes) {
-        diaFinalQuincena2 = diaFinalQuincena2 - diasEnMes
-        mesQuincena2 = mesAGenerar + 1
-        if (mesQuincena2 > 12) {
-          mesQuincena2 = 1
-          anioQuincena2 = anioAGenerar + 1
-        }
-      }
-      const fechaQuincena2Str = formatearFecha(anioQuincena2, mesQuincena2, diaFinalQuincena2)
-      console.log('Segunda quincena - Último día:', ultimoDia, 'Día calculado:', diaQuincena2, 'Día final:', diaFinalQuincena2, 'Fecha:', fechaQuincena2Str)
+      console.log('Segunda quincena - Límite:', fechaLimiteQuincena2Str, 'Vencimiento:', fechaVencimientoQuincena2Str)
       console.log('===================================')
 
       // Obtener nombre del mes
@@ -1429,13 +1433,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const mesLabel = meses[mesAGenerar - 1]
 
       // Generar las cuotas con ambas fechas
+      const fechasParaGenerar = {
+        mensual: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str },
+        quincena1: { vencimiento: fechaVencimientoQuincena1Str, limite: fechaLimiteQuincena1Str },
+        quincena2: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str }
+      }
+      
+      console.log('📤 Fechas que se envían a generarCuotasPeriodo:', fechasParaGenerar)
+      
       const result = await generarCuotasPeriodo(
         natilleraId,
-        {
-          mensual: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaQuincena2Str },
-          quincena1: { vencimiento: fechaVencimientoQuincena1Str, limite: fechaQuincena1Str },
-          quincena2: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaQuincena2Str }
-        },
+        fechasParaGenerar,
         mesLabel,
         mesAGenerar,
         anioAGenerar,

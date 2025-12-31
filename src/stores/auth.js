@@ -46,7 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(email, password, nombre) {
+async function register(email, password, nombre) {
     try {
       loading.value = true
       error.value = null
