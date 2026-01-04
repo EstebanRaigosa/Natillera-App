@@ -40,7 +40,7 @@
                 <ArrowUpTrayIcon class="w-5 h-5" />
                 <span class="hidden sm:inline">Importar CSV</span>
               </button>
-              <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+              <button @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
                 <PlusIcon class="w-5 h-5" />
                 <span>Agregar Socio</span>
               </button>
@@ -93,7 +93,7 @@
         <p class="text-gray-500 mb-8 text-sm sm:text-base">
           Agrega el primer socio para comenzar a gestionar las cuotas
         </p>
-        <button @click="modalAgregar = true" class="btn-primary inline-flex items-center gap-2">
+        <button @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
           <PlusIcon class="w-5 h-5" />
           Agregar Primer Socio
         </button>
@@ -555,7 +555,7 @@
             <label class="label">Selecciona un avatar</label>
             <div class="flex items-center gap-4 mb-3">
               <img 
-                :src="getAvatarUrl(formSocio.avatar_seed || formSocio.nombre || 'nuevo')" 
+                :src="getAvatarUrl(formSocio.avatar_seed || 'nuevo', formSocio.avatar_seed, formSocio.avatar_style)" 
                 alt="Avatar seleccionado"
                 class="w-16 h-16 rounded-xl bg-natillera-100 border-2 border-natillera-300"
               />
@@ -583,9 +583,11 @@
                   ]"
                 >
                   <img 
-                    :src="getAvatarUrl(seed, null, formSocio.avatar_style)" 
+                    :src="getAvatarUrl(seed, seed, formSocio.avatar_style)" 
                     :alt="seed"
-                    class="w-10 h-10 rounded-lg"
+                    class="w-10 h-10 rounded-lg object-cover"
+                    loading="lazy"
+                    @error="handleAvatarError($event, seed)"
                   />
                 </button>
               </div>
@@ -1361,7 +1363,26 @@ function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
   }
   
   const bgColors = backgroundColors[avatarStyle] || backgroundColors['adventurer']
+  // Asegurar que la URL esté correctamente formateada
   return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
+}
+
+function handleAvatarError(event, seed) {
+  // Si falla la carga, intentar con un seed por defecto
+  const img = event.target
+  const fallbackSeed = seed || img.alt || 'default'
+  // Intentar con un seed simple sin caracteres especiales
+  const simpleSeed = fallbackSeed.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  img.src = getAvatarUrl(simpleSeed, simpleSeed, 'adventurer')
+}
+
+function abrirModalAgregar() {
+  // Generar un avatar_seed inicial aleatorio si no hay uno
+  if (!formSocio.avatar_seed) {
+    const randomIndex = Math.floor(Math.random() * avatarSeeds.length)
+    formSocio.avatar_seed = avatarSeeds[randomIndex]
+  }
+  modalAgregar.value = true
 }
 
 function editarSocio(sn) {

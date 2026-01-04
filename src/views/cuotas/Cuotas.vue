@@ -354,30 +354,35 @@
     <!-- Lista de cuotas filtradas -->
     <div v-else class="space-y-4">
       <!-- Título, contador y toggle de vista -->
-      <div class="flex items-center gap-3 flex-wrap">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <!-- Título de sección de cuotas - Armónico y destacado -->
         <div v-if="cuotasMesActual.length > 0" class="flex-1 min-w-0">
-          <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/80 to-emerald-50/60 border-2 border-natillera-300/50 shadow-xl backdrop-blur-sm px-5 py-3.5">
+          <div class="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-natillera-50/80 to-emerald-50/60 border-2 border-natillera-300/50 shadow-lg sm:shadow-xl backdrop-blur-sm px-3 sm:px-5 py-2.5 sm:py-3.5">
             <!-- Efecto de fondo decorativo -->
-            <div class="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-natillera-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/20 to-natillera-400/15 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
+            <div class="absolute top-0 right-0 w-20 h-20 sm:w-28 sm:h-28 bg-gradient-to-br from-natillera-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-teal-400/20 to-natillera-400/15 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
             
-            <div class="relative flex items-center gap-3">
-              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-natillera-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
-                <CurrencyDollarIcon class="w-5 h-5 text-white" />
+            <div class="relative flex items-center gap-2 sm:gap-3">
+              <div class="w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-gradient-to-br from-natillera-500 to-emerald-600 flex items-center justify-center shadow-md sm:shadow-lg shadow-natillera-500/30 flex-shrink-0">
+                <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div class="flex-1 min-w-0">
-                <h2 class="text-base sm:text-lg font-bold text-gray-800 flex items-center gap-3 flex-wrap">
-                  <span>Cuotas del Mes</span>
-                  <span class="px-3 py-1.5 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white text-xs font-bold rounded-full shadow-md whitespace-nowrap">
+                <h2 class="text-sm sm:text-base lg:text-lg font-bold text-gray-800 flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <span class="whitespace-nowrap">Cuotas del Mes</span>
+                  <span class="px-2 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white text-xs font-bold rounded-full shadow-md whitespace-nowrap">
                     <span v-if="cuotasFiltradas.length === cuotasMesActual.length">
                       {{ cuotasMesActual.length }}
                     </span>
-                    <span v-else>
-                      Mostrando {{ cuotasFiltradas.length }} de {{ cuotasMesActual.length }}
-                    </span>
+                    <template v-else>
+                      <span class="hidden sm:inline">
+                        Mostrando {{ cuotasFiltradas.length }} de {{ cuotasMesActual.length }}
+                      </span>
+                      <span class="sm:hidden">
+                        {{ cuotasFiltradas.length }}/{{ cuotasMesActual.length }}
+                      </span>
+                    </template>
                   </span>
-                  <span v-if="filtroPeriodicidad !== 'todos'" class="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded-full">
+                  <span v-if="filtroPeriodicidad !== 'todos'" class="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-1 rounded-full hidden sm:inline">
                     ({{ filtroPeriodicidad === 'mensual' ? 'mensuales' : 'quincenales' }})
                   </span>
                 </h2>
@@ -386,7 +391,7 @@
           </div>
         </div>
         
-        <div class="flex items-center gap-3 flex-shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <!-- Botón Exportar Excel (solo visible en vista Excel) -->
           <button
             v-if="vistaExcel"
@@ -397,50 +402,260 @@
             <span class="hidden sm:inline">Exportar</span>
           </button>
           
-          <!-- Toggle de vista (oculto en móvil) -->
+          <!-- Toggle de vista -->
+          <!-- Vista móvil: Switch animado -->
+          <div class="md:hidden w-full relative bg-gray-100 rounded-2xl p-1.5 shadow-inner border-2 border-gray-200">
+            <!-- Indicador deslizante animado -->
+            <div 
+              class="absolute top-1.5 bottom-1.5 rounded-xl bg-gradient-to-r from-natillera-500 to-emerald-600 shadow-lg transition-all duration-300 ease-out"
+              :style="{
+                width: 'calc(50% - 3px)',
+                left: vistaAgrupada ? 'calc(50% + 1.5px)' : '3px',
+                transform: vistaAgrupada ? 'translateX(0)' : 'translateX(0)'
+              }"
+            ></div>
+            
+            <!-- Botones -->
+            <div class="relative flex items-center">
+              <button
+                @click="vistaAgrupada = false; vistaExcel = false"
+                class="flex-1 relative z-10 py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
+                :class="!vistaAgrupada && !vistaExcel ? 'text-white' : 'text-gray-600'"
+              >
+                <Squares2X2Icon class="w-5 h-5" />
+                <span>Tarjetas</span>
+              </button>
+              <button
+                @click="vistaAgrupada = true; vistaExcel = false"
+                class="flex-1 relative z-10 py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
+                :class="vistaAgrupada && !vistaExcel ? 'text-white' : 'text-gray-600'"
+              >
+                <UserGroupIcon class="w-5 h-5" />
+                <span>Por Socio</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Vista desktop: Botones normales -->
           <div class="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl px-4 py-2.5 self-stretch shadow-md">
             <button
-              @click="vistaExcel = false"
+              @click="vistaAgrupada = false; vistaExcel = false"
               :class="[
                 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
-                !vistaExcel 
+                !vistaAgrupada && !vistaExcel
                   ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
                   : 'text-gray-600 hover:bg-gray-50'
               ]"
             >
               <Squares2X2Icon class="w-4 h-4" />
-              <span class="hidden sm:inline">Tarjetas</span>
+              <span>Tarjetas</span>
             </button>
             <button
-              @click="vistaExcel = true"
+              @click="vistaAgrupada = true; vistaExcel = false"
               :class="[
                 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
-                vistaExcel 
+                vistaAgrupada && !vistaExcel
+                  ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
+                  : 'text-gray-600 hover:bg-gray-50'
+              ]"
+            >
+              <UserGroupIcon class="w-4 h-4" />
+              <span>Por Socio</span>
+            </button>
+            <button
+              @click="vistaExcel = true; vistaAgrupada = false"
+              :class="[
+                'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
+                vistaExcel && !vistaAgrupada
                   ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
                   : 'text-gray-600 hover:bg-gray-50'
               ]"
             >
               <TableCellsIcon class="w-4 h-4" />
-              <span class="hidden sm:inline">Excel</span>
+              <span>Excel</span>
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Vista Agrupada por Socio -->
+      <template v-if="vistaAgrupada && !vistaExcel">
+        <div class="space-y-4">
+          <div 
+            v-for="grupo in cuotasAgrupadasPorSocio" 
+            :key="grupo.socioId"
+            class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-lg bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20"
+          >
+            <!-- Header del grupo (Socio) -->
+            <div class="bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 p-4 sm:p-5">
+              <div class="flex items-center gap-4">
+                <img 
+                  :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)" 
+                  :alt="grupo.socio?.nombre"
+                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-natillera-300 shadow-md object-cover"
+                />
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 truncate">
+                    {{ grupo.socio?.nombre || 'Socio' }}
+                  </h3>
+                  <div class="flex items-center gap-3 mt-1 flex-wrap">
+                    <span class="text-sm text-gray-600 font-medium">
+                      {{ grupo.cuotas.length }} cuota{{ grupo.cuotas.length !== 1 ? 's' : '' }}
+                    </span>
+                    <span class="text-sm font-semibold text-natillera-700">
+                      Total: ${{ formatMoney(grupo.total) }}
+                    </span>
+                    <span class="text-sm font-semibold text-green-600">
+                      Pagado: ${{ formatMoney(grupo.pagado) }}
+                    </span>
+                    <span class="text-sm font-semibold"
+                      :class="grupo.pendiente > 0 ? 'text-red-600' : 'text-gray-500'"
+                    >
+                      Pendiente: ${{ formatMoney(grupo.pendiente) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lista de cuotas del socio -->
+            <div class="p-4 sm:p-5 space-y-3">
+              <div 
+                v-for="cuota in grupo.cuotas" 
+                :key="cuota.id"
+                @click="abrirModalDetalleCuota(cuota)"
+                class="relative overflow-hidden rounded-xl p-4 border cursor-pointer transition-all duration-300 hover:shadow-md group"
+                :class="[
+                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/50 border-green-200/60 hover:border-green-300' : 
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50/50 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
+                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300' : 
+                  (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
+                  'bg-orange-50/50 border-orange-200/60 hover:border-orange-300'
+                ]"
+              >
+                <!-- Efecto de resaltado para cuotas en mora -->
+                <div 
+                  v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
+                  class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
+                ></div>
+                
+                <!-- Indicador de pago parcial -->
+                <div 
+                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota"
+                  class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md"
+                >
+                  ⚠️ PAGO PARCIAL
+                </div>
+                
+                <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <div class="flex items-center gap-2">
+                        <span class="text-2xl">{{ getMesEmoji(cuota.mes) }}</span>
+                        <div>
+                          <p class="font-bold text-gray-800 text-sm sm:text-base">
+                            {{ getMesLabel(cuota.mes) }} {{ cuota.anio }}
+                            <span v-if="cuota.quincena" class="text-purple-600">- Q{{ cuota.quincena }}</span>
+                          </p>
+                          <p class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                            <CalendarDaysIcon class="w-3 h-3" />
+                            Vence: {{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}
+                          </p>
+                        </div>
+                      </div>
+                      <span 
+                        :class="[
+                          'px-2 py-1 rounded-lg text-xs font-semibold',
+                          (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700 border border-red-200' :
+                          (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
+                          (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
+                          'bg-orange-100 text-orange-700 border border-orange-200'
+                        ]"
+                      >
+                        {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
+                            (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
+                            (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
+                            (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'Pago Parcial' :
+                            'Pendiente' }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="text-right flex-1 sm:flex-none">
+                      <!-- Mostrar información de pago parcial si aplica -->
+                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota">
+                        <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
+                        <p class="font-bold text-base sm:text-lg text-orange-600">
+                          ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                          Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                        </p>
+                        <p class="text-xs font-medium text-green-600 mt-0.5">
+                          Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                        </p>
+                      </template>
+                      <template v-else>
+                        <p class="font-bold text-base sm:text-lg"
+                          :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 'text-gray-800'"
+                        >
+                          ${{ formatMoney(cuota.valor_cuota) }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                          Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                        </p>
+                      </template>
+                    </div>
+                    <!-- Botón de pago -->
+                    <button
+                      v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+                      @click.stop="abrirModalPago(cuota)"
+                      class="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 text-sm"
+                    >
+                      <CurrencyDollarIcon class="w-4 h-4" />
+                      <span class="hidden sm:inline">Pagar</span>
+                    </button>
+                    <!-- Botón de detalle si está pagada -->
+                    <button
+                      v-else
+                      @click.stop="abrirModalDetalleCuota(cuota)"
+                      class="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 text-sm"
+                    >
+                      <DocumentTextIcon class="w-4 h-4" />
+                      <span class="hidden sm:inline">Ver</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
       <!-- Vista Tarjetas -->
-      <template v-if="!vistaExcel">
+      <template v-else-if="!vistaExcel && !vistaAgrupada">
         <div 
           v-for="cuota in cuotasFiltradas" 
           :key="cuota.id"
           @click="abrirModalDetalleCuota(cuota)"
-          class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border border-gray-200/60 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
           :class="[
             (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
             (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
             (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
+            (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
             'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
           ]"
         >
+          <!-- Indicador de pago parcial -->
+          <div 
+            v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota"
+            class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
+          >
+            ⚠️ PAGO PARCIAL
+          </div>
+          
           <!-- Efecto de resaltado para cuotas en mora -->
           <div 
             v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
@@ -460,6 +675,7 @@
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-300' : 
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-300' :
               'bg-orange-300'
             ]"
           ></div>
@@ -471,6 +687,7 @@
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-400/60' : 
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-400/60' :
               'bg-orange-400/60'
             ]"
           ></div>
@@ -490,6 +707,7 @@
                     :class="[
                       cuota.estado === 'pagada' ? 'border-green-300' : 
                       cuota.estado === 'mora' ? 'border-red-300' : 
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'border-amber-300' :
                       cuota.estado === 'parcial' ? 'border-blue-300' : 
                       cuota.estado === 'programada' ? 'border-gray-300' : 'border-orange-300'
                     ]"
@@ -500,6 +718,7 @@
                       'absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center shadow-md border-2 border-white',
                       cuota.estado === 'pagada' ? 'bg-green-500' : 
                       cuota.estado === 'mora' ? 'bg-red-500' : 
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-500' :
                       cuota.estado === 'parcial' ? 'bg-blue-500' : 
                       cuota.estado === 'programada' ? 'bg-gray-400' : 'bg-orange-500'
                     ]"
@@ -598,10 +817,15 @@
                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
                       (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                       'bg-orange-100 text-orange-800 border border-orange-200'
                     ]"
                   >
-                    {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 'Pendiente' }}
+                    {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 
+                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : 
+                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 
+                       (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'Pago Parcial' :
+                       'Pendiente' }}
                   </span>
                 </div>
 
@@ -1678,13 +1902,20 @@
             </button>
 
             <button 
-              v-if="pagoRegistrado?.socioTelefono"
               @click="compartirWhatsApp"
-              :disabled="generandoImagen"
-              class="sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="generandoImagen || !pagoRegistrado?.socioTelefono"
+              :class="[
+                'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
+                (generandoImagen || !pagoRegistrado?.socioTelefono)
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              ]"
+              :title="!pagoRegistrado?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
-              {{ generandoImagen ? 'Preparando...' : '📲 Compartir por WhatsApp' }}
+              <span v-if="generandoImagen">Preparando...</span>
+              <span v-else-if="!pagoRegistrado?.socioTelefono">📲 Sin teléfono registrado</span>
+              <span v-else>📲 Compartir por WhatsApp</span>
             </button>
           </div>
 
@@ -2431,7 +2662,9 @@ import {
   UserIcon,
   PhoneIcon,
   UsersIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  UserGroupIcon,
+  CalendarDaysIcon
 } from '@heroicons/vue/24/outline'
 import DatePicker from '../../components/DatePicker.vue'
 import * as XLSX from 'xlsx-js-style'
@@ -2487,6 +2720,7 @@ const busquedaCuotas = ref('')
 const mostrarFiltros = ref(false)
 const inputBusquedaRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
+const vistaAgrupada = ref(false) // true = vista agrupada por socio
 
 // Configuración de exportación a Excel
 const columnasDisponibles = [
@@ -2767,10 +3001,11 @@ const exportarAExcel = async () => {
   }
 }
 
-// Forzar vista de tarjetas en móvil
+// Forzar vista de tarjetas en móvil (solo para Excel, no para agrupada)
 const checkMobileView = () => {
   if (window.innerWidth < 768) { // md breakpoint de Tailwind
     vistaExcel.value = false
+    // Permitir vista agrupada en móvil
   }
 }
 
@@ -2902,6 +3137,45 @@ const cuotasFiltradas = computed(() => {
   return filtradas
 })
 
+// Cuotas agrupadas por socio
+const cuotasAgrupadasPorSocio = computed(() => {
+  const grupos = {}
+  
+  cuotasFiltradas.value.forEach(cuota => {
+    const socioId = cuota.socio_natillera?.id || 'sin-socio'
+    const socio = cuota.socio_natillera?.socio
+    
+    if (!grupos[socioId]) {
+      grupos[socioId] = {
+        socioId,
+        socio: {
+          nombre: socio?.nombre || 'Socio',
+          avatar_seed: socio?.avatar_seed,
+          avatar_style: socio?.avatar_style,
+          periodicidad: cuota.socio_natillera?.periodicidad
+        },
+        cuotas: [],
+        total: 0,
+        pagado: 0,
+        pendiente: 0
+      }
+    }
+    
+    grupos[socioId].cuotas.push(cuota)
+    grupos[socioId].total += cuota.valor_cuota || 0
+    grupos[socioId].pagado += cuota.valor_pagado || 0
+    const pendiente = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+    grupos[socioId].pendiente += pendiente > 0 ? pendiente : 0
+  })
+  
+  // Convertir a array y ordenar por nombre del socio
+  return Object.values(grupos).sort((a, b) => {
+    const nombreA = (a.socio?.nombre || '').toLowerCase()
+    const nombreB = (b.socio?.nombre || '').toLowerCase()
+    return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' })
+  })
+})
+
 // Totales para la vista Excel
 const totalesExcel = computed(() => {
   const totalValorCuota = cuotasFiltradas.value.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
@@ -2937,8 +3211,9 @@ const resumenMesActual = computed(() => {
   
   return {
     pagadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'pagada').length,
-    pendientes: cuotasConEstadoReal.filter(c => c.estadoReal === 'pendiente' || c.estadoReal === 'programada').length,
+    pendientes: cuotasConEstadoReal.filter(c => c.estadoReal === 'pendiente').length,
     enMora: cuotasConEstadoReal.filter(c => c.estadoReal === 'mora').length,
+    programadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'programada').length,
     total: cuotasConEstadoReal.length,
     porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado
   }
@@ -2966,6 +3241,25 @@ function getMesEmoji(mes) {
     12: '🎄'   // Diciembre - navidad
   }
   return emojis[mes] || '📅'
+}
+
+// Nombre del mes
+function getMesLabel(mes) {
+  const meses = {
+    1: 'Enero',
+    2: 'Febrero',
+    3: 'Marzo',
+    4: 'Abril',
+    5: 'Mayo',
+    6: 'Junio',
+    7: 'Julio',
+    8: 'Agosto',
+    9: 'Septiembre',
+    10: 'Octubre',
+    11: 'Noviembre',
+    12: 'Diciembre'
+  }
+  return meses[mes] || 'Mes'
 }
 
 const formCuotas = reactive({
