@@ -542,9 +542,19 @@
                 <!-- Indicador de pago parcial -->
                 <div 
                   v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota"
-                  class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md"
+                  class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
                 >
                   ⚠️ PAGO PARCIAL
+                </div>
+                
+                <!-- Indicador de ajuste de valor -->
+                <div 
+                  v-if="tieneAjuste(cuota)"
+                  class="absolute top-0 left-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-br-lg rounded-tl-xl shadow-md z-20 flex items-center gap-1"
+                  :title="getTextoAjuste(cuota)"
+                >
+                  <InformationCircleIcon class="w-3 h-3" />
+                  <span>AJUSTE</span>
                 </div>
                 
                 <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
@@ -656,6 +666,16 @@
             ⚠️ PAGO PARCIAL
           </div>
           
+          <!-- Indicador de ajuste de valor -->
+          <div 
+            v-if="tieneAjuste(cuota)"
+            class="absolute top-0 left-0 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded-br-lg rounded-tl-xl shadow-md z-20 flex items-center gap-1"
+            :title="getTextoAjuste(cuota)"
+          >
+            <InformationCircleIcon class="w-3 h-3" />
+            <span>AJUSTE</span>
+          </div>
+          
           <!-- Efecto de resaltado para cuotas en mora -->
           <div 
             v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
@@ -737,6 +757,14 @@
                   >
                     Q{{ cuota.quincena }}
                   </span>
+                  <!-- Badge de ajuste -->
+                  <div 
+                    v-if="tieneAjuste(cuota)"
+                    class="absolute -bottom-1 -left-1 w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md border-2 border-white z-10"
+                    :title="getTextoAjuste(cuota)"
+                  >
+                    <InformationCircleIcon class="w-3 h-3 text-white" />
+                  </div>
                 </div>
                 
                 <!-- Información del socio más compacta -->
@@ -1213,6 +1241,19 @@
             </div>
           </div>
 
+          <!-- Anotación de ajuste (si existe) -->
+          <div v-if="tieneAjuste(cuotaDetalle)" class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-xl border-2 border-blue-300 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
+                <InformationCircleIcon class="w-5 h-5 text-white" />
+              </div>
+              <div class="flex-1">
+                <p class="font-bold text-blue-800 mb-2">📝 Anotación de Ajuste</p>
+                <p class="text-sm text-blue-700 leading-relaxed">{{ getTextoAjuste(cuotaDetalle) }}</p>
+              </div>
+            </div>
+          </div>
+
           <!-- Periodicidad y descripción -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
@@ -1229,7 +1270,7 @@
                 <DocumentTextIcon class="w-5 h-5 text-blue-500" />
                 <p class="text-xs text-gray-500 font-medium">Descripción</p>
               </div>
-              <p class="text-lg font-semibold text-gray-800">{{ cuotaDetalle.descripcion || 'Cuota' }}</p>
+              <p class="text-lg font-semibold text-gray-800">{{ cuotaDetalle.descripcion && !tieneAjuste(cuotaDetalle) ? cuotaDetalle.descripcion : 'Cuota' }}</p>
             </div>
           </div>
 
@@ -2641,6 +2682,7 @@ import {
   CheckCircleIcon,
   ClockIcon,
   ExclamationCircleIcon,
+  InformationCircleIcon,
   ChatBubbleLeftIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
@@ -3518,6 +3560,27 @@ function getTotalAPagar(cuota) {
 }
 
 // Calcular días en mora desde fecha_limite
+// Función para verificar si una cuota tiene una anotación de ajuste
+function tieneAjuste(cuota) {
+  if (!cuota.descripcion) return false
+  return cuota.descripcion.includes('Ajuste de valor') || cuota.descripcion.includes('Cuota ajustada')
+}
+
+// Función para obtener el texto de ajuste de una cuota
+function getTextoAjuste(cuota) {
+  if (!tieneAjuste(cuota)) return null
+  // Extraer la parte relevante de la descripción
+  const descripcion = cuota.descripcion
+  if (descripcion.includes('Ajuste de valor')) {
+    // Formato: "Ajuste de valor: Cuota original $X → $Y. Pagado: $Z (fecha)"
+    return descripcion.split('|')[0].trim()
+  } else if (descripcion.includes('Cuota ajustada')) {
+    // Formato: "Cuota ajustada: Valor original $X → $Y. Pendiente: $Z (fecha)"
+    return descripcion.split('|')[0].trim()
+  }
+  return descripcion
+}
+
 function getDiasMora(cuota) {
   if (!cuota || cuota.estado !== 'mora') return 0
   
@@ -3729,11 +3792,30 @@ async function handleGuardarSocio() {
 
   if (socioEditando.value) {
     try {
+      console.log('🟢 handleGuardarSocio - Iniciando guardado')
+      console.log('🟢 socioEditando.value:', socioEditando.value)
+      console.log('🟢 formSocio:', formSocio)
+      
       // Actualizar cuota del socio en socios_natillera
-      const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
-        valor_cuota_individual: formSocio.valor_cuota,
+      // Asegurar que el valor sea un número
+      const valorCuotaNumerico = typeof formSocio.valor_cuota === 'string' 
+        ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d]/g, '')) || 0
+        : Number(formSocio.valor_cuota) || 0
+      
+      console.log('🟢 valorCuotaNumerico calculado:', valorCuotaNumerico)
+      console.log('🟢 periodicidad:', formSocio.periodicidad)
+      
+      const datosParaActualizar = {
+        valor_cuota_individual: valorCuotaNumerico,
         periodicidad: formSocio.periodicidad
-      })
+      }
+      
+      console.log('🟢 Datos para actualizar socios_natillera:', datosParaActualizar)
+      console.log('🟢 ID del socio_natillera:', socioEditando.value.id)
+      
+      const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, datosParaActualizar)
+      
+      console.log('🟢 Resultado de actualizarSocioNatillera:', result)
 
       // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
       if (socioEditando.value.socio?.id) {
@@ -3754,9 +3836,24 @@ async function handleGuardarSocio() {
           datosActualizados.avatar_style = formSocio.avatar_style
         }
         
-        await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
+        const resultDatos = await sociosStore.actualizarDatosSocio(
+          socioEditando.value.socio.id, 
+          datosActualizados,
+          id // natilleraId
+        )
+        
+        if (!resultDatos.success) {
+          throw new Error(resultDatos.error || 'Error al actualizar los datos del socio')
+        }
       }
 
+      if (!result.success) {
+        console.error('❌ Error al actualizar socio_natillera:', result.error)
+        throw new Error(result.error || 'Error al actualizar la información del socio')
+      }
+
+      console.log('✅ Socio_natillera actualizado correctamente')
+      
       if (result.success) {
         // Cambiar estado a "generando cuotas"
         estadoGuardadoSocio.value = 'generando'
@@ -3826,7 +3923,9 @@ async function handleGuardarSocio() {
           // No mostrar error al usuario, solo loguear
         }
         
-        // Recargar cuotas para ver los cambios
+        // Recargar datos de los socios para actualizar la vista
+        await sociosStore.fetchSociosNatillera(id)
+        // Recargar cuotas para ver los cambios (importante: después de actualizar socios)
         await cuotasStore.fetchCuotasNatillera(id)
         cargarConteoSocios() // Recargar conteo de socios también
         estadoGuardadoSocio.value = ''

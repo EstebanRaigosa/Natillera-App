@@ -55,6 +55,46 @@
             <span>Auditoría</span>
           </router-link>
 
+          <router-link 
+            v-if="isAdmin"
+            to="/admin/chat" 
+            class="nav-link relative"
+            :class="{ 'nav-link-active': $route.path === '/admin/chat' }"
+            @click="cerrarSidebar; supportStore.resetUnreadCount()"
+          >
+            <ChatBubbleLeftRightIcon class="w-5 h-5" />
+            <span>Soporte</span>
+            <!-- Badge de notificación -->
+            <Transition
+              enter-active-class="transition duration-300 ease-out"
+              enter-from-class="opacity-0 scale-0"
+              enter-to-class="opacity-100 scale-100"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="opacity-100 scale-100"
+              leave-to-class="opacity-0 scale-0"
+              mode="out-in"
+            >
+              <span
+                v-if="supportStore.hasUnreadMessages && $route.path !== '/admin/chat'"
+                :key="`badge-${supportStore.unreadCount}`"
+                class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse"
+              >
+                {{ supportStore.unreadCount > 99 ? '99+' : supportStore.unreadCount }}
+              </span>
+            </Transition>
+          </router-link>
+
+          <router-link 
+            v-if="isAdmin"
+            to="/admin/data" 
+            class="nav-link"
+            :class="{ 'nav-link-active': $route.path === '/admin/data' }"
+            @click="cerrarSidebar"
+          >
+            <ClipboardDocumentListIcon class="w-5 h-5" />
+            <span>Datos BD</span>
+          </router-link>
+
           <div class="pt-4 pb-2">
             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Accesos Rápidos</p>
           </div>
@@ -72,15 +112,14 @@
               <!-- Contenedor principal de la natillera -->
               <div class="flex items-center gap-2 pr-1">
                 <!-- Link a la vista de detalle -->
-                <router-link
-                  :to="`/natilleras/${natillera.id}`"
-                  class="nav-link flex-1 min-w-0"
-                  :class="{ 'nav-link-active': $route.params.id === String(natillera.id) && $route.path === `/natilleras/${natillera.id}` }"
-                  @click="cerrarSidebar"
+                <button
+                  @click="navegarANatillera(natillera.id)"
+                  class="nav-link flex-1 min-w-0 text-left"
+                  :class="{ 'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`) }"
                 >
                   <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
                   <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
-                </router-link>
+                </button>
                 
                 <!-- Botón para abrir/cerrar desplegable -->
                 <button
@@ -236,10 +275,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
+import { useSupportStore } from '../stores/support'
+import { useNotificationStore } from '../stores/notifications'
 import { 
   HomeIcon, 
   BanknotesIcon, 
@@ -251,14 +292,23 @@ import {
   UsersIcon,
   CurrencyDollarIcon,
   CalendarIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
+const supportStore = useSupportStore()
+const notificationStore = useNotificationStore()
 const sidebarOpen = ref(false)
 const natilleraExpandida = ref(null)
+const previousUnreadCount = ref(0)
+
+// Verificar si el usuario es admin (raigo.16@gmail.com)
+const isAdmin = computed(() => {
+  return authStore.userEmail === 'raigo.16@gmail.com'
+})
 
 function getAvatarUrl(seed) {
   const encodedSeed = encodeURIComponent(seed || 'default')
@@ -285,14 +335,56 @@ function cerrarDesplegable() {
   cerrarSidebar()
 }
 
+function navegarANatillera(natilleraId) {
+  const nuevaRuta = `/natilleras/${natilleraId}`
+  const idActual = router.currentRoute.value.params.id
+  
+  // Siempre navegar si el ID es diferente
+  if (idActual !== String(natilleraId)) {
+    router.push(nuevaRuta)
+  } else {
+    // Si ya estás en esa natillera pero en una subruta, navegar a la vista principal
+    const rutaActual = router.currentRoute.value.path
+    if (rutaActual !== nuevaRuta) {
+      router.push(nuevaRuta)
+    }
+  }
+  cerrarSidebar()
+}
+
 async function handleLogout() {
   await authStore.logout()
   router.push('/auth/login')
 }
 
+// Watch para detectar nuevos mensajes y mostrar notificación
+watch(() => supportStore.unreadCount, (newCount, oldCount) => {
+  // Solo mostrar notificación si hay nuevos mensajes (aumentó el contador)
+  // y no es la primera carga (oldCount > 0)
+  if (newCount > oldCount && oldCount > 0 && isAdmin.value) {
+    notificationStore.info(
+      `Tienes ${newCount} ${newCount === 1 ? 'mensaje' : 'mensajes'} sin responder en soporte`,
+      'Nuevos mensajes',
+      8000
+    )
+  }
+  previousUnreadCount.value = newCount
+})
+
 onMounted(async () => {
   // Cargar natilleras al montar el componente
   await natillerasStore.fetchNatilleras()
+  
+  // Iniciar verificación de mensajes si es admin
+  if (isAdmin.value) {
+    supportStore.startChecking()
+    previousUnreadCount.value = supportStore.unreadCount
+  }
+})
+
+onUnmounted(() => {
+  // Detener verificación al desmontar
+  supportStore.stopChecking()
 })
 </script>
 

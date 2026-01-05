@@ -130,8 +130,12 @@
           
           <div class="relative z-10">
             <div class="flex items-start justify-between mb-4">
-              <div class="w-14 h-14 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <BanknotesIcon class="w-7 h-7 text-white" />
+              <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 overflow-hidden border-2 border-white">
+                <img 
+                  :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
+                  :alt="natillera.nombre"
+                  class="w-full h-full object-cover"
+                />
               </div>
               <span 
                 :class="[
@@ -172,6 +176,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { supabase } from '../lib/supabase'
+import { getNatilleraAvatarUrl } from '../utils/avatars'
 import { 
   BanknotesIcon, 
   UsersIcon, 

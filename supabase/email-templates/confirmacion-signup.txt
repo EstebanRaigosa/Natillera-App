@@ -1,0 +1,35 @@
+🌱 Natillerapp - Ahorro Comunitario Digital
+
+═══════════════════════════════════════════════════════════
+
+CONFIRMA TU REGISTRO
+
+═══════════════════════════════════════════════════════════
+
+¡Bienvenido a Natillerapp! 🎉
+
+Estás a un paso de comenzar a gestionar tus natilleras comunitarias. 
+Por favor, confirma tu correo electrónico haciendo clic en el siguiente enlace:
+
+{{ .ConfirmationURL }}
+
+═══════════════════════════════════════════════════════════
+
+¿QUÉ SIGUE?
+
+Una vez confirmes tu correo, podrás:
+• Crear y gestionar natilleras
+• Registrar socios y cuotas
+• Controlar préstamos internos
+• Organizar actividades y eventos
+
+═══════════════════════════════════════════════════════════
+
+IMPORTANTE:
+• Este enlace expirará en 24 horas por seguridad.
+• Si no solicitaste esta cuenta, puedes ignorar este correo.
+
+═══════════════════════════════════════════════════════════
+
+© 2024 Natillerapp. Plataforma de Ahorro Comunitario.
+

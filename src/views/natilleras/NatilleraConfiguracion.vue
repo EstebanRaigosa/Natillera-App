@@ -738,6 +738,149 @@
       </div>
     </Transition>
       </div>
+
+      <!-- === REASIGNAR NATILLERA (Solo Superusuario) === -->
+      <div v-if="esSuperUsuario" class="space-y-3">
+        <button
+          @click="seccionActiva = seccionActiva === 'reasignar' ? null : 'reasignar'"
+          :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            seccionActiva === 'reasignar'
+              ? 'bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 border-purple-400 shadow-purple-500/30'
+              : 'bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/40 border-purple-100/50 shadow-purple-500/10 hover:border-purple-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-gradient-to-br from-purple-500 to-indigo-500']">
+              <UserIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'reasignar' ? 'text-white' : 'text-gray-800']">
+                Reasignar Administrador
+              </h3>
+              <p :class="['text-sm', seccionActiva === 'reasignar' ? 'text-white/80' : 'text-gray-500']">
+                Cambiar el administrador de esta natillera
+              </p>
+            </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-purple-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'reasignar' ? 'text-white rotate-180' : 'text-purple-600']" />
+            </div>
+          </div>
+        </button>
+
+        <!-- Contenido Reasignar -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-purple-500/10 border-2 border-purple-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
+            <div class="relative p-5 sm:p-6">
+              <div class="mb-6">
+                <h4 class="text-lg font-bold text-gray-800 mb-2">Administrador Actual</h4>
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <p class="text-sm text-gray-600 mb-1">Email:</p>
+                  <p class="font-semibold text-gray-800">{{ adminActual?.email || 'Cargando...' }}</p>
+                  <p v-if="adminActual?.nombre" class="text-sm text-gray-500 mt-1">{{ adminActual.nombre }}</p>
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  Seleccionar Nuevo Administrador
+                </label>
+                <div class="relative">
+                  <input
+                    v-model="busquedaUsuario"
+                    type="text"
+                    placeholder="Buscar usuario por email o nombre (o ver todos los usuarios abajo)..."
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    @input="buscarUsuarios"
+                  />
+                  <MagnifyingGlassIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </div>
+
+                <!-- Lista de usuarios -->
+                <div v-if="buscandoUsuarios && !usuariosCargados" class="mt-4 text-center py-8">
+                  <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p class="text-sm text-gray-500">Cargando usuarios...</p>
+                </div>
+
+                <div v-else-if="usuariosEncontrados.length > 0" class="mt-4 max-h-60 overflow-y-auto border border-gray-200 rounded-xl">
+                  <div class="p-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <p class="text-xs text-gray-600 font-semibold">
+                      {{ usuariosEncontrados.length }} {{ usuariosEncontrados.length === 1 ? 'usuario encontrado' : 'usuarios encontrados' }}
+                    </p>
+                  </div>
+                  <button
+                    v-for="usuario in usuariosEncontrados"
+                    :key="usuario.id"
+                    @click="seleccionarUsuario(usuario)"
+                    :class="[
+                      'w-full p-4 text-left hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0',
+                      usuarioSeleccionado?.id === usuario.id ? 'bg-purple-100 border-purple-300' : ''
+                    ]"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                        {{ (usuario.nombre || usuario.email || 'U').charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="flex-1">
+                        <p class="font-semibold text-gray-800">{{ usuario.nombre || 'Sin nombre' }}</p>
+                        <p class="text-sm text-gray-500">{{ usuario.email }}</p>
+                      </div>
+                      <CheckCircleIcon v-if="usuarioSeleccionado?.id === usuario.id" class="w-6 h-6 text-purple-600" />
+                    </div>
+                  </button>
+                </div>
+
+                <div v-else-if="usuariosCargados && usuariosEncontrados.length === 0" class="mt-4 text-center py-8 text-gray-500">
+                  <p class="text-sm">No se encontraron usuarios con ese criterio de búsqueda</p>
+                  <button
+                    @click="busquedaUsuario = ''; filtrarUsuarios()"
+                    class="mt-2 text-sm text-purple-600 hover:text-purple-700 underline"
+                  >
+                    Ver todos los usuarios
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="usuarioSeleccionado" class="mb-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                <p class="text-sm font-semibold text-purple-700 mb-2">Nuevo Administrador Seleccionado:</p>
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
+                    {{ (usuarioSeleccionado.nombre || usuarioSeleccionado.email || 'U').charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <p class="font-bold text-gray-800">{{ usuarioSeleccionado.nombre || 'Sin nombre' }}</p>
+                    <p class="text-sm text-gray-600">{{ usuarioSeleccionado.email }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-3">
+                <button
+                  @click="cancelarReasignacion"
+                  class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  @click="confirmarReasignacion"
+                  :disabled="!usuarioSeleccionado || guardandoReasignacion"
+                  class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ guardandoReasignacion ? 'Reasignando...' : 'Reasignar Natillera' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <!-- Mensaje de éxito/error -->
@@ -756,6 +899,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
+import { useUsersStore } from '../../stores/users'
+import { supabase } from '../../lib/supabase'
 import { 
   ArrowLeftIcon,
   CalendarDaysIcon,
@@ -774,20 +919,33 @@ import {
   CurrencyDollarIcon,
   ChartBarIcon,
   XMarkIcon,
-  PlusIcon
+  PlusIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
+const usersStore = useUsersStore()
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
 const guardandoMensajes = ref(false)
 const guardandoSanciones = ref(false)
+const guardandoReasignacion = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
-const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia', 'sanciones' o null
+const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia', 'sanciones', 'reasignar' o null
 const tipoMensajeActivo = ref('individual') // 'individual', 'general', 'mora', 'pendiente'
+
+// Reasignación
+const usuarioAutenticado = ref(null)
+const busquedaUsuario = ref('')
+const todosLosUsuarios = ref([]) // Lista completa de usuarios
+const usuariosEncontrados = ref([]) // Usuarios filtrados
+const usuarioSeleccionado = ref(null)
+const adminActual = ref(null)
+const buscandoUsuarios = ref(false)
+const usuariosCargados = ref(false) // Flag para saber si ya se cargaron los usuarios
 
 // Mensajes
 const mensajeIndividual = ref('')
@@ -799,6 +957,13 @@ const textareaCuotaPendiente = ref(null)
 
 const id = computed(() => route.params.id)
 const natillera = computed(() => natillerasStore.natilleraActual)
+
+// Verificar si el usuario es superusuario
+const esSuperUsuario = computed(() => {
+  if (!usuarioAutenticado.value) return false
+  const email = (usuarioAutenticado.value.email || '').toLowerCase().trim()
+  return email === 'raigo.16@gmail.com'
+})
 
 // Configuración de meses
 const meses = [
@@ -1190,7 +1355,163 @@ watch(() => natillera.value, (newNatillera) => {
   }
 }, { immediate: true, deep: true })
 
+// Watch para cargar usuarios cuando se abre la sección de reasignación
+watch(() => seccionActiva.value, (nuevaSeccion) => {
+  if (nuevaSeccion === 'reasignar') {
+    cargarTodosLosUsuarios()
+  }
+})
+
+// Funciones para reasignación
+async function cargarTodosLosUsuarios() {
+  if (usuariosCargados.value) {
+    // Si ya están cargados, solo filtrar
+    filtrarUsuarios()
+    return
+  }
+
+  try {
+    buscandoUsuarios.value = true
+
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id, email, nombre')
+      .order('email', { ascending: true })
+
+    if (error) {
+      // Si el error es que la tabla no existe, mostrar mensaje más claro
+      if (error.code === 'PGRST205' || error.message?.includes('Could not find the table')) {
+        console.error('Error: La tabla user_profiles no existe. Por favor ejecuta la migración create_users_profiles.sql en Supabase.')
+        mensaje.value = {
+          tipo: 'error',
+          texto: 'Error: La tabla de usuarios no está configurada. Por favor ejecuta la migración create_users_profiles.sql en Supabase SQL Editor.'
+        }
+        throw new Error('Tabla user_profiles no encontrada. Ejecuta la migración create_users_profiles.sql')
+      }
+      throw error
+    }
+
+    todosLosUsuarios.value = data || []
+    usuariosCargados.value = true
+    filtrarUsuarios() // Mostrar todos inicialmente
+  } catch (e) {
+    console.error('Error cargando usuarios:', e)
+    todosLosUsuarios.value = []
+    usuariosEncontrados.value = []
+    
+    // Mostrar mensaje de error al usuario si no es un error de tabla no encontrada
+    if (e.message && !e.message.includes('Tabla user_profiles no encontrada')) {
+      mensaje.value = {
+        tipo: 'error',
+        texto: `Error cargando usuarios: ${e.message}`
+      }
+    }
+  } finally {
+    buscandoUsuarios.value = false
+  }
+}
+
+function filtrarUsuarios() {
+  if (!busquedaUsuario.value.trim()) {
+    // Si no hay búsqueda, mostrar todos
+    usuariosEncontrados.value = todosLosUsuarios.value
+    return
+  }
+
+  const termino = busquedaUsuario.value.toLowerCase().trim()
+  usuariosEncontrados.value = todosLosUsuarios.value.filter(usuario => {
+    const email = (usuario.email || '').toLowerCase()
+    const nombre = (usuario.nombre || '').toLowerCase()
+    return email.includes(termino) || nombre.includes(termino)
+  })
+}
+
+async function buscarUsuarios() {
+  // Ahora solo filtra la lista ya cargada
+  filtrarUsuarios()
+}
+
+function seleccionarUsuario(usuario) {
+  usuarioSeleccionado.value = usuario
+}
+
+function cancelarReasignacion() {
+  usuarioSeleccionado.value = null
+  busquedaUsuario.value = ''
+  usuariosEncontrados.value = []
+  // No limpiar todosLosUsuarios ni usuariosCargados para mantenerlos en memoria
+  seccionActiva.value = null
+}
+
+async function confirmarReasignacion() {
+  if (!usuarioSeleccionado.value || !natillera.value) return
+
+  if (!confirm(`¿Estás seguro de reasignar la natillera "${natillera.value.nombre}" a ${usuarioSeleccionado.value.email}?`)) {
+    return
+  }
+
+  try {
+    guardandoReasignacion.value = true
+
+    const resultado = await natillerasStore.reasignarNatillera(
+      natillera.value.id,
+      usuarioSeleccionado.value.id
+    )
+
+    if (resultado.success) {
+      mensaje.value = {
+        tipo: 'exito',
+        texto: `Natillera reasignada exitosamente a ${usuarioSeleccionado.value.email}`
+      }
+      
+      // Recargar la natillera para ver los cambios
+      await natillerasStore.fetchNatillera(id.value)
+      
+      // Cargar el nuevo administrador
+      await cargarAdminActual()
+      
+      // Limpiar formulario
+      cancelarReasignacion()
+    } else {
+      mensaje.value = {
+        tipo: 'error',
+        texto: resultado.error || 'Error al reasignar la natillera'
+      }
+    }
+  } catch (e) {
+    mensaje.value = {
+      tipo: 'error',
+      texto: e.message || 'Error al reasignar la natillera'
+    }
+  } finally {
+    guardandoReasignacion.value = false
+    setTimeout(() => {
+      mensaje.value = null
+    }, 5000)
+  }
+}
+
+async function cargarAdminActual() {
+  if (!natillera.value?.admin_id) return
+
+  try {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id, email, nombre')
+      .eq('id', natillera.value.admin_id)
+      .single()
+
+    adminActual.value = data
+  } catch (e) {
+    console.error('Error cargando administrador actual:', e)
+  }
+}
+
 onMounted(async () => {
+  // Obtener usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser()
+  usuarioAutenticado.value = user
+
   // Cargar configuración de mensajes
   await configStore.cargarConfiguracion()
   mensajeIndividual.value = configStore.mensajeIndividual
@@ -1201,7 +1522,15 @@ onMounted(async () => {
   // Cargar la natillera
   await natillerasStore.fetchNatillera(id.value)
   
+  // Cargar administrador actual
+  await cargarAdminActual()
+  
   // Los valores se actualizarán automáticamente por el watch
+})
+
+// Watch para cargar admin cuando cambie la natillera
+watch(() => natillera.value?.admin_id, async () => {
+  await cargarAdminActual()
 })
 </script>
 

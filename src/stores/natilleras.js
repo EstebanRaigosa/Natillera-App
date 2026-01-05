@@ -222,7 +222,202 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     return resultado
   }
 
-  function calcularEstadisticas(natillera) {
+  async function reasignarNatillera(natilleraId, nuevoAdminId) {
+    try {
+      loading.value = true
+      error.value = null
+
+      // Verificar autenticación
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('No estás autenticado')
+      }
+
+      // Verificar que el usuario sea el superusuario
+      const emailUsuario = (user.email || '').toLowerCase().trim()
+      const esSuperUsuario = emailUsuario === 'raigo.16@gmail.com'
+
+      if (!esSuperUsuario) {
+        throw new Error('Solo el superusuario puede reasignar natilleras')
+      }
+
+      // Obtener datos anteriores para auditoría
+      const { data: natilleraData, error: fetchError } = await supabase
+        .from('natilleras')
+        .select('*')
+        .eq('id', natilleraId)
+        .single()
+
+      if (fetchError) {
+        throw new Error(`Error al obtener la natillera: ${fetchError.message}`)
+      }
+
+      if (!natilleraData) {
+        throw new Error('Natillera no encontrada')
+      }
+
+      // Verificar que el nuevo administrador exista
+      const { data: nuevoAdmin, error: adminError } = await supabase
+        .from('user_profiles')
+        .select('id, email, nombre')
+        .eq('id', nuevoAdminId)
+        .single()
+
+      if (adminError || !nuevoAdmin) {
+        throw new Error('El usuario destino no existe')
+      }
+
+      // Obtener información del administrador anterior para auditoría
+      const { data: adminAnterior } = await supabase
+        .from('user_profiles')
+        .select('id, email, nombre')
+        .eq('id', natilleraData.admin_id)
+        .single()
+
+      // Actualizar el admin_id
+      const { data: natilleraActualizada, error: updateError } = await supabase
+        .from('natilleras')
+        .update({ admin_id: nuevoAdminId })
+        .eq('id', natilleraId)
+        .select()
+        .single()
+
+      if (updateError) {
+        throw new Error(`Error al reasignar la natillera: ${updateError.message}`)
+      }
+
+      // Actualizar en la lista local
+      const index = natilleras.value.findIndex(n => n.id === natilleraId)
+      if (index !== -1) {
+        natilleras.value[index] = natilleraActualizada
+      }
+
+      if (natilleraActual.value?.id === natilleraId) {
+        natilleraActual.value = { ...natilleraActual.value, ...natilleraActualizada }
+      }
+
+      // Registrar auditoría (en segundo plano)
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
+        'natillera',
+        natilleraId,
+        `Se reasignó la natillera "${natilleraData.nombre}" de ${adminAnterior?.email || adminAnterior?.nombre || 'usuario anterior'} a ${nuevoAdmin.email || nuevoAdmin.nombre}`,
+        natilleraData,
+        natilleraActualizada,
+        natilleraId,
+        { 
+          reasignacion: true,
+          admin_anterior: adminAnterior,
+          admin_nuevo: nuevoAdmin
+        }
+      ))
+
+      return { success: true, data: natilleraActualizada }
+    } catch (e) {
+      error.value = e.message
+      console.error('Error reasignando natillera:', e)
+      return { success: false, error: e.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function eliminarNatillera(id) {
+    try {
+      loading.value = true
+      error.value = null
+
+      // Verificar autenticación
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('No estás autenticado')
+      }
+
+      // Obtener datos de la natillera antes de eliminar para auditoría
+      const { data: natilleraData, error: fetchError } = await supabase
+        .from('natilleras')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (fetchError) {
+        throw new Error(`Error al obtener la natillera: ${fetchError.message}`)
+      }
+
+      if (!natilleraData) {
+        throw new Error('Natillera no encontrada')
+      }
+
+      // Verificar permisos: el superusuario puede eliminar cualquier natillera
+      // Otros usuarios solo pueden eliminar sus propias natilleras
+      const emailUsuario = (user.email || '').toLowerCase().trim()
+      const esSuperUsuario = emailUsuario === 'raigo.16@gmail.com'
+      const esAdmin = natilleraData.admin_id === user.id
+
+      console.log('Verificación de permisos:', {
+        email: emailUsuario,
+        esSuperUsuario,
+        esAdmin,
+        admin_id: natilleraData.admin_id,
+        user_id: user.id
+      })
+
+      if (!esSuperUsuario && !esAdmin) {
+        throw new Error('No tienes permisos para eliminar esta natillera. Solo el administrador puede eliminarla.')
+      }
+
+      // Eliminar la natillera (esto activará la eliminación en cascada)
+      const { error: deleteError } = await supabase
+        .from('natilleras')
+        .delete()
+        .eq('id', id)
+
+      if (deleteError) {
+        // Proporcionar mensaje de error más descriptivo
+        console.error('Error al eliminar natillera:', deleteError)
+        if (deleteError.code === '42501') {
+          // Error de permisos RLS - la política SQL no permite la eliminación
+          if (esSuperUsuario) {
+            throw new Error('Error de permisos: Aunque eres superusuario, la política SQL en Supabase no está configurada correctamente. Por favor, ejecuta la migración SQL actualizada: add_cascade_delete_policies.sql')
+          }
+          throw new Error('No tienes permisos para eliminar natilleras. Por favor, ejecuta la migración SQL en Supabase: add_cascade_delete_policies.sql')
+        }
+        throw new Error(`Error al eliminar la natillera: ${deleteError.message} (Código: ${deleteError.code || 'N/A'})`)
+      }
+
+      // Remover de la lista local
+      natilleras.value = natilleras.value.filter(n => n.id !== id)
+      
+      // Si es la natillera actual, limpiarla
+      if (natilleraActual.value?.id === id) {
+        natilleraActual.value = null
+      }
+
+      // Registrar auditoría (en segundo plano)
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
+        'natillera',
+        id,
+        `Se eliminó la natillera "${natilleraData.nombre}" y todos sus registros relacionados`,
+        natilleraData,
+        id,
+        { 
+          eliminacion_cascada: true,
+          registros_eliminados: 'socios_natillera, cuotas, prestamos, multas, actividades, historial, auditoria'
+        }
+      ))
+
+      return { success: true }
+    } catch (e) {
+      error.value = e.message
+      console.error('Error eliminando natillera:', e)
+      return { success: false, error: e.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function calcularEstadisticas(natillera) {
     if (!natillera) return null
 
     const socios = natillera.socios_natillera || []
@@ -241,14 +436,73 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
 
     const totalPendiente = cuotas
-      .filter(c => c.estado !== 'pagada')
+      .filter(c => {
+        // Excluir cuotas pagadas y programadas (incluso si tienen pago parcial)
+        return c.estado !== 'pagada' && c.estado !== 'programada'
+      })
       .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
 
     const utilidadActividades = actividades
       .reduce((sum, a) => sum + (a.utilidad || 0), 0)
 
+    // Calcular utilidades recogidas:
+    // 1. Sanciones de cuotas pagadas (solo las que ya fueron pagadas)
+    const sancionesPagadas = cuotas
+      .filter(c => c.estado === 'pagada' && c.valor_multa)
+      .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+
+    // 2. Intereses de préstamos (pagados y activos con pagos realizados)
+    let interesesPrestamos = 0
+    if (natillera.id) {
+      try {
+        // Obtener los IDs de socios_natillera de esta natillera
+        const { data: sociosNatillera } = await supabase
+          .from('socios_natillera')
+          .select('id')
+          .eq('natillera_id', natillera.id)
+
+        if (sociosNatillera && sociosNatillera.length > 0) {
+          const socioNatilleraIds = sociosNatillera.map(s => s.id)
+          
+          // Obtener TODOS los préstamos (pagados y activos)
+          const { data: prestamos } = await supabase
+            .from('prestamos')
+            .select('id, monto, saldo_actual, interes, interes_anticipado, interes_total')
+            .in('socio_natillera_id', socioNatilleraIds)
+            .in('estado', ['pagado', 'activo'])
+
+          if (prestamos && prestamos.length > 0) {
+            // Usar el mismo cálculo que en Prestamos.vue (totalIntereses computed):
+            // Si es interés anticipado, usar el interés_total guardado (ya se cobró al inicio)
+            // Si es interés mes vencido, calcular basado en lo pagado
+            interesesPrestamos = prestamos.reduce((sum, prestamo) => {
+              // Si es interés anticipado, usar el interés_total guardado (ya se cobró al inicio)
+              if (prestamo.interes_anticipado && prestamo.interes_total) {
+                return sum + (parseFloat(prestamo.interes_total) || 0)
+              }
+              // Si es interés mes vencido, calcular basado en lo pagado
+              const monto = parseFloat(prestamo.monto || 0)
+              const saldoActual = parseFloat(prestamo.saldo_actual || 0)
+              const interes = parseFloat(prestamo.interes || 0)
+              const interesGenerado = (monto - saldoActual) * (interes / 100)
+              return sum + interesGenerado
+            }, 0)
+          }
+        }
+      } catch (e) {
+        console.error('Error calculando intereses de préstamos:', e)
+      }
+    }
+
+    // 3. Utilidad de actividades (ya calculada arriba)
+    const utilidadesRecogidas = sancionesPagadas + interesesPrestamos + utilidadActividades
+
     console.log('Total aportado:', totalAportado)
     console.log('Total pendiente:', totalPendiente)
+    console.log('Sanciones pagadas:', sancionesPagadas)
+    console.log('Intereses préstamos:', interesesPrestamos)
+    console.log('Utilidad actividades:', utilidadActividades)
+    console.log('Utilidades recogidas total:', utilidadesRecogidas)
     console.log('=== FIN DEBUG ===')
 
     return {
@@ -257,6 +511,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalAportado,
       totalPendiente,
       utilidadActividades,
+      utilidadesRecogidas,
       fondoTotal: totalAportado + utilidadActividades
     }
   }
@@ -273,6 +528,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     crearNatillera,
     actualizarNatillera,
     cerrarNatillera,
+    reasignarNatillera,
+    eliminarNatillera,
     calcularEstadisticas
   }
 })

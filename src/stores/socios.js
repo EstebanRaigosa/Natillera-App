@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
+import { useCuotasStore } from './cuotas'
 
 export const useSociosStore = defineStore('socios', () => {
   const socios = ref([])
@@ -154,31 +155,129 @@ export const useSociosStore = defineStore('socios', () => {
       loading.value = true
       error.value = null
 
+      console.log('🔵 actualizarSocioNatillera - Iniciando actualización')
+      console.log('🔵 ID del socio_natillera:', id)
+      console.log('🔵 Datos a actualizar:', datos)
+
+      // Validar que los datos no estén vacíos
+      if (!datos || Object.keys(datos).length === 0) {
+        throw new Error('No se proporcionaron datos para actualizar')
+      }
+
       // Obtener datos anteriores para auditoría
-      const { data: datosAnteriores } = await supabase
+      const { data: datosAnteriores, error: fetchAnterioresError } = await supabase
         .from('socios_natillera')
         .select(`
           *,
           socio:socios(*)
         `)
         .eq('id', id)
-        .single()
+        .maybeSingle()
 
-      const { data, error: updateError } = await supabase
+      if (fetchAnterioresError) {
+        console.error('❌ Error obteniendo datos anteriores:', fetchAnterioresError)
+        throw fetchAnterioresError
+      }
+      
+      if (!datosAnteriores) {
+        console.error('❌ No se encontró el socio en la natillera con ID:', id)
+        throw new Error('No se encontró el socio en la natillera')
+      }
+
+      console.log('✅ Datos anteriores obtenidos:', datosAnteriores)
+
+      // Preparar los datos para el update, asegurando que los valores sean del tipo correcto
+      const datosParaUpdate = { ...datos }
+      
+      // Asegurar que valor_cuota_individual sea un número si existe
+      if (datosParaUpdate.valor_cuota_individual !== undefined) {
+        datosParaUpdate.valor_cuota_individual = Number(datosParaUpdate.valor_cuota_individual)
+        if (isNaN(datosParaUpdate.valor_cuota_individual)) {
+          throw new Error('El valor de la cuota debe ser un número válido')
+        }
+      }
+
+      console.log('🔵 Datos preparados para UPDATE:', datosParaUpdate)
+
+      // Actualizar los datos con .select() para verificar que se actualizó
+      const { data: dataUpdate, error: updateError } = await supabase
         .from('socios_natillera')
-        .update(datos)
+        .update(datosParaUpdate)
         .eq('id', id)
+        .select()
+
+      if (updateError) {
+        console.error('❌ Error en UPDATE:', updateError)
+        throw updateError
+      }
+
+      console.log('✅ UPDATE ejecutado. Filas afectadas:', dataUpdate?.length || 0)
+
+      if (!dataUpdate || dataUpdate.length === 0) {
+        console.error('❌ No se actualizó ninguna fila. Verificar permisos RLS o que el ID sea correcto')
+        throw new Error('No se pudo actualizar el registro. Verifica los permisos o que el registro exista.')
+      }
+
+      // Obtener los datos actualizados completos con relaciones
+      const { data, error: fetchError } = await supabase
+        .from('socios_natillera')
         .select(`
           *,
           socio:socios(*)
         `)
-        .single()
+        .eq('id', id)
+        .maybeSingle()
 
-      if (updateError) throw updateError
+      if (fetchError) {
+        console.error('❌ Error obteniendo datos actualizados:', fetchError)
+        throw fetchError
+      }
+      
+      if (!data) {
+        console.error('❌ No se pudieron obtener los datos actualizados después del UPDATE')
+        throw new Error('No se pudo obtener los datos actualizados del socio')
+      }
+
+      console.log('✅ Datos actualizados obtenidos:', data)
 
       const index = sociosNatillera.value.findIndex(s => s.id === id)
       if (index !== -1) {
-        sociosNatillera.value[index] = data
+        // Actualizar el objeto completo para mantener la reactividad
+        Object.assign(sociosNatillera.value[index], data)
+      } else {
+        // Si no existe, agregarlo
+        sociosNatillera.value.push(data)
+      }
+
+      // Actualizar también las referencias en las cuotas ya cargadas
+      const cuotasStore = useCuotasStore()
+      cuotasStore.actualizarSocioNatilleraEnCuotas(id, data)
+
+      // Si se cambió el valor_cuota_individual, actualizar todas las cuotas pendientes
+      if (datosParaUpdate.valor_cuota_individual !== undefined) {
+        // Comparar como números para evitar problemas de tipo
+        const valorAnterior = Number(datosAnteriores.valor_cuota_individual || 0)
+        const valorNuevo = Number(datosParaUpdate.valor_cuota_individual || 0)
+        
+        if (valorAnterior !== valorNuevo) {
+          console.log('🔄 Valor de cuota cambió. Actualizando cuotas pendientes...')
+          console.log(`🔄 Cambio: $${valorAnterior} -> $${valorNuevo}`)
+          
+          // Actualizar todas las cuotas pendientes del socio
+          const resultActualizarCuotas = await cuotasStore.actualizarCuotasPorCambioValorCuota(
+            id, 
+            valorNuevo
+          )
+          
+          if (resultActualizarCuotas.success) {
+            console.log(`✅ ${resultActualizarCuotas.cuotasActualizadas} cuotas actualizadas exitosamente`)
+          } else {
+            console.error('⚠️ Error actualizando cuotas:', resultActualizarCuotas.error)
+            // No lanzar error aquí, solo loguear, para no bloquear la actualización del socio
+          }
+        } else {
+          console.log('ℹ️ El valor de cuota no cambió, no se actualizarán las cuotas')
+        }
       }
 
       // Registrar auditoría (en segundo plano)
@@ -195,8 +294,10 @@ export const useSociosStore = defineStore('socios', () => {
         { campos_modificados: Object.keys(datos) }
       ))
 
+      console.log('✅ actualizarSocioNatillera - Actualización completada exitosamente')
       return { success: true, data }
     } catch (e) {
+      console.error('❌ actualizarSocioNatillera - Error:', e)
       error.value = e.message
       return { success: false, error: e.message }
     } finally {
@@ -211,20 +312,43 @@ export const useSociosStore = defineStore('socios', () => {
   async function actualizarDatosSocio(socioId, datos, natilleraId = null) {
     try {
       // Obtener datos anteriores para auditoría
-      const { data: datosAnteriores } = await supabase
+      const { data: datosAnteriores, error: fetchAnterioresError } = await supabase
         .from('socios')
         .select('*')
         .eq('id', socioId)
-        .single()
+        .maybeSingle()
 
-      const { data, error: updateError } = await supabase
+      if (fetchAnterioresError) throw fetchAnterioresError
+      if (!datosAnteriores) {
+        throw new Error('No se encontró el socio')
+      }
+
+      // Actualizar los datos
+      const { error: updateError } = await supabase
         .from('socios')
         .update(datos)
         .eq('id', socioId)
-        .select()
-        .single()
 
       if (updateError) throw updateError
+
+      // Obtener los datos actualizados
+      const { data, error: fetchError } = await supabase
+        .from('socios')
+        .select('*')
+        .eq('id', socioId)
+        .maybeSingle()
+
+      if (fetchError) throw fetchError
+      if (!data) {
+        throw new Error('No se pudo obtener los datos actualizados del socio')
+      }
+
+      // Actualizar la referencia en sociosNatillera local
+      sociosNatillera.value.forEach(socioNatillera => {
+        if (socioNatillera.socio_id === socioId) {
+          socioNatillera.socio = data
+        }
+      })
 
       // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
@@ -329,6 +453,65 @@ export const useSociosStore = defineStore('socios', () => {
     }
   }
 
+  // Eliminar socio de una natillera (elimina socios_natillera y en cascada cuotas, préstamos, etc.)
+  async function eliminarSocioNatillera(socioNatilleraId) {
+    try {
+      loading.value = true
+      error.value = null
+
+      // Obtener datos del socio_natillera antes de eliminar para auditoría
+      const { data: socioNatilleraData } = await supabase
+        .from('socios_natillera')
+        .select(`
+          *,
+          socio:socios(*),
+          natillera:natilleras(*)
+        `)
+        .eq('id', socioNatilleraId)
+        .single()
+
+      if (!socioNatilleraData) {
+        throw new Error('Socio no encontrado en la natillera')
+      }
+
+      const natilleraId = socioNatilleraData.natillera_id
+      const nombreSocio = socioNatilleraData.socio?.nombre || 'Socio'
+
+      // Eliminar el socio_natillera (esto activará la eliminación en cascada)
+      const { error: deleteError } = await supabase
+        .from('socios_natillera')
+        .delete()
+        .eq('id', socioNatilleraId)
+
+      if (deleteError) throw deleteError
+
+      // Remover de la lista local
+      sociosNatillera.value = sociosNatillera.value.filter(s => s.id !== socioNatilleraId)
+
+      // Registrar auditoría (en segundo plano)
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
+        'socio_natillera',
+        socioNatilleraId,
+        `Se eliminó el socio "${nombreSocio}" de la natillera y todos sus registros relacionados (cuotas, préstamos, multas)`,
+        socioNatilleraData,
+        natilleraId,
+        { 
+          eliminacion_cascada: true,
+          registros_eliminados: 'cuotas, prestamos, multas, pagos_prestamo, historial_comprobantes'
+        }
+      ))
+
+      return { success: true }
+    } catch (e) {
+      error.value = e.message
+      console.error('Error eliminando socio:', e)
+      return { success: false, error: e.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     socios,
     sociosNatillera,
@@ -341,7 +524,8 @@ export const useSociosStore = defineStore('socios', () => {
     cambiarEstadoSocio,
     actualizarCuotaSocio,
     calcularEstadoSocio,
-    obtenerResumenSocio
+    obtenerResumenSocio,
+    eliminarSocioNatillera
   }
 })
 

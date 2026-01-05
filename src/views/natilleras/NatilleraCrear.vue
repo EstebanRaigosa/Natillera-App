@@ -61,6 +61,77 @@
         ></textarea>
       </div>
 
+      <!-- Selector de Avatar -->
+      <div class="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+        <h3 class="font-semibold text-purple-800 flex items-center gap-2 mb-4">
+          <span class="text-xl">🎨</span>
+          Avatar de la Natillera
+        </h3>
+        
+        <div class="space-y-4">
+          <!-- Vista previa del avatar -->
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg border-2 border-white overflow-hidden bg-white">
+              <img 
+                :src="avatarPreviewUrl" 
+                :alt="form.nombre || 'Natillera'"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="flex-1">
+              <label class="label">Personalizar (opcional)</label>
+              <input 
+                v-model="form.avatar_seed"
+                type="text" 
+                class="input-field"
+                placeholder="Deja vacío para usar el nombre"
+                @input="generarAvatarSeed"
+              />
+              <p class="text-xs text-gray-500 mt-1">
+                Ingresa un texto único para generar un avatar diferente
+              </p>
+            </div>
+          </div>
+
+          <!-- Selector de estilo -->
+          <div>
+            <label class="label mb-2">Estilo del Avatar</label>
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              <button
+                v-for="estilo in estilosAvatar"
+                :key="estilo.value"
+                type="button"
+                @click="form.avatar_style = estilo.value"
+                :class="[
+                  'relative p-3 rounded-xl border-2 transition-all hover:scale-105 hover:shadow-lg group',
+                  form.avatar_style === estilo.value
+                    ? 'border-purple-500 bg-gradient-to-br from-purple-100 to-purple-50 shadow-md ring-2 ring-purple-200'
+                    : 'border-gray-200 bg-white hover:border-purple-300'
+                ]"
+                :title="estilo.label"
+              >
+                <img 
+                  :src="getAvatarPreviewUrl(estilo.value)" 
+                  :alt="estilo.label"
+                  class="w-full h-full object-cover rounded-lg"
+                />
+                <div v-if="form.avatar_style === estilo.value" class="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                  <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-semibold px-1 py-0.5 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                  {{ estilo.label }}
+                </div>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">
+              Selecciona un estilo abstracto y bonito para el avatar de tu natillera
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Reglas de multas -->
       <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
         <h3 class="font-semibold text-amber-800 flex items-center gap-2 mb-4">
@@ -174,9 +245,10 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
+import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { 
   ArrowLeftIcon,
   ExclamationTriangleIcon,
@@ -187,11 +259,22 @@ const router = useRouter()
 const natillerasStore = useNatillerasStore()
 
 const error = ref('')
+const estilosAvatar = [
+  { value: 'shapes', label: 'Formas' },
+  { value: 'rings', label: 'Anillos' },
+  { value: 'identicon', label: 'Patrones' },
+  { value: 'icons', label: 'Iconos' },
+  { value: 'bottts', label: 'Robots' },
+  { value: 'pixel-art', label: 'Pixel Art' },
+  { value: 'fun-emoji', label: 'Emojis' }
+]
 const form = reactive({
   nombre: '',
   fecha_inicio: new Date().toISOString().split('T')[0],
   periodicidad: 'mensual',
   descripcion: '',
+  avatar_seed: '',
+  avatar_style: 'shapes',
   multa_activa: true,
   valor_multa: 5000,
   dias_gracia: 3,
@@ -199,6 +282,24 @@ const form = reactive({
   interes_prestamo: 2,
   plazo_maximo: 6
 })
+
+// Generar seed aleatorio inicial
+function generarAvatarSeed() {
+  if (!form.avatar_seed && form.nombre) {
+    // No hacer nada, dejar que use el nombre
+  }
+}
+
+// Vista previa del avatar
+const avatarPreviewUrl = computed(() => {
+  const seed = form.avatar_seed || form.nombre || 'natillera-preview'
+  return getNatilleraAvatarUrl(seed, null, form.avatar_style)
+})
+
+function getAvatarPreviewUrl(estilo) {
+  const seed = form.avatar_seed || form.nombre || 'preview'
+  return getNatilleraAvatarUrl(seed, null, estilo)
+}
 
 async function handleSubmit() {
   error.value = ''
@@ -208,6 +309,7 @@ async function handleSubmit() {
     fecha_inicio: form.fecha_inicio,
     periodicidad: form.periodicidad,
     descripcion: form.descripcion,
+    avatar_seed: form.avatar_seed || form.nombre, // Usar el seed personalizado o el nombre
     reglas_multas: form.multa_activa ? {
       activa: true,
       valor: form.valor_multa,

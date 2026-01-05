@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS natilleras (
     reglas_multas JSONB DEFAULT '{"activa": false}',
     reglas_interes JSONB DEFAULT '{"activo": false}',
     estado VARCHAR(20) DEFAULT 'activa' CHECK (estado IN ('activa', 'cerrada', 'pausada')),
+    avatar_seed VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -263,8 +264,28 @@ CREATE POLICY "Ver pagos de préstamos de mis natilleras" ON pagos_prestamo
         )
     );
 
-CREATE POLICY "Gestionar pagos de préstamos" ON pagos_prestamo
-    FOR ALL USING (
+CREATE POLICY "Insertar pagos de préstamos de mis natilleras" ON pagos_prestamo
+    FOR INSERT WITH CHECK (
+        prestamo_id IN (
+            SELECT p.id FROM prestamos p
+            JOIN socios_natillera sn ON p.socio_natillera_id = sn.id
+            JOIN natilleras n ON sn.natillera_id = n.id
+            WHERE n.admin_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Actualizar pagos de préstamos de mis natilleras" ON pagos_prestamo
+    FOR UPDATE USING (
+        prestamo_id IN (
+            SELECT p.id FROM prestamos p
+            JOIN socios_natillera sn ON p.socio_natillera_id = sn.id
+            JOIN natilleras n ON sn.natillera_id = n.id
+            WHERE n.admin_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Eliminar pagos de préstamos de mis natilleras" ON pagos_prestamo
+    FOR DELETE USING (
         prestamo_id IN (
             SELECT p.id FROM prestamos p
             JOIN socios_natillera sn ON p.socio_natillera_id = sn.id

@@ -52,117 +52,148 @@
           </div>
           
           <!-- Campos del formulario -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <!-- Filtro por Natillera -->
-            <div class="space-y-2 min-w-0">
-              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <div class="w-2 h-2 rounded-full bg-natillera-500 flex-shrink-0"></div>
-                <span class="truncate">Natillera</span>
-              </label>
-              <div class="relative">
-                <select
-                  v-model="filtros.natilleraId"
-                  @change="aplicarFiltros"
-                  class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
-                >
-                  <option value="">Todas las natilleras</option>
-                  <option v-for="natillera in natilleras" :key="natillera.id" :value="natillera.id">
-                    {{ natillera.nombre }}
-                  </option>
-                </select>
-                <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Filtro por Entidad -->
-            <div class="space-y-2 min-w-0">
-              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
-                <span class="truncate">Entidad</span>
-              </label>
-              <div class="relative">
-                <select
-                  v-model="filtros.entidad"
-                  @change="aplicarFiltros"
-                  class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
-                >
-                  <option value="">Todas las entidades</option>
-                  <option value="natillera">Natillera</option>
-                  <option value="socio">Socio</option>
-                  <option value="socio_natillera">Socio en Natillera</option>
-                  <option value="cuota">Cuota</option>
-                  <option value="pago">Pago</option>
-                  <option value="comprobante">Comprobante</option>
-                  <option value="prestamo">Préstamo</option>
-                  <option value="actividad">Actividad</option>
-                </select>
-                <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Filtro por Tipo de Acción -->
-            <div class="space-y-2 min-w-0">
-              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <div class="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0"></div>
-                <span class="truncate">Tipo de Acción</span>
-              </label>
-              <div class="relative">
-                <select
-                  v-model="filtros.tipoAccion"
-                  @change="aplicarFiltros"
-                  class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
-                >
-                  <option value="">Todas las acciones</option>
-                  <option value="CREATE">Crear</option>
-                  <option value="UPDATE">Actualizar</option>
-                  <option value="DELETE">Eliminar</option>
-                  <option value="GENERATE">Generar</option>
-                  <option value="REGISTER">Registrar</option>
-                </select>
-                <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <!-- Filtro por Fecha -->
-            <div class="space-y-2 min-w-0 sm:col-span-2 xl:col-span-1">
-              <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                <div class="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0"></div>
-                <span class="truncate">Rango de Fechas</span>
-              </label>
-              <div class="flex gap-2">
-                <div class="relative flex-1 min-w-0">
-                  <input
-                    v-model="filtros.fechaDesde"
-                    type="date"
-                    class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
-                  />
+          <div class="space-y-5">
+            <!-- Primera fila: Filtros principales -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Filtro por Entidad -->
+              <div class="space-y-2 min-w-0">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></div>
+                  <span class="truncate">Entidad</span>
+                </label>
+                <div class="relative">
+                  <select
+                    v-model="filtros.entidad"
+                    @change="aplicarFiltros"
+                    class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
+                  >
+                    <option value="">Todas las entidades</option>
+                    <option value="natillera">Natillera</option>
+                    <option value="socio">Socio</option>
+                    <option value="socio_natillera">Socio en Natillera</option>
+                    <option value="cuota">Cuota</option>
+                    <option value="pago">Pago</option>
+                    <option value="comprobante">Comprobante</option>
+                    <option value="prestamo">Préstamo</option>
+                    <option value="actividad">Actividad</option>
+                  </select>
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                   </div>
                 </div>
-                <div class="relative flex-1 min-w-0">
-                  <input
-                    v-model="filtros.fechaHasta"
-                    type="date"
-                    class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
-                  />
+              </div>
+
+              <!-- Filtro por Tipo de Acción -->
+              <div class="space-y-2 min-w-0">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div class="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0"></div>
+                  <span class="truncate">Tipo de Acción</span>
+                </label>
+                <div class="relative">
+                  <select
+                    v-model="filtros.tipoAccion"
+                    @change="aplicarFiltros"
+                    class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
+                  >
+                    <option value="">Todas las acciones</option>
+                    <option value="CREATE">Crear</option>
+                    <option value="UPDATE">Actualizar</option>
+                    <option value="DELETE">Eliminar</option>
+                    <option value="GENERATE">Generar</option>
+                    <option value="REGISTER">Registrar</option>
+                  </select>
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filtro por Fecha -->
+              <div class="space-y-2 min-w-0">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div class="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0"></div>
+                  <span class="truncate">Rango de Fechas</span>
+                </label>
+                <div class="flex gap-2">
+                  <div class="relative flex-1 min-w-0">
+                    <input
+                      v-model="filtros.fechaDesde"
+                      type="date"
+                      class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
+                    />
+                    <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="relative flex-1 min-w-0">
+                    <input
+                      v-model="filtros.fechaHasta"
+                      type="date"
+                      class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
+                    />
+                    <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Segunda fila: Filtros exclusivos de super usuario -->
+            <div v-if="esSuperUsuario" class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-200/50">
+              <!-- Filtro por Natillera (solo para super usuario) -->
+              <div class="space-y-2 min-w-0">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div class="w-2 h-2 rounded-full bg-natillera-500 flex-shrink-0"></div>
+                  <span class="truncate">Natillera</span>
+                </label>
+                <div class="relative">
+                  <select
+                    v-model="filtros.natilleraId"
+                    @change="aplicarFiltros"
+                    class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
+                  >
+                    <option value="">Todas las natilleras</option>
+                    <option v-for="natillera in todasLasNatilleras" :key="natillera.id" :value="natillera.id">
+                      {{ natillera.nombre }}
+                    </option>
+                  </select>
+                  <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filtro por Usuario (solo para super usuario) -->
+              <div class="space-y-2 min-w-0">
+                <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                  <div class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div>
+                  <span class="truncate">Usuario</span>
+                </label>
+                <div class="relative">
+                  <select
+                    v-model="filtros.usuarioEmail"
+                    @change="aplicarFiltros"
+                    class="input-field w-full pl-9 pr-8 appearance-none cursor-pointer hover:bg-white focus:bg-white transition-colors text-sm"
+                  >
+                    <option value="">Todos los usuarios</option>
+                    <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.email">
+                      {{ usuario.email }}
+                    </option>
+                  </select>
+                  <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
                   </div>
                 </div>
@@ -538,6 +569,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuditoria } from '../../composables/useAuditoria'
 import { useNatillerasStore } from '../../stores/natilleras'
+import { useUsersStore } from '../../stores/users'
+import { useAuthStore } from '../../stores/auth'
 import {
   ClipboardDocumentListIcon,
   FunnelIcon,
@@ -546,11 +579,18 @@ import {
 
 const auditoria = useAuditoria()
 const natillerasStore = useNatillerasStore()
+const usersStore = useUsersStore()
+const authStore = useAuthStore()
 
 const loading = ref(false)
 const registros = ref([])
 const totalRegistros = ref(0)
 const registroSeleccionado = ref(null)
+
+// Verificar si el usuario es super usuario
+const esSuperUsuario = computed(() => {
+  return authStore.userEmail === 'raigo.16@gmail.com'
+})
 
 // Función para obtener la fecha actual en formato YYYY-MM-DD
 function obtenerFechaActual() {
@@ -562,6 +602,7 @@ const filtros = ref({
   natilleraId: '',
   entidad: '',
   tipoAccion: '',
+  usuarioEmail: '', // Filtro por usuario (solo para super usuario)
   fechaDesde: obtenerFechaActual(),
   fechaHasta: obtenerFechaActual(),
   limit: 50,
@@ -569,6 +610,14 @@ const filtros = ref({
 })
 
 const natilleras = computed(() => natillerasStore.natillerasActivas)
+// Para super usuario, mostrar todas las natilleras (no solo activas)
+const todasLasNatilleras = computed(() => {
+  if (esSuperUsuario.value) {
+    return natillerasStore.natilleras || []
+  }
+  return natillerasStore.natillerasActivas || []
+})
+const usuarios = computed(() => usersStore.users || [])
 
 const tienePaginaAnterior = computed(() => (filtros.value.offset || 0) > 0)
 const tienePaginaSiguiente = computed(() => {
@@ -578,7 +627,12 @@ const tienePaginaSiguiente = computed(() => {
 })
 
 onMounted(async () => {
+  // Cargar natilleras (para super usuario cargará todas, para otros solo las suyas)
   await natillerasStore.fetchNatilleras()
+  // Cargar usuarios solo si es super usuario
+  if (esSuperUsuario.value) {
+    await usersStore.fetchUsers()
+  }
   await cargarRegistros()
 })
 
@@ -589,6 +643,7 @@ async function cargarRegistros() {
       natilleraId: filtros.value.natilleraId || undefined,
       entidad: filtros.value.entidad || undefined,
       tipoAccion: filtros.value.tipoAccion || undefined,
+      usuarioEmail: filtros.value.usuarioEmail || undefined, // Filtro por usuario (solo para super usuario)
       fechaDesde: filtros.value.fechaDesde ? new Date(filtros.value.fechaDesde) : undefined,
       fechaHasta: filtros.value.fechaHasta ? new Date(filtros.value.fechaHasta + 'T23:59:59') : undefined,
       limit: filtros.value.limit,
@@ -619,6 +674,7 @@ function limpiarFiltros() {
     natilleraId: '',
     entidad: '',
     tipoAccion: '',
+    usuarioEmail: '', // Limpiar también el filtro de usuario
     fechaDesde: fechaActual,
     fechaHasta: fechaActual,
     limit: 50,

@@ -8,6 +8,8 @@ import DashboardLayout from '../layouts/DashboardLayout.vue'
 // Views
 import Login from '../views/auth/Login.vue'
 import Register from '../views/auth/Register.vue'
+import Welcome from '../views/auth/Welcome.vue'
+import ResetPassword from '../views/auth/ResetPassword.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Natilleras from '../views/natilleras/Natilleras.vue'
 import NatilleraDetalle from '../views/natilleras/NatilleraDetalle.vue'
@@ -20,6 +22,8 @@ import Actividades from '../views/actividades/Actividades.vue'
 import NatilleraConfiguracion from '../views/natilleras/NatilleraConfiguracion.vue'
 import Configuracion from '../views/configuracion/Configuracion.vue'
 import Auditoria from '../views/auditoria/Auditoria.vue'
+import ChatAdmin from '../views/admin/ChatAdmin.vue'
+import DataAdmin from '../views/admin/DataAdmin.vue'
 
 const routes = [
   {
@@ -39,6 +43,16 @@ const routes = [
         path: 'register',
         name: 'Register',
         component: Register
+      },
+      {
+        path: 'welcome',
+        name: 'Welcome',
+        component: Welcome
+      },
+      {
+        path: 'reset-password',
+        name: 'ResetPassword',
+        component: ResetPassword
       }
     ]
   },
@@ -113,6 +127,16 @@ const routes = [
         path: 'auditoria',
         name: 'Auditoria',
         component: Auditoria
+      },
+      {
+        path: 'admin/chat',
+        name: 'ChatAdmin',
+        component: ChatAdmin
+      },
+      {
+        path: 'admin/data',
+        name: 'DataAdmin',
+        component: DataAdmin
       }
     ]
   }
@@ -140,8 +164,9 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Si ya está autenticado y va a login/register, redirigir al dashboard
-  if (to.name === 'Login' || to.name === 'Register') {
+  // Si ya está autenticado y va a login/register/welcome, redirigir al dashboard
+  // ResetPassword es una excepción ya que puede estar autenticado temporalmente con token de recuperación
+  if (to.name === 'Login' || to.name === 'Register' || to.name === 'Welcome') {
     if (authStore.isAuthenticated) {
       next({ name: 'Dashboard' })
       return

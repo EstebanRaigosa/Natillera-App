@@ -246,3 +246,38 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
 }
+
+/* ScaleX animation */
+@keyframes scaleX {
+  0% {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  100% {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+.animate-scale-x {
+  animation: scaleX 0.8s ease-out 0.3s forwards;
+}
+
+/* Error slide transition */
+.error-slide-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.error-slide-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.error-slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.error-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}

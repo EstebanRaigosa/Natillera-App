@@ -574,6 +574,8 @@ export function useAuditoria() {
    * @param {string} filtros.entidad - Tipo de entidad
    * @param {string} filtros.tipoAccion - Tipo de acción
    * @param {string} filtros.entidadId - ID de entidad específica
+   * @param {string} filtros.usuarioId - ID del usuario (solo para super usuario)
+   * @param {string} filtros.usuarioEmail - Email del usuario (solo para super usuario)
    * @param {Date} filtros.fechaDesde - Fecha desde
    * @param {Date} filtros.fechaHasta - Fecha hasta
    * @param {number} filtros.limit - Límite de resultados
@@ -607,6 +609,12 @@ export function useAuditoria() {
         }
         if (filtros.entidadId) {
           query = query.eq('entidad_id', filtros.entidadId)
+        }
+        if (filtros.usuarioId) {
+          query = query.eq('usuario_id', filtros.usuarioId)
+        }
+        if (filtros.usuarioEmail) {
+          query = query.eq('usuario_email', filtros.usuarioEmail)
         }
         if (filtros.fechaDesde) {
           query = query.gte('created_at', filtros.fechaDesde.toISOString())

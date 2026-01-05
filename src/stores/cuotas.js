@@ -8,6 +8,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
   const loading = ref(false)
   const error = ref(null)
 
+  // Función para actualizar la referencia de socio_natillera en las cuotas ya cargadas
+  function actualizarSocioNatilleraEnCuotas(socioNatilleraId, datosActualizados) {
+    cuotas.value.forEach(cuota => {
+      if (cuota.socio_natillera?.id === socioNatilleraId) {
+        if (cuota.socio_natillera) {
+          Object.assign(cuota.socio_natillera, datosActualizados)
+        }
+      }
+    })
+  }
+
   async function fetchCuotasNatillera(natilleraId) {
     try {
       loading.value = true
@@ -1573,6 +1584,174 @@ export const useCuotasStore = defineStore('cuotas', () => {
   }
 
   // Función para actualizar una cuota
+  // Función para actualizar todas las cuotas pendientes/futuras de un socio cuando cambia valor_cuota_individual
+  async function actualizarCuotasPorCambioValorCuota(socioNatilleraId, nuevoValorCuota) {
+    try {
+      console.log('🔄 Actualizando cuotas pendientes para socio_natillera:', socioNatilleraId)
+      console.log('🔄 Nuevo valor de cuota:', nuevoValorCuota)
+
+      // Obtener TODAS las cuotas del socio (incluyendo las pagadas)
+      const { data: todasLasCuotas, error: fetchError } = await supabase
+        .from('cuotas')
+        .select('*')
+        .eq('socio_natillera_id', socioNatilleraId)
+        .order('fecha_limite', { ascending: true })
+
+      if (fetchError) {
+        console.error('❌ Error obteniendo cuotas:', fetchError)
+        throw fetchError
+      }
+
+      if (!todasLasCuotas || todasLasCuotas.length === 0) {
+        console.log('✅ No hay cuotas para actualizar')
+        return { success: true, cuotasActualizadas: 0 }
+      }
+
+      console.log(`📋 Encontradas ${todasLasCuotas.length} cuotas totales para revisar`)
+
+      // Convertir el nuevo valor a número
+      const nuevoValorNum = Number(nuevoValorCuota)
+      if (isNaN(nuevoValorNum)) {
+        throw new Error('El nuevo valor de cuota debe ser un número válido')
+      }
+
+      // Actualizar TODAS las cuotas (pendientes y pagadas)
+      const cuotasActualizadas = []
+      for (const cuota of todasLasCuotas) {
+        const valorPagadoActual = Number(cuota.valor_pagado || 0)
+        const valorCuotaAnterior = Number(cuota.valor_cuota || 0)
+        const estadoAnterior = cuota.estado
+        const esPagada = estadoAnterior === 'pagada' || valorPagadoActual >= valorCuotaAnterior
+        
+        const datosActualizar = {
+          valor_cuota: nuevoValorNum
+        }
+
+        // CASO 1: Cuota pagada
+        if (esPagada) {
+          if (nuevoValorNum > valorPagadoActual) {
+            // Nuevo valor es MAYOR: convertir a pago parcial, dejar diferencia como pendiente
+            datosActualizar.estado = 'parcial'
+            // Mantener el valor_pagado actual, solo cambiar el valor_cuota
+            // La diferencia (nuevoValorNum - valorPagadoActual) queda como pendiente
+            const diferencia = nuevoValorNum - valorPagadoActual
+            const fechaActual = new Date().toLocaleDateString('es-ES')
+            datosActualizar.descripcion = `Cuota ajustada: Valor original $${valorCuotaAnterior.toLocaleString('es-ES')} → $${nuevoValorNum.toLocaleString('es-ES')}. Pendiente: $${diferencia.toLocaleString('es-ES')} (${fechaActual})`
+            console.log(`🔄 Cuota pagada ${cuota.id}: Convertida a parcial. Diferencia pendiente: $${diferencia.toLocaleString('es-ES')}`)
+          } else if (nuevoValorNum < valorPagadoActual) {
+            // Nuevo valor es MENOR: mantener como pagada pero agregar anotación
+            datosActualizar.estado = 'pagada'
+            const fechaActual = new Date().toLocaleDateString('es-ES')
+            const anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-ES')} → $${nuevoValorNum.toLocaleString('es-ES')}. Pagado: $${valorPagadoActual.toLocaleString('es-ES')} (${fechaActual})`
+            // Si ya tiene descripción, agregar la nueva anotación
+            datosActualizar.descripcion = cuota.descripcion 
+              ? `${cuota.descripcion} | ${anotacion}`
+              : anotacion
+            console.log(`🔄 Cuota pagada ${cuota.id}: Mantenida como pagada con anotación`)
+          } else {
+            // Nuevo valor es IGUAL: mantener como pagada, sin cambios
+            datosActualizar.estado = 'pagada'
+            console.log(`🔄 Cuota pagada ${cuota.id}: Sin cambios (valor igual)`)
+          }
+        } 
+        // CASO 2: Cuota pendiente/parcial
+        else {
+          if (valorPagadoActual > nuevoValorNum) {
+            // Si ya pagó más que el nuevo valor, ajustar el valor_pagado al nuevo valor
+            datosActualizar.valor_pagado = nuevoValorNum
+            datosActualizar.estado = 'pagada'
+            if (!cuota.fecha_pago) {
+              datosActualizar.fecha_pago = new Date().toISOString()
+            }
+          } else if (valorPagadoActual === nuevoValorNum && nuevoValorNum > 0) {
+            // Si el valor pagado es igual al nuevo valor, marcar como pagada
+            datosActualizar.estado = 'pagada'
+            if (!cuota.fecha_pago) {
+              datosActualizar.fecha_pago = new Date().toISOString()
+            }
+          } else if (valorPagadoActual > 0 && valorPagadoActual < nuevoValorNum) {
+            // Si tiene un pago parcial menor al nuevo valor, mantener el pago parcial
+            datosActualizar.estado = 'parcial'
+          } else {
+            // Sin pagos, solo actualizar el valor
+            datosActualizar.estado = 'pendiente'
+          }
+        }
+
+        console.log(`🔄 Actualizando cuota ${cuota.id}:`, {
+          valorAnterior: valorCuotaAnterior,
+          valorNuevo: nuevoValorNum,
+          valorPagado: valorPagadoActual,
+          estadoAnterior: estadoAnterior,
+          esPagada: esPagada,
+          datosActualizar
+        })
+
+        const { error: updateError } = await supabase
+          .from('cuotas')
+          .update(datosActualizar)
+          .eq('id', cuota.id)
+
+        if (updateError) {
+          console.error(`❌ Error actualizando cuota ${cuota.id}:`, updateError)
+          continue // Continuar con la siguiente cuota aunque falle una
+        }
+
+        cuotasActualizadas.push(cuota.id)
+        console.log(`✅ Cuota ${cuota.id} actualizada correctamente`)
+      }
+
+      console.log(`✅ Total: ${cuotasActualizadas.length} cuotas actualizadas de ${todasLasCuotas.length} totales`)
+
+      // Actualizar las cuotas en el store local
+      cuotas.value.forEach(cuota => {
+        if (cuota.socio_natillera_id === socioNatilleraId && cuotasActualizadas.includes(cuota.id)) {
+          const cuotaActualizada = todasLasCuotas.find(c => c.id === cuota.id)
+          if (cuotaActualizada) {
+            // Actualizar el valor en la cuota local
+            cuota.valor_cuota = nuevoValorNum
+            const valorPagado = Number(cuota.valor_pagado || 0)
+            const valorCuotaAnterior = Number(cuota.valor_cuota || 0)
+            const esPagada = cuota.estado === 'pagada' || valorPagado >= valorCuotaAnterior
+            
+            // Ajustar según el caso
+            if (esPagada) {
+              if (nuevoValorNum > valorPagado) {
+                // Convertir a parcial
+                cuota.estado = 'parcial'
+                // Mantener valor_pagado, solo actualizar valor_cuota
+              } else if (nuevoValorNum < valorPagado) {
+                // Mantener como pagada con anotación
+                cuota.estado = 'pagada'
+              }
+              // Actualizar descripción si existe
+              if (cuotaActualizada.descripcion) {
+                cuota.descripcion = cuotaActualizada.descripcion
+              }
+            } else {
+              // Cuota pendiente/parcial
+              if (valorPagado > nuevoValorNum) {
+                cuota.valor_pagado = nuevoValorNum
+                cuota.estado = 'pagada'
+              } else if (valorPagado === nuevoValorNum && nuevoValorNum > 0) {
+                cuota.estado = 'pagada'
+              } else if (valorPagado > 0 && valorPagado < nuevoValorNum) {
+                cuota.estado = 'parcial'
+              } else {
+                cuota.estado = 'pendiente'
+              }
+            }
+          }
+        }
+      })
+
+      return { success: true, cuotasActualizadas: cuotasActualizadas.length }
+    } catch (e) {
+      console.error('❌ Error actualizando cuotas por cambio de valor:', e)
+      return { success: false, error: e.message, cuotasActualizadas: 0 }
+    }
+  }
+
   async function actualizarCuota(cuotaId, datos) {
     try {
       loading.value = true
@@ -1663,7 +1842,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     getResumenPorMes,
     generarCuotasAutomaticas,
     buscarCuotaPorCodigo,
-    actualizarCuota
+    actualizarCuota,
+    actualizarSocioNatilleraEnCuotas,
+    actualizarCuotasPorCambioValorCuota
   }
 })
 

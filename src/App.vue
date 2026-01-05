@@ -1,10 +1,14 @@
 <template>
   <router-view />
+  <ChatWidget />
+  <NotificationToast />
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from './stores/auth'
+import ChatWidget from './components/ChatWidget.vue'
+import NotificationToast from './components/NotificationToast.vue'
 
 const authStore = useAuthStore()
 
@@ -29,14 +33,34 @@ function handleEnterKey(event) {
   }
 }
 
+// Función para hacer scroll cuando un input recibe focus (móvil)
+function handleInputFocus(event) {
+  const target = event.target
+  // Solo procesar inputs y textareas
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+    // Usar setTimeout para asegurar que el teclado se haya abierto
+    setTimeout(() => {
+      // Scroll suave al elemento, con un poco de padding superior para mejor visibilidad
+      target.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      })
+    }, 300) // Delay para dar tiempo a que el teclado virtual se abra
+  }
+}
+
 onMounted(() => {
   authStore.checkAuth()
   // Agregar listener global para Enter
   document.addEventListener('keydown', handleEnterKey)
+  // Agregar listener para hacer scroll cuando un input recibe focus (móvil)
+  document.addEventListener('focusin', handleInputFocus)
 })
 
 onUnmounted(() => {
-  // Limpiar listener al desmontar
+  // Limpiar listeners al desmontar
   document.removeEventListener('keydown', handleEnterKey)
+  document.removeEventListener('focusin', handleInputFocus)
 })
 </script>

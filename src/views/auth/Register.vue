@@ -137,10 +137,15 @@ async function handleRegister() {
   const result = await authStore.register(email.value, password.value, nombre.value)
   
   if (result.success) {
-    successMessage.value = '¡Cuenta creada! Revisa tu correo para confirmar.'
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 2000)
+    // Guardar el email antes de limpiar el formulario
+    const emailRegistrado = email.value
+    successMessage.value = `¡Cuenta creada! Por favor revisa tu correo electrónico (${emailRegistrado}) y haz clic en el enlace de confirmación para activar tu cuenta. Una vez confirmado, podrás iniciar sesión.`
+    // Limpiar el formulario
+    nombre.value = ''
+    email.value = ''
+    password.value = ''
+    confirmPassword.value = ''
+    // No redirigir al dashboard - el usuario debe validar su email primero
   } else {
     errorMessage.value = result.error
   }

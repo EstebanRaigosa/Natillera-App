@@ -30,8 +30,12 @@
           <div class="relative z-10">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
               <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div class="w-10 h-10 sm:w-12 sm:h-14 lg:w-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
-                  <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-7 lg:w-7 text-white" />
+                <div class="w-10 h-10 sm:w-12 sm:h-14 lg:w-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0 overflow-hidden border-2 border-white">
+                  <img 
+                    :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
+                    :alt="natillera.nombre"
+                    class="w-full h-full object-cover"
+                  />
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 lg:gap-3 mb-1 sm:mb-2">
@@ -70,7 +74,7 @@
                 >
                   <MagnifyingGlassIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
                   <span class="hidden sm:inline">Buscar Comprobante</span>
-                  <span class="sm:hidden">Buscar</span>
+                  <span class="sm:hidden">Busc. Comprobante</span>
                 </button>
                 <router-link 
                   :to="`/natilleras/${id}/configuracion`"
@@ -208,8 +212,8 @@
           </div>
           
           <!-- Grid de indicadores -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg">
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
@@ -217,7 +221,7 @@
             <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Socios</p>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
@@ -225,7 +229,7 @@
             <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Recaudado</p>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border border-amber-200/50 backdrop-blur-sm shadow-lg">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border border-amber-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-orange-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
@@ -233,7 +237,15 @@
             <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Pendiente</p>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg">
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/20 border border-teal-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <!-- Círculo decorativo -->
+          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-teal-400/20 to-cyan-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
+            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Utilidades</p>
+          </div>
+        </div>
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
@@ -641,15 +653,33 @@
             </div>
             
             <!-- Card de información del comprobante -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-5 shadow-sm">
+            <div :class="[
+              'border-2 rounded-xl p-5 shadow-sm',
+              comprobanteEncontrado.tipo === 'abono_prestamo' 
+                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200' 
+                : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+            ]">
               <div class="flex items-center gap-2 mb-4">
-                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <div :class="[
+                  'w-10 h-10 rounded-lg flex items-center justify-center',
+                  comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-500' : 'bg-green-500'
+                ]">
                   <CheckCircleIcon class="w-6 h-6 text-white" />
                 </div>
-                <h4 class="font-bold text-green-800 text-lg">Comprobante Encontrado</h4>
+                <div>
+                  <h4 :class="[
+                    'font-bold text-lg',
+                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-800' : 'text-green-800'
+                  ]">
+                    Comprobante Encontrado
+                  </h4>
+                  <p v-if="comprobanteEncontrado.tipo === 'abono_prestamo'" class="text-xs text-amber-700 font-semibold mt-0.5">
+                    Abono a Préstamo
+                  </p>
+                </div>
               </div>
               
-              <div class="bg-white rounded-lg p-5 space-y-4 border border-green-200">
+              <div class="bg-white rounded-lg p-5 space-y-4 border" :class="comprobanteEncontrado.tipo === 'abono_prestamo' ? 'border-amber-200' : 'border-green-200'">
                 <div class="pb-3 border-b border-gray-100">
                   <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Código {{ infoComprobanteAntiguo ? 'Actual' : 'del Comprobante' }}</p>
                   <p class="font-mono font-bold text-xl text-gray-800">{{ comprobanteEncontrado.codigo_comprobante }}</p>
@@ -667,37 +697,131 @@
                   </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
-                  <div class="bg-gray-50 rounded-lg p-3">
-                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Cuota</p>
-                    <p class="font-bold text-gray-800 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota) }}</p>
-                  </div>
-                  <div class="bg-green-50 rounded-lg p-3">
-                    <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Pagado</p>
-                    <p class="font-bold text-green-600 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                <!-- Alerta de comprobante eliminado -->
+                <div v-if="comprobanteEncontrado.eliminado" class="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-4">
+                  <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <ExclamationCircleIcon class="w-5 h-5 text-white" />
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-bold text-red-800 mb-2">⚠️ COMPROBANTE ELIMINADO</p>
+                      <div class="space-y-1 text-sm">
+                        <p class="text-red-700">
+                          <span class="font-semibold">Eliminado por:</span> {{ comprobanteEncontrado.eliminado_por }}
+                        </p>
+                        <p class="text-red-700">
+                          <span class="font-semibold">Fecha de eliminación:</span> {{ formatDateWithTime(comprobanteEncontrado.eliminado_el) }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                <div class="pt-3 border-t border-gray-200">
-                  <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-semibold">Estado</p>
-                  <span 
-                    :class="[
-                      'inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-sm',
-                      comprobanteEncontrado.estado === 'pagada' ? 'bg-green-100 text-green-800' :
-                      comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 text-blue-800' :
-                      comprobanteEncontrado.estado === 'mora' ? 'bg-red-100 text-red-800' :
-                      comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-700'
-                    ]"
-                  >
-                    {{ comprobanteEncontrado.estado?.toUpperCase() || 'N/A' }}
-                  </span>
+
+                <!-- Alerta de código actualizado -->
+                <div v-else-if="comprobanteEncontrado.codigo_nuevo" class="bg-red-50 border-2 border-red-400 rounded-lg p-4 mb-4">
+                  <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <ExclamationTriangleIcon class="w-6 h-6 text-white" />
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-bold text-red-800 mb-2 text-lg">⚠️ COMPROBANTE NO VÁLIDO</p>
+                      <p class="text-sm text-red-700 mb-2 font-semibold">
+                        Este comprobante fue actualizado y <span class="text-red-900 font-bold">ya no es válido</span>.
+                      </p>
+                      <p class="text-sm text-red-600 mb-3">
+                        El comprobante válido tiene el siguiente código:
+                      </p>
+                      <div class="flex items-center gap-3 flex-wrap">
+                        <span class="font-mono font-bold text-red-900 bg-red-100 border-2 border-red-300 px-3 py-1.5 rounded-lg">
+                          {{ comprobanteEncontrado.codigo_nuevo }}
+                        </span>
+                        <button
+                          @click="codigoBusqueda = comprobanteEncontrado.codigo_nuevo; buscarComprobante()"
+                          class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+                        >
+                          <ArrowRightIcon class="w-4 h-4" />
+                          Ver comprobante válido
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Información específica según el tipo -->
+                <template v-if="comprobanteEncontrado.tipo === 'abono_prestamo' || comprobanteEncontrado.tipo === 'abono_prestamo_eliminado' || comprobanteEncontrado.tipo === 'abono_prestamo_antiguo'">
+                  <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                    <p class="text-xs text-amber-700 mb-2 uppercase tracking-wide font-semibold">Información del Préstamo</p>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Monto del Préstamo</p>
+                        <p class="font-bold text-gray-800">${{ formatMoney(comprobanteEncontrado.prestamo?.monto || 0) }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Saldo Actual</p>
+                        <p class="font-bold text-gray-800">${{ formatMoney(comprobanteEncontrado.prestamo?.saldo_actual || 0) }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Interés</p>
+                        <p class="font-bold text-gray-800">{{ comprobanteEncontrado.prestamo?.interes || 0 }}%</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Cuotas</p>
+                        <p class="font-bold text-gray-800">{{ comprobanteEncontrado.prestamo?.numero_cuotas || 0 }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                    <div class="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor del Abono</p>
+                      <p class="font-bold text-amber-700 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                    </div>
+                    <div v-if="!comprobanteEncontrado.eliminado" class="bg-green-50 rounded-lg p-3 border border-green-200">
+                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Saldo Después del Abono</p>
+                      <p class="font-bold text-green-600 text-lg">${{ formatMoney(Math.max(0, (comprobanteEncontrado.prestamo?.saldo_actual || 0) - (comprobanteEncontrado.valor_pagado || 0))) }}</p>
+                    </div>
+                  </div>
+                </template>
+                
+                <template v-else>
+                  <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Cuota</p>
+                      <p class="font-bold text-gray-800 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota) }}</p>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-3">
+                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Pagado</p>
+                      <p class="font-bold text-green-600 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                    </div>
+                  </div>
+                  
+                  <div class="pt-3 border-t border-gray-200">
+                    <p class="text-xs text-gray-500 mb-2 uppercase tracking-wide font-semibold">Estado</p>
+                    <span 
+                      :class="[
+                        'inline-flex items-center px-3 py-1.5 rounded-lg font-semibold text-sm',
+                        comprobanteEncontrado.estado === 'pagada' ? 'bg-green-100 text-green-800' :
+                        comprobanteEncontrado.estado === 'parcial' ? 'bg-blue-100 text-blue-800' :
+                        comprobanteEncontrado.estado === 'mora' ? 'bg-red-100 text-red-800' :
+                        comprobanteEncontrado.estado === 'pendiente' ? 'bg-orange-100 text-orange-800' :
+                        'bg-gray-100 text-gray-700'
+                      ]"
+                    >
+                      {{ comprobanteEncontrado.estado?.toUpperCase() || 'N/A' }}
+                    </span>
+                  </div>
+                </template>
                 
                 <div class="pt-3 border-t border-gray-200">
-                  <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+                  <div :class="[
+                    'rounded-lg p-3 border',
+                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'
+                  ]">
                     <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Fecha de Pago</p>
-                    <p v-if="comprobanteEncontrado.fecha_pago" class="text-green-800 font-bold text-lg">
+                    <p v-if="comprobanteEncontrado.fecha_pago" :class="[
+                      'font-bold text-lg',
+                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-800' : 'text-green-800'
+                    ]">
                       {{ formatDateWithTime(comprobanteEncontrado.fecha_pago) }}
                     </p>
                     <p v-else class="text-gray-500 font-medium">No registrada</p>
@@ -803,9 +927,6 @@
                 class="relative overflow-hidden rounded-xl border-l-4 border-t-2 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm animate-fade-in-up"
                 :style="{ animationDelay: `${index * 0.05}s` }"
                 :class="[
-                  (cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono
-                    ? 'h-auto sm:h-auto' 
-                    : 'h-[91px] sm:h-auto',
                   cuotaData.estado === 'pagada' 
                     ? 'border-l-green-500 border-t-green-500 bg-gradient-to-br from-green-100 via-green-50 to-white' :
                   cuotaData.estado === 'mora' 
@@ -826,7 +947,17 @@
                 class="absolute inset-0 border-2 border-red-500 rounded-xl animate-pulse pointer-events-none z-0"
                 style="animation-duration: 1.5s;"
               ></div>
-              <div class="p-2 sm:p-2.5 h-full flex flex-col">
+              <div class="p-2 sm:p-2.5 h-full flex flex-col relative">
+                <!-- Botón WhatsApp en móvil - esquina superior derecha -->
+                <button
+                  v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                  @click="enviarWhatsAppCuota(cuotaData)"
+                  class="sm:hidden absolute top-2 right-2 w-7 h-7 bg-green-500 hover:bg-green-600 text-white rounded-full transition-all shadow-md hover:shadow-lg flex items-center justify-center z-20 flex-shrink-0"
+                  title="Enviar recordatorio por WhatsApp"
+                >
+                  <ChatBubbleLeftIcon class="w-3.5 h-3.5 flex-shrink-0" />
+                </button>
+                
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 flex-1 min-h-0">
                   <!-- Lado izquierdo: Emoji y nombre del mes -->
                   <div class="flex items-center gap-2.5 flex-1 min-w-0">
@@ -848,7 +979,7 @@
                     <!-- Nombre del mes, monto y detalles -->
                     <div class="min-w-0 flex-1">
                       <div class="flex items-center justify-between sm:block gap-2">
-                        <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex items-center gap-2 flex-wrap pr-8 sm:pr-0">
                           <p class="font-bold text-gray-800 text-sm sm:text-base">
                             {{ getMesLabel(cuotaData.mes) }} {{ cuotaData.anio }}
                             <span v-if="cuotaData.quincena" class="text-purple-600">- Q{{ cuotaData.quincena }}</span>
@@ -983,16 +1114,6 @@
                     </button>
                   </div>
                 </div>
-                
-                <!-- Botón WhatsApp en móvil (solo para pendiente o mora) - esquina inferior izquierda -->
-                <button
-                  v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                  @click="enviarWhatsAppCuota(cuotaData)"
-                  class="sm:hidden absolute bottom-2 left-2 p-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0 z-10"
-                  title="Enviar recordatorio por WhatsApp"
-                >
-                  <ChatBubbleLeftIcon class="w-3.5 h-3.5" />
-                </button>
               </div>
             </div>
             </template>
@@ -1432,6 +1553,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  InformationCircleIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   UserIcon,
@@ -1450,6 +1572,8 @@ import {
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useCuotasStore } from '../../stores/cuotas'
+import { getNatilleraAvatarUrl } from '../../utils/avatars'
+import { supabase } from '../../lib/supabase'
 
 const props = defineProps({
   id: String
@@ -1573,6 +1697,7 @@ async function buscarComprobante() {
   comprobanteNuevo.value = null
   
   try {
+    // Primero buscar en cuotas
     const result = await cuotasStore.buscarCuotaPorCodigo(id.value, codigoBusqueda.value.trim())
     
     if (result.success) {
@@ -1587,14 +1712,170 @@ async function buscarComprobante() {
           ...result.data, // Mantener toda la información de la cuota (socio, descripción, etc.)
           codigo_comprobante: result.historial.codigoAnterior, // Código anterior
           valor_pagado: result.historial.valorPagadoAnterior, // Valor pagado anterior
-          fecha_pago: null // No hay fecha de pago para el código anterior ya que fue actualizado
+          fecha_pago: null, // No hay fecha de pago para el código anterior ya que fue actualizado
+          tipo: 'cuota' // Indicar que es una cuota
         }
       } else {
         // Si no es antiguo, mostrar normalmente
-        comprobanteEncontrado.value = result.data
+        comprobanteEncontrado.value = {
+          ...result.data,
+          tipo: 'cuota' // Indicar que es una cuota
+        }
       }
     } else {
-      errorBusqueda.value = result.error || 'No se encontró el comprobante'
+      // Si no se encuentra en cuotas, buscar en pagos de préstamos
+      const codigo = codigoBusqueda.value.trim().toUpperCase()
+      
+      // Obtener los IDs de préstamos de esta natillera
+      const { data: prestamosNatillera, error: prestamosError } = await supabase
+        .from('prestamos')
+        .select(`
+          id,
+          socio_natillera:socios_natillera!inner(
+            id,
+            natillera_id,
+            socio:socios(*)
+          )
+        `)
+        .eq('socios_natillera.natillera_id', id.value)
+      
+      if (prestamosError) throw prestamosError
+      
+      if (prestamosNatillera && prestamosNatillera.length > 0) {
+        const prestamoIds = prestamosNatillera.map(p => p.id)
+        
+        // Primero buscar en pagos actuales
+        const { data: pagoPrestamo, error: pagoError } = await supabase
+          .from('pagos_prestamo')
+          .select(`
+            *,
+            prestamo:prestamos(
+              id,
+              monto,
+              saldo_actual,
+              interes,
+              numero_cuotas,
+              tipo_interes,
+              interes_anticipado,
+              socio_natillera:socios_natillera(
+                id,
+                socio:socios(*)
+              )
+            )
+          `)
+          .eq('codigo_comprobante', codigo)
+          .in('prestamo_id', prestamoIds)
+          .maybeSingle()
+        
+        if (pagoError) throw pagoError
+        
+        if (pagoPrestamo) {
+          // Formatear como comprobante de abono
+          comprobanteEncontrado.value = {
+            codigo_comprobante: pagoPrestamo.codigo_comprobante,
+            valor_pagado: pagoPrestamo.valor,
+            fecha_pago: pagoPrestamo.fecha,
+            tipo: 'abono_prestamo', // Indicar que es un abono a préstamo
+            socio_natillera: {
+              socio: pagoPrestamo.prestamo?.socio_natillera?.socio || null
+            },
+            descripcion: 'Abono a Préstamo',
+            prestamo: pagoPrestamo.prestamo,
+            pago_prestamo: pagoPrestamo
+          }
+        } else {
+          // Si no se encuentra en pagos actuales, buscar en historial
+          try {
+            // Buscar en historial directamente por código
+            const { data: historialPrestamo, error: historialError } = await supabase
+              .from('historial_comprobantes_prestamo')
+              .select(`
+                *,
+                prestamo:prestamos(
+                  id,
+                  monto,
+                  saldo_actual,
+                  interes,
+                  numero_cuotas,
+                  tipo_interes,
+                  interes_anticipado,
+                  socio_natillera:socios_natillera(
+                    id,
+                    socio:socios(*)
+                  )
+                ),
+                socio_natillera:socios_natillera(
+                  id,
+                  socio:socios(*)
+                )
+              `)
+              .eq('codigo_comprobante_anterior', codigo)
+              .order('fecha_actualizacion', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+            
+            if (historialError && !historialError.message.includes('historial_comprobantes_prestamo')) {
+              throw historialError
+            }
+            
+            if (historialPrestamo) {
+              // Obtener información del préstamo (puede venir del historial o de la relación)
+              const prestamoHistorial = historialPrestamo.prestamo || null
+              const socioNatillera = historialPrestamo.socio_natillera || prestamoHistorial?.socio_natillera || null
+              
+              // Verificar que el préstamo pertenezca a esta natillera
+              const prestamoPerteneceNatillera = historialPrestamo.prestamo_id && 
+                prestamoIds.includes(historialPrestamo.prestamo_id)
+              
+              if (prestamoPerteneceNatillera || !historialPrestamo.prestamo_id) {
+                // Si fue eliminado, mostrar información de eliminación
+                if (historialPrestamo.eliminado) {
+                  comprobanteEncontrado.value = {
+                    codigo_comprobante: historialPrestamo.codigo_comprobante_anterior,
+                    valor_pagado: historialPrestamo.valor_abono_anterior,
+                    fecha_pago: historialPrestamo.fecha_actualizacion,
+                    tipo: 'abono_prestamo_eliminado',
+                    eliminado: true,
+                    eliminado_por: historialPrestamo.eliminado_por_email || 'Usuario desconocido',
+                    eliminado_el: historialPrestamo.eliminado_el,
+                    socio_natillera: {
+                      socio: socioNatillera?.socio || null
+                    },
+                    descripcion: 'Abono a Préstamo (ELIMINADO)',
+                    prestamo: prestamoHistorial || null,
+                    historial: historialPrestamo
+                  }
+                } else {
+                  // Si fue actualizado, mostrar información del código anterior
+                  comprobanteEncontrado.value = {
+                    codigo_comprobante: historialPrestamo.codigo_comprobante_anterior,
+                    valor_pagado: historialPrestamo.valor_abono_anterior,
+                    fecha_pago: historialPrestamo.fecha_actualizacion,
+                    tipo: 'abono_prestamo_antiguo',
+                    socio_natillera: {
+                      socio: socioNatillera?.socio || null
+                    },
+                    descripcion: 'Abono a Préstamo (Código Actualizado)',
+                    prestamo: prestamoHistorial || null,
+                    codigo_nuevo: historialPrestamo.codigo_comprobante_nuevo,
+                    historial: historialPrestamo
+                  }
+                }
+              } else {
+                errorBusqueda.value = 'No se encontró ningún comprobante con ese código'
+              }
+            } else {
+              errorBusqueda.value = 'No se encontró ningún comprobante con ese código'
+            }
+          } catch (historialErr) {
+            // Si hay error al buscar en historial, solo mostrar que no se encontró
+            console.warn('Error buscando en historial:', historialErr)
+            errorBusqueda.value = 'No se encontró ningún comprobante con ese código'
+          }
+        }
+      } else {
+        errorBusqueda.value = result.error || 'No se encontró el comprobante'
+      }
     }
   } catch (e) {
     errorBusqueda.value = 'Error al buscar el comprobante: ' + e.message
@@ -1816,16 +2097,42 @@ const resumenSocio = computed(() => {
   }
 })
 
-const estadisticas = computed(() => {
-  return natillerasStore.calcularEstadisticas(natillera.value) || {
+const estadisticas = ref({
+  totalSocios: 0,
+  sociosActivos: 0,
+  totalAportado: 0,
+  totalPendiente: 0,
+  utilidadActividades: 0,
+  utilidadesRecogidas: 0,
+  fondoTotal: 0
+})
+
+// Función para calcular estadísticas de forma asíncrona
+async function calcularEstadisticasAsync() {
+  if (!natillera.value) {
+    estadisticas.value = {
+      totalSocios: 0,
+      sociosActivos: 0,
+      totalAportado: 0,
+      totalPendiente: 0,
+      utilidadActividades: 0,
+      utilidadesRecogidas: 0,
+      fondoTotal: 0
+    }
+    return
+  }
+  
+  const stats = await natillerasStore.calcularEstadisticas(natillera.value)
+  estadisticas.value = stats || {
     totalSocios: 0,
     sociosActivos: 0,
     totalAportado: 0,
     totalPendiente: 0,
     utilidadActividades: 0,
+    utilidadesRecogidas: 0,
     fondoTotal: 0
   }
-})
+}
 
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
@@ -1833,12 +2140,7 @@ function formatMoney(value) {
 
 function formatMoneyShort(value) {
   const num = value || 0
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1).replace('.0', '') + 'M'
-  }
-  if (num >= 1000) {
-    return (num / 1000).toFixed(0) + 'K'
-  }
+  // Mostrar el número completo con formato de miles
   return new Intl.NumberFormat('es-CO').format(num)
 }
 
@@ -2429,6 +2731,43 @@ watch(sociosEnMora, async (newValue, oldValue) => {
   }
 }, { deep: true })
 
+// Watch para recalcular estadísticas cuando cambie la natillera
+watch(natillera, async () => {
+  if (natillera.value) {
+    await calcularEstadisticasAsync()
+  }
+}, { deep: true })
+
+// Watch para detectar cambios en el ID de la natillera y recargar datos
+watch(() => id.value, async (newId, oldId) => {
+  // Solo recargar si el ID realmente cambió
+  if (newId && newId !== oldId) {
+    try {
+      await natillerasStore.fetchNatillera(newId)
+      configStore.cargarConfiguracion()
+      
+      // Calcular estadísticas
+      await calcularEstadisticasAsync()
+      
+      // Cargar cuotas para verificar mora
+      const cuotas = await cuotasStore.fetchCuotasNatillera(newId)
+      cuotasNatillera.value = cuotas || []
+      
+      // Calcular sanciones dinámicas para las cuotas en mora
+      const resultSanciones = await cuotasStore.calcularSancionesTotales(newId, cuotas)
+      if (resultSanciones.success) {
+        sancionesPorCuota.value = resultSanciones.sanciones || {}
+        configSancionesActiva.value = resultSanciones.configActiva || false
+      }
+      
+      // Recalcular estadísticas después de cargar cuotas
+      await calcularEstadisticasAsync()
+    } catch (error) {
+      console.error('Error recargando datos de natillera:', error)
+    }
+  }
+})
+
 onMounted(async () => {
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
@@ -2437,6 +2776,9 @@ onMounted(async () => {
     const natilleraId = props.id || route.params.id
     await natillerasStore.fetchNatillera(natilleraId)
     configStore.cargarConfiguracion()
+    
+    // Calcular estadísticas
+    await calcularEstadisticasAsync()
     
     // Cargar cuotas para verificar mora
     const cuotas = await cuotasStore.fetchCuotasNatillera(natilleraId)
@@ -2449,6 +2791,9 @@ onMounted(async () => {
       configSancionesActiva.value = resultSanciones.configActiva || false
       console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
     }
+    
+    // Recalcular estadísticas después de cargar cuotas
+    await calcularEstadisticasAsync()
     
     // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
     await nextTick()

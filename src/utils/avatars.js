@@ -30,3 +30,26 @@ export function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
   return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
 }
 
+export function getNatilleraAvatarUrl(nombre, avatarSeed = null, style = 'shapes') {
+  // Usar DiceBear Avatars con estilos abstractos y bonitos para natilleras (NO personas)
+  // Si hay un avatar_seed guardado, usarlo; si no, usar el nombre
+  const finalSeed = avatarSeed || nombre || 'natillera-default'
+  const encodedSeed = encodeURIComponent(finalSeed)
+  const avatarStyle = style || 'shapes'
+  
+  // Colores vibrantes y variados para estilos abstractos
+  const backgroundColors = {
+    'shapes': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'rings': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'identicon': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'icons': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'bottts': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'pixel-art': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a',
+    'fun-emoji': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf,ffd93d,6bcf7f,4d96ff,ff6b9d,ffa07a'
+  }
+  
+  const bgColors = backgroundColors[avatarStyle] || backgroundColors['shapes']
+  
+  return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
+}
+
