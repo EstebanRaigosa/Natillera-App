@@ -97,3 +97,4 @@ Redirige a /dashboard
 - [Documentación de Supabase - URL Configuration](https://supabase.com/docs/guides/auth/auth-redirects)
 - [Documentación de Supabase - Email Templates](https://supabase.com/docs/guides/auth/auth-email-templates)
 
+

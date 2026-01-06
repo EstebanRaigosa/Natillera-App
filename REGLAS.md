@@ -1,5 +1,36 @@
 # Reglas del Sistema - Natillera App
 
+## Configuración Regional
+
+La configuración regional que se mantendrá para el proyecto será la de **Colombia**, de la siguiente manera:
+
+| Elemento | Valor Correcto |
+|----------|---------------|
+| **País / Región** | Colombia |
+| **Idioma** | Español (Colombia) |
+| **Formato de Fecha** | `dd/MM/yyyy` (ejemplo: 15/12/2024) |
+| **Separador Decimal** | `,` (coma) |
+| **Separador de Miles** | `.` (punto) |
+| **Moneda** | Peso colombiano (`$`) |
+| **Zona Horaria** | `UTC -05:00 (Bogotá)` |
+
+### Aplicación en el Sistema
+
+Esta configuración afecta:
+- **Formato de fecha**: Todas las fechas se mostrarán en formato `dd/MM/yyyy`
+- **Separador decimal y de miles**: Los números se formatearán con punto para miles y coma para decimales (ejemplo: `1.234.567,89`)
+- **Moneda**: Se utilizará el símbolo `$` para pesos colombianos
+- **Zona horaria**: Todas las fechas y horas se manejarán en la zona horaria de Bogotá (UTC-5)
+- **Formato de números**: Importante para Excel, SQL y aplicaciones que exporten datos
+
+### Ejemplos de Formato
+
+- **Fecha**: `15/12/2024` (no `2024-12-15` o `12/15/2024`)
+- **Número**: `1.234.567,89` (no `1,234,567.89`)
+- **Moneda**: `$1.234.567` (no `COP 1,234,567` o `1.234.567 COP`)
+
+---
+
 ## Estados de las Cuotas
 
 Existen 4 estados posibles para una cuota: **Programada**, **Pendiente**, **En Mora** y **Pagada**.

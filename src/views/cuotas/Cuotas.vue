@@ -3458,25 +3458,17 @@ watch(mesSeleccionado, async (nuevoMes) => {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
     
-    // Solo generar cuotas automáticamente si el mes seleccionado es el mes actual
-    const fechaActual = new Date()
-    const mesActual = fechaActual.getMonth() + 1 // 1-12
-    const anioActual = fechaActual.getFullYear()
-    
-    // Verificar que el mes seleccionado sea el mes actual y el año coincida
-    if (nuevoMes === mesActual && anioNatillera.value === anioActual) {
-      // Intentar generar cuotas automáticamente para el mes actual
-      try {
-        const result = await cuotasStore.generarCuotasAutomaticas(id, nuevoMes, anioNatillera.value)
-        if (result.success && !result.yaExisten) {
-          console.log(`✅ Cuotas generadas automáticamente para el mes ${nuevoMes}`)
-          // Recargar cuotas para mostrar las nuevas
-          await cuotasStore.fetchCuotasNatillera(id)
-        }
-      } catch (error) {
-        console.error('Error en generación automática:', error)
-        // No mostrar error al usuario, solo loguear
+    // Generar cuotas automáticamente para el mes seleccionado si faltan
+    try {
+      const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioNatillera.value)
+      if (result.success && result.cuotasGeneradas > 0) {
+        console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente para el mes ${nuevoMes}`)
+        // Recargar cuotas para mostrar las nuevas
+        await cuotasStore.fetchCuotasNatillera(id)
       }
+    } catch (error) {
+      console.error('Error en generación automática:', error)
+      // No mostrar error al usuario, solo loguear
     }
     
     // Recalcular sanciones dinámicas cuando se cambia de mes
@@ -4231,6 +4223,7 @@ async function handleRegistrarPago() {
     
     // Guardar info del pago para el modal de confirmación
     pagoRegistrado.value = {
+      cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
       socioNombre,
       socioTelefono,
       valor: valorPagado, // Valor del pago actual
@@ -4652,6 +4645,52 @@ async function descargarComprobante() {
     document.body.removeChild(link)
     
     console.log('Descarga completada')
+    
+    // Registrar auditoría de descarga de comprobante
+    if (pagoRegistrado.value) {
+      const auditoria = useAuditoria()
+      const cuotaIdParaAuditoria = pagoRegistrado.value.cuotaId || null
+      const natilleraIdParaAuditoria = id || null
+      
+      console.log('[Auditoría] Registrando descarga de comprobante:', {
+        tieneCuotaId: !!cuotaIdParaAuditoria,
+        cuotaId: cuotaIdParaAuditoria,
+        natilleraId: natilleraIdParaAuditoria,
+        pagoRegistrado: pagoRegistrado.value
+      })
+      
+      const promesaAuditoria = auditoria.registrar({
+        tipoAccion: 'DOWNLOAD',
+        entidad: 'comprobante',
+        entidadId: cuotaIdParaAuditoria,
+        descripcion: `Se descargó comprobante de pago de ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
+        natilleraId: natilleraIdParaAuditoria,
+        detalles: {
+          tipo_comprobante: 'pago_cuota',
+          codigo_comprobante: pagoRegistrado.value.codigoComprobante || null,
+          socio_nombre: pagoRegistrado.value.socioNombre || null,
+          valor: pagoRegistrado.value.valor || null,
+          valor_total: pagoRegistrado.value.valorPagadoTotal || null,
+          es_parcial: pagoRegistrado.value.esParcial || false,
+          cuota_id: cuotaIdParaAuditoria
+        }
+      })
+      
+      registrarAuditoriaEnSegundoPlano(promesaAuditoria)
+      
+      // También loguear el resultado para debug
+      promesaAuditoria.then(result => {
+        if (result.success) {
+          console.log('[Auditoría] ✅ Descarga registrada exitosamente:', result.id)
+        } else {
+          console.error('[Auditoría] ❌ Error registrando descarga:', result.error)
+        }
+      }).catch(error => {
+        console.error('[Auditoría] ❌ Excepción al registrar descarga:', error)
+      })
+    } else {
+      console.warn('[Auditoría] No se pudo registrar descarga: pagoRegistrado.value es null')
+    }
   } catch (e) {
     console.error('Error completo:', e)
     alert('Error al generar la imagen: ' + e.message)
@@ -4681,6 +4720,28 @@ async function compartirWhatsApp() {
         title: 'Comprobante de Pago',
         text: `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".\n\n¡Gracias por estar al día! 🙌`
       })
+      
+      // Registrar auditoría de envío de comprobante
+      if (pagoRegistrado.value?.cuotaId) {
+        const auditoria = useAuditoria()
+        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+          tipoAccion: 'SEND',
+          entidad: 'comprobante',
+          entidadId: pagoRegistrado.value.cuotaId,
+          descripcion: `Se envió comprobante de pago por WhatsApp a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
+          natilleraId: id,
+          detalles: {
+            tipo_comprobante: 'pago_cuota',
+            metodo_envio: 'whatsapp',
+            codigo_comprobante: pagoRegistrado.value.codigoComprobante,
+            socio_nombre: pagoRegistrado.value.socioNombre,
+            socio_telefono: pagoRegistrado.value.socioTelefono,
+            valor: pagoRegistrado.value.valor,
+            valor_total: pagoRegistrado.value.valorPagadoTotal,
+            es_parcial: pagoRegistrado.value.esParcial
+          }
+        }))
+      }
     } else {
       // Fallback: descargar y abrir WhatsApp con mensaje
       const link = document.createElement('a')
@@ -4694,6 +4755,28 @@ async function compartirWhatsApp() {
         if (telefono) {
           const mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago. ¡Gracias por estar al día! 🙌`
           window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          
+          // Registrar auditoría de envío de comprobante (fallback)
+          if (pagoRegistrado.value?.cuotaId) {
+            const auditoria = useAuditoria()
+            registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+              tipoAccion: 'SEND',
+              entidad: 'comprobante',
+              entidadId: pagoRegistrado.value.cuotaId,
+              descripcion: `Se envió comprobante de pago por WhatsApp (fallback) a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
+              natilleraId: id,
+              detalles: {
+                tipo_comprobante: 'pago_cuota',
+                metodo_envio: 'whatsapp_fallback',
+                codigo_comprobante: pagoRegistrado.value.codigoComprobante,
+                socio_nombre: pagoRegistrado.value.socioNombre,
+                socio_telefono: pagoRegistrado.value.socioTelefono,
+                valor: pagoRegistrado.value.valor,
+                valor_total: pagoRegistrado.value.valorPagadoTotal,
+                es_parcial: pagoRegistrado.value.esParcial
+              }
+            }))
+          }
         }
       }, 500)
       
@@ -4707,6 +4790,28 @@ async function compartirWhatsApp() {
       if (telefono) {
         const mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera.\n\n¡Gracias por estar al día! 🙌`
         window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        
+        // Registrar auditoría de envío de comprobante (solo texto)
+        if (pagoRegistrado.value?.cuotaId) {
+          const auditoria = useAuditoria()
+          registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+            tipoAccion: 'SEND',
+            entidad: 'comprobante',
+            entidadId: pagoRegistrado.value.cuotaId,
+            descripcion: `Se envió comprobante de pago por WhatsApp (solo texto) a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
+            natilleraId: id,
+            detalles: {
+              tipo_comprobante: 'pago_cuota',
+              metodo_envio: 'whatsapp_texto',
+              codigo_comprobante: pagoRegistrado.value.codigoComprobante,
+              socio_nombre: pagoRegistrado.value.socioNombre,
+              socio_telefono: pagoRegistrado.value.socioTelefono,
+              valor: pagoRegistrado.value.valor,
+              valor_total: pagoRegistrado.value.valorPagadoTotal,
+              es_parcial: pagoRegistrado.value.esParcial
+            }
+          }))
+        }
       }
     }
   } finally {
@@ -4760,6 +4865,7 @@ function reenviarComprobante(cuota) {
   
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
+    cuotaId: cuota.id, // ID de la cuota para auditoría
     socioNombre: cuota.socio_natillera?.socio?.nombre,
     socioTelefono: cuota.socio_natillera?.socio?.telefono,
     valor: valorPagadoTotal, // Para reenvío, mostrar el total pagado
@@ -4779,6 +4885,23 @@ function reenviarComprobante(cuota) {
         })
       : 'Fecha no registrada'
   }
+  
+  // Registrar auditoría de reenvío de comprobante
+  const auditoria = useAuditoria()
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'RESEND',
+    entidad: 'comprobante',
+    entidadId: cuota.id,
+    descripcion: `Se reenvió comprobante de pago de ${cuota.socio_natillera?.socio?.nombre || 'socio'} (Código: ${cuota.codigo_comprobante || 'N/A'})`,
+    natilleraId: id,
+    detalles: {
+      tipo_comprobante: 'pago_cuota',
+      codigo_comprobante: cuota.codigo_comprobante,
+      socio_nombre: cuota.socio_natillera?.socio?.nombre,
+      valor_total: valorPagadoTotal,
+      es_parcial: esParcial
+    }
+  }))
   
   modalConfirmacion.value = true
 }
@@ -5113,6 +5236,21 @@ onMounted(async () => {
   }
   
   await cuotasStore.fetchCuotasNatillera(id)
+  
+  // Generar cuotas faltantes para el mes seleccionado al cargar la vista
+  if (mesSeleccionado.value) {
+    try {
+      const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioNatillera.value)
+      if (result.success && result.cuotasGeneradas > 0) {
+        console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente al cargar la vista`)
+        // Recargar cuotas para mostrar las nuevas
+        await cuotasStore.fetchCuotasNatillera(id)
+      }
+    } catch (error) {
+      console.error('Error en generación automática al cargar:', error)
+      // No mostrar error al usuario, solo loguear
+    }
+  }
   
   // Calcular sanciones dinámicas solo si están activadas
   if (sancionesActivas.value) {

@@ -123,6 +123,7 @@
                     <input
                       v-model="filtros.fechaDesde"
                       type="date"
+                      lang="es-CO"
                       class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
                     />
                     <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -135,6 +136,7 @@
                     <input
                       v-model="filtros.fechaHasta"
                       type="date"
+                      lang="es-CO"
                       class="input-field w-full pl-9 pr-3 hover:bg-white focus:bg-white transition-colors text-sm"
                     />
                     <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -733,12 +735,11 @@ function cerrarDetalle() {
 
 function formatDate(dateString) {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  const d = new Date(dateString)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 function formatTime(dateString) {

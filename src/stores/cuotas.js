@@ -1471,6 +1471,243 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // Función para generar cuotas faltantes para socios que no tienen cuota en un mes
+  async function generarCuotasFaltantes(natilleraId, mes = null, anio = null) {
+    try {
+      loading.value = true
+      error.value = null
+
+      // Obtener información de la natillera (días de gracia y período)
+      const { data: natillera, error: natilleraError } = await supabase
+        .from('natilleras')
+        .select('reglas_multas, mes_inicio, mes_fin, anio')
+        .eq('id', natilleraId)
+        .single()
+
+      if (natilleraError) throw natilleraError
+      if (!natillera) return { success: false, error: 'Natillera no encontrada' }
+
+      // Obtener días de gracia
+      const reglasMultas = natillera.reglas_multas || {}
+      const diasGracia = reglasMultas.dias_gracia || 3
+
+      // Si no se especifica mes/año, usar el mes actual
+      const fechaActual = new Date()
+      const mesAGenerar = mes || (fechaActual.getMonth() + 1) // 1-12
+      const anioAGenerar = anio || fechaActual.getFullYear()
+
+      // Verificar que el mes esté dentro del período de la natillera
+      const anioNatillera = natillera.anio || anioAGenerar
+      const mesInicio = natillera.mes_inicio || 1
+      const mesFin = natillera.mes_fin || 11
+
+      // Verificar si el mes está en el rango
+      let mesEnRango = false
+      if (anioAGenerar === anioNatillera) {
+        if (mesInicio <= mesFin) {
+          // Rango normal (ej: Enero a Noviembre)
+          mesEnRango = mesAGenerar >= mesInicio && mesAGenerar <= mesFin
+        } else {
+          // Rango que cruza año (ej: Noviembre a Enero)
+          mesEnRango = mesAGenerar >= mesInicio || mesAGenerar <= mesFin
+        }
+      }
+
+      if (!mesEnRango) {
+        return { success: false, error: 'El mes seleccionado no está en el período de la natillera' }
+      }
+
+      // Obtener todos los socios activos
+      const { data: sociosNatillera, error: sociosError } = await supabase
+        .from('socios_natillera')
+        .select('id, periodicidad')
+        .eq('natillera_id', natilleraId)
+        .eq('estado', 'activo')
+
+      if (sociosError) throw sociosError
+      if (!sociosNatillera || sociosNatillera.length === 0) {
+        return { success: false, error: 'No hay socios activos' }
+      }
+
+      const socioNatilleraIds = sociosNatillera.map(s => s.id)
+
+      // Obtener cuotas existentes para este mes
+      const { data: cuotasExistentes, error: cuotasError } = await supabase
+        .from('cuotas')
+        .select('socio_natillera_id, quincena')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .eq('mes', mesAGenerar)
+        .eq('anio', anioAGenerar)
+
+      if (cuotasError) throw cuotasError
+
+      // Crear un mapa de cuotas existentes por socio y quincena
+      const cuotasExistentesMap = new Map()
+      ;(cuotasExistentes || []).forEach(cuota => {
+        const key = `${cuota.socio_natillera_id}-${cuota.quincena || 'mensual'}`
+        cuotasExistentesMap.set(key, true)
+      })
+
+      // Identificar socios que no tienen cuota generada
+      // Verificación más estricta: contar cuotas por socio y verificar según periodicidad
+      const sociosSinCuota = []
+      sociosNatillera.forEach(socio => {
+        const periodicidad = socio.periodicidad || 'mensual'
+        
+        // Contar cuotas existentes para este socio
+        const cuotasDelSocio = (cuotasExistentes || []).filter(c => c.socio_natillera_id === socio.id)
+        
+        if (periodicidad === 'quincenal') {
+          // Para quincenal: debe tener exactamente 2 cuotas (quincena 1 y quincena 2)
+          const tieneQ1 = cuotasDelSocio.some(c => c.quincena === 1)
+          const tieneQ2 = cuotasDelSocio.some(c => c.quincena === 2)
+          
+          if (!tieneQ1 || !tieneQ2) {
+            sociosSinCuota.push(socio.id)
+            console.log(`📋 Socio ${socio.id} (quincenal) sin cuota completa: Q1=${tieneQ1}, Q2=${tieneQ2}`)
+          }
+        } else {
+          // Para mensual: debe tener 1 cuota sin quincena (null)
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
+          
+          if (!tieneMensual) {
+            sociosSinCuota.push(socio.id)
+            console.log(`📋 Socio ${socio.id} (mensual) sin cuota`)
+          }
+        }
+      })
+
+      // Si todos los socios ya tienen cuota, retornar
+      if (sociosSinCuota.length === 0) {
+        return { success: true, message: 'Todos los socios ya tienen cuota generada para este mes', cuotasGeneradas: 0 }
+      }
+
+      // Calcular fechas límite y fechas de vencimiento
+      const ultimoDia = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)
+      
+      const formatearFecha = (anio, mes, dia) => {
+        return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+      }
+      
+      const calcularFechaConDiasGracia = (anio, mes, dia, diasGracia) => {
+        const diasEnMes = obtenerUltimoDiaDelMes(mes, anio)
+        const diaFinal = dia + diasGracia
+        let anioFinal = anio
+        let mesFinal = mes
+        let diaResultado = diaFinal
+        
+        if (diaResultado > diasEnMes) {
+          diaResultado = diaResultado - diasEnMes
+          mesFinal = mes + 1
+          if (mesFinal > 12) {
+            mesFinal = 1
+            anioFinal = anio + 1
+          }
+        }
+        return formatearFecha(anioFinal, mesFinal, diaResultado)
+      }
+      
+      const fechaLimiteQuincena1Str = formatearFecha(anioAGenerar, mesAGenerar, 15)
+      const fechaVencimientoQuincena1Str = calcularFechaConDiasGracia(anioAGenerar, mesAGenerar, 15, diasGracia)
+      const fechaLimiteQuincena2Str = formatearFecha(anioAGenerar, mesAGenerar, ultimoDia)
+      const fechaVencimientoQuincena2Str = calcularFechaConDiasGracia(anioAGenerar, mesAGenerar, ultimoDia, diasGracia)
+
+      // Obtener nombre del mes
+      const meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ]
+      const mesLabel = meses[mesAGenerar - 1]
+
+      // Generar las cuotas solo para los socios que faltan
+      const fechasParaGenerar = {
+        mensual: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str },
+        quincena1: { vencimiento: fechaVencimientoQuincena1Str, limite: fechaLimiteQuincena1Str },
+        quincena2: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str }
+      }
+
+      // Generar cuotas para cada socio que falta
+      // IMPORTANTE: Verificar nuevamente antes de generar para evitar duplicados
+      let cuotasGeneradas = 0
+      for (const socioId of sociosSinCuota) {
+        // Verificación adicional: Re-verificar que el socio realmente no tiene cuota
+        // Esta verificación es atómica y previene condiciones de carrera
+        const { data: cuotasSocio, error: errorVerificacion } = await supabase
+          .from('cuotas')
+          .select('id, quincena')
+          .eq('socio_natillera_id', socioId)
+          .eq('mes', mesAGenerar)
+          .eq('anio', anioAGenerar)
+        
+        if (errorVerificacion) {
+          console.error(`❌ Error verificando cuotas del socio ${socioId}:`, errorVerificacion)
+          continue
+        }
+        
+        // Obtener información del socio para verificar periodicidad
+        const socio = sociosNatillera.find(s => s.id === socioId)
+        const periodicidad = socio?.periodicidad || 'mensual'
+        
+        // Verificación estricta según periodicidad
+        let necesitaGenerar = false
+        if (periodicidad === 'quincenal') {
+          // Para quincenal: debe tener exactamente 2 cuotas
+          const tieneQ1 = cuotasSocio?.some(c => c.quincena === 1) || false
+          const tieneQ2 = cuotasSocio?.some(c => c.quincena === 2) || false
+          necesitaGenerar = !tieneQ1 || !tieneQ2
+          
+          if (!necesitaGenerar) {
+            console.log(`⏭️ Socio ${socioId} (quincenal) ya tiene ambas cuotas, saltando...`)
+            continue
+          }
+        } else {
+          // Para mensual: debe tener 1 cuota sin quincena
+          const tieneMensual = cuotasSocio?.some(c => c.quincena === null || c.quincena === undefined) || false
+          necesitaGenerar = !tieneMensual
+          
+          if (!necesitaGenerar) {
+            console.log(`⏭️ Socio ${socioId} (mensual) ya tiene cuota, saltando...`)
+            continue
+          }
+        }
+        
+        // Solo generar si realmente necesita
+        if (necesitaGenerar) {
+          console.log(`✅ Generando cuotas para socio ${socioId} (${periodicidad})`)
+          const result = await generarCuotasPeriodo(
+            natilleraId,
+            fechasParaGenerar,
+            mesLabel,
+            mesAGenerar,
+            anioAGenerar,
+            socioId // Solo este socio
+          )
+          
+          if (result.success) {
+            // Contar cuántas cuotas se generaron
+            cuotasGeneradas += periodicidad === 'quincenal' ? 2 : 1
+            console.log(`✅ Cuotas generadas para socio ${socioId}`)
+          } else {
+            console.error(`❌ Error generando cuotas para socio ${socioId}:`, result.error)
+          }
+        }
+      }
+
+      return { 
+        success: true, 
+        message: `Se generaron ${cuotasGeneradas} cuotas para ${sociosSinCuota.length} socio(s)`, 
+        cuotasGeneradas,
+        sociosProcesados: sociosSinCuota.length
+      }
+    } catch (e) {
+      error.value = e.message
+      console.error('Error en generación de cuotas faltantes:', e)
+      return { success: false, error: e.message }
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Función para buscar cuota por código de comprobante
   async function buscarCuotaPorCodigo(natilleraId, codigo) {
     try {
@@ -1635,14 +1872,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Mantener el valor_pagado actual, solo cambiar el valor_cuota
             // La diferencia (nuevoValorNum - valorPagadoActual) queda como pendiente
             const diferencia = nuevoValorNum - valorPagadoActual
-            const fechaActual = new Date().toLocaleDateString('es-ES')
-            datosActualizar.descripcion = `Cuota ajustada: Valor original $${valorCuotaAnterior.toLocaleString('es-ES')} → $${nuevoValorNum.toLocaleString('es-ES')}. Pendiente: $${diferencia.toLocaleString('es-ES')} (${fechaActual})`
-            console.log(`🔄 Cuota pagada ${cuota.id}: Convertida a parcial. Diferencia pendiente: $${diferencia.toLocaleString('es-ES')}`)
+            const fechaActual = new Date().toLocaleDateString('es-CO', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }).replace(/\//g, '/')
+            datosActualizar.descripcion = `Cuota ajustada: Valor original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pendiente: $${diferencia.toLocaleString('es-CO')} (${fechaActual})`
+            console.log(`🔄 Cuota pagada ${cuota.id}: Convertida a parcial. Diferencia pendiente: $${diferencia.toLocaleString('es-CO')}`)
           } else if (nuevoValorNum < valorPagadoActual) {
             // Nuevo valor es MENOR: mantener como pagada pero agregar anotación
             datosActualizar.estado = 'pagada'
-            const fechaActual = new Date().toLocaleDateString('es-ES')
-            const anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-ES')} → $${nuevoValorNum.toLocaleString('es-ES')}. Pagado: $${valorPagadoActual.toLocaleString('es-ES')} (${fechaActual})`
+            const fechaActual = new Date().toLocaleDateString('es-CO', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }).replace(/\//g, '/')
+            const anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pagado: $${valorPagadoActual.toLocaleString('es-CO')} (${fechaActual})`
             // Si ya tiene descripción, agregar la nueva anotación
             datosActualizar.descripcion = cuota.descripcion 
               ? `${cuota.descripcion} | ${anotacion}`
@@ -1841,6 +2086,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     getCuotasPorMes,
     getResumenPorMes,
     generarCuotasAutomaticas,
+    generarCuotasFaltantes,
     buscarCuotaPorCodigo,
     actualizarCuota,
     actualizarSocioNatilleraEnCuotas,

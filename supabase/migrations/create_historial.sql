@@ -30,3 +30,4 @@ DROP POLICY IF EXISTS "Registrar historial" ON historial;
 CREATE POLICY "Registrar historial" ON historial
     FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
+

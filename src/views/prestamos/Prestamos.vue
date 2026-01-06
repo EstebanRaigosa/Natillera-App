@@ -397,16 +397,127 @@
           <!-- Tipo de interés -->
           <div>
             <label class="label mb-2">Tipo de interés *</label>
-            <select v-model="formPrestamo.tipo_interes" class="input-field" required>
-              <option value="simple">📊 Interés Simple</option>
-              <option value="compuesto">💰 Interés Compuesto</option>
-            </select>
-            <p class="mt-1 text-xs text-gray-500">
+            <div class="grid grid-cols-2 gap-3">
+              <!-- Radio: Interés Simple -->
+              <label 
+                :class="[
+                  'relative flex flex-row items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                  formPrestamo.tipo_interes === 'simple'
+                    ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
+                    : 'border-gray-200 bg-white hover:border-natillera-300 hover:bg-gray-50'
+                ]"
+              >
+                <input 
+                  type="radio" 
+                  v-model="formPrestamo.tipo_interes" 
+                  value="simple"
+                  class="sr-only"
+                  required
+                />
+                <div 
+                  :class="[
+                    'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    formPrestamo.tipo_interes === 'simple'
+                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30'
+                      : 'bg-gray-100 border-2 border-gray-200'
+                  ]"
+                >
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span 
+                    :class="[
+                      'font-bold text-xs block',
+                      formPrestamo.tipo_interes === 'simple' ? 'text-natillera-700' : 'text-gray-700'
+                    ]"
+                  >
+                    Interés Simple
+                  </span>
+                  <span 
+                    :class="[
+                      'text-xs block',
+                      formPrestamo.tipo_interes === 'simple' ? 'text-natillera-600' : 'text-gray-500'
+                    ]"
+                  >
+                    Sobre monto inicial
+                  </span>
+                </div>
+                <!-- Indicador de selección -->
+                <div 
+                  v-if="formPrestamo.tipo_interes === 'simple'"
+                  class="w-4 h-4 bg-natillera-500 rounded-full flex items-center justify-center flex-shrink-0"
+                >
+                  <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </label>
+
+              <!-- Radio: Interés Compuesto -->
+              <label 
+                :class="[
+                  'relative flex flex-row items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all duration-200',
+                  formPrestamo.tipo_interes === 'compuesto'
+                    ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
+                    : 'border-gray-200 bg-white hover:border-natillera-300 hover:bg-gray-50'
+                ]"
+              >
+                <input 
+                  type="radio" 
+                  v-model="formPrestamo.tipo_interes" 
+                  value="compuesto"
+                  class="sr-only"
+                  required
+                />
+                <div 
+                  :class="[
+                    'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                    formPrestamo.tipo_interes === 'compuesto'
+                      ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30'
+                      : 'bg-gray-100 border-2 border-gray-200'
+                  ]"
+                >
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span 
+                    :class="[
+                      'font-bold text-xs block',
+                      formPrestamo.tipo_interes === 'compuesto' ? 'text-natillera-700' : 'text-gray-700'
+                    ]"
+                  >
+                    Interés Compuesto
+                  </span>
+                  <span 
+                    :class="[
+                      'text-xs block',
+                      formPrestamo.tipo_interes === 'compuesto' ? 'text-natillera-600' : 'text-gray-500'
+                    ]"
+                  >
+                    Se acumula mensualmente
+                  </span>
+                </div>
+                <!-- Indicador de selección -->
+                <div 
+                  v-if="formPrestamo.tipo_interes === 'compuesto'"
+                  class="w-4 h-4 bg-natillera-500 rounded-full flex items-center justify-center flex-shrink-0"
+                >
+                  <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </label>
+            </div>
+            <p class="mt-2 text-xs text-gray-500 text-center">
               <span v-if="formPrestamo.tipo_interes === 'simple'">
-                Se calcula sobre el monto inicial solamente
+                💡 El interés se calcula sobre el monto inicial solamente
               </span>
               <span v-else>
-                El interés se acumula mensualmente
+                💡 El interés se acumula mensualmente sobre el capital + intereses
               </span>
             </p>
           </div>
@@ -438,6 +549,30 @@
                 required
               />
             </div>
+          </div>
+
+          <!-- Fecha de inicio del préstamo -->
+          <div>
+            <label class="label mb-2 flex items-center gap-2">
+              <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Fecha de inicio del préstamo *</span>
+            </label>
+            <div class="relative">
+              <DateInput
+                v-model="formPrestamo.fecha_pago"
+                placeholder="dd/MM/yyyy"
+                input-class="text-base font-semibold"
+                :required="true"
+              />
+            </div>
+            <p class="mt-2 text-xs text-gray-500 flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-natillera-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>Esta fecha será el punto de partida para calcular las fechas de las cuotas del plan de pagos</span>
+            </p>
           </div>
 
           <!-- Resumen de intereses -->
@@ -632,8 +767,10 @@
                   $
                 </div>
                 <input 
+                  ref="inputValorAbonoRef"
                   :value="valorAbonoFormateado"
                   @input="actualizarValorAbono"
+                  @focus="$event.target.select()"
                   type="text" 
                   inputmode="numeric"
                   class="input-field pl-12 pr-4 text-2xl font-bold text-natillera-700 focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 bg-white hover:border-natillera-300 transition-all cursor-text"
@@ -676,6 +813,28 @@
               <div v-if="formAbono.valor && formAbono.valor > (prestamoSeleccionado?.saldo_actual || 0)" class="mt-2 text-xs text-red-600 font-medium">
                 ⚠️ El abono no puede ser mayor al saldo actual
               </div>
+            </div>
+
+            <!-- Campo de fecha de pago -->
+            <div>
+              <label class="label mb-2 flex items-center gap-2">
+                <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Fecha de pago *</span>
+              </label>
+              <DateInput
+                v-model="formAbono.fecha_pago"
+                placeholder="dd/MM/yyyy"
+                input-class="text-base font-semibold"
+                :required="true"
+              />
+              <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Selecciona la fecha en que se realizó el pago (formato: dd/MM/yyyy)
+              </p>
             </div>
           </form>
         </div>
@@ -871,106 +1030,135 @@
     <!-- Modal Editar Abono -->
     <div v-if="modalEditarAbono && abonoAEditar" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalEditarAbono = false; abonoAEditar = null"></div>
-      <div class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+      <div class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-5 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
+          <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16 blur-xl"></div>
           <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <PencilIcon class="w-5 h-5 text-white" />
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
+                <PencilIcon class="w-6 h-6 text-white" />
               </div>
               <div>
-                <h3 class="text-xl font-display font-bold">
+                <h3 class="text-2xl font-display font-bold">
                   Editar Abono
                 </h3>
-                <p class="text-white/90 text-xs">Modifica el valor del abono</p>
+                <p class="text-white/90 text-sm mt-0.5">Modifica el valor del abono registrado</p>
               </div>
             </div>
             <button 
               @click="modalEditarAbono = false; abonoAEditar = null"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+              class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
         </div>
 
         <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
-          <form @submit.prevent="guardarAbonoEditado" class="p-4 sm:p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 via-white to-gray-50">
+          <form @submit.prevent="guardarAbonoEditado" class="p-5 sm:p-6 space-y-6">
             <!-- Información del abono actual -->
-            <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 border-2 border-blue-200 rounded-xl p-4 overflow-hidden">
-              <div class="absolute top-0 right-0 w-20 h-20 bg-blue-200/30 rounded-full -mr-10 -mt-10 blur-xl"></div>
+            <div class="relative bg-white border-2 border-blue-200 rounded-2xl p-5 shadow-lg overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 bg-blue-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               <div class="relative z-10">
-                <p class="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Abono Actual</p>
-                <p class="text-2xl font-bold text-blue-700">${{ formatMoney(abonoAEditar?.valorOriginal || abonoAEditar?.valor) }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ formatDate(abonoAEditar?.fecha) }}</p>
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-md">
+                    <CurrencyDollarIcon class="w-5 h-5 text-white" />
+                  </div>
+                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Abono Actual</p>
+                </div>
+                <p class="text-3xl font-bold text-blue-700 mb-1">${{ formatMoney(abonoAEditar?.valorOriginal || abonoAEditar?.valor) }}</p>
+                <p class="text-sm text-gray-500 flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {{ formatDate(abonoAEditar?.fecha) }}
+                </p>
               </div>
             </div>
 
             <!-- Campo de nuevo valor -->
-            <div>
-              <label class="label mb-2 flex items-center gap-2">
-                <CurrencyDollarIcon class="w-5 h-5 text-natillera-600" />
-                Nuevo valor del abono *
+            <div class="space-y-3">
+              <label class="label mb-3 flex items-center gap-2 text-base">
+                <div class="w-8 h-8 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                  <CurrencyDollarIcon class="w-4 h-4 text-white" />
+                </div>
+                <span class="font-bold">Nuevo valor del abono *</span>
               </label>
               <div class="relative">
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-natillera-600 font-bold text-xl z-10">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 text-natillera-600 font-bold text-2xl z-10">
                   $
                 </div>
                 <input 
-                  v-model.number="abonoAEditar.valor"
-                  type="number" 
-                  class="input-field pl-12 text-xl font-bold text-natillera-700 focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
-                  min="1000"
-                  step="1000"
+                  :value="valorAbonoEditadoFormateado"
+                  @input="actualizarValorAbonoEditado"
+                  @focus="$event.target.select()"
+                  type="text" 
+                  inputmode="numeric"
+                  class="w-full pl-14 pr-5 py-4 text-2xl font-bold text-natillera-700 bg-white border-2 border-natillera-200 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md"
                   placeholder="0"
                   required
                 />
               </div>
               
               <!-- Información del cambio -->
-              <div v-if="abonoAEditar?.valor && abonoAEditar.valor !== parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)" class="mt-4 p-4 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl">
-                <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-semibold text-gray-700">Diferencia:</span>
+              <div 
+                v-if="abonoAEditar?.valor && abonoAEditar.valor !== parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)" 
+                class="mt-4 p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-xl shadow-sm"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Diferencia:
+                  </span>
                   <span :class="[
-                    'text-lg font-bold',
+                    'text-xl font-bold',
                     (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? 'text-green-700' : 'text-red-700'
                   ]">
-                    {{ (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? '+' : '' }}${{ formatMoney(abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) }}
+                    {{ (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 ? '+' : '' }}${{ formatMoney(Math.abs(abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor))) }}
                   </span>
                 </div>
-                <p class="text-xs text-amber-700 mt-2">
-                  {{ (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 
-                    ? 'El saldo del préstamo disminuirá' 
-                    : 'El saldo del préstamo aumentará' }}
-                </p>
+                <div class="flex items-center gap-2 text-sm text-amber-800 bg-white/60 rounded-lg px-3 py-2">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>
+                    {{ (abonoAEditar.valor - parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)) > 0 
+                      ? 'El saldo del préstamo disminuirá en esta cantidad' 
+                      : 'El saldo del préstamo aumentará en esta cantidad' }}
+                  </span>
+                </div>
               </div>
               
               <!-- Validaciones -->
-              <div v-if="abonoAEditar?.valor && abonoAEditar.valor < 1000" class="mt-2 text-xs text-amber-600 font-medium">
-                ⚠️ El valor mínimo del abono es $1.000
+              <div v-if="abonoAEditar?.valor && abonoAEditar.valor < 1000" class="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-sm text-amber-700">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span class="font-medium">El valor mínimo del abono es $1.000</span>
               </div>
             </div>
           </form>
         </div>
 
         <!-- Footer fijo -->
-        <div class="border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4 flex-shrink-0">
+        <div class="border-t-2 border-gray-200 bg-white p-5 flex-shrink-0">
           <div class="flex gap-3">
             <button 
               type="button"
               @click="modalEditarAbono = false; abonoAEditar = null"
-              class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+              class="flex-1 px-5 py-3.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancelar
             </button>
             <button 
               type="button"
               @click="guardarAbonoEditado" 
-              class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center gap-2"
+              class="flex-1 px-5 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center gap-2"
               :disabled="loading || !abonoAEditar?.valor || abonoAEditar.valor < 1000 || abonoAEditar.valor === parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)"
             >
               <PencilIcon v-if="!loading" class="w-5 h-5" />
@@ -1016,19 +1204,18 @@
           <div class="p-4 sm:p-6 space-y-6">
             <!-- Información del préstamo -->
             <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="font-semibold text-gray-800 flex items-center gap-2">
-                  <CurrencyDollarIcon class="w-5 h-5 text-blue-600" />
-                  Información del Préstamo
+              <div class="flex items-center justify-between mb-4 gap-3">
+                <h4 class="font-semibold text-gray-800 flex items-center gap-2 flex-1 min-w-0">
+                  <CurrencyDollarIcon class="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <span class="truncate">Información del Préstamo</span>
                 </h4>
                 <button
-                  @click="abrirModalCompartirPrestamo"
-                  class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
+                  @click.stop="abrirModalCompartirPrestamo"
+                  class="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0"
                   title="Enviar información del préstamo por WhatsApp"
                 >
-                  <ChatBubbleLeftIcon class="w-4 h-4" />
-                  <span class="hidden sm:inline">Enviar por WhatsApp</span>
-                  <span class="sm:hidden">WhatsApp</span>
+                  <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
+                  <span class="hidden lg:inline ml-1.5">Enviar por WhatsApp</span>
                 </button>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -1111,6 +1298,479 @@
                   <p class="text-xs text-gray-500 mb-1">Saldo pendiente</p>
                   <p class="font-bold text-red-600">${{ formatMoney(prestamoDetalle?.saldo_actual) }}</p>
                 </div>
+              </div>
+            </div>
+
+            <!-- Plan de Pagos -->
+            <div v-if="planPagosPrestamo.length > 0">
+              <!-- Si solo hay 1 cuota, mostrarla directamente -->
+              <div v-if="planPagosPrestamo.length === 1" class="mb-4">
+                <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Plan de Pago
+                </h4>
+                <!-- Vista Desktop: Tabla -->
+                <div class="hidden md:block bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <table class="w-full">
+                      <thead class="bg-gradient-to-r from-natillera-50 to-emerald-50">
+                        <tr>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Cuota</th>
+                          <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fecha Proyectada</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Valor Cuota</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Valor Pagado</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Capital</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Interés</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Saldo Restante</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                      <tr 
+                        v-for="cuota in planPagosPrestamo" 
+                        :key="cuota.id"
+                        :class="[
+                          'hover:bg-gray-50 transition-colors',
+                          cuota.pagada ? 'bg-green-50/30' : '',
+                          new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada ? 'bg-amber-50/30' : ''
+                        ]"
+                      >
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-800">
+                          #{{ cuota.numero_cuota }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                          {{ formatDate(cuota.fecha_proyectada) }}
+                          <span 
+                            v-if="new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada"
+                            class="ml-2 text-xs text-amber-600 font-semibold"
+                          >
+                            ⚠️ Vencida
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-800 text-right">
+                          ${{ formatMoney(cuota.valor_cuota) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm font-semibold text-right" :class="parseFloat(cuota.valor_pagado || 0) > 0 ? 'text-green-700' : 'text-gray-500'">
+                          ${{ formatMoney(cuota.valor_pagado || 0) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600 text-right">
+                          ${{ formatMoney(cuota.capital) }}
+                        </td>
+                          <td class="px-4 py-3 text-sm text-gray-600 text-right">
+                            ${{ formatMoney(cuota.interes) }}
+                          </td>
+                          <td class="px-4 py-3 text-sm font-semibold text-right" :class="(parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0)) > 0 ? 'text-gray-700' : 'text-green-600'">
+                            ${{ formatMoney(Math.max(0, parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0))) }}
+                          </td>
+                          <td class="px-4 py-3 text-center">
+                            <span 
+                              :class="[
+                                'px-2 py-1 rounded-full text-xs font-semibold',
+                                cuota.pagada 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : new Date(cuota.fecha_proyectada) < new Date()
+                                  ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-gray-100 text-gray-600'
+                              ]"
+                            >
+                              {{ cuota.pagada ? 'Pagada' : new Date(cuota.fecha_proyectada) < new Date() ? 'Vencida' : 'Pendiente' }}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- Vista Móvil: Tarjeta -->
+                <div class="md:hidden">
+                  <div 
+                    v-for="cuota in planPagosPrestamo" 
+                    :key="cuota.id"
+                    :class="[
+                      'bg-white border-2 rounded-xl p-4 shadow-sm transition-all',
+                      cuota.pagada 
+                        ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-white' 
+                        : new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada
+                        ? 'border-amber-200 bg-gradient-to-br from-amber-50/50 to-white'
+                        : 'border-gray-200 hover:border-natillera-300'
+                    ]"
+                  >
+                    <!-- Header de la tarjeta -->
+                    <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                      <div class="flex items-center gap-2">
+                        <div 
+                          :class="[
+                            'w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm',
+                            cuota.pagada 
+                              ? 'bg-green-500 text-white' 
+                              : new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-natillera-500 text-white'
+                          ]"
+                        >
+                          #{{ cuota.numero_cuota }}
+                        </div>
+                        <div>
+                          <p class="font-semibold text-gray-800 text-sm">Cuota #{{ cuota.numero_cuota }}</p>
+                          <p class="text-xs text-gray-500">{{ formatDate(cuota.fecha_proyectada) }}</p>
+                        </div>
+                      </div>
+                      <span 
+                        :class="[
+                          'px-2.5 py-1 rounded-full text-xs font-semibold',
+                          cuota.pagada 
+                            ? 'bg-green-100 text-green-700' 
+                            : new Date(cuota.fecha_proyectada) < new Date()
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-gray-100 text-gray-600'
+                        ]"
+                      >
+                        {{ cuota.pagada ? 'Pagada' : new Date(cuota.fecha_proyectada) < new Date() ? 'Vencida' : 'Pendiente' }}
+                      </span>
+                    </div>
+                    <!-- Información de la cuota -->
+                    <div class="space-y-2">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Valor de la cuota:</span>
+                        <span class="text-sm font-bold text-gray-800">${{ formatMoney(cuota.valor_cuota) }}</span>
+                      </div>
+                      <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <span class="text-xs text-gray-500">Valor pagado:</span>
+                        <span 
+                          :class="[
+                            'text-sm font-bold',
+                            parseFloat(cuota.valor_pagado || 0) > 0 ? 'text-green-700' : 'text-gray-500'
+                          ]"
+                        >
+                          ${{ formatMoney(cuota.valor_pagado || 0) }}
+                        </span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                        <div>
+                          <p class="text-xs text-gray-500 mb-0.5">Capital</p>
+                          <p class="text-sm font-semibold text-gray-700">${{ formatMoney(cuota.capital) }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500 mb-0.5">Interés</p>
+                          <p class="text-sm font-semibold text-gray-700">${{ formatMoney(cuota.interes) }}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                        <span class="text-xs font-semibold text-gray-600">Saldo restante:</span>
+                        <span 
+                          :class="[
+                            'text-sm font-bold',
+                            (parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0)) > 0 ? 'text-gray-800' : 'text-green-600'
+                          ]"
+                        >
+                          ${{ formatMoney(Math.max(0, parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0))) }}
+                        </span>
+                      </div>
+                      <div 
+                        v-if="new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada"
+                        class="mt-2 pt-2 border-t border-amber-200"
+                      >
+                        <p class="text-xs text-amber-600 font-semibold flex items-center gap-1">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                          Esta cuota está vencida
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Si hay más de 1 cuota, mostrar sección desplegable -->
+              <div v-else class="mb-4">
+                <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Plan de Pagos
+                  <span class="text-sm font-normal text-gray-500">({{ planPagosPrestamo.length }} cuotas)</span>
+                </h4>
+                
+                <!-- Resumen cuando está colapsado -->
+                <div v-if="!planPagosExpandido" class="mb-4 space-y-3">
+                  <!-- Próxima fecha de pago -->
+                  <div 
+                    v-if="proximaCuotaPago"
+                    class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+                  >
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-natillera-100 rounded-lg flex items-center justify-center">
+                          <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500 mb-0.5">Próxima fecha de pago</p>
+                          <p class="text-sm font-semibold text-gray-800">
+                            {{ formatDate(proximaCuotaPago.fecha_proyectada) }}
+                            <span class="text-xs font-normal text-gray-500 ml-1">• Cuota #{{ proximaCuotaPago.numero_cuota }}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <div class="text-right">
+                        <p class="text-xs text-gray-500 mb-0.5">Valor</p>
+                        <p class="text-base font-bold text-natillera-700">
+                          ${{ formatMoney(proximaCuotaPago.valor_cuota || 0) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Estadísticas -->
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-green-50 rounded-lg p-3 border border-green-200 text-center">
+                      <p class="text-xl font-bold text-green-700">
+                        {{ planPagosPrestamo.filter(c => c.pagada).length }}
+                      </p>
+                      <p class="text-xs text-green-600 mt-0.5">Pagadas</p>
+                    </div>
+                    <div class="bg-amber-50 rounded-lg p-3 border border-amber-200 text-center">
+                      <p class="text-xl font-bold text-amber-700">
+                        {{ planPagosPrestamo.filter(c => new Date(c.fecha_proyectada) < new Date() && !c.pagada).length }}
+                      </p>
+                      <p class="text-xs text-amber-600 mt-0.5">Vencidas</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center">
+                      <p class="text-xl font-bold text-gray-700">
+                        {{ planPagosPrestamo.filter(c => !c.pagada && new Date(c.fecha_proyectada) >= new Date()).length }}
+                      </p>
+                      <p class="text-xs text-gray-600 mt-0.5">Pendientes</p>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-3 border border-blue-200 text-center">
+                      <p class="text-xl font-bold text-blue-700">
+                        {{ pagosPrestamo.length }}
+                      </p>
+                      <p class="text-xs text-blue-600 mt-0.5">Abonos</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Total y botón -->
+                  <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <span class="text-sm font-semibold text-gray-700">Total proyectado:</span>
+                    <span class="text-base font-bold text-gray-800">
+                      ${{ formatMoney(planPagosPrestamo.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)) }}
+                    </span>
+                  </div>
+                  
+                  <!-- Botón para expandir -->
+                  <button
+                    @click="planPagosExpandido = true"
+                    class="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-natillera-600 hover:text-natillera-700 hover:bg-natillera-50 rounded-lg transition-colors"
+                  >
+                    <span>Ver todas las cuotas</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Botón para colapsar cuando está expandido -->
+                <div v-else class="mb-4">
+                  <button
+                    @click="planPagosExpandido = false"
+                    class="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
+                  >
+                    <svg class="w-4 h-4 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <span>Ocultar cuotas</span>
+                  </button>
+                </div>
+              
+              <!-- Contenido desplegable -->
+              <Transition
+                enter-active-class="transition-all duration-300 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-[5000px]"
+                leave-active-class="transition-all duration-300 ease-in"
+                leave-from-class="opacity-100 max-h-[5000px]"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div v-show="planPagosExpandido" class="overflow-hidden">
+                  <!-- Vista Desktop: Tabla -->
+                  <div class="hidden md:block bg-white border border-gray-200 rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gradient-to-r from-natillera-50 to-emerald-50">
+                      <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Cuota</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Fecha Proyectada</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Valor Cuota</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Valor Pagado</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Capital</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Interés</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Saldo Restante</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                      <tr 
+                        v-for="cuota in planPagosPrestamo" 
+                        :key="cuota.id"
+                        :class="[
+                          'hover:bg-gray-50 transition-colors',
+                          cuota.pagada ? 'bg-green-50/30' : '',
+                          new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada ? 'bg-amber-50/30' : ''
+                        ]"
+                      >
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-800">
+                          #{{ cuota.numero_cuota }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">
+                          {{ formatDate(cuota.fecha_proyectada) }}
+                          <span 
+                            v-if="new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada"
+                            class="ml-2 text-xs text-amber-600 font-semibold"
+                          >
+                            ⚠️ Vencida
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-800 text-right">
+                          ${{ formatMoney(cuota.valor_cuota) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm font-semibold text-right" :class="parseFloat(cuota.valor_pagado || 0) > 0 ? 'text-green-700' : 'text-gray-500'">
+                          ${{ formatMoney(cuota.valor_pagado || 0) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600 text-right">
+                          ${{ formatMoney(cuota.capital) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-600 text-right">
+                          ${{ formatMoney(cuota.interes) }}
+                        </td>
+                        <td class="px-4 py-3 text-sm font-semibold text-right" :class="(parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0)) > 0 ? 'text-gray-700' : 'text-green-600'">
+                          ${{ formatMoney(Math.max(0, parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0))) }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                          <span 
+                            :class="[
+                              'px-2 py-1 rounded-full text-xs font-semibold',
+                              cuota.pagada 
+                                ? 'bg-green-100 text-green-700' 
+                                : new Date(cuota.fecha_proyectada) < new Date()
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-gray-100 text-gray-600'
+                            ]"
+                          >
+                            {{ cuota.pagada ? 'Pagada' : new Date(cuota.fecha_proyectada) < new Date() ? 'Vencida' : 'Pendiente' }}
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+                  <!-- Vista Móvil: Tarjetas -->
+                  <div class="md:hidden space-y-3">
+                <div 
+                  v-for="cuota in planPagosPrestamo" 
+                  :key="cuota.id"
+                  :class="[
+                    'bg-white border-2 rounded-xl p-4 shadow-sm transition-all',
+                    cuota.pagada 
+                      ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-white' 
+                      : new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada
+                      ? 'border-amber-200 bg-gradient-to-br from-amber-50/50 to-white'
+                      : 'border-gray-200 hover:border-natillera-300'
+                  ]"
+                >
+                  <!-- Header de la tarjeta -->
+                  <div class="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
+                    <div class="flex items-center gap-2">
+                      <div 
+                        :class="[
+                          'w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm',
+                          cuota.pagada 
+                            ? 'bg-green-500 text-white' 
+                            : new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada
+                            ? 'bg-amber-500 text-white'
+                            : 'bg-natillera-500 text-white'
+                        ]"
+                      >
+                        #{{ cuota.numero_cuota }}
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-800 text-sm">Cuota #{{ cuota.numero_cuota }}</p>
+                        <p class="text-xs text-gray-500">{{ formatDate(cuota.fecha_proyectada) }}</p>
+                      </div>
+                    </div>
+                    <span 
+                      :class="[
+                        'px-2.5 py-1 rounded-full text-xs font-semibold',
+                        cuota.pagada 
+                          ? 'bg-green-100 text-green-700' 
+                          : new Date(cuota.fecha_proyectada) < new Date()
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-600'
+                      ]"
+                    >
+                      {{ cuota.pagada ? 'Pagada' : new Date(cuota.fecha_proyectada) < new Date() ? 'Vencida' : 'Pendiente' }}
+                    </span>
+                  </div>
+
+                  <!-- Información de la cuota -->
+                  <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                      <span class="text-xs text-gray-500">Valor de la cuota:</span>
+                      <span class="text-sm font-bold text-gray-800">${{ formatMoney(cuota.valor_cuota) }}</span>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <span class="text-xs text-gray-500">Valor pagado:</span>
+                      <span 
+                        :class="[
+                          'text-sm font-bold',
+                          parseFloat(cuota.valor_pagado || 0) > 0 ? 'text-green-700' : 'text-gray-500'
+                        ]"
+                      >
+                        ${{ formatMoney(cuota.valor_pagado || 0) }}
+                      </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                      <div>
+                        <p class="text-xs text-gray-500 mb-0.5">Capital</p>
+                        <p class="text-sm font-semibold text-gray-700">${{ formatMoney(cuota.capital) }}</p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 mb-0.5">Interés</p>
+                        <p class="text-sm font-semibold text-gray-700">${{ formatMoney(cuota.interes) }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <span class="text-xs font-semibold text-gray-600">Saldo restante:</span>
+                      <span 
+                        :class="[
+                          'text-sm font-bold',
+                          (parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0)) > 0 ? 'text-gray-800' : 'text-green-600'
+                        ]"
+                      >
+                        ${{ formatMoney(Math.max(0, parseFloat(cuota.valor_cuota) - parseFloat(cuota.valor_pagado || 0))) }}
+                      </span>
+                    </div>
+                    <div 
+                      v-if="new Date(cuota.fecha_proyectada) < new Date() && !cuota.pagada"
+                      class="mt-2 pt-2 border-t border-amber-200"
+                    >
+                      <p class="text-xs text-amber-600 font-semibold flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Esta cuota está vencida
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                  </div>
+                </div>
+              </Transition>
               </div>
             </div>
 
@@ -1505,6 +2165,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/vue/24/outline'
 import { getAvatarUrl } from '../../utils/avatars'
+import DateInput from '../../components/DateInput.vue'
 
 const notificationStore = useNotificationStore()
 const auditoria = useAuditoria()
@@ -1526,6 +2187,8 @@ const modalDetalle = ref(false)
 const prestamoSeleccionado = ref(null)
 const prestamoDetalle = ref(null)
 const pagosPrestamo = ref([])
+const planPagosPrestamo = ref([])
+const planPagosExpandido = ref(false)
 const prestamoAEliminar = ref(null)
 const abonoAEliminar = ref(null)
 const abonoAEditar = ref(null)
@@ -1538,7 +2201,8 @@ const formPrestamo = reactive({
   monto: 100000,
   interes: 2,
   numero_cuotas: 1,
-  tipo_interes: 'simple' // 'simple' o 'compuesto'
+  tipo_interes: 'simple', // 'simple' o 'compuesto'
+  fecha_pago: new Date().toISOString().split('T')[0] // Fecha de inicio del préstamo
 })
 
 const montoFormateado = ref('100.000')
@@ -1549,9 +2213,12 @@ const calcularPorMontoARecibir = ref(false)
 const montoARecibirFormateado = ref('')
 
 const formAbono = reactive({
-  valor: 0
+  valor: 0,
+  fecha_pago: new Date().toISOString().split('T')[0] // Fecha actual en formato YYYY-MM-DD
 })
 const valorAbonoFormateado = ref('')
+const valorAbonoEditadoFormateado = ref('')
+const inputValorAbonoRef = ref(null)
 const modalComprobanteAbono = ref(false)
 const comprobanteAbono = ref(null)
 const generandoImagenComprobante = ref(false)
@@ -1739,6 +2406,14 @@ const montoAPagar = computed(() => {
 })
 
 // Cuota mensual: con anticipado solo se divide el capital, con normal se divide el total
+const proximaCuotaPago = computed(() => {
+  if (!planPagosPrestamo.value || planPagosPrestamo.value.length === 0) return null
+  const cuotasPendientes = planPagosPrestamo.value
+    .filter(c => !c.pagada && new Date(c.fecha_proyectada) >= new Date())
+    .sort((a, b) => new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada))
+  return cuotasPendientes.length > 0 ? cuotasPendientes[0] : null
+})
+
 const cuotaMensual = computed(() => {
   if (mostrarInteresAnticipado.value) {
     // Con interés anticipado, la cuota es solo el capital dividido entre las cuotas
@@ -1855,11 +2530,11 @@ function cerrarSelectorSocio() {
 
 function formatDate(date) {
   if (!date) return ''
-  return new Date(date).toLocaleDateString('es-CO', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 async function fetchPrestamos() {
@@ -1918,8 +2593,13 @@ async function fetchSocios() {
 
 function abrirModalAbono(prestamo) {
   prestamoSeleccionado.value = prestamo
-  formAbono.valor = prestamo.saldo_actual
-  valorAbonoFormateado.value = formatMoney(prestamo.saldo_actual)
+  // Cargar el valor de la cuota por defecto
+  const valorCuota = calcularCuotaMensualDetalle(prestamo)
+  // Si el valor de la cuota es mayor al saldo, usar el saldo
+  const valorInicial = valorCuota > prestamo.saldo_actual ? prestamo.saldo_actual : valorCuota
+  formAbono.valor = valorInicial
+  formAbono.fecha_pago = new Date().toISOString().split('T')[0] // Fecha actual por defecto
+  valorAbonoFormateado.value = formatMoney(valorInicial)
   modalAbono.value = true
   // Guardar si el modal de detalle estaba abierto para este préstamo
   if (prestamoDetalle.value && prestamoDetalle.value.id === prestamo.id) {
@@ -1951,6 +2631,7 @@ function actualizarValorAbono(event) {
 function cerrarModalAbono() {
   modalAbono.value = false
   formAbono.valor = 0
+  formAbono.fecha_pago = new Date().toISOString().split('T')[0]
   valorAbonoFormateado.value = ''
   prestamoSeleccionado.value = null
 }
@@ -2280,6 +2961,25 @@ async function descargarComprobanteAbono() {
     document.body.removeChild(link)
     
     notificationStore.success('Comprobante descargado exitosamente', 'Éxito')
+    
+    // Registrar auditoría de descarga de comprobante
+    if (comprobanteAbono.value?.pagoPrestamoId) {
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+        tipoAccion: 'DOWNLOAD',
+        entidad: 'comprobante',
+        entidadId: comprobanteAbono.value.pagoPrestamoId,
+        descripcion: `Se descargó comprobante de abono a préstamo de ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
+        natilleraId: id,
+        detalles: {
+          tipo_comprobante: 'abono_prestamo',
+          codigo_comprobante: comprobanteAbono.value.codigoComprobante,
+          socio_nombre: comprobanteAbono.value.socioNombre,
+          valor: comprobanteAbono.value.valor,
+          prestamo_id: comprobanteAbono.value.prestamoId
+        }
+      }))
+    }
   } catch (e) {
     console.error('Error al generar imagen:', e)
     notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
@@ -2311,23 +3011,44 @@ async function reenviarComprobanteAbono(pago) {
     
     // Preparar datos del comprobante
     comprobanteAbono.value = {
+      pagoPrestamoId: pago.id, // ID del pago de préstamo para auditoría
+      prestamoId: prestamo.id, // ID del préstamo para auditoría
       valor: parseFloat(pago.valor) || 0,
       codigoComprobante: pago.codigo_comprobante,
       socioNombre: socioNombre,
       socioTelefono: socioTelefono,
       fecha: pago.fecha 
-        ? new Date(pago.fecha).toLocaleDateString('es-CO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })
+        ? (() => {
+            const d = new Date(pago.fecha)
+            const day = String(d.getDate()).padStart(2, '0')
+            const month = String(d.getMonth() + 1).padStart(2, '0')
+            const year = d.getFullYear()
+            const hours = String(d.getHours()).padStart(2, '0')
+            const minutes = String(d.getMinutes()).padStart(2, '0')
+            return `${day}/${month}/${year} ${hours}:${minutes}`
+          })()
         : 'Fecha no disponible',
       saldoAnterior: saldoAnterior,
       saldoNuevo: saldoNuevo,
       prestamo: prestamo
     }
+    
+    // Registrar auditoría de reenvío de comprobante
+    const auditoria = useAuditoria()
+    registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+      tipoAccion: 'RESEND',
+      entidad: 'comprobante',
+      entidadId: pago.id,
+      descripcion: `Se reenvió comprobante de abono a préstamo de ${socioNombre || 'socio'} (Código: ${pago.codigo_comprobante || 'N/A'})`,
+      natilleraId: id,
+      detalles: {
+        tipo_comprobante: 'abono_prestamo',
+        codigo_comprobante: pago.codigo_comprobante,
+        socio_nombre: socioNombre,
+        valor: parseFloat(pago.valor) || 0,
+        prestamo_id: prestamo.id
+      }
+    }))
     
     // Abrir modal de comprobante
     modalComprobanteAbono.value = true
@@ -2358,6 +3079,27 @@ async function compartirWhatsAppAbono() {
         title: 'Comprobante de Abono',
         text: `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
       })
+      
+      // Registrar auditoría de envío de comprobante
+      if (comprobanteAbono.value?.pagoPrestamoId) {
+        const auditoria = useAuditoria()
+        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+          tipoAccion: 'SEND',
+          entidad: 'comprobante',
+          entidadId: comprobanteAbono.value.pagoPrestamoId,
+          descripcion: `Se envió comprobante de abono a préstamo por WhatsApp a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
+          natilleraId: id,
+          detalles: {
+            tipo_comprobante: 'abono_prestamo',
+            metodo_envio: 'whatsapp',
+            codigo_comprobante: comprobanteAbono.value.codigoComprobante,
+            socio_nombre: comprobanteAbono.value.socioNombre,
+            socio_telefono: comprobanteAbono.value.socioTelefono,
+            valor: comprobanteAbono.value.valor,
+            prestamo_id: comprobanteAbono.value.prestamoId
+          }
+        }))
+      }
     } else {
       // Fallback: descargar y abrir WhatsApp con mensaje
       const link = document.createElement('a')
@@ -2371,6 +3113,27 @@ async function compartirWhatsAppAbono() {
         if (telefono) {
           const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo. ¡Gracias por estar al día! 🙌`
           window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          
+          // Registrar auditoría de envío de comprobante (fallback)
+          if (comprobanteAbono.value?.pagoPrestamoId) {
+            const auditoria = useAuditoria()
+            registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+              tipoAccion: 'SEND',
+              entidad: 'comprobante',
+              entidadId: comprobanteAbono.value.pagoPrestamoId,
+              descripcion: `Se envió comprobante de abono a préstamo por WhatsApp (fallback) a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
+              natilleraId: id,
+              detalles: {
+                tipo_comprobante: 'abono_prestamo',
+                metodo_envio: 'whatsapp_fallback',
+                codigo_comprobante: comprobanteAbono.value.codigoComprobante,
+                socio_nombre: comprobanteAbono.value.socioNombre,
+                socio_telefono: comprobanteAbono.value.socioTelefono,
+                valor: comprobanteAbono.value.valor,
+                prestamo_id: comprobanteAbono.value.prestamoId
+              }
+            }))
+          }
         }
       }, 500)
     }
@@ -2381,6 +3144,27 @@ async function compartirWhatsAppAbono() {
     if (telefono) {
       const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
       window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+      
+      // Registrar auditoría de envío de comprobante (solo texto)
+      if (comprobanteAbono.value?.pagoPrestamoId) {
+        const auditoria = useAuditoria()
+        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+          tipoAccion: 'SEND',
+          entidad: 'comprobante',
+          entidadId: comprobanteAbono.value.pagoPrestamoId,
+          descripcion: `Se envió comprobante de abono a préstamo por WhatsApp (solo texto) a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
+          natilleraId: id,
+          detalles: {
+            tipo_comprobante: 'abono_prestamo',
+            metodo_envio: 'whatsapp_texto',
+            codigo_comprobante: comprobanteAbono.value.codigoComprobante,
+            socio_nombre: comprobanteAbono.value.socioNombre,
+            socio_telefono: comprobanteAbono.value.socioTelefono,
+            valor: comprobanteAbono.value.valor,
+            prestamo_id: comprobanteAbono.value.prestamoId
+          }
+        }))
+      }
     } else {
       notificationStore.error('No se pudo compartir el comprobante', 'Error')
     }
@@ -2390,9 +3174,14 @@ async function compartirWhatsAppAbono() {
 }
 
 async function abrirModalDetalle(prestamo) {
+  // Cerrar el desplegable antes de abrir el modal
+  planPagosExpandido.value = false
   prestamoDetalle.value = prestamo
   modalDetalle.value = true
-  await fetchPagosPrestamo(prestamo.id)
+  await Promise.all([
+    fetchPagosPrestamo(prestamo.id),
+    fetchPlanPagosPrestamo(prestamo.id)
+  ])
 }
 
 async function fetchPagosPrestamo(prestamoId) {
@@ -2416,6 +3205,378 @@ async function fetchPagosPrestamo(prestamoId) {
     console.error('❌ Error cargando pagos del préstamo:', e)
     pagosPrestamo.value = []
   }
+}
+
+async function fetchPlanPagosPrestamo(prestamoId) {
+  try {
+    const { data, error } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*')
+      .eq('prestamo_id', prestamoId)
+      .order('numero_cuota', { ascending: true })
+
+    if (error) {
+      console.error('❌ Error cargando plan de pagos:', error)
+      planPagosPrestamo.value = []
+      return
+    }
+    
+    planPagosPrestamo.value = data || []
+  } catch (e) {
+    console.error('❌ Error cargando plan de pagos:', e)
+    planPagosPrestamo.value = []
+  }
+}
+
+// Función para aplicar abono a la primera cuota pendiente del plan de pagos
+async function aplicarAbonoAPlanPagos(prestamoId, valorAbono, fechaPago) {
+  try {
+    // Obtener todas las cuotas ordenadas por número
+    const { data: todasCuotas, error: errorCuotas } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*')
+      .eq('prestamo_id', prestamoId)
+      .order('numero_cuota', { ascending: true })
+
+    if (errorCuotas) {
+      console.error('❌ Error obteniendo cuotas:', errorCuotas)
+      return
+    }
+
+    // Filtrar cuotas que aún tienen saldo pendiente (no pagadas completamente)
+    const cuotasPendientes = todasCuotas.filter(c => {
+      const valorCuota = parseFloat(c.valor_cuota)
+      const valorPagado = parseFloat(c.valor_pagado || 0)
+      return valorPagado < valorCuota
+    })
+
+    if (errorCuotas) {
+      console.error('❌ Error obteniendo cuotas pendientes:', errorCuotas)
+      return
+    }
+
+    if (!cuotasPendientes || cuotasPendientes.length === 0) {
+      console.log('ℹ️ No hay cuotas pendientes para aplicar el abono')
+      return
+    }
+
+    let abonoRestante = parseFloat(valorAbono)
+    let indiceCuota = 0
+
+    // Aplicar el abono a las cuotas pendientes hasta que se agote
+    while (abonoRestante > 0 && indiceCuota < cuotasPendientes.length) {
+      const cuota = cuotasPendientes[indiceCuota]
+      const valorCuota = parseFloat(cuota.valor_cuota)
+      const valorPagadoActual = parseFloat(cuota.valor_pagado || 0)
+      const valorRestanteCuota = valorCuota - valorPagadoActual
+      
+      if (abonoRestante >= valorRestanteCuota) {
+        // El abono cubre completamente el resto de esta cuota
+        // Marcar como pagada y actualizar valor_pagado
+        const { error: errorUpdate } = await supabase
+          .from('plan_pagos_prestamo')
+          .update({
+            pagada: true,
+            fecha_pago: fechaPago,
+            valor_pagado: valorCuota
+          })
+          .eq('id', cuota.id)
+
+        if (errorUpdate) {
+          console.error(`❌ Error actualizando cuota ${cuota.numero_cuota}:`, errorUpdate)
+        } else {
+          console.log(`✅ Cuota ${cuota.numero_cuota} marcada como pagada`)
+        }
+
+        abonoRestante -= valorRestanteCuota
+        indiceCuota++
+      } else {
+        // El abono no cubre completamente el resto de la cuota
+        // Actualizar solo el valor_pagado
+        const nuevoValorPagado = valorPagadoActual + abonoRestante
+        const { error: errorUpdate } = await supabase
+          .from('plan_pagos_prestamo')
+          .update({
+            valor_pagado: nuevoValorPagado
+          })
+          .eq('id', cuota.id)
+
+        if (errorUpdate) {
+          console.error(`❌ Error actualizando valor pagado de cuota ${cuota.numero_cuota}:`, errorUpdate)
+        } else {
+          console.log(`ℹ️ Abono parcial de $${formatMoney(abonoRestante)} aplicado a cuota ${cuota.numero_cuota}`)
+        }
+
+        abonoRestante = 0
+      }
+    }
+
+    // Actualizar los saldos proyectados de todas las cuotas pendientes restantes
+    // basándose en el nuevo saldo del préstamo
+    const { data: prestamoActualizado, error: errorPrestamo } = await supabase
+      .from('prestamos')
+      .select('saldo_actual')
+      .eq('id', prestamoId)
+      .single()
+
+    if (!errorPrestamo && prestamoActualizado) {
+      const saldoActual = parseFloat(prestamoActualizado.saldo_actual)
+      
+      // Obtener todas las cuotas para actualizar saldos
+      const { data: todasCuotasActualizadas, error: errorTodas } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('*')
+        .eq('prestamo_id', prestamoId)
+        .order('numero_cuota', { ascending: true })
+      
+      // Filtrar solo las pendientes (con saldo)
+      const todasCuotasPendientes = todasCuotasActualizadas?.filter(c => {
+        const valorCuota = parseFloat(c.valor_cuota)
+        const valorPagado = parseFloat(c.valor_pagado || 0)
+        return valorPagado < valorCuota
+      }) || []
+
+      if (!errorTodas && todasCuotasPendientes) {
+        let saldoAcumulado = saldoActual
+        
+        // Actualizar saldos proyectados de las cuotas pendientes
+        for (const cuota of todasCuotasPendientes) {
+          const valorCuota = parseFloat(cuota.valor_cuota)
+          const valorPagado = parseFloat(cuota.valor_pagado || 0)
+          const valorRestanteCuota = valorCuota - valorPagado
+          saldoAcumulado = Math.max(0, saldoAcumulado - valorRestanteCuota)
+          
+          const { error: errorSaldo } = await supabase
+            .from('plan_pagos_prestamo')
+            .update({
+              saldo_proyectado: saldoAcumulado
+            })
+            .eq('id', cuota.id)
+
+          if (errorSaldo) {
+            console.error(`❌ Error actualizando saldo de cuota ${cuota.numero_cuota}:`, errorSaldo)
+          }
+        }
+      }
+    }
+
+    // Recargar el plan de pagos para reflejar los cambios
+    await fetchPlanPagosPrestamo(prestamoId)
+  } catch (e) {
+    console.error('❌ Error aplicando abono al plan de pagos:', e)
+  }
+}
+
+// Función para actualizar el plan de pagos después de editar un abono
+async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbono) {
+  try {
+    // Obtener todos los pagos del préstamo ordenados por fecha
+    const { data: todosPagos, error: errorPagos } = await supabase
+      .from('pagos_prestamo')
+      .select('*')
+      .eq('prestamo_id', prestamoId)
+      .order('fecha', { ascending: true })
+
+    if (errorPagos) {
+      console.error('❌ Error obteniendo pagos:', errorPagos)
+      return
+    }
+
+    // Obtener todas las cuotas del plan de pagos
+    const { data: todasCuotas, error: errorCuotas } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*')
+      .eq('prestamo_id', prestamoId)
+      .order('numero_cuota', { ascending: true })
+
+    if (errorCuotas) {
+      console.error('❌ Error obteniendo cuotas:', errorCuotas)
+      return
+    }
+
+    // Resetear todas las cuotas: valor_pagado = 0, pagada = false
+    for (const cuota of todasCuotas) {
+      await supabase
+        .from('plan_pagos_prestamo')
+        .update({
+          valor_pagado: 0,
+          pagada: false,
+          fecha_pago: null
+        })
+        .eq('id', cuota.id)
+    }
+
+    // Recalcular aplicando todos los pagos desde cero
+    let abonoRestante = 0
+    for (const pago of todosPagos) {
+      abonoRestante += parseFloat(pago.valor)
+    }
+
+    // Ordenar las cuotas por número (ya están ordenadas, pero por seguridad)
+    const cuotasOrdenadas = [...todasCuotas].sort((a, b) => a.numero_cuota - b.numero_cuota)
+
+    // Aplicar todos los abonos a las cuotas en orden
+    // Después del reset, todas las cuotas tienen valor_pagado = 0
+    let indiceCuota = 0
+    while (abonoRestante > 0 && indiceCuota < cuotasOrdenadas.length) {
+      const cuota = cuotasOrdenadas[indiceCuota]
+      const valorCuota = parseFloat(cuota.valor_cuota)
+      
+      // Después del reset, el valor pagado es 0, pero lo calculamos dinámicamente
+      // basándonos en las actualizaciones anteriores en este mismo proceso
+      let valorPagadoActual = 0
+      
+      // Verificar si ya actualizamos esta cuota en este proceso
+      // (esto es para manejar el caso donde una cuota se completa y seguimos con la siguiente)
+      const valorRestanteCuota = valorCuota - valorPagadoActual
+
+      if (abonoRestante >= valorCuota) {
+        // El abono cubre completamente esta cuota
+        const fechaUltimoPago = todosPagos[todosPagos.length - 1]?.fecha || new Date().toISOString()
+        await supabase
+          .from('plan_pagos_prestamo')
+          .update({
+            pagada: true,
+            valor_pagado: valorCuota,
+            fecha_pago: fechaUltimoPago
+          })
+          .eq('id', cuota.id)
+
+        abonoRestante -= valorCuota
+        indiceCuota++
+      } else {
+        // El abono no cubre completamente la cuota
+        await supabase
+          .from('plan_pagos_prestamo')
+          .update({
+            valor_pagado: abonoRestante
+          })
+          .eq('id', cuota.id)
+
+        abonoRestante = 0
+      }
+    }
+
+    // Actualizar los saldos proyectados de todas las cuotas
+    const { data: prestamoActualizado, error: errorPrestamo } = await supabase
+      .from('prestamos')
+      .select('saldo_actual')
+      .eq('id', prestamoId)
+      .single()
+
+    if (!errorPrestamo && prestamoActualizado) {
+      const saldoActual = parseFloat(prestamoActualizado.saldo_actual)
+      
+      // Obtener todas las cuotas nuevamente para actualizar saldos
+      const { data: cuotasActualizadas, error: errorTodas } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('*')
+        .eq('prestamo_id', prestamoId)
+        .order('numero_cuota', { ascending: true })
+
+      if (!errorTodas && cuotasActualizadas) {
+        let saldoAcumulado = saldoActual
+        
+        // Actualizar saldos proyectados de todas las cuotas
+        for (const cuota of cuotasActualizadas) {
+          const valorCuota = parseFloat(cuota.valor_cuota)
+          const valorPagado = parseFloat(cuota.valor_pagado || 0)
+          
+          // El saldo proyectado es el saldo actual menos lo que falta pagar de esta cuota
+          const valorRestanteCuota = valorCuota - valorPagado
+          saldoAcumulado = Math.max(0, saldoAcumulado - valorRestanteCuota)
+          
+          await supabase
+            .from('plan_pagos_prestamo')
+            .update({
+              saldo_proyectado: saldoAcumulado
+            })
+            .eq('id', cuota.id)
+        }
+      }
+    }
+
+    // Recargar el plan de pagos
+    await fetchPlanPagosPrestamo(prestamoId)
+  } catch (e) {
+    console.error('❌ Error actualizando plan de pagos después de editar abono:', e)
+  }
+}
+
+// Función para generar el plan de pagos
+function generarPlanPagos(prestamo) {
+  const planPagos = []
+  const numeroCuotas = prestamo.numero_cuotas || 1
+  const monto = prestamo.monto || 0
+  const interes = prestamo.interes || 0
+  const tasaMensual = interes / 100
+  // Usar fecha_inicio si está disponible, sino usar created_at, sino fecha actual
+  const fechaInicio = prestamo.fecha_inicio 
+    ? new Date(prestamo.fecha_inicio) 
+    : new Date(prestamo.created_at || new Date())
+  
+  // Calcular valor de cuota
+  let valorCuota = 0
+  let interesTotal = 0
+  
+  if (prestamo.interes_anticipado) {
+    // Con interés anticipado, la cuota es solo el capital dividido entre las cuotas
+    valorCuota = monto / numeroCuotas
+    interesTotal = prestamo.interes_total || 0
+  } else {
+    // Con interés normal
+    if (prestamo.tipo_interes === 'compuesto') {
+      const montoFinal = monto * Math.pow(1 + tasaMensual, numeroCuotas)
+      interesTotal = montoFinal - monto
+      valorCuota = montoFinal / numeroCuotas
+    } else {
+      interesTotal = monto * tasaMensual * numeroCuotas
+      valorCuota = (monto + interesTotal) / numeroCuotas
+    }
+  }
+  
+  let saldoRestante = monto
+  
+  for (let i = 1; i <= numeroCuotas; i++) {
+    // Calcular fecha proyectada (meses desde la fecha de inicio)
+    const fechaProyectada = new Date(fechaInicio)
+    fechaProyectada.setMonth(fechaProyectada.getMonth() + i)
+    
+    // Calcular capital e interés de esta cuota
+    let capitalCuota = 0
+    let interesCuota = 0
+    
+    if (prestamo.interes_anticipado) {
+      // Con interés anticipado, solo se paga capital
+      capitalCuota = valorCuota
+      interesCuota = 0
+    } else {
+      if (prestamo.tipo_interes === 'compuesto') {
+        // Interés compuesto: el interés se calcula sobre el saldo restante
+        interesCuota = saldoRestante * tasaMensual
+        capitalCuota = valorCuota - interesCuota
+      } else {
+        // Interés simple: el interés es fijo por cuota
+        interesCuota = monto * tasaMensual
+        capitalCuota = valorCuota - interesCuota
+      }
+    }
+    
+    saldoRestante = Math.max(0, saldoRestante - capitalCuota)
+    
+    planPagos.push({
+      prestamo_id: prestamo.id,
+      numero_cuota: i,
+      fecha_proyectada: fechaProyectada.toISOString().split('T')[0],
+      valor_cuota: Math.round(valorCuota),
+      capital: Math.round(capitalCuota),
+      interes: Math.round(interesCuota),
+      saldo_proyectado: Math.round(saldoRestante),
+      pagada: false
+    })
+  }
+  
+  return planPagos
 }
 
 async function handleCrearPrestamo() {
@@ -2461,6 +3622,27 @@ async function handleCrearPrestamo() {
     
     const nombreSocio = data.socio_natillera?.socio?.nombre || 'Socio'
     
+    // Generar plan de pagos usando la fecha del formulario
+    const planPagos = generarPlanPagos({
+      ...data,
+      tipo_interes: formPrestamo.tipo_interes,
+      interes_anticipado: mostrarInteresAnticipado.value,
+      numero_cuotas: formPrestamo.numero_cuotas,
+      fecha_inicio: formPrestamo.fecha_pago ? new Date(formPrestamo.fecha_pago + 'T00:00:00').toISOString() : data.created_at
+    })
+    
+    // Insertar plan de pagos en la base de datos
+    if (planPagos.length > 0) {
+      const { error: errorPlan } = await supabase
+        .from('plan_pagos_prestamo')
+        .insert(planPagos)
+      
+      if (errorPlan) {
+        console.error('Error al crear plan de pagos:', errorPlan)
+        // No lanzar error, solo registrar en consola
+      }
+    }
+    
     // Registrar en auditoría
     registrarAuditoriaEnSegundoPlano(
       auditoria.registrarCreacion(
@@ -2488,18 +3670,13 @@ async function handleCrearPrestamo() {
     formPrestamo.interes = 2
     formPrestamo.numero_cuotas = 1
     formPrestamo.tipo_interes = 'simple'
+    formPrestamo.fecha_pago = new Date().toISOString().split('T')[0]
     montoFormateado.value = '100.000'
     montoARecibirFormateado.value = ''
     mostrarSelectorSocio.value = false
     busquedaSocio.value = ''
     calcularPorMontoARecibir.value = false
     mostrarInteresAnticipado.value = false
-    montoFormateado.value = '100.000'
-    formPrestamo.interes = 2
-    formPrestamo.numero_cuotas = 1
-    formPrestamo.tipo_interes = 'simple'
-    mostrarSelectorSocio.value = false
-    busquedaSocio.value = ''
     notificationStore.success('Préstamo creado exitosamente', 'Éxito')
   } catch (e) {
     notificationStore.error(e.message || 'Error al crear el préstamo', 'Error')
@@ -2601,10 +3778,15 @@ async function handleRegistrarAbono() {
     }
     
     // Registrar el pago
+    // Convertir la fecha del formulario (YYYY-MM-DD) a ISO string con hora
+    const fechaPago = formAbono.fecha_pago 
+      ? new Date(formAbono.fecha_pago + 'T00:00:00').toISOString()
+      : new Date().toISOString()
+    
     const datosPago = {
       prestamo_id: prestamoSeleccionado.value.id,
       valor: parseFloat(formAbono.valor),
-      fecha: new Date().toISOString(),
+      fecha: fechaPago,
       codigo_comprobante: codigoComprobante
     }
     
@@ -2697,7 +3879,7 @@ async function handleRegistrarAbono() {
         natilleraId
       )
     )
-
+    
     // Actualizar en la lista local
     const index = prestamos.value.findIndex(p => p.id === prestamoSeleccionado.value.id)
     if (index !== -1) {
@@ -2707,19 +3889,46 @@ async function handleRegistrarAbono() {
     const prestamoIdAbonado = prestamoSeleccionado.value.id
     const estabaEnDetalle = prestamoDetalle.value && prestamoDetalle.value.id === prestamoIdAbonado
     
+    // Actualizar plan de pagos: recalcular todo desde cero con todos los pagos
+    await actualizarPlanPagosDespuesDeEditarAbono(prestamoIdAbonado, 0) // 0 porque es un nuevo abono, no una diferencia
+    
+    // Si estaba viendo el detalle, recargar los datos
+    if (estabaEnDetalle) {
+      await Promise.all([
+        fetchPagosPrestamo(prestamoIdAbonado),
+        fetchPlanPagosPrestamo(prestamoIdAbonado)
+      ])
+      // Actualizar también el préstamo en el detalle
+      prestamoDetalle.value = { ...prestamoDetalle.value, ...data }
+    }
+    
     // Preparar datos del comprobante
+    // Usar la fecha del formulario si está disponible, sino usar la fecha actual
+    const fechaPagoComprobante = formAbono.fecha_pago 
+      ? (() => {
+          // Convertir fecha del formulario (YYYY-MM-DD) a formato dd/MM/yyyy
+          const [year, month, day] = formAbono.fecha_pago.split('-')
+          return `${day}/${month}/${year}`
+        })()
+      : (() => {
+          // Si no hay fecha seleccionada, usar fecha y hora actual
+          const d = new Date()
+          const day = String(d.getDate()).padStart(2, '0')
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const year = d.getFullYear()
+          const hours = String(d.getHours()).padStart(2, '0')
+          const minutes = String(d.getMinutes()).padStart(2, '0')
+          return `${day}/${month}/${year} ${hours}:${minutes}`
+        })()
+    
     comprobanteAbono.value = {
+      pagoPrestamoId: pagoInsertado[0].id, // ID del pago de préstamo para auditoría
+      prestamoId: prestamoSeleccionado.value.id, // ID del préstamo para auditoría
       valor: formAbono.valor,
       codigoComprobante: codigoComprobante,
       socioNombre: nombreSocio,
       socioTelefono: socioTelefono,
-      fecha: new Date().toLocaleDateString('es-CO', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }),
+      fecha: fechaPagoComprobante,
       saldoAnterior: datosAnteriores.saldo_actual,
       saldoNuevo: Math.max(0, nuevoSaldo),
       prestamo: prestamoSeleccionado.value
@@ -2743,7 +3952,8 @@ async function handleRegistrarAbono() {
       // Recargar los pagos del préstamo
       console.log('🔄 Recargando pagos para préstamo:', prestamoIdAbonado)
       await fetchPagosPrestamo(prestamoIdAbonado)
-      // Asegurarse de que el modal de detalle esté abierto
+      // Asegurarse de que el modal de detalle esté abierto y cerrar el desplegable
+      planPagosExpandido.value = false // Cerrar el desplegable
       modalDetalle.value = true
       console.log('✅ Modal de detalle actualizado, pagos recargados. Total pagos:', pagosPrestamo.value.length)
       console.log('📋 Lista de pagos:', pagosPrestamo.value)
@@ -2767,9 +3977,37 @@ async function handleRegistrarAbono() {
 function abrirModalEditarAbono(pago) {
   abonoAEditar.value = {
     ...pago,
-    valorOriginal: parseFloat(pago.valor)
+    valorOriginal: parseFloat(pago.valor),
+    valor: parseFloat(pago.valor)
   }
+  valorAbonoEditadoFormateado.value = formatMoney(parseFloat(pago.valor))
   modalEditarAbono.value = true
+}
+
+function actualizarValorAbonoEditado(event) {
+  // Obtener el valor del input sin formatear
+  const valorSinFormato = event.target.value.replace(/\./g, '')
+  
+  // Si está vacío, establecer en 0
+  if (!valorSinFormato || valorSinFormato === '') {
+    abonoAEditar.value.valor = 0
+    valorAbonoEditadoFormateado.value = ''
+    return
+  }
+  
+  // Convertir a número
+  const numero = parseInt(valorSinFormato)
+  
+  // Validar que sea un número válido
+  if (isNaN(numero)) {
+    return
+  }
+  
+  // Actualizar el valor numérico
+  abonoAEditar.value.valor = numero
+  
+  // Formatear para mostrar en el input
+  valorAbonoEditadoFormateado.value = formatMoney(numero)
 }
 
 async function guardarAbonoEditado() {
@@ -2894,8 +4132,11 @@ async function guardarAbonoEditado() {
     // Actualizar el detalle si está abierto
     if (prestamoDetalle.value && prestamoDetalle.value.id === prestamoId) {
       prestamoDetalle.value = { ...prestamoDetalle.value, ...prestamoActualizado }
-      // Recargar los pagos
-      await fetchPagosPrestamo(prestamoId)
+      // Recargar los pagos y actualizar el plan de pagos
+      await Promise.all([
+        fetchPagosPrestamo(prestamoId),
+        actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferencia)
+      ])
     }
     
     modalEditarAbono.value = false
@@ -3040,8 +4281,11 @@ async function eliminarAbonoConfirmado() {
     // Actualizar el detalle si está abierto
     if (prestamoDetalle.value && prestamoDetalle.value.id === prestamoId) {
       prestamoDetalle.value = { ...prestamoDetalle.value, ...prestamoActualizado }
-      // Recargar los pagos
-      await fetchPagosPrestamo(prestamoId)
+      // Recargar los pagos y actualizar el plan de pagos
+      await Promise.all([
+        fetchPagosPrestamo(prestamoId),
+        actualizarPlanPagosDespuesDeEditarAbono(prestamoId, -valorAbono) // Negativo porque se eliminó
+      ])
     }
     
     abonoAEliminar.value = null

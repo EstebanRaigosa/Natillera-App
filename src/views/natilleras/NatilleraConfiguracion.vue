@@ -22,6 +22,110 @@
     <!-- Opciones de configuración con contenido expandible -->
     <div class="space-y-4">
       
+      <!-- === INFORMACIÓN BÁSICA === -->
+      <div class="space-y-3">
+      <button
+        @click="seccionActiva = seccionActiva === 'basica' ? null : 'basica'"
+        :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+          seccionActiva === 'basica'
+              ? 'bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-500 border-natillera-400 shadow-natillera-500/30'
+              : 'bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/40 border-natillera-100/50 shadow-natillera-500/10 hover:border-natillera-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-gradient-to-br from-natillera-500 to-emerald-500']">
+              <CurrencyDollarIcon class="w-6 h-6 text-white" />
+          </div>
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'basica' ? 'text-white' : 'text-gray-800']">
+            Información Básica
+          </h3>
+              <p :class="['text-sm', seccionActiva === 'basica' ? 'text-white/80' : 'text-gray-500']">
+                Nombre, periodicidad y configuraciones iniciales
+          </p>
+          </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-natillera-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'basica' ? 'text-white rotate-180' : 'text-natillera-600']" />
+          </div>
+        </div>
+      </button>
+
+        <!-- Contenido Información Básica -->
+    <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-natillera-500/10 border-2 border-natillera-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-natillera-500 to-emerald-500"></div>
+            <div class="relative p-5 sm:p-6 space-y-4">
+              <!-- Nombre -->
+              <div>
+                <label class="label font-semibold text-gray-700">Nombre de la Natillera *</label>
+                <input 
+                  v-model="configBasica.nombre"
+                  type="text"
+                  class="input-field"
+                  placeholder="Ej: Natillera Familiar 2024"
+                  required
+                />
+              </div>
+
+              <!-- Descripción -->
+              <div>
+                <label class="label font-semibold text-gray-700">Descripción</label>
+                <textarea 
+                  v-model="configBasica.descripcion"
+                  class="input-field min-h-[100px]"
+                  placeholder="Descripción opcional de la natillera..."
+                ></textarea>
+              </div>
+
+              <!-- Periodicidad -->
+              <div>
+                <label class="label font-semibold text-gray-700">Periodicidad *</label>
+                <select v-model="configBasica.periodicidad" class="input-field">
+                  <option value="semanal">Semanal</option>
+                  <option value="quincenal">Quincenal</option>
+                  <option value="mensual">Mensual</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-2">
+                  Frecuencia con la que se generan las cuotas.
+                </p>
+              </div>
+
+              <!-- Fecha de Inicio -->
+              <div>
+                <label class="label font-semibold text-gray-700">Fecha de Inicio *</label>
+                <input 
+                  v-model="configBasica.fecha_inicio"
+                  type="date"
+                  class="input-field"
+                  required
+                />
+                <p class="text-xs text-gray-500 mt-2">
+                  Fecha en que inició o iniciará la natillera.
+                </p>
+              </div>
+
+              <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
+          <button 
+            @click="guardarConfigBasica"
+                  :disabled="guardandoBasica"
+                  class="btn-primary text-sm bg-gradient-to-r from-natillera-500 to-emerald-600"
+          >
+                  {{ guardandoBasica ? 'Guardando...' : 'Guardar Información' }}
+          </button>
+        </div>
+      </div>
+      </div>
+    </Transition>
+      </div>
+
       <!-- === MENSAJES === -->
       <div class="space-y-3">
       <button
@@ -927,6 +1031,7 @@ const route = useRoute()
 const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const usersStore = useUsersStore()
+const guardandoBasica = ref(false)
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
 const guardandoMensajes = ref(false)
@@ -934,7 +1039,7 @@ const guardandoSanciones = ref(false)
 const guardandoReasignacion = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
-const seccionActiva = ref(null) // 'mensajes', 'periodo', 'diasGracia', 'sanciones', 'reasignar' o null
+const seccionActiva = ref(null) // 'basica', 'mensajes', 'periodo', 'diasGracia', 'sanciones', 'reasignar' o null
 const tipoMensajeActivo = ref('individual') // 'individual', 'general', 'mora', 'pendiente'
 
 // Reasignación
@@ -980,6 +1085,14 @@ const meses = [
   { value: 11, label: 'Noviembre' },
   { value: 12, label: 'Diciembre' }
 ]
+
+// Configuración básica
+const configBasica = ref({
+  nombre: '',
+  descripcion: '',
+  periodicidad: 'mensual',
+  fecha_inicio: new Date().toISOString().split('T')[0]
+})
 
 // Configuración de período
 const configPeriodo = ref({
@@ -1037,6 +1150,69 @@ function eliminarNivel(index) {
   if (configSanciones.value.niveles.length > 1) {
     configSanciones.value.niveles.splice(index, 1)
   }
+}
+
+async function guardarConfigBasica() {
+  guardandoBasica.value = true
+  mensaje.value = null
+  
+  // Validaciones
+  if (!configBasica.value.nombre || configBasica.value.nombre.trim() === '') {
+    mensaje.value = {
+      tipo: 'error',
+      texto: 'El nombre de la natillera es requerido'
+    }
+    guardandoBasica.value = false
+    setTimeout(() => { mensaje.value = null }, 5000)
+    return
+  }
+
+  if (!configBasica.value.fecha_inicio) {
+    mensaje.value = {
+      tipo: 'error',
+      texto: 'La fecha de inicio es requerida'
+    }
+    guardandoBasica.value = false
+    setTimeout(() => { mensaje.value = null }, 5000)
+    return
+  }
+  
+  const result = await natillerasStore.actualizarNatillera(id.value, {
+    nombre: configBasica.value.nombre.trim(),
+    descripcion: configBasica.value.descripcion?.trim() || null,
+    periodicidad: configBasica.value.periodicidad,
+    fecha_inicio: configBasica.value.fecha_inicio
+  })
+  
+  if (result.success) {
+    mensaje.value = {
+      tipo: 'exito',
+      texto: 'Información básica guardada correctamente'
+    }
+    // Recargar la natillera para ver los cambios
+    await natillerasStore.fetchNatillera(id.value)
+    // Actualizar los valores locales con los datos recargados
+    if (natillera.value) {
+      configBasica.value = {
+        nombre: natillera.value.nombre || '',
+        descripcion: natillera.value.descripcion || '',
+        periodicidad: natillera.value.periodicidad || 'mensual',
+        fecha_inicio: natillera.value.fecha_inicio || new Date().toISOString().split('T')[0]
+      }
+    }
+    // Cerrar la sección después de guardar
+    seccionActiva.value = null
+  } else {
+    mensaje.value = {
+      tipo: 'error',
+      texto: result.error || 'Error al guardar la información básica'
+    }
+  }
+  
+  setTimeout(() => {
+    mensaje.value = null
+  }, 5000)
+  guardandoBasica.value = false
 }
 
 async function guardarConfigPeriodo() {
@@ -1308,6 +1484,13 @@ function restaurarDefectoMensajes() {
 // Función para actualizar los valores locales desde la natillera
 function actualizarValoresDesdeNatillera() {
   if (natillera.value) {
+    configBasica.value = {
+      nombre: natillera.value.nombre || '',
+      descripcion: natillera.value.descripcion || '',
+      periodicidad: natillera.value.periodicidad || 'mensual',
+      fecha_inicio: natillera.value.fecha_inicio || new Date().toISOString().split('T')[0]
+    }
+    
     configPeriodo.value = {
       mes_inicio: natillera.value.mes_inicio || 1,
       mes_fin: natillera.value.mes_fin || 11,

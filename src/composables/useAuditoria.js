@@ -140,12 +140,11 @@ export function useAuditoria() {
       // Si es una fecha ISO
       if (/^\d{4}-\d{2}-\d{2}/.test(valor)) {
         try {
-          const fecha = new Date(valor)
-          return fecha.toLocaleDateString('es-CO', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })
+          const d = new Date(valor)
+          const day = String(d.getDate()).padStart(2, '0')
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const year = d.getFullYear()
+          return `${day}/${month}/${year}`
         } catch (e) {
           return valor
         }

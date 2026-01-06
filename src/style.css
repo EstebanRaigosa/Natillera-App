@@ -210,6 +210,23 @@ input[type="date"] {
   cursor: pointer;
 }
 
+/* Forzar formato de fecha para Colombia (dd/MM/yyyy) */
+input[type="date"][lang="es-CO"] {
+  color-scheme: light;
+}
+
+/* Estilo para mostrar el formato correcto en el placeholder */
+input[type="date"][lang="es-CO"]::before {
+  content: attr(placeholder);
+  color: #9ca3af;
+  position: absolute;
+  pointer-events: none;
+}
+
+input[type="date"][lang="es-CO"]:valid::before {
+  display: none;
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 12px;
