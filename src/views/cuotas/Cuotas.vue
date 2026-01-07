@@ -296,10 +296,31 @@
     </div>
     </Transition>
 
-    <!-- Lista de cuotas -->
-    <div v-if="cuotasStore.loading" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-400 mt-4">Cargando cuotas...</p>
+    <!-- Lista de cuotas - Indicador de carga mejorado -->
+    <div v-if="cuotasStore.loading || inicializando" class="flex flex-col items-center justify-center py-16 px-4">
+      <div class="relative">
+        <!-- Fondo con pulso suave -->
+        <div class="absolute inset-0 w-20 h-20 -m-2 bg-natillera-100 rounded-full animate-pulse"></div>
+        <!-- Círculo exterior -->
+        <div class="relative w-16 h-16 border-4 border-natillera-200 rounded-full"></div>
+        <!-- Círculo interior giratorio -->
+        <div class="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-natillera-500 border-r-natillera-400 rounded-full animate-spin"></div>
+        <!-- Icono central -->
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <svg v-if="generandoCuotas" class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <svg v-else class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+      <p class="text-gray-700 mt-6 font-semibold text-lg">
+        {{ generandoCuotas ? 'Preparando cuotas del mes...' : 'Cargando cuotas...' }}
+      </p>
+      <p class="text-gray-400 text-sm mt-1">
+        {{ generandoCuotas ? 'Generando cuotas para los socios' : 'Esto solo tomará un momento' }}
+      </p>
     </div>
 
     <!-- Estado vacío: Sin cuotas generadas para el mes -->
@@ -2404,6 +2425,8 @@
                 <input 
                   :value="formatearValorCuota(formSocio.valor_cuota)"
                   @input="handleValorCuotaInput($event)"
+                  @focus="seleccionarMontoCuota"
+                  @click="seleccionarMontoCuota"
                   type="text" 
                   class="input-field pl-8 text-lg font-semibold"
                   placeholder="50.000"
@@ -2420,15 +2443,17 @@
               <label class="label">
                 Periodicidad de pago
               </label>
-              <div class="grid grid-cols-2 gap-3">
+              <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-3'">
                 <button
                   type="button"
-                  @click="formSocio.periodicidad = 'mensual'"
+                  @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
+                  :disabled="periodicidadNatillera === 'mensual'"
                   :class="[
-                    'p-4 rounded-xl border-2 transition-all text-left',
+                    'p-4 rounded-xl border-2 transition-all text-left w-full',
                     formSocio.periodicidad === 'mensual'
                       ? 'border-natillera-500 bg-natillera-50 ring-2 ring-natillera-200'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-gray-200 bg-white hover:border-gray-300',
+                    periodicidadNatillera === 'mensual' ? 'cursor-default opacity-90' : ''
                   ]"
                 >
                   <div class="flex items-center gap-2 mb-1">
@@ -2436,10 +2461,14 @@
                     <span class="font-semibold" :class="formSocio.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'">
                       Mensual
                     </span>
+                    <span v-if="periodicidadNatillera === 'mensual'" class="ml-auto text-xs bg-natillera-200 text-natillera-700 px-2 py-0.5 rounded-full font-medium">
+                      Único
+                    </span>
                   </div>
                   <p class="text-xs text-gray-500">1 cuota por mes</p>
                 </button>
                 <button
+                  v-if="periodicidadNatillera === 'quincenal'"
                   type="button"
                   @click="formSocio.periodicidad = 'quincenal'"
                   :class="[
@@ -2458,6 +2487,9 @@
                   <p class="text-xs text-gray-500">2 cuotas por mes</p>
                 </button>
               </div>
+              <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mt-2">
+                Esta natillera está configurada como mensual
+              </p>
             </div>
 
             <!-- Información de contacto (colapsable) -->
@@ -2672,6 +2704,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from
 import { useRoute } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
+import { useNatillerasStore } from '../../stores/natilleras'
 import { supabase } from '../../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 // Ya no necesitamos html2canvas, dibujamos directamente en canvas
@@ -2718,6 +2751,7 @@ const props = defineProps({
 const route = useRoute()
 const cuotasStore = useCuotasStore()
 const sociosStore = useSociosStore()
+const natillerasStore = useNatillerasStore()
 
 const modalGenerarCuotas = ref(false)
 const modalPago = ref(false)
@@ -2756,6 +2790,8 @@ const mesInicio = ref(1)
 const mesFin = ref(11)
 const anioNatillera = ref(new Date().getFullYear())
 const mesSeleccionado = ref(null)
+const inicializando = ref(true) // Flag para evitar que el watch se dispare durante la inicialización
+const generandoCuotas = ref(false) // Flag para evitar ejecuciones paralelas de generación
 const filtroEstado = ref('todos')
 const filtroPeriodicidad = ref('todos')
 const busquedaCuotas = ref('')
@@ -3452,14 +3488,27 @@ const mesParam = computed(() => {
 
 const resumen = computed(() => cuotasStore.calcularResumenCuotas())
 
-// Cuando cambia el mes seleccionado, actualizar el formulario y resetear filtros
-watch(mesSeleccionado, async (nuevoMes) => {
-  if (nuevoMes) {
+// Cuando cambia el mes seleccionado (por interacción del usuario, NO durante inicialización)
+watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
+  // Ignorar durante la inicialización para evitar múltiples cargas
+  if (inicializando.value) {
+    console.log('⏭️ Watch ignorado - inicialización en curso')
+    return
+  }
+  
+  if (nuevoMes && nuevoMes !== mesAnterior) {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
     
+    // Evitar ejecuciones paralelas de generación de cuotas
+    if (generandoCuotas.value) {
+      console.log('⏭️ Generación de cuotas ya en curso, ignorando...')
+      return
+    }
+    
     // Generar cuotas automáticamente para el mes seleccionado si faltan
     try {
+      generandoCuotas.value = true
       const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioNatillera.value)
       if (result.success && result.cuotasGeneradas > 0) {
         console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente para el mes ${nuevoMes}`)
@@ -3469,10 +3518,14 @@ watch(mesSeleccionado, async (nuevoMes) => {
     } catch (error) {
       console.error('Error en generación automática:', error)
       // No mostrar error al usuario, solo loguear
+    } finally {
+      generandoCuotas.value = false
     }
     
     // Recalcular sanciones dinámicas cuando se cambia de mes
-    await recalcularSancionesMes()
+    if (sancionesActivas.value) {
+      await recalcularSancionesMes()
+    }
   }
 })
 
@@ -3707,6 +3760,11 @@ const avatarSeeds = [
   'Domingo', 'Efrain', 'Felix', 'Gerardo', 'Horacio'
 ]
 
+// Periodicidad de la natillera actual
+const periodicidadNatillera = computed(() => {
+  return natillerasStore.natilleraActual?.periodicidad || 'mensual'
+})
+
 // Texto del label de cuota según periodicidad
 const textoLabelCuota = computed(() => {
   const periodicidad = formSocio.periodicidad
@@ -3776,6 +3834,12 @@ function handleValorCuotaInput(event) {
       formSocio.valor_cuota = numero
     }
   }
+}
+
+function seleccionarMontoCuota(event) {
+  const input = event?.target
+  if (!input || typeof input.select !== 'function') return
+  setTimeout(() => input.select(), 0)
 }
 
 async function handleGuardarSocio() {
@@ -5214,60 +5278,71 @@ function handleClickOutside(event) {
 }
 
 onMounted(async () => {
-  await cargarNatillera()
+  // Marcar que estamos inicializando para evitar que el watch se dispare
+  inicializando.value = true
   
-  // Cargar días de gracia de la natillera
   try {
-    const { data: natillera } = await supabase
-      .from('natilleras')
-      .select('reglas_multas')
-      .eq('id', id)
-      .single()
+    // 1. Cargar datos de la natillera (esto asigna mesSeleccionado pero el watch está desactivado)
+    await cargarNatillera()
     
-    diasGracia.value = natillera?.reglas_multas?.dias_gracia || 3
-    // Verificar si las sanciones están activadas
-    sancionesActivas.value = natillera?.reglas_multas?.sanciones?.activa || false
-    console.log('📅 Días de gracia cargados:', diasGracia.value)
-    console.log('⚙️ Sanciones activas:', sancionesActivas.value)
-  } catch (error) {
-    console.error('Error cargando días de gracia:', error)
-    diasGracia.value = 3 // Valor por defecto
-    sancionesActivas.value = false
-  }
-  
-  await cuotasStore.fetchCuotasNatillera(id)
-  
-  // Generar cuotas faltantes para el mes seleccionado al cargar la vista
-  if (mesSeleccionado.value) {
+    // 2. Cargar días de gracia y configuración de sanciones
     try {
-      const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioNatillera.value)
-      if (result.success && result.cuotasGeneradas > 0) {
-        console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente al cargar la vista`)
-        // Recargar cuotas para mostrar las nuevas
-        await cuotasStore.fetchCuotasNatillera(id)
-      }
+      const { data: natillera } = await supabase
+        .from('natilleras')
+        .select('reglas_multas')
+        .eq('id', id)
+        .single()
+      
+      diasGracia.value = natillera?.reglas_multas?.dias_gracia || 3
+      sancionesActivas.value = natillera?.reglas_multas?.sanciones?.activa || false
+      console.log('📅 Días de gracia cargados:', diasGracia.value)
+      console.log('⚙️ Sanciones activas:', sancionesActivas.value)
     } catch (error) {
-      console.error('Error en generación automática al cargar:', error)
-      // No mostrar error al usuario, solo loguear
+      console.error('Error cargando días de gracia:', error)
+      diasGracia.value = 3
+      sancionesActivas.value = false
     }
-  }
-  
-  // Calcular sanciones dinámicas solo si están activadas
-  if (sancionesActivas.value) {
-    const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
-    if (resultSanciones.success) {
-      sancionesDinamicas.value = resultSanciones.sanciones || {}
-      console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+    
+    // 3. Cargar cuotas existentes (primera carga)
+    await cuotasStore.fetchCuotasNatillera(id)
+    
+    // 4. Generar cuotas faltantes SOLO si es necesario (una sola vez, sin condiciones de carrera)
+    if (mesSeleccionado.value) {
+      try {
+        generandoCuotas.value = true
+        const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioNatillera.value)
+        if (result.success && result.cuotasGeneradas > 0) {
+          console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente al cargar la vista`)
+          // Recargar cuotas SOLO si se generaron nuevas
+          await cuotasStore.fetchCuotasNatillera(id)
+        }
+      } catch (error) {
+        console.error('Error en generación automática al cargar:', error)
+      } finally {
+        generandoCuotas.value = false
+      }
     }
-  } else {
-    // Limpiar sanciones si están desactivadas
-    sancionesDinamicas.value = {}
-    console.log('⚠️ Sanciones desactivadas - no se calcularán multas')
-  }
-  
-  // Si hay un mes seleccionado, recalcular sanciones para ese mes
-  if (mesSeleccionado.value) {
-    await recalcularSancionesMes()
+    
+    // 5. Calcular sanciones dinámicas solo si están activadas
+    if (sancionesActivas.value) {
+      const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
+      if (resultSanciones.success) {
+        sancionesDinamicas.value = resultSanciones.sanciones || {}
+        console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
+      }
+      
+      // Recalcular sanciones para el mes seleccionado
+      if (mesSeleccionado.value) {
+        await recalcularSancionesMes()
+      }
+    } else {
+      sancionesDinamicas.value = {}
+      console.log('⚠️ Sanciones desactivadas - no se calcularán multas')
+    }
+  } finally {
+    // 6. Marcar que la inicialización terminó - ahora el watch puede funcionar normalmente
+    inicializando.value = false
+    console.log('✅ Inicialización completada')
   }
   
   document.addEventListener('click', handleClickOutside)

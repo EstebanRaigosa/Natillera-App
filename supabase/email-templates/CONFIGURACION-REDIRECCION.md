@@ -98,3 +98,4 @@ Redirige a /dashboard
 - [Documentación de Supabase - Email Templates](https://supabase.com/docs/guides/auth/auth-email-templates)
 
 
+

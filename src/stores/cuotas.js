@@ -7,6 +7,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
   const cuotas = ref([])
   const loading = ref(false)
   const error = ref(null)
+  
+  // Mapa para rastrear qué natilleras están generando cuotas (evitar ejecuciones paralelas)
+  const generandoCuotasPorNatillera = new Map()
 
   // Función para actualizar la referencia de socio_natillera en las cuotas ya cargadas
   function actualizarSocioNatilleraEnCuotas(socioNatilleraId, datosActualizados) {
@@ -1473,6 +1476,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
   // Función para generar cuotas faltantes para socios que no tienen cuota en un mes
   async function generarCuotasFaltantes(natilleraId, mes = null, anio = null) {
+    // Crear clave única para esta operación (natillera + mes + año)
+    const claveOperacion = `${natilleraId}-${mes}-${anio}`
+    
+    // Verificar si ya hay una operación en curso para evitar condiciones de carrera
+    if (generandoCuotasPorNatillera.get(claveOperacion)) {
+      console.log(`⏭️ Ya hay una generación de cuotas en curso para ${claveOperacion}`)
+      return { success: true, message: 'Ya hay una generación en curso', cuotasGeneradas: 0, enCurso: true }
+    }
+    
+    // Marcar que estamos generando cuotas para esta natillera/mes/año
+    generandoCuotasPorNatillera.set(claveOperacion, true)
+    
     try {
       loading.value = true
       error.value = null
@@ -1619,79 +1634,108 @@ export const useCuotasStore = defineStore('cuotas', () => {
       ]
       const mesLabel = meses[mesAGenerar - 1]
 
-      // Generar las cuotas solo para los socios que faltan
-      const fechasParaGenerar = {
-        mensual: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str },
-        quincena1: { vencimiento: fechaVencimientoQuincena1Str, limite: fechaLimiteQuincena1Str },
-        quincena2: { vencimiento: fechaVencimientoQuincena2Str, limite: fechaLimiteQuincena2Str }
+      // Calcular estado inicial según fecha de vencimiento
+      const fechaHoy = new Date()
+      fechaHoy.setHours(0, 0, 0, 0)
+      
+      const calcularEstadoInicial = (fechaVencimientoStr) => {
+        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(year, month - 1, day)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return fechaHoy >= fechaVencimiento ? 'pendiente' : 'programada'
       }
 
-      // Generar cuotas para cada socio que falta
-      // IMPORTANTE: Verificar nuevamente antes de generar para evitar duplicados
-      let cuotasGeneradas = 0
-      for (const socioId of sociosSinCuota) {
-        // Verificación adicional: Re-verificar que el socio realmente no tiene cuota
-        // Esta verificación es atómica y previene condiciones de carrera
-        const { data: cuotasSocio, error: errorVerificacion } = await supabase
-          .from('cuotas')
-          .select('id, quincena')
-          .eq('socio_natillera_id', socioId)
-          .eq('mes', mesAGenerar)
-          .eq('anio', anioAGenerar)
+      // Obtener información completa de los socios que necesitan cuota (con valor_cuota_individual)
+      const { data: sociosCompletos, error: sociosCompletosError } = await supabase
+        .from('socios_natillera')
+        .select('id, periodicidad, valor_cuota_individual')
+        .in('id', sociosSinCuota)
+        .eq('estado', 'activo')
+      
+      if (sociosCompletosError) throw sociosCompletosError
+
+      // Preparar TODAS las cuotas a crear en un solo array (BATCH)
+      const cuotasACrear = []
+      
+      for (const socio of sociosCompletos) {
+        const periodicidad = socio.periodicidad || 'mensual'
+        const valorCuota = socio.valor_cuota_individual
         
-        if (errorVerificacion) {
-          console.error(`❌ Error verificando cuotas del socio ${socioId}:`, errorVerificacion)
-          continue
-        }
+        // Verificar qué cuotas específicas le faltan a este socio
+        const cuotasDelSocio = (cuotasExistentes || []).filter(c => c.socio_natillera_id === socio.id)
         
-        // Obtener información del socio para verificar periodicidad
-        const socio = sociosNatillera.find(s => s.id === socioId)
-        const periodicidad = socio?.periodicidad || 'mensual'
-        
-        // Verificación estricta según periodicidad
-        let necesitaGenerar = false
         if (periodicidad === 'quincenal') {
-          // Para quincenal: debe tener exactamente 2 cuotas
-          const tieneQ1 = cuotasSocio?.some(c => c.quincena === 1) || false
-          const tieneQ2 = cuotasSocio?.some(c => c.quincena === 2) || false
-          necesitaGenerar = !tieneQ1 || !tieneQ2
+          const tieneQ1 = cuotasDelSocio.some(c => c.quincena === 1)
+          const tieneQ2 = cuotasDelSocio.some(c => c.quincena === 2)
           
-          if (!necesitaGenerar) {
-            console.log(`⏭️ Socio ${socioId} (quincenal) ya tiene ambas cuotas, saltando...`)
-            continue
+          // Crear solo las quincenas que faltan
+          if (!tieneQ1) {
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: valorCuota,
+              valor_pagado: 0,
+              fecha_vencimiento: fechaVencimientoQuincena1Str,
+              fecha_limite: fechaLimiteQuincena1Str,
+              mes: mesAGenerar,
+              anio: anioAGenerar,
+              quincena: 1,
+              estado: calcularEstadoInicial(fechaVencimientoQuincena1Str),
+              descripcion: `${mesLabel} - 1ra Quincena`
+            })
+          }
+          
+          if (!tieneQ2) {
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: valorCuota,
+              valor_pagado: 0,
+              fecha_vencimiento: fechaVencimientoQuincena2Str,
+              fecha_limite: fechaLimiteQuincena2Str,
+              mes: mesAGenerar,
+              anio: anioAGenerar,
+              quincena: 2,
+              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str),
+              descripcion: `${mesLabel} - 2da Quincena`
+            })
           }
         } else {
-          // Para mensual: debe tener 1 cuota sin quincena
-          const tieneMensual = cuotasSocio?.some(c => c.quincena === null || c.quincena === undefined) || false
-          necesitaGenerar = !tieneMensual
+          // Mensual - solo crear si no tiene cuota mensual
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
           
-          if (!necesitaGenerar) {
-            console.log(`⏭️ Socio ${socioId} (mensual) ya tiene cuota, saltando...`)
-            continue
-          }
-        }
-        
-        // Solo generar si realmente necesita
-        if (necesitaGenerar) {
-          console.log(`✅ Generando cuotas para socio ${socioId} (${periodicidad})`)
-          const result = await generarCuotasPeriodo(
-            natilleraId,
-            fechasParaGenerar,
-            mesLabel,
-            mesAGenerar,
-            anioAGenerar,
-            socioId // Solo este socio
-          )
-          
-          if (result.success) {
-            // Contar cuántas cuotas se generaron
-            cuotasGeneradas += periodicidad === 'quincenal' ? 2 : 1
-            console.log(`✅ Cuotas generadas para socio ${socioId}`)
-          } else {
-            console.error(`❌ Error generando cuotas para socio ${socioId}:`, result.error)
+          if (!tieneMensual) {
+            cuotasACrear.push({
+              socio_natillera_id: socio.id,
+              valor_cuota: valorCuota,
+              valor_pagado: 0,
+              fecha_vencimiento: fechaVencimientoQuincena2Str,
+              fecha_limite: fechaLimiteQuincena2Str,
+              mes: mesAGenerar,
+              anio: anioAGenerar,
+              quincena: null,
+              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str),
+              descripcion: `Cuota ${mesLabel}`
+            })
           }
         }
       }
+
+      // Si no hay cuotas que crear, retornar
+      if (cuotasACrear.length === 0) {
+        return { success: true, message: 'No hay cuotas nuevas que generar', cuotasGeneradas: 0 }
+      }
+
+      console.log(`📋 Generando ${cuotasACrear.length} cuotas en una sola operación batch...`)
+
+      // INSERTAR TODAS LAS CUOTAS EN UNA SOLA OPERACIÓN (sin parpadeos)
+      const { data: cuotasInsertadas, error: insertError } = await supabase
+        .from('cuotas')
+        .insert(cuotasACrear)
+        .select()
+
+      if (insertError) throw insertError
+
+      const cuotasGeneradas = cuotasInsertadas?.length || 0
+      console.log(`✅ ${cuotasGeneradas} cuotas generadas exitosamente en batch`)
 
       return { 
         success: true, 
@@ -1705,6 +1749,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
       return { success: false, error: e.message }
     } finally {
       loading.value = false
+      // Liberar el bloqueo para esta natillera/mes/año
+      generandoCuotasPorNatillera.delete(claveOperacion)
     }
   }
 

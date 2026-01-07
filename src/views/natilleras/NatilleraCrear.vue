@@ -99,104 +99,6 @@
         </div>
       </div>
 
-      <!-- Selector de Avatar -->
-      <div class="relative p-5 sm:p-6 bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50 rounded-2xl border-2 border-purple-100/50 shadow-lg shadow-purple-100/50 hover:shadow-xl hover:shadow-purple-200/50 transition-all duration-300 animate-fade-in-up stagger-3 overflow-hidden">
-        <!-- Decoración de fondo -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-indigo-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-200/20 to-purple-200/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div class="relative">
-          <h3 class="font-semibold text-purple-800 flex items-center gap-2 mb-5 text-lg">
-            <span class="text-2xl animate-bounce-slow">🎨</span>
-            <span>Avatar de la Natillera</span>
-          </h3>
-          
-          <div class="space-y-5">
-            <!-- Vista previa del avatar -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-purple-100/50">
-              <div class="relative group">
-                <div class="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl border-2 border-white overflow-hidden bg-white ring-2 ring-purple-200/50 group-hover:ring-purple-400/50 transition-all duration-300 group-hover:scale-105">
-                  <img 
-                    :src="avatarPreviewUrl" 
-                    :alt="form.nombre || 'Natillera'"
-                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                </div>
-                <div class="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                  <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586A2 2 0 1120 10l-7 7-7-7a2 2 0 011.414-1.414L10 12.172l3.586-3.586z"/>
-                  </svg>
-                </div>
-              </div>
-              <div class="flex-1 w-full">
-                <label class="label text-purple-700">Personalizar (opcional)</label>
-                <input 
-                  v-model="form.avatar_seed"
-                  type="text" 
-                  class="input-field bg-white/90 border-purple-200 focus:border-purple-400 focus:ring-purple-400/30"
-                  placeholder="Deja vacío para usar el nombre"
-                  @input="generarAvatarSeed"
-                />
-                <p class="text-xs text-purple-600/70 mt-1.5 flex items-center gap-1">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Ingresa un texto único para generar un avatar diferente
-                </p>
-              </div>
-            </div>
-
-            <!-- Selector de estilo -->
-            <div>
-              <label class="label mb-3 text-purple-700">Estilo del Avatar</label>
-              <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                <button
-                  v-for="(estilo, index) in estilosAvatar"
-                  :key="estilo.value"
-                  type="button"
-                  @click="form.avatar_style = estilo.value"
-                  :class="[
-                    'relative p-2.5 rounded-xl border-2 transition-all duration-300 hover:scale-110 hover:shadow-xl group overflow-hidden',
-                    form.avatar_style === estilo.value
-                      ? 'border-purple-500 bg-gradient-to-br from-purple-100 to-indigo-50 shadow-lg ring-2 ring-purple-300/50 scale-105'
-                      : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50/50'
-                  ]"
-                  :style="{ animationDelay: `${index * 0.05}s` }"
-                  :title="estilo.label"
-                >
-                  <!-- Efecto shimmer en hover -->
-                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  
-                  <div class="relative aspect-square rounded-lg overflow-hidden">
-                    <img 
-                      :src="getAvatarPreviewUrl(estilo.value)" 
-                      :alt="estilo.label"
-                      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                  </div>
-                  
-                  <div v-if="form.avatar_style === estilo.value" class="absolute -top-1.5 -right-1.5 w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-full flex items-center justify-center shadow-lg ring-2 ring-white animate-bounce-in">
-                    <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                  </div>
-                  
-                  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent text-white text-[10px] font-semibold px-1.5 py-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    {{ estilo.label }}
-                  </div>
-                </button>
-              </div>
-              <p class="text-xs text-purple-600/70 mt-3 flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                </svg>
-                Selecciona un estilo abstracto y bonito para el avatar de tu natillera
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Reglas de multas -->
       <div class="relative p-5 sm:p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl border-2 border-amber-100/50 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/50 transition-all duration-300 animate-fade-in-up stagger-4 overflow-hidden">
         <!-- Decoración de fondo -->
@@ -410,10 +312,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
-import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { Transition } from 'vue'
 import { 
   ArrowLeftIcon,
@@ -425,22 +326,11 @@ const router = useRouter()
 const natillerasStore = useNatillerasStore()
 
 const error = ref('')
-const estilosAvatar = [
-  { value: 'shapes', label: 'Formas' },
-  { value: 'rings', label: 'Anillos' },
-  { value: 'identicon', label: 'Patrones' },
-  { value: 'icons', label: 'Iconos' },
-  { value: 'bottts', label: 'Robots' },
-  { value: 'pixel-art', label: 'Pixel Art' },
-  { value: 'fun-emoji', label: 'Emojis' }
-]
 const form = reactive({
   nombre: '',
   fecha_inicio: new Date().toISOString().split('T')[0],
   periodicidad: 'mensual',
   descripcion: '',
-  avatar_seed: '',
-  avatar_style: 'shapes',
   multa_activa: true,
   valor_multa: 5000,
   dias_gracia: 3,
@@ -448,24 +338,6 @@ const form = reactive({
   interes_prestamo: 2,
   plazo_maximo: 6
 })
-
-// Generar seed aleatorio inicial
-function generarAvatarSeed() {
-  if (!form.avatar_seed && form.nombre) {
-    // No hacer nada, dejar que use el nombre
-  }
-}
-
-// Vista previa del avatar
-const avatarPreviewUrl = computed(() => {
-  const seed = form.avatar_seed || form.nombre || 'natillera-preview'
-  return getNatilleraAvatarUrl(seed, null, form.avatar_style)
-})
-
-function getAvatarPreviewUrl(estilo) {
-  const seed = form.avatar_seed || form.nombre || 'preview'
-  return getNatilleraAvatarUrl(seed, null, estilo)
-}
 
 async function handleSubmit() {
   error.value = ''
@@ -508,7 +380,6 @@ async function handleSubmit() {
     fecha_inicio: form.fecha_inicio,
     periodicidad: form.periodicidad,
     descripcion: form.descripcion,
-    avatar_seed: form.avatar_seed || form.nombre, // Usar el seed personalizado o el nombre
     reglas_multas: reglasMultas,
     reglas_interes: form.prestamos_activos ? {
       activo: true,
@@ -528,39 +399,6 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
-/* Animación de entrada con rebote para el checkmark */
-@keyframes bounce-in {
-  0% {
-    transform: scale(0) rotate(-180deg);
-    opacity: 0;
-  }
-  50% {
-    transform: scale(1.2) rotate(10deg);
-  }
-  100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 1;
-  }
-}
-
-.animate-bounce-in {
-  animation: bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-}
-
-/* Animación de rebote lento para emojis */
-@keyframes bounce-slow {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-bounce-slow {
-  animation: bounce-slow 2s ease-in-out infinite;
-}
-
 /* Animación de pulso lento para decoraciones */
 @keyframes pulse-slow {
   0%, 100% {

@@ -626,31 +626,74 @@
               <input 
                 :value="formatearValorCuota(formSocio.valor_cuota)"
                 @input="handleValorCuotaInput($event)"
+                @focus="seleccionarMontoCuota"
+                @click="seleccionarMontoCuota"
                 type="text" 
                 class="input-field pl-8 text-lg font-semibold"
                 placeholder="50.000"
                 required
               />
             </div>
-            <p class="text-xs text-natillera-600 mt-2">
-              Este es el valor que el socio aportará en cada período
-            </p>
-            
-            <!-- Mensaje de advertencia cuando se edita un socio existente -->
-            <div v-if="socioEditando" class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div class="flex items-start gap-2">
-                <ExclamationTriangleIcon class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p class="text-xs font-semibold text-amber-800 mb-1">
-                    ⚠️ Advertencia importante
-                  </p>
-                  <p class="text-xs text-amber-700 leading-relaxed">
-                    Al modificar este valor, se actualizarán automáticamente todas las cuotas (pendientes, futuras y pagadas) que ya han sido generadas para este socio. 
-                    <br><br>
-                    <strong>Si el nuevo valor es mayor:</strong> Las cuotas pagadas se convertirán en pagos parciales, dejando la diferencia como pendiente.
-                    <br>
-                    <strong>Si el nuevo valor es menor:</strong> Las cuotas pagadas se mantendrán como pagadas con una anotación visible.
-                  </p>
+            <div class="mt-2 space-y-2">
+              <p class="text-xs text-natillera-600">
+                Este es el valor que el socio aportará en cada período
+              </p>
+              
+              <!-- Alerta breve siempre visible cuando se edita -->
+              <div v-if="socioEditando" class="flex items-center gap-2 p-2.5 bg-amber-50/80 border border-amber-200/50 rounded-lg">
+                <ExclamationTriangleIcon class="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <p class="text-xs text-amber-700 flex-1">
+                  Este cambio afectará todas las cuotas generadas
+                </p>
+                
+                <!-- Botón de información detallada integrado -->
+                <div class="relative flex-shrink-0">
+                  <button 
+                    type="button"
+                    data-advertencia-button
+                    @click.stop="mostrarAdvertenciaCuota = !mostrarAdvertenciaCuota"
+                    class="flex items-center justify-center w-6 h-6 text-amber-600 hover:text-amber-700 active:text-amber-800 hover:bg-amber-100 rounded-full transition-all touch-manipulation"
+                    title="Ver más detalles"
+                  >
+                    <InformationCircleIcon class="w-5 h-5" />
+                  </button>
+                
+                <!-- Tooltip/Popover con la información completa -->
+                <Transition
+                  enter-active-class="transition-all duration-200 ease-out"
+                  enter-from-class="opacity-0 translate-y-2 scale-95"
+                  enter-to-class="opacity-100 translate-y-0 scale-100"
+                  leave-active-class="transition-all duration-150 ease-in"
+                  leave-from-class="opacity-100 translate-y-0 scale-100"
+                  leave-to-class="opacity-0 translate-y-2 scale-95"
+                >
+                  <div 
+                    v-show="mostrarAdvertenciaCuota"
+                    data-advertencia-tooltip
+                    class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 border border-amber-200 rounded-xl shadow-xl z-50"
+                    @click.stop
+                  >
+                    <div class="absolute bottom-0 right-4 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 border-r border-b border-amber-200"></div>
+                    <p class="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1">
+                      <ExclamationTriangleIcon class="w-3.5 h-3.5" />
+                      Al modificar este valor:
+                    </p>
+                    <ul class="text-[11px] text-amber-700 space-y-1.5 leading-relaxed">
+                      <li class="flex items-start gap-1.5">
+                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                        <span>Se actualizarán <strong>todas las cuotas</strong> generadas para este socio</span>
+                      </li>
+                      <li class="flex items-start gap-1.5">
+                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                        <span><strong>Valor mayor:</strong> Cuotas pagadas → pagos parciales</span>
+                      </li>
+                      <li class="flex items-start gap-1.5">
+                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                        <span><strong>Valor menor:</strong> Se mantienen pagadas con nota</span>
+                      </li>
+                    </ul>
+                  </div>
+                </Transition>
                 </div>
               </div>
             </div>
@@ -661,15 +704,17 @@
             <label class="label">
               Periodicidad de pago
             </label>
-            <div class="grid grid-cols-2 gap-3">
+            <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-3'">
               <button
                 type="button"
-                @click="formSocio.periodicidad = 'mensual'"
+                @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
+                :disabled="periodicidadNatillera === 'mensual'"
                 :class="[
-                  'p-4 rounded-xl border-2 transition-all text-left',
+                  'p-4 rounded-xl border-2 transition-all text-left w-full',
                   formSocio.periodicidad === 'mensual'
                     ? 'border-natillera-500 bg-natillera-50 ring-2 ring-natillera-200'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : 'border-gray-200 bg-white hover:border-gray-300',
+                  periodicidadNatillera === 'mensual' ? 'cursor-default opacity-90' : ''
                 ]"
               >
                 <div class="flex items-center gap-2 mb-1">
@@ -677,10 +722,14 @@
                   <span class="font-semibold" :class="formSocio.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'">
                     Mensual
                   </span>
+                  <span v-if="periodicidadNatillera === 'mensual'" class="ml-auto text-xs bg-natillera-200 text-natillera-700 px-2 py-0.5 rounded-full font-medium">
+                    Único
+                  </span>
                 </div>
                 <p class="text-xs text-gray-500">1 cuota por mes</p>
               </button>
               <button
+                v-if="periodicidadNatillera === 'quincenal'"
                 type="button"
                 @click="formSocio.periodicidad = 'quincenal'"
                 :class="[
@@ -699,6 +748,9 @@
                 <p class="text-xs text-gray-500">2 cuotas por mes</p>
               </button>
             </div>
+            <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mt-2">
+              Esta natillera está configurada como mensual
+            </p>
           </div>
 
           <!-- Información de contacto (colapsable) -->
@@ -1263,7 +1315,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSociosStore } from '../../stores/socios'
 import { useCuotasStore } from '../../stores/cuotas'
@@ -1323,6 +1375,7 @@ const socioParaCuotas = ref(null)
 const cuotasSocioPorMes = ref([])
 const errorSocio = ref('')
 const mostrarContacto = ref(false)
+const mostrarAdvertenciaCuota = ref(false)
 const cuotasSocio = ref([])
 const loadingDetalle = ref(false)
 const busqueda = ref('')
@@ -1405,6 +1458,11 @@ const avatarSeeds = [
   'Domingo', 'Efrain', 'Felix', 'Gerardo', 'Horacio'
 ]
 
+// Periodicidad de la natillera actual
+const periodicidadNatillera = computed(() => {
+  return natillerasStore.natilleraActual?.periodicidad || 'mensual'
+})
+
 // Texto del label de cuota según periodicidad
 const textoLabelCuota = computed(() => {
   const periodicidad = formSocio.periodicidad
@@ -1475,6 +1533,13 @@ function handleValorCuotaInput(event) {
   }
 }
 
+function seleccionarMontoCuota(event) {
+  const input = event?.target
+  if (!input || typeof input.select !== 'function') return
+  // El click puede mover el cursor después de seleccionar; diferimos el select()
+  setTimeout(() => input.select(), 0)
+}
+
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
   // Usar DiceBear Avatars con el estilo seleccionado
   // Si hay un avatar_seed guardado, usarlo; si no, usar el nombre
@@ -1537,6 +1602,7 @@ function cerrarModal() {
   errorSocio.value = ''
   mostrarContacto.value = false
   mostrarAvatares.value = false
+  mostrarAdvertenciaCuota.value = false
   Object.assign(formSocio, {
     nombre: '',
     documento: '',
@@ -2095,8 +2161,41 @@ async function verDetalleSocio(sn) {
 }
 
 
+// Listener para cerrar el tooltip cuando se hace click fuera
+let clickOutsideListener = null
+
+watch(mostrarAdvertenciaCuota, (isOpen) => {
+  if (isOpen) {
+    // Agregar listener después de que Vue renderice
+    nextTick(() => {
+      clickOutsideListener = (event) => {
+        const tooltip = document.querySelector('[data-advertencia-tooltip]')
+        const button = event.target.closest('[data-advertencia-button]')
+        
+        if (tooltip && !tooltip.contains(event.target) && !button) {
+          mostrarAdvertenciaCuota.value = false
+        }
+      }
+      document.addEventListener('click', clickOutsideListener)
+    })
+  } else {
+    // Remover listener cuando se cierra
+    if (clickOutsideListener) {
+      document.removeEventListener('click', clickOutsideListener)
+      clickOutsideListener = null
+    }
+  }
+})
+
 onMounted(() => {
   sociosStore.fetchSociosNatillera(id)
+})
+
+onUnmounted(() => {
+  // Limpiar listener al desmontar
+  if (clickOutsideListener) {
+    document.removeEventListener('click', clickOutsideListener)
+  }
 })
 </script>
 
