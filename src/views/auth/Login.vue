@@ -198,17 +198,26 @@
               <h4 class="text-lg font-display font-bold text-gray-800 mb-2">
                 ¡Email enviado!
               </h4>
-              <p class="text-sm text-gray-600 mb-4">
+              <p class="text-sm text-gray-600 mb-2">
                 Hemos enviado un enlace de recuperación a <strong class="text-gray-800">{{ forgotPasswordEmail }}</strong>
               </p>
+              <!-- Aviso de tiempo de espera -->
+              <div class="flex items-center justify-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl mb-3">
+                <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-xs text-amber-700 font-medium">
+                  El correo puede demorar hasta 5 minutos en llegar
+                </p>
+              </div>
               <p class="text-xs text-gray-500">
-                Revisa tu bandeja de entrada y haz clic en el enlace para restablecer tu contraseña.
+                Revisa tu bandeja de entrada y carpeta de spam. Haz clic en el enlace para restablecer tu contraseña.
               </p>
               <button
                 @click="closeForgotPasswordModal"
-                class="mt-6 w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all font-semibold shadow-md hover:shadow-lg"
+                class="mt-5 w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all font-semibold shadow-md hover:shadow-lg"
               >
-                Cerrar
+                Entendido
               </button>
             </div>
 

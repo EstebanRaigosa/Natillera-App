@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
+import { BASE_URL, devLog } from '../config/environment'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -113,13 +114,18 @@ async function register(email, password, nombre) {
       loading.value = true
       error.value = null
       
+      // URL de redirección según el entorno (desarrollo o producción)
+      const redirectUrl = `${BASE_URL}/auth/welcome`
+      devLog('Registro - URL de redirección:', redirectUrl)
+      
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             nombre
-          }
+          },
+          emailRedirectTo: redirectUrl
         }
       })
       
@@ -145,8 +151,9 @@ async function register(email, password, nombre) {
       loading.value = true
       error.value = null
       
-      // Obtener la URL base para el redirect
-      const redirectUrl = `${window.location.origin}/auth/reset-password`
+      // URL de redirección según el entorno (desarrollo o producción)
+      const redirectUrl = `${BASE_URL}/auth/reset-password`
+      devLog('Reset Password - URL de redirección:', redirectUrl)
       
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
@@ -223,10 +230,14 @@ async function register(email, password, nombre) {
       loading.value = true
       error.value = null
       
+      // URL de redirección según el entorno (desarrollo o producción)
+      const redirectUrl = `${BASE_URL}/dashboard`
+      devLog('Google OAuth - URL de redirección:', redirectUrl)
+      
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: redirectUrl
         }
       })
       

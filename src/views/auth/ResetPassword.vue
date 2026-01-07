@@ -10,8 +10,22 @@
       </div>
     </div>
 
+    <!-- Estado de carga - Verificando enlace -->
+    <div v-if="isLoading" class="text-center py-12 animate-fade-in-up">
+      <div class="w-16 h-16 mx-auto mb-6 relative">
+        <div class="absolute inset-0 rounded-full border-4 border-natillera-200"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-natillera-500 border-t-transparent animate-spin"></div>
+      </div>
+      <h3 class="text-xl font-display font-bold text-gray-800 mb-2">
+        Verificando enlace...
+      </h3>
+      <p class="text-gray-500 text-sm">
+        Por favor espera mientras validamos tu enlace de recuperación
+      </p>
+    </div>
+
     <!-- Vista de éxito -->
-    <div v-if="success" class="text-center py-8 animate-fade-in-up">
+    <div v-else-if="success" class="text-center py-8 animate-fade-in-up">
       <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
         <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -34,8 +48,35 @@
       </router-link>
     </div>
 
+    <!-- Vista de error - Enlace inválido o expirado -->
+    <div v-else-if="errorMessage && !isValidSession" class="text-center py-8 animate-fade-in-up">
+      <div class="w-20 h-20 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-display font-bold text-gray-800 mb-3">
+        Enlace no válido
+      </h3>
+      <p class="text-gray-600 mb-4">
+        {{ errorMessage }}
+      </p>
+      <p class="text-sm text-gray-400 mb-6">
+        Serás redirigido al inicio de sesión en unos segundos...
+      </p>
+      <router-link
+        to="/auth/login"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all font-semibold shadow-md hover:shadow-lg"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+        </svg>
+        Ir al inicio de sesión
+      </router-link>
+    </div>
+
     <!-- Formulario de restablecimiento -->
-    <form v-else @submit.prevent="handleResetPassword" class="space-y-6 animate-fade-in-up stagger-1">
+    <form v-else-if="isValidSession" @submit.prevent="handleResetPassword" class="space-y-6 animate-fade-in-up stagger-1">
       <!-- Mensaje informativo -->
       <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl">
         <p class="text-sm text-blue-800 text-center">
@@ -144,7 +185,7 @@
     </form>
 
     <!-- Enlace de regreso al login -->
-    <div v-if="!success" class="mt-8 text-center animate-fade-in-up stagger-2">
+    <div v-if="!success && isValidSession && !isLoading" class="mt-8 text-center animate-fade-in-up stagger-2">
       <p class="text-sm text-gray-600">
         ¿Recordaste tu contraseña? 
         <router-link 
@@ -163,11 +204,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { supabase } from '../../lib/supabase'
+import { devLog } from '../../config/environment'
 
 const router = useRouter()
 const route = useRoute()
@@ -179,29 +221,150 @@ const errorMessage = ref('')
 const success = ref(false)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const isValidSession = ref(false)
+const isLoading = ref(true)
 
 const isFormValid = computed(() => {
   return password.value.length >= 6 && 
          confirmPassword.value.length >= 6 && 
-         password.value === confirmPassword.value
+         password.value === confirmPassword.value &&
+         isValidSession.value
 })
 
+// Listener para cambios de autenticación
+let authListener = null
+let checkInterval = null
+
 onMounted(async () => {
-  // Verificar que hay un token de reset en la URL
+  devLog('ResetPassword: Iniciando verificación de sesión...')
+  devLog('ResetPassword: URL actual:', window.location.href)
+  devLog('ResetPassword: Hash:', window.location.hash)
+  devLog('ResetPassword: Search:', window.location.search)
+  
+  // Verificar parámetros tanto en hash como en query params
   const hashParams = new URLSearchParams(window.location.hash.substring(1))
-  const accessToken = hashParams.get('access_token')
-  const type = hashParams.get('type')
+  const queryParams = new URLSearchParams(window.location.search.substring(1))
   
-  // También verificar query params (por si Supabase los pasa de otra forma)
-  const queryParams = new URLSearchParams(window.location.search)
-  const tokenFromQuery = queryParams.get('token')
+  // Buscar token en hash o query params
+  const accessToken = hashParams.get('access_token') || queryParams.get('access_token')
+  const refreshToken = hashParams.get('refresh_token') || queryParams.get('refresh_token')
+  const type = hashParams.get('type') || queryParams.get('type')
+  const hasError = hashParams.get('error') || queryParams.get('error')
+  const errorDescription = hashParams.get('error_description') || queryParams.get('error_description')
   
-  if (!accessToken && type !== 'recovery' && !tokenFromQuery) {
-    // Si no hay token, redirigir al login
-    errorMessage.value = 'El enlace de restablecimiento no es válido o ha expirado. Por favor, solicita un nuevo enlace.'
+  devLog('ResetPassword: Access token encontrado:', !!accessToken)
+  devLog('ResetPassword: Refresh token encontrado:', !!refreshToken)
+  devLog('ResetPassword: Type:', type)
+  devLog('ResetPassword: Error:', hasError, errorDescription)
+  
+  // Si hay un error explícito en la URL
+  if (hasError) {
+    isLoading.value = false
+    errorMessage.value = errorDescription 
+      ? decodeURIComponent(errorDescription.replace(/\+/g, ' '))
+      : 'El enlace de restablecimiento no es válido o ha expirado.'
+    
     setTimeout(() => {
       router.push('/auth/login')
-    }, 3000)
+    }, 5000)
+    return
+  }
+  
+  // Escuchar eventos de autenticación de Supabase ANTES de verificar la sesión
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    devLog('ResetPassword: Evento de auth:', event, session?.user?.email)
+    
+    if (event === 'PASSWORD_RECOVERY') {
+      // Supabase ha procesado el token de recuperación correctamente
+      devLog('ResetPassword: Token de recuperación válido')
+      isValidSession.value = true
+      isLoading.value = false
+      errorMessage.value = ''
+    } else if (event === 'SIGNED_IN' && session) {
+      // El usuario tiene una sesión válida (puede ser del token de recuperación)
+      devLog('ResetPassword: Sesión válida detectada')
+      isValidSession.value = true
+      isLoading.value = false
+      errorMessage.value = ''
+    } else if (event === 'TOKEN_REFRESHED' && session) {
+      // Token refrescado, sesión válida
+      devLog('ResetPassword: Token refrescado')
+      isValidSession.value = true
+      isLoading.value = false
+    }
+  })
+  
+  authListener = subscription
+  
+  // Verificar si ya hay una sesión existente (por si el evento ya ocurrió)
+  const { data: { session }, error } = await supabase.auth.getSession()
+  
+  if (error) {
+    devLog('ResetPassword: Error obteniendo sesión:', error)
+  }
+  
+  if (session) {
+    devLog('ResetPassword: Sesión existente encontrada:', session.user?.email)
+    isValidSession.value = true
+    isLoading.value = false
+    return
+  }
+  
+  // Si hay tokens en la URL, esperar a que Supabase los procese
+  if (accessToken || refreshToken || type === 'recovery') {
+    devLog('ResetPassword: Tokens encontrados en URL, esperando procesamiento...')
+    
+    // Dar más tiempo para que Supabase procese el token (aumentado a 5 segundos)
+    // Verificar múltiples veces con intervalos
+    let attempts = 0
+    const maxAttempts = 10 // 10 intentos x 500ms = 5 segundos máximo
+    
+    checkInterval = setInterval(async () => {
+      attempts++
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      if (currentSession) {
+        devLog('ResetPassword: Sesión establecida después de', attempts, 'intentos')
+        isValidSession.value = true
+        isLoading.value = false
+        clearInterval(checkInterval)
+      } else if (attempts >= maxAttempts) {
+        devLog('ResetPassword: Timeout después de', attempts, 'intentos')
+        clearInterval(checkInterval)
+        // Verificar una última vez antes de marcar como error
+        const { data: { session: finalSession } } = await supabase.auth.getSession()
+        if (finalSession) {
+          isValidSession.value = true
+          isLoading.value = false
+        } else {
+          isLoading.value = false
+          errorMessage.value = 'El enlace de restablecimiento ha expirado o no es válido. Por favor, solicita uno nuevo.'
+          setTimeout(() => {
+            router.push('/auth/login')
+          }, 5000)
+        }
+      }
+    }, 500) // Verificar cada 500ms
+  } else {
+    // No hay token ni sesión, el enlace no es válido
+    devLog('ResetPassword: No se encontraron tokens en la URL')
+    isLoading.value = false
+    errorMessage.value = 'No se encontró un enlace de restablecimiento válido. Por favor, solicita un nuevo enlace desde la página de inicio de sesión.'
+    
+    setTimeout(() => {
+      router.push('/auth/login')
+    }, 5000)
+  }
+})
+
+onUnmounted(() => {
+  // Limpiar el listener al desmontar
+  if (authListener) {
+    authListener.unsubscribe()
+  }
+  // Limpiar el intervalo si existe
+  if (checkInterval) {
+    clearInterval(checkInterval)
   }
 })
 

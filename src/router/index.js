@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { isDev, isLocalhost, devLog } from '../config/environment'
 
 // Layouts
 import AuthLayout from '../layouts/AuthLayout.vue'
@@ -25,6 +26,10 @@ import Auditoria from '../views/auditoria/Auditoria.vue'
 import ChatAdmin from '../views/admin/ChatAdmin.vue'
 import DataAdmin from '../views/admin/DataAdmin.vue'
 
+// Helper para detectar si estamos en modo desarrollo
+const isDevMode = isDev || isLocalhost
+
+// Rutas base de la aplicación
 const routes = [
   {
     path: '/',
@@ -137,10 +142,36 @@ const routes = [
         path: 'admin/data',
         name: 'DataAdmin',
         component: DataAdmin
-      }
+      },
+      // Rutas experimentales (solo en desarrollo)
+      // Añade aquí rutas que quieras probar antes de llevarlas a producción
+      // Ejemplo:
+      // ...(isDevMode ? [{
+      //   path: 'experimental/nueva-vista',
+      //   name: 'NuevaVistaExperimental',
+      //   component: () => import('../views/experimental/NuevaVista.vue'),
+      //   meta: { devOnly: true }
+      // }] : [])
     ]
   }
 ]
+
+// Rutas experimentales que solo están disponibles en desarrollo
+const experimentalRoutes = [
+  // Añade aquí rutas experimentales
+  // {
+  //   path: '/dev/playground',
+  //   name: 'DevPlayground',
+  //   component: () => import('../views/dev/Playground.vue'),
+  //   meta: { devOnly: true, requiresAuth: true }
+  // }
+]
+
+// Agregar rutas experimentales solo en desarrollo
+if (isDevMode) {
+  devLog('Modo desarrollo activo - Rutas experimentales habilitadas')
+  routes.push(...experimentalRoutes)
+}
 
 const router = createRouter({
   history: createWebHistory(),

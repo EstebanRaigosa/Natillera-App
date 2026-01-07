@@ -24,7 +24,7 @@
         </div>
 
         <!-- Navegación -->
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto pb-24">
           <router-link 
             to="/dashboard" 
             class="nav-link"
@@ -219,29 +219,50 @@
 
         </nav>
 
-        <!-- Usuario -->
-        <div class="p-4 border-t border-gray-100">
-          <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
+      </div>
+    </aside>
+
+    <!-- Usuario - Siempre visible fijo en la parte inferior izquierda -->
+    <div 
+      :class="[
+        'fixed bottom-0 left-0 w-72 p-3 z-50 transition-all duration-300',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      ]"
+    >
+      <div class="user-panel group">
+        <!-- Efecto de brillo animado en hover -->
+        <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
+        
+        <div class="relative flex items-center gap-3">
+          <!-- Avatar con borde gradiente -->
+          <div class="relative">
+            <div class="absolute -inset-1 bg-gradient-to-br from-natillera-400 via-natillera-500 to-natillera-600 rounded-full opacity-75 blur-sm group-hover:opacity-100 transition-opacity"></div>
             <img 
               :src="getAvatarUrl(authStore.userEmail || authStore.userName)" 
               :alt="authStore.userName"
-              class="w-10 h-10 rounded-full bg-accent-100"
+              class="relative w-11 h-11 rounded-full ring-2 ring-white shadow-lg"
             />
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-gray-800 truncate">{{ authStore.userName }}</p>
-              <p class="text-xs text-gray-400 truncate">{{ authStore.userEmail }}</p>
-            </div>
-            <button 
-              @click="handleLogout"
-              class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="Cerrar sesión"
-            >
-              <ArrowRightOnRectangleIcon class="w-5 h-5" />
-            </button>
+            <!-- Indicador de estado online -->
+            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-lg"></span>
           </div>
+          
+          <!-- Info del usuario -->
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-gray-800 truncate text-sm">{{ authStore.userName }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ authStore.userEmail }}</p>
+          </div>
+          
+          <!-- Botón de logout con estilo -->
+          <button 
+            @click="handleLogout"
+            class="logout-btn group/btn"
+            title="Cerrar sesión"
+          >
+            <ArrowRightOnRectangleIcon class="w-5 h-5 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+          </button>
         </div>
       </div>
-    </aside>
+    </div>
 
     <!-- Overlay móvil -->
     <div 
@@ -271,6 +292,21 @@
         <router-view />
       </div>
     </main>
+
+    <!-- Indicador de modo desarrollo -->
+    <div 
+      v-if="isDevMode"
+      class="fixed top-4 right-4 z-[100] dev-badge"
+      title="Modo desarrollo activo"
+    >
+      <div class="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg shadow-orange-500/30 border border-amber-400/50">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        DEV MODE
+      </div>
+    </div>
   </div>
 </template>
 
@@ -281,6 +317,10 @@ import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useSupportStore } from '../stores/support'
 import { useNotificationStore } from '../stores/notifications'
+import { isDev, isLocalhost } from '../config/environment'
+
+// Detectar modo desarrollo
+const isDevMode = isDev || isLocalhost
 import { 
   HomeIcon, 
   BanknotesIcon, 
@@ -405,6 +445,42 @@ onUnmounted(() => {
 
 .nav-link-sub-active {
   @apply bg-natillera-100 text-natillera-700 font-semibold border-natillera-300 shadow-sm;
+}
+
+/* Panel de usuario fijo */
+.user-panel {
+  @apply relative p-3.5 rounded-2xl overflow-hidden;
+  @apply bg-gradient-to-br from-white via-natillera-50/50 to-white;
+  @apply border border-natillera-200/60;
+  @apply shadow-lg shadow-natillera-500/10;
+  @apply backdrop-blur-xl;
+  @apply transition-all duration-300;
+}
+
+.user-panel:hover {
+  @apply shadow-xl shadow-natillera-500/20;
+  @apply border-natillera-300/80;
+  transform: translateY(-2px);
+}
+
+/* Botón de logout elegante */
+.logout-btn {
+  @apply relative p-2.5 rounded-xl overflow-hidden;
+  @apply text-gray-400;
+  @apply transition-all duration-300;
+  @apply border border-transparent;
+}
+
+.logout-btn:hover {
+  @apply text-white;
+  @apply bg-gradient-to-br from-rose-500 to-red-600;
+  @apply border-rose-400/50;
+  @apply shadow-lg shadow-rose-500/30;
+  transform: scale(1.05);
+}
+
+.logout-btn:active {
+  transform: scale(0.95);
 }
 </style>
 

@@ -1,7 +1,11 @@
 <template>
   <!-- Botón flotante del formulario de contacto -->
   <Teleport to="body">
-    <div class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] safe-area-bottom">
+    <div 
+      v-if="!shouldHideButton || windowWidth >= 640"
+      data-chat-widget
+      class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-[9999] safe-area-bottom transition-all duration-300"
+    >
       <!-- Botón para abrir/cerrar formulario -->
       <button
         v-if="!isOpen"
@@ -329,18 +333,196 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Teleport } from 'vue'
 import { ChatBubbleLeftRightIcon, XMarkIcon, PaperAirplaneIcon, EnvelopeIcon, CheckCircleIcon, InformationCircleIcon, ShieldCheckIcon, PaperClipIcon, XCircleIcon, PhotoIcon, DocumentIcon } from '@heroicons/vue/24/outline'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 import emailjs from '@emailjs/browser'
+import { hasOpenModals } from '../composables/useModalTracker'
 
 const notificationStore = useNotificationStore()
 const authStore = useAuthStore()
 
 const isOpen = ref(false)
+
+// Observar cambios en el tamaño de la ventana para recalcular
+const windowWidth = ref(window.innerWidth)
+const updateWindowWidth = () => {
+  windowWidth.value = window.innerWidth
+}
+
+// Estado local para forzar reactividad
+const modalsOpen = ref(false)
+
+// Observar cambios en hasOpenModals para actualizar el estado local
+watch(hasOpenModals, (newValue) => {
+  modalsOpen.value = newValue
+}, { immediate: true })
+
+// Computed para ocultar el botón en móvil cuando hay modales abiertas
+const shouldHideButton = computed(() => {
+  // Leer el valor reactivo para que Vue rastree los cambios
+  const isMobile = windowWidth.value < 640 // sm breakpoint de Tailwind
+  const shouldHide = isMobile && modalsOpen.value
+  
+  return shouldHide
+})
+
+// Observar cambios en windowWidth para forzar recálculo
+watch(windowWidth, () => {
+  // El computed se recalculará automáticamente
+})
+
+onMounted(() => {
+  window.addEventListener('resize', updateWindowWidth)
+  // Observar cambios en el DOM para detectar modales
+  observeModals()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateWindowWidth)
+  if (modalObserver) {
+    modalObserver.disconnect()
+  }
+  if (checkInterval) {
+    clearInterval(checkInterval)
+  }
+})
+
+// Observer para detectar modales en el DOM
+let modalObserver = null
+let checkInterval = null
+
+function observeModals() {
+  // Función para verificar si hay modales abiertas
+  const checkForModals = () => {
+    // Método 1: Buscar elementos con atributo data-modal (más confiable)
+    const modalsWithAttribute = document.querySelectorAll('[data-modal]')
+    let hasModal = false
+    
+    for (const element of modalsWithAttribute) {
+      // Saltar si es el chat widget
+      if (element.closest('[data-chat-widget]') || 
+          element.hasAttribute('data-chat-widget')) {
+        continue
+      }
+      
+      const styles = window.getComputedStyle(element)
+      
+      // Verificar que esté visible
+      if (styles.display !== 'none' && 
+          styles.opacity !== '0' && 
+          styles.visibility !== 'hidden' &&
+          element.offsetParent !== null) {
+        hasModal = true
+        break
+      }
+    }
+    
+    // Método 2: Si no se encontró con atributo, buscar por características (fallback)
+    if (!hasModal) {
+      const allDivs = document.querySelectorAll('div')
+      
+      for (const element of allDivs) {
+        // Saltar si es el chat widget
+        if (element.closest('[data-chat-widget]') || 
+            element.hasAttribute('data-chat-widget')) {
+          continue
+        }
+        
+        const classes = element.className || ''
+        const styles = window.getComputedStyle(element)
+        
+        // Verificar que tenga position fixed
+        if (styles.position !== 'fixed' && !classes.includes('fixed')) {
+          continue
+        }
+        
+        // Verificar que tenga inset-0 (pantalla completa)
+        const hasInset0 = classes.includes('inset-0') || 
+                         (styles.top === '0px' && styles.left === '0px' && 
+                          styles.right === '0px' && styles.bottom === '0px')
+        if (!hasInset0) continue
+        
+        // Verificar que esté visible
+        if (styles.display === 'none' || 
+            styles.opacity === '0' || 
+            styles.visibility === 'hidden' ||
+            element.offsetParent === null) {
+          continue
+        }
+        
+        // Verificar z-index (50 o 60 son modales en esta app)
+        const zIndex = parseInt(styles.zIndex) || 0
+        if (zIndex !== 50 && zIndex !== 60) continue
+        
+        // Buscar hijos directos con overlay
+        let hasOverlayChild = false
+        for (const child of element.children) {
+          const childClasses = child.className || ''
+          const childStyles = window.getComputedStyle(child)
+          const childBg = childStyles.backgroundColor
+          const childHasDarkBg = childBg.includes('rgb(0, 0, 0)') || 
+                                childBg.includes('rgba(0, 0, 0') ||
+                                childClasses.includes('bg-black')
+          const childHasBackdrop = childClasses.includes('backdrop-blur')
+          const childIsAbsolute = childStyles.position === 'absolute'
+          const childHasInset0 = childClasses.includes('inset-0') ||
+                                (childStyles.top === '0px' && childStyles.left === '0px' && 
+                                 childStyles.right === '0px' && childStyles.bottom === '0px')
+          
+          if (childIsAbsolute && childHasInset0 && (childHasDarkBg || childHasBackdrop)) {
+            hasOverlayChild = true
+            break
+          }
+        }
+        
+        if (hasOverlayChild) {
+          hasModal = true
+          break
+        }
+      }
+    }
+    
+    // Actualizar el estado
+    if (hasOpenModals.value !== hasModal) {
+      hasOpenModals.value = hasModal
+      modalsOpen.value = hasModal // Sincronizar estado local para forzar reactividad
+    } else if (modalsOpen.value !== hasModal) {
+      // Asegurar sincronización incluso si hasOpenModals no cambió
+      modalsOpen.value = hasModal
+    }
+  }
+  
+  // Verificar inmediatamente
+  checkForModals()
+  
+  // Verificar varias veces al inicio para asegurar que detecte modales que ya están abiertas
+  setTimeout(checkForModals, 50)
+  setTimeout(checkForModals, 150)
+  setTimeout(checkForModals, 300)
+  
+  // Crear un observer para detectar cambios en el DOM
+  modalObserver = new MutationObserver(() => {
+    // Ejecutar inmediatamente cuando hay cambios
+    checkForModals()
+  })
+  
+  // Observar cambios en el body
+  modalObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['class', 'style'],
+    attributeOldValue: false
+  })
+  
+  // También verificar periódicamente (por si el observer no detecta algunos cambios)
+  // Verificar más frecuentemente para detectar cambios de Vue rápidamente
+  checkInterval = setInterval(checkForModals, 100) // Verificar cada 100ms para respuesta rápida
+}
 const isSending = ref(false)
 const mensajeEnviado = ref(false)
 const userEmail = ref('')

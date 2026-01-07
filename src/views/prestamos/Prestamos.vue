@@ -124,23 +124,57 @@
         v-for="prestamo in prestamos" 
         :key="prestamo.id"
         @click="abrirModalDetalle(prestamo)"
-        class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-6 sm:p-6 cursor-pointer"
+        :class="[
+          'group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 p-6 sm:p-6 cursor-pointer',
+          prestamo.tieneCuotasVencidas 
+            ? 'bg-gradient-to-br from-red-50 via-orange-50/50 to-red-50/30 border-2 border-red-400 hover:shadow-red-500/30' 
+            : 'bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 hover:shadow-natillera-500/20'
+        ]"
       >
         <!-- Efectos decorativos -->
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
+        <div 
+          :class="[
+            'absolute top-0 right-0 w-24 h-24 rounded-full blur-xl -translate-y-1/2 translate-x-1/2',
+            prestamo.tieneCuotasVencidas
+              ? 'bg-gradient-to-br from-red-400/25 to-orange-400/20'
+              : 'bg-gradient-to-br from-natillera-400/15 to-emerald-400/10'
+          ]"
+        ></div>
+        <div 
+          :class="[
+            'absolute bottom-0 left-0 w-20 h-20 rounded-full blur-lg translate-y-1/2 -translate-x-1/2',
+            prestamo.tieneCuotasVencidas
+              ? 'bg-gradient-to-tr from-orange-400/25 to-red-400/20'
+              : 'bg-gradient-to-tr from-teal-400/15 to-natillera-400/10'
+          ]"
+        ></div>
+        
+        <!-- Barra lateral de alerta para cuotas vencidas -->
+        <div 
+          v-if="prestamo.tieneCuotasVencidas"
+          class="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-red-500 via-orange-500 to-red-500 animate-pulse"
+        ></div>
         
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-4">
           <div class="flex items-center gap-4 sm:gap-4">
             <div 
               :class="[
-                'w-16 h-16 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300',
+                'w-16 h-16 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 relative',
+                prestamo.tieneCuotasVencidas 
+                  ? 'bg-gradient-to-br from-red-500 to-orange-600 shadow-red-500/50 animate-pulse' :
                 prestamo.estado === 'pagado' ? 'bg-gradient-to-br from-green-400 to-green-600 shadow-green-500/30' : 
                 prestamo.estado === 'activo' ? 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/30' : 
                 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-gray-500/30'
               ]"
             >
               <BanknotesIcon class="w-8 h-8 sm:w-7 sm:h-7 text-white" />
+              <!-- Badge de alerta en el ícono -->
+              <div 
+                v-if="prestamo.tieneCuotasVencidas"
+                class="absolute -top-1 -right-1 w-6 h-6 bg-red-600 border-2 border-white rounded-full flex items-center justify-center animate-bounce"
+              >
+                <span class="text-white text-xs font-bold">!</span>
+              </div>
             </div>
             <div>
               <p class="font-display font-semibold text-gray-800 text-xl sm:text-lg">
@@ -188,6 +222,19 @@
             >
               {{ prestamo.estado }}
             </span>
+            <!-- Indicador de cuotas vencidas - MÁS VISIBLE -->
+            <div 
+              v-if="prestamo.tieneCuotasVencidas"
+              class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-red-600 shadow-lg shadow-red-500/50 animate-pulse"
+              title="Este préstamo tiene cuotas vencidas"
+            >
+              <svg class="w-5 h-5 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-sm font-black uppercase tracking-wide">
+                {{ prestamo.cuotasVencidas }} {{ prestamo.cuotasVencidas === 1 ? 'cuota vencida' : 'cuotas vencidas' }}
+              </span>
+            </div>
             <button 
               v-if="prestamo.estado === 'activo'"
               @click.stop="abrirModalAbono(prestamo)"
@@ -2561,12 +2608,56 @@ async function fetchPrestamos() {
 
     if (error) throw error
 
-    // Combinar con datos del socio
+    // Obtener IDs de préstamos para cargar el plan de pagos
+    const prestamoIds = (data || []).map(p => p.id)
+    
+    // Cargar el plan de pagos para todos los préstamos en una sola consulta
+    let planPagosMap = {}
+    if (prestamoIds.length > 0) {
+      const { data: planPagos, error: planError } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('*')
+        .in('prestamo_id', prestamoIds)
+
+      if (!planError && planPagos) {
+        // Crear un mapa por prestamo_id
+        planPagosMap = planPagos.reduce((acc, cuota) => {
+          if (!acc[cuota.prestamo_id]) {
+            acc[cuota.prestamo_id] = []
+          }
+          acc[cuota.prestamo_id].push(cuota)
+          return acc
+        }, {})
+      }
+    }
+
+    // Combinar con datos del socio y verificar cuotas vencidas
+    const fechaActual = new Date()
+    fechaActual.setHours(0, 0, 0, 0)
+
     prestamos.value = (data || []).map(prestamo => {
       const socioNatillera = sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
+      const planPagosPrestamo = planPagosMap[prestamo.id] || []
+      
+      // Verificar si tiene cuotas vencidas
+      const tieneCuotasVencidas = planPagosPrestamo.some(cuota => {
+        const fechaVencimiento = new Date(cuota.fecha_proyectada)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return !cuota.pagada && fechaVencimiento < fechaActual
+      })
+
+      // Contar cuántas cuotas vencidas tiene
+      const cuotasVencidas = planPagosPrestamo.filter(cuota => {
+        const fechaVencimiento = new Date(cuota.fecha_proyectada)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return !cuota.pagada && fechaVencimiento < fechaActual
+      }).length
+
       return {
         ...prestamo,
-        socio_natillera: socioNatillera
+        socio_natillera: socioNatillera,
+        tieneCuotasVencidas,
+        cuotasVencidas
       }
     })
   } catch (e) {

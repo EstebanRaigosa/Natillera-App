@@ -289,7 +289,13 @@
                 Hay {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio' : 'socios' }} en mora
               </h2>
               <p :class="['text-sm font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
-                {{ totalCuotasMora }} {{ totalCuotasMora === 1 ? 'cuota' : 'cuotas' }} en mora • Total: ${{ formatMoneyShort(totalDeudaMora) }}
+                {{ totalCuotasMora }} {{ totalCuotasMora === 1 ? 'cuota' : 'cuotas' }} en mora
+                <span v-if="totalPrestamosVencidos > 0" class="ml-1.5">
+                  • {{ totalPrestamosVencidos }} {{ totalPrestamosVencidos === 1 ? 'préstamo' : 'préstamos' }} vencido{{ totalPrestamosVencidos > 1 ? 's' : '' }}
+                </span>
+                <span class="block sm:inline sm:ml-1.5 mt-0.5 sm:mt-0">
+                  • Total: ${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}
+                </span>
               </p>
             </div>
           </div>
@@ -357,7 +363,7 @@
     </div>
 
     <!-- Modal WhatsApp -->
-    <div v-if="modalWhatsApp" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalWhatsApp" data-modal="whatsapp" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50" @click="cerrarModalWhatsApp"></div>
       <div class="card relative w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col">
         <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-2 sm:mb-3">
@@ -427,7 +433,7 @@
     </div>
 
     <!-- Modal Detalle Socio -->
-    <div v-if="modalDetalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div v-if="modalDetalle" data-modal="detalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalle = false"></div>
       <div class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
         <!-- Header con gradiente -->
@@ -550,7 +556,7 @@
     </div>
 
     <!-- Modal Buscar Comprobante -->
-    <div v-if="modalBuscarComprobante" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalBuscarComprobante" data-modal="buscar-comprobante" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalBuscarComprobante"></div>
       <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         <!-- Header con gradiente -->
@@ -855,7 +861,7 @@
     </div>
 
     <!-- Modal Cuotas del Socio por Mes -->
-    <div v-if="modalCuotasSocio" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalCuotasSocio" data-modal="cuotas-socio" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalCuotasSocio"></div>
       <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         <!-- Header con gradiente -->
@@ -1234,7 +1240,7 @@
     </div>
 
     <!-- Modal Configurar Período de Meses -->
-    <div v-if="modalConfigMeses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalConfigMeses" data-modal="config-meses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50" @click="modalConfigMeses = false"></div>
       <div class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl">
         <div class="flex items-center gap-3 mb-6">
@@ -1326,7 +1332,7 @@
   </div>
 
     <!-- Modal Socios en Mora -->
-    <div v-if="modalSociosEnMora" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div v-if="modalSociosEnMora" data-modal="socios-en-mora" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSociosEnMora = false"></div>
       <div class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
         <!-- Header con gradiente -->
@@ -1361,7 +1367,7 @@
         <!-- Contenido -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           <!-- Resumen rápido -->
-          <div :class="['grid gap-3 sm:gap-4', totalSancionesMora > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
+          <div :class="['grid gap-3 sm:gap-4', totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'grid-cols-2 sm:grid-cols-5' : totalSancionesMora > 0 || totalPrestamosVencidos > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
             <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'">
               <p class="text-3xl sm:text-4xl font-bold mb-1" :class="sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'">{{ totalCuotasMora }}</p>
               <p class="text-xs sm:text-sm font-semibold" :class="sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'">Cuotas en mora</p>
@@ -1370,13 +1376,19 @@
               <p class="text-3xl sm:text-4xl font-bold mb-1 text-amber-600">{{ totalCuotasPendientes }}</p>
               <p class="text-xs sm:text-sm font-semibold text-amber-700">Cuotas pendientes</p>
             </div>
+            <!-- Préstamos vencidos (solo si hay) -->
+            <div v-if="totalPrestamosVencidos > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300">
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-purple-600">{{ totalPrestamosVencidos }}</p>
+              <p class="text-xs sm:text-sm font-semibold text-purple-700">Préstamos vencidos</p>
+              <p class="text-[10px] text-purple-600 mt-0.5">{{ totalCuotasPrestamosVencidos }} {{ totalCuotasPrestamosVencidos === 1 ? 'cuota' : 'cuotas' }}</p>
+            </div>
             <!-- Sanciones (solo si hay) -->
             <div v-if="totalSancionesMora > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300">
               <p class="text-3xl sm:text-4xl font-bold mb-1 text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
               <p class="text-xs sm:text-sm font-semibold text-rose-700">Total sanciones</p>
             </div>
             <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora) }}</p>
+              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}</p>
               <p class="text-xs sm:text-sm font-semibold text-orange-700">Total a cobrar</p>
             </div>
           </div>
@@ -1431,6 +1443,26 @@
                         <span v-if="socioMora.cuotasPendientes > 0" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 whitespace-nowrap">
                           {{ socioMora.cuotasPendientes }} {{ socioMora.cuotasPendientes === 1 ? 'pend.' : 'pend.' }}
                         </span>
+                        <span v-if="socioMora.tienePrestamosVencidos" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200 whitespace-nowrap">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                          Préstamo sin pagar
+                        </span>
+                      </div>
+                      <!-- Información de préstamo vencido - Móvil compacto -->
+                      <div v-if="socioMora.tienePrestamosVencidos && socioMora.fechaVencimientoPrestamo" class="mt-1.5 sm:mt-2">
+                        <div class="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs">
+                          <div class="flex items-center gap-1 text-purple-600 bg-purple-50 px-2 py-0.5 rounded-md">
+                            <CalendarDaysIcon class="w-3 h-3 flex-shrink-0" />
+                            <span class="font-medium">Fecha de pago:</span>
+                            <span class="font-semibold">{{ formatDate(socioMora.fechaVencimientoPrestamo) }}</span>
+                          </div>
+                          <div v-if="socioMora.diasMoraPrestamo > 0" class="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
+                            <ExclamationCircleIcon class="w-3 h-3 flex-shrink-0" />
+                            <span class="font-medium">{{ socioMora.diasMoraPrestamo }}d</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1458,6 +1490,29 @@
                     </div>
                   </div>
                   
+                  <!-- Si solo tiene préstamos vencidos (sin cuotas) en móvil -->
+                  <div v-else-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes" class="sm:hidden w-full -mt-1 pt-2 border-t border-gray-200/60">
+                    <div class="flex items-center justify-between gap-2">
+                      <!-- Total a cobrar préstamo - destacado -->
+                      <div class="flex-1 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
+                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo vencido</p>
+                        <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                      </div>
+                      
+                      <!-- Información adicional - lado derecho compacto -->
+                      <div class="flex items-center gap-2 text-right">
+                        <div class="flex flex-col">
+                          <span class="text-[9px] text-gray-500">Cuotas</span>
+                          <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                        </div>
+                        <div class="flex flex-col">
+                          <span class="text-[9px] text-gray-500">Días</span>
+                          <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <!-- Si solo tiene pendientes (sin mora) en móvil -->
                   <div v-else class="sm:hidden w-full -mt-2">
                     <div class="text-left">
@@ -1469,6 +1524,14 @@
                 <!-- Botón en móvil: abajo -->
                 <div class="sm:hidden">
                   <button
+                    v-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes"
+                    @click.stop="verPrestamoSocio(socioMora)"
+                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg"
+                  >
+                    Ver préstamo
+                  </button>
+                  <button
+                    v-else
                     @click.stop="verCuotasSocio(socioMora)"
                     class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
@@ -1515,8 +1578,47 @@
                   </button>
                 </div>
                 
+                <!-- Layout desktop: solo préstamos vencidos -->
+                <div v-else-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-start gap-3">
+                  <div class="flex items-start gap-3 sm:gap-4">
+                    <!-- Columna de etiquetas -->
+                    <div class="text-right space-y-1">
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Préstamo vencido</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-gray-500">Días sin pago</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Columna de valores -->
+                    <div class="text-right space-y-1 min-w-[100px]">
+                      <div class="mb-1">
+                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-red-600 text-xs sm:text-sm">{{ socioMora.diasMoraPrestamo || 0 }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Botón Ver préstamo -->
+                  <button
+                    @click.stop="verPrestamoSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver préstamo
+                  </button>
+                </div>
+                
                 <!-- Si solo tiene pendientes (sin mora) en desktop -->
-                <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
+                <div v-else-if="!socioMora.tienePrestamosVencidos" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
                   <div class="text-right">
                     <p class="text-sm sm:text-base font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
                     <p class="text-xs text-gray-500">adeudado</p>
@@ -1526,6 +1628,20 @@
                     class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
                   >
                     Ver cuotas
+                  </button>
+                </div>
+                
+                <!-- Si solo tiene préstamos vencidos (sin cuotas) en desktop -->
+                <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <div class="text-right">
+                    <p class="text-sm sm:text-base font-bold text-purple-600">${{ formatMoney(socioMora.totalDeudaPrestamo) }}</p>
+                    <p class="text-xs text-gray-500">préstamo vencido</p>
+                  </div>
+                  <button
+                    @click.stop="verPrestamoSocio(socioMora)"
+                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                  >
+                    Ver préstamo
                   </button>
                 </div>
                 </div>
@@ -1612,6 +1728,7 @@ const bannerSociosEnMoraRef = ref(null)
 const cuotasNatillera = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
 const configSancionesActiva = ref(false)
+const prestamosVencidos = ref([]) // Préstamos con cuotas vencidas agrupadas por socio
 
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
@@ -1903,85 +2020,246 @@ function cerrarModalBuscarComprobante() {
   errorBusqueda.value = ''
 }
 
-// Socios con problemas de mora o pendientes vencidos
-const sociosEnMora = computed(() => {
-  if (!cuotasNatillera.value || !cuotasNatillera.value.length) return []
+// Función para obtener préstamos con cuotas vencidas
+async function obtenerPrestamosVencidos() {
+  if (!id.value) return
   
+  try {
+    // Obtener los IDs de socios_natillera de esta natillera
+    const { data: sociosNatillera, error: sociosError } = await supabase
+      .from('socios_natillera')
+      .select('id, socio:socios(*)')
+      .eq('natillera_id', id.value)
+    
+    if (sociosError) throw sociosError
+    if (!sociosNatillera || sociosNatillera.length === 0) {
+      prestamosVencidos.value = []
+      return
+    }
+    
+    const socioNatilleraIds = sociosNatillera.map(s => s.id)
+    
+    // Obtener préstamos activos de estos socios
+    const { data: prestamos, error: prestamosError } = await supabase
+      .from('prestamos')
+      .select(`
+        id,
+        socio_natillera_id,
+        monto,
+        saldo_actual,
+        socio_natillera:socios_natillera(
+          id,
+          socio:socios(*)
+        )
+      `)
+      .in('socio_natillera_id', socioNatilleraIds)
+      .eq('estado', 'activo')
+    
+    if (prestamosError) throw prestamosError
+    if (!prestamos || prestamos.length === 0) {
+      prestamosVencidos.value = []
+      return
+    }
+    
+    const prestamoIds = prestamos.map(p => p.id)
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    
+    // Obtener planes de pago de estos préstamos
+    const { data: planesPago, error: planesError } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*')
+      .in('prestamo_id', prestamoIds)
+      .order('fecha_proyectada', { ascending: true })
+    
+    if (planesError) throw planesError
+    
+    // Agrupar por socio_natillera_id y encontrar cuotas vencidas
+    const sociosConPrestamosVencidos = {}
+    
+    planesPago?.forEach(plan => {
+      const fechaProyectada = new Date(plan.fecha_proyectada)
+      fechaProyectada.setHours(0, 0, 0, 0)
+      
+      // Verificar si la cuota está vencida y no está completamente pagada
+      const valorCuota = parseFloat(plan.valor_cuota || 0)
+      const valorPagado = parseFloat(plan.valor_pagado || 0)
+      const estaVencida = hoy > fechaProyectada
+      const noEstaPagada = !plan.pagada && valorPagado < valorCuota
+      
+      if (estaVencida && noEstaPagada) {
+        // Encontrar el préstamo correspondiente
+        const prestamo = prestamos.find(p => p.id === plan.prestamo_id)
+        if (!prestamo) return
+        
+        const socioId = prestamo.socio_natillera_id
+        
+        if (!sociosConPrestamosVencidos[socioId]) {
+          sociosConPrestamosVencidos[socioId] = {
+            socio_natillera_id: socioId,
+            socio: prestamo.socio_natillera?.socio,
+            cuotasVencidas: 0,
+            totalDeudaPrestamo: 0,
+            diasMoraPrestamo: 0,
+            fechaVencimientoMasAntigua: null,
+            prestamoId: prestamo.id, // ID del préstamo con cuotas vencidas
+            cuotaVencidaMasAntigua: null // Información de la cuota vencida más antigua
+          }
+        }
+        
+        sociosConPrestamosVencidos[socioId].cuotasVencidas++
+        const deudaCuota = valorCuota - valorPagado
+        sociosConPrestamosVencidos[socioId].totalDeudaPrestamo += deudaCuota
+        
+        // Calcular días de mora desde la fecha más antigua y guardar la cuota más antigua
+        if (!sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua || 
+            fechaProyectada < sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua) {
+          sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua = fechaProyectada
+          sociosConPrestamosVencidos[socioId].cuotaVencidaMasAntigua = {
+            id: plan.id,
+            numero_cuota: plan.numero_cuota,
+            fecha_proyectada: plan.fecha_proyectada,
+            valor_cuota: valorCuota,
+            valor_pagado: valorPagado,
+            deuda: deudaCuota
+          }
+        }
+      }
+    })
+    
+    // Calcular días de mora para cada socio
+    Object.values(sociosConPrestamosVencidos).forEach(socio => {
+      if (socio.fechaVencimientoMasAntigua) {
+        socio.diasMoraPrestamo = Math.floor((hoy - socio.fechaVencimientoMasAntigua) / (1000 * 60 * 60 * 24))
+        socio.diasMoraPrestamo = Math.max(0, socio.diasMoraPrestamo)
+      }
+    })
+    
+    prestamosVencidos.value = Object.values(sociosConPrestamosVencidos)
+  } catch (error) {
+    console.error('Error obteniendo préstamos vencidos:', error)
+    prestamosVencidos.value = []
+  }
+}
+
+// Socios con problemas de mora o pendientes vencidos (incluyendo préstamos)
+const sociosEnMora = computed(() => {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
   // Agrupar cuotas por socio
   const sociosMap = {}
   
-  cuotasNatillera.value.forEach(cuota => {
-    if (!cuota) return
-    
-    const socioId = cuota.socio_natillera_id
-    if (!socioId) return
-    
-    const socioInfo = cuota.socio_natillera?.socio
-    
-    if (!sociosMap[socioId]) {
-      sociosMap[socioId] = {
-        id: socioId,
-        nombre: socioInfo?.nombre || 'Sin nombre',
-        avatar_seed: socioInfo?.avatar_seed || null,
-        avatar_style: socioInfo?.avatar_style || 'adventurer',
-        periodicidad: cuota.socio_natillera?.periodicidad || 'mensual',
-        cuotasMora: 0,
-        cuotasPendientes: 0,
-        totalDeuda: 0,
-        totalSanciones: 0,
-        valorCuotaPromedio: 0,
-        diasMora: 0,
-        cuotasMoraList: [], // Para calcular días de mora
-        socio: socioInfo || null // Guardar el objeto socio completo para acceder al teléfono
-      }
-    }
-    
-    // Contar cuotas en mora
-    if (cuota.estado === 'mora') {
-      sociosMap[socioId].cuotasMora++
-      const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
-      // Obtener la sanción calculada dinámicamente para esta cuota
-      const sancionCuota = sancionesPorCuota.value[cuota.id] || 0
-      sociosMap[socioId].totalDeuda += deudaCuota
-      sociosMap[socioId].totalSanciones += sancionCuota
-      // Guardar cuota para calcular días de mora
-      sociosMap[socioId].cuotasMoraList.push(cuota)
-      // Acumular valor de cuota para promedio
-      sociosMap[socioId].valorCuotaPromedio += cuota.valor_cuota || 0
-    }
-    // Contar cuotas pendientes vencidas
-    else if (cuota.estado === 'pendiente' || cuota.estado === 'parcial') {
-      if (cuota.fecha_limite) {
-        const fechaLimite = new Date(cuota.fecha_limite)
-        fechaLimite.setHours(0, 0, 0, 0)
-        
-        if (hoy > fechaLimite) {
-          sociosMap[socioId].cuotasPendientes++
-          sociosMap[socioId].totalDeuda += (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+  // Procesar cuotas de natillera
+  if (cuotasNatillera.value && cuotasNatillera.value.length > 0) {
+    cuotasNatillera.value.forEach(cuota => {
+      if (!cuota) return
+      
+      const socioId = cuota.socio_natillera_id
+      if (!socioId) return
+      
+      const socioInfo = cuota.socio_natillera?.socio
+      
+      if (!sociosMap[socioId]) {
+        sociosMap[socioId] = {
+          id: socioId,
+          nombre: socioInfo?.nombre || 'Sin nombre',
+          avatar_seed: socioInfo?.avatar_seed || null,
+          avatar_style: socioInfo?.avatar_style || 'adventurer',
+          periodicidad: cuota.socio_natillera?.periodicidad || 'mensual',
+          cuotasMora: 0,
+          cuotasPendientes: 0,
+          totalDeuda: 0,
+          totalSanciones: 0,
+          valorCuotaPromedio: 0,
+          diasMora: 0,
+          cuotasMoraList: [],
+          socio: socioInfo || null,
+          // Campos para préstamos
+          tienePrestamosVencidos: false,
+          cuotasVencidasPrestamo: 0,
+          totalDeudaPrestamo: 0,
+          diasMoraPrestamo: 0,
+          prestamoId: null,
+          fechaVencimientoPrestamo: null
         }
       }
-    }
-  })
+      
+      // Contar cuotas en mora
+      if (cuota.estado === 'mora') {
+        sociosMap[socioId].cuotasMora++
+        const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+        const sancionCuota = sancionesPorCuota.value[cuota.id] || 0
+        sociosMap[socioId].totalDeuda += deudaCuota
+        sociosMap[socioId].totalSanciones += sancionCuota
+        sociosMap[socioId].cuotasMoraList.push(cuota)
+        sociosMap[socioId].valorCuotaPromedio += cuota.valor_cuota || 0
+      }
+      // Contar cuotas pendientes vencidas
+      else if (cuota.estado === 'pendiente' || cuota.estado === 'parcial') {
+        if (cuota.fecha_limite) {
+          const fechaLimite = new Date(cuota.fecha_limite)
+          fechaLimite.setHours(0, 0, 0, 0)
+          
+          if (hoy > fechaLimite) {
+            sociosMap[socioId].cuotasPendientes++
+            sociosMap[socioId].totalDeuda += (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+          }
+        }
+      }
+    })
+  }
   
-  // Filtrar solo los que tienen problemas y calcular información adicional
+  // Agregar información de préstamos vencidos
+  if (prestamosVencidos.value && prestamosVencidos.value.length > 0) {
+    prestamosVencidos.value.forEach(prestamoVencido => {
+      const socioId = prestamoVencido.socio_natillera_id
+      
+      if (!sociosMap[socioId]) {
+        // Si el socio no tiene cuotas en mora pero sí préstamos vencidos, agregarlo
+        sociosMap[socioId] = {
+          id: socioId,
+          nombre: prestamoVencido.socio?.nombre || 'Sin nombre',
+          avatar_seed: prestamoVencido.socio?.avatar_seed || null,
+          avatar_style: prestamoVencido.socio?.avatar_style || 'adventurer',
+          periodicidad: 'mensual',
+          cuotasMora: 0,
+          cuotasPendientes: 0,
+          totalDeuda: 0,
+          totalSanciones: 0,
+          valorCuotaPromedio: 0,
+          diasMora: 0,
+          cuotasMoraList: [],
+          socio: prestamoVencido.socio || null,
+          tienePrestamosVencidos: true,
+          cuotasVencidasPrestamo: prestamoVencido.cuotasVencidas || 0,
+          totalDeudaPrestamo: prestamoVencido.totalDeudaPrestamo || 0,
+          diasMoraPrestamo: prestamoVencido.diasMoraPrestamo || 0,
+          prestamoId: prestamoVencido.prestamoId || null,
+          fechaVencimientoPrestamo: prestamoVencido.fechaVencimientoMasAntigua || null
+        }
+      } else {
+        // Agregar información de préstamos vencidos al socio existente
+        sociosMap[socioId].tienePrestamosVencidos = true
+        sociosMap[socioId].cuotasVencidasPrestamo = prestamoVencido.cuotasVencidas || 0
+        sociosMap[socioId].totalDeudaPrestamo = prestamoVencido.totalDeudaPrestamo || 0
+        sociosMap[socioId].diasMoraPrestamo = prestamoVencido.diasMoraPrestamo || 0
+        sociosMap[socioId].prestamoId = prestamoVencido.prestamoId || null
+        sociosMap[socioId].fechaVencimientoPrestamo = prestamoVencido.fechaVencimientoMasAntigua || null
+      }
+    })
+  }
+  
+  // Filtrar solo los que tienen problemas (cuotas o préstamos) y calcular información adicional
   return Object.values(sociosMap)
-    .filter(s => s.cuotasMora > 0 || s.cuotasPendientes > 0)
+    .filter(s => s.cuotasMora > 0 || s.cuotasPendientes > 0 || s.tienePrestamosVencidos)
     .map(s => {
       // Calcular días de mora (basado en la cuota más antigua en mora)
-      // Los días se calculan desde fecha_limite porque esa es la fecha desde la cual está en mora
       let diasMora = 0
       if (s.cuotasMoraList.length > 0) {
-        const hoy = new Date()
-        hoy.setHours(0, 0, 0, 0)
-        
-        // Encontrar la fecha_limite más antigua de todas las cuotas en mora
         const fechasLimite = s.cuotasMoraList
-          .filter(c => c.fecha_limite) // Solo cuotas con fecha_limite
+          .filter(c => c.fecha_limite)
           .map(c => {
-            // Parsear fecha_limite correctamente (puede venir como string YYYY-MM-DD)
             const fechaStr = c.fecha_limite
             let fechaLimite
             if (typeof fechaStr === 'string') {
@@ -1993,14 +2271,19 @@ const sociosEnMora = computed(() => {
             fechaLimite.setHours(0, 0, 0, 0)
             return fechaLimite
           })
-          .filter(f => !isNaN(f.getTime())) // Filtrar fechas inválidas
-          .sort((a, b) => a - b) // Ordenar de más antigua a más reciente
+          .filter(f => !isNaN(f.getTime()))
+          .sort((a, b) => a - b)
         
         if (fechasLimite.length > 0) {
-          const fechaMasAntigua = fechasLimite[0] // La más antigua
+          const fechaMasAntigua = fechasLimite[0]
           diasMora = Math.floor((hoy - fechaMasAntigua) / (1000 * 60 * 60 * 24))
-          diasMora = Math.max(0, diasMora) // No permitir negativos
+          diasMora = Math.max(0, diasMora)
         }
+      }
+      
+      // Si tiene préstamos vencidos, usar el mayor entre días de mora de cuotas y préstamos
+      if (s.tienePrestamosVencidos && s.diasMoraPrestamo > diasMora) {
+        diasMora = s.diasMoraPrestamo
       }
       
       // Calcular valor promedio de cuota
@@ -2008,27 +2291,34 @@ const sociosEnMora = computed(() => {
         ? Math.round(s.valorCuotaPromedio / s.cuotasMora)
         : 0
       
-      // Obtener información completa del socio desde la primera cuota (si no existe ya)
+      // Obtener información completa del socio
       const socioCompleto = s.socio || (() => {
-        const primeraCuota = s.cuotasMoraList[0] || cuotasNatillera.value.find(c => c.socio_natillera_id === s.id)
+        const primeraCuota = s.cuotasMoraList[0] || cuotasNatillera.value?.find(c => c.socio_natillera_id === s.id)
         return primeraCuota?.socio_natillera?.socio || null
       })()
       
+      // Calcular total de deuda incluyendo préstamos
+      const totalDeudaCompleto = s.totalDeuda + (s.totalDeudaPrestamo || 0)
+      
       return {
         ...s,
-        // Total incluyendo sanciones
-        totalConSanciones: s.totalDeuda + s.totalSanciones,
-        // Días de mora
+        // Total incluyendo sanciones y préstamos
+        totalConSanciones: totalDeudaCompleto + s.totalSanciones,
+        // Días de mora (mayor entre cuotas y préstamos)
         diasMora,
         // Valor promedio de cuota
         valorCuotaPromedio,
-        // Información completa del socio (usar el que ya existe o buscar uno nuevo)
-        socio: socioCompleto
+        // Información completa del socio
+        socio: socioCompleto,
+        // Total de deuda incluyendo préstamos
+        totalDeuda: totalDeudaCompleto
       }
     })
     .sort((a, b) => {
-      // Primero los que tienen más cuotas en mora
-      if (b.cuotasMora !== a.cuotasMora) return b.cuotasMora - a.cuotasMora
+      // Primero los que tienen más cuotas en mora o préstamos vencidos
+      const problemasA = a.cuotasMora + a.cuotasVencidasPrestamo
+      const problemasB = b.cuotasMora + b.cuotasVencidasPrestamo
+      if (problemasB !== problemasA) return problemasB - problemasA
       // Luego por total de deuda con sanciones
       return b.totalConSanciones - a.totalConSanciones
     })
@@ -2063,6 +2353,22 @@ const totalDeudaMora = computed(() => {
 const totalSancionesMora = computed(() => {
   if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
   return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalSanciones || 0), 0)
+})
+
+// Estadísticas de préstamos vencidos
+const totalPrestamosVencidos = computed(() => {
+  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
+  return prestamosVencidos.value.length
+})
+
+const totalCuotasPrestamosVencidos = computed(() => {
+  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
+  return prestamosVencidos.value.reduce((sum, p) => sum + (p?.cuotasVencidas || 0), 0)
+})
+
+const totalDeudaPrestamosVencidos = computed(() => {
+  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
+  return prestamosVencidos.value.reduce((sum, p) => sum + (p?.totalDeudaPrestamo || 0), 0)
 })
 
 // Resumen financiero del socio seleccionado
@@ -2313,6 +2619,20 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
   
   // Por defecto, mantener el estado original
   return cuota.estado || 'programada'
+}
+
+// Función para navegar a la vista de préstamos del socio
+function verPrestamoSocio(socioMora) {
+  if (socioMora.prestamoId) {
+    // Navegar a la vista de préstamos con el ID del préstamo en el query
+    router.push({
+      path: `/natilleras/${id.value}/prestamos`,
+      query: { prestamoId: socioMora.prestamoId }
+    })
+  } else {
+    // Si no hay ID de préstamo, solo navegar a la vista de préstamos
+    router.push(`/natilleras/${id.value}/prestamos`)
+  }
 }
 
 // Función para abrir el modal de cuotas del socio
@@ -2762,6 +3082,9 @@ watch(() => id.value, async (newId, oldId) => {
       
       // Recalcular estadísticas después de cargar cuotas
       await calcularEstadisticasAsync()
+      
+      // Obtener préstamos vencidos
+      await obtenerPrestamosVencidos()
     } catch (error) {
       console.error('Error recargando datos de natillera:', error)
     }
@@ -2794,6 +3117,9 @@ onMounted(async () => {
     
     // Recalcular estadísticas después de cargar cuotas
     await calcularEstadisticasAsync()
+    
+    // Obtener préstamos vencidos
+    await obtenerPrestamosVencidos()
     
     // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
     await nextTick()

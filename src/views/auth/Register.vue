@@ -74,11 +74,37 @@
         {{ errorMessage }}
       </div>
 
-      <div v-if="successMessage" class="p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
-        {{ successMessage }}
+      <!-- Mensaje de éxito mejorado -->
+      <div v-if="successMessage" class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl shadow-lg">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="font-bold text-green-800 mb-1">¡Cuenta creada exitosamente! 🎉</h4>
+            <p class="text-sm text-green-700 mb-3">
+              Hemos enviado un enlace de confirmación a <strong>{{ emailRegistrado }}</strong>
+            </p>
+            <!-- Aviso de tiempo de espera -->
+            <div class="flex items-center gap-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl mb-3">
+              <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-xs text-amber-700 font-medium">
+                El correo puede demorar hasta 5 minutos en llegar
+              </p>
+            </div>
+            <p class="text-xs text-green-600">
+              Revisa tu bandeja de entrada y carpeta de spam. Una vez confirmado, podrás iniciar sesión.
+            </p>
+          </div>
+        </div>
       </div>
 
       <button 
+        v-if="!successMessage"
         type="submit" 
         class="btn-primary w-full flex items-center justify-center gap-2"
         :disabled="authStore.loading"
@@ -91,9 +117,21 @@
         </span>
         <span>{{ authStore.loading ? 'Creando cuenta...' : 'Crear cuenta' }}</span>
       </button>
+
+      <!-- Botón para ir a login después de registro exitoso -->
+      <router-link 
+        v-if="successMessage"
+        to="/auth/login" 
+        class="btn-primary w-full flex items-center justify-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+        </svg>
+        Ir a Iniciar Sesión
+      </router-link>
     </form>
 
-    <p class="mt-6 text-center text-sm text-gray-500">
+    <p v-if="!successMessage" class="mt-6 text-center text-sm text-gray-500">
       ¿Ya tienes cuenta? 
       <router-link to="/auth/login" class="text-natillera-600 font-semibold hover:text-natillera-700">
         Inicia sesión
@@ -117,6 +155,7 @@ const password = ref('')
 const confirmPassword = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
+const emailRegistrado = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
@@ -138,8 +177,8 @@ async function handleRegister() {
   
   if (result.success) {
     // Guardar el email antes de limpiar el formulario
-    const emailRegistrado = email.value
-    successMessage.value = `¡Cuenta creada! Por favor revisa tu correo electrónico (${emailRegistrado}) y haz clic en el enlace de confirmación para activar tu cuenta. Una vez confirmado, podrás iniciar sesión.`
+    emailRegistrado.value = email.value
+    successMessage.value = true
     // Limpiar el formulario
     nombre.value = ''
     email.value = ''
