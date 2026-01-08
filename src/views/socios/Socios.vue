@@ -1176,40 +1176,43 @@
                             {{ getMesLabel(cuotaData.mes) }} {{ cuotaData.anio }}
                             <span v-if="cuotaData.quincena" class="text-purple-600">- Q{{ cuotaData.quincena }}</span>
                           </p>
-                          <!-- Badge de estado en móvil (junto al mes) -->
-                          <span 
-                            v-if="cuotaData.estado === 'pagada'"
-                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm sm:hidden"
-                          >
-                            pagada
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'mora'"
-                            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm sm:hidden"
-                          >
-                            en mora
-                            <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
-                              ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                          <!-- Badges de estado en móvil (junto al mes) -->
+                          <div class="flex flex-wrap gap-1 sm:hidden">
+                            <span 
+                              v-if="cuotaData.estado === 'pagada'"
+                              class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                            >
+                              pagada
                             </span>
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota"
-                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm sm:hidden"
-                          >
-                            pago parcial
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'pendiente'"
-                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm sm:hidden"
-                          >
-                            pendiente
-                          </span>
-                          <span 
-                            v-else
-                            class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm sm:hidden"
-                          >
-                            programada
-                          </span>
+                            <span 
+                              v-if="cuotaData.estado === 'mora'"
+                              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                            >
+                              en mora
+                              <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                                ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                              </span>
+                            </span>
+                            <!-- Badge pago parcial: se muestra si hay pago pero no se completó (cuota + sanción) -->
+                            <span 
+                              v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
+                              class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
+                            >
+                              pago parcial
+                            </span>
+                            <span 
+                              v-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
+                              class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                            >
+                              pendiente
+                            </span>
+                            <span 
+                              v-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
+                              class="inline-flex items-center px-1.5 py-0.5 rounded-lg text-[9px] font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                            >
+                              programada
+                            </span>
+                          </div>
                         </div>
                         <!-- Monto en móvil -->
                         <div class="text-right sm:hidden">
@@ -1285,40 +1288,43 @@
                   
                   <!-- Lado derecho: Estado y botón WhatsApp (solo en desktop) -->
                   <div class="hidden sm:flex items-center gap-2 flex-shrink-0">
-                    <!-- Badge de estado -->
-                    <span 
-                      v-if="cuotaData.estado === 'pagada'"
-                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
-                    >
-                      pagada
-                    </span>
-                    <span 
-                      v-else-if="cuotaData.estado === 'mora'"
-                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
-                    >
-                      en mora
-                      <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
-                        ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                    <!-- Badges de estado -->
+                    <div class="flex items-center gap-1.5">
+                      <span 
+                        v-if="cuotaData.estado === 'pagada'"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                      >
+                        pagada
                       </span>
-                    </span>
-                    <span 
-                      v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota"
-                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
-                    >
-                      pago parcial
-                    </span>
-                    <span 
-                      v-else-if="cuotaData.estado === 'pendiente'"
-                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
-                    >
-                      pendiente
-                    </span>
-                    <span 
-                      v-else
-                      class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
-                    >
-                      programada
-                    </span>
+                      <span 
+                        v-if="cuotaData.estado === 'mora'"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                      >
+                        en mora
+                        <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                          ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
+                        </span>
+                      </span>
+                      <!-- Badge pago parcial: se muestra si hay pago pero no se completó (cuota + sanción) -->
+                      <span 
+                        v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
+                      >
+                        pago parcial
+                      </span>
+                      <span 
+                        v-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                      >
+                        pendiente
+                      </span>
+                      <span 
+                        v-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                      >
+                        programada
+                      </span>
+                    </div>
                     
                     <!-- Botón WhatsApp (solo para pendiente o mora) -->
                     <button
@@ -1396,8 +1402,8 @@
                         {{ getMesLabel(cuotaData.mes) }} {{ cuotaData.anio }}
                         <span v-if="cuotaData.quincena" class="text-purple-600">- Q{{ cuotaData.quincena }}</span>
                       </p>
-                      <!-- Badge de estado -->
-                      <div class="flex items-center gap-2 mt-1">
+                      <!-- Badges de estado -->
+                      <div class="flex items-center gap-1.5 mt-1 flex-wrap">
                         <span 
                           v-if="cuotaData.estado === 'pagada'"
                           class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-green-100 text-green-700 border border-green-200"
@@ -1405,7 +1411,7 @@
                           pagada
                         </span>
                         <span 
-                          v-else-if="cuotaData.estado === 'mora'"
+                          v-if="cuotaData.estado === 'mora'"
                           class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-red-100 text-red-700 border border-red-200"
                         >
                           en mora
@@ -1413,20 +1419,21 @@
                             ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                           </span>
                         </span>
+                        <!-- Badge pago parcial: se muestra si hay pago pero no se completó (cuota + sanción) -->
                         <span 
-                          v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota"
+                          v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
                           class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200"
                         >
                           pago parcial
                         </span>
                         <span 
-                          v-else-if="cuotaData.estado === 'pendiente'"
+                          v-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
                           class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200"
                         >
                           pendiente
                         </span>
                         <span 
-                          v-else
+                          v-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
                           class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200"
                         >
                           programada
@@ -2001,8 +2008,13 @@ function formatDate(date) {
 
 // Función para calcular el estado real de una cuota basándose en la fecha actual y días de gracia
 function calcularEstadoRealCuota(cuota, diasGracia) {
-  // Si está pagada completamente, siempre es pagada
-  if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) {
+  // Si está pagada completamente (incluyendo sanción si existe), siempre es pagada
+  // Considerar valor_multa para cuotas que tienen sanción pendiente
+  const sancion = cuota.valor_multa || 0
+  const totalAPagar = (cuota.valor_cuota || 0) + sancion
+  const valorPagado = cuota.valor_pagado || 0
+  
+  if (valorPagado >= totalAPagar) {
     return 'pagada'
   }
   
@@ -2027,21 +2039,38 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
   
   // Programada: fecha_actual < (fecha_limite - dias_gracia)
   if (fechaActual < fechaInicioPendiente) {
+    // Si tiene pago parcial antes de la fecha, es parcial
+    if (valorPagado > 0 && valorPagado < totalAPagar) {
+      return 'parcial'
+    }
     return 'programada'
   }
   
   // Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
   if (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) {
+    // Si tiene pago parcial en período pendiente, es parcial
+    if (valorPagado > 0 && valorPagado < totalAPagar) {
+      return 'parcial'
+    }
     return 'pendiente'
   }
   
   // En Mora: fecha_actual > fecha_limite
+  // Aquí retornamos mora aunque tenga pago parcial - la UI mostrará ambos badges
   if (fechaActual > fechaLimite) {
     return 'mora'
   }
   
   // Por defecto, mantener el estado original
   return cuota.estado || 'programada'
+}
+
+// Función auxiliar para verificar si una cuota tiene pago parcial (para mostrar badge adicional)
+function tienePagoParcial(cuota) {
+  const sancion = cuota.valor_multa || 0
+  const totalAPagar = (cuota.valor_cuota || 0) + sancion
+  const valorPagado = cuota.valor_pagado || 0
+  return valorPagado > 0 && valorPagado < totalAPagar
 }
 
 // Función para abrir el modal de cuotas del socio

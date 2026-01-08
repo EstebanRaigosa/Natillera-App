@@ -550,7 +550,7 @@
                   (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/50 border-green-200/60 hover:border-green-300' : 
                   (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50/50 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
                   (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300' : 
-                  (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
+                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
                   'bg-orange-50/50 border-orange-200/60 hover:border-orange-300'
                 ]"
               >
@@ -560,9 +560,9 @@
                   class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
                 ></div>
                 
-                <!-- Indicador de pago parcial -->
+                <!-- Indicador de pago parcial (considera cuota + sanción) -->
                 <div 
-                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota"
+                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
                   class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
                 >
                   ⚠️ PAGO PARCIAL
@@ -600,14 +600,14 @@
                           (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700 border border-green-200' :
                           (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700 border border-red-200' :
                           (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
-                          (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
+                          (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                           'bg-orange-100 text-orange-700 border border-orange-200'
                         ]"
                       >
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
                             (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
                             (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
-                            (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'Pago Parcial' :
+                            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'Pago Parcial' :
                             'Pendiente' }}
                       </span>
                     </div>
@@ -615,7 +615,7 @@
                   <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="text-right flex-1 sm:flex-none">
                       <!-- Mostrar información de pago parcial si aplica -->
-                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota">
+                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
                         <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                         <p class="font-bold text-base sm:text-lg text-orange-600">
                           ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
@@ -675,13 +675,13 @@
             (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
             (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
             (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
-            (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
+            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
             'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
           ]"
         >
           <!-- Indicador de pago parcial -->
           <div 
-            v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota"
+            v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
             class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
           >
             ⚠️ PAGO PARCIAL
@@ -716,7 +716,7 @@
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-300' : 
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-300' :
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-300' :
               'bg-orange-300'
             ]"
           ></div>
@@ -728,7 +728,7 @@
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-400/60' : 
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-400/60' :
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-400/60' :
               'bg-orange-400/60'
             ]"
           ></div>
@@ -748,7 +748,7 @@
                     :class="[
                       cuota.estado === 'pagada' ? 'border-green-300' : 
                       cuota.estado === 'mora' ? 'border-red-300' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'border-amber-300' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'border-amber-300' :
                       cuota.estado === 'parcial' ? 'border-blue-300' : 
                       cuota.estado === 'programada' ? 'border-gray-300' : 'border-orange-300'
                     ]"
@@ -759,7 +759,7 @@
                       'absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center shadow-md border-2 border-white',
                       cuota.estado === 'pagada' ? 'bg-green-500' : 
                       cuota.estado === 'mora' ? 'bg-red-500' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-500' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-500' :
                       cuota.estado === 'parcial' ? 'bg-blue-500' : 
                       cuota.estado === 'programada' ? 'bg-gray-400' : 'bg-orange-500'
                     ]"
@@ -840,7 +840,7 @@
                       </p>
                     </template>
                     <!-- Estado parcial -->
-                    <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota">
+                    <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
                       <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</p>
                       <p class="text-xs text-gray-500 mt-1">
@@ -866,14 +866,14 @@
                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
                       (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                       'bg-orange-100 text-orange-800 border border-orange-200'
                     ]"
                   >
                     {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 
                        (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : 
                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 
-                       (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota) ? 'Pago Parcial' :
+                       (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'Pago Parcial' :
                        'Pendiente' }}
                   </span>
                 </div>
@@ -881,7 +881,7 @@
                 <!-- Botones de acción en una fila en móvil -->
                 <div class="flex items-center justify-end gap-2" @click.stop>
                   <button 
-                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
+                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
                     @click="abrirModalEditar(cuota)"
                     class="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                     title="Editar cuota"
@@ -898,7 +898,7 @@
                   </button>
 
                   <button 
-                    v-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
+                    v-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
                     @click="reenviarComprobante(cuota)"
                     class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
                     title="Reenviar comprobante"
@@ -997,7 +997,7 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-2">
                   <button 
-                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
+                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
                     @click="abrirModalEditar(cuota)"
                     class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                     title="Editar cuota"
@@ -1012,7 +1012,7 @@
                     Pagar
                   </button>
                   <button 
-                    v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < cuota.valor_cuota)"
+                    v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
                     @click="reenviarComprobante(cuota)"
                     class="px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                     title="Reenviar comprobante"
@@ -1565,8 +1565,8 @@
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-3">Fechas Límite de Pago</label>
-                <p v-if="socioSeleccionadoEsMensual" class="text-xs text-gray-500 mb-3">
-                  El socio seleccionado es mensual
+                <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mb-3">
+                  Esta natillera está configurada como mensual
                 </p>
                 <p v-else class="text-xs text-gray-500 mb-3">
                   La 2da quincena aplica también para socios mensuales
@@ -1575,7 +1575,7 @@
               
               <div class="space-y-3">
                 <!-- 1ra Quincena -->
-                <div v-if="!socioSeleccionadoEsMensual" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div v-if="periodicidadNatillera === 'quincenal'" class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div class="flex items-center gap-2 mb-3">
                     <span class="w-7 h-7 bg-purple-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">1</span>
                     <span class="font-medium text-gray-800">1ra Quincena</span>
@@ -1590,10 +1590,10 @@
                 <!-- 2da Quincena / Fecha Mensual -->
                 <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div class="flex items-center gap-2 mb-3">
-                    <span v-if="!socioSeleccionadoEsMensual" class="w-7 h-7 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">2</span>
-                    <span v-else class="w-7 h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs">📅</span>
+                    <span v-if="periodicidadNatillera === 'mensual'" class="w-7 h-7 bg-emerald-500 text-white rounded-lg flex items-center justify-center text-xs">📅</span>
+                    <span v-else class="w-7 h-7 bg-indigo-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">2</span>
                     <span class="font-medium text-gray-800">
-                      {{ socioSeleccionadoEsMensual ? 'Fecha Mensual' : '2da Quincena' }}
+                      {{ periodicidadNatillera === 'mensual' ? 'Fecha Mensual' : '2da Quincena' }}
                     </span>
                   </div>
                   <DatePicker 
@@ -1752,6 +1752,8 @@
                 <input 
                   :value="formatearValorPago(formPago.valor)"
                   @input="handleValorPagoInput($event)"
+                  @focus="seleccionarValorPago"
+                  @click="seleccionarValorPago"
                   type="text" 
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
                   :placeholder="`Máx: ${formatMoney(getTotalAPagar(cuotaSeleccionada))}`"
@@ -2178,6 +2180,7 @@
                 <input 
                   :value="formatearValorPago(formEditarCuota.valor_cuota)"
                   @input="handleValorCuotaEditarInput($event)"
+                  @focus="$event.target.select()"
                   type="text" 
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
                   placeholder="0"
@@ -3464,10 +3467,16 @@ const diasGracia = ref(3)
 // - Programada: fecha_actual < (fecha_limite - dias_gracia)
 // - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
 // - En Mora: fecha_actual > fecha_limite
-// - Pagada: valor_pagado >= valor_cuota
+// - Pagada: valor_pagado >= (valor_cuota + sanción)
+// - Parcial: valor_pagado > 0 && valor_pagado < (valor_cuota + sanción) && fecha no vencida
+// - Mora: fecha vencida (aunque tenga pago parcial, la UI mostrará ambos badges)
 function calcularEstadoRealCuota(cuota) {
-  // Si está pagada completamente, siempre es pagada
-  if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) {
+  // Si está pagada completamente (incluyendo sanción), siempre es pagada
+  const sancion = getSancionCuota(cuota)
+  const totalAPagar = (cuota.valor_cuota || 0) + sancion
+  const valorPagado = cuota.valor_pagado || 0
+  
+  if (valorPagado >= totalAPagar) {
     return 'pagada'
   }
   
@@ -3511,21 +3520,38 @@ function calcularEstadoRealCuota(cuota) {
   
   // Programada: fecha_actual < (fecha_limite - dias_gracia)
   if (fechaActual < fechaInicioPendiente) {
+    // Si tiene pago parcial antes de la fecha, es parcial
+    if (valorPagado > 0 && valorPagado < totalAPagar) {
+      return 'parcial'
+    }
     return 'programada'
   }
   
   // Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
   if (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) {
+    // Si tiene pago parcial en período pendiente, es parcial
+    if (valorPagado > 0 && valorPagado < totalAPagar) {
+      return 'parcial'
+    }
     return 'pendiente'
   }
   
   // En Mora: fecha_actual > fecha_limite
+  // Aquí retornamos mora aunque tenga pago parcial - la UI mostrará ambos badges
   if (fechaActual > fechaLimite) {
     return 'mora'
   }
   
   // Por defecto, mantener el estado original
   return cuota.estado || 'programada'
+}
+
+// Función auxiliar para verificar si una cuota tiene pago parcial (para mostrar badge adicional)
+function tienePagoParcialCuota(cuota) {
+  const sancion = getSancionCuota(cuota)
+  const totalAPagar = (cuota.valor_cuota || 0) + sancion
+  const valorPagado = cuota.valor_pagado || 0
+  return valorPagado > 0 && valorPagado < totalAPagar
 }
 
 const mesParam = computed(() => {
@@ -3659,9 +3685,25 @@ async function recalcularSancionesMes() {
 function getSancionCuota(cuota) {
   // Si las sanciones no están activadas, retornar 0
   if (!sancionesActivas.value) return 0
-  if (!cuota || cuota.estado !== 'mora') return 0
-  // Usar la sanción calculada dinámicamente, si no existe usar la guardada en BD
-  return sancionesDinamicas.value[cuota.id] || cuota.valor_multa || 0
+  if (!cuota) return 0
+  
+  // Para cuotas en mora, usar la sanción calculada dinámicamente
+  if (cuota.estado === 'mora') {
+    return sancionesDinamicas.value[cuota.id] || cuota.valor_multa || 0
+  }
+  
+  // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente),
+  // seguir considerando la sanción hasta que se pague completamente
+  // Esto cubre el caso de cuotas que estaban en mora y se les hizo un pago parcial
+  if (cuota.valor_multa && cuota.valor_multa > 0) {
+    const totalConSancion = (cuota.valor_cuota || 0) + cuota.valor_multa
+    // Solo retornar la sanción si aún no se ha pagado el total
+    if ((cuota.valor_pagado || 0) < totalConSancion) {
+      return cuota.valor_multa
+    }
+  }
+  
+  return 0
 }
 
 // Obtener el total a pagar de una cuota (valor_cuota + sanción - valor_pagado)
@@ -3761,9 +3803,9 @@ function abrirModalDetalleCuota(cuota) {
 
 function abrirModalPago(cuota) {
   cuotaSeleccionada.value = cuota
-  // Inicializar con el valor pendiente completo
-  const valorPendiente = cuota.valor_cuota - (cuota.valor_pagado || 0)
-  formPago.valor = valorPendiente > 0 ? valorPendiente : 0
+  // Inicializar con el total a pagar completo (incluye cuota + sanciones)
+  const totalAPagar = getTotalAPagar(cuota)
+  formPago.valor = totalAPagar > 0 ? totalAPagar : 0
   modalPago.value = true
 }
 
@@ -3904,6 +3946,12 @@ function handleValorCuotaInput(event) {
 }
 
 function seleccionarMontoCuota(event) {
+  const input = event?.target
+  if (!input || typeof input.select !== 'function') return
+  setTimeout(() => input.select(), 0)
+}
+
+function seleccionarValorPago(event) {
   const input = event?.target
   if (!input || typeof input.select !== 'function') return
   setTimeout(() => input.select(), 0)
@@ -4119,9 +4167,11 @@ async function guardarEdicionCuota() {
     // Si hay un pago parcial, actualizar valor_pagado (reemplazar, no sumar)
     if (tienePagoParcial) {
       const nuevoValorPagado = nuevoValor
-      // Calcular el nuevo estado basado en el valor pagado
+      // Calcular el nuevo estado basado en el valor pagado (incluyendo sanción)
+      const sancion = getSancionCuota(cuotaEditando.value)
+      const totalAPagar = valorCuota + sancion
       let nuevoEstado = 'pendiente'
-      if (nuevoValorPagado >= valorCuota) {
+      if (nuevoValorPagado >= totalAPagar) {
         nuevoEstado = 'pagada'
       } else if (nuevoValorPagado > 0) {
         nuevoEstado = 'parcial'
@@ -4375,8 +4425,11 @@ async function handleRegistrarPago() {
     const cuotaActualizada = result.data
     const valorCuota = cuotaSeleccionada.value.valor_cuota
     const valorPagadoTotal = cuotaActualizada?.valor_pagado || (cuotaSeleccionada.value.valor_pagado || 0) + valorPagado
-    const valorPendiente = valorCuota - valorPagadoTotal
-    const esParcial = valorPendiente > 0 && valorPagadoTotal < valorCuota
+    // Considerar la sanción al calcular el total a pagar
+    const sancion = getSancionCuota(cuotaActualizada || cuotaSeleccionada.value)
+    const totalAPagar = valorCuota + sancion
+    const valorPendiente = totalAPagar - valorPagadoTotal
+    const esParcial = valorPendiente > 0 && valorPagadoTotal < totalAPagar
     
     // Obtener el código del comprobante
     const codigoComprobante = cuotaActualizada?.codigo_comprobante || null

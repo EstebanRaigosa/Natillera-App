@@ -249,7 +249,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // - Programada: fecha_actual < (fecha_limite - dias_gracia)
   // - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
   // - En Mora: fecha_actual > fecha_limite
-  // - Pagada: valor_pagado >= valor_cuota
+  // - Pagada: valor_pagado >= (valor_cuota + valor_multa)
   async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null) {
     try {
       const lista = cuotasLista || cuotas.value
@@ -294,8 +294,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const cuotasAMora = [] // pendiente/parcial -> mora (solo las que no tienen multa ya aplicada)
 
       lista.forEach(cuota => {
-        // Solo procesar cuotas que no estén pagadas completamente
-        if ((cuota.valor_pagado || 0) >= (cuota.valor_cuota || 0)) return
+        // Solo procesar cuotas que no estén pagadas completamente (incluyendo sanción)
+        const totalAPagar = (cuota.valor_cuota || 0) + (cuota.valor_multa || 0)
+        if ((cuota.valor_pagado || 0) >= totalAPagar) return
 
         const fechaLimite = cuota.fecha_limite
         if (!fechaLimite) return
@@ -1043,9 +1044,51 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       if (fetchError) throw fetchError
 
+      // Obtener natillera_id desde socios_natillera
+      const { data: socioNatillera, error: socioError } = await supabase
+        .from('socios_natillera')
+        .select('natillera_id')
+        .eq('id', cuotaActual.socio_natillera_id)
+        .single()
+
+      if (socioError) throw socioError
+
+      const natilleraId = socioNatillera?.natillera_id
+      if (!natilleraId) {
+        throw new Error('No se pudo obtener la natillera asociada a la cuota')
+      }
+
+      // Obtener configuración de sanciones y calcular sanción dinámica si la cuota está en mora
+      let sancionDinamica = cuotaActual.valor_multa || 0
+      if (cuotaActual.estado === 'mora') {
+        const { data: natillera } = await supabase
+          .from('natilleras')
+          .select('reglas_multas')
+          .eq('id', natilleraId)
+          .single()
+        
+        const configSanciones = natillera?.reglas_multas?.sanciones || null
+        
+        if (configSanciones?.activa) {
+          // Contar cuotas en mora del mismo socio para el escalonamiento
+          const { data: cuotasMoraSocio } = await supabase
+            .from('cuotas')
+            .select('id')
+            .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
+            .eq('estado', 'mora')
+          
+          const cantidadCuotasMora = cuotasMoraSocio?.length || 1
+          sancionDinamica = calcularMultaDinamica(cuotaActual, configSanciones, cantidadCuotasMora)
+        }
+      }
+
       const nuevoValorPagado = (cuotaActual.valor_pagado || 0) + valorPagado
-      // Considerar la multa en el total a pagar para determinar si está completamente pagada
-      const totalAPagar = (cuotaActual.valor_cuota || 0) + (cuotaActual.valor_multa || 0)
+      // Considerar la sanción dinámica calculada (o la guardada en BD) en el total a pagar
+      // El total a pagar es: valor_cuota + sanción - valor_pagado_anterior
+      const totalAPagar = (cuotaActual.valor_cuota || 0) + sancionDinamica
+      
+      // La cuota solo se marca como "pagada" cuando se paga el total completo (cuota + sanciones)
+      // Si solo se paga la cuota sin las sanciones, debe quedar como "parcial"
       const nuevaEstado = nuevoValorPagado >= totalAPagar 
         ? 'pagada' 
         : nuevoValorPagado > 0 
@@ -1106,6 +1149,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
         estado: nuevaEstado,
         fecha_pago: fechaPagoActualizada,
         comprobante_url: comprobante
+      }
+      
+      // Actualizar valor_multa en la BD con la sanción dinámica calculada (si es diferente)
+      // Esto asegura que la sanción quede guardada correctamente
+      if (cuotaActual.estado === 'mora' && sancionDinamica > 0 && sancionDinamica !== (cuotaActual.valor_multa || 0)) {
+        updateData.valor_multa = sancionDinamica
       }
       
       // Solo agregar codigo_comprobante si existe un código generado
@@ -1185,24 +1234,24 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Registrar auditoría
       const auditoria = useAuditoria()
       
-      // Obtener natillera_id y nombre del socio desde la cuota
-      const { data: socioNatillera } = await supabase
+      // Obtener nombre del socio (ya tenemos natilleraId)
+      const { data: socioData } = await supabase
         .from('socios_natillera')
-        .select('natillera_id, socio:socios(nombre)')
+        .select('socio:socios(nombre)')
         .eq('id', cuotaActual.socio_natillera_id)
         .single()
       
-      const nombreSocio = socioNatillera?.socio?.nombre || 'Socio desconocido'
+      const nombreSocio = socioData?.socio?.nombre || 'Socio desconocido'
       const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < totalAPagar
-      const tieneMulta = (cuotaActual.valor_multa || 0) > 0
+      const tieneMulta = sancionDinamica > 0
       let descripcion
       if (esPagoParcial) {
         descripcion = tieneMulta
-          ? `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')} incl. multa)`
+          ? `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')} incl. multa de $${sancionDinamica.toLocaleString('es-CO')})`
           : `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')})`
       } else if (nuevaEstado === 'pagada') {
         descripcion = tieneMulta
-          ? `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (incluye multa de $${cuotaActual.valor_multa.toLocaleString('es-CO')})`
+          ? `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (incluye multa de $${sancionDinamica.toLocaleString('es-CO')})`
           : `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
       } else {
         descripcion = `Se registró pago de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
@@ -1210,7 +1259,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       
       // Asegurar que los IDs sean strings válidos
       const cuotaIdStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
-      const natilleraIdStr = socioNatillera?.natillera_id ? String(socioNatillera.natillera_id) : null
+      const natilleraIdStr = natilleraId ? String(natilleraId) : null
       
       // Registrar auditoría en segundo plano
       registrarAuditoriaEnSegundoPlano(auditoria.registrarPago(
@@ -1225,7 +1274,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valor_pagado_nuevo: nuevoValorPagado,
           valor_pagado_agregado: valorPagado,
           valor_cuota: cuotaActual.valor_cuota,
-          valor_multa: cuotaActual.valor_multa || 0,
+          valor_multa: sancionDinamica, // Usar la sanción dinámica calculada
+          valor_multa_anterior: cuotaActual.valor_multa || 0,
           total_a_pagar: totalAPagar,
           estado_anterior: cuotaActual.estado,
           estado_nuevo: nuevaEstado,
