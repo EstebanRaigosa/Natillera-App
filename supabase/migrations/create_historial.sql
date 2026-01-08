@@ -32,3 +32,4 @@ CREATE POLICY "Registrar historial" ON historial
 
 
 
+
