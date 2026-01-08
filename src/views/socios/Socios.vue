@@ -72,6 +72,222 @@
       </div>
     </div>
 
+    <!-- Alerta de Cuotas de Natillera en Mora -->
+    <div 
+      v-if="cantidadSociosCuotasEnMora > 0"
+      class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-yellow-50/50 to-orange-50/30 border-2 border-amber-400 shadow-lg animate-fade-in-up"
+    >
+      <!-- Efectos decorativos -->
+      <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-yellow-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-yellow-400/20 to-amber-400/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+      
+      <!-- Barra lateral de alerta -->
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-amber-500 via-yellow-500 to-orange-500"></div>
+      
+      <!-- Header colapsable -->
+      <button
+        @click="mostrarSeccionCuotasEnMora = !mostrarSeccionCuotasEnMora"
+        class="relative z-10 w-full flex items-center justify-between p-4 sm:p-5 hover:bg-amber-100/30 transition-colors"
+      >
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="relative">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/40">
+              <CalendarDaysIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            </div>
+            <!-- Badge con cantidad de cuotas -->
+            <div class="absolute -top-2 -right-2 w-6 h-6 bg-amber-600 border-2 border-white rounded-full flex items-center justify-center shadow-md">
+              <span class="text-white text-xs font-bold">{{ totalCuotasEnMora }}</span>
+            </div>
+          </div>
+          <div class="text-left">
+            <h3 class="font-display font-bold text-amber-800 text-lg sm:text-xl">
+              Cuotas en Mora
+            </h3>
+            <p class="text-amber-700 text-sm">
+              {{ cantidadSociosCuotasEnMora }} {{ cantidadSociosCuotasEnMora === 1 ? 'socio tiene' : 'socios tienen' }} {{ totalCuotasEnMora }} {{ totalCuotasEnMora === 1 ? 'cuota' : 'cuotas' }} vencidas
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click.stop="irACuotas"
+            class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all text-sm hidden sm:flex items-center gap-2"
+          >
+            <CalendarDaysIcon class="w-4 h-4" />
+            Ver Cuotas
+          </button>
+          <ChevronDownIcon 
+            :class="['w-6 h-6 text-amber-600 transition-transform duration-300', mostrarSeccionCuotasEnMora ? 'rotate-180' : '']" 
+          />
+        </div>
+      </button>
+      
+      <!-- Lista de socios con cuotas en mora (colapsable) -->
+      <div 
+        v-show="mostrarSeccionCuotasEnMora"
+        class="relative z-10 px-4 sm:px-5 pb-4 sm:pb-5 space-y-3 w-full overflow-hidden"
+      >
+        <!-- Botón ver cuotas en móvil -->
+        <button
+          @click="irACuotas"
+          class="w-full sm:hidden px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2 mb-3"
+        >
+          <CalendarDaysIcon class="w-4 h-4" />
+          Ir a Cuotas
+        </button>
+        
+        <div 
+          v-for="socioMora in sociosConCuotasEnMora" 
+          :key="socioMora.id"
+          @click="irACuotas"
+          class="relative bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all cursor-pointer group"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 w-full">
+            <!-- Sección izquierda: Avatar y nombre -->
+            <div class="flex items-center gap-3 flex-1 min-w-0 max-w-full">
+              <img 
+                :src="getAvatarUrl(socioMora.nombre || socioMora.id, socioMora.avatar_seed, socioMora.avatar_style)" 
+                :alt="socioMora.nombre"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-amber-200 shadow-sm flex-shrink-0 object-cover"
+              />
+              <div class="flex-1 min-w-0 max-w-full overflow-hidden">
+                <p class="font-semibold text-gray-800 truncate mb-1">
+                  {{ socioMora.nombre }}
+                </p>
+                <p class="text-xs sm:text-sm text-amber-700 truncate">
+                  <span class="font-medium">Cuotas de Natillera</span> · ${{ formatMoney(socioMora.totalDeuda) }}
+                </p>
+              </div>
+            </div>
+            <!-- Sección derecha: Badges e información -->
+            <div class="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-1.5 flex-shrink-0">
+              <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-100 text-amber-700 border border-amber-300">
+                <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span class="text-xs font-bold whitespace-nowrap">
+                  {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
+                </span>
+              </div>
+              <span class="text-xs text-amber-600 font-medium whitespace-nowrap">
+                {{ socioMora.diasMora }} días
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerta de Préstamos en Mora -->
+    <div 
+      v-if="cantidadPrestamosEnMora > 0"
+      class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-50 via-orange-50/50 to-red-50/30 border-2 border-red-300 shadow-lg animate-fade-in-up"
+    >
+      <!-- Efectos decorativos -->
+      <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-400/20 to-orange-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+      <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-400/20 to-red-400/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+      
+      <!-- Barra lateral de alerta -->
+      <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-500 via-orange-500 to-red-500"></div>
+      
+      <!-- Header colapsable -->
+      <button
+        @click="mostrarSeccionPrestamosEnMora = !mostrarSeccionPrestamosEnMora"
+        class="relative z-10 w-full flex items-center justify-between p-4 sm:p-5 hover:bg-red-100/30 transition-colors"
+      >
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="relative">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/40">
+              <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+            </div>
+            <!-- Badge con cantidad -->
+            <div class="absolute -top-2 -right-2 w-6 h-6 bg-red-600 border-2 border-white rounded-full flex items-center justify-center shadow-md">
+              <span class="text-white text-xs font-bold">{{ cantidadPrestamosEnMora }}</span>
+            </div>
+          </div>
+          <div class="text-left">
+            <h3 class="font-display font-bold text-red-800 text-lg sm:text-xl">
+              Préstamos en Mora
+            </h3>
+            <p class="text-red-600 text-sm">
+              {{ cantidadPrestamosEnMora }} {{ cantidadPrestamosEnMora === 1 ? 'préstamo tiene' : 'préstamos tienen' }} cuotas vencidas
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click.stop="irAPrestamos"
+            class="px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all text-sm hidden sm:flex items-center gap-2"
+          >
+            <BanknotesIcon class="w-4 h-4" />
+            Ver Préstamos
+          </button>
+          <ChevronDownIcon 
+            :class="['w-6 h-6 text-red-600 transition-transform duration-300', mostrarSeccionPrestamosEnMora ? 'rotate-180' : '']" 
+          />
+        </div>
+      </button>
+      
+      <!-- Lista de préstamos en mora (colapsable) -->
+      <div 
+        v-show="mostrarSeccionPrestamosEnMora"
+        class="relative z-10 px-4 sm:px-5 pb-4 sm:pb-5 space-y-3 w-full overflow-hidden"
+      >
+        <!-- Botón ver préstamos en móvil -->
+        <button
+          @click="irAPrestamos"
+          class="w-full sm:hidden px-4 py-2.5 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2 mb-3"
+        >
+          <BanknotesIcon class="w-4 h-4" />
+          Ir a Préstamos
+        </button>
+        
+        <div 
+          v-for="prestamo in prestamosEnMora" 
+          :key="prestamo.id"
+          @click="irAPrestamos"
+          class="relative bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-5 border border-red-200 shadow-sm hover:shadow-md hover:border-red-300 transition-all cursor-pointer group"
+        >
+          <div class="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 w-full">
+            <!-- Sección izquierda: Avatar y nombre -->
+            <div class="flex items-center gap-3 flex-1 min-w-0 max-w-full">
+              <img 
+                :src="getAvatarUrl(prestamo.socio_natillera?.socio?.nombre || prestamo.id, prestamo.socio_natillera?.socio?.avatar_seed, prestamo.socio_natillera?.socio?.avatar_style)" 
+                :alt="prestamo.socio_natillera?.socio?.nombre"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-red-200 shadow-sm flex-shrink-0 object-cover"
+              />
+              <div class="flex-1 min-w-0 max-w-full overflow-hidden">
+                <p class="font-semibold text-gray-800 truncate mb-1">
+                  {{ prestamo.socio_natillera?.socio?.nombre || 'Socio' }}
+                </p>
+                <p class="text-xs sm:text-sm text-red-700 truncate">
+                  <span class="font-medium">Préstamo</span> · ${{ formatMoney(prestamo.monto) }}
+                </p>
+                <p class="text-xs sm:text-sm text-red-700 truncate mt-0.5">
+                  Saldo: ${{ formatMoney(prestamo.saldo_actual) }}
+                </p>
+              </div>
+            </div>
+            <!-- Sección derecha: Badges e información -->
+            <div class="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-1.5 flex-shrink-0">
+              <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-red-100 text-red-700 border border-red-200">
+                <ExclamationTriangleIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span class="text-xs font-bold whitespace-nowrap">
+                  {{ prestamo.cuotasVencidas }} {{ prestamo.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
+                </span>
+              </div>
+              <div class="flex flex-col items-end gap-0.5">
+                <span class="text-xs text-red-600 font-medium whitespace-nowrap">
+                  {{ prestamo.diasMora }} días
+                </span>
+                <span class="text-xs text-gray-500 whitespace-nowrap">
+                  ${{ formatMoney(prestamo.valorCuotasEnDeuda) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Lista de socios -->
     <div v-if="sociosStore.loading" class="text-center py-12">
       <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
@@ -1316,11 +1532,12 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useSociosStore } from '../../stores/socios'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
+import { supabase } from '../../lib/supabase'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -1358,6 +1575,7 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const router = useRouter()
 const sociosStore = useSociosStore()
 const cuotasStore = useCuotasStore()
 const natillerasStore = useNatillerasStore()
@@ -1380,6 +1598,15 @@ const cuotasSocio = ref([])
 const loadingDetalle = ref(false)
 const busqueda = ref('')
 const socioAEliminar = ref(null)
+
+// Variables para préstamos en mora
+const prestamosEnMora = ref([])
+const loadingPrestamos = ref(false)
+const mostrarSeccionPrestamosEnMora = ref(true)
+
+// Variables para cuotas de natillera en mora
+const mostrarSeccionCuotasEnMora = ref(true)
+const loadingCuotas = ref(false)
 
 // Variables para importación CSV
 const archivoCSV = ref(null)
@@ -2187,8 +2414,201 @@ watch(mostrarAdvertenciaCuota, (isOpen) => {
   }
 })
 
-onMounted(() => {
+// Función para cargar préstamos en mora
+async function fetchPrestamosEnMora() {
+  loadingPrestamos.value = true
+  try {
+    // Obtener los IDs de socios_natillera de esta natillera
+    const { data: sociosNatillera } = await supabase
+      .from('socios_natillera')
+      .select('id, socio:socios(*)')
+      .eq('natillera_id', id)
+
+    if (!sociosNatillera || sociosNatillera.length === 0) {
+      prestamosEnMora.value = []
+      return
+    }
+
+    const socioNatilleraIds = sociosNatillera.map(s => s.id)
+
+    // Obtener préstamos activos
+    const { data: prestamos, error } = await supabase
+      .from('prestamos')
+      .select('*')
+      .in('socio_natillera_id', socioNatilleraIds)
+      .eq('estado', 'activo')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    if (!prestamos || prestamos.length === 0) {
+      prestamosEnMora.value = []
+      return
+    }
+
+    // Obtener IDs de préstamos para cargar el plan de pagos
+    const prestamoIds = prestamos.map(p => p.id)
+
+    // Cargar el plan de pagos para todos los préstamos
+    const { data: planPagos, error: planError } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*')
+      .in('prestamo_id', prestamoIds)
+
+    if (planError) throw planError
+
+    // Crear un mapa por prestamo_id
+    const planPagosMap = (planPagos || []).reduce((acc, cuota) => {
+      if (!acc[cuota.prestamo_id]) {
+        acc[cuota.prestamo_id] = []
+      }
+      acc[cuota.prestamo_id].push(cuota)
+      return acc
+    }, {})
+
+    // Fecha actual para calcular vencimientos
+    const fechaActual = new Date()
+    fechaActual.setHours(0, 0, 0, 0)
+
+    // Filtrar préstamos con cuotas vencidas
+    const prestamosConMora = prestamos.map(prestamo => {
+      const socioNatillera = sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
+      const planPagosPrestamo = planPagosMap[prestamo.id] || []
+
+      // Filtrar cuotas vencidas (no pagadas y con fecha anterior a hoy)
+      const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
+        const fechaVencimiento = new Date(cuota.fecha_proyectada)
+        fechaVencimiento.setHours(0, 0, 0, 0)
+        return !cuota.pagada && fechaVencimiento < fechaActual
+      })
+
+      const tieneCuotasVencidas = cuotasVencidasArray.length > 0
+      const cuotasVencidas = cuotasVencidasArray.length
+
+      // Calcular días de mora y valor en deuda
+      let diasMora = 0
+      let valorCuotasEnDeuda = 0
+
+      if (cuotasVencidasArray.length > 0) {
+        const cuotaMasAntigua = cuotasVencidasArray.sort((a, b) =>
+          new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada)
+        )[0]
+
+        const fechaVencimientoMasAntigua = new Date(cuotaMasAntigua.fecha_proyectada)
+        fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
+
+        const diffTime = fechaActual - fechaVencimientoMasAntigua
+        diasMora = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+        valorCuotasEnDeuda = cuotasVencidasArray.reduce((sum, cuota) => sum + (cuota.valor_cuota || 0), 0)
+      }
+
+      return {
+        ...prestamo,
+        socio_natillera: socioNatillera,
+        tieneCuotasVencidas,
+        cuotasVencidas,
+        diasMora,
+        valorCuotasEnDeuda
+      }
+    }).filter(p => p.tieneCuotasVencidas)
+
+    prestamosEnMora.value = prestamosConMora
+  } catch (e) {
+    console.error('Error cargando préstamos en mora:', e)
+    prestamosEnMora.value = []
+  } finally {
+    loadingPrestamos.value = false
+  }
+}
+
+// Computed para contar préstamos en mora
+const cantidadPrestamosEnMora = computed(() => prestamosEnMora.value.length)
+
+// Computed para socios con cuotas de natillera en mora
+const sociosConCuotasEnMora = computed(() => {
+  const cuotas = cuotasStore.cuotas
+  if (!cuotas || cuotas.length === 0) return []
+  
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  
+  // Agrupar cuotas en mora por socio
+  const sociosMap = {}
+  
+  cuotas.forEach(cuota => {
+    if (cuota.estado !== 'mora') return
+    
+    const socioId = cuota.socio_natillera_id
+    if (!socioId) return
+    
+    const socioInfo = cuota.socio_natillera?.socio
+    
+    if (!sociosMap[socioId]) {
+      sociosMap[socioId] = {
+        id: socioId,
+        nombre: socioInfo?.nombre || 'Sin nombre',
+        avatar_seed: socioInfo?.avatar_seed || null,
+        avatar_style: socioInfo?.avatar_style || 'adventurer',
+        socio: socioInfo || null,
+        cuotasMora: 0,
+        totalDeuda: 0,
+        diasMora: 0,
+        fechaMoraAntigua: null,
+        cuotasMoraList: []
+      }
+    }
+    
+    // Contar cuotas en mora
+    sociosMap[socioId].cuotasMora++
+    const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0) + (cuota.valor_multa || 0)
+    sociosMap[socioId].totalDeuda += deudaCuota
+    sociosMap[socioId].cuotasMoraList.push(cuota)
+    
+    // Calcular días de mora desde la cuota más antigua
+    if (cuota.fecha_limite) {
+      const fechaLimite = new Date(cuota.fecha_limite)
+      fechaLimite.setHours(0, 0, 0, 0)
+      
+      if (!sociosMap[socioId].fechaMoraAntigua || fechaLimite < sociosMap[socioId].fechaMoraAntigua) {
+        sociosMap[socioId].fechaMoraAntigua = fechaLimite
+        sociosMap[socioId].diasMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+      }
+    }
+  })
+  
+  // Convertir a array y ordenar por días de mora (mayor primero)
+  return Object.values(sociosMap).sort((a, b) => b.diasMora - a.diasMora)
+})
+
+// Computed para contar socios con cuotas en mora
+const cantidadSociosCuotasEnMora = computed(() => sociosConCuotasEnMora.value.length)
+
+// Total de cuotas en mora (suma de todas las cuotas de todos los socios)
+const totalCuotasEnMora = computed(() => {
+  return sociosConCuotasEnMora.value.reduce((sum, socio) => sum + socio.cuotasMora, 0)
+})
+
+// Navegar a préstamos
+function irAPrestamos() {
+  router.push(`/natilleras/${id}/prestamos`)
+}
+
+// Navegar a cuotas
+function irACuotas() {
+  router.push(`/natilleras/${id}/cuotas`)
+}
+
+onMounted(async () => {
   sociosStore.fetchSociosNatillera(id)
+  fetchPrestamosEnMora()
+  // Cargar cuotas para mostrar socios con cuotas en mora
+  loadingCuotas.value = true
+  try {
+    await cuotasStore.fetchCuotasNatillera(id)
+  } finally {
+    loadingCuotas.value = false
+  }
 })
 
 onUnmounted(() => {

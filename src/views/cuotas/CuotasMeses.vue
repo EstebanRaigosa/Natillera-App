@@ -214,27 +214,67 @@ function getMesEmoji(mes) {
   return emojis[mes] || '📅'
 }
 
+// Función para calcular el año correcto de un mes basándose en el período de la natillera
+// Por ejemplo: si mes_inicio=12 (dic), mes_fin=11 (nov), anio_inicio=2025
+//   - Diciembre (12) → 2025
+//   - Enero-Nov (1-11) → 2026
+function calcularAnioMes(mes, mesInicioNatillera, mesFinNatillera, anioInicioNatillera) {
+  // Si el período cruza el año (mes_inicio > mes_fin, ej: dic a nov)
+  if (mesInicioNatillera > mesFinNatillera) {
+    // Si el mes está en la primera parte del período (mes_inicio a diciembre)
+    if (mes >= mesInicioNatillera) {
+      return anioInicioNatillera
+    }
+    // Si el mes está en la segunda parte del período (enero a mes_fin)
+    if (mes <= mesFinNatillera) {
+      return anioInicioNatillera + 1
+    }
+  } else {
+    // Si el período no cruza el año (mes_inicio <= mes_fin, ej: ene a nov)
+    return anioInicioNatillera
+  }
+  
+  // Por defecto, devolver el año inicial
+  return anioInicioNatillera
+}
+
 // Función para obtener resumen de un mes específico
 function getResumenMes(mes) {
-  return cuotasStore.getResumenPorMes(mes, anioNatillera.value)
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    mes,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  return cuotasStore.getResumenPorMes(mes, anioCorrecto)
 }
 
 // Cargar información de la natillera
 async function cargarNatillera() {
-  const { data } = await supabase
-    .from('natilleras')
-    .select('nombre, mes_inicio, mes_fin, anio')
-    .eq('id', id)
-    .single()
+  // OPTIMIZADO: Cargar natillera Y cuotas EN PARALELO
+  const [natilleraResult] = await Promise.all([
+    supabase
+      .from('natilleras')
+      .select('nombre, mes_inicio, mes_fin, anio, anio_inicio')
+      .eq('id', id)
+      .single(),
+    cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true }) // Skip mora para esta vista resumen
+  ])
   
+  const data = natilleraResult.data
   if (data) {
     mesInicio.value = data.mes_inicio || 1
     mesFin.value = data.mes_fin || 11
-    anioNatillera.value = data.anio || new Date().getFullYear()
+    // Usar anio_inicio como año base
+    if (data.anio_inicio !== null && data.anio_inicio !== undefined && data.anio_inicio !== '') {
+      anioNatillera.value = Number(data.anio_inicio)
+    } else if (data.anio !== null && data.anio !== undefined && data.anio !== '') {
+      anioNatillera.value = Number(data.anio)
+    } else {
+      anioNatillera.value = new Date().getFullYear()
+    }
   }
-  
-  // Cargar cuotas para calcular resúmenes
-  await cuotasStore.fetchCuotasNatillera(id)
 }
 
 onMounted(() => {

@@ -39,7 +39,7 @@
                     <span class="text-3xl sm:text-4xl transform hover:scale-110 transition-transform duration-300">{{ getMesEmoji(mesSeleccionado) }}</span>
                     <div>
                       <p class="text-base sm:text-lg font-bold text-natillera-800 leading-tight">{{ mesSeleccionadoLabel }}</p>
-                      <p class="text-xs sm:text-sm text-natillera-600 font-semibold leading-tight">{{ anioNatillera }}</p>
+                      <p class="text-xs sm:text-sm text-natillera-600 font-semibold leading-tight">{{ anioMesSeleccionado }}</p>
                     </div>
                   </div>
                 </div>
@@ -1070,7 +1070,7 @@
           <p class="text-gray-700 font-medium">
             ¿Estás seguro de que deseas borrar las cuotas de 
             <span class="font-bold text-red-600">
-              {{ todosMeses.find(m => m.value === mesSeleccionado)?.label }} {{ anioNatillera }}
+              {{ todosMeses.find(m => m.value === mesSeleccionado)?.label }} {{ anioMesSeleccionado }}
             </span>?
           </p>
           <p class="text-sm text-gray-600 mt-2">
@@ -3060,7 +3060,10 @@ const exportarAExcel = async () => {
     
     // Generar el nombre del archivo
     const mesNombre = mesSeleccionadoLabel.value || 'Todos'
-    const nombreArchivo = `Cuotas_${mesNombre}_${anioNatillera.value}_${new Date().toISOString().split('T')[0]}.xlsx`
+    const anioParaArchivo = mesSeleccionado.value 
+      ? anioMesSeleccionado.value 
+      : anioNatillera.value
+    const nombreArchivo = `Cuotas_${mesNombre}_${anioParaArchivo}_${new Date().toISOString().split('T')[0]}.xlsx`
     
     // Descargar el archivo
     XLSX.writeFile(wb, nombreArchivo)
@@ -3141,10 +3144,37 @@ const mesSeleccionadoLabel = computed(() => {
   return todosMeses.find(m => m.value === mesSeleccionado.value)?.label || ''
 })
 
+// Año correcto para el mes seleccionado basado en el período de la natillera
+const anioMesSeleccionado = computed(() => {
+  if (!mesSeleccionado.value) return anioNatillera.value
+  const anioCalculado = calcularAnioMes(
+    mesSeleccionado.value,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  // Debug: verificar cálculo del año
+  console.log('📅 Cálculo de año:', {
+    mes: mesSeleccionado.value,
+    mesInicio: mesInicio.value,
+    mesFin: mesFin.value,
+    anioBase: anioNatillera.value,
+    anioCalculado: anioCalculado
+  })
+  return anioCalculado
+})
+
 // Cuotas del mes actual (sin filtro de estado)
 const cuotasMesActual = computed(() => {
   if (!mesSeleccionado.value) return cuotasStore.cuotas
-  return cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioNatillera.value)
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    mesSeleccionado.value,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  return cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioCorrecto)
 })
 
 // Cuotas filtradas por estado, periodicidad y búsqueda (para mostrar en la lista)
@@ -3272,9 +3302,19 @@ const totalesExcel = computed(() => {
 
 // Resumen del mes actual (usando estados reales calculados)
 const resumenMesActual = computed(() => {
-  const cuotas = mesSeleccionado.value 
-    ? cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioNatillera.value)
-    : cuotasStore.cuotas
+  let cuotas
+  if (mesSeleccionado.value) {
+    // Calcular el año correcto para este mes basándose en el período de la natillera
+    const anioCorrecto = calcularAnioMes(
+      mesSeleccionado.value,
+      mesInicio.value,
+      mesFin.value,
+      anioNatillera.value
+    )
+    cuotas = cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioCorrecto)
+  } else {
+    cuotas = cuotasStore.cuotas
+  }
   
   // Calcular estados reales y contar por estado
   const cuotasConEstadoReal = cuotas.map(c => ({
@@ -3299,7 +3339,14 @@ const resumenMesActual = computed(() => {
 
 // Función para obtener resumen de un mes específico (para los badges de los tabs)
 function getResumenMes(mes) {
-  return cuotasStore.getResumenPorMes(mes, anioNatillera.value)
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    mes,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  return cuotasStore.getResumenPorMes(mes, anioCorrecto)
 }
 
 // Emoji representativo de cada mes
@@ -3509,22 +3556,34 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
     // Generar cuotas automáticamente para el mes seleccionado si faltan
     try {
       generandoCuotas.value = true
-      const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioNatillera.value)
-      if (result.success && result.cuotasGeneradas > 0) {
-        console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente para el mes ${nuevoMes}`)
-        // Recargar cuotas para mostrar las nuevas
-        await cuotasStore.fetchCuotasNatillera(id)
+      // Calcular el año correcto para este mes basándose en el período de la natillera
+      const anioCorrecto = calcularAnioMes(
+        nuevoMes,
+        mesInicio.value,
+        mesFin.value,
+        anioNatillera.value
+      )
+      // Verificar primero con datos locales si faltan cuotas
+      const cuotasActuales = cuotasStore.cuotas
+      const faltanCuotas = verificarCuotasFaltantes(cuotasActuales, nuevoMes, anioCorrecto)
+      
+      if (faltanCuotas) {
+        const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioCorrecto)
+        if (result.success && result.cuotasGeneradas > 0) {
+          console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente para el mes ${nuevoMes}`)
+          // Recargar cuotas (skip mora porque son cuotas nuevas)
+          await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+        }
       }
     } catch (error) {
       console.error('Error en generación automática:', error)
-      // No mostrar error al usuario, solo loguear
     } finally {
       generandoCuotas.value = false
     }
     
-    // Recalcular sanciones dinámicas cuando se cambia de mes
+    // Recalcular sanciones en segundo plano si están activadas
     if (sancionesActivas.value) {
-      await recalcularSancionesMes()
+      recalcularSancionesMes() // Sin await para no bloquear
     }
   }
 })
@@ -3566,13 +3625,21 @@ async function recalcularSancionesMes() {
     return
   }
   
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    mesSeleccionado.value,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  
   // Obtener las cuotas del mes actual
   const cuotasDelMes = cuotasStore.cuotas.filter(c => {
     if (!c.fecha_limite) return false
     const fecha = new Date(c.fecha_limite)
     const mes = fecha.getMonth() + 1
     const anio = fecha.getFullYear()
-    return mes === mesSeleccionado.value && anio === anioNatillera.value
+    return mes === mesSeleccionado.value && anio === anioCorrecto
   })
   
   if (cuotasDelMes.length === 0) return
@@ -3916,16 +3983,30 @@ async function handleGuardarSocio() {
         
         // Usar el mes seleccionado en la vista de cuotas (como si se usara el menú de generar cuotas)
         const mesParaGenerar = mesSeleccionado.value || (new Date().getMonth() + 1)
-        const anioParaGenerar = anioNatillera.value || new Date().getFullYear()
         
         // Obtener días de gracia de la natillera
         const { data: natillera } = await supabase
           .from('natilleras')
-          .select('reglas_multas')
+          .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
           .eq('id', id)
           .single()
         
         const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+        
+        // Usar anio_inicio como año base, con fallback a anio si no existe
+        const anioBase = natillera?.anio_inicio !== null && natillera?.anio_inicio !== undefined 
+          ? Number(natillera.anio_inicio) 
+          : (natillera?.anio !== null && natillera?.anio !== undefined 
+            ? Number(natillera.anio) 
+            : anioNatillera.value)
+        
+        // Calcular el año correcto para este mes basándose en el período de la natillera
+        const anioParaGenerar = calcularAnioMes(
+          mesParaGenerar,
+          natillera?.mes_inicio || mesInicio.value,
+          natillera?.mes_fin || mesFin.value,
+          anioBase
+        )
         
         // Calcular fechas por defecto para el mes seleccionado
         const fechasPorDefecto = calcularFechasPorDefecto(mesParaGenerar, anioParaGenerar, diasGracia)
@@ -4173,7 +4254,7 @@ async function handleGenerarCuotas() {
   // Obtener días de gracia de la natillera
   const { data: natillera, error: natilleraError } = await supabase
     .from('natilleras')
-    .select('reglas_multas')
+    .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
     .eq('id', id)
     .single()
   
@@ -4186,6 +4267,21 @@ async function handleGenerarCuotas() {
   const diasGracia = reglasMultas.dias_gracia || 3
 
   const mesLabel = todosMeses.find(m => m.value === formCuotas.mes)?.label || ''
+  
+  // Usar anio_inicio como año base, con fallback a anio si no existe
+  const anioBase = natillera.anio_inicio !== null && natillera.anio_inicio !== undefined 
+    ? Number(natillera.anio_inicio) 
+    : (natillera.anio !== null && natillera.anio !== undefined 
+      ? Number(natillera.anio) 
+      : anioNatillera.value)
+  
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    formCuotas.mes,
+    natillera.mes_inicio || mesInicio.value,
+    natillera.mes_fin || mesFin.value,
+    anioBase
+  )
   
   // Calcular fecha de vencimiento (sumando días de gracia a la fecha límite)
   function calcularFechaVencimiento(fechaLimiteStr) {
@@ -4212,7 +4308,9 @@ async function handleGenerarCuotas() {
     mensual: { vencimiento: fechaVencimientoMensual, limite: formCuotas.fecha_quincena2 },
     quincena1: { vencimiento: fechaVencimientoQ1, limite: formCuotas.fecha_quincena1 },
     quincena2: { vencimiento: fechaVencimientoQ2, limite: formCuotas.fecha_quincena2 },
-    diasGracia
+    diasGracia,
+    mes: formCuotas.mes,
+    anio: anioCorrecto
   })
   
   // La fecha mensual es la misma que la 2da quincena
@@ -4234,7 +4332,7 @@ async function handleGenerarCuotas() {
     },
     mesLabel,
     formCuotas.mes,
-    anioNatillera.value,
+    anioCorrecto,
     formCuotas.tipoGeneracion === 'unSocio' ? formCuotas.socioSeleccionado : null
   )
 
@@ -4244,8 +4342,8 @@ async function handleGenerarCuotas() {
     formCuotas.fecha_quincena2 = ''
     // Cambiar al mes generado
     mesSeleccionado.value = formCuotas.mes
-    // Recargar cuotas y conteo
-    cuotasStore.fetchCuotasNatillera(id)
+    // Recargar cuotas y conteo (skip mora porque son cuotas nuevas)
+    cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
     cargarConteoSocios()
   } else {
     alert('Error: ' + result.error)
@@ -4970,18 +5068,54 @@ function reenviarComprobante(cuota) {
   modalConfirmacion.value = true
 }
 
+// Caché de configuración de natillera para evitar consultas repetidas
+let natilleraConfigCache = null
+
 async function cargarNatillera() {
+  // Si ya tenemos la config en caché, usarla
+  if (natilleraConfigCache) {
+    const data = natilleraConfigCache
+    natilleraNombre.value = data.nombre
+    mesInicio.value = data.mes_inicio || 1
+    mesFin.value = data.mes_fin || 11
+    diasGracia.value = data.reglas_multas?.dias_gracia || 3
+    sancionesActivas.value = data.reglas_multas?.sanciones?.activa || false
+    
+    let anioCargado = data.anio_inicio ?? data.anio ?? new Date().getFullYear()
+    anioNatillera.value = Number(anioCargado)
+    return data
+  }
+
+  // Una sola consulta que trae TODO lo necesario
   const { data } = await supabase
     .from('natilleras')
-    .select('nombre, mes_inicio, mes_fin, anio')
+    .select('nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas')
     .eq('id', id)
     .single()
   
   if (data) {
+    // Guardar en caché
+    natilleraConfigCache = data
+    
     natilleraNombre.value = data.nombre
     mesInicio.value = data.mes_inicio || 1
     mesFin.value = data.mes_fin || 11
-    anioNatillera.value = data.anio || new Date().getFullYear()
+    
+    // Cargar días de gracia y sanciones de la misma consulta
+    diasGracia.value = data.reglas_multas?.dias_gracia || 3
+    sancionesActivas.value = data.reglas_multas?.sanciones?.activa || false
+    
+    // Usar anio_inicio como año base
+    let anioCargado
+    if (data.anio_inicio !== null && data.anio_inicio !== undefined && data.anio_inicio !== '') {
+      anioCargado = Number(data.anio_inicio)
+    } else if (data.anio !== null && data.anio !== undefined && data.anio !== '') {
+      anioCargado = Number(data.anio)
+    } else {
+      anioCargado = new Date().getFullYear()
+    }
+    
+    anioNatillera.value = anioCargado
     
     // Si hay un mes en la ruta, usarlo; sino, seleccionar el mes actual si está en el rango, sino el primero
     if (mesParam.value) {
@@ -5001,8 +5135,45 @@ async function cargarNatillera() {
     formCuotas.mes = mesSeleccionado.value
   }
   
-  // Cargar conteo de socios por periodicidad
-  await cargarConteoSocios()
+  return data
+}
+
+// Función para verificar si faltan cuotas basándose en los datos ya cargados
+function verificarCuotasFaltantes(cuotasCargadas, mes, anio) {
+  // Obtener socios únicos de las cuotas cargadas del mes específico
+  const cuotasDelMes = cuotasCargadas.filter(c => c.mes === mes && c.anio === anio)
+  
+  // Si no hay cuotas del mes, definitivamente faltan
+  if (cuotasDelMes.length === 0) {
+    return true
+  }
+  
+  // Agrupar cuotas por socio para verificar completitud
+  const cuotasPorSocio = {}
+  cuotasDelMes.forEach(c => {
+    if (!cuotasPorSocio[c.socio_natillera_id]) {
+      cuotasPorSocio[c.socio_natillera_id] = {
+        periodicidad: c.socio_natillera?.periodicidad || 'mensual',
+        cuotas: []
+      }
+    }
+    cuotasPorSocio[c.socio_natillera_id].cuotas.push(c)
+  })
+  
+  // Verificar si algún socio tiene cuotas incompletas
+  for (const socioId in cuotasPorSocio) {
+    const { periodicidad, cuotas } = cuotasPorSocio[socioId]
+    if (periodicidad === 'quincenal') {
+      const tieneQ1 = cuotas.some(c => c.quincena === 1)
+      const tieneQ2 = cuotas.some(c => c.quincena === 2)
+      if (!tieneQ1 || !tieneQ2) return true
+    } else {
+      const tieneMensual = cuotas.some(c => c.quincena === null || c.quincena === undefined)
+      if (!tieneMensual) return true
+    }
+  }
+  
+  return false
 }
 
 async function cargarConteoSocios() {
@@ -5037,8 +5208,16 @@ async function cargarSociosActivos() {
 
 // Función para cargar fechas de un mes que ya tiene cuotas
 async function cargarFechasDelMes(mes) {
-  // Obtener las cuotas del mes seleccionado
-  const cuotasDelMes = cuotasStore.getCuotasPorMes(mes, anioNatillera.value)
+  // Calcular el año correcto para este mes basándose en el período de la natillera
+  const anioCorrecto = calcularAnioMes(
+    mes,
+    mesInicio.value,
+    mesFin.value,
+    anioNatillera.value
+  )
+  
+  // Obtener las cuotas del mes seleccionado con el año correcto
+  const cuotasDelMes = cuotasStore.getCuotasPorMes(mes, anioCorrecto)
   
   if (cuotasDelMes.length > 0) {
     // Buscar fecha de la 1ra quincena
@@ -5061,6 +5240,30 @@ async function cargarFechasDelMes(mes) {
     formCuotas.fecha_quincena1 = ''
     formCuotas.fecha_quincena2 = ''
   }
+}
+
+// Función para calcular el año correcto de un mes basándose en el período de la natillera
+// Por ejemplo: si mes_inicio=12 (dic), mes_fin=11 (nov), anio_inicio=2025
+//   - Diciembre (12) → 2025
+//   - Enero-Nov (1-11) → 2026
+function calcularAnioMes(mes, mesInicioNatillera, mesFinNatillera, anioInicioNatillera) {
+  // Si el período cruza el año (mes_inicio > mes_fin, ej: dic a nov)
+  if (mesInicioNatillera > mesFinNatillera) {
+    // Si el mes está en la primera parte del período (mes_inicio a diciembre)
+    if (mes >= mesInicioNatillera) {
+      return anioInicioNatillera
+    }
+    // Si el mes está en la segunda parte del período (enero a mes_fin)
+    if (mes <= mesFinNatillera) {
+      return anioInicioNatillera + 1
+    }
+  } else {
+    // Si el período no cruza el año (mes_inicio <= mes_fin, ej: ene a nov)
+    return anioInicioNatillera
+  }
+  
+  // Por defecto, devolver el año inicial
+  return anioInicioNatillera
 }
 
 // Función para calcular fechas por defecto basadas en el mes (sin días de gracia)
@@ -5121,16 +5324,31 @@ async function abrirModalGenerarCuotas() {
       // Obtener días de gracia de la natillera
       const { data: natillera } = await supabase
         .from('natilleras')
-        .select('reglas_multas')
+        .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
         .eq('id', id)
         .single()
       
       const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
       
+      // Usar anio_inicio como año base, con fallback a anio si no existe
+      const anioBase = natillera?.anio_inicio !== null && natillera?.anio_inicio !== undefined 
+        ? Number(natillera.anio_inicio) 
+        : (natillera?.anio !== null && natillera?.anio !== undefined 
+          ? Number(natillera.anio) 
+          : anioNatillera.value)
+      
+      // Calcular el año correcto para este mes basándose en el período de la natillera
+      const anioCorrecto = calcularAnioMes(
+        mesParaCalcular,
+        natillera?.mes_inicio || mesInicio.value,
+        natillera?.mes_fin || mesFin.value,
+        anioBase
+      )
+      
       // Calcular fechas por defecto
       const fechasPorDefecto = calcularFechasPorDefecto(
         mesParaCalcular,
-        anioNatillera.value,
+        anioCorrecto,
         diasGracia
       )
       
@@ -5170,6 +5388,14 @@ async function borrarCuotasMes() {
   try {
     cuotasStore.loading = true
     
+    // Calcular el año correcto para este mes basándose en el período de la natillera
+    const anioCorrecto = calcularAnioMes(
+      mesSeleccionado.value,
+      mesInicio.value,
+      mesFin.value,
+      anioNatillera.value
+    )
+    
     // Obtener los IDs de socios_natillera de esta natillera (incluyendo nombres para auditoría)
     const { data: sociosNatillera, error: sociosError } = await supabase
       .from('socios_natillera')
@@ -5196,7 +5422,7 @@ async function borrarCuotasMes() {
       .select('*')
       .in('socio_natillera_id', socioNatilleraIds)
       .eq('mes', mesSeleccionado.value)
-      .eq('anio', anioNatillera.value)
+      .eq('anio', anioCorrecto)
       .in('estado', ['pendiente', 'mora', 'programada'])
 
     if (fetchError) throw fetchError
@@ -5208,7 +5434,7 @@ async function borrarCuotasMes() {
       .delete()
       .in('socio_natillera_id', socioNatilleraIds)
       .eq('mes', mesSeleccionado.value)
-      .eq('anio', anioNatillera.value)
+      .eq('anio', anioCorrecto)
       .in('estado', ['pendiente', 'mora', 'programada'])
 
     if (deleteError) throw deleteError
@@ -5229,7 +5455,7 @@ async function borrarCuotasMes() {
       registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
         'cuota',
         null, // No hay un ID específico para eliminación masiva
-        `Se eliminaron ${cantidadEliminadas} cuota(s) de ${mesLabel} ${anioNatillera.value} para: ${sociosTexto}`,
+        `Se eliminaron ${cantidadEliminadas} cuota(s) de ${mesLabel} ${anioCorrecto} para: ${sociosTexto}`,
         {
           cuotas_eliminadas: cuotasAEliminar.map(c => ({
             id: c.id,
@@ -5241,13 +5467,13 @@ async function borrarCuotasMes() {
           socios_afectados: sociosAfectados,
           total_eliminadas: cantidadEliminadas,
           mes: mesSeleccionado.value,
-          anio: anioNatillera.value
+          anio: anioCorrecto
         },
         id, // natilleraId
         {
           accion: 'eliminacion_masiva',
           mes: mesLabel,
-          anio: anioNatillera.value,
+          anio: anioCorrecto,
           socios: sociosAfectados
         }
       ))
@@ -5280,69 +5506,63 @@ function handleClickOutside(event) {
 onMounted(async () => {
   // Marcar que estamos inicializando para evitar que el watch se dispare
   inicializando.value = true
+  const tiempoInicio = performance.now()
   
   try {
-    // 1. Cargar datos de la natillera (esto asigna mesSeleccionado pero el watch está desactivado)
-    await cargarNatillera()
+    // 1. Cargar natillera y cuotas EN PARALELO (operaciones independientes)
+    const [natilleraData, cuotasCargadas] = await Promise.all([
+      cargarNatillera(),
+      cuotasStore.fetchCuotasNatillera(id)
+    ])
     
-    // 2. Cargar días de gracia y configuración de sanciones
-    try {
-      const { data: natillera } = await supabase
-        .from('natilleras')
-        .select('reglas_multas')
-        .eq('id', id)
-        .single()
-      
-      diasGracia.value = natillera?.reglas_multas?.dias_gracia || 3
-      sancionesActivas.value = natillera?.reglas_multas?.sanciones?.activa || false
-      console.log('📅 Días de gracia cargados:', diasGracia.value)
-      console.log('⚙️ Sanciones activas:', sancionesActivas.value)
-    } catch (error) {
-      console.error('Error cargando días de gracia:', error)
-      diasGracia.value = 3
-      sancionesActivas.value = false
-    }
+    // Los datos de días de gracia y sanciones ya están cargados en cargarNatillera()
+    console.log('📅 Días de gracia:', diasGracia.value, '| Sanciones activas:', sancionesActivas.value)
     
-    // 3. Cargar cuotas existentes (primera carga)
-    await cuotasStore.fetchCuotasNatillera(id)
-    
-    // 4. Generar cuotas faltantes SOLO si es necesario (una sola vez, sin condiciones de carrera)
+    // 2. Verificar si faltan cuotas USANDO LOS DATOS YA CARGADOS (sin nueva consulta)
     if (mesSeleccionado.value) {
-      try {
-        generandoCuotas.value = true
-        const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioNatillera.value)
-        if (result.success && result.cuotasGeneradas > 0) {
-          console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente al cargar la vista`)
-          // Recargar cuotas SOLO si se generaron nuevas
-          await cuotasStore.fetchCuotasNatillera(id)
+      const anioCorrecto = calcularAnioMes(
+        mesSeleccionado.value,
+        mesInicio.value,
+        mesFin.value,
+        anioNatillera.value
+      )
+      
+      // Verificar con datos locales si faltan cuotas
+      const faltanCuotas = verificarCuotasFaltantes(cuotasCargadas, mesSeleccionado.value, anioCorrecto)
+      
+      if (faltanCuotas) {
+        try {
+          generandoCuotas.value = true
+          const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioCorrecto)
+          if (result.success && result.cuotasGeneradas > 0) {
+            console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente`)
+            // Recargar solo si se generaron nuevas (skip mora)
+            await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+          }
+        } catch (error) {
+          console.error('Error en generación automática:', error)
+        } finally {
+          generandoCuotas.value = false
         }
-      } catch (error) {
-        console.error('Error en generación automática al cargar:', error)
-      } finally {
-        generandoCuotas.value = false
       }
     }
     
-    // 5. Calcular sanciones dinámicas solo si están activadas
-    if (sancionesActivas.value) {
-      const resultSanciones = await cuotasStore.calcularSancionesTotales(id)
-      if (resultSanciones.success) {
-        sancionesDinamicas.value = resultSanciones.sanciones || {}
-        console.log('💰 Sanciones dinámicas cargadas:', Object.keys(sancionesDinamicas.value).length, 'cuotas')
-      }
-      
-      // Recalcular sanciones para el mes seleccionado
-      if (mesSeleccionado.value) {
-        await recalcularSancionesMes()
-      }
+    // 3. Calcular sanciones solo si están activadas (en segundo plano si no es crítico)
+    if (sancionesActivas.value && mesSeleccionado.value) {
+      // Ejecutar sin await para no bloquear la UI
+      cuotasStore.calcularSancionesTotales(id).then(resultSanciones => {
+        if (resultSanciones.success) {
+          sancionesDinamicas.value = resultSanciones.sanciones || {}
+        }
+      })
     } else {
       sancionesDinamicas.value = {}
-      console.log('⚠️ Sanciones desactivadas - no se calcularán multas')
     }
+    
+    const tiempoFin = performance.now()
+    console.log(`✅ Inicialización completada en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
   } finally {
-    // 6. Marcar que la inicialización terminó - ahora el watch puede funcionar normalmente
     inicializando.value = false
-    console.log('✅ Inicialización completada')
   }
   
   document.addEventListener('click', handleClickOutside)

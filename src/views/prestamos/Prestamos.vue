@@ -125,9 +125,9 @@
         :key="prestamo.id"
         @click="abrirModalDetalle(prestamo)"
         :class="[
-          'group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 p-6 sm:p-6 cursor-pointer',
+          'group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 p-6 cursor-pointer',
           prestamo.tieneCuotasVencidas 
-            ? 'bg-gradient-to-br from-red-50 via-orange-50/50 to-red-50/30 border-2 border-red-400 hover:shadow-red-500/30' 
+            ? 'bg-gradient-to-br from-red-50 via-orange-50/50 to-red-50/30 border-2 border-red-300 hover:shadow-red-500/30 mora-card' 
             : 'bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 hover:shadow-natillera-500/20'
         ]"
       >
@@ -149,31 +149,31 @@
           ]"
         ></div>
         
-        <!-- Barra lateral de alerta para cuotas vencidas -->
+        <!-- Barra lateral de mora -->
         <div 
           v-if="prestamo.tieneCuotasVencidas"
-          class="absolute left-0 top-0 bottom-0 w-2 bg-gradient-to-b from-red-500 via-orange-500 to-red-500 animate-pulse"
+          class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-500 via-orange-500 to-red-500 mora-bar"
         ></div>
         
         <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-4">
-          <div class="flex items-center gap-4 sm:gap-4">
+          <div class="flex items-center gap-4">
             <div 
               :class="[
                 'w-16 h-16 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 relative',
                 prestamo.tieneCuotasVencidas 
-                  ? 'bg-gradient-to-br from-red-500 to-orange-600 shadow-red-500/50 animate-pulse' :
+                  ? 'bg-gradient-to-br from-red-500 to-orange-500 shadow-red-500/40' :
                 prestamo.estado === 'pagado' ? 'bg-gradient-to-br from-green-400 to-green-600 shadow-green-500/30' : 
                 prestamo.estado === 'activo' ? 'bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/30' : 
                 'bg-gradient-to-br from-gray-300 to-gray-500 shadow-gray-500/30'
               ]"
             >
               <BanknotesIcon class="w-8 h-8 sm:w-7 sm:h-7 text-white" />
-              <!-- Badge de alerta en el ícono -->
+              <!-- Badge de alerta pequeño -->
               <div 
                 v-if="prestamo.tieneCuotasVencidas"
-                class="absolute -top-1 -right-1 w-6 h-6 bg-red-600 border-2 border-white rounded-full flex items-center justify-center animate-bounce"
+                class="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 border-2 border-white rounded-full flex items-center justify-center mora-badge"
               >
-                <span class="text-white text-xs font-bold">!</span>
+                <span class="text-red-600 text-[10px] font-black">!</span>
               </div>
             </div>
             <div>
@@ -188,28 +188,24 @@
 
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 text-center lg:text-right">
             <div class="bg-white/50 rounded-xl p-4 sm:p-3 backdrop-blur-sm border border-gray-200/50">
-              <p class="text-xs sm:text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Monto</p>
+              <p class="text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Monto</p>
               <p class="font-bold text-gray-800 text-base sm:text-sm lg:text-base">${{ formatMoney(prestamo.monto) }}</p>
             </div>
             <div class="bg-white/50 rounded-xl p-4 sm:p-3 backdrop-blur-sm border border-blue-200/50">
-              <p class="text-xs sm:text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Pagado</p>
-              <p class="font-bold text-blue-600 text-base sm:text-sm lg:text-base">
-                ${{ formatMoney(prestamo.monto - prestamo.saldo_actual) }}
-              </p>
+              <p class="text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Pagado</p>
+              <p class="font-bold text-blue-600 text-base sm:text-sm lg:text-base">${{ formatMoney(prestamo.monto - prestamo.saldo_actual) }}</p>
             </div>
             <div class="bg-white/50 rounded-xl p-4 sm:p-3 backdrop-blur-sm border border-accent-200/50">
-              <p class="text-xs sm:text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Interés</p>
+              <p class="text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Interés</p>
               <p class="font-bold text-accent-600 text-base sm:text-sm lg:text-base">{{ prestamo.interes }}%</p>
             </div>
             <div class="bg-white/50 rounded-xl p-4 sm:p-3 backdrop-blur-sm border border-gray-200/50">
-              <p class="text-xs sm:text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Saldo</p>
-              <p class="font-bold text-base sm:text-sm lg:text-base" :class="prestamo.saldo_actual > 0 ? 'text-red-600' : 'text-green-600'">
-                ${{ formatMoney(prestamo.saldo_actual) }}
-              </p>
+              <p class="text-xs text-gray-500 font-medium mb-1.5 sm:mb-1">Saldo</p>
+              <p class="font-bold text-base sm:text-sm lg:text-base" :class="prestamo.saldo_actual > 0 ? 'text-red-600' : 'text-green-600'">${{ formatMoney(prestamo.saldo_actual) }}</p>
             </div>
           </div>
 
-          <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center gap-2 flex-wrap">
             <span 
               :class="[
                 'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm',
@@ -222,23 +218,32 @@
             >
               {{ prestamo.estado }}
             </span>
-            <!-- Indicador de cuotas vencidas - MÁS VISIBLE -->
-            <div 
-              v-if="prestamo.tieneCuotasVencidas"
-              class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white border-2 border-red-600 shadow-lg shadow-red-500/50 animate-pulse"
-              title="Este préstamo tiene cuotas vencidas"
-            >
-              <svg class="w-5 h-5 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-              </svg>
-              <span class="text-sm font-black uppercase tracking-wide">
-                {{ prestamo.cuotasVencidas }} {{ prestamo.cuotasVencidas === 1 ? 'cuota vencida' : 'cuotas vencidas' }}
+            
+            <!-- Badges de mora compactos -->
+            <template v-if="prestamo.tieneCuotasVencidas">
+              <span class="mora-info-badge bg-red-500 text-white">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                </svg>
+                {{ prestamo.diasMora }}d
               </span>
-            </div>
+              <span class="mora-info-badge bg-orange-500 text-white">
+                {{ prestamo.cuotasVencidas }} {{ prestamo.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
+              </span>
+              <span class="mora-info-badge bg-yellow-500 text-yellow-900 font-bold">
+                ${{ formatMoney(prestamo.valorCuotasEnDeuda) }}
+              </span>
+            </template>
+            
             <button 
               v-if="prestamo.estado === 'activo'"
               @click.stop="abrirModalAbono(prestamo)"
-              class="btn-secondary py-2 px-4 text-sm shadow-md hover:shadow-lg transition-all"
+              :class="[
+                'py-2 px-4 text-sm shadow-md hover:shadow-lg transition-all rounded-lg font-semibold',
+                prestamo.tieneCuotasVencidas
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'btn-secondary'
+              ]"
             >
               Abonar
             </button>
@@ -598,13 +603,13 @@
             </div>
           </div>
 
-          <!-- Fecha de inicio del préstamo -->
+          <!-- Fecha de pago (primera cuota) -->
           <div>
             <label class="label mb-2 flex items-center gap-2">
               <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span>Fecha de inicio del préstamo *</span>
+              <span>Fecha de pago *</span>
             </label>
             <div class="relative">
               <DateInput
@@ -618,7 +623,7 @@
               <svg class="w-4 h-4 text-natillera-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
-              <span>Esta fecha será el punto de partida para calcular las fechas de las cuotas del plan de pagos</span>
+              <span>Esta será la fecha de la primera cuota. Las siguientes cuotas se generarán cada mes</span>
             </p>
           </div>
 
@@ -2249,7 +2254,7 @@ const formPrestamo = reactive({
   interes: 2,
   numero_cuotas: 1,
   tipo_interes: 'simple', // 'simple' o 'compuesto'
-  fecha_pago: new Date().toISOString().split('T')[0] // Fecha de inicio del préstamo
+  fecha_pago: new Date().toISOString().split('T')[0] // Fecha de pago de la primera cuota
 })
 
 const montoFormateado = ref('100.000')
@@ -2639,25 +2644,47 @@ async function fetchPrestamos() {
       const socioNatillera = sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
       const planPagosPrestamo = planPagosMap[prestamo.id] || []
       
-      // Verificar si tiene cuotas vencidas
-      const tieneCuotasVencidas = planPagosPrestamo.some(cuota => {
+      // Filtrar cuotas vencidas (no pagadas y con fecha anterior a hoy)
+      const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
         const fechaVencimiento = new Date(cuota.fecha_proyectada)
         fechaVencimiento.setHours(0, 0, 0, 0)
         return !cuota.pagada && fechaVencimiento < fechaActual
       })
 
+      // Verificar si tiene cuotas vencidas
+      const tieneCuotasVencidas = cuotasVencidasArray.length > 0
+
       // Contar cuántas cuotas vencidas tiene
-      const cuotasVencidas = planPagosPrestamo.filter(cuota => {
-        const fechaVencimiento = new Date(cuota.fecha_proyectada)
-        fechaVencimiento.setHours(0, 0, 0, 0)
-        return !cuota.pagada && fechaVencimiento < fechaActual
-      }).length
+      const cuotasVencidas = cuotasVencidasArray.length
+
+      // Calcular días de mora (desde la cuota más antigua vencida)
+      let diasMora = 0
+      let valorCuotasEnDeuda = 0
+      
+      if (cuotasVencidasArray.length > 0) {
+        // Ordenar por fecha para obtener la más antigua
+        const cuotaMasAntigua = cuotasVencidasArray.sort((a, b) => 
+          new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada)
+        )[0]
+        
+        const fechaVencimientoMasAntigua = new Date(cuotaMasAntigua.fecha_proyectada)
+        fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
+        
+        // Calcular días de diferencia
+        const diffTime = fechaActual - fechaVencimientoMasAntigua
+        diasMora = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        
+        // Sumar valor de todas las cuotas vencidas
+        valorCuotasEnDeuda = cuotasVencidasArray.reduce((sum, cuota) => sum + (cuota.valor_cuota || 0), 0)
+      }
 
       return {
         ...prestamo,
         socio_natillera: socioNatillera,
         tieneCuotasVencidas,
-        cuotasVencidas
+        cuotasVencidas,
+        diasMora,
+        valorCuotasEnDeuda
       }
     })
   } catch (e) {
@@ -3629,9 +3656,9 @@ function generarPlanPagos(prestamo) {
   let saldoRestante = monto
   
   for (let i = 1; i <= numeroCuotas; i++) {
-    // Calcular fecha proyectada (meses desde la fecha de inicio)
+    // Calcular fecha proyectada: cuota 1 = fecha ingresada, siguientes +1 mes cada una
     const fechaProyectada = new Date(fechaInicio)
-    fechaProyectada.setMonth(fechaProyectada.getMonth() + i)
+    fechaProyectada.setMonth(fechaProyectada.getMonth() + (i - 1))
     
     // Calcular capital e interés de esta cuota
     let capitalCuota = 0
@@ -5007,4 +5034,84 @@ async function compartirPrestamoWhatsApp() {
   }
 }
 </script>
+
+<style scoped>
+/* Tarjeta en mora - efecto sutil de brillo */
+.mora-card {
+  animation: mora-subtle-glow 3s ease-in-out infinite;
+}
+
+@keyframes mora-subtle-glow {
+  0%, 100% {
+    box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.2),
+                0 8px 10px -6px rgba(239, 68, 68, 0.1);
+  }
+  50% {
+    box-shadow: 0 15px 35px -5px rgba(239, 68, 68, 0.35),
+                0 10px 15px -6px rgba(239, 68, 68, 0.2);
+  }
+}
+
+/* Barra lateral animada */
+.mora-bar {
+  animation: bar-glow 2s ease-in-out infinite;
+}
+
+@keyframes bar-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 2px 0 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 3px 0 12px rgba(249, 115, 22, 0.6);
+  }
+}
+
+/* Badge pequeño de alerta */
+.mora-badge {
+  animation: badge-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Badges de información de mora */
+.mora-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: badge-appear 0.3s ease-out;
+}
+
+@keyframes badge-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive: en móvil los badges se ven más pequeños */
+@media (max-width: 640px) {
+  .mora-info-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+  }
+}
+</style>
 

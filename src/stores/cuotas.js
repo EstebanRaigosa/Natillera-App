@@ -22,7 +22,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
     })
   }
 
-  async function fetchCuotasNatillera(natilleraId) {
+  // Opción skipMoraUpdate para cargas rápidas cuando solo necesitamos los datos
+  // sin recalcular mora/multas (útil después de generar cuotas nuevas)
+  async function fetchCuotasNatillera(natilleraId, opciones = {}) {
+    const { skipMoraUpdate = false } = opciones
+    
     try {
       loading.value = true
       error.value = null
@@ -62,11 +66,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       cuotas.value = cuotasConSocio
       
-      // Actualizar automáticamente el estado de cuotas en mora y aplicar sanciones
-      await actualizarEstadoMoraAutomatico(cuotasConSocio, natilleraId)
-      
-      // Recalcular multas para cuotas que ya están en mora pero no tienen multa aplicada
-      await recalcularMultasCuotasMora(natilleraId)
+      // Solo actualizar mora/multas si no se salta (primera carga o cuando hay cambios)
+      if (!skipMoraUpdate) {
+        // Actualizar automáticamente el estado de cuotas en mora y aplicar sanciones
+        await actualizarEstadoMoraAutomatico(cuotasConSocio, natilleraId)
+        
+        // Recalcular multas para cuotas que ya están en mora pero no tienen multa aplicada
+        await recalcularMultasCuotasMora(natilleraId)
+      }
       
       return cuotasConSocio
     } catch (e) {
@@ -1316,7 +1323,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Obtener información de la natillera (días de gracia y período)
       const { data: natillera, error: natilleraError } = await supabase
         .from('natilleras')
-        .select('reglas_multas, mes_inicio, mes_fin, anio')
+        .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
         .eq('id', natilleraId)
         .single()
 
@@ -1332,24 +1339,29 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const mesAGenerar = mes || (fechaActual.getMonth() + 1) // 1-12
       const anioAGenerar = anio || fechaActual.getFullYear()
 
-      // Verificar que el mes esté dentro del período de la natillera
-      const anioNatillera = natillera.anio || anioAGenerar
+      // Usar anio_inicio como base, con fallback a anio
+      const anioInicioNatillera = natillera.anio_inicio || natillera.anio || anioAGenerar
       const mesInicio = natillera.mes_inicio || 1
       const mesFin = natillera.mes_fin || 11
 
-      // Verificar si el mes está en el rango
+      // Verificar si el mes está en el rango - CORREGIDO para períodos que cruzan años
       let mesEnRango = false
-      if (anioAGenerar === anioNatillera) {
-        if (mesInicio <= mesFin) {
-          // Rango normal (ej: Enero a Noviembre)
-          mesEnRango = mesAGenerar >= mesInicio && mesAGenerar <= mesFin
-        } else {
-          // Rango que cruza año (ej: Noviembre a Enero)
-          mesEnRango = mesAGenerar >= mesInicio || mesAGenerar <= mesFin
-        }
+      if (mesInicio <= mesFin) {
+        // Rango normal (ej: Enero a Noviembre) - todos los meses están en el mismo año
+        mesEnRango = anioAGenerar === anioInicioNatillera && 
+                     mesAGenerar >= mesInicio && 
+                     mesAGenerar <= mesFin
+      } else {
+        // Rango que cruza año (ej: Diciembre a Noviembre)
+        // Primera parte del período: mes_inicio a diciembre del año de inicio
+        const enPrimeraParte = anioAGenerar === anioInicioNatillera && mesAGenerar >= mesInicio
+        // Segunda parte del período: enero a mes_fin del año siguiente
+        const enSegundaParte = anioAGenerar === (anioInicioNatillera + 1) && mesAGenerar <= mesFin
+        mesEnRango = enPrimeraParte || enSegundaParte
       }
 
       if (!mesEnRango) {
+        console.log(`⚠️ Mes ${mesAGenerar}/${anioAGenerar} fuera del rango [${mesInicio}/${anioInicioNatillera} - ${mesFin}/${mesInicio > mesFin ? anioInicioNatillera + 1 : anioInicioNatillera}]`)
         return { success: false, error: 'El mes seleccionado no está en el período de la natillera' }
       }
 
@@ -1481,7 +1493,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
     
     // Verificar si ya hay una operación en curso para evitar condiciones de carrera
     if (generandoCuotasPorNatillera.get(claveOperacion)) {
-      console.log(`⏭️ Ya hay una generación de cuotas en curso para ${claveOperacion}`)
       return { success: true, message: 'Ya hay una generación en curso', cuotasGeneradas: 0, enCurso: true }
     }
     
@@ -1489,113 +1500,134 @@ export const useCuotasStore = defineStore('cuotas', () => {
     generandoCuotasPorNatillera.set(claveOperacion, true)
     
     try {
-      loading.value = true
+      const tiempoInicio = performance.now()
       error.value = null
 
-      // Obtener información de la natillera (días de gracia y período)
-      const { data: natillera, error: natilleraError } = await supabase
-        .from('natilleras')
-        .select('reglas_multas, mes_inicio, mes_fin, anio')
-        .eq('id', natilleraId)
-        .single()
+      // Si no se especifica mes/año, usar el mes actual
+      const fechaActual = new Date()
+      const mesAGenerar = mes || (fechaActual.getMonth() + 1)
+      const anioAGenerar = anio || fechaActual.getFullYear()
 
-      if (natilleraError) throw natilleraError
+      // SUPER OPTIMIZACIÓN: Una sola consulta que trae socios Y natillera EN PARALELO
+      const [sociosResult, natilleraResult] = await Promise.all([
+        supabase
+          .from('socios_natillera')
+          .select('id, periodicidad, valor_cuota_individual')
+          .eq('natillera_id', natilleraId)
+          .eq('estado', 'activo'),
+        supabase
+          .from('natilleras')
+          .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
+          .eq('id', natilleraId)
+          .single()
+      ])
+
+      if (sociosResult.error) throw sociosResult.error
+      if (natilleraResult.error) throw natilleraResult.error
+      
+      const sociosRapido = sociosResult.data
+      const natillera = natilleraResult.data
+
+      if (!sociosRapido || sociosRapido.length === 0) {
+        return { success: false, error: 'No hay socios activos' }
+      }
       if (!natillera) return { success: false, error: 'Natillera no encontrada' }
+
+      const socioIdsRapido = sociosRapido.map(s => s.id)
+      
+      // Verificación rápida de cuotas existentes
+      const { data: cuotasRapido, error: cuotasRapidoError } = await supabase
+        .from('cuotas')
+        .select('socio_natillera_id, quincena')
+        .in('socio_natillera_id', socioIdsRapido)
+        .eq('mes', mesAGenerar)
+        .eq('anio', anioAGenerar)
+
+      if (cuotasRapidoError) throw cuotasRapidoError
+
+      // Verificar si todos los socios ya tienen sus cuotas completas
+      let todosTienenCuotas = true
+      for (const socio of sociosRapido) {
+        const cuotasDelSocio = (cuotasRapido || []).filter(c => c.socio_natillera_id === socio.id)
+        const periodicidad = socio.periodicidad || 'mensual'
+        
+        if (periodicidad === 'quincenal') {
+          const tieneQ1 = cuotasDelSocio.some(c => c.quincena === 1)
+          const tieneQ2 = cuotasDelSocio.some(c => c.quincena === 2)
+          if (!tieneQ1 || !tieneQ2) {
+            todosTienenCuotas = false
+            break
+          }
+        } else {
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
+          if (!tieneMensual) {
+            todosTienenCuotas = false
+            break
+          }
+        }
+      }
+
+      // Si todos tienen cuotas, retornar inmediatamente
+      if (todosTienenCuotas) {
+        const tiempoFin = performance.now()
+        console.log(`⚡ Verificación rápida: todas las cuotas existen (${(tiempoFin - tiempoInicio).toFixed(0)}ms)`)
+        return { success: true, message: 'Todos los socios ya tienen cuota generada para este mes', cuotasGeneradas: 0 }
+      }
 
       // Obtener días de gracia
       const reglasMultas = natillera.reglas_multas || {}
       const diasGracia = reglasMultas.dias_gracia || 3
 
-      // Si no se especifica mes/año, usar el mes actual
-      const fechaActual = new Date()
-      const mesAGenerar = mes || (fechaActual.getMonth() + 1) // 1-12
-      const anioAGenerar = anio || fechaActual.getFullYear()
-
-      // Verificar que el mes esté dentro del período de la natillera
-      const anioNatillera = natillera.anio || anioAGenerar
+      // Usar anio_inicio como base, con fallback a anio
+      const anioInicioNatillera = natillera.anio_inicio || natillera.anio || anioAGenerar
       const mesInicio = natillera.mes_inicio || 1
       const mesFin = natillera.mes_fin || 11
 
-      // Verificar si el mes está en el rango
+      // Verificar si el mes está en el rango - CORREGIDO para períodos que cruzan años
       let mesEnRango = false
-      if (anioAGenerar === anioNatillera) {
-        if (mesInicio <= mesFin) {
-          // Rango normal (ej: Enero a Noviembre)
-          mesEnRango = mesAGenerar >= mesInicio && mesAGenerar <= mesFin
-        } else {
-          // Rango que cruza año (ej: Noviembre a Enero)
-          mesEnRango = mesAGenerar >= mesInicio || mesAGenerar <= mesFin
-        }
+      if (mesInicio <= mesFin) {
+        // Rango normal (ej: Enero a Noviembre) - todos los meses están en el mismo año
+        mesEnRango = anioAGenerar === anioInicioNatillera && 
+                     mesAGenerar >= mesInicio && 
+                     mesAGenerar <= mesFin
+      } else {
+        // Rango que cruza año (ej: Diciembre a Noviembre)
+        // Primera parte del período: mes_inicio a diciembre del año de inicio
+        const enPrimeraParte = anioAGenerar === anioInicioNatillera && mesAGenerar >= mesInicio
+        // Segunda parte del período: enero a mes_fin del año siguiente
+        const enSegundaParte = anioAGenerar === (anioInicioNatillera + 1) && mesAGenerar <= mesFin
+        mesEnRango = enPrimeraParte || enSegundaParte
       }
 
       if (!mesEnRango) {
+        console.log(`⚠️ Mes ${mesAGenerar}/${anioAGenerar} fuera del rango [${mesInicio}/${anioInicioNatillera} - ${mesFin}/${mesInicio > mesFin ? anioInicioNatillera + 1 : anioInicioNatillera}]`)
         return { success: false, error: 'El mes seleccionado no está en el período de la natillera' }
       }
 
-      // Obtener todos los socios activos
-      const { data: sociosNatillera, error: sociosError } = await supabase
-        .from('socios_natillera')
-        .select('id, periodicidad')
-        .eq('natillera_id', natilleraId)
-        .eq('estado', 'activo')
+      // Usar los datos ya cargados (no volver a consultar)
+      const sociosNatillera = sociosRapido
+      const socioNatilleraIds = socioIdsRapido
+      const cuotasExistentes = cuotasRapido
 
-      if (sociosError) throw sociosError
-      if (!sociosNatillera || sociosNatillera.length === 0) {
-        return { success: false, error: 'No hay socios activos' }
-      }
-
-      const socioNatilleraIds = sociosNatillera.map(s => s.id)
-
-      // Obtener cuotas existentes para este mes
-      const { data: cuotasExistentes, error: cuotasError } = await supabase
-        .from('cuotas')
-        .select('socio_natillera_id, quincena')
-        .in('socio_natillera_id', socioNatilleraIds)
-        .eq('mes', mesAGenerar)
-        .eq('anio', anioAGenerar)
-
-      if (cuotasError) throw cuotasError
-
-      // Crear un mapa de cuotas existentes por socio y quincena
-      const cuotasExistentesMap = new Map()
-      ;(cuotasExistentes || []).forEach(cuota => {
-        const key = `${cuota.socio_natillera_id}-${cuota.quincena || 'mensual'}`
-        cuotasExistentesMap.set(key, true)
-      })
-
-      // Identificar socios que no tienen cuota generada
-      // Verificación más estricta: contar cuotas por socio y verificar según periodicidad
+      // Identificar socios que no tienen cuota generada (ya sabemos que hay algunos)
       const sociosSinCuota = []
       sociosNatillera.forEach(socio => {
         const periodicidad = socio.periodicidad || 'mensual'
-        
-        // Contar cuotas existentes para este socio
         const cuotasDelSocio = (cuotasExistentes || []).filter(c => c.socio_natillera_id === socio.id)
         
         if (periodicidad === 'quincenal') {
-          // Para quincenal: debe tener exactamente 2 cuotas (quincena 1 y quincena 2)
           const tieneQ1 = cuotasDelSocio.some(c => c.quincena === 1)
           const tieneQ2 = cuotasDelSocio.some(c => c.quincena === 2)
-          
           if (!tieneQ1 || !tieneQ2) {
             sociosSinCuota.push(socio.id)
-            console.log(`📋 Socio ${socio.id} (quincenal) sin cuota completa: Q1=${tieneQ1}, Q2=${tieneQ2}`)
           }
         } else {
-          // Para mensual: debe tener 1 cuota sin quincena (null)
           const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
-          
           if (!tieneMensual) {
             sociosSinCuota.push(socio.id)
-            console.log(`📋 Socio ${socio.id} (mensual) sin cuota`)
           }
         }
       })
-
-      // Si todos los socios ya tienen cuota, retornar
-      if (sociosSinCuota.length === 0) {
-        return { success: true, message: 'Todos los socios ya tienen cuota generada para este mes', cuotasGeneradas: 0 }
-      }
 
       // Calcular fechas límite y fechas de vencimiento
       const ultimoDia = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)

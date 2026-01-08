@@ -1367,29 +1367,89 @@
         <!-- Contenido -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           <!-- Resumen rápido -->
-          <div :class="['grid gap-3 sm:gap-4', totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'grid-cols-2 sm:grid-cols-5' : totalSancionesMora > 0 || totalPrestamosVencidos > 0 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3']">
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1" :class="sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'">{{ totalCuotasMora }}</p>
-              <p class="text-xs sm:text-sm font-semibold" :class="sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'">Cuotas en mora</p>
+          <div :class="[
+            'grid gap-3 sm:gap-4',
+            totalSancionesMora > 0 && totalPrestamosVencidos > 0 
+              ? 'grid-cols-2 sm:grid-cols-3' // 5 tarjetas en 2 filas: 3-2
+              : totalSancionesMora > 0 || totalPrestamosVencidos > 0 
+              ? 'grid-cols-2 sm:grid-cols-4' 
+              : 'grid-cols-2 sm:grid-cols-3'
+          ]">
+            <div :class="[
+              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5',
+              sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'
+            ]">
+              <p :class="[
+                'font-bold mb-1',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl',
+                sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600'
+              ]">{{ totalCuotasMora }}</p>
+              <p :class="[
+                'font-semibold',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm',
+                sociosEnMora.length >= 3 ? 'text-red-700' : 'text-amber-700'
+              ]">Cuotas en mora</p>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-amber-300/60 hover:border-amber-400' : 'border-orange-300/60 hover:border-orange-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-amber-600">{{ totalCuotasPendientes }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-amber-700">Cuotas pendientes</p>
+            <div :class="[
+              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5',
+              sociosEnMora.length >= 3 ? 'border-amber-300/60 hover:border-amber-400' : 'border-orange-300/60 hover:border-orange-400'
+            ]">
+              <p :class="[
+                'font-bold mb-1 text-amber-600',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
+              ]">{{ totalCuotasPendientes }}</p>
+              <p :class="[
+                'font-semibold text-amber-700',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
+              ]">Cuotas pendientes</p>
             </div>
             <!-- Préstamos vencidos (solo si hay) -->
-            <div v-if="totalPrestamosVencidos > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-purple-600">{{ totalPrestamosVencidos }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-purple-700">Préstamos vencidos</p>
-              <p class="text-[10px] text-purple-600 mt-0.5">{{ totalCuotasPrestamosVencidos }} {{ totalCuotasPrestamosVencidos === 1 ? 'cuota' : 'cuotas' }}</p>
+            <div v-if="totalPrestamosVencidos > 0" :class="[
+              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
+            ]">
+              <p :class="[
+                'font-bold mb-1 text-purple-600',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
+              ]">{{ totalPrestamosVencidos }}</p>
+              <p :class="[
+                'font-semibold text-purple-700',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
+              ]">Préstamos vencidos</p>
+              <p :class="[
+                'text-purple-600 mt-0.5',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[8px] sm:text-[9px]' : 'text-[10px]'
+              ]">{{ totalCuotasPrestamosVencidos }} {{ totalCuotasPrestamosVencidos === 1 ? 'cuota' : 'cuotas' }}</p>
             </div>
             <!-- Sanciones (solo si hay) -->
-            <div v-if="totalSancionesMora > 0" class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-rose-600">${{ formatMoneyShort(totalSancionesMora) }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-rose-700">Total sanciones</p>
+            <div v-if="totalSancionesMora > 0" :class="[
+              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
+            ]">
+              <p :class="[
+                'font-bold mb-1 text-rose-600',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
+              ]">${{ formatMoneyShort(totalSancionesMora) }}</p>
+              <p :class="[
+                'font-semibold text-rose-700',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
+              ]">Total sanciones</p>
             </div>
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-5 text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300" :class="sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'">
-              <p class="text-3xl sm:text-4xl font-bold mb-1 text-orange-600">${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}</p>
-              <p class="text-xs sm:text-sm font-semibold text-orange-700">Total a cobrar</p>
+            <div :class="[
+              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5 sm:col-span-2' : 'p-4 sm:p-5',
+              sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'
+            ]">
+              <p :class="[
+                'font-bold mb-1 text-orange-600',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-xl sm:text-2xl' : 'text-3xl sm:text-4xl'
+              ]">${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}</p>
+              <p :class="[
+                'font-semibold text-orange-700',
+                totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'text-[10px] sm:text-xs' : 'text-xs sm:text-sm'
+              ]">Total a cobrar</p>
             </div>
           </div>
 
@@ -1469,22 +1529,43 @@
                   
                   <!-- Datos financieros en móvil: debajo del nombre, en una sola línea compacta -->
                   <div v-if="socioMora.cuotasMora > 0" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
-                    <div class="flex items-center justify-between gap-3">
-                      <!-- Total a cobrar - destacado -->
-                      <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
-                        <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar</p>
-                        <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                    <div class="space-y-2">
+                      <!-- Cuotas en mora -->
+                      <div class="flex items-center justify-between gap-3">
+                        <!-- Total a cobrar - destacado -->
+                        <div class="flex-1 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg px-2.5 py-1.5 border border-red-200/60">
+                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Total a cobrar (cuotas)</p>
+                          <p class="text-base font-bold text-red-600 leading-tight">${{ formatMoney(socioMora.totalConSanciones || socioMora.totalDeuda) }}</p>
+                        </div>
+                        
+                        <!-- Valor cuota y Sanción - lado derecho compacto -->
+                        <div class="flex flex-col gap-1.5 text-right">
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] text-gray-500">Cuota:</span>
+                            <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
+                          </div>
+                          <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] text-gray-500">Sanción:</span>
+                            <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
+                          </div>
+                        </div>
                       </div>
                       
-                      <!-- Valor cuota y Sanción - lado derecho compacto -->
-                      <div class="flex flex-col gap-1.5 text-right">
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] text-gray-500">Cuota:</span>
-                          <span class="text-[11px] font-semibold text-gray-700">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</span>
+                      <!-- Préstamo en mora (si existe) -->
+                      <div v-if="socioMora.tienePrestamosVencidos" class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
+                        <div class="flex-1">
+                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo en mora</p>
+                          <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
                         </div>
-                        <div class="flex items-center gap-1.5">
-                          <span class="text-[9px] text-gray-500">Sanción:</span>
-                          <span class="text-[11px] font-semibold text-rose-600">${{ formatMoney(socioMora.totalSanciones || 0) }}</span>
+                        <div class="flex items-center gap-2 text-right">
+                          <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-500">Cuotas</span>
+                            <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                          </div>
+                          <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-500">Días</span>
+                            <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1514,6 +1595,43 @@
                   </div>
                   
                   <!-- Si solo tiene pendientes (sin mora) en móvil -->
+                  <div v-else-if="!socioMora.tienePrestamosVencidos" class="sm:hidden w-full -mt-2">
+                    <div class="text-left">
+                      <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                      <p class="text-[10px] text-gray-500">adeudado</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Si tiene pendientes y también préstamos vencidos en móvil -->
+                  <div v-else-if="socioMora.tienePrestamosVencidos" class="sm:hidden w-full -mt-2 pt-2 border-t border-gray-200/60">
+                    <div class="space-y-2">
+                      <!-- Pendientes -->
+                      <div class="text-left">
+                        <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                        <p class="text-[10px] text-gray-500">adeudado</p>
+                      </div>
+                      
+                      <!-- Préstamo en mora -->
+                      <div class="flex items-center justify-between gap-2 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg px-2.5 py-1.5 border border-purple-200/60">
+                        <div class="flex-1">
+                          <p class="text-[9px] text-gray-600 font-medium mb-0.5">Préstamo en mora</p>
+                          <p class="text-base font-bold text-purple-600 leading-tight">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                        </div>
+                        <div class="flex items-center gap-2 text-right">
+                          <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-500">Cuotas</span>
+                            <span class="text-xs font-semibold text-gray-700">{{ socioMora.cuotasVencidasPrestamo }}</span>
+                          </div>
+                          <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-500">Días</span>
+                            <span class="text-xs font-semibold text-red-600">{{ socioMora.diasMoraPrestamo || 0 }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Fallback -->
                   <div v-else class="sm:hidden w-full -mt-2">
                     <div class="text-left">
                       <p class="text-xs font-bold text-amber-600">${{ formatMoney(socioMora.totalDeuda) }}</p>
@@ -1522,20 +1640,20 @@
                   </div>
                 
                 <!-- Botón en móvil: abajo -->
-                <div class="sm:hidden">
+                <div class="sm:hidden flex flex-col gap-2">
                   <button
-                    v-if="socioMora.tienePrestamosVencidos && !socioMora.cuotasMora && !socioMora.cuotasPendientes"
-                    @click.stop="verPrestamoSocio(socioMora)"
-                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg"
-                  >
-                    Ver préstamo
-                  </button>
-                  <button
-                    v-else
+                    v-if="socioMora.cuotasMora > 0 || socioMora.cuotasPendientes > 0"
                     @click.stop="verCuotasSocio(socioMora)"
                     class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg"
                   >
                     Ver cuotas
+                  </button>
+                  <button
+                    v-if="socioMora.tienePrestamosVencidos"
+                    @click.stop="verPrestamoSocio(socioMora)"
+                    class="w-full px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg"
+                  >
+                    Ir al préstamo
                   </button>
                 </div>
                 
@@ -1550,8 +1668,17 @@
                       <div class="mb-1">
                         <p class="text-[10px] text-gray-500">Valor cuota</p>
                       </div>
-                      <div>
+                      <div v-if="!socioMora.tienePrestamosVencidos">
                         <p class="text-[10px] text-gray-500">Sanción</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
+                        <p class="text-[10px] text-gray-500">Sanción</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
+                        <p class="text-[10px] text-gray-500">Préstamo en mora</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos">
+                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
                       </div>
                     </div>
                     
@@ -1563,19 +1690,37 @@
                       <div class="mb-1">
                         <p class="font-semibold text-gray-700 text-xs sm:text-sm">${{ formatMoney(socioMora.valorCuotaPromedio || 0) }}</p>
                       </div>
-                      <div>
+                      <div v-if="!socioMora.tienePrestamosVencidos">
                         <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
+                        <p class="font-semibold text-rose-600 text-xs sm:text-sm">${{ formatMoney(socioMora.totalSanciones || 0) }}</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos" class="mb-1">
+                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                      </div>
+                      <div v-if="socioMora.tienePrestamosVencidos">
+                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <!-- Botón Ver cuotas -->
-                  <button
-                    @click.stop="verCuotasSocio(socioMora)"
-                    class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
-                  >
-                    Ver cuotas
-                  </button>
+                  <!-- Botones -->
+                  <div class="flex flex-col gap-2">
+                    <button
+                      @click.stop="verCuotasSocio(socioMora)"
+                      class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                    >
+                      Ver cuotas
+                    </button>
+                    <button
+                      v-if="socioMora.tienePrestamosVencidos"
+                      @click.stop="verPrestamoSocio(socioMora)"
+                      class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                    >
+                      Ir al préstamo
+                    </button>
+                  </div>
                 </div>
                 
                 <!-- Layout desktop: solo préstamos vencidos -->
@@ -1608,12 +1753,12 @@
                     </div>
                   </div>
                   
-                  <!-- Botón Ver préstamo -->
+                  <!-- Botón Ir al préstamo -->
                   <button
                     @click.stop="verPrestamoSocio(socioMora)"
                     class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
                   >
-                    Ver préstamo
+                    Ir al préstamo
                   </button>
                 </div>
                 
@@ -1631,6 +1776,53 @@
                   </button>
                 </div>
                 
+                <!-- Si tiene pendientes y también préstamos vencidos -->
+                <div v-else-if="socioMora.cuotasPendientes > 0 && socioMora.tienePrestamosVencidos" class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-start gap-3">
+                  <div class="flex items-start gap-3 sm:gap-4">
+                    <!-- Columna de etiquetas -->
+                    <div class="text-right space-y-1">
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Pendiente</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="text-[10px] text-gray-500">Préstamo en mora</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-gray-500">Cuotas vencidas</p>
+                      </div>
+                    </div>
+                    
+                    <!-- Columna de valores -->
+                    <div class="text-right space-y-1 min-w-[100px]">
+                      <div class="mb-1">
+                        <p class="font-bold text-amber-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeuda) }}</p>
+                      </div>
+                      <div class="mb-1">
+                        <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(socioMora.totalDeudaPrestamo || 0) }}</p>
+                      </div>
+                      <div>
+                        <p class="font-semibold text-gray-700 text-xs sm:text-sm">{{ socioMora.cuotasVencidasPrestamo || 0 }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Botones -->
+                  <div class="flex flex-col gap-2">
+                    <button
+                      @click.stop="verCuotasSocio(socioMora)"
+                      class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                    >
+                      Ver cuotas
+                    </button>
+                    <button
+                      @click.stop="verPrestamoSocio(socioMora)"
+                      class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
+                    >
+                      Ir al préstamo
+                    </button>
+                  </div>
+                </div>
+                
                 <!-- Si solo tiene préstamos vencidos (sin cuotas) en desktop -->
                 <div v-else class="hidden sm:flex flex-shrink-0 flex-col sm:flex-row items-end sm:items-center gap-2">
                   <div class="text-right">
@@ -1641,7 +1833,7 @@
                     @click.stop="verPrestamoSocio(socioMora)"
                     class="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl transition-all shadow-md hover:shadow-lg whitespace-nowrap"
                   >
-                    Ver préstamo
+                    Ir al préstamo
                   </button>
                 </div>
                 </div>

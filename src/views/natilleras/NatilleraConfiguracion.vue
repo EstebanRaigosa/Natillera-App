@@ -548,35 +548,93 @@
           <div v-if="seccionActiva === 'periodo'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-200/50 ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
             <div class="relative p-5 sm:p-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label class="label font-semibold text-gray-700">Mes de Inicio *</label>
-                  <select v-model.number="configPeriodo.mes_inicio" class="input-field">
-                    <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="label font-semibold text-gray-700">Mes de Fin *</label>
-                  <select v-model.number="configPeriodo.mes_fin" class="input-field">
-                    <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="label font-semibold text-gray-700">Año *</label>
-                  <input v-model.number="configPeriodo.anio" type="number" class="input-field" :min="new Date().getFullYear()" />
+        <!-- Información sobre el período -->
+        <div class="mb-4 p-4 bg-blue-50/80 border border-blue-200/50 rounded-xl">
+          <p class="text-sm text-blue-700 flex items-start gap-2">
+            <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Puedes configurar un período que cruce de un año a otro. Por ejemplo: <strong>Diciembre 2025</strong> a <strong>Noviembre 2026</strong>.</span>
+          </p>
+        </div>
+
+        <!-- Mes y Año de Inicio -->
+        <div class="mb-4">
+          <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            Inicio del Período
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label font-semibold text-gray-700">Mes de Inicio *</label>
+              <select v-model.number="configPeriodo.mes_inicio" class="input-field">
+                <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label font-semibold text-gray-700">Año de Inicio *</label>
+              <select v-model.number="configPeriodo.anio_inicio" class="input-field">
+                <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+              </select>
+            </div>
           </div>
         </div>
 
-              <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <p class="text-sm text-gray-700">
-                  📅 <strong>{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }}</strong> a 
-                  <strong>{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }}</strong> de 
-                  <strong>{{ configPeriodo.anio }}</strong>
-                  <span class="text-xs text-gray-500 ml-2">
-                    ({{ configPeriodo.mes_fin >= configPeriodo.mes_inicio ? configPeriodo.mes_fin - configPeriodo.mes_inicio + 1 : 12 - configPeriodo.mes_inicio + configPeriodo.mes_fin + 1 }} meses)
-                  </span>
+        <!-- Mes y Año de Fin -->
+        <div class="mb-4">
+          <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            Fin del Período
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="label font-semibold text-gray-700">Mes de Fin *</label>
+              <select v-model.number="configPeriodo.mes_fin" class="input-field">
+                <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="label font-semibold text-gray-700">Año de Fin *</label>
+              <select v-model.number="configPeriodo.anio" class="input-field">
+                <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen del período -->
+        <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <p class="text-sm text-gray-700 flex items-center gap-2">
+            <span class="text-xl">📅</span>
+            <span>
+              <strong class="text-blue-800">{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }} {{ configPeriodo.anio_inicio }}</strong>
+              <span class="text-gray-500 mx-2">→</span>
+              <strong class="text-indigo-800">{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }} {{ configPeriodo.anio }}</strong>
+              <span class="text-xs text-gray-500 ml-2 bg-white/60 px-2 py-0.5 rounded-full">
+                {{ cantidadMesesPeriodo }} {{ cantidadMesesPeriodo === 1 ? 'mes' : 'meses' }}
+              </span>
+            </span>
           </p>
         </div>
+
+        <!-- Nota sobre período que cruza años -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out"
+          enter-from-class="opacity-0 max-h-0 -translate-y-2"
+          enter-to-class="opacity-100 max-h-20 translate-y-0"
+          leave-active-class="transition-all duration-200 ease-in"
+          leave-from-class="opacity-100 max-h-20 translate-y-0"
+          leave-to-class="opacity-0 max-h-0 -translate-y-2"
+        >
+          <div v-if="configPeriodo.anio_inicio !== configPeriodo.anio" class="mt-3 p-3 bg-amber-50/80 border border-amber-200/50 rounded-xl">
+            <p class="text-xs text-amber-700 flex items-center gap-2">
+              <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <span>Este período cruza de un año a otro. Ideal para natilleras que inician en diciembre y terminan el año siguiente.</span>
+            </p>
+          </div>
+        </Transition>
 
               <div class="flex justify-end pt-4 border-t border-blue-200 mt-4">
           <button 
@@ -1094,11 +1152,40 @@ const configBasica = ref({
   fecha_inicio: new Date().toISOString().split('T')[0]
 })
 
+// Generar lista de años (desde 2 años atrás hasta 5 años adelante)
+const anioActual = new Date().getFullYear()
+const aniosDisponibles = computed(() => {
+  const anios = []
+  for (let i = anioActual - 2; i <= anioActual + 5; i++) {
+    anios.push(i)
+  }
+  return anios
+})
+
 // Configuración de período
+const anioActualDefault = new Date().getFullYear()
 const configPeriodo = ref({
   mes_inicio: 1,
+  anio_inicio: anioActualDefault,
   mes_fin: 11,
-  anio: new Date().getFullYear()
+  anio: anioActualDefault
+})
+
+// Calcular el número de meses del período
+const cantidadMesesPeriodo = computed(() => {
+  if (configPeriodo.value.anio_inicio === configPeriodo.value.anio) {
+    // Mismo año
+    return configPeriodo.value.mes_fin >= configPeriodo.value.mes_inicio 
+      ? configPeriodo.value.mes_fin - configPeriodo.value.mes_inicio + 1 
+      : 12 - configPeriodo.value.mes_inicio + configPeriodo.value.mes_fin + 1
+  } else if (configPeriodo.value.anio > configPeriodo.value.anio_inicio) {
+    // Período cruza años
+    const mesesPrimerAnio = 12 - configPeriodo.value.mes_inicio + 1
+    const mesesSegundoAnio = configPeriodo.value.mes_fin
+    const aniosIntermedios = (configPeriodo.value.anio - configPeriodo.value.anio_inicio - 1) * 12
+    return mesesPrimerAnio + mesesSegundoAnio + aniosIntermedios
+  }
+  return 0
 })
 
 // Configuración de días de gracia
@@ -1221,6 +1308,7 @@ async function guardarConfigPeriodo() {
   
   const result = await natillerasStore.actualizarNatillera(id.value, {
     mes_inicio: configPeriodo.value.mes_inicio,
+    anio_inicio: configPeriodo.value.anio_inicio,
     mes_fin: configPeriodo.value.mes_fin,
     anio: configPeriodo.value.anio
   })
@@ -1236,6 +1324,7 @@ async function guardarConfigPeriodo() {
     if (natillera.value) {
       configPeriodo.value = {
         mes_inicio: natillera.value.mes_inicio || 1,
+        anio_inicio: natillera.value.anio_inicio || natillera.value.anio || new Date().getFullYear(),
         mes_fin: natillera.value.mes_fin || 11,
         anio: natillera.value.anio || new Date().getFullYear()
       }
@@ -1491,8 +1580,12 @@ function actualizarValoresDesdeNatillera() {
       fecha_inicio: natillera.value.fecha_inicio || new Date().toISOString().split('T')[0]
     }
     
+    // Para anio_inicio: usar el valor guardado, o si no existe, usar el anio como fallback
+    const anioInicio = natillera.value.anio_inicio || natillera.value.anio || new Date().getFullYear()
+    
     configPeriodo.value = {
       mes_inicio: natillera.value.mes_inicio || 1,
+      anio_inicio: anioInicio,
       mes_fin: natillera.value.mes_fin || 11,
       anio: natillera.value.anio || new Date().getFullYear()
     }
