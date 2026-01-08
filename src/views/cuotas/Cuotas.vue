@@ -1270,7 +1270,7 @@
               </div>
               <div class="flex-1">
                 <p class="font-bold text-blue-800 mb-2">📝 Anotación de Ajuste</p>
-                <p class="text-sm text-blue-700 leading-relaxed">{{ getTextoAjuste(cuotaDetalle) }}</p>
+                <p class="text-sm text-blue-700 leading-relaxed whitespace-pre-line">{{ getTextoAjuste(cuotaDetalle) }}</p>
               </div>
             </div>
           </div>
@@ -1693,6 +1693,29 @@
         <div class="p-6 space-y-6">
           <!-- Card de información del socio -->
           <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+            <!-- Alerta de ajustes si existe -->
+            <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-4 p-3 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+              <button
+                @click.stop="abrirModalHistorialAjustes(cuotaSeleccionada)"
+                class="group w-full flex items-center justify-between gap-3 cursor-pointer"
+              >
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                  <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                    <InformationCircleIcon class="w-5 h-5 text-white" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                      Esta cuota tiene ajustes de valor
+                    </p>
+                    <p class="text-xs text-blue-600 mt-0.5">
+                      Haz clic para ver el historial completo de cambios
+                    </p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              </button>
+            </div>
+            
             <div class="flex items-center gap-3 mb-4">
               <img 
                 :src="getAvatarUrl(cuotaSeleccionada?.socio_natillera?.socio?.nombre || cuotaSeleccionada?.socio_natillera?.id, cuotaSeleccionada?.socio_natillera?.socio?.avatar_seed, cuotaSeleccionada?.socio_natillera?.socio?.avatar_style)" 
@@ -1703,8 +1726,8 @@
                 <p class="font-semibold text-gray-800 truncate">
                   {{ cuotaSeleccionada?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500">
-                  {{ cuotaSeleccionada?.descripcion || 'Cuota' }}
+                <p class="text-xs text-gray-500 mt-1">
+                  {{ cuotaSeleccionada?.descripcion && !tieneAjuste(cuotaSeleccionada) ? cuotaSeleccionada.descripcion : 'Cuota' }}
                 </p>
               </div>
             </div>
@@ -1787,6 +1810,156 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Historial de Ajustes -->
+    <div v-if="modalHistorialAjustes" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalHistorialAjustes = false"></div>
+      <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-6 text-white relative overflow-hidden flex-shrink-0">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                  <InformationCircleIcon class="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 class="text-2xl font-display font-bold">
+                    Historial de Ajustes
+                  </h3>
+                  <p class="text-white/90 text-sm">
+                    Cambios realizados en el valor de la cuota
+                  </p>
+                </div>
+              </div>
+              <button
+                @click="modalHistorialAjustes = false"
+                class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 transition-colors"
+              >
+                <XMarkIcon class="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <!-- Información del socio -->
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
+            <div class="flex items-center gap-3">
+              <img 
+                v-if="cuotaSeleccionada?.socio_natillera?.socio"
+                :src="getAvatarUrl(cuotaSeleccionada.socio_natillera.socio.nombre, cuotaSeleccionada.socio_natillera.socio.avatar_seed, cuotaSeleccionada.socio_natillera.socio.avatar_style)" 
+                :alt="cuotaSeleccionada.socio_natillera.socio.nombre"
+                class="w-12 h-12 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+              />
+              <div class="flex-1">
+                <p class="font-semibold text-gray-800">
+                  {{ cuotaSeleccionada?.socio_natillera?.socio?.nombre || 'Socio' }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ getMesLabel(cuotaSeleccionada?.mes) }} {{ cuotaSeleccionada?.anio }}
+                  <span v-if="cuotaSeleccionada?.quincena" class="text-purple-600">- Q{{ cuotaSeleccionada.quincena }}</span>
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-gray-500 mb-1">Valor Actual</p>
+                <p class="text-lg font-bold text-natillera-700">
+                  ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de ajustes -->
+          <div class="space-y-4">
+            <div
+              v-for="(ajuste, index) in obtenerAjustesFormateados(cuotaSeleccionada)"
+              :key="index"
+              class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-xl border-2 border-blue-200 shadow-sm hover:shadow-md transition-all"
+            >
+              <div class="flex items-start gap-4">
+                <!-- Icono y número -->
+                <div class="flex-shrink-0">
+                  <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    <span class="text-white font-bold text-lg">{{ index + 1 }}</span>
+                  </div>
+                </div>
+                
+                <!-- Contenido del ajuste -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-2">
+                    <CalendarIcon class="w-4 h-4 text-blue-600" />
+                    <p class="text-xs font-semibold text-blue-700">
+                      {{ ajuste.fecha }}
+                    </p>
+                  </div>
+                  
+                  <div class="space-y-3">
+                    <!-- Cambio de valor -->
+                    <div class="bg-white/60 rounded-lg p-3 border border-blue-100">
+                      <p class="text-xs text-gray-600 mb-2 font-medium">Cambio de Valor</p>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-semibold text-gray-700">
+                          ${{ formatMoney(ajuste.valorAnterior) }}
+                        </span>
+                        <ArrowRightIcon class="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span class="px-3 py-1.5 bg-blue-100 rounded-lg text-sm font-semibold text-blue-700">
+                          ${{ formatMoney(ajuste.valorNuevo) }}
+                        </span>
+                        <span class="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                          :class="ajuste.diferencia >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                          {{ ajuste.diferencia >= 0 ? '+' : '' }}${{ formatMoney(Math.abs(ajuste.diferencia)) }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Estado del pago -->
+                    <div v-if="ajuste.valorPagado !== null || ajuste.pendiente !== null" class="grid grid-cols-2 gap-2">
+                      <div v-if="ajuste.valorPagado !== null" class="bg-green-50 rounded-lg p-3 border border-green-200">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Pagado</p>
+                        <p class="text-sm font-bold text-green-700">
+                          ${{ formatMoney(ajuste.valorPagado) }}
+                        </p>
+                      </div>
+                      <div v-if="ajuste.pendiente !== null" class="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Pendiente</p>
+                        <p class="text-sm font-bold text-orange-700">
+                          ${{ formatMoney(ajuste.pendiente) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje si no hay ajustes -->
+            <div v-if="!tieneAjuste(cuotaSeleccionada)" class="text-center py-12">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <InformationCircleIcon class="w-8 h-8 text-gray-400" />
+              </div>
+              <p class="text-gray-500 font-medium">No hay ajustes registrados</p>
+              <p class="text-sm text-gray-400 mt-1">Esta cuota no ha tenido cambios en su valor</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+          <button
+            @click="modalHistorialAjustes = false"
+            class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -2769,6 +2942,7 @@ const pagoRegistrado = ref(null)
 const modalDetalleCuota = ref(false)
 const cuotaDetalle = ref(null)
 const modalDetalleSocio = ref(false)
+const modalHistorialAjustes = ref(false)
 const modalEditarSocio = ref(false)
 const socioSeleccionado = ref(null)
 const socioEditando = ref(null)
@@ -3723,15 +3897,24 @@ function tieneAjuste(cuota) {
 // Función para obtener el texto de ajuste de una cuota
 function getTextoAjuste(cuota) {
   if (!tieneAjuste(cuota)) return null
-  // Extraer la parte relevante de la descripción
+  // Extraer todas las anotaciones de ajuste de la descripción
   const descripcion = cuota.descripcion
-  if (descripcion.includes('Ajuste de valor')) {
-    // Formato: "Ajuste de valor: Cuota original $X → $Y. Pagado: $Z (fecha)"
-    return descripcion.split('|')[0].trim()
-  } else if (descripcion.includes('Cuota ajustada')) {
-    // Formato: "Cuota ajustada: Valor original $X → $Y. Pendiente: $Z (fecha)"
-    return descripcion.split('|')[0].trim()
+  if (!descripcion) return null
+  
+  // Separar por | para obtener todas las anotaciones
+  const partes = descripcion.split('|').map(p => p.trim())
+  
+  // Filtrar solo las partes que son anotaciones de ajuste
+  const anotaciones = partes.filter(parte => 
+    parte.includes('Ajuste de valor') || parte.includes('Cuota ajustada')
+  )
+  
+  // Si hay múltiples anotaciones, mostrarlas todas separadas por saltos de línea
+  if (anotaciones.length > 0) {
+    return anotaciones.join('\n\n')
   }
+  
+  // Si no se encontraron anotaciones específicas, devolver la descripción completa
   return descripcion
 }
 
@@ -3807,6 +3990,99 @@ function abrirModalPago(cuota) {
   const totalAPagar = getTotalAPagar(cuota)
   formPago.valor = totalAPagar > 0 ? totalAPagar : 0
   modalPago.value = true
+}
+
+function abrirModalHistorialAjustes(cuota) {
+  cuotaSeleccionada.value = cuota
+  modalHistorialAjustes.value = true
+}
+
+// Función para parsear y formatear las anotaciones de ajuste
+function obtenerAjustesFormateados(cuota) {
+  if (!cuota || !cuota.descripcion) return []
+  
+  const descripcion = cuota.descripcion
+  const partes = descripcion.split('|').map(p => p.trim())
+  
+  // Filtrar solo las partes que son anotaciones de ajuste
+  const anotaciones = partes.filter(parte => 
+    parte.includes('Ajuste de valor') || parte.includes('Cuota ajustada')
+  )
+  
+  return anotaciones.map(anotacion => {
+    const ajuste = {
+      fecha: null,
+      valorAnterior: null,
+      valorNuevo: null,
+      valorPagado: null,
+      pendiente: null,
+      diferencia: 0,
+      tipo: null
+    }
+    
+    // Extraer fecha (formato: DD/MM/YYYY)
+    const fechaMatch = anotacion.match(/\((\d{2}\/\d{2}\/\d{4})\)/)
+    if (fechaMatch) {
+      ajuste.fecha = fechaMatch[1]
+    }
+    
+    // Extraer valores según el tipo de ajuste
+    if (anotacion.includes('Ajuste de valor')) {
+      ajuste.tipo = 'ajuste'
+      // Formato: "Ajuste de valor: Cuota original $X → $Y. Pagado: $Z (fecha)"
+      // o "Ajuste de valor: Cuota original $X → $Y. Pagado: $Z, Pendiente: $W (fecha)"
+      // o "Ajuste de valor: Cuota original $X → $Y (fecha)"
+      
+      const valorAnteriorMatch = anotacion.match(/original \$([\d.,]+)/)
+      const valorNuevoMatch = anotacion.match(/→ \$([\d.,]+)/)
+      const valorPagadoMatch = anotacion.match(/Pagado: \$([\d.,]+)/)
+      const pendienteMatch = anotacion.match(/Pendiente: \$([\d.,]+)/)
+      
+      if (valorAnteriorMatch) {
+        const valorStr = valorAnteriorMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.valorAnterior = parseFloat(valorStr) || 0
+      }
+      if (valorNuevoMatch) {
+        const valorStr = valorNuevoMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.valorNuevo = parseFloat(valorStr) || 0
+      }
+      if (valorPagadoMatch) {
+        const valorStr = valorPagadoMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.valorPagado = parseFloat(valorStr) || 0
+      }
+      if (pendienteMatch) {
+        const valorStr = pendienteMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.pendiente = parseFloat(valorStr) || 0
+      }
+    } else if (anotacion.includes('Cuota ajustada')) {
+      ajuste.tipo = 'ajustada'
+      // Formato: "Cuota ajustada: Valor original $X → $Y. Pendiente: $Z (fecha)"
+      
+      const valorAnteriorMatch = anotacion.match(/original \$([\d.,]+)/)
+      const valorNuevoMatch = anotacion.match(/→ \$([\d.,]+)/)
+      const pendienteMatch = anotacion.match(/Pendiente: \$([\d.,]+)/)
+      
+      if (valorAnteriorMatch) {
+        const valorStr = valorAnteriorMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.valorAnterior = parseFloat(valorStr) || 0
+      }
+      if (valorNuevoMatch) {
+        const valorStr = valorNuevoMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.valorNuevo = parseFloat(valorStr) || 0
+      }
+      if (pendienteMatch) {
+        const valorStr = pendienteMatch[1].replace(/\./g, '').replace(',', '.')
+        ajuste.pendiente = parseFloat(valorStr) || 0
+      }
+    }
+    
+    // Calcular diferencia
+    if (ajuste.valorAnterior !== null && ajuste.valorNuevo !== null) {
+      ajuste.diferencia = ajuste.valorNuevo - ajuste.valorAnterior
+    }
+    
+    return ajuste
+  }).reverse() // Mostrar el más reciente primero
 }
 
 function abrirModalEditar(cuota) {

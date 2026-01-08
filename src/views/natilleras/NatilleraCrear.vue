@@ -73,7 +73,6 @@
             <div class="relative">
               <select v-model="form.periodicidad" class="input-field peer appearance-none cursor-pointer" required>
                 <option value="">Selecciona...</option>
-                <option value="semanal">Semanal</option>
                 <option value="quincenal">Quincenal</option>
                 <option value="mensual">Mensual</option>
               </select>

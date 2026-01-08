@@ -89,7 +89,6 @@
               <div>
                 <label class="label font-semibold text-gray-700">Periodicidad *</label>
                 <select v-model="configBasica.periodicidad" class="input-field">
-                  <option value="semanal">Semanal</option>
                   <option value="quincenal">Quincenal</option>
                   <option value="mensual">Mensual</option>
                 </select>

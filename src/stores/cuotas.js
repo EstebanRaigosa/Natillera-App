@@ -1992,6 +1992,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valor_cuota: nuevoValorNum
         }
 
+        // Preparar fecha actual para la anotación
+        const fechaActual = new Date().toLocaleDateString('es-CO', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\//g, '/')
+
         // CASO 1: Cuota pagada
         if (esPagada) {
           if (nuevoValorNum > valorPagadoActual) {
@@ -2000,23 +2007,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Mantener el valor_pagado actual, solo cambiar el valor_cuota
             // La diferencia (nuevoValorNum - valorPagadoActual) queda como pendiente
             const diferencia = nuevoValorNum - valorPagadoActual
-            const fechaActual = new Date().toLocaleDateString('es-CO', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }).replace(/\//g, '/')
-            datosActualizar.descripcion = `Cuota ajustada: Valor original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pendiente: $${diferencia.toLocaleString('es-CO')} (${fechaActual})`
+            const anotacion = `Cuota ajustada: Valor original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pendiente: $${diferencia.toLocaleString('es-CO')} (${fechaActual})`
+            // Agregar anotación sin sobrescribir las anteriores
+            datosActualizar.descripcion = cuota.descripcion 
+              ? `${cuota.descripcion} | ${anotacion}`
+              : anotacion
             console.log(`🔄 Cuota pagada ${cuota.id}: Convertida a parcial. Diferencia pendiente: $${diferencia.toLocaleString('es-CO')}`)
           } else if (nuevoValorNum < valorPagadoActual) {
             // Nuevo valor es MENOR: mantener como pagada pero agregar anotación
             datosActualizar.estado = 'pagada'
-            const fechaActual = new Date().toLocaleDateString('es-CO', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            }).replace(/\//g, '/')
             const anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pagado: $${valorPagadoActual.toLocaleString('es-CO')} (${fechaActual})`
-            // Si ya tiene descripción, agregar la nueva anotación
+            // Agregar anotación sin sobrescribir las anteriores
             datosActualizar.descripcion = cuota.descripcion 
               ? `${cuota.descripcion} | ${anotacion}`
               : anotacion
@@ -2029,6 +2030,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
         } 
         // CASO 2: Cuota pendiente/parcial
         else {
+          // Crear anotación para cuotas pendientes/parciales
+          let anotacion = null
+          if (valorCuotaAnterior !== nuevoValorNum) {
+            // Solo crear anotación si el valor realmente cambió
+            if (valorPagadoActual > 0) {
+              // Tiene pago parcial
+              const pendiente = nuevoValorNum - valorPagadoActual
+              anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')}. Pagado: $${valorPagadoActual.toLocaleString('es-CO')}, Pendiente: $${pendiente.toLocaleString('es-CO')} (${fechaActual})`
+            } else {
+              // Sin pagos
+              anotacion = `Ajuste de valor: Cuota original $${valorCuotaAnterior.toLocaleString('es-CO')} → $${nuevoValorNum.toLocaleString('es-CO')} (${fechaActual})`
+            }
+          }
+
           if (valorPagadoActual > nuevoValorNum) {
             // Si ya pagó más que el nuevo valor, ajustar el valor_pagado al nuevo valor
             datosActualizar.valor_pagado = nuevoValorNum
@@ -2048,6 +2063,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
           } else {
             // Sin pagos, solo actualizar el valor
             datosActualizar.estado = 'pendiente'
+          }
+
+          // Agregar anotación si existe y el valor cambió
+          if (anotacion) {
+            datosActualizar.descripcion = cuota.descripcion 
+              ? `${cuota.descripcion} | ${anotacion}`
+              : anotacion
+            console.log(`🔄 Cuota pendiente/parcial ${cuota.id}: Agregada anotación de ajuste`)
           }
         }
 

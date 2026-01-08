@@ -1609,10 +1609,10 @@ const socioAEliminar = ref(null)
 // Variables para préstamos en mora
 const prestamosEnMora = ref([])
 const loadingPrestamos = ref(false)
-const mostrarSeccionPrestamosEnMora = ref(true)
+const mostrarSeccionPrestamosEnMora = ref(false)
 
 // Variables para cuotas de natillera en mora
-const mostrarSeccionCuotasEnMora = ref(true)
+const mostrarSeccionCuotasEnMora = ref(false)
 const loadingCuotas = ref(false)
 
 // Variables para importación CSV
@@ -1964,12 +1964,24 @@ function tieneAjuste(cuotaData) {
 // Función para obtener el texto de ajuste de una cuota
 function getTextoAjuste(cuotaData) {
   if (!tieneAjuste(cuotaData)) return null
+  // Extraer todas las anotaciones de ajuste de la descripción
   const descripcion = cuotaData.descripcion
-  if (descripcion.includes('Ajuste de valor')) {
-    return descripcion.split('|')[0].trim()
-  } else if (descripcion.includes('Cuota ajustada')) {
-    return descripcion.split('|')[0].trim()
+  if (!descripcion) return null
+  
+  // Separar por | para obtener todas las anotaciones
+  const partes = descripcion.split('|').map(p => p.trim())
+  
+  // Filtrar solo las partes que son anotaciones de ajuste
+  const anotaciones = partes.filter(parte => 
+    parte.includes('Ajuste de valor') || parte.includes('Cuota ajustada')
+  )
+  
+  // Si hay múltiples anotaciones, mostrarlas todas separadas por saltos de línea
+  if (anotaciones.length > 0) {
+    return anotaciones.join('\n\n')
   }
+  
+  // Si no se encontraron anotaciones específicas, devolver la descripción completa
   return descripcion
 }
 
