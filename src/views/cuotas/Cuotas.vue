@@ -2971,6 +2971,7 @@ const dropdownMesAbierto = ref(false)
 const dropdownMesRef = ref(null)
 const sancionesDinamicas = ref({}) // Sanciones calculadas dinámicamente
 const sancionesActivas = ref(false) // Indica si las sanciones están activadas
+const diasGracia = ref(3) // Días de gracia de la natillera
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -3643,17 +3644,13 @@ function handleValorPagoInput(event) {
 
 const id = props.id || route.params.id
 
-// Días de gracia de la natillera (se cargará en onMounted)
-const diasGracia = ref(3)
-
-// Función para calcular el estado real de una cuota basándose en la fecha actual y días de gracia
+// Función para calcular el estado real de una cuota basándose en la fecha actual
 // Reglas según REGLAS.md:
-// - Programada: fecha_actual < (fecha_limite - dias_gracia)
-// - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
-// - En Mora: fecha_actual > fecha_limite
+// - Programada: fecha_actual < fecha_limite
+// - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+// - En Mora: fecha_actual > fecha_vencimiento
 // - Pagada: valor_pagado >= (valor_cuota + sanción)
-// - Parcial: valor_pagado > 0 && valor_pagado < (valor_cuota + sanción) && fecha no vencida
-// - Mora: fecha vencida (aunque tenga pago parcial, la UI mostrará ambos badges)
+// - Parcial: valor_pagado > 0 && valor_pagado < (valor_cuota + sanción)
 function calcularEstadoRealCuota(cuota) {
   // Si está pagada completamente (incluyendo sanción), siempre es pagada
   const sancion = getSancionCuota(cuota)
@@ -3680,39 +3677,28 @@ function calcularEstadoRealCuota(cuota) {
   }
   fechaLimite.setHours(0, 0, 0, 0)
   
-  // Calcular fecha límite - días de gracia (inicio del período pendiente)
-  const fechaInicioPendiente = new Date(fechaLimite)
-  fechaInicioPendiente.setDate(fechaInicioPendiente.getDate() - diasGracia.value)
-  
-  // Debug: para cuotas con fecha límite 05/01/2026
-  if (cuota.fecha_limite && cuota.fecha_limite.includes('2026-01-05')) {
-    console.log('🔍 Debug estado cuota:', {
-      nombre: cuota.socio_natillera?.socio?.nombre,
-      fechaActual: fechaActual.toISOString().split('T')[0],
-      fechaLimite: fechaLimite.toISOString().split('T')[0],
-      diasGracia: diasGracia.value,
-      fechaInicioPendiente: fechaInicioPendiente.toISOString().split('T')[0],
-      comparacion: {
-        'fechaActual < fechaInicioPendiente': fechaActual < fechaInicioPendiente,
-        'fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite': fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite,
-        'fechaActual > fechaLimite': fechaActual > fechaLimite
-      },
-      estadoCalculado: fechaActual < fechaInicioPendiente ? 'programada' : 
-                       (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) ? 'pendiente' : 'mora'
-    })
+  // Parsear fecha_vencimiento (usa fecha_limite como fallback si no existe)
+  let fechaVencimiento
+  const fechaVencimientoStr = cuota.fecha_vencimiento || cuota.fecha_limite
+  if (typeof fechaVencimientoStr === 'string' && fechaVencimientoStr.includes('-')) {
+    const [anio, mes, dia] = fechaVencimientoStr.split('-').map(Number)
+    fechaVencimiento = new Date(anio, mes - 1, dia)
+  } else {
+    fechaVencimiento = new Date(fechaVencimientoStr)
   }
+  fechaVencimiento.setHours(0, 0, 0, 0)
   
-  // Programada: fecha_actual < (fecha_limite - dias_gracia)
-  if (fechaActual < fechaInicioPendiente) {
-    // Si tiene pago parcial antes de la fecha, es parcial
+  // Programada: fecha_actual < fecha_limite
+  if (fechaActual < fechaLimite) {
+    // Si tiene pago parcial antes de la fecha límite, es parcial
     if (valorPagado > 0 && valorPagado < totalAPagar) {
       return 'parcial'
     }
     return 'programada'
   }
   
-  // Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
-  if (fechaActual >= fechaInicioPendiente && fechaActual <= fechaLimite) {
+  // Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+  if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
     // Si tiene pago parcial en período pendiente, es parcial
     if (valorPagado > 0 && valorPagado < totalAPagar) {
       return 'parcial'
@@ -3720,9 +3706,9 @@ function calcularEstadoRealCuota(cuota) {
     return 'pendiente'
   }
   
-  // En Mora: fecha_actual > fecha_limite
-  // Aquí retornamos mora aunque tenga pago parcial - la UI mostrará ambos badges
-  if (fechaActual > fechaLimite) {
+  // En Mora: fecha_actual > fecha_vencimiento
+  // Retornamos mora aunque tenga pago parcial - la UI mostrará ambos badges si aplica
+  if (fechaActual > fechaVencimiento) {
     return 'mora'
   }
   
@@ -5499,6 +5485,24 @@ function verificarCuotasFaltantes(cuotasCargadas, mes, anio) {
     cuotasPorSocio[c.socio_natillera_id].cuotas.push(c)
   })
   
+  // IMPORTANTE: Comparar el número de socios con cuotas contra el total de socios activos
+  // Si el conteo está disponible, verificar que todos los socios tengan cuotas
+  const totalSociosEsperados = conteoSociosMensuales.value + conteoSociosQuincenales.value
+  const sociosConCuotas = Object.keys(cuotasPorSocio).length
+  
+  // Si el conteo total está disponible y hay menos socios con cuotas, faltan cuotas
+  if (totalSociosEsperados > 0 && sociosConCuotas < totalSociosEsperados) {
+    console.log(`⚠️ Faltan cuotas: ${sociosConCuotas} socios con cuotas vs ${totalSociosEsperados} socios activos`)
+    return true
+  }
+  
+  // Si el conteo no está disponible (0), asumir que potencialmente faltan cuotas
+  // para que el store haga la verificación completa
+  if (totalSociosEsperados === 0) {
+    console.log('⚠️ Conteo de socios no disponible, asumiendo que potencialmente faltan cuotas')
+    return true
+  }
+  
   // Verificar si algún socio tiene cuotas incompletas
   for (const socioId in cuotasPorSocio) {
     const { periodicidad, cuotas } = cuotasPorSocio[socioId]
@@ -5848,14 +5852,16 @@ onMounted(async () => {
   const tiempoInicio = performance.now()
   
   try {
-    // 1. Cargar natillera y cuotas EN PARALELO (operaciones independientes)
+    // 1. Cargar natillera, cuotas Y conteo de socios EN PARALELO (operaciones independientes)
     const [natilleraData, cuotasCargadas] = await Promise.all([
       cargarNatillera(),
-      cuotasStore.fetchCuotasNatillera(id)
+      cuotasStore.fetchCuotasNatillera(id),
+      cargarConteoSocios() // Importante: cargar conteo de socios para verificar si faltan cuotas
     ])
     
     // Los datos de días de gracia y sanciones ya están cargados en cargarNatillera()
     console.log('📅 Días de gracia:', diasGracia.value, '| Sanciones activas:', sancionesActivas.value)
+    console.log('👥 Socios: Mensuales:', conteoSociosMensuales.value, '| Quincenales:', conteoSociosQuincenales.value)
     
     // 2. Verificar si faltan cuotas USANDO LOS DATOS YA CARGADOS (sin nueva consulta)
     if (mesSeleccionado.value) {

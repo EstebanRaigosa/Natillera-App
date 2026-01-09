@@ -39,23 +39,22 @@ Existen 4 estados posibles para una cuota: **Programada**, **Pendiente**, **En M
 
 #### 1. Programada
 Una cuota está en estado **Programada** cuando:
-- Se ha generado la cuota
-- La fecha actual **NO** es mayor o igual a la **Fecha Límite** menos los **Días de Gracia**
+- La fecha actual es **anterior** a la **Fecha Límite**
 
-**Fórmula:** `fecha_actual < (fecha_limite - dias_gracia)`
+**Fórmula:** `fecha_actual < fecha_limite`
 
 #### 2. Pendiente
 Una cuota pasa a estar en estado **Pendiente** cuando:
-- La fecha actual es **mayor o igual** a la **Fecha Límite** menos los **Días de Gracia**
-- Y la fecha actual es **menor o igual** a la **Fecha Límite**
+- La fecha actual es **mayor o igual** a la **Fecha Límite**
+- Y la fecha actual es **menor o igual** a la **Fecha de Vencimiento**
 
-**Fórmula:** `(fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite`
+**Fórmula:** `fecha_limite <= fecha_actual <= fecha_vencimiento`
 
 #### 3. En Mora
 Una cuota está en estado **En Mora** cuando:
-- La fecha actual **supera** la **Fecha Límite**
+- La fecha actual **supera** la **Fecha de Vencimiento**
 
-**Fórmula:** `fecha_actual > fecha_limite`
+**Fórmula:** `fecha_actual > fecha_vencimiento`
 
 #### 4. Pagada
 Una cuota está en estado **Pagada** cuando:

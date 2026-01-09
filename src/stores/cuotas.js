@@ -246,43 +246,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // Función para actualizar automáticamente el estado de cuotas (programada -> pendiente -> mora)
   // y aplicar sanciones según la configuración de la natillera
   // Reglas según REGLAS.md:
-  // - Programada: fecha_actual < (fecha_limite - dias_gracia)
-  // - Pendiente: (fecha_limite - dias_gracia) <= fecha_actual <= fecha_limite
-  // - En Mora: fecha_actual > fecha_limite
+  // - Programada: fecha_actual < fecha_limite
+  // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+  // - En Mora: fecha_actual > fecha_vencimiento
   // - Pagada: valor_pagado >= (valor_cuota + valor_multa)
   async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null) {
     try {
       const lista = cuotasLista || cuotas.value
       if (!lista || lista.length === 0) return
-
-      // Obtener días de gracia de la natillera
-      let diasGracia = 3 // Valor por defecto
-      if (natilleraId) {
-        const { data: natillera } = await supabase
-          .from('natilleras')
-          .select('reglas_multas')
-          .eq('id', natilleraId)
-          .single()
-        
-        diasGracia = natillera?.reglas_multas?.dias_gracia || 3
-      } else if (lista.length > 0) {
-        // Obtener natillera_id desde el primer socio_natillera
-        const { data: socioNatillera } = await supabase
-          .from('socios_natillera')
-          .select('natillera_id')
-          .eq('id', lista[0].socio_natillera_id)
-          .single()
-        
-        if (socioNatillera?.natillera_id) {
-          const { data: natillera } = await supabase
-            .from('natilleras')
-            .select('reglas_multas')
-            .eq('id', socioNatillera.natillera_id)
-            .single()
-          
-          diasGracia = natillera?.reglas_multas?.dias_gracia || 3
-        }
-      }
 
       // Obtener fecha actual (solo fecha, sin hora)
       const fechaActual = new Date()
@@ -290,6 +261,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const fechaActualStr = fechaActual.toISOString().split('T')[0] // YYYY-MM-DD
 
       // Separar cuotas por estado a actualizar
+      const cuotasAProgramada = [] // pendiente -> programada (corrección si fecha_actual < fecha_limite)
       const cuotasAPendiente = [] // programada -> pendiente
       const cuotasAMora = [] // pendiente/parcial -> mora (solo las que no tienen multa ya aplicada)
 
@@ -298,25 +270,32 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const totalAPagar = (cuota.valor_cuota || 0) + (cuota.valor_multa || 0)
         if ((cuota.valor_pagado || 0) >= totalAPagar) return
 
-        const fechaLimite = cuota.fecha_limite
+        // Usar ambas fechas según REGLAS.md
+        const fechaVencimiento = cuota.fecha_vencimiento || cuota.fecha_limite
+        const fechaLimite = cuota.fecha_limite || cuota.fecha_vencimiento
         if (!fechaLimite) return
 
+        const fechaVencimientoDate = new Date(fechaVencimiento)
+        fechaVencimientoDate.setHours(0, 0, 0, 0)
+        
         const fechaLimiteDate = new Date(fechaLimite)
         fechaLimiteDate.setHours(0, 0, 0, 0)
         
-        // Calcular fecha límite - días de gracia (inicio del período pendiente)
-        const fechaInicioPendiente = new Date(fechaLimiteDate)
-        fechaInicioPendiente.setDate(fechaInicioPendiente.getDate() - diasGracia)
-        const fechaInicioPendienteStr = fechaInicioPendiente.toISOString().split('T')[0]
         const fechaLimiteStr = fechaLimiteDate.toISOString().split('T')[0]
+        const fechaVencimientoStr = fechaVencimientoDate.toISOString().split('T')[0]
 
-        // Programada -> Pendiente: cuando fecha_actual >= (fecha_limite - dias_gracia)
-        if (cuota.estado === 'programada' && fechaActualStr >= fechaInicioPendienteStr) {
+        // Corregir estado: Pendiente -> Programada si fecha_actual < fecha_limite
+        // (solo si no tiene pagos parciales)
+        if (cuota.estado === 'pendiente' && fechaActualStr < fechaLimiteStr && (cuota.valor_pagado || 0) === 0) {
+          cuotasAProgramada.push(cuota.id)
+        }
+        // Programada -> Pendiente: cuando fecha_actual >= fecha_limite
+        else if (cuota.estado === 'programada' && fechaActualStr >= fechaLimiteStr) {
           cuotasAPendiente.push(cuota.id)
         }
-        // Pendiente/Parcial -> Mora: cuando fecha_actual > fecha_limite
+        // Pendiente/Parcial -> Mora: cuando fecha_actual > fecha_vencimiento
         // Solo si no está ya en mora (evitar reprocesar)
-        else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaLimiteStr) {
+        else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaVencimientoStr) {
           cuotasAMora.push({
             id: cuota.id,
             socio_natillera_id: cuota.socio_natillera_id,
@@ -326,6 +305,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
       })
 
       const actualizaciones = []
+
+      // Corregir cuotas a programada (si estaban mal marcadas como pendiente)
+      if (cuotasAProgramada.length > 0) {
+        console.log(`🔄 Corrigiendo ${cuotasAProgramada.length} cuota(s) de pendiente a programada`)
+        const { data: actualizadasProgramada, error: errorProgramada } = await supabase
+          .from('cuotas')
+          .update({ estado: 'programada' })
+          .in('id', cuotasAProgramada)
+          .select()
+
+        if (errorProgramada) {
+          console.error('Error actualizando cuotas a programada:', errorProgramada)
+        } else if (actualizadasProgramada) {
+          actualizaciones.push(...actualizadasProgramada)
+        }
+      }
 
       // Actualizar cuotas a pendiente
       if (cuotasAPendiente.length > 0) {
@@ -446,6 +441,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       return { 
         success: true, 
         actualizadas: actualizaciones.length,
+        aProgramada: cuotasAProgramada.length,
         aPendiente: cuotasAPendiente.length,
         aMora: cuotasAMora.length
       }
@@ -615,23 +611,34 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const fechaActual = new Date()
       fechaActual.setHours(0, 0, 0, 0)
 
-      // Helper para calcular estado inicial
-      const calcularEstadoInicial = (fechaVencimientoStr) => {
-        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
-        const fechaVencimiento = new Date(year, month - 1, day)
+      // Helper para calcular estado inicial según REGLAS.md:
+      // - Programada: fecha_actual < fecha_limite
+      // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+      // - Mora: fecha_actual > fecha_vencimiento
+      const calcularEstadoInicial = (fechaVencimientoStr, fechaLimiteStr) => {
+        const [yV, mV, dV] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(yV, mV - 1, dV)
         fechaVencimiento.setHours(0, 0, 0, 0)
-        return fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+        
+        const [yL, mL, dL] = fechaLimiteStr.split('-').map(Number)
+        const fechaLimite = new Date(yL, mL - 1, dL)
+        fechaLimite.setHours(0, 0, 0, 0)
+        
+        if (fechaActual > fechaVencimiento) {
+          return 'mora'
+        } else if (fechaActual >= fechaLimite) {
+          return 'pendiente'
+        } else {
+          return 'programada'
+        }
       }
 
       // Helper para calcular nuevo estado basado en pagos
-      const calcularNuevoEstado = (valorPagado, nuevoValorCuota, estadoActual, fechaVencimientoStr) => {
+      const calcularNuevoEstado = (valorPagado, nuevoValorCuota, estadoActual, fechaVencimientoStr, fechaLimiteStr) => {
         if (valorPagado >= nuevoValorCuota) return 'pagada'
         if (valorPagado > 0) return 'parcial'
-        // Si no hay pago, calcular según fecha
-        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
-        const fechaVencimiento = new Date(year, month - 1, day)
-        fechaVencimiento.setHours(0, 0, 0, 0)
-        return fechaActual >= fechaVencimiento ? 'pendiente' : 'programada'
+        // Si no hay pago, calcular según fecha usando la misma lógica
+        return calcularEstadoInicial(fechaVencimientoStr, fechaLimiteStr)
       }
 
       // Arrays para operaciones batch
@@ -681,7 +688,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             cuotasAEliminar.push(cuotaMensual.id)
             
             // Crear primera quincena CON el pago migrado
-            const estadoQ1 = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaQuincena1.vencimiento)
+            const estadoQ1 = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaQuincena1.vencimiento, fechaQuincena1.limite)
             cuotasACrear.push({
               socio_natillera_id: socio.id,
               valor_cuota: nuevoValorCuota,
@@ -701,7 +708,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fecha_vencimiento: fechaQuincena2.vencimiento,
               fecha_limite: fechaQuincena2.limite,
               mes, anio, quincena: 2,
-              estado: calcularEstadoInicial(fechaQuincena2.vencimiento),
+              estado: calcularEstadoInicial(fechaQuincena2.vencimiento, fechaQuincena2.limite),
               descripcion: `${mesLabel} - 2da Quincena`
             })
           } else {
@@ -710,7 +717,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Primera quincena
             if (cuotaQ1) {
               const valorPagado = cuotaQ1.valor_pagado || 0
-              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ1.estado, fechaQuincena1.vencimiento)
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ1.estado, fechaQuincena1.vencimiento, fechaQuincena1.limite)
               datosAnterioresPorId[cuotaQ1.id] = { ...cuotaQ1, socio }
               cuotasAActualizar.push({
                 id: cuotaQ1.id,
@@ -728,7 +735,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_vencimiento: fechaQuincena1.vencimiento,
                 fecha_limite: fechaQuincena1.limite,
                 mes, anio, quincena: 1,
-                estado: calcularEstadoInicial(fechaQuincena1.vencimiento),
+                estado: calcularEstadoInicial(fechaQuincena1.vencimiento, fechaQuincena1.limite),
                 descripcion: `${mesLabel} - 1ra Quincena`
               })
             }
@@ -736,7 +743,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Segunda quincena
             if (cuotaQ2) {
               const valorPagado = cuotaQ2.valor_pagado || 0
-              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ2.estado, fechaQuincena2.vencimiento)
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ2.estado, fechaQuincena2.vencimiento, fechaQuincena2.limite)
               datosAnterioresPorId[cuotaQ2.id] = { ...cuotaQ2, socio }
               cuotasAActualizar.push({
                 id: cuotaQ2.id,
@@ -754,7 +761,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_vencimiento: fechaQuincena2.vencimiento,
                 fecha_limite: fechaQuincena2.limite,
                 mes, anio, quincena: 2,
-                estado: calcularEstadoInicial(fechaQuincena2.vencimiento),
+                estado: calcularEstadoInicial(fechaQuincena2.vencimiento, fechaQuincena2.limite),
                 descripcion: `${mesLabel} - 2da Quincena`
               })
             }
@@ -791,7 +798,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             })
             
             // Crear cuota mensual CON los pagos migrados
-            const estadoMensual = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaMensual.vencimiento)
+            const estadoMensual = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaMensual.vencimiento, fechaMensual.limite)
             cuotasACrear.push({
               socio_natillera_id: socio.id,
               valor_cuota: nuevoValorCuota,
@@ -807,7 +814,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             
             if (cuotaMensual) {
               const valorPagado = cuotaMensual.valor_pagado || 0
-              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaMensual.estado, fechaMensual.vencimiento)
+              const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaMensual.estado, fechaMensual.vencimiento, fechaMensual.limite)
               datosAnterioresPorId[cuotaMensual.id] = { ...cuotaMensual, socio }
               cuotasAActualizar.push({
                 id: cuotaMensual.id,
@@ -825,7 +832,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_vencimiento: fechaMensual.vencimiento,
                 fecha_limite: fechaMensual.limite,
                 mes, anio, quincena: null,
-                estado: calcularEstadoInicial(fechaMensual.vencimiento),
+                estado: calcularEstadoInicial(fechaMensual.vencimiento, fechaMensual.limite),
                 descripcion: `Cuota ${mesLabel}`
               })
             }
@@ -1716,15 +1723,29 @@ export const useCuotasStore = defineStore('cuotas', () => {
       ]
       const mesLabel = meses[mesAGenerar - 1]
 
-      // Calcular estado inicial según fecha de vencimiento
+      // Calcular estado inicial según REGLAS.md:
+      // - Programada: fecha_actual < fecha_limite
+      // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+      // - Mora: fecha_actual > fecha_vencimiento
       const fechaHoy = new Date()
       fechaHoy.setHours(0, 0, 0, 0)
       
-      const calcularEstadoInicial = (fechaVencimientoStr) => {
-        const [year, month, day] = fechaVencimientoStr.split('-').map(Number)
-        const fechaVencimiento = new Date(year, month - 1, day)
+      const calcularEstadoInicial = (fechaVencimientoStr, fechaLimiteStr) => {
+        const [yV, mV, dV] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(yV, mV - 1, dV)
         fechaVencimiento.setHours(0, 0, 0, 0)
-        return fechaHoy >= fechaVencimiento ? 'pendiente' : 'programada'
+        
+        const [yL, mL, dL] = fechaLimiteStr.split('-').map(Number)
+        const fechaLimite = new Date(yL, mL - 1, dL)
+        fechaLimite.setHours(0, 0, 0, 0)
+        
+        if (fechaHoy > fechaVencimiento) {
+          return 'mora'
+        } else if (fechaHoy >= fechaLimite) {
+          return 'pendiente'
+        } else {
+          return 'programada'
+        }
       }
 
       // Obtener información completa de los socios que necesitan cuota (con valor_cuota_individual)
@@ -1761,7 +1782,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               mes: mesAGenerar,
               anio: anioAGenerar,
               quincena: 1,
-              estado: calcularEstadoInicial(fechaVencimientoQuincena1Str),
+              estado: calcularEstadoInicial(fechaVencimientoQuincena1Str, fechaLimiteQuincena1Str),
               descripcion: `${mesLabel} - 1ra Quincena`
             })
           }
@@ -1776,7 +1797,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               mes: mesAGenerar,
               anio: anioAGenerar,
               quincena: 2,
-              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str),
+              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str, fechaLimiteQuincena2Str),
               descripcion: `${mesLabel} - 2da Quincena`
             })
           }
@@ -1794,7 +1815,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               mes: mesAGenerar,
               anio: anioAGenerar,
               quincena: null,
-              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str),
+              estado: calcularEstadoInicial(fechaVencimientoQuincena2Str, fechaLimiteQuincena2Str),
               descripcion: `Cuota ${mesLabel}`
             })
           }
