@@ -213,44 +213,139 @@
           
           <!-- Grid de indicadores -->
           <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="relative overflow-visible rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
             <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{{ estadisticas.totalSocios }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Socios</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold">Socios</p>
+              <div class="relative inline-block tooltip-container">
+                <button
+                  type="button"
+                  class="info-btn focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full"
+                  tabindex="0"
+                  aria-label="Información sobre Socios"
+                >
+                  <InformationCircleIcon class="w-4 h-4 text-blue-500 hover:text-blue-600 transition-colors" />
+                </button>
+                <div class="tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-2 invisible opacity-0 transition-all duration-200 z-50 w-48 pointer-events-none">
+                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl whitespace-normal">
+                    <p class="font-semibold mb-1">Socios</p>
+                    <p>Total de socios registrados en la natillera</p>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="relative overflow-visible rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
             <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Recaudado</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold">Recaudado</p>
+              <div class="relative inline-block tooltip-container">
+                <button
+                  type="button"
+                  class="info-btn focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 rounded-full"
+                  tabindex="0"
+                  aria-label="Información sobre Recaudado"
+                >
+                  <InformationCircleIcon class="w-4 h-4 text-green-500 hover:text-green-600 transition-colors" />
+                </button>
+                <div class="tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-2 invisible opacity-0 transition-all duration-200 z-50 w-56 pointer-events-none">
+                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl whitespace-normal">
+                    <p class="font-semibold mb-1">Recaudado</p>
+                    <p>Suma de las cuotas normales pagadas. No incluye sanciones (se cuentan en Utilidades).</p>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border border-amber-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="relative overflow-visible rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border border-amber-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-orange-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
             <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Pendiente</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold">Pendiente</p>
+              <div class="relative inline-block tooltip-container">
+                <button
+                  type="button"
+                  class="info-btn focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 rounded-full"
+                  tabindex="0"
+                  aria-label="Información sobre Pendiente"
+                >
+                  <InformationCircleIcon class="w-4 h-4 text-amber-500 hover:text-amber-600 transition-colors" />
+                </button>
+                <div class="tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-2 invisible opacity-0 transition-all duration-200 z-50 w-56 pointer-events-none">
+                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl whitespace-normal">
+                    <p class="font-semibold mb-1">Pendiente</p>
+                    <p>Suma de las cuotas pendientes más las sanciones por pagar.</p>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/20 border border-teal-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="relative overflow-visible rounded-2xl bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/20 border border-teal-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-teal-400/20 to-cyan-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
             <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Utilidades</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold">Utilidades</p>
+              <div class="relative inline-block tooltip-container">
+                <button
+                  type="button"
+                  class="info-btn focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 rounded-full"
+                  tabindex="0"
+                  aria-label="Información sobre Utilidades"
+                >
+                  <InformationCircleIcon class="w-4 h-4 text-teal-500 hover:text-teal-600 transition-colors" />
+                </button>
+                <div class="tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-2 invisible opacity-0 transition-all duration-200 z-50 w-64 pointer-events-none">
+                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl whitespace-normal">
+                    <p class="font-semibold mb-1">Utilidades</p>
+                    <p>Suma de sanciones pagadas, intereses de préstamos y utilidad de actividades.</p>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="relative overflow-visible rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <!-- Círculo decorativo -->
           <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
           <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
             <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Fondo Total</p>
+            <div class="flex items-center gap-1.5 mt-2">
+              <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold">Fondo Total</p>
+              <div class="relative inline-block tooltip-container">
+                <button
+                  type="button"
+                  class="info-btn focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded-full"
+                  tabindex="0"
+                  aria-label="Información sobre Fondo Total"
+                >
+                  <InformationCircleIcon class="w-4 h-4 text-purple-500 hover:text-purple-600 transition-colors" />
+                </button>
+                <div class="tooltip absolute left-1/2 -translate-x-1/2 bottom-full mb-2 invisible opacity-0 transition-all duration-200 z-50 w-56 pointer-events-none">
+                  <div class="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl whitespace-normal">
+                    <p class="font-semibold mb-1">Fondo Total</p>
+                    <p>Suma del total recaudado más todas las utilidades.</p>
+                    <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
           </div>
@@ -3352,6 +3447,13 @@ onUnmounted(() => {
 
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Estilos para tooltips - funcionan con hover y focus */
+.tooltip-container:hover .tooltip,
+.tooltip-container:focus-within .tooltip {
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 /* Animación de rebote lento para el icono */

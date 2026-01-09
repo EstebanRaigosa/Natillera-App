@@ -431,16 +431,114 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada')
     console.log('Cuotas pagadas:', cuotasPagadas.length, cuotasPagadas)
 
+    // Obtener configuración de sanciones para calcular sanciones pendientes
+    let configSanciones = null
+    let sancionesDinamicas = {}
+    try {
+      const { data: natilleraData } = await supabase
+        .from('natilleras')
+        .select('reglas_multas')
+        .eq('id', natillera.id)
+        .single()
+      
+      configSanciones = natilleraData?.reglas_multas?.sanciones || null
+      
+      // Calcular sanciones dinámicas para cuotas en mora si las sanciones están activas
+      if (configSanciones?.activa) {
+        const cuotasMoraPorSocio = {}
+        cuotas.filter(c => c.estado === 'mora').forEach(c => {
+          cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+        })
+
+        // Calcular multa base
+        function calcularMulta(cantidadCuotasMora = 1) {
+          let multa = 0
+          if (configSanciones.tipo === 'simple') {
+            multa = configSanciones.valorFijo || 0
+          } else if (configSanciones.tipo === 'escalonada') {
+            const niveles = configSanciones.niveles || []
+            const nivelesOrdenados = [...niveles].sort((a, b) => b.cuotas - a.cuotas)
+            for (const nivel of nivelesOrdenados) {
+              if (cantidadCuotasMora >= nivel.cuotas) {
+                multa = nivel.valor || 0
+                break
+              }
+            }
+            if (multa === 0 && niveles.length > 0) {
+              multa = niveles[0].valor || 0
+            }
+          }
+          return multa
+        }
+
+        // Calcular sanciones dinámicas para cada cuota en mora
+        cuotas.filter(c => c.estado === 'mora').forEach(cuota => {
+          const cantidadMora = cuotasMoraPorSocio[cuota.socio_natillera_id] || 1
+          let multaBase = calcularMulta(cantidadMora)
+          
+          // Calcular intereses adicionales por días de mora
+          let interesesAdicionales = 0
+          if (cuota.fecha_limite && configSanciones.interesesAdicionales?.activo) {
+            const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+            const fechaLimite = new Date(anio, mes - 1, dia)
+            fechaLimite.setHours(0, 0, 0, 0)
+            const hoy = new Date()
+            hoy.setHours(0, 0, 0, 0)
+            const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+            
+            if (diasEnMora > 0) {
+              const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
+              const valorInteres = configSanciones.interesesAdicionales.valor || 0
+              if (diasParaInteres > 0 && valorInteres > 0) {
+                const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+                interesesAdicionales = periodosInteres * valorInteres
+              }
+            }
+          }
+          
+          sancionesDinamicas[cuota.id] = multaBase + interesesAdicionales
+        })
+      }
+    } catch (e) {
+      console.error('Error obteniendo configuración de sanciones:', e)
+    }
+
+    // Calcular totalAportado: solo el valor de las cuotas normales, sin incluir sanciones
+    // Las sanciones ya se cuentan en utilidadesRecogidas
     const totalAportado = cuotas
       .filter(c => c.estado === 'pagada')
-      .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+      .reduce((sum, c) => {
+        const valorPagado = c.valor_pagado || 0
+        const sancionPagada = c.valor_multa || 0
+        // Restar la sanción del valor pagado para obtener solo la cuota normal
+        return sum + (valorPagado - sancionPagada)
+      }, 0)
 
-    const totalPendiente = cuotas
-      .filter(c => {
-        // Excluir cuotas pagadas y programadas (incluso si tienen pago parcial)
-        return c.estado !== 'pagada' && c.estado !== 'programada'
-      })
-      .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
+    // Calcular totalPendiente: incluir valor de cuota pendiente + sanciones pendientes
+    const cuotasPendientes = cuotas.filter(c => {
+      return c.estado !== 'pagada' && c.estado !== 'programada'
+    })
+
+    const totalPendiente = cuotasPendientes.reduce((sum, c) => {
+      // Valor pendiente de la cuota (valor_cuota - valor_pagado)
+      const deudaCuota = (c.valor_cuota || 0) - (c.valor_pagado || 0)
+      
+      // Obtener sanción pendiente
+      let sancionPendiente = 0
+      if (c.estado === 'mora') {
+        // Para cuotas en mora, usar sanción dinámica calculada o valor_multa guardado
+        sancionPendiente = sancionesDinamicas[c.id] || c.valor_multa || 0
+      } else if (c.valor_multa && c.valor_multa > 0) {
+        // Para cuotas pendientes/parciales que tienen valor_multa guardado,
+        // verificar si aún tienen sanción pendiente
+        const totalConSancion = (c.valor_cuota || 0) + c.valor_multa
+        if ((c.valor_pagado || 0) < totalConSancion) {
+          sancionPendiente = c.valor_multa
+        }
+      }
+      
+      return sum + deudaCuota + sancionPendiente
+    }, 0)
 
     const utilidadActividades = actividades
       .reduce((sum, a) => sum + (a.utilidad || 0), 0)
@@ -497,8 +595,23 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     // 3. Utilidad de actividades (ya calculada arriba)
     const utilidadesRecogidas = sancionesPagadas + interesesPrestamos + utilidadActividades
 
-    console.log('Total aportado:', totalAportado)
-    console.log('Total pendiente:', totalPendiente)
+    // Calcular sanciones pendientes totales para el log
+    const sancionesPendientesTotal = cuotasPendientes.reduce((sum, c) => {
+      let sancionPendiente = 0
+      if (c.estado === 'mora') {
+        sancionPendiente = sancionesDinamicas[c.id] || c.valor_multa || 0
+      } else if (c.valor_multa && c.valor_multa > 0) {
+        const totalConSancion = (c.valor_cuota || 0) + c.valor_multa
+        if ((c.valor_pagado || 0) < totalConSancion) {
+          sancionPendiente = c.valor_multa
+        }
+      }
+      return sum + sancionPendiente
+    }, 0)
+
+    console.log('Total aportado (sin sanciones):', totalAportado)
+    console.log('Total pendiente (con sanciones):', totalPendiente)
+    console.log('Sanciones pendientes incluidas:', sancionesPendientesTotal)
     console.log('Sanciones pagadas:', sancionesPagadas)
     console.log('Intereses préstamos:', interesesPrestamos)
     console.log('Utilidad actividades:', utilidadActividades)
@@ -512,7 +625,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalPendiente,
       utilidadActividades,
       utilidadesRecogidas,
-      fondoTotal: totalAportado + utilidadActividades
+      fondoTotal: totalAportado + utilidadesRecogidas
     }
   }
 
