@@ -477,7 +477,64 @@ export const useSociosStore = defineStore('socios', () => {
       const natilleraId = socioNatilleraData.natillera_id
       const nombreSocio = socioNatilleraData.socio?.nombre || 'Socio'
 
-      // Eliminar el socio_natillera (esto activará la eliminación en cascada)
+      // Obtener IDs de cuotas y préstamos relacionados para eliminar historiales
+      const { data: cuotas } = await supabase
+        .from('cuotas')
+        .select('id')
+        .eq('socio_natillera_id', socioNatilleraId)
+
+      const { data: prestamos } = await supabase
+        .from('prestamos')
+        .select('id')
+        .eq('socio_natillera_id', socioNatilleraId)
+
+      const cuotaIds = cuotas?.map(c => c.id) || []
+      const prestamoIds = prestamos?.map(p => p.id) || []
+
+      // Obtener IDs de pagos de préstamos
+      const { data: pagosPrestamo } = await supabase
+        .from('pagos_prestamo')
+        .select('id')
+        .in('prestamo_id', prestamoIds)
+
+      const pagoPrestamoIds = pagosPrestamo?.map(p => p.id) || []
+
+      // Eliminar explícitamente los historiales de comprobantes
+      // Historial de comprobantes de cuotas
+      if (cuotaIds.length > 0) {
+        const { error: errorHistorialCuotas } = await supabase
+          .from('historial_comprobantes')
+          .delete()
+          .in('cuota_id', cuotaIds)
+        
+        if (errorHistorialCuotas) {
+          console.warn('Advertencia al eliminar historial de comprobantes de cuotas:', errorHistorialCuotas)
+        }
+      }
+
+      // Historial de comprobantes de préstamos
+      if (pagoPrestamoIds.length > 0) {
+        const { error: errorHistorialPrestamos } = await supabase
+          .from('historial_comprobantes_prestamo')
+          .delete()
+          .in('pago_prestamo_id', pagoPrestamoIds)
+        
+        if (errorHistorialPrestamos) {
+          console.warn('Advertencia al eliminar historial de comprobantes de préstamos:', errorHistorialPrestamos)
+        }
+      }
+
+      // También eliminar por socio_natillera_id (por si acaso)
+      const { error: errorHistorialSocio } = await supabase
+        .from('historial_comprobantes_prestamo')
+        .delete()
+        .eq('socio_natillera_id', socioNatilleraId)
+      
+      if (errorHistorialSocio) {
+        console.warn('Advertencia al eliminar historial por socio_natillera_id:', errorHistorialSocio)
+      }
+
+      // Eliminar el socio_natillera (esto activará la eliminación en cascada de cuotas, préstamos, multas, pagos_prestamo)
       const { error: deleteError } = await supabase
         .from('socios_natillera')
         .delete()
@@ -493,12 +550,15 @@ export const useSociosStore = defineStore('socios', () => {
       registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
         'socio_natillera',
         socioNatilleraId,
-        `Se eliminó el socio "${nombreSocio}" de la natillera y todos sus registros relacionados (cuotas, préstamos, multas)`,
+        `Se eliminó el socio "${nombreSocio}" de la natillera y todos sus registros relacionados (cuotas, préstamos, multas, historiales)`,
         socioNatilleraData,
         natilleraId,
         { 
           eliminacion_cascada: true,
-          registros_eliminados: 'cuotas, prestamos, multas, pagos_prestamo, historial_comprobantes'
+          registros_eliminados: 'cuotas, prestamos, multas, pagos_prestamo, historial_comprobantes, historial_comprobantes_prestamo',
+          cuotas_eliminadas: cuotaIds.length,
+          prestamos_eliminados: prestamoIds.length,
+          pagos_eliminados: pagoPrestamoIds.length
         }
       ))
 

@@ -1262,17 +1262,27 @@
             </div>
           </div>
 
-          <!-- Anotación de ajuste (si existe) -->
-          <div v-if="tieneAjuste(cuotaDetalle)" class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-5 rounded-xl border-2 border-blue-300 shadow-sm">
-            <div class="flex items-start gap-3">
-              <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-md">
-                <InformationCircleIcon class="w-5 h-5 text-white" />
+          <!-- Alerta de ajustes si existe -->
+          <div v-if="tieneAjuste(cuotaDetalle)" class="p-3 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+            <button
+              @click.stop="abrirModalHistorialAjustes(cuotaDetalle)"
+              class="group w-full flex items-center justify-between gap-3 cursor-pointer"
+            >
+              <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                  <InformationCircleIcon class="w-5 h-5 text-white" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                    Esta cuota tiene ajustes de valor
+                  </p>
+                  <p class="text-xs text-blue-600 mt-0.5">
+                    Haz clic para ver el historial completo de cambios
+                  </p>
+                </div>
               </div>
-              <div class="flex-1">
-                <p class="font-bold text-blue-800 mb-2">📝 Anotación de Ajuste</p>
-                <p class="text-sm text-blue-700 leading-relaxed whitespace-pre-line">{{ getTextoAjuste(cuotaDetalle) }}</p>
-              </div>
-            </div>
+              <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </button>
           </div>
 
           <!-- Periodicidad y descripción -->

@@ -294,20 +294,8 @@
               leave-from-class="opacity-100 max-h-96 translate-y-0"
               leave-to-class="opacity-0 max-h-0 -translate-y-4"
             >
-              <div v-if="form.multa_activa" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="relative">
-                  <label class="label text-amber-800">Valor de la multa ($)</label>
-                  <div class="relative">
-                    <input 
-                      v-model.number="form.valor_multa"
-                      type="number" 
-                      class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30"
-                      placeholder="5000"
-                      min="0"
-                    />
-                    <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 peer-focus:via-amber-500/10 pointer-events-none transition-all duration-300"></div>
-                  </div>
-                </div>
+              <div v-if="form.multa_activa" class="space-y-5">
+                <!-- Días de gracia -->
                 <div class="relative">
                   <label class="label text-amber-800">Días de gracia</label>
                   <div class="relative">
@@ -319,6 +307,141 @@
                       min="0"
                     />
                     <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 peer-focus:via-amber-500/10 pointer-events-none transition-all duration-300"></div>
+                  </div>
+                </div>
+
+                <!-- Tipo de sanción -->
+                <div>
+                  <label class="label font-semibold text-amber-800 mb-3 block">Tipo de Sanción</label>
+                  <div class="grid grid-cols-2 gap-3">
+                    <button 
+                      type="button"
+                      @click="form.tipo_sancion = 'simple'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', form.tipo_sancion === 'simple' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
+                    >
+                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="form.tipo_sancion === 'simple' ? 'text-amber-600' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Simple</p>
+                      <p class="text-xs text-gray-500">Valor fijo</p>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="form.tipo_sancion = 'escalonada'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', form.tipo_sancion === 'escalonada' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
+                    >
+                      <ChartBarIcon class="w-5 h-5 mb-1" :class="form.tipo_sancion === 'escalonada' ? 'text-amber-600' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
+                      <p class="text-xs text-gray-500">Progresiva</p>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Simple -->
+                <div v-if="form.tipo_sancion === 'simple'" class="space-y-4">
+                  <div class="p-4 bg-white/70 rounded-xl border border-amber-200">
+                    <label class="label font-semibold text-amber-800">Valor de multa por mora</label>
+                    <div class="relative mt-2">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input 
+                        :value="formatearValorMulta(form.valor_multa)"
+                        @input="handleValorMultaInput"
+                        type="text" 
+                        inputmode="numeric"
+                        class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30 pl-8 w-full max-w-[200px]" 
+                        placeholder="5.000"
+                      />
+                    </div>
+                  </div>
+                  
+                  <!-- Resumen Simple -->
+                  <div class="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                    <div class="flex items-start gap-2">
+                      <CurrencyDollarIcon class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div class="flex-1">
+                        <p class="text-xs font-semibold text-amber-800 mb-1">Resumen: Sanción Simple</p>
+                        <p class="text-xs text-amber-700">
+                          Se aplicará un valor fijo de <strong>${{ formatMoney(form.valor_multa) }}</strong> por cada cuota en mora.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Info adicional -->
+                  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start gap-2">
+                      <InformationCircleIcon class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-blue-700">
+                        💡 Puedes configurar <strong>intereses adicionales por días</strong> y <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Escalonada -->
+                <div v-if="form.tipo_sancion === 'escalonada'" class="space-y-4">
+                  <!-- Tabla niveles -->
+                  <div class="p-4 bg-white/70 rounded-xl border border-amber-200">
+                    <label class="label font-semibold text-amber-800 mb-3 block">Intereses por cuotas vencidas</label>
+                    <div class="space-y-2">
+                      <div v-for="(nivel, index) in form.niveles_sancion" :key="index" class="flex items-center gap-3">
+                        <span class="text-sm text-gray-600 w-20">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                        <div class="relative flex-1 max-w-[120px]">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <input 
+                            v-model.number="nivel.valor" 
+                            type="number" 
+                            min="0" 
+                            class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30 pl-7 py-1.5 text-sm" 
+                          />
+                        </div>
+                        <button 
+                          v-if="form.niveles_sancion.length > 1" 
+                          @click="eliminarNivel(index)" 
+                          type="button"
+                          class="text-red-500 hover:text-red-700 p-1 transition-colors"
+                        >
+                          <XMarkIcon class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <button 
+                      v-if="form.niveles_sancion.length < 10" 
+                      @click="agregarNivel" 
+                      type="button"
+                      class="mt-3 text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1 transition-colors"
+                    >
+                      <PlusIcon class="w-4 h-4" /> Agregar nivel
+                    </button>
+                  </div>
+
+                  <!-- Resumen Escalonada -->
+                  <div class="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                    <div class="flex items-start gap-2">
+                      <ChartBarIcon class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div class="flex-1">
+                        <p class="text-xs font-semibold text-amber-800 mb-1">Resumen: Sanción Escalonada</p>
+                        <p class="text-xs text-amber-700 mb-2">
+                          El valor de la multa aumenta según la cantidad de cuotas en mora del socio:
+                        </p>
+                        <div class="space-y-1">
+                          <div v-for="(nivel, index) in form.niveles_sancion.slice(0, 3)" :key="index" class="text-xs text-amber-700">
+                            • {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
+                          </div>
+                          <p v-if="form.niveles_sancion.length > 3" class="text-xs text-amber-600 italic">
+                            ... y {{ form.niveles_sancion.length - 3 }} nivel{{ form.niveles_sancion.length - 3 > 1 ? 'es' : '' }} más
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Info adicional -->
+                  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start gap-2">
+                      <InformationCircleIcon class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-blue-700">
+                        💡 Puedes configurar <strong>intereses adicionales por días</strong> y <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -463,7 +586,11 @@ import {
   ArrowLeftIcon,
   ExclamationTriangleIcon,
   CurrencyDollarIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  ChartBarIcon,
+  PlusIcon,
+  XMarkIcon,
+  InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -509,8 +636,15 @@ const form = reactive({
   anio: new Date().getFullYear(),
   // Multas
   multa_activa: true,
+  tipo_sancion: 'simple', // 'simple' o 'escalonada'
   valor_multa: 5000,
   dias_gracia: 3,
+  niveles_sancion: [
+    { cuotas: 1, valor: 4000 },
+    { cuotas: 2, valor: 4500 },
+    { cuotas: 3, valor: 5000 },
+    { cuotas: 4, valor: 6000 }
+  ],
   // Préstamos
   prestamos_activos: true,
   interes_prestamo: 2,
@@ -535,6 +669,47 @@ watch(() => form.fecha_inicio, (nuevaFecha) => {
     }
   }
 }, { immediate: true })
+
+// Formatear dinero
+function formatMoney(value) {
+  if (!value && value !== 0) return '0'
+  return new Intl.NumberFormat('es-CO').format(value)
+}
+
+// Formatear valor de multa para el input
+function formatearValorMulta(value) {
+  if (!value && value !== 0) return ''
+  const numero = typeof value === 'string' ? value.replace(/\./g, '') : value
+  return new Intl.NumberFormat('es-CO').format(numero)
+}
+
+// Manejar input del valor de multa
+function handleValorMultaInput(event) {
+  const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
+  if (valor === '') {
+    form.valor_multa = 0
+  } else {
+    const numero = parseInt(valor, 10)
+    if (!isNaN(numero) && numero >= 0) {
+      form.valor_multa = numero
+    }
+  }
+}
+
+// Funciones para manejar niveles de sanción escalonada
+function agregarNivel() {
+  const ultimoNivel = form.niveles_sancion[form.niveles_sancion.length - 1]
+  form.niveles_sancion.push({
+    cuotas: ultimoNivel.cuotas + 1,
+    valor: ultimoNivel.valor + 500
+  })
+}
+
+function eliminarNivel(index) {
+  if (form.niveles_sancion.length > 1) {
+    form.niveles_sancion.splice(index, 1)
+  }
+}
 
 // Calcular el número de meses del período
 const cantidadMeses = computed(() => {
@@ -562,9 +737,9 @@ async function handleSubmit() {
     dias_gracia: form.dias_gracia,
     sanciones: {
       activa: true, // Esto activa las multas en la configuración
-      tipo: 'simple', // Tipo por defecto: simple (multa fija)
-      valorFijo: form.valor_multa,
-      niveles: [
+      tipo: form.tipo_sancion, // Usar el tipo seleccionado
+      valorFijo: form.tipo_sancion === 'simple' ? form.valor_multa : (form.niveles_sancion[0]?.valor || 0),
+      niveles: form.tipo_sancion === 'escalonada' ? form.niveles_sancion : [
         { cuotas: 1, valor: form.valor_multa },
         { cuotas: 2, valor: form.valor_multa },
         { cuotas: 3, valor: form.valor_multa },
