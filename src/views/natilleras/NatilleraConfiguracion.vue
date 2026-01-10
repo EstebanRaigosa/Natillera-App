@@ -1042,6 +1042,59 @@
           </div>
         </Transition>
       </div>
+
+      <!-- === COLABORADORES === -->
+      <div class="space-y-3">
+        <button
+          @click="seccionActiva = seccionActiva === 'colaboradores' ? null : 'colaboradores'"
+          :class="[
+            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            seccionActiva === 'colaboradores'
+              ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 border-blue-400 shadow-blue-500/30'
+              : 'bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 border-blue-100/50 shadow-blue-500/10 hover:border-blue-300 hover:shadow-xl'
+          ]"
+        >
+          <div class="relative p-4 sm:p-5 flex items-center gap-4">
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-indigo-500']">
+              <UserGroupIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex-1 text-left">
+              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'colaboradores' ? 'text-white' : 'text-gray-800']">
+                Colaboradores
+              </h3>
+              <p :class="['text-sm', seccionActiva === 'colaboradores' ? 'text-white/80' : 'text-gray-500']">
+                Gestiona quién puede acceder a esta natillera
+              </p>
+            </div>
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-blue-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'colaboradores' ? 'text-white rotate-180' : 'text-blue-600']" />
+            </div>
+          </div>
+        </button>
+
+        <!-- Contenido Colaboradores -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 -translate-y-2"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 -translate-y-2"
+        >
+          <div v-if="seccionActiva === 'colaboradores'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-200/50 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+            <div class="relative p-5 sm:p-6">
+              <ColaboradoresManager
+                :natillera-id="id"
+                :admin-id="natillera?.admin_id"
+                :admin-email="adminActual?.email || ''"
+                :admin-nombre="adminActual?.nombre || adminActual?.email || ''"
+                :es-admin="esAdmin"
+              />
+            </div>
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <!-- Mensaje de éxito/error -->
@@ -1061,7 +1114,9 @@ import { useRoute } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useUsersStore } from '../../stores/users'
+import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
+import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import { 
   ArrowLeftIcon,
   CalendarDaysIcon,
@@ -1073,6 +1128,7 @@ import {
   ChatBubbleLeftRightIcon,
   UserIcon,
   UsersIcon,
+  UserGroupIcon,
   EyeIcon,
   ArrowPathIcon,
   ChevronDownIcon,
@@ -1125,6 +1181,12 @@ const esSuperUsuario = computed(() => {
   if (!usuarioAutenticado.value) return false
   const email = (usuarioAutenticado.value.email || '').toLowerCase().trim()
   return email === 'raigo.16@gmail.com'
+})
+
+// Verificar si el usuario es admin de la natillera
+const esAdmin = computed(() => {
+  if (!usuarioAutenticado.value || !natillera.value) return false
+  return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
 })
 
 // Configuración de meses

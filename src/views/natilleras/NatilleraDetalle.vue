@@ -85,6 +85,14 @@
                   <span class="sm:hidden">Config</span>
                 </router-link>
                 <button 
+                  @click="abrirFormularioInvitarColaborador"
+                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-700 font-semibold rounded-lg sm:rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
+                >
+                  <UsersIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
+                  <span class="hidden sm:inline">Invitar Colaboradores</span>
+                  <span class="sm:hidden">Colaboradores</span>
+                </button>
+                <button 
                   @click="modalWhatsApp = true"
                   class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 font-semibold rounded-lg sm:rounded-xl hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
                 >
@@ -152,55 +160,6 @@
         </div>
       </div>
 
-      <!-- Mensaje de todo en orden (cuando no hay mora) -->
-      <div 
-        v-else-if="natillera.socios_natillera?.length > 0"
-        class="relative bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 rounded-3xl p-6 sm:p-8 border border-green-200/50 shadow-xl backdrop-blur-sm overflow-hidden"
-      >
-        <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-green-400/15 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        
-        <div class="relative z-10 flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/30">
-            <CheckCircleIcon class="w-8 h-8 text-white" />
-          </div>
-          <div class="flex-1">
-            <h2 class="text-lg sm:text-xl font-display font-bold text-green-800">
-              ✅ Todo en orden
-            </h2>
-            <p class="text-sm text-green-600">
-              No hay socios con cuotas en mora o pendientes vencidas
-            </p>
-          </div>
-          <router-link 
-            :to="`/natilleras/${id}/cuotas`"
-            class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 font-semibold text-sm rounded-xl shadow-lg hover:shadow-xl transition-all whitespace-nowrap"
-          >
-            Ver cuotas
-            <ArrowRightIcon class="w-4 h-4" />
-          </router-link>
-        </div>
-      </div>
-
-      <!-- Mensaje cuando no hay socios -->
-      <div 
-        v-else
-        class="relative bg-gradient-to-br from-white via-gray-50/30 to-slate-50/20 rounded-3xl p-6 sm:p-8 border border-gray-200/50 shadow-xl backdrop-blur-sm overflow-hidden"
-      >
-        <div class="relative z-10 text-center py-4">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 mb-4">
-            <UsersIcon class="w-8 h-8 text-gray-400" />
-          </div>
-          <p class="text-gray-600 font-medium mb-4">No hay socios registrados</p>
-          <router-link 
-            :to="`/natilleras/${id}/socios`"
-            class="btn-primary inline-flex items-center gap-2 shadow-lg"
-          >
-            <PlusIcon class="w-4 h-4" />
-            Agregar socios
-          </router-link>
-        </div>
-      </div>
-
       <!-- Indicadores -->
       <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Efectos decorativos -->
@@ -227,15 +186,15 @@
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-blue-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
               <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-3 right-3 z-20">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30">
-                  <UsersIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-blue-500/20 backdrop-blur-sm border border-blue-400/30">
+                  <UsersIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
                 <!-- Valor numérico destacado -->
-                <p class="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">{{ estadisticas.totalSocios }}</p>
+                <p class="text-2xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">{{ estadisticas.totalSocios }}</p>
                 <!-- Etiqueta -->
                 <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Socios</p>
               </div>
@@ -248,15 +207,15 @@
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-green-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
               <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-3 right-3 z-20">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md shadow-green-500/30">
-                  <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-green-500/90 to-emerald-600/90 rounded-md flex items-center justify-center shadow-sm shadow-green-500/20 backdrop-blur-sm border border-green-400/30">
+                  <CurrencyDollarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
                 <!-- Valor numérico destacado -->
-                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
                 <!-- Etiqueta -->
                 <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Recaudado</p>
               </div>
@@ -269,15 +228,15 @@
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-amber-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
               <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-3 right-3 z-20">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md shadow-amber-500/30">
-                  <ExclamationTriangleIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-500/90 to-orange-600/90 rounded-md flex items-center justify-center shadow-sm shadow-amber-500/20 backdrop-blur-sm border border-amber-400/30">
+                  <ExclamationTriangleIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
                 <!-- Valor numérico destacado -->
-                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
                 <!-- Etiqueta -->
                 <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Pendiente</p>
               </div>
@@ -290,15 +249,15 @@
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-300/20 to-teal-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
               <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-3 right-3 z-20">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md shadow-teal-500/30">
-                  <BanknotesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-teal-500/90 to-cyan-600/90 rounded-md flex items-center justify-center shadow-sm shadow-teal-500/20 backdrop-blur-sm border border-teal-400/30">
+                  <BanknotesIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
                 <!-- Valor numérico destacado -->
-                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
                 <!-- Etiqueta -->
                 <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Utilidades</p>
               </div>
@@ -311,15 +270,15 @@
               <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-purple-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
               <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-3 right-3 z-20">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-purple-500/30">
-                  <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-purple-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-purple-500/20 backdrop-blur-sm border border-purple-400/30">
+                  <ChartBarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                 </div>
               </div>
               
-              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
                 <!-- Valor numérico destacado -->
-                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
                 <!-- Etiqueta -->
                 <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Fondo Total</p>
               </div>
@@ -1907,6 +1866,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
+    <div class="hidden">
+      <ColaboradoresManager
+        ref="colaboradoresManagerRef"
+        :natillera-id="id"
+        :admin-id="natillera?.admin_id"
+        :admin-email="adminActual?.email || ''"
+        :admin-nombre="adminActual?.nombre || adminActual?.email || ''"
+        :es-admin="esAdmin"
+      />
+    </div>
 </template>
 
 <script setup>
@@ -1944,8 +1915,10 @@ import {
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useCuotasStore } from '../../stores/cuotas'
+import { useAuthStore } from '../../stores/auth'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
+import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 
 const props = defineProps({
   id: String
@@ -1957,6 +1930,7 @@ const natillerasStore = useNatillerasStore()
 const sociosStore = useSociosStore()
 const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
+const authStore = useAuthStore()
 
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
@@ -1965,6 +1939,7 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const modalSociosEnMora = ref(false)
 const loadingCuotasSocio = ref(false)
+const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
@@ -2020,6 +1995,12 @@ function abrirConfigMeses() {
   modalConfigMeses.value = true
 }
 
+function abrirFormularioInvitarColaborador() {
+  if (colaboradoresManagerRef.value) {
+    colaboradoresManagerRef.value.abrirModalInvitar()
+  }
+}
+
 async function guardarConfigMeses() {
   const result = await natillerasStore.actualizarNatillera(props.id || route.params.id, {
     mes_inicio: formConfigMeses.value.mes_inicio,
@@ -2058,6 +2039,40 @@ const sociosFiltrados = computed(() => {
 })
 
 const natillera = computed(() => natillerasStore.natilleraActual)
+
+// Usuario autenticado y admin
+const usuarioAutenticado = ref(null)
+const adminActual = ref(null)
+
+// Verificar si el usuario es superusuario
+const esSuperUsuario = computed(() => {
+  if (!usuarioAutenticado.value) return false
+  const email = (usuarioAutenticado.value.email || '').toLowerCase().trim()
+  return email === 'raigo.16@gmail.com'
+})
+
+// Verificar si el usuario es admin de la natillera
+const esAdmin = computed(() => {
+  if (!usuarioAutenticado.value || !natillera.value) return false
+  return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
+})
+
+// Cargar información del administrador actual
+async function cargarAdminActual() {
+  if (!natillera.value?.admin_id) return
+
+  try {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id, email, nombre')
+      .eq('id', natillera.value.admin_id)
+      .single()
+
+    adminActual.value = data
+  } catch (e) {
+    console.error('Error cargando administrador actual:', e)
+  }
+}
 
 // Función para buscar comprobante
 async function buscarComprobante() {
@@ -3340,6 +3355,10 @@ onMounted(async () => {
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
   
+  // Obtener usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser()
+  usuarioAutenticado.value = user
+  
   try {
     const natilleraId = props.id || route.params.id
     
@@ -3353,6 +3372,9 @@ onMounted(async () => {
     
     // Cargar configuración (no bloquea)
     configStore.cargarConfiguracion()
+    
+    // Cargar información del administrador
+    await cargarAdminActual()
     
     // Asignar cuotas inmediatamente para mostrar socios en mora
     cuotasNatillera.value = cuotasResult || []

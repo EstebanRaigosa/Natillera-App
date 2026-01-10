@@ -5,6 +5,7 @@ import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/u
 
 export const useNatillerasStore = defineStore('natilleras', () => {
   const natilleras = ref([])
+  const natillerasCompartidas = ref([])
   const natilleraActual = ref(null)
   const loading = ref(false)
   const error = ref(null)
@@ -13,7 +14,19 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     natilleras.value.filter(n => n.estado === 'activa')
   )
 
+  const natillerasCompartidasActivas = computed(() => 
+    natillerasCompartidas.value.filter(n => n.estado === 'activa')
+  )
+
+  // Todas las natilleras (propias + compartidas)
+  const todasLasNatilleras = computed(() => {
+    const propias = natilleras.value.map(n => ({ ...n, es_propia: true, mi_rol: 'administrador' }))
+    const compartidas = natillerasCompartidas.value.map(n => ({ ...n, es_propia: false }))
+    return [...propias, ...compartidas]
+  })
+
   const totalNatilleras = computed(() => natilleras.value.length)
+  const totalNatillerasCompartidas = computed(() => natillerasCompartidas.value.length)
 
   async function fetchNatilleras() {
     try {
@@ -46,6 +59,72 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     } catch (e) {
       error.value = e.message
       console.error('Error cargando natilleras:', e)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Obtener natilleras compartidas con el usuario
+  async function fetchNatillerasCompartidas() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        natillerasCompartidas.value = []
+        return
+      }
+
+      // Obtener colaboraciones aceptadas
+      const { data: colaboraciones, error: colabError } = await supabase
+        .from('natillera_colaboradores')
+        .select(`
+          natillera_id,
+          rol,
+          permisos,
+          natillera:natilleras(*)
+        `)
+        .eq('usuario_id', user.id)
+        .eq('estado', 'aceptada')
+
+      if (colabError) {
+        console.error('Error cargando natilleras compartidas:', colabError)
+        natillerasCompartidas.value = []
+        return
+      }
+
+      // Formatear las natilleras compartidas
+      const natillerasConInfo = await Promise.all(
+        (colaboraciones || [])
+          .filter(c => c.natillera) // Filtrar las que tienen natillera válida
+          .map(async (colab) => {
+            const { count } = await supabase
+              .from('socios_natillera')
+              .select('*', { count: 'exact', head: true })
+              .eq('natillera_id', colab.natillera.id)
+            
+            return {
+              ...colab.natillera,
+              socios_count: count || 0,
+              mi_rol: colab.rol,
+              mis_permisos: colab.permisos
+            }
+          })
+      )
+
+      natillerasCompartidas.value = natillerasConInfo
+    } catch (e) {
+      console.error('Error cargando natilleras compartidas:', e)
+      natillerasCompartidas.value = []
+    }
+  }
+
+  // Función combinada para cargar todas las natilleras
+  async function fetchTodasLasNatilleras() {
+    loading.value = true
+    try {
+      await Promise.all([
+        fetchNatilleras(),
+        fetchNatillerasCompartidas()
+      ])
     } finally {
       loading.value = false
     }
@@ -518,12 +597,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
 
   return {
     natilleras,
+    natillerasCompartidas,
     natilleraActual,
     loading,
     error,
     natillerasActivas,
+    natillerasCompartidasActivas,
+    todasLasNatilleras,
     totalNatilleras,
+    totalNatillerasCompartidas,
     fetchNatilleras,
+    fetchNatillerasCompartidas,
+    fetchTodasLasNatilleras,
     fetchNatillera,
     crearNatillera,
     actualizarNatillera,

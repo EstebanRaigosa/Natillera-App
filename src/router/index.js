@@ -12,7 +12,6 @@ import Register from '../views/auth/Register.vue'
 import Welcome from '../views/auth/Welcome.vue'
 import ResetPassword from '../views/auth/ResetPassword.vue'
 import Dashboard from '../views/Dashboard.vue'
-import Natilleras from '../views/natilleras/Natilleras.vue'
 import NatilleraDetalle from '../views/natilleras/NatilleraDetalle.vue'
 import NatilleraCrear from '../views/natilleras/NatilleraCrear.vue'
 import Socios from '../views/socios/Socios.vue'
@@ -25,6 +24,7 @@ import Configuracion from '../views/configuracion/Configuracion.vue'
 import Auditoria from '../views/auditoria/Auditoria.vue'
 import ChatAdmin from '../views/admin/ChatAdmin.vue'
 import DataAdmin from '../views/admin/DataAdmin.vue'
+import AceptarInvitacion from '../views/invitaciones/AceptarInvitacion.vue'
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -72,9 +72,9 @@ const routes = [
         component: Dashboard
       },
       {
+        // Redirección para compatibilidad con links existentes
         path: 'natilleras',
-        name: 'Natilleras',
-        component: Natilleras
+        redirect: '/dashboard'
       },
       {
         path: 'natilleras/crear',
@@ -142,6 +142,12 @@ const routes = [
         path: 'admin/data',
         name: 'DataAdmin',
         component: DataAdmin
+      },
+      {
+        path: 'invitacion/:token',
+        name: 'AceptarInvitacion',
+        component: AceptarInvitacion,
+        props: true
       },
       // Rutas experimentales (solo en desarrollo)
       // Añade aquí rutas que quieras probar antes de llevarlas a producción
