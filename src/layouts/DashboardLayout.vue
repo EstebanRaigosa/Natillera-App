@@ -32,16 +32,6 @@
             @click="cerrarSidebar"
           >
             <HomeIcon class="w-5 h-5" />
-            <span>Inicio</span>
-          </router-link>
-
-          <router-link 
-            to="/natilleras" 
-            class="nav-link"
-            :class="{ 'nav-link-active': $route.path === '/natilleras' }"
-            @click="cerrarSidebar"
-          >
-            <BanknotesIcon class="w-5 h-5" />
             <span>Mis Natilleras</span>
           </router-link>
 
@@ -103,19 +93,29 @@
           <div v-if="natillerasStore.loading" class="px-4 py-2">
             <p class="text-xs text-gray-400">Cargando...</p>
           </div>
-          <template v-else-if="natillerasStore.natillerasActivas.length > 0">
+          <template v-else-if="todasLasNatillerasActivas.length > 0">
             <div 
-              v-for="natillera in natillerasStore.natillerasActivas" 
+              v-for="natillera in todasLasNatillerasActivas" 
               :key="natillera.id"
               class="space-y-1"
             >
               <!-- Contenedor principal de la natillera -->
-              <div class="flex items-center gap-2 pr-1">
+              <div 
+                class="flex items-center gap-2 pr-1 rounded-xl px-1 py-1 transition-all duration-200"
+                :class="[
+                  !natillera.es_propia 
+                    ? 'bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-2 border-blue-400 shadow-sm' 
+                    : ''
+                ]"
+              >
                 <!-- Link a la vista de detalle -->
                 <button
                   @click="navegarANatillera(natillera.id)"
                   class="nav-link flex-1 min-w-0 text-left"
-                  :class="{ 'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`) }"
+                  :class="[
+                    { 'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`) },
+                    !natillera.es_propia ? 'hover:bg-blue-200/60' : ''
+                  ]"
                 >
                   <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
                   <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
@@ -127,8 +127,12 @@
                   :class="[
                     'p-2.5 rounded-xl transition-all duration-300 flex-shrink-0 shadow-lg border-2 relative z-10',
                     natilleraExpandida === natillera.id
-                      ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white hover:from-natillera-600 hover:to-natillera-700 border-natillera-400 shadow-natillera-500/40'
-                      : 'bg-white text-natillera-600 hover:bg-natillera-50 border-natillera-200 hover:border-natillera-300 hover:shadow-xl'
+                      ? !natillera.es_propia
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 border-blue-400 shadow-blue-500/40'
+                        : 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white hover:from-natillera-600 hover:to-natillera-700 border-natillera-400 shadow-natillera-500/40'
+                      : !natillera.es_propia
+                        ? 'bg-white text-blue-600 hover:bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-xl'
+                        : 'bg-white text-natillera-600 hover:bg-natillera-50 border-natillera-200 hover:border-natillera-300 hover:shadow-xl'
                   ]"
                   title="Ver opciones"
                 >
@@ -149,9 +153,19 @@
               >
                 <div 
                   v-if="natilleraExpandida === natillera.id" 
-                  class="ml-2 mr-2 mt-2 mb-2 p-3 bg-gradient-to-br from-natillera-50 via-white to-gray-50 rounded-xl border-2 border-natillera-200 shadow-lg space-y-1.5 overflow-hidden"
+                  :class="[
+                    'ml-2 mr-2 mt-2 mb-2 p-3 rounded-xl border-2 shadow-lg space-y-1.5 overflow-hidden',
+                    !natillera.es_propia
+                      ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-200'
+                      : 'bg-gradient-to-br from-natillera-50 via-white to-gray-50 border-natillera-200'
+                  ]"
                 >
-                  <div class="text-xs font-semibold text-natillera-700 uppercase tracking-wider mb-2 px-2">
+                  <div 
+                    :class="[
+                      'text-xs font-semibold uppercase tracking-wider mb-2 px-2',
+                      !natillera.es_propia ? 'text-blue-700' : 'text-natillera-700'
+                    ]"
+                  >
                     Opciones
                   </div>
                   <router-link
@@ -216,6 +230,11 @@
             <PlusCircleIcon class="w-5 h-5" />
             <span>Nueva Natillera</span>
           </router-link>
+
+          <!-- Invitaciones Pendientes -->
+          <div class="pt-4">
+            <InvitacionesPendientes />
+          </div>
 
         </nav>
 
@@ -335,6 +354,7 @@ import {
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
+import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -348,6 +368,26 @@ const previousUnreadCount = ref(0)
 // Verificar si el usuario es admin (raigo.16@gmail.com)
 const isAdmin = computed(() => {
   return authStore.userEmail === 'raigo.16@gmail.com'
+})
+
+// Todas las natilleras activas (propias y compartidas) sin duplicados
+const todasLasNatillerasActivas = computed(() => {
+  // Obtener IDs de natilleras compartidas activas para evitar duplicados
+  const idsCompartidas = new Set(
+    natillerasStore.natillerasCompartidasActivas.map(n => n.id)
+  )
+  
+  // Obtener natilleras propias activas que NO estén en compartidas
+  const propiasSinDuplicar = natillerasStore.natillerasActivas
+    .filter(n => !idsCompartidas.has(n.id))
+    .map(n => ({ ...n, es_propia: true, mi_rol: 'administrador' }))
+  
+  // Obtener natilleras compartidas activas
+  const compartidas = natillerasStore.natillerasCompartidasActivas
+    .map(n => ({ ...n, es_propia: false }))
+  
+  // Combinar ambas listas (priorizando compartidas si están duplicadas)
+  return [...compartidas, ...propiasSinDuplicar]
 })
 
 function getAvatarUrl(seed) {
@@ -412,8 +452,8 @@ watch(() => supportStore.unreadCount, (newCount, oldCount) => {
 })
 
 onMounted(async () => {
-  // Cargar natilleras al montar el componente
-  await natillerasStore.fetchNatilleras()
+  // Cargar todas las natilleras (propias y compartidas)
+  await natillerasStore.fetchTodasLasNatilleras()
   
   // Iniciar verificación de mensajes si es admin
   if (isAdmin.value) {

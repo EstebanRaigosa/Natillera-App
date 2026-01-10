@@ -85,6 +85,14 @@
                   <span class="sm:hidden">Config</span>
                 </router-link>
                 <button 
+                  @click="abrirFormularioInvitarColaborador"
+                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-700 font-semibold rounded-lg sm:rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
+                >
+                  <UsersIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
+                  <span class="hidden sm:inline">Invitar Colaboradores</span>
+                  <span class="sm:hidden">Colaboradores</span>
+                </button>
+                <button 
                   @click="modalWhatsApp = true"
                   class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 font-semibold rounded-lg sm:rounded-xl hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
                 >
@@ -98,6 +106,181 @@
                 >
                   Cerrar
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BANNER DE ALERTA DE MORA - Click para abrir modal -->
+      <div 
+        ref="bannerSociosEnMoraRef"
+        v-if="sociosEnMora.length > 0"
+        @click="modalSociosEnMora = true"
+        class="relative rounded-2xl p-4 sm:p-5 border-2 shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 group animate-fade-in-alerta"
+        :class="[
+          sociosEnMora.length >= 3 
+            ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30 hover:border-red-500 hover:-translate-y-0.5' 
+            : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30 hover:border-amber-500 hover:-translate-y-0.5'
+        ]"
+      >
+        <!-- Efecto de barrido automático -->
+        <div 
+          :class="[
+            'absolute inset-0 rounded-2xl animate-sweep-hover pointer-events-none',
+            sociosEnMora.length >= 3 
+              ? 'bg-gradient-to-r from-transparent via-red-300/70 to-transparent' 
+              : 'bg-gradient-to-r from-transparent via-amber-300/70 to-transparent'
+          ]"
+        ></div>
+        
+        <div class="relative z-10 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 sm:gap-4 flex-1">
+            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/50' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/50']">
+              <ExclamationTriangleIcon :class="['w-6 h-6 sm:w-7 sm:h-7 text-white']" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2 :class="['text-lg sm:text-xl font-display font-bold mb-0.5', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
+                Hay {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio' : 'socios' }} en mora
+              </h2>
+              <p :class="['text-sm font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
+                {{ totalCuotasMora }} {{ totalCuotasMora === 1 ? 'cuota' : 'cuotas' }} en mora
+                <span v-if="totalPrestamosVencidos > 0" class="ml-1.5">
+                  • {{ totalPrestamosVencidos }} {{ totalPrestamosVencidos === 1 ? 'préstamo' : 'préstamos' }} vencido{{ totalPrestamosVencidos > 1 ? 's' : '' }}
+                </span>
+                <span class="block sm:inline sm:ml-1.5 mt-0.5 sm:mt-0">
+                  • Total: ${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}
+                </span>
+              </p>
+            </div>
+          </div>
+          <div class="flex-shrink-0">
+            <ChevronRightIcon :class="['w-6 h-6 transition-transform duration-300 group-hover:translate-x-1', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Indicadores -->
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Efectos decorativos -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <!-- Título del contenedor -->
+          <div class="flex items-center gap-2 mb-4 sm:mb-5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
+              <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
+              Indicadores
+            </h2>
+          </div>
+          
+          <!-- Grid de indicadores -->
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+            <!-- Indicador: Socios -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-white to-indigo-50/40 border-2 border-blue-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-blue-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-blue-500/20 backdrop-blur-sm border border-blue-400/30">
+                  <UsersIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-2xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">{{ estadisticas.totalSocios }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Socios</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Recaudado -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-white to-emerald-50/40 border-2 border-green-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/25 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-400/35 group-hover:to-emerald-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-green-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-green-500/90 to-emerald-600/90 rounded-md flex items-center justify-center shadow-sm shadow-green-500/20 backdrop-blur-sm border border-green-400/30">
+                  <CurrencyDollarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Recaudado</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Pendiente -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50/40 border-2 border-amber-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/25 to-orange-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-400/35 group-hover:to-orange-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-amber-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-500/90 to-orange-600/90 rounded-md flex items-center justify-center shadow-sm shadow-amber-500/20 backdrop-blur-sm border border-amber-400/30">
+                  <ExclamationTriangleIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Pendiente</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Utilidades -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-50 via-white to-cyan-50/40 border-2 border-teal-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-400/25 to-cyan-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-teal-400/35 group-hover:to-cyan-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-300/20 to-teal-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-teal-500/90 to-cyan-600/90 rounded-md flex items-center justify-center shadow-sm shadow-teal-500/20 backdrop-blur-sm border border-teal-400/30">
+                  <BanknotesIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Utilidades</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Fondo Total -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-50 via-white to-indigo-50/40 border-2 border-purple-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-purple-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
+                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-purple-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-purple-500/20 backdrop-blur-sm border border-purple-400/30">
+                  <ChartBarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Fondo Total</p>
               </div>
             </div>
           </div>
@@ -1938,6 +2121,18 @@
         </div>
       </div>
     </div>
+
+    <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
+    <div class="hidden">
+      <ColaboradoresManager
+        ref="colaboradoresManagerRef"
+        :natillera-id="id"
+        :admin-id="natillera?.admin_id"
+        :admin-email="adminActual?.email || ''"
+        :admin-nombre="adminActual?.nombre || adminActual?.email || ''"
+        :es-admin="esAdmin"
+      />
+    </div>
 </template>
 
 <script setup>
@@ -1975,8 +2170,10 @@ import {
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useCuotasStore } from '../../stores/cuotas'
+import { useAuthStore } from '../../stores/auth'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
+import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 
 const props = defineProps({
   id: String
@@ -1988,6 +2185,7 @@ const natillerasStore = useNatillerasStore()
 const sociosStore = useSociosStore()
 const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
+const authStore = useAuthStore()
 
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
@@ -1996,6 +2194,7 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const modalSociosEnMora = ref(false)
 const loadingCuotasSocio = ref(false)
+const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
@@ -2051,6 +2250,12 @@ function abrirConfigMeses() {
   modalConfigMeses.value = true
 }
 
+function abrirFormularioInvitarColaborador() {
+  if (colaboradoresManagerRef.value) {
+    colaboradoresManagerRef.value.abrirModalInvitar()
+  }
+}
+
 async function guardarConfigMeses() {
   const result = await natillerasStore.actualizarNatillera(props.id || route.params.id, {
     mes_inicio: formConfigMeses.value.mes_inicio,
@@ -2089,6 +2294,40 @@ const sociosFiltrados = computed(() => {
 })
 
 const natillera = computed(() => natillerasStore.natilleraActual)
+
+// Usuario autenticado y admin
+const usuarioAutenticado = ref(null)
+const adminActual = ref(null)
+
+// Verificar si el usuario es superusuario
+const esSuperUsuario = computed(() => {
+  if (!usuarioAutenticado.value) return false
+  const email = (usuarioAutenticado.value.email || '').toLowerCase().trim()
+  return email === 'raigo.16@gmail.com'
+})
+
+// Verificar si el usuario es admin de la natillera
+const esAdmin = computed(() => {
+  if (!usuarioAutenticado.value || !natillera.value) return false
+  return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
+})
+
+// Cargar información del administrador actual
+async function cargarAdminActual() {
+  if (!natillera.value?.admin_id) return
+
+  try {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id, email, nombre')
+      .eq('id', natillera.value.admin_id)
+      .single()
+
+    adminActual.value = data
+  } catch (e) {
+    console.error('Error cargando administrador actual:', e)
+  }
+}
 
 // Función para buscar comprobante
 async function buscarComprobante() {
@@ -2307,111 +2546,97 @@ function cerrarModalBuscarComprobante() {
   errorBusqueda.value = ''
 }
 
-// Función para obtener préstamos con cuotas vencidas
+// Función para obtener préstamos con cuotas vencidas - OPTIMIZADA
 async function obtenerPrestamosVencidos() {
   if (!id.value) return
   
   try {
-    // Obtener los IDs de socios_natillera de esta natillera
-    const { data: sociosNatillera, error: sociosError } = await supabase
-      .from('socios_natillera')
-      .select('id, socio:socios(*)')
-      .eq('natillera_id', id.value)
-    
-    if (sociosError) throw sociosError
-    if (!sociosNatillera || sociosNatillera.length === 0) {
-      prestamosVencidos.value = []
-      return
-    }
-    
-    const socioNatilleraIds = sociosNatillera.map(s => s.id)
-    
-    // Obtener préstamos activos de estos socios
-    const { data: prestamos, error: prestamosError } = await supabase
+    // OPTIMIZACIÓN: Una sola consulta con JOINs para obtener todos los datos necesarios
+    // En lugar de 3 consultas secuenciales, usamos una consulta con relaciones anidadas
+    const { data: prestamosConPagos, error: prestamosError } = await supabase
       .from('prestamos')
       .select(`
         id,
         socio_natillera_id,
         monto,
         saldo_actual,
-        socio_natillera:socios_natillera(
+        socio_natillera:socios_natillera!inner(
           id,
+          natillera_id,
           socio:socios(*)
+        ),
+        plan_pagos_prestamo(
+          id,
+          numero_cuota,
+          fecha_proyectada,
+          valor_cuota,
+          valor_pagado,
+          pagada
         )
       `)
-      .in('socio_natillera_id', socioNatilleraIds)
+      .eq('socio_natillera.natillera_id', id.value)
       .eq('estado', 'activo')
     
     if (prestamosError) throw prestamosError
-    if (!prestamos || prestamos.length === 0) {
+    if (!prestamosConPagos || prestamosConPagos.length === 0) {
       prestamosVencidos.value = []
       return
     }
     
-    const prestamoIds = prestamos.map(p => p.id)
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
     
-    // Obtener planes de pago de estos préstamos
-    const { data: planesPago, error: planesError } = await supabase
-      .from('plan_pagos_prestamo')
-      .select('*')
-      .in('prestamo_id', prestamoIds)
-      .order('fecha_proyectada', { ascending: true })
-    
-    if (planesError) throw planesError
-    
-    // Agrupar por socio_natillera_id y encontrar cuotas vencidas
+    // Procesar los datos en memoria (sin consultas adicionales)
     const sociosConPrestamosVencidos = {}
     
-    planesPago?.forEach(plan => {
-      const fechaProyectada = new Date(plan.fecha_proyectada)
-      fechaProyectada.setHours(0, 0, 0, 0)
+    prestamosConPagos.forEach(prestamo => {
+      const planesPago = prestamo.plan_pagos_prestamo || []
       
-      // Verificar si la cuota está vencida y no está completamente pagada
-      const valorCuota = parseFloat(plan.valor_cuota || 0)
-      const valorPagado = parseFloat(plan.valor_pagado || 0)
-      const estaVencida = hoy > fechaProyectada
-      const noEstaPagada = !plan.pagada && valorPagado < valorCuota
-      
-      if (estaVencida && noEstaPagada) {
-        // Encontrar el préstamo correspondiente
-        const prestamo = prestamos.find(p => p.id === plan.prestamo_id)
-        if (!prestamo) return
+      planesPago.forEach(plan => {
+        const fechaProyectada = new Date(plan.fecha_proyectada)
+        fechaProyectada.setHours(0, 0, 0, 0)
         
-        const socioId = prestamo.socio_natillera_id
+        // Verificar si la cuota está vencida y no está completamente pagada
+        const valorCuota = parseFloat(plan.valor_cuota || 0)
+        const valorPagado = parseFloat(plan.valor_pagado || 0)
+        const estaVencida = hoy > fechaProyectada
+        const noEstaPagada = !plan.pagada && valorPagado < valorCuota
         
-        if (!sociosConPrestamosVencidos[socioId]) {
-          sociosConPrestamosVencidos[socioId] = {
-            socio_natillera_id: socioId,
-            socio: prestamo.socio_natillera?.socio,
-            cuotasVencidas: 0,
-            totalDeudaPrestamo: 0,
-            diasMoraPrestamo: 0,
-            fechaVencimientoMasAntigua: null,
-            prestamoId: prestamo.id, // ID del préstamo con cuotas vencidas
-            cuotaVencidaMasAntigua: null // Información de la cuota vencida más antigua
+        if (estaVencida && noEstaPagada) {
+          const socioId = prestamo.socio_natillera_id
+          
+          if (!sociosConPrestamosVencidos[socioId]) {
+            sociosConPrestamosVencidos[socioId] = {
+              socio_natillera_id: socioId,
+              socio: prestamo.socio_natillera?.socio,
+              cuotasVencidas: 0,
+              totalDeudaPrestamo: 0,
+              diasMoraPrestamo: 0,
+              fechaVencimientoMasAntigua: null,
+              prestamoId: prestamo.id,
+              cuotaVencidaMasAntigua: null
+            }
+          }
+          
+          sociosConPrestamosVencidos[socioId].cuotasVencidas++
+          const deudaCuota = valorCuota - valorPagado
+          sociosConPrestamosVencidos[socioId].totalDeudaPrestamo += deudaCuota
+          
+          // Calcular días de mora desde la fecha más antigua
+          if (!sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua || 
+              fechaProyectada < sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua) {
+            sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua = fechaProyectada
+            sociosConPrestamosVencidos[socioId].cuotaVencidaMasAntigua = {
+              id: plan.id,
+              numero_cuota: plan.numero_cuota,
+              fecha_proyectada: plan.fecha_proyectada,
+              valor_cuota: valorCuota,
+              valor_pagado: valorPagado,
+              deuda: deudaCuota
+            }
           }
         }
-        
-        sociosConPrestamosVencidos[socioId].cuotasVencidas++
-        const deudaCuota = valorCuota - valorPagado
-        sociosConPrestamosVencidos[socioId].totalDeudaPrestamo += deudaCuota
-        
-        // Calcular días de mora desde la fecha más antigua y guardar la cuota más antigua
-        if (!sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua || 
-            fechaProyectada < sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua) {
-          sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua = fechaProyectada
-          sociosConPrestamosVencidos[socioId].cuotaVencidaMasAntigua = {
-            id: plan.id,
-            numero_cuota: plan.numero_cuota,
-            fecha_proyectada: plan.fecha_proyectada,
-            valor_cuota: valorCuota,
-            valor_pagado: valorPagado,
-            deuda: deudaCuota
-          }
-        }
-      }
+      })
     })
     
     // Calcular días de mora para cada socio
@@ -3350,28 +3575,31 @@ watch(() => id.value, async (newId, oldId) => {
   // Solo recargar si el ID realmente cambió
   if (newId && newId !== oldId) {
     try {
-      await natillerasStore.fetchNatillera(newId)
+      // OPTIMIZACIÓN: Cargar datos en paralelo
+      const [natilleraResult, cuotasResult] = await Promise.all([
+        natillerasStore.fetchNatillera(newId),
+        cuotasStore.fetchCuotasNatillera(newId, { skipMoraUpdate: true })
+      ])
+      
       configStore.cargarConfiguracion()
+      cuotasNatillera.value = cuotasResult || []
       
-      // Calcular estadísticas
-      await calcularEstadisticasAsync()
+      // Cargar datos secundarios en paralelo
+      const [estadisticasResult, prestamosResult, sancionesResult] = await Promise.all([
+        calcularEstadisticasAsync(),
+        obtenerPrestamosVencidos(),
+        cuotasStore.calcularSancionesTotales(newId, cuotasResult)
+      ])
       
-      // Cargar cuotas para verificar mora
-      const cuotas = await cuotasStore.fetchCuotasNatillera(newId)
-      cuotasNatillera.value = cuotas || []
-      
-      // Calcular sanciones dinámicas para las cuotas en mora
-      const resultSanciones = await cuotasStore.calcularSancionesTotales(newId, cuotas)
-      if (resultSanciones.success) {
-        sancionesPorCuota.value = resultSanciones.sanciones || {}
-        configSancionesActiva.value = resultSanciones.configActiva || false
+      if (sancionesResult.success) {
+        sancionesPorCuota.value = sancionesResult.sanciones || {}
+        configSancionesActiva.value = sancionesResult.configActiva || false
       }
       
-      // Recalcular estadísticas después de cargar cuotas
-      await calcularEstadisticasAsync()
-      
-      // Obtener préstamos vencidos
-      await obtenerPrestamosVencidos()
+      // Actualizar mora en segundo plano
+      cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, newId)
+        .then(() => cuotasStore.recalcularMultasCuotasMora(newId))
+        .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     } catch (error) {
       console.error('Error recargando datos de natillera:', error)
     }
@@ -3382,31 +3610,50 @@ onMounted(async () => {
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
   
+  // Obtener usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser()
+  usuarioAutenticado.value = user
+  
   try {
     const natilleraId = props.id || route.params.id
-    await natillerasStore.fetchNatillera(natilleraId)
+    
+    // OPTIMIZACIÓN: Cargar datos en paralelo para mostrar la UI más rápido
+    // Fase 1: Cargar datos esenciales en paralelo (sin bloquear la UI)
+    const [natilleraResult, cuotasResult] = await Promise.all([
+      natillerasStore.fetchNatillera(natilleraId),
+      // skipMoraUpdate: true para carga rápida inicial (mora se actualiza después)
+      cuotasStore.fetchCuotasNatillera(natilleraId, { skipMoraUpdate: true })
+    ])
+    
+    // Cargar configuración (no bloquea)
     configStore.cargarConfiguracion()
     
-    // Calcular estadísticas
-    await calcularEstadisticasAsync()
+    // Cargar información del administrador
+    await cargarAdminActual()
     
-    // Cargar cuotas para verificar mora
-    const cuotas = await cuotasStore.fetchCuotasNatillera(natilleraId)
-    cuotasNatillera.value = cuotas || []
+    // Asignar cuotas inmediatamente para mostrar socios en mora
+    cuotasNatillera.value = cuotasResult || []
     
-    // Calcular sanciones dinámicas para las cuotas en mora
-    const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
-    if (resultSanciones.success) {
-      sancionesPorCuota.value = resultSanciones.sanciones || {}
-      configSancionesActiva.value = resultSanciones.configActiva || false
+    // Fase 2: Cargar datos secundarios en paralelo (no bloquean la visualización inicial)
+    // Esto permite que el banner de socios en mora se muestre rápidamente
+    const [estadisticasResult, prestamosResult, sancionesResult] = await Promise.all([
+      calcularEstadisticasAsync(),
+      obtenerPrestamosVencidos(),
+      cuotasStore.calcularSancionesTotales(natilleraId, cuotasResult)
+    ])
+    
+    // Aplicar sanciones calculadas
+    if (sancionesResult.success) {
+      sancionesPorCuota.value = sancionesResult.sanciones || {}
+      configSancionesActiva.value = sancionesResult.configActiva || false
       console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
     }
     
-    // Recalcular estadísticas después de cargar cuotas
-    await calcularEstadisticasAsync()
-    
-    // Obtener préstamos vencidos
-    await obtenerPrestamosVencidos()
+    // Fase 3: Actualizar mora/multas en segundo plano (no bloquea la UI)
+    // Esto se ejecuta después de que la UI ya está visible
+    cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, natilleraId)
+      .then(() => cuotasStore.recalcularMultasCuotasMora(natilleraId))
+      .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     
     // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
     await nextTick()

@@ -548,18 +548,12 @@
                 class="relative overflow-hidden rounded-xl p-4 border cursor-pointer transition-all duration-300 hover:shadow-md group"
                 :class="[
                   (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/50 border-green-200/60 hover:border-green-300' : 
-                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50/50 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400' : 
                   (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300' : 
                   (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
                   'bg-orange-50/50 border-orange-200/60 hover:border-orange-300'
                 ]"
               >
-                <!-- Efecto de resaltado para cuotas en mora -->
-                <div 
-                  v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
-                  class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
-                ></div>
-                
                 <!-- Indicador de pago parcial (considera cuota + sanción) -->
                 <div 
                   v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
@@ -673,7 +667,7 @@
           class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
           :class="[
             (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
-            (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-white via-red-50/40 to-rose-50/30 border-red-200/60 hover:border-red-300 animate-mora-highlight' : 
+            (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400' : 
             (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
             (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
             'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
@@ -696,18 +690,6 @@
             <InformationCircleIcon class="w-3 h-3" />
             <span>AJUSTE</span>
           </div>
-          
-          <!-- Efecto de resaltado para cuotas en mora -->
-          <div 
-            v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
-            class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
-          ></div>
-          <!-- Borde pulsante para cuotas en mora -->
-          <div 
-            v-if="(cuota.estadoReal || cuota.estado) === 'mora'"
-            class="absolute inset-0 border-2 border-red-500 rounded-2xl animate-pulse pointer-events-none z-0"
-            style="animation-duration: 1.5s;"
-          ></div>
           
           <!-- Efectos decorativos de fondo más sutiles -->
           <div 
@@ -5953,39 +5935,5 @@ onUnmounted(() => {
   }
 }
 
-/* Animación de resaltado para cuotas en mora */
-@keyframes mora-highlight {
-  0%, 100% {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.6), 0 10px 10px -5px rgba(239, 68, 68, 0.4), 0 0 0 4px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.5);
-    transform: scale(1.03);
-  }
-}
-
-.animate-mora-highlight {
-  animation: mora-highlight 1.5s ease-in-out infinite;
-}
-
-/* Efecto shimmer especial para cuotas en mora */
-@keyframes shimmer-mora {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
-    opacity: 0;
-  }
-}
-
-.animate-shimmer-mora {
-  animation: shimmer-mora 2s ease-in-out infinite;
-}
 </style>
 

@@ -5,12 +5,16 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useAuthStore } from './stores/auth'
 import ChatWidget from './components/ChatWidget.vue'
 import NotificationToast from './components/NotificationToast.vue'
+import { useSessionTimeout } from './composables/useSessionTimeout'
 
 const authStore = useAuthStore()
+
+// Configurar timeout de sesión por inactividad (10 minutos)
+const sessionTimeout = useSessionTimeout(10)
 
 // Función para ocultar el teclado al presionar Enter
 function handleEnterKey(event) {
@@ -56,11 +60,24 @@ onMounted(() => {
   document.addEventListener('keydown', handleEnterKey)
   // Agregar listener para hacer scroll cuando un input recibe focus (móvil)
   document.addEventListener('focusin', handleInputFocus)
+  
+  // Iniciar el sistema de timeout de sesión si el usuario está autenticado
+  if (authStore.isAuthenticated) {
+    sessionTimeout.start()
+  }
 })
 
 onUnmounted(() => {
   // Limpiar listeners al desmontar
   document.removeEventListener('keydown', handleEnterKey)
   document.removeEventListener('focusin', handleInputFocus)
+  
+  // Detener el sistema de timeout al desmontar
+  sessionTimeout.stop()
+})
+
+// Observar cambios en el estado de autenticación para iniciar/detener el timeout
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  sessionTimeout.onAuthStateChange()
 })
 </script>
