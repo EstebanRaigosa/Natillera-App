@@ -755,14 +755,18 @@
                 <tr>
                   <th class="text-left p-3 font-semibold text-gray-700">Nombre</th>
                   <th class="text-left p-3 font-semibold text-gray-700">Cuota</th>
-                  <th class="text-left p-3 font-semibold text-gray-700">Teléfono</th>
+                  <th class="text-left p-3 font-semibold text-gray-700">
+                    Teléfono <span class="text-red-500 text-xs">*</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(socio, index) in sociosPreview" :key="index" class="border-t border-gray-100">
                   <td class="p-3 text-gray-800">{{ socio.nombre }}</td>
                   <td class="p-3 text-natillera-600 font-medium">${{ formatMoney(socio.valor_cuota) }}</td>
-                  <td class="p-3 text-gray-500">{{ socio.telefono || '-' }}</td>
+                  <td class="p-3" :class="socio.telefono ? 'text-gray-700' : 'text-red-500'">
+                    {{ socio.telefono || '❌ Requerido' }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -881,9 +885,10 @@
                 @input="handleValorCuotaInput($event)"
                 @focus="seleccionarMontoCuota"
                 @click="seleccionarMontoCuota"
+                @blur="handleValorCuotaBlur"
                 type="text" 
                 class="input-field pl-8 text-lg font-semibold"
-                placeholder="50.000"
+                placeholder="Ingrese el valor de la cuota (ej: 120.000)"
                 required
               />
             </div>
@@ -952,6 +957,42 @@
             </div>
           </div>
 
+          <!-- Teléfono (obligatorio y único) -->
+          <div>
+            <label class="label">
+              Teléfono / WhatsApp <span class="text-red-500">*</span>
+              <span class="text-xs font-normal text-gray-500 ml-2">(único por socio)</span>
+            </label>
+            <div class="relative flex gap-2">
+              <input 
+                v-model="formSocio.telefono"
+                type="tel" 
+                class="input-field flex-1"
+                placeholder="3001234567"
+                required
+              />
+              <button
+                v-if="contactPickerDisponible"
+                @click="abrirSelectorContactos"
+                type="button"
+                class="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-natillera-500 to-emerald-500 hover:from-natillera-600 hover:to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                title="Seleccionar contacto del teléfono"
+              >
+                <UserIcon class="w-5 h-5" />
+                <span class="hidden sm:inline">Contactos</span>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">
+              📱 Número único requerido para recordatorios de pago
+              <span v-if="contactPickerDisponible" class="block mt-1">
+                💡 Usa el botón "Contactos" para seleccionar desde tu agenda
+              </span>
+            </p>
+            <p v-if="errorTelefonoDuplicado" class="text-xs text-red-600 mt-1">
+              ⚠️ Este número de teléfono ya está registrado para otro socio
+            </p>
+          </div>
+
           <!-- Periodicidad -->
           <div>
             <label class="label">
@@ -1006,7 +1047,7 @@
             </p>
           </div>
 
-          <!-- Información de contacto (colapsable) -->
+          <!-- Información de contacto adicional (colapsable) -->
           <div class="border border-gray-200 rounded-xl overflow-hidden">
             <button 
               type="button"
@@ -1014,7 +1055,7 @@
               class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
             >
               <span class="font-medium text-gray-700">
-                📱 Información de contacto
+                📧 Información de contacto adicional
                 <span class="text-gray-400 font-normal text-sm">(opcional)</span>
               </span>
               <ChevronDownIcon 
@@ -1023,17 +1064,6 @@
             </button>
             
             <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-gray-200">
-              <div>
-                <label class="label">Teléfono / WhatsApp</label>
-                <input 
-                  v-model="formSocio.telefono"
-                  type="tel" 
-                  class="input-field"
-                  placeholder="3001234567"
-                />
-                <p class="text-xs text-gray-400 mt-1">Para enviar recordatorios de pago</p>
-              </div>
-
               <div>
                 <label class="label">Correo electrónico</label>
                 <input 
@@ -1721,6 +1751,267 @@
         </Transition>
       </div>
     </Transition>
+
+    <!-- Modal de Progreso de Creación de Socio - DISEÑO ULTRA MODERNO -->
+    <Transition name="modal-fade">
+      <div v-if="modalProgreso" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <!-- Fondo con efecto glassmorphism -->
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-black/60 to-teal-900/30 backdrop-blur-xl"></div>
+        
+        <!-- Partículas decorativas flotantes -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-emerald-400 rounded-full animate-float-particle opacity-60"></div>
+          <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-green-300 rounded-full animate-float-particle-slow opacity-40" style="animation-delay: 0.5s"></div>
+          <div class="absolute bottom-1/3 left-1/3 w-2 h-2 bg-teal-400 rounded-full animate-float-particle opacity-50" style="animation-delay: 1s"></div>
+          <div class="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full animate-float-particle-slow opacity-70" style="animation-delay: 1.5s"></div>
+        </div>
+        
+        <Transition name="modal-scale" appear>
+          <div class="relative w-full max-w-sm">
+            <!-- Tarjeta principal con efecto 3D -->
+            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
+              <!-- Gradiente superior decorativo -->
+              <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 opacity-10"></div>
+              
+              <!-- Anillos orbitales decorativos (cuando está procesando) -->
+              <div v-if="!progresoCreacion.exito && !progresoCreacion.error" class="absolute inset-0 flex items-center justify-center pointer-events-none" style="top: -20px">
+                <div class="w-40 h-40 border border-emerald-200/30 rounded-full animate-orbit-slow"></div>
+                <div class="absolute w-32 h-32 border border-green-200/40 rounded-full animate-orbit-reverse"></div>
+              </div>
+
+              <div class="relative p-8 pb-10">
+                <!-- Icono principal con múltiples capas de animación -->
+                <div class="relative mx-auto mb-8 w-28 h-28">
+                  <!-- Aura exterior pulsante -->
+                  <div 
+                    :class="[
+                      'absolute -inset-4 rounded-full transition-all duration-700',
+                      progresoCreacion.exito 
+                        ? 'bg-emerald-400/20 animate-pulse-success' 
+                        : progresoCreacion.error && progresoCreacion.paso === 0
+                          ? 'bg-red-400/20 animate-pulse'
+                          : 'bg-gradient-to-r from-emerald-400/15 via-green-400/20 to-teal-400/15 animate-pulse-slow'
+                    ]"
+                  ></div>
+                  
+                  <!-- Anillo giratorio exterior -->
+                  <div 
+                    v-if="!progresoCreacion.exito && progresoCreacion.paso > 0"
+                    class="absolute -inset-2 rounded-full border-2 border-dashed border-emerald-300/40 animate-spin-very-slow"
+                  ></div>
+                  
+                  <!-- Círculo principal -->
+                  <div 
+                    :class="[
+                      'absolute inset-0 rounded-full flex items-center justify-center transition-all duration-700 transform',
+                      progresoCreacion.exito 
+                        ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-2xl shadow-emerald-500/50 scale-110' 
+                        : progresoCreacion.error && progresoCreacion.paso === 0
+                          ? 'bg-gradient-to-br from-red-400 via-rose-500 to-pink-500 shadow-2xl shadow-red-500/40'
+                          : 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-xl shadow-emerald-500/30'
+                    ]"
+                  >
+                    <!-- Efecto de brillo interior -->
+                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+                    
+                    <!-- Estado: Creando socio -->
+                    <template v-if="progresoCreacion.paso === 1">
+                      <div class="relative">
+                        <UserIcon class="w-12 h-12 text-white drop-shadow-lg animate-bounce-gentle" />
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+                          <PlusIcon class="w-3 h-3 text-emerald-500" />
+                        </div>
+                      </div>
+                    </template>
+                    
+                    <!-- Estado: Generando cuotas -->
+                    <template v-else-if="progresoCreacion.paso === 2">
+                      <div class="relative">
+                        <SparklesIcon class="w-12 h-12 text-white drop-shadow-lg animate-sparkle" />
+                        <!-- Mini estrellas que salen -->
+                        <div class="absolute -top-2 -right-2 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                        <div class="absolute -bottom-1 -left-2 w-1.5 h-1.5 bg-yellow-200 rounded-full animate-ping" style="animation-delay: 0.3s"></div>
+                      </div>
+                    </template>
+                    
+                    <!-- Estado: Completado con éxito -->
+                    <template v-else-if="progresoCreacion.paso === 3 && progresoCreacion.exito">
+                      <CheckCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-success-pop" />
+                    </template>
+                    
+                    <!-- Estado: Error -->
+                    <template v-else-if="progresoCreacion.error && progresoCreacion.paso === 0">
+                      <XCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-shake" />
+                    </template>
+                    
+                    <!-- Estado: Iniciando -->
+                    <template v-else>
+                      <div class="relative w-12 h-12">
+                        <div class="absolute inset-0 border-4 border-white/30 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+                        <div class="absolute inset-2 border-2 border-transparent border-b-white/60 rounded-full animate-spin-reverse"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Nombre del socio con tipografía elegante -->
+                <h3 class="text-2xl font-display font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-clip-text text-transparent text-center mb-1">
+                  {{ progresoCreacion.nombreSocio }}
+                </h3>
+
+                <!-- Mensaje de progreso con animación sutil -->
+                <p 
+                  :class="[
+                    'text-center text-base font-medium mb-6 transition-all duration-500',
+                    progresoCreacion.exito ? 'text-emerald-600' : 
+                    progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-gray-500'
+                  ]"
+                >
+                  {{ progresoCreacion.mensaje }}
+                </p>
+
+                <!-- Timeline de pasos - Diseño minimalista y elegante -->
+                <div class="relative mb-8">
+                  <!-- Línea de conexión -->
+                  <div class="absolute top-4 left-8 right-8 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-700 ease-out rounded-full"
+                      :style="{ width: `${((progresoCreacion.paso - 1) / 2) * 100}%` }"
+                    ></div>
+                  </div>
+                  
+                  <div class="relative flex justify-between">
+                    <!-- Paso 1: Socio -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 1 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso > 1">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <UserIcon v-else-if="progresoCreacion.paso === 1" class="w-4 h-4" />
+                        <span v-else class="text-xs font-bold">1</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-emerald-600' : 'text-gray-400']">Socio</span>
+                    </div>
+                    
+                    <!-- Paso 2: Cuotas -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 2 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso > 2">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <SparklesIcon v-else-if="progresoCreacion.paso === 2" class="w-4 h-4 animate-pulse" />
+                        <span v-else class="text-xs font-bold">2</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-emerald-600' : 'text-gray-400']">Cuotas</span>
+                    </div>
+                    
+                    <!-- Paso 3: Listo -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 3 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso >= 3">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <span v-else class="text-xs font-bold">3</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-emerald-600' : 'text-gray-400']">¡Listo!</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Badge de cuotas generadas - Diseño premium -->
+                <Transition
+                  enter-active-class="transition-all duration-500 ease-out"
+                  enter-from-class="opacity-0 scale-90 translate-y-4"
+                  enter-to-class="opacity-100 scale-100 translate-y-0"
+                >
+                  <div 
+                    v-if="progresoCreacion.paso >= 2 && progresoCreacion.cuotasGeneradas > 0"
+                    class="flex justify-center"
+                  >
+                    <div class="relative group">
+                      <!-- Glow effect -->
+                      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                      
+                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl">
+                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                          <SparklesIcon class="w-5 h-5 text-white" />
+                        </div>
+                        <div class="text-left">
+                          <p class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                            {{ progresoCreacion.cuotasGeneradas }}
+                          </p>
+                          <p class="text-xs text-gray-500 font-medium">cuotas generadas</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+
+                <!-- Mensaje de éxito final -->
+                <Transition
+                  enter-active-class="transition-all duration-700 delay-300"
+                  enter-from-class="opacity-0 translate-y-2"
+                  enter-to-class="opacity-100 translate-y-0"
+                >
+                  <div v-if="progresoCreacion.exito" class="mt-6 text-center">
+                    <p class="text-sm text-gray-400">El modal se cerrará automáticamente...</p>
+                  </div>
+                </Transition>
+
+                <!-- Mensaje de error con botón de cerrar -->
+                <div v-if="progresoCreacion.error && progresoCreacion.paso === 0" class="mt-6 text-center">
+                  <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
+                    <p class="text-sm text-red-600">{{ progresoCreacion.error }}</p>
+                  </div>
+                  <button 
+                    @click="cerrarModalProgreso"
+                    class="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Barra de progreso inferior decorativa -->
+              <div class="h-1.5 bg-gray-100">
+                <div 
+                  class="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 transition-all duration-700 ease-out"
+                  :style="{ width: `${(progresoCreacion.paso / 3) * 100}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -1762,7 +2053,8 @@ import {
   ChatBubbleLeftIcon,
   Squares2X2Icon,
   Bars3Icon,
-  TrashIcon
+  TrashIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -1788,6 +2080,7 @@ const socioSeleccionado = ref(null)
 const socioParaCuotas = ref(null)
 const cuotasSocioPorMes = ref([])
 const errorSocio = ref('')
+const errorTelefonoDuplicado = ref(false)
 const mostrarContacto = ref(false)
 const mostrarAdvertenciaCuota = ref(false)
 const cuotasSocio = ref([])
@@ -1797,6 +2090,18 @@ const socioAEliminar = ref(null)
 const guardando = ref(false)
 const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga
+
+// Variables para el modal de progreso de creación de socio
+const modalProgreso = ref(false)
+const progresoCreacion = ref({
+  paso: 0, // 0: iniciando, 1: creando socio, 2: generando cuotas, 3: completado
+  mensaje: '',
+  cuotasGeneradas: 0,
+  cuotasTotales: 0,
+  error: null,
+  exito: false,
+  nombreSocio: ''
+})
 
 // Variables para préstamos en mora
 const prestamosEnMora = ref([])
@@ -1839,13 +2144,85 @@ const formSocio = reactive({
   documento: '',
   email: '',
   telefono: '',
-  valor_cuota: 50000,
+  valor_cuota: 0, // Iniciar en 0 para forzar al usuario a ingresar un valor explícitamente
   periodicidad: 'mensual',
   avatar_seed: '',
   avatar_style: 'adventurer'
 })
 
 const mostrarAvatares = ref(false)
+
+// Verificar si la Contact Picker API está disponible
+const contactPickerDisponible = ref(false)
+const razonNoDisponible = ref('')
+
+// Función auxiliar para detectar si estamos en un dispositivo móvil
+function esDispositivoMovil() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         (window.innerWidth <= 768 && 'ontouchstart' in window)
+}
+
+// Verificar disponibilidad de la Contact Picker API al montar el componente
+onMounted(() => {
+  const esMovil = esDispositivoMovil()
+  
+  // Verificar si la Contact Picker API está disponible
+  // Esta API está disponible principalmente en Chrome/Edge en Android
+  if (!esMovil) {
+    razonNoDisponible.value = 'La función de contactos solo está disponible en dispositivos móviles'
+    contactPickerDisponible.value = false
+    return
+  }
+
+  // Verificar si la API está disponible en el navegador
+  if ('contacts' in navigator && 'select' in navigator.contacts) {
+    contactPickerDisponible.value = true
+    razonNoDisponible.value = ''
+  } else if ('contacts' in navigator && 'pick' in navigator.contacts) {
+    // API alternativa en algunos navegadores móviles
+    contactPickerDisponible.value = true
+    razonNoDisponible.value = ''
+  } else {
+    // Intentar verificar de otra manera (para APIs experimentales)
+    try {
+      if (navigator.contacts && typeof navigator.contacts.select === 'function') {
+        contactPickerDisponible.value = true
+        razonNoDisponible.value = ''
+      } else if (navigator.contacts && typeof navigator.contacts.pick === 'function') {
+        contactPickerDisponible.value = true
+        razonNoDisponible.value = ''
+      } else {
+        // API no disponible - determinar la razón
+        const userAgent = navigator.userAgent
+        if (/iPhone|iPad|iPod/i.test(userAgent)) {
+          razonNoDisponible.value = 'iOS Safari no soporta esta función. Usa Chrome o Edge en Android.'
+        } else if (/Android/i.test(userAgent)) {
+          razonNoDisponible.value = 'Esta función requiere Chrome o Edge en Android. Tu navegador actual no la soporta.'
+        } else {
+          razonNoDisponible.value = 'Tu navegador no soporta la selección de contactos. Prueba con Chrome o Edge en Android.'
+        }
+        contactPickerDisponible.value = false
+      }
+    } catch (e) {
+      // API no disponible
+      razonNoDisponible.value = 'Error al verificar la disponibilidad de la API de contactos'
+      contactPickerDisponible.value = false
+    }
+  }
+  
+  // Debug: mostrar información en consola (solo en desarrollo)
+  if (import.meta.env.DEV) {
+    console.log('Contact Picker API:', {
+      disponible: contactPickerDisponible.value,
+      esMovil,
+      userAgent: navigator.userAgent,
+      tieneContacts: 'contacts' in navigator,
+      tieneSelect: 'contacts' in navigator && 'select' in navigator.contacts,
+      tienePick: 'contacts' in navigator && 'pick' in navigator.contacts,
+      razon: razonNoDisponible.value
+    })
+  }
+})
 
 // Lista de seeds para avatares predefinidos
 const avatarSeeds = [
@@ -1886,7 +2263,12 @@ const avatarSeeds = [
 
 // Periodicidad de la natillera actual
 const periodicidadNatillera = computed(() => {
-  return natillerasStore.natilleraActual?.periodicidad || 'mensual'
+  // Si la natillera actual no coincide con el ID de la ruta, retornar 'mensual' por defecto
+  // pero esto debería manejarse cargando la natillera cuando sea necesario
+  if (natillerasStore.natilleraActual && natillerasStore.natilleraActual.id === id) {
+    return natillerasStore.natilleraActual.periodicidad || 'mensual'
+  }
+  return 'mensual'
 })
 
 // Texto del label de cuota según periodicidad
@@ -1948,13 +2330,28 @@ function formatearValorCuota(value) {
 
 // Manejar input del valor de cuota
 function handleValorCuotaInput(event) {
-  const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
-  if (valor === '') {
+  const valorOriginal = event.target.value
+  // Remover puntos (separadores de miles) y cualquier carácter no numérico
+  const valorLimpio = valorOriginal.replace(/\./g, '').replace(/[^\d]/g, '')
+  
+  console.log('📝 Input de cuota - Valor original del input:', valorOriginal)
+  console.log('📝 Input de cuota - Valor limpio (sin puntos):', valorLimpio)
+  console.log('📝 Input de cuota - formSocio.valor_cuota ANTES:', formSocio.valor_cuota)
+  
+  if (valorLimpio === '' || valorLimpio === '0') {
     formSocio.valor_cuota = 0
+    console.log('📝 Input de cuota - Valor final: 0 (vacío o cero)')
   } else {
-    const numero = parseInt(valor, 10)
-    if (!isNaN(numero) && numero >= 0) {
+    // Usar parseFloat para manejar números grandes correctamente (parseInt tiene límites)
+    const numero = parseFloat(valorLimpio)
+    if (!isNaN(numero) && numero > 0) {
+      const valorAnterior = formSocio.valor_cuota
       formSocio.valor_cuota = numero
+      console.log('✅ Input de cuota - Valor parseado:', numero, 'Tipo:', typeof numero)
+      console.log('✅ Input de cuota - formSocio.valor_cuota actualizado de', valorAnterior, 'a', formSocio.valor_cuota)
+      console.log('✅ Input de cuota - Verificación: formSocio.valor_cuota ===', formSocio.valor_cuota, ':', formSocio.valor_cuota === numero)
+    } else {
+      console.warn('⚠️ Input de cuota - Valor no válido (NaN o <= 0):', valorLimpio, '→', numero)
     }
   }
 }
@@ -1964,6 +2361,17 @@ function seleccionarMontoCuota(event) {
   if (!input || typeof input.select !== 'function') return
   // El click puede mover el cursor después de seleccionar; diferimos el select()
   setTimeout(() => input.select(), 0)
+}
+
+// Manejar blur del input para validar el valor final
+function handleValorCuotaBlur(event) {
+  const valorActual = formSocio.valor_cuota
+  console.log('👋 Blur del input - Valor final en formSocio.valor_cuota:', valorActual)
+  
+  // Si el valor es 0, asegurar que el campo esté vacío visualmente
+  if (valorActual === 0) {
+    event.target.value = ''
+  }
 }
 
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
@@ -2000,12 +2408,43 @@ function handleAvatarError(event, seed) {
   img.src = getAvatarUrl(simpleSeed, simpleSeed, 'adventurer')
 }
 
-function abrirModalAgregar() {
+async function abrirModalAgregar() {
+  // Asegurar que la natillera esté cargada para obtener su periodicidad
+  if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
+    await natillerasStore.fetchNatillera(id)
+  }
+  
+  // IMPORTANTE: Resetear el formulario completamente antes de abrir el modal
+  // para asegurar que no haya valores residuales
+  Object.assign(formSocio, {
+    nombre: '',
+    documento: '',
+    email: '',
+    telefono: '',
+    valor_cuota: 0, // Iniciar en 0 para forzar al usuario a ingresar un valor
+    periodicidad: 'mensual',
+    avatar_seed: '',
+    avatar_style: 'adventurer'
+  })
+  
+  // Establecer la periodicidad inicial según la natillera
+  // Si la natillera es quincenal, permitir ambas opciones (mensual y quincenal)
+  // Si la natillera es mensual, solo permitir mensual
+  const periodicidad = periodicidadNatillera.value
+  if (periodicidad === 'mensual') {
+    formSocio.periodicidad = 'mensual'
+  } else {
+    // Para natilleras quincenales, establecer mensual por defecto pero permitir ambas opciones
+    formSocio.periodicidad = 'mensual'
+  }
+  
   // Generar un avatar_seed inicial aleatorio si no hay uno
   if (!formSocio.avatar_seed) {
     const randomIndex = Math.floor(Math.random() * avatarSeeds.length)
     formSocio.avatar_seed = avatarSeeds[randomIndex]
   }
+  
+  console.log('📝 Modal abierto - formSocio inicial:', { ...formSocio })
   modalAgregar.value = true
 }
 
@@ -2026,6 +2465,7 @@ function cerrarModal() {
   modalAgregar.value = false
   socioEditando.value = null
   errorSocio.value = ''
+  errorTelefonoDuplicado.value = false
   mostrarContacto.value = false
   mostrarAvatares.value = false
   mostrarAdvertenciaCuota.value = false
@@ -2034,18 +2474,168 @@ function cerrarModal() {
     documento: '',
     email: '',
     telefono: '',
-    valor_cuota: 50000,
+    valor_cuota: 0, // Resetear a 0 para forzar al usuario a ingresar un valor
     periodicidad: 'mensual',
     avatar_seed: '',
     avatar_style: 'adventurer'
   })
 }
 
+// Función auxiliar para limpiar y formatear número de teléfono
+function limpiarNumeroTelefono(telefono) {
+  if (!telefono) return ''
+  // Remover caracteres no numéricos excepto el signo +
+  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
+  // Si comienza con +, mantenerlo, de lo contrario limpiar todo
+  if (!numeroLimpio.startsWith('+')) {
+    numeroLimpio = numeroLimpio.replace(/\D/g, '')
+  }
+  return numeroLimpio
+}
+
+// Función para abrir el selector de contactos del dispositivo móvil
+async function abrirSelectorContactos() {
+  try {
+    // Verificar si la API está disponible
+    if (!('contacts' in navigator)) {
+      notificationStore.error(
+        'El selector de contactos no está disponible en este navegador',
+        'Función no disponible',
+        3000
+      )
+      return
+    }
+
+    let contactos = null
+
+    // Intentar usar la Contact Picker API estándar (Chrome/Edge en Android)
+    if ('select' in navigator.contacts) {
+      try {
+        const props = ['tel']
+        const opts = { multiple: false }
+        contactos = await navigator.contacts.select(props, opts)
+      } catch (error) {
+        console.error('Error al usar navigator.contacts.select:', error)
+        // Intentar con API alternativa
+        if ('pick' in navigator.contacts) {
+          contactos = await navigator.contacts.pick({ filterBy: ['tel'], multiple: false })
+        }
+      }
+    } else if ('pick' in navigator.contacts) {
+      // API alternativa
+      contactos = await navigator.contacts.pick({ filterBy: ['tel'], multiple: false })
+    }
+
+    if (contactos && contactos.length > 0) {
+      const contacto = contactos[0]
+      
+      // Extraer el número de teléfono - manejar diferentes formatos de respuesta
+      let numeroTelefono = ''
+      
+      // Formato 1: contacto.tel (array de strings)
+      if (contacto.tel && Array.isArray(contacto.tel) && contacto.tel.length > 0) {
+        numeroTelefono = contacto.tel[0]
+      } 
+      // Formato 2: contacto.tel (string único)
+      else if (contacto.tel && typeof contacto.tel === 'string') {
+        numeroTelefono = contacto.tel
+      }
+      // Formato 3: contacto.phoneNumbers (array de objetos)
+      else if (contacto.phoneNumbers && Array.isArray(contacto.phoneNumbers) && contacto.phoneNumbers.length > 0) {
+        const phoneNumber = contacto.phoneNumbers[0]
+        numeroTelefono = phoneNumber.value || phoneNumber.number || phoneNumber.tel || phoneNumber
+      }
+      // Formato 4: contacto.phoneNumber (string único)
+      else if (contacto.phoneNumber && typeof contacto.phoneNumber === 'string') {
+        numeroTelefono = contacto.phoneNumber
+      }
+
+      if (numeroTelefono) {
+        // Limpiar y formatear el número
+        formSocio.telefono = limpiarNumeroTelefono(numeroTelefono)
+        
+        // También intentar llenar el nombre si está vacío
+        if (!formSocio.nombre) {
+          if (contacto.name) {
+            formSocio.nombre = Array.isArray(contacto.name) ? contacto.name[0] : contacto.name
+          } else if (contacto.displayName) {
+            formSocio.nombre = contacto.displayName
+          } else if (contacto.givenName) {
+            const nombreCompleto = [contacto.givenName, contacto.familyName].filter(Boolean).join(' ')
+            if (nombreCompleto) {
+              formSocio.nombre = nombreCompleto
+            }
+          }
+        }
+
+        // También intentar llenar el email si está vacío
+        if (!formSocio.email) {
+          if (contacto.email) {
+            formSocio.email = Array.isArray(contacto.email) ? contacto.email[0] : contacto.email
+          } else if (contacto.emails && Array.isArray(contacto.emails) && contacto.emails.length > 0) {
+            const emailObj = contacto.emails[0]
+            formSocio.email = emailObj.value || emailObj.address || emailObj
+          }
+        }
+
+        notificationStore.success(
+          'Contacto seleccionado correctamente',
+          'Éxito',
+          2000
+        )
+      } else {
+        notificationStore.warning(
+          'El contacto seleccionado no tiene número de teléfono',
+          'Sin teléfono',
+          3000
+        )
+      }
+    } else {
+      // El usuario canceló la selección - no mostrar error
+      console.log('Selección de contacto cancelada')
+    }
+  } catch (error) {
+    console.error('Error al abrir selector de contactos:', error)
+    
+    // Manejar diferentes tipos de errores
+    if (error.name === 'AbortError' || error.name === 'NotAllowedError') {
+      notificationStore.warning(
+        'Permiso denegado o acción cancelada',
+        'Acceso a contactos',
+        3000
+      )
+    } else if (error.name === 'NotSupportedError') {
+      notificationStore.error(
+        'El selector de contactos no está soportado en este dispositivo',
+        'Función no soportada',
+        3000
+      )
+    } else {
+      notificationStore.error(
+        'Error al acceder a los contactos: ' + (error.message || 'Error desconocido'),
+        'Error',
+        4000
+      )
+    }
+  }
+}
+
 async function handleGuardarSocio() {
   errorSocio.value = ''
+  errorTelefonoDuplicado.value = false
   guardando.value = true
 
   try {
+    // Validar que el teléfono esté presente y no esté vacío
+    if (!formSocio.telefono || formSocio.telefono.trim() === '') {
+      errorSocio.value = 'El número de teléfono es obligatorio'
+      guardando.value = false
+      return
+    }
+
+    // Limpiar espacios y formatear el teléfono
+    const telefonoLimpio = formSocio.telefono.trim()
+
     if (socioEditando.value) {
       // Actualizar cuota del socio en socios_natillera
       const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
@@ -2055,9 +2645,18 @@ async function handleGuardarSocio() {
 
       // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
       if (socioEditando.value.socio?.id) {
+        // Verificar unicidad del teléfono (excepto el propio socio)
+        const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, socioEditando.value.socio.id)
+        if (!telefonoExiste) {
+          errorTelefonoDuplicado.value = true
+          errorSocio.value = 'Este número de teléfono ya está registrado para otro socio'
+          guardando.value = false
+          return
+        }
+
         const datosActualizados = {
           nombre: formSocio.nombre,
-          telefono: formSocio.telefono || null,
+          telefono: telefonoLimpio,
           email: formSocio.email || null,
           documento: formSocio.documento || null
         }
@@ -2067,7 +2666,18 @@ async function handleGuardarSocio() {
           datosActualizados.avatar_seed = formSocio.avatar_seed
         }
         
-        await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
+        const resultDatos = await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados)
+        
+        if (!resultDatos.success) {
+          if (resultDatos.error?.includes('unique') || resultDatos.error?.includes('duplicate')) {
+            errorTelefonoDuplicado.value = true
+            errorSocio.value = 'Este número de teléfono ya está registrado para otro socio'
+          } else {
+            errorSocio.value = resultDatos.error || 'Error al actualizar los datos del socio'
+          }
+          guardando.value = false
+          return
+        }
       }
 
       if (result.success) {
@@ -2099,36 +2709,244 @@ async function handleGuardarSocio() {
         errorSocio.value = result.error
       }
     } else {
-      // Agregar nuevo socio
+      // Agregar nuevo socio - verificar unicidad del teléfono
+      const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio)
+      if (!telefonoExiste) {
+        errorTelefonoDuplicado.value = true
+        errorSocio.value = 'Este número de teléfono ya está registrado para otro socio'
+        guardando.value = false
+        return
+      }
+
       const datosSocio = {
         nombre: formSocio.nombre,
         documento: formSocio.documento,
         email: formSocio.email || null,
-        telefono: formSocio.telefono || null,
+        telefono: telefonoLimpio,
         avatar_seed: formSocio.avatar_seed || null
       }
 
-      const result = await sociosStore.agregarSocio(
-        id,
-        datosSocio,
-        formSocio.valor_cuota,
-        formSocio.periodicidad
-      )
+      // IMPORTANTE: Validar y procesar el valor de cuota y periodicidad ANTES de cerrar el modal
+      // para no perder los valores del formulario
+      const valorCuotaParaGuardar = typeof formSocio.valor_cuota === 'string' 
+        ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
+        : Number(formSocio.valor_cuota) || 0
+      
+      // IMPORTANTE: Capturar la periodicidad seleccionada ANTES de cerrar el modal
+      const periodicidadParaGuardar = formSocio.periodicidad || 'mensual'
+      
+      console.log('🚀 ANTES de cerrar modal - valor_cuota (formSocio):', formSocio.valor_cuota, 'Tipo:', typeof formSocio.valor_cuota)
+      console.log('🚀 ANTES de cerrar modal - periodicidad (formSocio):', formSocio.periodicidad)
+      console.log('🚀 ANTES de cerrar modal - valorCuotaParaGuardar (procesado):', valorCuotaParaGuardar, 'Tipo:', typeof valorCuotaParaGuardar)
+      console.log('🚀 ANTES de cerrar modal - periodicidadParaGuardar:', periodicidadParaGuardar)
+      
+      if (valorCuotaParaGuardar <= 0) {
+        errorSocio.value = 'El valor de la cuota debe ser mayor a cero'
+        guardando.value = false
+        return
+      }
+      
+      // Verificar si la natillera tiene cuotas automáticas activadas
+      const natillera = natillerasStore.natilleraActual
+      const cuotasAutomaticas = natillera?.cuotas_automaticas !== false
 
-      if (result.success) {
-        // Mostrar notificación de éxito
-        notificationStore.success(
-          `${formSocio.nombre} ha sido agregado a la natillera`,
-          'Socio agregado',
-          3000
+      // Si tiene cuotas automáticas, mostrar el modal de progreso
+      if (cuotasAutomaticas) {
+        // Guardar los valores antes de cerrar el modal para no perderlos
+        const valorCuotaGuardado = valorCuotaParaGuardar
+        const periodicidadGuardada = periodicidadParaGuardar
+        
+        cerrarModal() // Cerrar el modal de agregar socio
+        
+        // Restaurar los valores después de cerrar (el modal los resetea)
+        formSocio.valor_cuota = valorCuotaGuardado
+        formSocio.periodicidad = periodicidadGuardada
+        
+        // Iniciar el modal de progreso
+        progresoCreacion.value = {
+          paso: 1,
+          mensaje: 'Creando socio...',
+          cuotasGeneradas: 0,
+          cuotasTotales: 0,
+          error: null,
+          exito: false,
+          nombreSocio: formSocio.nombre
+        }
+        modalProgreso.value = true
+
+        // Pequeña pausa para que el usuario vea el estado inicial
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        // Paso 1: Crear el socio
+        // Usar los valores guardados antes de cerrar el modal
+        const valorCuotaFinal = valorCuotaGuardado // Ya validado y guardado antes de cerrar modal
+        const periodicidadFinal = periodicidadGuardada // Ya capturada antes de cerrar modal
+        
+        console.log('🚀 Creando socio (con cuotas automáticas) - Datos completos:')
+        console.log('🚀 - Nombre:', datosSocio.nombre)
+        console.log('🚀 - valorCuotaFinal a guardar:', valorCuotaFinal, 'Tipo:', typeof valorCuotaFinal)
+        console.log('🚀 - periodicidadFinal a guardar:', periodicidadFinal)
+        console.log('🚀 - periodicidad en formSocio (después de restaurar):', formSocio.periodicidad)
+        
+        const result = await sociosStore.agregarSocio(
+          id,
+          datosSocio,
+          valorCuotaFinal, // Usar el valor ya procesado y validado
+          periodicidadFinal // Usar la periodicidad capturada antes de cerrar modal
         )
-        cerrarModal()
+
+        if (!result.success) {
+          progresoCreacion.value.paso = 0
+          progresoCreacion.value.error = result.error
+          progresoCreacion.value.mensaje = 'Error al crear el socio'
+          guardando.value = false
+          return
+        }
+
+        // Paso 2: Generar cuotas automáticas
+        progresoCreacion.value.paso = 2
+        progresoCreacion.value.mensaje = 'Generando cuotas del período...'
+        
+        await new Promise(resolve => setTimeout(resolve, 300))
+
+        const socioNatilleraId = result.data.id
+        console.log('🆔 Socio creado con éxito:', {
+          socioNatilleraId,
+          resultData: result.data,
+          valorCuotaFinal: valorCuotaFinal,
+          valorCuotaEnBD: result.data?.valor_cuota_individual,
+          periodicidadFinal: periodicidadFinal,
+          periodicidadEnBD: result.data?.periodicidad
+        })
+        
+        // Verificar que la periodicidad se guardó correctamente
+        if (result.data?.periodicidad !== periodicidadFinal) {
+          console.error('⚠️ ADVERTENCIA: La periodicidad guardada difiere de la seleccionada!')
+          console.error('⚠️ Periodicidad seleccionada:', periodicidadFinal)
+          console.error('⚠️ Periodicidad guardada en BD:', result.data?.periodicidad)
+        }
+        
+        // Usar el mismo valor procesado que se guardó en el socio
+        const resultCuotas = await generarCuotasParaSocio(
+          id, 
+          socioNatilleraId, 
+          natillera, 
+          valorCuotaFinal, // Usar el mismo valor procesado
+          periodicidadFinal // Usar la periodicidad capturada
+        )
+
+        if (resultCuotas.success) {
+          progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
+          progresoCreacion.value.cuotasTotales = resultCuotas.cuotasGeneradas
+          progresoCreacion.value.paso = 3
+          progresoCreacion.value.mensaje = '¡Socio creado exitosamente!'
+          progresoCreacion.value.exito = true
+        } else {
+          // Si hubo error en las cuotas pero el socio se creó, mostrar mensaje parcial
+          progresoCreacion.value.paso = 3
+          progresoCreacion.value.mensaje = 'Socio creado. Algunas cuotas no se generaron.'
+          progresoCreacion.value.error = resultCuotas.error
+          progresoCreacion.value.exito = true // El socio sí se creó
+        }
+
+        // Esperar 2.5 segundos y cerrar automáticamente
+        await new Promise(resolve => setTimeout(resolve, 2500))
+        cerrarModalProgreso()
+
       } else {
-        errorSocio.value = result.error
+        // Sin cuotas automáticas, crear socio normalmente
+        // Usar los valores ya procesados y validados arriba
+        const valorCuotaFinal = valorCuotaParaGuardar // Ya validado arriba
+        const periodicidadFinal = periodicidadParaGuardar // Ya capturada arriba
+        
+        console.log('🚀 Creando socio (sin cuotas automáticas) - Datos completos:')
+        console.log('🚀 - Nombre:', datosSocio.nombre)
+        console.log('🚀 - valorCuotaFinal a guardar:', valorCuotaFinal, 'Tipo:', typeof valorCuotaFinal)
+        console.log('🚀 - periodicidadFinal a guardar:', periodicidadFinal)
+        console.log('🚀 - periodicidad en formSocio:', formSocio.periodicidad)
+        
+        const result = await sociosStore.agregarSocio(
+          id,
+          datosSocio,
+          valorCuotaFinal, // Usar el valor ya procesado y validado
+          periodicidadFinal // Usar la periodicidad capturada
+        )
+
+        if (result.success) {
+          notificationStore.success(
+            `${formSocio.nombre} ha sido agregado a la natillera`,
+            'Socio agregado',
+            3000
+          )
+          cerrarModal()
+        } else {
+          if (result.error?.includes('unique') || result.error?.includes('duplicate') || result.error?.includes('teléfono')) {
+            errorTelefonoDuplicado.value = true
+            errorSocio.value = 'Este número de teléfono ya está registrado para otro socio'
+          } else {
+            errorSocio.value = result.error
+          }
+        }
       }
     }
   } finally {
     guardando.value = false
+  }
+}
+
+// Función OPTIMIZADA para generar cuotas automáticas para un socio nuevo
+// Usa batch insert para generar todas las cuotas en una sola operación
+async function generarCuotasParaSocio(natilleraId, socioNatilleraId, natillera, valorCuota, periodicidad) {
+  try {
+    console.log('🚀 Iniciando generación optimizada de cuotas...')
+    console.log('📋 Datos para generación:', {
+      natilleraId,
+      socioNatilleraId,
+      valorCuota,
+      periodicidad,
+      natilleraDisponible: !!natillera,
+      natilleraNombre: natillera?.nombre,
+      natilleraMesInicio: natillera?.mes_inicio,
+      natilleraMesFin: natillera?.mes_fin,
+      natilleraAnio: natillera?.anio,
+      natilleraAnioInicio: natillera?.anio_inicio
+    })
+    
+    // Usar la nueva función batch que es ~10x más rápida
+    const result = await cuotasStore.generarCuotasBatchParaSocio(
+      natilleraId,
+      socioNatilleraId,
+      valorCuota,
+      periodicidad,
+      natillera
+    )
+    
+    console.log('📊 Resultado de generación:', result)
+    
+    if (result.success) {
+      progresoCreacion.value.cuotasGeneradas = result.cuotasGeneradas
+      console.log(`✅ Cuotas generadas exitosamente en ${result.tiempoMs?.toFixed(0) || 0}ms`)
+    } else {
+      console.error('❌ Error en generación:', result.error)
+    }
+    
+    return result
+  } catch (error) {
+    console.error('❌ Error generando cuotas automáticas:', error)
+    return { success: false, error: error.message, cuotasGeneradas: 0 }
+  }
+}
+
+function cerrarModalProgreso() {
+  modalProgreso.value = false
+  progresoCreacion.value = {
+    paso: 0,
+    mensaje: '',
+    cuotasGeneradas: 0,
+    cuotasTotales: 0,
+    error: null,
+    exito: false,
+    nombreSocio: ''
   }
 }
 
@@ -2542,11 +3360,11 @@ function enviarWhatsAppCuota(cuotaData) {
 
 // Funciones para importación CSV
 function descargarEjemploCSV() {
-  const contenido = `nombre,valor_cuota,cantidad_cuotas,telefono,email,documento
-Juan Pérez,50000,1,3001234567,juan@email.com,1234567890
-María García,75000,2,3009876543,maria@email.com,0987654321
-Carlos López,50000,1,3005551234,,
-Ana Martínez,100000,1,,,`
+  const contenido = `nombre,valor_cuota,telefono,email,documento
+Juan Pérez,50000,3001234567,juan@email.com,1234567890
+María García,75000,3009876543,maria@email.com,0987654321
+Carlos López,50000,3005551234,,
+Ana Martínez,100000,3004445678,,0987654322`
 
   const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
@@ -2580,8 +3398,8 @@ function handleArchivoCSV(event) {
       const encabezados = lineas[0].split(',').map(h => h.trim().toLowerCase())
       
       // Validar encabezados requeridos
-      if (!encabezados.includes('nombre') || !encabezados.includes('valor_cuota')) {
-        errorImportar.value = 'El archivo debe tener las columnas "nombre" y "valor_cuota"'
+      if (!encabezados.includes('nombre') || !encabezados.includes('valor_cuota') || !encabezados.includes('telefono')) {
+        errorImportar.value = 'El archivo debe tener las columnas "nombre", "valor_cuota" y "telefono" (obligatorio y único)'
         sociosPreview.value = []
         return
       }
@@ -2596,13 +3414,13 @@ function handleArchivoCSV(event) {
           socio[header] = valores[index] || ''
         })
 
-        // Validar datos mínimos
-        if (socio.nombre && socio.valor_cuota) {
+        // Validar datos mínimos (nombre, valor_cuota y telefono son obligatorios)
+        if (socio.nombre && socio.valor_cuota && socio.telefono && socio.telefono.trim() !== '') {
           socios.push({
             nombre: socio.nombre,
             valor_cuota: parseInt(socio.valor_cuota) || 50000,
             cantidad_cuotas: parseInt(socio.cantidad_cuotas) || 1,
-            telefono: socio.telefono || null,
+            telefono: socio.telefono.trim(), // Obligatorio y único
             email: socio.email || null,
             documento: socio.documento || null
           })
@@ -2625,30 +3443,46 @@ function handleArchivoCSV(event) {
 async function importarSocios() {
   if (sociosPreview.value.length === 0) return
 
+  // Validar que todos los socios tengan teléfono
+  const sociosSinTelefono = sociosPreview.value.filter(s => !s.telefono || s.telefono.trim() === '')
+  if (sociosSinTelefono.length > 0) {
+    errorImportar.value = `Error: ${sociosSinTelefono.length} ${sociosSinTelefono.length === 1 ? 'socio no tiene' : 'socios no tienen'} teléfono. El teléfono es obligatorio y único.`
+    return
+  }
+
   importando.value = true
   errorImportar.value = ''
   exitoImportar.value = ''
 
   let importados = 0
   let errores = 0
+  const erroresDetalle = []
 
   for (const socio of sociosPreview.value) {
+    // Validar nuevamente el teléfono antes de agregar
+    if (!socio.telefono || socio.telefono.trim() === '') {
+      errores++
+      erroresDetalle.push(`${socio.nombre}: teléfono requerido`)
+      continue
+    }
+
     const result = await sociosStore.agregarSocio(
       id,
       {
         nombre: socio.nombre,
         documento: socio.documento,
         email: socio.email,
-        telefono: socio.telefono
+        telefono: socio.telefono.trim() // Asegurar que esté limpio
       },
       socio.valor_cuota,
-      socio.cantidad_cuotas
+      'mensual' // Periodicidad por defecto para importación
     )
 
     if (result.success) {
       importados++
     } else {
       errores++
+      erroresDetalle.push(`${socio.nombre}: ${result.error || 'Error desconocido'}`)
     }
   }
 
@@ -2658,8 +3492,18 @@ async function importarSocios() {
     exitoImportar.value = `Se importaron ${importados} socios exitosamente`
     sociosPreview.value = []
     archivoCSV.value = null
+    // Recargar la lista de socios
+    await sociosStore.fetchSociosNatillera(id)
   } else {
-    exitoImportar.value = `Se importaron ${importados} socios. ${errores} tuvieron errores.`
+    const mensajeErrores = erroresDetalle.length > 0 
+      ? '\n\nDetalles:\n' + erroresDetalle.slice(0, 5).join('\n') + (erroresDetalle.length > 5 ? `\n... y ${erroresDetalle.length - 5} más` : '')
+      : ''
+    errorImportar.value = `Se importaron ${importados} socios. ${errores} ${errores === 1 ? 'tuvo error' : 'tuvieron errores'}.${mensajeErrores}`
+    if (importados > 0) {
+      exitoImportar.value = `${importados} socios importados correctamente`
+      // Recargar la lista de socios
+      await sociosStore.fetchSociosNatillera(id)
+    }
   }
 }
 
@@ -2709,6 +3553,13 @@ watch(mostrarAdvertenciaCuota, (isOpen) => {
     }
   }
 })
+
+// Watch para recargar la natillera cuando cambie el ID de la ruta o props
+watch(() => props.id || route.params.id, async (newId) => {
+  if (newId && newId !== natillerasStore.natilleraActual?.id) {
+    await natillerasStore.fetchNatillera(newId)
+  }
+}, { immediate: false })
 
 // Función para cargar préstamos en mora
 async function fetchPrestamosEnMora() {
@@ -2896,6 +3747,11 @@ function irACuotas() {
 }
 
 onMounted(async () => {
+  // Cargar natillera actual para obtener su periodicidad
+  if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
+    await natillerasStore.fetchNatillera(id)
+  }
+  
   // Cargar socios y marcar carga inicial como completada
   await sociosStore.fetchSociosNatillera(id)
   cargaInicial.value = false
@@ -3066,6 +3922,274 @@ onUnmounted(() => {
     opacity: 0;
     transform: scale(0.95) translateY(5px);
   }
+}
+
+/* Animaciones para el modal de progreso */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ========================================
+   ANIMACIONES MODAL DE PROGRESO PREMIUM
+   ======================================== */
+
+/* Partículas flotantes */
+@keyframes float-particle {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) scale(1.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-40px) translateX(-5px) scale(0.8);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translateY(-20px) translateX(-15px) scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes float-particle-slow {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translateY(-30px) translateX(20px) rotate(120deg);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translateY(-15px) translateX(-10px) rotate(240deg);
+    opacity: 0.5;
+  }
+}
+
+.animate-float-particle {
+  animation: float-particle 4s ease-in-out infinite;
+}
+
+.animate-float-particle-slow {
+  animation: float-particle-slow 6s ease-in-out infinite;
+}
+
+/* Órbitas */
+@keyframes orbit-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-orbit-slow {
+  animation: orbit-slow 12s linear infinite;
+}
+
+.animate-orbit-reverse {
+  animation: orbit-reverse 8s linear infinite;
+}
+
+/* Spin muy lento para anillos decorativos */
+@keyframes spin-very-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-very-slow {
+  animation: spin-very-slow 20s linear infinite;
+}
+
+/* Spin reverso */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 1.5s linear infinite;
+}
+
+/* Bounce suave */
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 1.5s ease-in-out infinite;
+}
+
+/* Efecto sparkle para iconos */
+@keyframes sparkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(0.95) rotate(-3deg);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.05) rotate(2deg);
+    opacity: 0.95;
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* Pop de éxito */
+@keyframes success-pop {
+  0% {
+    transform: scale(0) rotate(-30deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.9) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-success-pop {
+  animation: success-pop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Pulse de éxito */
+@keyframes pulse-success {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse-success {
+  animation: pulse-success 1.5s ease-in-out infinite;
+}
+
+/* Shake para errores */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+/* Animación de check dibujándose */
+@keyframes check-draw {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-check-draw path {
+  stroke-dasharray: 24;
+  animation: check-draw 0.4s ease-out forwards;
 }
 </style>
 

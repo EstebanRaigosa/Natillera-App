@@ -522,62 +522,100 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       
       configSanciones = natilleraData?.reglas_multas?.sanciones || null
       
-      // Calcular sanciones dinámicas para cuotas en mora si las sanciones están activas
-      if (configSanciones?.activa) {
-        const cuotasMoraPorSocio = {}
-        cuotas.filter(c => c.estado === 'mora').forEach(c => {
-          cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
-        })
+        // Calcular sanciones dinámicas para cuotas en mora si las sanciones están activas
+        if (configSanciones?.activa) {
+          const periodicidadNatillera = natillera?.periodicidad || 'mensual'
+          const cuotasMora = cuotas.filter(c => c.estado === 'mora')
+          
+          // Función para obtener valor de sanción por posición (escalonada acumulativa)
+          function obtenerValorSancionPorPosicion(configSanciones, posicion) {
+            if (configSanciones.tipo === 'simple') {
+              return configSanciones.valorFijo || 0
+            } else if (configSanciones.tipo === 'escalonada') {
+              const niveles = configSanciones.niveles || []
+              if (niveles.length === 0) return 0
 
-        // Calcular multa base
-        function calcularMulta(cantidadCuotasMora = 1) {
-          let multa = 0
-          if (configSanciones.tipo === 'simple') {
-            multa = configSanciones.valorFijo || 0
-          } else if (configSanciones.tipo === 'escalonada') {
-            const niveles = configSanciones.niveles || []
-            const nivelesOrdenados = [...niveles].sort((a, b) => b.cuotas - a.cuotas)
-            for (const nivel of nivelesOrdenados) {
-              if (cantidadCuotasMora >= nivel.cuotas) {
-                multa = nivel.valor || 0
-                break
+              const nivelesOrdenados = [...niveles].sort((a, b) => a.cuotas - b.cuotas)
+              
+              for (const nivel of nivelesOrdenados) {
+                if (posicion <= nivel.cuotas) {
+                  return nivel.valor || 0
+                }
               }
+              
+              return nivelesOrdenados[nivelesOrdenados.length - 1]?.valor || 0
             }
-            if (multa === 0 && niveles.length > 0) {
-              multa = niveles[0].valor || 0
-            }
+            return 0
           }
-          return multa
+
+          // Agrupar cuotas en mora por socio y ordenarlas por fecha de vencimiento
+          const cuotasPorSocio = {}
+          cuotasMora.forEach(c => {
+            if (!cuotasPorSocio[c.socio_natillera_id]) {
+              cuotasPorSocio[c.socio_natillera_id] = []
+            }
+            cuotasPorSocio[c.socio_natillera_id].push(c)
+          })
+
+          // Ordenar cuotas de cada socio por fecha_limite (más antigua primero)
+          Object.keys(cuotasPorSocio).forEach(socioId => {
+            cuotasPorSocio[socioId].sort((a, b) => {
+              const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+              const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+              return fechaA - fechaB
+            })
+          })
+
+          // Calcular sanciones acumulativamente para cada cuota (por socio)
+          Object.keys(cuotasPorSocio).forEach(socioId => {
+            const cuotasSocio = cuotasPorSocio[socioId]
+            let posicionAcumulativa = 1 // Cada socio empieza desde la posición 1
+
+            cuotasSocio.forEach(cuota => {
+              const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+              const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+
+              let multaBase = 0
+
+              if (configSanciones.tipo === 'simple') {
+                multaBase = configSanciones.valorFijo || 0
+              } else if (configSanciones.tipo === 'escalonada') {
+                if (esMensualEnQuincenal) {
+                  // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
+                  const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                  multaBase = sancionPos1 + sancionPos2
+                  posicionAcumulativa += 2
+                } else {
+                  multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  posicionAcumulativa += 1
+                }
+              }
+              
+              // Calcular intereses adicionales por días de mora
+              let interesesAdicionales = 0
+              if (cuota.fecha_limite && configSanciones.interesesAdicionales?.activo) {
+                const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+                const fechaLimite = new Date(anio, mes - 1, dia)
+                fechaLimite.setHours(0, 0, 0, 0)
+                const hoy = new Date()
+                hoy.setHours(0, 0, 0, 0)
+                const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+                
+                if (diasEnMora > 0) {
+                  const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
+                  const valorInteres = configSanciones.interesesAdicionales.valor || 0
+                  if (diasParaInteres > 0 && valorInteres > 0) {
+                    const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+                    interesesAdicionales = periodosInteres * valorInteres
+                  }
+                }
+              }
+              
+              sancionesDinamicas[cuota.id] = multaBase + interesesAdicionales
+            })
+          })
         }
-
-        // Calcular sanciones dinámicas para cada cuota en mora
-        cuotas.filter(c => c.estado === 'mora').forEach(cuota => {
-          const cantidadMora = cuotasMoraPorSocio[cuota.socio_natillera_id] || 1
-          let multaBase = calcularMulta(cantidadMora)
-          
-          // Calcular intereses adicionales por días de mora
-          let interesesAdicionales = 0
-          if (cuota.fecha_limite && configSanciones.interesesAdicionales?.activo) {
-            const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
-            const fechaLimite = new Date(anio, mes - 1, dia)
-            fechaLimite.setHours(0, 0, 0, 0)
-            const hoy = new Date()
-            hoy.setHours(0, 0, 0, 0)
-            const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
-            
-            if (diasEnMora > 0) {
-              const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
-              const valorInteres = configSanciones.interesesAdicionales.valor || 0
-              if (diasParaInteres > 0 && valorInteres > 0) {
-                const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
-                interesesAdicionales = periodosInteres * valorInteres
-              }
-            }
-          }
-          
-          sancionesDinamicas[cuota.id] = multaBase + interesesAdicionales
-        })
-      }
     } catch (e) {
       console.error('Error obteniendo configuración de sanciones:', e)
     }

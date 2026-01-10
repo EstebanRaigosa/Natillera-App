@@ -450,8 +450,74 @@
         </div>
       </div>
 
+      <!-- Generación automática de cuotas -->
+      <div class="relative p-4 sm:p-6 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-50 rounded-xl sm:rounded-2xl border-2 border-emerald-100/50 shadow-lg shadow-emerald-100/50 hover:shadow-xl hover:shadow-emerald-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
+        <!-- Decoración de fondo -->
+        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-200/20 to-green-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        
+        <div class="relative">
+          <h3 class="font-semibold text-emerald-800 flex items-center gap-2 sm:gap-2.5 mb-3 sm:mb-5 text-base sm:text-lg">
+            <div class="p-1 sm:p-1.5 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg shadow-md">
+              <SparklesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <span>Generación de Cuotas Automáticas</span>
+          </h3>
+          
+          <div class="space-y-3 sm:space-y-4">
+            <!-- Toggle con mejor soporte móvil -->
+            <div class="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-white/70 backdrop-blur-sm rounded-xl border border-emerald-100/50">
+              <!-- Switch mejorado para móvil (usando botón en lugar de checkbox) -->
+              <button 
+                type="button"
+                @click="form.cuotas_automaticas = !form.cuotas_automaticas"
+                :class="[
+                  'relative flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2',
+                  form.cuotas_automaticas 
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg shadow-emerald-500/30' 
+                    : 'bg-gray-300'
+                ]"
+              >
+                <span 
+                  :class="[
+                    'absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 flex items-center justify-center',
+                    form.cuotas_automaticas ? 'left-[22px]' : 'left-0.5'
+                  ]"
+                >
+                  <svg v-if="form.cuotas_automaticas" class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </span>
+              </button>
+              
+              <div class="flex-1 min-w-0">
+                <span class="text-gray-700 font-semibold text-sm sm:text-base block mb-1">
+                  Generar cuotas automáticamente
+                </span>
+                <p class="text-xs text-gray-500 leading-relaxed">
+                  Al agregar un nuevo socio, se crearán todas sus cuotas del período
+                </p>
+              </div>
+            </div>
+
+            <!-- Información explicativa -->
+            <div class="p-3 sm:p-4 bg-emerald-50/80 border border-emerald-200/50 rounded-lg sm:rounded-xl">
+              <p class="text-xs sm:text-sm text-emerald-700 flex items-start gap-2 leading-relaxed">
+                <SparklesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <span>
+                  Las cuotas se generarán desde <strong>{{ meses.find(m => m.value === form.mes_inicio)?.label }} {{ form.anio_inicio }}</strong> hasta <strong>{{ meses.find(m => m.value === form.mes_fin)?.label }} {{ form.anio }}</strong>, 
+                  respetando la periodicidad configurada.
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Reglas de intereses -->
-      <div class="relative p-5 sm:p-6 bg-gradient-to-br from-cyan-50 via-sky-50 to-cyan-50 rounded-2xl border-2 border-cyan-100/50 shadow-lg shadow-cyan-100/50 hover:shadow-xl hover:shadow-cyan-200/50 transition-all duration-300 animate-fade-in-up stagger-6 overflow-hidden">
+      <div class="relative p-5 sm:p-6 bg-gradient-to-br from-cyan-50 via-sky-50 to-cyan-50 rounded-2xl border-2 border-cyan-100/50 shadow-lg shadow-cyan-100/50 hover:shadow-xl hover:shadow-cyan-200/50 transition-all duration-300 animate-fade-in-up stagger-7 overflow-hidden">
         <!-- Decoración de fondo -->
         <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-cyan-200/20 to-sky-200/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
@@ -590,7 +656,8 @@ import {
   ChartBarIcon,
   PlusIcon,
   XMarkIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  SparklesIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -634,6 +701,8 @@ const form = reactive({
   anio_inicio: new Date().getFullYear(),
   mes_fin: 11, // Noviembre por defecto
   anio: new Date().getFullYear(),
+  // Generación automática de cuotas
+  cuotas_automaticas: true,
   // Multas
   multa_activa: true,
   tipo_sancion: 'simple', // 'simple' o 'escalonada'
@@ -775,6 +844,8 @@ async function handleSubmit() {
     anio_inicio: form.anio_inicio,
     mes_fin: form.mes_fin,
     anio: form.anio,
+    // Generación automática de cuotas
+    cuotas_automaticas: form.cuotas_automaticas,
     // Reglas
     reglas_multas: reglasMultas,
     reglas_interes: form.prestamos_activos ? {
@@ -835,6 +906,7 @@ async function handleSubmit() {
 .stagger-5 { animation-delay: 0.5s; }
 .stagger-6 { animation-delay: 0.6s; }
 .stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
 
 /* Animación scale-x para la línea decorativa */
 @keyframes scale-x {

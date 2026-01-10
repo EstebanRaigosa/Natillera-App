@@ -120,6 +120,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return multa
   }
 
+  // Función para obtener el valor de sanción para una posición específica (escalonada acumulativa)
+  function obtenerValorSancionPorPosicion(configSanciones, posicion) {
+    if (!configSanciones || !configSanciones.activa) {
+      return 0
+    }
+
+    if (configSanciones.tipo === 'simple') {
+      return configSanciones.valorFijo || 0
+    } else if (configSanciones.tipo === 'escalonada') {
+      const niveles = configSanciones.niveles || []
+      if (niveles.length === 0) return 0
+
+      // Ordenar niveles por cantidad de cuotas (ascendente)
+      const nivelesOrdenados = [...niveles].sort((a, b) => a.cuotas - b.cuotas)
+      
+      // Buscar el nivel que corresponde exactamente a la posición
+      for (const nivel of nivelesOrdenados) {
+        if (posicion <= nivel.cuotas) {
+          return nivel.valor || 0
+        }
+      }
+      
+      // Si la posición es mayor que todos los niveles, usar el último nivel
+      return nivelesOrdenados[nivelesOrdenados.length - 1]?.valor || 0
+    }
+
+    return 0
+  }
+
   // Función para calcular la multa dinámica de una cuota considerando la fecha actual
   // y la configuración de intereses adicionales por días de mora
   function calcularMultaDinamica(cuota, configSanciones, cantidadCuotasMoraSocio = 1) {
@@ -186,16 +215,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // Función para calcular el total de sanciones de un conjunto de cuotas
   async function calcularSancionesTotales(natilleraId, cuotasLista = null) {
     try {
-      // Obtener configuración de sanciones
+      // Obtener configuración de sanciones y periodicidad de la natillera
       const { data: natillera } = await supabase
         .from('natilleras')
-        .select('reglas_multas')
+        .select('reglas_multas, periodicidad')
         .eq('id', natilleraId)
         .single()
 
       const configSanciones = natillera?.reglas_multas?.sanciones || null
+      const periodicidadNatillera = natillera?.periodicidad || 'mensual'
 
       console.log('🔧 Configuración de sanciones:', JSON.stringify(configSanciones, null, 2))
+      console.log('📅 Periodicidad natillera:', periodicidadNatillera)
 
       if (!configSanciones?.activa) {
         console.log('⚠️ Sanciones no activas')
@@ -214,21 +245,84 @@ export const useCuotasStore = defineStore('cuotas', () => {
       })
 
       const lista = cuotasLista || cuotas.value
+      const cuotasMora = lista.filter(c => c.estado === 'mora')
       
-      // Contar cuotas en mora por socio para el escalonamiento
-      const cuotasMoraPorSocio = {}
-      lista.filter(c => c.estado === 'mora').forEach(c => {
-        cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+      // Agrupar cuotas en mora por socio y ordenarlas por fecha de vencimiento
+      const cuotasPorSocio = {}
+      cuotasMora.forEach(c => {
+        if (!cuotasPorSocio[c.socio_natillera_id]) {
+          cuotasPorSocio[c.socio_natillera_id] = []
+        }
+        cuotasPorSocio[c.socio_natillera_id].push(c)
       })
 
-      console.log('📋 Cuotas en mora por socio:', cuotasMoraPorSocio)
+      // Ordenar cuotas de cada socio por fecha_limite (más antigua primero)
+      Object.keys(cuotasPorSocio).forEach(socioId => {
+        cuotasPorSocio[socioId].sort((a, b) => {
+          const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+          const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+          return fechaA - fechaB
+        })
+      })
 
-      // Calcular sanción dinámica para cada cuota en mora
+      // Calcular sanciones acumulativamente para cada cuota (por socio)
       const sanciones = {}
-      lista.filter(c => c.estado === 'mora').forEach(cuota => {
-        const cantidadMora = cuotasMoraPorSocio[cuota.socio_natillera_id] || 1
-        const sancion = calcularMultaDinamica(cuota, configSanciones, cantidadMora)
-        sanciones[cuota.id] = sancion
+
+      Object.keys(cuotasPorSocio).forEach(socioId => {
+        const cuotasSocio = cuotasPorSocio[socioId]
+        let posicionAcumulativa = 1 // Cada socio empieza desde la posición 1
+
+        cuotasSocio.forEach(cuota => {
+          const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+          const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+
+          let multaBase = 0
+
+          if (configSanciones.tipo === 'simple') {
+            // Sanción simple: mismo valor para todas
+            multaBase = configSanciones.valorFijo || 0
+          } else if (configSanciones.tipo === 'escalonada') {
+            // Sanción escalonada: calcular según posición acumulativa
+            if (esMensualEnQuincenal) {
+              // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
+              // Por ejemplo: posición 1 (4500) + posición 2 (5000) = 9500
+              const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+              const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+              multaBase = sancionPos1 + sancionPos2
+              posicionAcumulativa += 2 // Avanzar 2 posiciones (2 quincenas)
+            } else {
+              // Si es quincenal o mensual en natillera mensual, solo 1 posición
+              multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+              posicionAcumulativa += 1 // Avanzar 1 posición
+            }
+          }
+
+          // Calcular intereses adicionales por días de mora
+          let interesesAdicionales = 0
+          const fechaLimiteStr = cuota.fecha_limite
+          if (fechaLimiteStr && configSanciones.interesesAdicionales?.activo) {
+            const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+            const fechaLimite = new Date(anio, mes - 1, dia)
+            fechaLimite.setHours(0, 0, 0, 0)
+            const hoy = new Date()
+            hoy.setHours(0, 0, 0, 0)
+            const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+            
+            if (diasEnMora > 0) {
+              const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
+              const valorInteres = configSanciones.interesesAdicionales.valor || 0
+              if (diasParaInteres > 0 && valorInteres > 0) {
+                const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+                interesesAdicionales = periodosInteres * valorInteres
+              }
+            }
+          }
+
+          sanciones[cuota.id] = multaBase + interesesAdicionales
+          
+          const posicionInicial = posicionAcumulativa - (esMensualEnQuincenal ? 2 : 1)
+          console.log(`💰 Sanción cuota ${cuota.id} (${periodicidadSocio}): Posición ${posicionInicial}${esMensualEnQuincenal ? `+${posicionInicial + 1}` : ''}, Base $${multaBase.toLocaleString()} + Intereses $${interesesAdicionales.toLocaleString()} = $${(multaBase + interesesAdicionales).toLocaleString()}`)
+        })
       })
 
       return { 
@@ -339,17 +433,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Actualizar cuotas a mora con aplicación de sanciones
       if (cuotasAMora.length > 0) {
-        // Obtener la configuración de sanciones de la natillera
+        // Obtener la configuración de sanciones y periodicidad de la natillera
         let configSanciones = null
+        let periodicidadNatillera = 'mensual'
         
         if (natilleraId) {
           const { data: natillera } = await supabase
             .from('natilleras')
-            .select('reglas_multas')
+            .select('reglas_multas, periodicidad')
             .eq('id', natilleraId)
             .single()
           
           configSanciones = natillera?.reglas_multas?.sanciones || null
+          periodicidadNatillera = natillera?.periodicidad || 'mensual'
         } else if (cuotasAMora.length > 0) {
           // Obtener natillera_id desde el primer socio_natillera
           const { data: socioNatillera } = await supabase
@@ -361,29 +457,100 @@ export const useCuotasStore = defineStore('cuotas', () => {
           if (socioNatillera?.natillera_id) {
             const { data: natillera } = await supabase
               .from('natilleras')
-              .select('reglas_multas')
+              .select('reglas_multas, periodicidad')
               .eq('id', socioNatillera.natillera_id)
               .single()
             
             configSanciones = natillera?.reglas_multas?.sanciones || null
+            periodicidadNatillera = natillera?.periodicidad || 'mensual'
           }
         }
 
-        // Si las sanciones están activas, contar cuotas en mora por socio para escalonamiento
-        let cuotasMoraPorSocio = {}
-        if (configSanciones?.activa && configSanciones?.tipo === 'escalonada') {
-          // Obtener todas las cuotas en mora actuales por socio
+        // Si las sanciones están activas, calcular multas de forma acumulativa
+        if (configSanciones?.activa) {
+          // Obtener todas las cuotas en mora existentes de los socios afectados
           const socioIds = [...new Set(cuotasAMora.map(c => c.socio_natillera_id))]
           
-          const { data: cuotasMoraExistentes } = await supabase
-            .from('cuotas')
-            .select('socio_natillera_id')
-            .in('socio_natillera_id', socioIds)
-            .eq('estado', 'mora')
-
-          // Contar cuotas en mora por socio
-          ;(cuotasMoraExistentes || []).forEach(c => {
-            cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+          // Obtener todas las cuotas en mora existentes (ya en BD) y las que están pasando a mora
+          let todasCuotasMoraPorSocio = {}
+          
+          // Obtener todas las cuotas en mora (ya existentes + las que están pasando a mora)
+          // Primero obtener las que ya están en mora desde la lista local
+          const cuotasMoraExistentes = lista.filter(c => 
+            c.estado === 'mora' && socioIds.includes(c.socio_natillera_id)
+          )
+          
+          // Agregar las cuotas que están pasando a mora ahora
+          cuotasAMora.forEach(c => {
+            const cuotaCompleta = lista.find(lc => lc.id === c.id)
+            if (cuotaCompleta) {
+              // Verificar que no esté ya en la lista (evitar duplicados)
+              if (!cuotasMoraExistentes.find(ce => ce.id === cuotaCompleta.id)) {
+                cuotasMoraExistentes.push(cuotaCompleta)
+              }
+            }
+          })
+          
+          // Si hay cuotas en la lista local, usarlas
+          if (cuotasMoraExistentes.length > 0) {
+            cuotasMoraExistentes.forEach(c => {
+              if (!todasCuotasMoraPorSocio[c.socio_natillera_id]) {
+                todasCuotasMoraPorSocio[c.socio_natillera_id] = []
+              }
+              todasCuotasMoraPorSocio[c.socio_natillera_id].push(c)
+            })
+          } else {
+            // Si no hay en la lista local, consultar BD
+            const { data: cuotasMoraBD } = await supabase
+              .from('cuotas')
+              .select('id, socio_natillera_id, fecha_limite, fecha_vencimiento, quincena')
+              .in('socio_natillera_id', socioIds)
+              .eq('estado', 'mora')
+            
+            // Obtener periodicidad de los socios
+            const { data: sociosNatillera } = await supabase
+              .from('socios_natillera')
+              .select('id, periodicidad')
+              .in('id', socioIds)
+            
+            const periodicidadPorSocio = {}
+            ;(sociosNatillera || []).forEach(sn => {
+              periodicidadPorSocio[sn.id] = sn.periodicidad || 'mensual'
+            })
+            
+            // Convertir a formato compatible
+            ;(cuotasMoraBD || []).forEach(c => {
+              if (!todasCuotasMoraPorSocio[c.socio_natillera_id]) {
+                todasCuotasMoraPorSocio[c.socio_natillera_id] = []
+              }
+              todasCuotasMoraPorSocio[c.socio_natillera_id].push({
+                ...c,
+                socio_natillera: { periodicidad: periodicidadPorSocio[c.socio_natillera_id] }
+              })
+            })
+            
+            // Agregar también las cuotas que están pasando a mora
+            cuotasAMora.forEach(c => {
+              const cuotaCompleta = lista.find(lc => lc.id === c.id)
+              if (cuotaCompleta) {
+                if (!todasCuotasMoraPorSocio[cuotaCompleta.socio_natillera_id]) {
+                  todasCuotasMoraPorSocio[cuotaCompleta.socio_natillera_id] = []
+                }
+                // Verificar que no esté ya en la lista
+                if (!todasCuotasMoraPorSocio[cuotaCompleta.socio_natillera_id].find(ce => ce.id === cuotaCompleta.id)) {
+                  todasCuotasMoraPorSocio[cuotaCompleta.socio_natillera_id].push(cuotaCompleta)
+                }
+              }
+            })
+          }
+          
+          // Ordenar cuotas de cada socio por fecha_limite
+          Object.keys(todasCuotasMoraPorSocio).forEach(socioId => {
+            todasCuotasMoraPorSocio[socioId].sort((a, b) => {
+              const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+              const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+              return fechaA - fechaB
+            })
           })
         }
 
@@ -392,10 +559,45 @@ export const useCuotasStore = defineStore('cuotas', () => {
           // Calcular la multa si las sanciones están activas y la cuota no tenía multa
           let valorMulta = 0
           if (configSanciones?.activa && !cuotaInfo.yaTeníaMulta) {
-            const cantidadMora = (cuotasMoraPorSocio[cuotaInfo.socio_natillera_id] || 0) + 1
-            valorMulta = calcularMulta(configSanciones, cantidadMora)
+            // Obtener la información completa de la cuota
+            const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
+            if (!cuotaActual) continue
             
-            console.log(`💰 Aplicando multa de $${valorMulta.toLocaleString('es-CO')} a cuota ${cuotaInfo.id} (${cantidadMora} cuotas en mora)`)
+            const periodicidadSocio = cuotaActual.socio_natillera?.periodicidad || 
+                                      (cuotaActual.quincena === null ? 'mensual' : 'quincenal')
+            const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+            
+            // Obtener todas las cuotas en mora del socio (incluyendo las que están pasando ahora)
+            const cuotasMoraSocio = todasCuotasMoraPorSocio[cuotaInfo.socio_natillera_id] || []
+            
+            // Encontrar la posición de esta cuota en la lista ordenada
+            const indiceCuota = cuotasMoraSocio.findIndex(c => c.id === cuotaInfo.id)
+            if (indiceCuota === -1) continue
+            
+            // Calcular posición acumulativa contando las cuotas anteriores
+            let posicionAcumulativa = 1
+            for (let i = 0; i < indiceCuota; i++) {
+              const c = cuotasMoraSocio[i]
+              const periodicidadC = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
+              const esMensual = periodicidadNatillera === 'quincenal' && periodicidadC === 'mensual'
+              posicionAcumulativa += esMensual ? 2 : 1
+            }
+            
+            // Calcular multa según la posición
+            if (configSanciones.tipo === 'simple') {
+              valorMulta = configSanciones.valorFijo || 0
+            } else if (configSanciones.tipo === 'escalonada') {
+              if (esMensualEnQuincenal) {
+                // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
+                const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                valorMulta = sancionPos1 + sancionPos2
+              } else {
+                valorMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+              }
+            }
+            
+            console.log(`💰 Aplicando multa de $${valorMulta.toLocaleString('es-CO')} a cuota ${cuotaInfo.id} (posición ${posicionAcumulativa}${esMensualEnQuincenal ? `+${posicionAcumulativa + 1}` : ''})`)
           }
 
           const datosActualizar = {
@@ -454,14 +656,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // Función para recalcular multas de cuotas que ya están en mora pero no tienen multa aplicada
   async function recalcularMultasCuotasMora(natilleraId) {
     try {
-      // Obtener configuración de sanciones
+      // Obtener configuración de sanciones y periodicidad de la natillera
       const { data: natillera } = await supabase
         .from('natilleras')
-        .select('reglas_multas')
+        .select('reglas_multas, periodicidad')
         .eq('id', natilleraId)
         .single()
 
       const configSanciones = natillera?.reglas_multas?.sanciones || null
+      const periodicidadNatillera = natillera?.periodicidad || 'mensual'
 
       // Si las sanciones no están activas, no hacer nada
       if (!configSanciones?.activa) {
@@ -480,12 +683,16 @@ export const useCuotasStore = defineStore('cuotas', () => {
       console.log(`🔄 Recalculando multas para ${cuotasMoraSinMulta.length} cuota(s) en mora sin multa...`)
 
       // Para el tipo escalonado, necesitamos contar cuotas en mora por socio
+      // Si la natillera es quincenal y el socio es mensual, contar cada cuota mensual como 2
       let cuotasMoraPorSocio = {}
       if (configSanciones.tipo === 'escalonada') {
         cuotas.value
           .filter(c => c.estado === 'mora')
           .forEach(c => {
-            cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + 1
+            const periodicidadSocio = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
+            // Si natillera es quincenal y socio es mensual, contar como 2 cuotas
+            const pesoCuota = (periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual') ? 2 : 1
+            cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + pesoCuota
           })
       }
 
@@ -1070,22 +1277,86 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (cuotaActual.estado === 'mora') {
         const { data: natillera } = await supabase
           .from('natilleras')
-          .select('reglas_multas')
+          .select('reglas_multas, periodicidad')
           .eq('id', natilleraId)
           .single()
         
         const configSanciones = natillera?.reglas_multas?.sanciones || null
+        const periodicidadNatillera = natillera?.periodicidad || 'mensual'
         
         if (configSanciones?.activa) {
-          // Contar cuotas en mora del mismo socio para el escalonamiento
+          // Obtener todas las cuotas en mora del socio ordenadas por fecha
           const { data: cuotasMoraSocio } = await supabase
             .from('cuotas')
-            .select('id')
+            .select('id, fecha_limite, quincena')
             .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
             .eq('estado', 'mora')
+            .order('fecha_limite', { ascending: true })
           
-          const cantidadCuotasMora = cuotasMoraSocio?.length || 1
-          sancionDinamica = calcularMultaDinamica(cuotaActual, configSanciones, cantidadCuotasMora)
+          // Obtener periodicidad del socio
+          const { data: socioNatilleraInfo } = await supabase
+            .from('socios_natillera')
+            .select('periodicidad')
+            .eq('id', cuotaActual.socio_natillera_id)
+            .single()
+          
+          const periodicidadSocio = socioNatilleraInfo?.periodicidad || 'mensual'
+          const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+          
+          // Encontrar la posición de esta cuota en la lista ordenada
+          let posicionAcumulativa = 1
+          if (cuotasMoraSocio && cuotasMoraSocio.length > 0) {
+            // Encontrar el índice de la cuota actual
+            const indiceCuota = cuotasMoraSocio.findIndex(c => c.id === cuotaActual.id)
+            
+            if (indiceCuota !== -1) {
+              // Calcular posición acumulativa contando las cuotas anteriores
+              for (let i = 0; i < indiceCuota; i++) {
+                const c = cuotasMoraSocio[i]
+                const esMensual = c.quincena === null
+                const esMensualEnQuincenalC = periodicidadNatillera === 'quincenal' && esMensual
+                posicionAcumulativa += esMensualEnQuincenalC ? 2 : 1
+              }
+            }
+          }
+          
+          // Calcular multa base según la posición
+          let multaBase = 0
+          if (configSanciones.tipo === 'simple') {
+            multaBase = configSanciones.valorFijo || 0
+          } else if (configSanciones.tipo === 'escalonada') {
+            if (esMensualEnQuincenal) {
+              // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
+              const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+              const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+              multaBase = sancionPos1 + sancionPos2
+            } else {
+              multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+            }
+          }
+          
+          // Calcular intereses adicionales por días de mora
+          let interesesAdicionales = 0
+          const fechaLimiteStr = cuotaActual.fecha_limite
+          if (fechaLimiteStr && configSanciones.interesesAdicionales?.activo) {
+            const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+            const fechaLimite = new Date(anio, mes - 1, dia)
+            fechaLimite.setHours(0, 0, 0, 0)
+            const hoy = new Date()
+            hoy.setHours(0, 0, 0, 0)
+            const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+            
+            if (diasEnMora > 0) {
+              const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
+              const valorInteres = configSanciones.interesesAdicionales.valor || 0
+              if (diasParaInteres > 0 && valorInteres > 0) {
+                const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+                interesesAdicionales = periodosInteres * valorInteres
+              }
+            }
+          }
+          
+          sancionDinamica = multaBase + interesesAdicionales
         }
       }
 
@@ -2242,6 +2513,277 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // ========================================================
+  // FUNCIÓN OPTIMIZADA: Genera todas las cuotas del período en un solo batch
+  // Esta función es ~10x más rápida que generar cuota por cuota
+  // ========================================================
+  async function generarCuotasBatchParaSocio(natilleraId, socioNatilleraId, valorCuota, periodicidad, natilleraParam) {
+    const tiempoInicio = performance.now()
+    
+    try {
+      console.log('🚀 GENERACIÓN BATCH DE CUOTAS - Inicio')
+      console.log('📋 Parámetros recibidos:', {
+        natilleraId,
+        socioNatilleraId,
+        valorCuota,
+        periodicidad,
+        natilleraParam: natilleraParam ? 'presente' : 'NULL'
+      })
+      
+      if (!socioNatilleraId) {
+        console.error('❌ socioNatilleraId es null o undefined')
+        return { success: false, error: 'ID del socio no válido', cuotasGeneradas: 0 }
+      }
+      
+      // IMPORTANTE: Obtener datos frescos de la natillera directamente de la BD
+      // para asegurar que tenemos todos los campos necesarios
+      let natillera = natilleraParam
+      
+      if (!natillera || !natillera.mes_inicio || !natillera.mes_fin) {
+        console.log('📡 Obteniendo datos de natillera desde BD...')
+        const { data: natilleraDB, error: natilleraError } = await supabase
+          .from('natilleras')
+          .select('id, nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas')
+          .eq('id', natilleraId)
+          .single()
+        
+        if (natilleraError || !natilleraDB) {
+          console.error('❌ Error obteniendo natillera:', natilleraError)
+          return { success: false, error: 'No se pudo obtener la configuración de la natillera', cuotasGeneradas: 0 }
+        }
+        
+        natillera = natilleraDB
+        console.log('✅ Natillera obtenida de BD:', natillera)
+      }
+      
+      console.log('📋 Datos de natillera:', {
+        id: natillera.id,
+        nombre: natillera.nombre,
+        mes_inicio: natillera.mes_inicio,
+        mes_fin: natillera.mes_fin,
+        anio: natillera.anio,
+        anio_inicio: natillera.anio_inicio,
+        reglas_multas: natillera.reglas_multas
+      })
+      
+      // Obtener configuración de días de gracia
+      const reglasMultas = natillera.reglas_multas || {}
+      const diasGracia = reglasMultas.dias_gracia || 3
+      
+      // Calcular el período de la natillera
+      const mesInicio = natillera.mes_inicio || 1
+      const anioInicio = natillera.anio_inicio || natillera.anio || new Date().getFullYear()
+      const mesFin = natillera.mes_fin || 11
+      const anioFin = natillera.anio || new Date().getFullYear()
+      
+      console.log('📅 Período calculado:', { mesInicio, mesFin, anioInicio, anioFin })
+      
+      // Generar lista de meses del período
+      const mesesDelPeriodo = []
+      
+      if (anioInicio === anioFin) {
+        for (let mes = mesInicio; mes <= mesFin; mes++) {
+          mesesDelPeriodo.push({ mes, anio: anioInicio })
+        }
+      } else {
+        // Período que cruza años
+        for (let mes = mesInicio; mes <= 12; mes++) {
+          mesesDelPeriodo.push({ mes, anio: anioInicio })
+        }
+        for (let anio = anioInicio + 1; anio < anioFin; anio++) {
+          for (let mes = 1; mes <= 12; mes++) {
+            mesesDelPeriodo.push({ mes, anio })
+          }
+        }
+        for (let mes = 1; mes <= mesFin; mes++) {
+          mesesDelPeriodo.push({ mes, anio: anioFin })
+        }
+      }
+      
+      console.log(`📅 Meses del período: ${mesesDelPeriodo.length}`, mesesDelPeriodo)
+      
+      // Si no hay meses, retornar error
+      if (mesesDelPeriodo.length === 0) {
+        console.error('❌ No hay meses en el período. Verificar mes_inicio y mes_fin')
+        return { success: false, error: 'No hay meses válidos en el período de la natillera', cuotasGeneradas: 0 }
+      }
+      
+      // Helper para obtener último día del mes
+      const obtenerUltimoDia = (mes, anio) => {
+        return new Date(anio, mes, 0).getDate()
+      }
+      
+      // Helper para formatear fecha
+      const formatearFecha = (anio, mes, dia) => {
+        return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+      }
+      
+      // Helper para calcular fecha con días de gracia
+      const calcularFechaConDiasGracia = (anio, mes, dia, dias) => {
+        const diasEnMes = obtenerUltimoDia(mes, anio)
+        let diaResultado = dia + dias
+        let mesFinal = mes
+        let anioFinal = anio
+        
+        if (diaResultado > diasEnMes) {
+          diaResultado = diaResultado - diasEnMes
+          mesFinal = mes + 1
+          if (mesFinal > 12) {
+            mesFinal = 1
+            anioFinal = anio + 1
+          }
+        }
+        return formatearFecha(anioFinal, mesFinal, diaResultado)
+      }
+      
+      // Calcular estado inicial basado en fecha
+      const fechaActual = new Date()
+      fechaActual.setHours(0, 0, 0, 0)
+      
+      const calcularEstado = (fechaVencimientoStr, fechaLimiteStr) => {
+        const [yV, mV, dV] = fechaVencimientoStr.split('-').map(Number)
+        const fechaVencimiento = new Date(yV, mV - 1, dV)
+        
+        const [yL, mL, dL] = fechaLimiteStr.split('-').map(Number)
+        const fechaLimite = new Date(yL, mL - 1, dL)
+        
+        if (fechaActual > fechaVencimiento) return 'mora'
+        if (fechaActual >= fechaLimite) return 'pendiente'
+        return 'programada'
+      }
+      
+      // Generar todos los registros de cuotas en memoria
+      const cuotasAInsertar = []
+      const esQuincenal = periodicidad === 'quincenal'
+      
+      for (const { mes, anio } of mesesDelPeriodo) {
+        const ultimoDia = obtenerUltimoDia(mes, anio)
+        
+        if (esQuincenal) {
+          // Primera quincena
+          const fechaLimiteQ1 = formatearFecha(anio, mes, 15)
+          const fechaVencimientoQ1 = calcularFechaConDiasGracia(anio, mes, 15, diasGracia)
+          
+          // Obtener nombre del mes para descripción
+          const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+          const mesLabel = meses[mes - 1]
+          
+          cuotasAInsertar.push({
+            socio_natillera_id: socioNatilleraId,
+            mes,
+            anio,
+            quincena: 1,
+            valor_cuota: valorCuota,
+            valor_pagado: 0,
+            fecha_limite: fechaLimiteQ1,
+            fecha_vencimiento: fechaVencimientoQ1,
+            estado: calcularEstado(fechaVencimientoQ1, fechaLimiteQ1),
+            descripcion: `${mesLabel} - 1ra Quincena`
+          })
+          
+          // Segunda quincena
+          const fechaLimiteQ2 = formatearFecha(anio, mes, ultimoDia)
+          const fechaVencimientoQ2 = calcularFechaConDiasGracia(anio, mes, ultimoDia, diasGracia)
+          
+          cuotasAInsertar.push({
+            socio_natillera_id: socioNatilleraId,
+            mes,
+            anio,
+            quincena: 2,
+            valor_cuota: valorCuota,
+            valor_pagado: 0,
+            fecha_limite: fechaLimiteQ2,
+            fecha_vencimiento: fechaVencimientoQ2,
+            estado: calcularEstado(fechaVencimientoQ2, fechaLimiteQ2),
+            descripcion: `${mesLabel} - 2da Quincena`
+          })
+        } else {
+          // Mensual
+          const fechaLimite = formatearFecha(anio, mes, ultimoDia)
+          const fechaVencimiento = calcularFechaConDiasGracia(anio, mes, ultimoDia, diasGracia)
+          
+          // Obtener nombre del mes para descripción
+          const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+          const mesLabel = meses[mes - 1]
+          
+          cuotasAInsertar.push({
+            socio_natillera_id: socioNatilleraId,
+            mes,
+            anio,
+            quincena: null,
+            valor_cuota: valorCuota,
+            valor_pagado: 0,
+            fecha_limite: fechaLimite,
+            fecha_vencimiento: fechaVencimiento,
+            estado: calcularEstado(fechaVencimiento, fechaLimite),
+            descripcion: `Cuota ${mesLabel}`
+          })
+        }
+      }
+      
+      console.log(`📝 Cuotas a insertar: ${cuotasAInsertar.length}`)
+      if (cuotasAInsertar.length > 0) {
+        console.log('📝 Ejemplo de cuota:', cuotasAInsertar[0])
+      }
+      
+      // Si no hay cuotas a insertar, retornar
+      if (cuotasAInsertar.length === 0) {
+        console.error('❌ No hay cuotas para insertar')
+        return { success: false, error: 'No se generaron cuotas', cuotasGeneradas: 0 }
+      }
+      
+      // Verificar primero si ya existen cuotas para este socio
+      const { data: cuotasExistentes, error: checkError } = await supabase
+        .from('cuotas')
+        .select('id')
+        .eq('socio_natillera_id', socioNatilleraId)
+        .limit(1)
+      
+      if (checkError) {
+        console.error('❌ Error verificando cuotas existentes:', checkError)
+      }
+      
+      if (cuotasExistentes && cuotasExistentes.length > 0) {
+        console.log('⚠️ Ya existen cuotas para este socio, no se generarán nuevas')
+        return { success: true, cuotasGeneradas: 0, mensaje: 'El socio ya tiene cuotas generadas' }
+      }
+      
+      console.log('📤 Iniciando inserción batch...')
+      
+      // Insertar todas las cuotas de una vez (BATCH INSERT)
+      const { data: cuotasInsertadas, error: insertError } = await supabase
+        .from('cuotas')
+        .insert(cuotasAInsertar)
+        .select('id')
+      
+      if (insertError) {
+        console.error('❌ Error en batch insert:', insertError)
+        console.error('❌ Código de error:', insertError.code)
+        console.error('❌ Mensaje:', insertError.message)
+        console.error('❌ Detalles:', insertError.details)
+        throw insertError
+      }
+      
+      console.log('✅ Inserción exitosa:', cuotasInsertadas)
+      
+      const tiempoFin = performance.now()
+      console.log(`✅ GENERACIÓN BATCH COMPLETADA en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
+      console.log(`📊 Cuotas generadas: ${cuotasInsertadas?.length || cuotasAInsertar.length}`)
+      
+      return {
+        success: true,
+        cuotasGeneradas: cuotasInsertadas?.length || cuotasAInsertar.length,
+        tiempoMs: tiempoFin - tiempoInicio
+      }
+      
+    } catch (e) {
+      console.error('❌ Error en generación batch:', e)
+      return { success: false, error: e.message, cuotasGeneradas: 0 }
+    }
+  }
+
   return {
     cuotas,
     loading,
@@ -2259,6 +2801,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     getResumenPorMes,
     generarCuotasAutomaticas,
     generarCuotasFaltantes,
+    generarCuotasBatchParaSocio,
     buscarCuotaPorCodigo,
     actualizarCuota,
     actualizarSocioNatilleraEnCuotas,

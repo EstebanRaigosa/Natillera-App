@@ -1178,22 +1178,32 @@
             </div>
             <div :class="[
               'p-5 rounded-xl border shadow-sm',
-              cuotaDetalle.estado === 'mora' 
+              (cuotaDetalle.estado === 'mora' || (getSancionCuotaDetalle(cuotaDetalle) > 0 && cuotaDetalle?.valor_pagado && cuotaDetalle.valor_pagado >= (cuotaDetalle?.valor_cuota || 0)))
                 ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
                 : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
             ]">
-              <p class="text-xs text-gray-500 font-medium mb-2">
-                {{ cuotaDetalle.estado === 'mora' ? 'Total a Pagar' : 'Valor Pendiente' }}
-              </p>
-              <p :class="[
-                'text-2xl font-bold',
-                cuotaDetalle.estado === 'mora' ? 'text-red-700' : 'text-amber-700'
-              ]">
-                ${{ formatMoney(getTotalAPagar(cuotaDetalle)) }}
-              </p>
-              <p v-if="getSancionCuota(cuotaDetalle) > 0" class="text-xs text-red-600 font-semibold mt-1">
-                Incluye multa de ${{ formatMoney(getSancionCuota(cuotaDetalle)) }}
-              </p>
+              <template v-if="getSancionCuotaDetalle(cuotaDetalle) > 0 && cuotaDetalle?.valor_pagado && cuotaDetalle.valor_pagado >= (cuotaDetalle?.valor_cuota || 0)">
+                <p class="text-xs text-gray-500 font-medium mb-2">
+                  Sanción
+                </p>
+                <p class="text-2xl font-bold text-red-700">
+                  ${{ formatMoney(getSancionCuotaDetalle(cuotaDetalle)) }}
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-xs text-gray-500 font-medium mb-2">
+                  {{ cuotaDetalle.estado === 'mora' ? 'Total a Pagar' : 'Valor Pendiente' }}
+                </p>
+                <p :class="[
+                  'text-2xl font-bold',
+                  cuotaDetalle.estado === 'mora' ? 'text-red-700' : 'text-amber-700'
+                ]">
+                  ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaDetalle))) }}
+                </p>
+                <p v-if="getSancionCuotaDetalle(cuotaDetalle) > 0" class="text-xs text-red-600 font-semibold mt-1">
+                  Incluye multa de ${{ formatMoney(getSancionCuotaDetalle(cuotaDetalle)) }}
+                </p>
+              </template>
             </div>
           </div>
           
@@ -1730,8 +1740,8 @@
                 <p class="font-bold text-gray-800 text-lg">
                   ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
                 </p>
-                <p v-if="getSancionCuota(cuotaSeleccionada) > 0" class="text-xs text-red-600 font-semibold">
-                  + Multa: ${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}
+                <p v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado <= (cuotaSeleccionada?.valor_cuota || 0))" class="text-xs text-red-600 font-semibold">
+                  + Multa: ${{ formatMoney(getSancionCuotaDetalle(cuotaSeleccionada)) }}
                 </p>
               </div>
               <div v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
@@ -1741,10 +1751,18 @@
                 </p>
               </div>
               <div>
-                <p class="text-xs text-gray-500 mb-1">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
-                <p :class="['font-bold text-lg', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                  ${{ formatMoney(getTotalAPagar(cuotaSeleccionada)) }}
-                </p>
+                <template v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado >= (cuotaSeleccionada?.valor_cuota || 0)">
+                  <p class="text-xs text-gray-500 mb-1">Sanción</p>
+                  <p class="font-bold text-lg text-red-600">
+                    ${{ formatMoney(getSancionCuotaDetalle(cuotaSeleccionada)) }}
+                  </p>
+                </template>
+                <template v-else>
+                  <p class="text-xs text-gray-500 mb-1">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
+                  <p :class="['font-bold text-lg', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                    ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
+                  </p>
+                </template>
               </div>
             </div>
           </div>
@@ -1771,16 +1789,16 @@
                   @click="seleccionarValorPago"
                   type="text" 
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
-                  :placeholder="`Máx: ${formatMoney(getTotalAPagar(cuotaSeleccionada))}`"
+                  :placeholder="`Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`"
                   required
                 />
               </div>
               <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
                 <span>Máximo disponible:</span>
                 <span :class="['font-semibold', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                  ${{ formatMoney(getTotalAPagar(cuotaSeleccionada)) }}
+                  ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
                 </span>
-                <span v-if="getSancionCuota(cuotaSeleccionada) > 0" class="text-red-500 text-xs">(incluye multa)</span>
+                <span v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado < (cuotaSeleccionada?.valor_cuota || 0))" class="text-red-500 text-xs">(incluye multa)</span>
               </p>
             </div>
 
@@ -3858,6 +3876,42 @@ function getSancionCuota(cuota) {
   return 0
 }
 
+// Función para obtener la sanción (pendiente o pagada) de una cuota
+// Detecta cuando hay una sanción basándose en valor_multa o en el sobrepago
+function getSancionCuotaDetalle(cuota) {
+  if (!cuota) return 0
+  
+  const valorCuota = cuota.valor_cuota || 0
+  const valorPagado = cuota.valor_pagado || 0
+  const valorMulta = cuota.valor_multa || 0
+  
+  // Si hay valor_multa guardado, usarlo
+  if (valorMulta > 0) {
+    return valorMulta
+  }
+  
+  // Si el valor pagado es mayor que el valor de la cuota, la diferencia es la sanción pagada
+  // Esto cubre el caso cuando una cuota se pagó con sanción pero no quedó registrado en valor_multa
+  if (valorPagado > valorCuota) {
+    return valorPagado - valorCuota
+  }
+  
+  // Para cuotas en mora, usar la sanción calculada dinámicamente
+  if (cuota.estado === 'mora') {
+    return sancionesDinamicas.value[cuota.id] || 0
+  }
+  
+  // Para cuotas pendientes/parciales, verificar si hay sanción pendiente
+  if (sancionesActivas.value) {
+    const sancion = getSancionCuota(cuota)
+    if (sancion > 0) {
+      return sancion
+    }
+  }
+  
+  return 0
+}
+
 // Obtener el total a pagar de una cuota (valor_cuota + sanción - valor_pagado)
 function getTotalAPagar(cuota) {
   if (!cuota) return 0
@@ -4188,13 +4242,25 @@ function formatearValorCuota(value) {
 
 // Manejar input del valor de cuota
 function handleValorCuotaInput(event) {
-  const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
-  if (valor === '') {
+  const valorOriginal = event.target.value
+  // Remover puntos (separadores de miles) y cualquier carácter no numérico
+  const valorLimpio = valorOriginal.replace(/\./g, '').replace(/[^\d]/g, '')
+  
+  console.log('📝 Input de cuota (Cuotas.vue) - Valor original:', valorOriginal)
+  console.log('📝 Input de cuota (Cuotas.vue) - Valor limpio:', valorLimpio)
+  
+  if (valorLimpio === '') {
     formSocio.valor_cuota = 0
+    console.log('📝 Input de cuota (Cuotas.vue) - Valor final: 0 (vacío)')
   } else {
-    const numero = parseInt(valor, 10)
+    // Usar parseFloat para manejar números grandes correctamente (parseInt tiene límites)
+    const numero = parseFloat(valorLimpio)
     if (!isNaN(numero) && numero >= 0) {
       formSocio.valor_cuota = numero
+      console.log('📝 Input de cuota (Cuotas.vue) - Valor final parseado:', numero, 'Tipo:', typeof numero)
+      console.log('📝 Input de cuota (Cuotas.vue) - formSocio.valor_cuota actualizado a:', formSocio.valor_cuota)
+    } else {
+      console.warn('⚠️ Input de cuota (Cuotas.vue) - Valor no válido:', valorLimpio)
     }
   }
 }
@@ -4222,16 +4288,26 @@ async function handleGuardarSocio() {
       console.log('🟢 formSocio:', formSocio)
       
       // Actualizar cuota del socio en socios_natillera
-      // Asegurar que el valor sea un número
+      // Asegurar que el valor sea un número y se guarde exactamente como se ingresa
       const valorCuotaNumerico = typeof formSocio.valor_cuota === 'string' 
-        ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d]/g, '')) || 0
+        ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
         : Number(formSocio.valor_cuota) || 0
       
-      console.log('🟢 valorCuotaNumerico calculado:', valorCuotaNumerico)
+      // Validar que el valor sea positivo
+      if (valorCuotaNumerico <= 0) {
+        errorSocio.value = 'El valor de la cuota debe ser mayor a cero'
+        estadoGuardadoSocio.value = ''
+        return
+      }
+      
+      console.log('🟢 handleGuardarSocio - Actualizando socio')
+      console.log('🟢 valor_cuota (formSocio):', formSocio.valor_cuota, 'Tipo:', typeof formSocio.valor_cuota)
+      console.log('🟢 valorCuotaNumerico calculado:', valorCuotaNumerico, 'Tipo:', typeof valorCuotaNumerico)
       console.log('🟢 periodicidad:', formSocio.periodicidad)
+      console.log('🟢 IMPORTANTE: El valor debe guardarse exactamente como se ingresa, sin modificaciones por periodicidad')
       
       const datosParaActualizar = {
-        valor_cuota_individual: valorCuotaNumerico,
+        valor_cuota_individual: valorCuotaNumerico, // Valor exacto sin modificaciones
         periodicidad: formSocio.periodicidad
       }
       

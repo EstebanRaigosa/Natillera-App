@@ -38,19 +38,88 @@ export const useSociosStore = defineStore('socios', () => {
     }
   }
 
+  async function verificarTelefonoUnico(telefono, excluirSocioId = null) {
+    try {
+      if (!telefono || telefono.trim() === '') {
+        return false // No válido si está vacío
+      }
+
+      const telefonoLimpio = telefono.trim()
+      
+      let query = supabase
+        .from('socios')
+        .select('id')
+        .eq('telefono', telefonoLimpio)
+
+      // Si estamos editando, excluir el socio actual
+      if (excluirSocioId) {
+        query = query.neq('id', excluirSocioId)
+      }
+
+      const { data, error } = await query.maybeSingle()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 es "not found", que es lo esperado
+        throw error
+      }
+
+      // Si data es null, el teléfono es único (no existe)
+      // Si data existe, el teléfono ya está en uso
+      return data === null
+    } catch (e) {
+      console.error('Error verificando unicidad del teléfono:', e)
+      return false // En caso de error, asumir que no es único
+    }
+  }
+
   async function agregarSocio(natilleraId, datosSocio, valorCuota, periodicidad = 'mensual') {
     try {
       loading.value = true
       error.value = null
 
+      // VALIDACIÓN CRÍTICA: Asegurar que valorCuota sea un número y se guarde exactamente como se ingresa
+      let valorCuotaFinal = valorCuota
+      if (typeof valorCuota === 'string') {
+        // Si es string, limpiar y convertir a número
+        valorCuotaFinal = parseFloat(valorCuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
+      } else {
+        valorCuotaFinal = Number(valorCuota) || 0
+      }
+      
+      // Validar que el valor sea positivo
+      if (valorCuotaFinal <= 0) {
+        throw new Error('El valor de la cuota debe ser mayor a cero')
+      }
+      
+      // VALIDACIÓN CRÍTICA: Asegurar que la periodicidad sea válida
+      const periodicidadFinal = periodicidad === 'quincenal' ? 'quincenal' : 'mensual'
+      
+      // IMPORTANTE: El valor debe guardarse exactamente como se ingresa, sin modificaciones
+      console.log('💰 Valor de cuota recibido:', valorCuota, 'Tipo:', typeof valorCuota)
+      console.log('💰 Valor de cuota final a guardar:', valorCuotaFinal, 'Tipo:', typeof valorCuotaFinal)
+      console.log('📅 Periodicidad recibida:', periodicidad, 'Tipo:', typeof periodicidad)
+      console.log('📅 Periodicidad final a guardar:', periodicidadFinal)
+
+      // Validar que el teléfono esté presente
+      if (!datosSocio.telefono || datosSocio.telefono.trim() === '') {
+        throw new Error('El número de teléfono es obligatorio')
+      }
+
+      const telefonoLimpio = datosSocio.telefono.trim()
+
+      // Verificar unicidad del teléfono
+      const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio)
+      if (!telefonoUnico) {
+        throw new Error('Este número de teléfono ya está registrado para otro socio')
+      }
+
       // Generar documento automático si no se proporciona
       const documento = datosSocio.documento || `AUTO-${Date.now()}`
       
-      // Preparar datos del socio (campos opcionales pueden ser null)
+      // Preparar datos del socio
       const socioData = {
         nombre: datosSocio.nombre,
         documento: documento,
-        telefono: datosSocio.telefono || null,
+        telefono: telefonoLimpio, // Siempre requerido ahora
         email: datosSocio.email || null,
         avatar_seed: datosSocio.avatar_seed || null,
         avatar_style: datosSocio.avatar_style || 'adventurer'
@@ -59,10 +128,10 @@ export const useSociosStore = defineStore('socios', () => {
       // Primero crear o buscar el socio
       let socioId
       
-      // Buscar si el socio ya existe por nombre (si no hay documento real)
+      // Buscar si el socio ya existe por documento o email (pero el teléfono ya está validado como único)
       let socioExistente = null
       
-      if (datosSocio.documento) {
+      if (datosSocio.documento && datosSocio.documento.trim() !== '' && !datosSocio.documento.startsWith('AUTO-')) {
         // Si tiene documento, buscar por documento
         const { data } = await supabase
           .from('socios')
@@ -70,7 +139,7 @@ export const useSociosStore = defineStore('socios', () => {
           .eq('documento', datosSocio.documento)
           .maybeSingle()
         socioExistente = data
-      } else if (datosSocio.email) {
+      } else if (datosSocio.email && datosSocio.email.trim() !== '') {
         // Si tiene email, buscar por email
         const { data } = await supabase
           .from('socios')
@@ -83,19 +152,42 @@ export const useSociosStore = defineStore('socios', () => {
       if (socioExistente) {
         socioId = socioExistente.id
         
-        // Actualizar datos del socio existente si hay nuevos datos
-        const datosActualizar = {}
-        if (datosSocio.telefono) datosActualizar.telefono = datosSocio.telefono
+        // Verificar que el teléfono del socio existente no esté siendo usado por otro
+        // Si el socio existente tiene un teléfono diferente, verificar que el nuevo sea único
+        const { data: socioActual } = await supabase
+          .from('socios')
+          .select('telefono')
+          .eq('id', socioId)
+          .single()
+
+        // Si el teléfono es diferente, verificar unicidad nuevamente
+        if (socioActual?.telefono !== telefonoLimpio) {
+          const telefonoUnicoParaActualizacion = await verificarTelefonoUnico(telefonoLimpio, socioId)
+          if (!telefonoUnicoParaActualizacion) {
+            throw new Error('Este número de teléfono ya está registrado para otro socio')
+          }
+        }
+        
+        // Actualizar datos del socio existente
+        const datosActualizar = {
+          nombre: datosSocio.nombre,
+          telefono: telefonoLimpio, // Siempre actualizar el teléfono
+        }
         if (datosSocio.email) datosActualizar.email = datosSocio.email
         if (datosSocio.avatar_seed) datosActualizar.avatar_seed = datosSocio.avatar_seed
         if (datosSocio.avatar_style) datosActualizar.avatar_style = datosSocio.avatar_style
-        if (datosSocio.nombre) datosActualizar.nombre = datosSocio.nombre
         
-        if (Object.keys(datosActualizar).length > 0) {
-          await supabase
-            .from('socios')
-            .update(datosActualizar)
-            .eq('id', socioId)
+        const { error: updateError } = await supabase
+          .from('socios')
+          .update(datosActualizar)
+          .eq('id', socioId)
+
+        if (updateError) {
+          // Verificar si es error de unicidad
+          if (updateError.code === '23505' || updateError.message?.includes('unique') || updateError.message?.includes('duplicate')) {
+            throw new Error('Este número de teléfono ya está registrado para otro socio')
+          }
+          throw updateError
         }
       } else {
         // Crear nuevo socio
@@ -105,7 +197,13 @@ export const useSociosStore = defineStore('socios', () => {
           .select()
           .single()
 
-        if (socioError) throw socioError
+        if (socioError) {
+          // Verificar si es error de unicidad
+          if (socioError.code === '23505' || socioError.message?.includes('unique') || socioError.message?.includes('duplicate')) {
+            throw new Error('Este número de teléfono ya está registrado para otro socio')
+          }
+          throw socioError
+        }
         socioId = nuevoSocio.id
       }
 
@@ -122,23 +220,52 @@ export const useSociosStore = defineStore('socios', () => {
       }
 
       // Agregar a la natillera
+      // IMPORTANTE: Guardar el valor exactamente como se recibió, sin modificaciones por periodicidad
+      console.log('💾 Guardando en BD - valor_cuota_individual:', valorCuotaFinal)
+      console.log('💾 Guardando en BD - periodicidad:', periodicidadFinal)
+      const datosInsert = {
+        natillera_id: natilleraId,
+        socio_id: socioId,
+        valor_cuota_individual: valorCuotaFinal, // Valor exacto sin modificaciones
+        periodicidad: periodicidadFinal, // Usar la periodicidad validada
+        estado: 'activo',
+        fecha_ingreso: new Date().toISOString()
+      }
+      console.log('💾 Datos completos a insertar:', datosInsert)
+      
       const { data, error: vincularError } = await supabase
         .from('socios_natillera')
-        .insert({
-          natillera_id: natilleraId,
-          socio_id: socioId,
-          valor_cuota_individual: valorCuota,
-          periodicidad: periodicidad,
-          estado: 'activo',
-          fecha_ingreso: new Date().toISOString()
-        })
+        .insert(datosInsert)
         .select(`
           *,
           socio:socios(*)
         `)
         .single()
 
-      if (vincularError) throw vincularError
+      if (vincularError) {
+        console.error('❌ Error al guardar socio en natillera:', vincularError)
+        throw vincularError
+      }
+      
+      // Verificar que el valor y periodicidad guardados sean correctos
+      console.log('✅ Socio guardado exitosamente')
+      console.log('✅ Valor guardado en BD (valor_cuota_individual):', data.valor_cuota_individual)
+      console.log('✅ Periodicidad guardada en BD:', data.periodicidad)
+      console.log('✅ Datos completos del socio guardado:', data)
+      
+      // Verificar que el valor no haya cambiado
+      if (Number(data.valor_cuota_individual) !== valorCuotaFinal) {
+        console.error('⚠️ ADVERTENCIA: El valor guardado difiere del valor enviado!')
+        console.error('⚠️ Valor enviado:', valorCuotaFinal)
+        console.error('⚠️ Valor guardado:', data.valor_cuota_individual)
+      }
+      
+      // Verificar que la periodicidad no haya cambiado
+      if (data.periodicidad !== periodicidadFinal) {
+        console.error('⚠️ ADVERTENCIA: La periodicidad guardada difiere de la enviada!')
+        console.error('⚠️ Periodicidad enviada:', periodicidadFinal)
+        console.error('⚠️ Periodicidad guardada:', data.periodicidad)
+      }
 
       sociosNatillera.value.push(data)
       return { success: true, data }
@@ -323,13 +450,36 @@ export const useSociosStore = defineStore('socios', () => {
         throw new Error('No se encontró el socio')
       }
 
+      // Validar que el teléfono esté presente si se está actualizando
+      if (datos.telefono !== undefined) {
+        if (!datos.telefono || datos.telefono.trim() === '') {
+          throw new Error('El número de teléfono es obligatorio')
+        }
+
+        const telefonoLimpio = datos.telefono.trim()
+        
+        // Verificar unicidad del teléfono (excluyendo el socio actual)
+        const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, socioId)
+        if (!telefonoUnico) {
+          throw new Error('Este número de teléfono ya está registrado para otro socio')
+        }
+
+        datos.telefono = telefonoLimpio
+      }
+
       // Actualizar los datos
       const { error: updateError } = await supabase
         .from('socios')
         .update(datos)
         .eq('id', socioId)
 
-      if (updateError) throw updateError
+      if (updateError) {
+        // Verificar si es error de unicidad
+        if (updateError.code === '23505' || updateError.message?.includes('unique') || updateError.message?.includes('duplicate')) {
+          throw new Error('Este número de teléfono ya está registrado para otro socio')
+        }
+        throw updateError
+      }
 
       // Obtener los datos actualizados
       const { data, error: fetchError } = await supabase
@@ -578,6 +728,7 @@ export const useSociosStore = defineStore('socios', () => {
     loading,
     error,
     fetchSociosNatillera,
+    verificarTelefonoUnico,
     agregarSocio,
     actualizarSocioNatillera,
     actualizarDatosSocio,

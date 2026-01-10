@@ -231,7 +231,8 @@ async function register(email, password, nombre) {
       error.value = null
       
       // URL de redirección según el entorno (desarrollo o producción)
-      const redirectUrl = `${BASE_URL}/dashboard`
+      // Usamos /auth/welcome para que Welcome.vue maneje tanto éxito como errores
+      const redirectUrl = `${BASE_URL}/auth/welcome`
       devLog('Google OAuth - URL de redirección:', redirectUrl)
       
       const { error: authError } = await supabase.auth.signInWithOAuth({
