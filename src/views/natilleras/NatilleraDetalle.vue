@@ -201,6 +201,133 @@
         </div>
       </div>
 
+      <!-- Indicadores -->
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Efectos decorativos -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <!-- Título del contenedor -->
+          <div class="flex items-center gap-2 mb-4 sm:mb-5">
+            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
+              <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
+              Indicadores
+            </h2>
+          </div>
+          
+          <!-- Grid de indicadores -->
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+            <!-- Indicador: Socios -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-white to-indigo-50/40 border-2 border-blue-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-blue-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-3 right-3 z-20">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30">
+                  <UsersIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">{{ estadisticas.totalSocios }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Socios</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Recaudado -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-white to-emerald-50/40 border-2 border-green-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/25 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-400/35 group-hover:to-emerald-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-green-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-3 right-3 z-20">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md shadow-green-500/30">
+                  <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Recaudado</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Pendiente -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50/40 border-2 border-amber-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/25 to-orange-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-400/35 group-hover:to-orange-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-amber-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-3 right-3 z-20">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-md shadow-amber-500/30">
+                  <ExclamationTriangleIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Pendiente</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Utilidades -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-50 via-white to-cyan-50/40 border-2 border-teal-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-400/25 to-cyan-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-teal-400/35 group-hover:to-cyan-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-300/20 to-teal-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-3 right-3 z-20">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-md shadow-teal-500/30">
+                  <BanknotesIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Utilidades</p>
+              </div>
+            </div>
+
+            <!-- Indicador: Fondo Total -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-50 via-white to-indigo-50/40 border-2 border-purple-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
+              <!-- Efectos decorativos de fondo -->
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-purple-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              
+              <!-- Icono pequeño en esquina superior derecha -->
+              <div class="absolute top-3 right-3 z-20">
+                <div class="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md shadow-purple-500/30">
+                  <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+              </div>
+              
+              <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center min-h-[120px]">
+                <!-- Valor numérico destacado -->
+                <p class="text-2xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
+                <!-- Etiqueta -->
+                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Fondo Total</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Menú de Navegación -->
       <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Efectos decorativos -->
@@ -287,69 +414,6 @@
               </div>
               <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-purple-700 transition-colors duration-300">Actividades</span>
             </router-link>
-          </div>
-        </div>
-      </div>
-
-      <!-- Indicadores -->
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-        <!-- Efectos decorativos -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div class="relative z-10">
-          <!-- Título del contenedor -->
-          <div class="flex items-center gap-2 mb-4 sm:mb-5">
-            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
-              <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
-              Indicadores
-            </h2>
-          </div>
-          
-          <!-- Grid de indicadores -->
-          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <!-- Círculo decorativo -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{{ estadisticas.totalSocios }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Socios</p>
-          </div>
-        </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <!-- Círculo decorativo -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Recaudado</p>
-          </div>
-        </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border border-amber-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <!-- Círculo decorativo -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-orange-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Pendiente</p>
-          </div>
-        </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-teal-50/30 to-cyan-50/20 border border-teal-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <!-- Círculo decorativo -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-teal-400/20 to-cyan-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Utilidades</p>
-          </div>
-        </div>
-        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <!-- Círculo decorativo -->
-          <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
-            <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Fondo Total</p>
-          </div>
-        </div>
           </div>
         </div>
       </div>
