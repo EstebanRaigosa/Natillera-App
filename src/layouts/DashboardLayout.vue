@@ -307,10 +307,16 @@
       </header>
 
       <!-- Contenido de la página -->
-      <div class="flex-1 p-3 sm:p-4 lg:p-8 w-full min-h-0">
+      <div 
+        class="flex-1 p-3 sm:p-4 lg:p-8 w-full min-h-0"
+        :class="route.params.id ? 'pb-20 lg:pb-3' : 'pb-3'"
+      >
         <router-view />
       </div>
     </main>
+
+    <!-- Navegación inferior móvil -->
+    <MobileBottomNav />
 
     <!-- Indicador de modo desarrollo -->
     <div 
@@ -331,7 +337,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useSupportStore } from '../stores/support'
@@ -355,8 +361,10 @@ import {
   ChatBubbleLeftRightIcon
 } from '@heroicons/vue/24/outline'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
+import MobileBottomNav from '../components/MobileBottomNav.vue'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
 const supportStore = useSupportStore()

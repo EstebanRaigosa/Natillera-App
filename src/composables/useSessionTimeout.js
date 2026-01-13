@@ -61,8 +61,8 @@ export function useSessionTimeout(timeoutMinutes = 10) {
       // Cerrar sesión
       await authStore.logout()
       
-      // Redirigir al login
-      router.push({ name: 'Login' })
+      // Recargar la página para garantizar que se cierre todo lo que el usuario tenía abierto
+      window.location.reload()
     }
   }
   

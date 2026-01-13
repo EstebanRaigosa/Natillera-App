@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS socios (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     nombre VARCHAR(255) NOT NULL,
     documento VARCHAR(50) UNIQUE NOT NULL,
-    telefono VARCHAR(20) UNIQUE NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
     email VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

@@ -528,6 +528,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useColaboradoresStore, PERMISOS_DISPONIBLES, PERMISOS_POR_ROL } from '../stores/colaboradores'
+import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import {
   UserPlusIcon,
   UsersIcon,
@@ -576,6 +577,12 @@ const modalInvitar = ref(false)
 const modalEditar = ref(false)
 const modalRevocar = ref(false)
 const modalEliminar = ref(false)
+
+// Bloquear scroll del body cuando las modales están abiertas
+useBodyScrollLock(modalInvitar)
+useBodyScrollLock(modalEditar)
+useBodyScrollLock(modalRevocar)
+useBodyScrollLock(modalEliminar)
 const colaboradorEditando = ref(null)
 const colaboradorRevocando = ref(null)
 const colaboradorEliminando = ref(null)

@@ -33,16 +33,61 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       loading.value = true
       error.value = null
 
-      const { data, error: fetchError } = await supabase
+      // Obtener el usuario actual para filtrar solo las natilleras propias
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        natilleras.value = []
+        return
+      }
+
+      // Verificar si es superusuario (puede ver todas las natilleras)
+      const emailUsuario = (user.email || '').toLowerCase().trim()
+      const esSuperUsuario = emailUsuario === 'raigo.16@gmail.com'
+
+      // Obtener las IDs de las natilleras compartidas (donde el usuario es colaborador, no admin)
+      // para excluirlas de la lista de propias
+      const { data: colaboraciones } = await supabase
+        .from('natillera_colaboradores')
+        .select('natillera_id')
+        .eq('usuario_id', user.id)
+        .eq('estado', 'aceptada')
+
+      const idsNatillerasCompartidas = new Set((colaboraciones || []).map(c => c.natillera_id))
+
+      // Si es superusuario, obtener todas las natilleras (RLS ya filtra)
+      // Si no, solo obtener natilleras donde el usuario es admin (excluye compartidas)
+      let query = supabase
         .from('natilleras')
         .select('*')
+      
+      if (!esSuperUsuario) {
+        query = query.eq('admin_id', user.id)
+      }
+      
+      const { data, error: fetchError } = await query
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
 
+      // Filtrar para excluir las natilleras compartidas (donde el usuario es colaborador pero no admin)
+      // Si es superusuario y también es admin de una natillera compartida, se incluye en propias
+      const natillerasFiltradas = (data || []).filter(natillera => {
+        // Si el usuario es admin de esta natillera, siempre incluirla
+        if (natillera.admin_id === user.id) {
+          return true
+        }
+        // Si NO es admin y está en la lista de compartidas, excluirla (solo para superusuario)
+        if (idsNatillerasCompartidas.has(natillera.id)) {
+          return false
+        }
+        // Para superusuario: incluir todas las demás natilleras
+        // Para usuario normal: ya están filtradas por admin_id
+        return true
+      })
+
       // Para cada natillera, obtener el conteo de socios
       const natillerasConConteo = await Promise.all(
-        (data || []).map(async (natillera) => {
+        natillerasFiltradas.map(async (natillera) => {
           const { count } = await supabase
             .from('socios_natillera')
             .select('*', { count: 'exact', head: true })
@@ -746,6 +791,213 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
   }
 
+  // Función para clasificar y guardar utilidades
+  async function clasificarYGuardarUtilidades(natilleraId, fechaCierre = null) {
+    try {
+      if (!natilleraId) {
+        throw new Error('ID de natillera requerido')
+      }
+
+      // Obtener datos de la natillera
+      const natillera = await fetchNatillera(natilleraId)
+      if (!natillera) {
+        throw new Error('Natillera no encontrada')
+      }
+
+      const socios = natillera.socios_natillera || []
+      const cuotas = natillera.cuotas || []
+      const actividades = natillera.actividades || []
+
+      // Obtener IDs de socios_natillera
+      const socioNatilleraIds = socios.map(s => s.id)
+
+      // 1. Calcular utilidades de sanciones (multas pagadas)
+      const sancionesPagadas = cuotas
+        .filter(c => c.estado === 'pagada' && c.valor_multa)
+        .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+
+      // 2. Calcular utilidades de préstamos (intereses)
+      let interesesPrestamos = 0
+      let prestamosIds = []
+      
+      if (socioNatilleraIds.length > 0) {
+        const { data: prestamos } = await supabase
+          .from('prestamos')
+          .select('id, monto, saldo_actual, interes, interes_anticipado, interes_total')
+          .in('socio_natillera_id', socioNatilleraIds)
+          .in('estado', ['pagado', 'activo'])
+
+        if (prestamos && prestamos.length > 0) {
+          prestamosIds = prestamos.map(p => p.id)
+          
+          // Obtener historial de refinanciaciones para todos los préstamos
+          const { data: historialRefinanciaciones } = await supabase
+            .from('historial_refinanciaciones')
+            .select('*')
+            .in('prestamo_id', prestamosIds)
+            .order('fecha_refinanciacion', { ascending: true })
+
+          // Crear mapa de historial por préstamo
+          const historialMap = {}
+          if (historialRefinanciaciones) {
+            historialRefinanciaciones.forEach(historial => {
+              if (!historialMap[historial.prestamo_id]) {
+                historialMap[historial.prestamo_id] = historial
+              }
+            })
+          }
+
+          // Obtener cuotas pagadas de todos los préstamos para calcular intereses correctamente
+          const { data: cuotasPagadas } = await supabase
+            .from('plan_pagos_prestamo')
+            .select('prestamo_id, interes')
+            .in('prestamo_id', prestamosIds)
+            .eq('pagada', true)
+
+          // Crear mapa de intereses por préstamo basado en cuotas pagadas
+          const interesesPorPrestamo = {}
+          if (cuotasPagadas) {
+            cuotasPagadas.forEach(cuota => {
+              if (!interesesPorPrestamo[cuota.prestamo_id]) {
+                interesesPorPrestamo[cuota.prestamo_id] = 0
+              }
+              interesesPorPrestamo[cuota.prestamo_id] += parseFloat(cuota.interes || 0)
+            })
+          }
+
+          interesesPrestamos = prestamos.reduce((sum, prestamo) => {
+            const historial = historialMap[prestamo.id]
+            const tieneInteresAnticipadoInicial = historial 
+              ? historial.interes_anticipado_anterior 
+              : prestamo.interes_anticipado
+
+            // Si el préstamo fue refinanciado y inicialmente fue con interés anticipado,
+            // usar solo los intereses de las cuotas pagadas (ya registrados en utilidades_clasificadas)
+            if (historial && tieneInteresAnticipadoInicial) {
+              // Usar los intereses de las cuotas pagadas
+              const interesesCuotasPagadas = interesesPorPrestamo[prestamo.id] || 0
+              return sum + interesesCuotasPagadas
+            }
+            
+            // Para préstamos normales con interés anticipado (no refinanciados),
+            // el interés_total ya fue registrado al crear el préstamo en utilidades_clasificadas.
+            // Sin embargo, para mantener la consistencia al cerrar períodos, incluimos el interés_total
+            // porque el upsert reemplazará el monto completo con el cálculo actualizado.
+            // Los intereses de cuotas pagadas adicionales (si las hay) también se incluyen.
+            if (prestamo.interes_anticipado && prestamo.interes_total) {
+              // Incluir el interés_total (ya registrado al crear el préstamo)
+              // y los intereses de cuotas pagadas si las hay
+              const interesesCuotasPagadas = interesesPorPrestamo[prestamo.id] || 0
+              // Si hay intereses de cuotas pagadas, sumarlos (para préstamos que fueron refinanciados después)
+              // Si no hay historial pero hay intereses de cuotas, significa que el préstamo fue refinanciado
+              // pero no tenemos historial (caso edge)
+              return sum + (parseFloat(prestamo.interes_total) || 0) + interesesCuotasPagadas
+            }
+            
+            // Para préstamos sin interés anticipado, calcular basado en lo pagado
+            const monto = parseFloat(prestamo.monto || 0)
+            const saldoActual = parseFloat(prestamo.saldo_actual || 0)
+            const interes = parseFloat(prestamo.interes || 0)
+            const interesGenerado = (monto - saldoActual) * (interes / 100)
+            return sum + interesGenerado
+          }, 0)
+        }
+      }
+
+      // 3. Clasificar utilidades de actividades por tipo
+      const utilidadesPorTipo = {
+        rifas: 0,
+        bingo: 0,
+        venta: 0,
+        evento: 0,
+        otro: 0
+      }
+      const actividadesPorTipo = {
+        rifas: [],
+        bingo: [],
+        venta: [],
+        evento: [],
+        otro: []
+      }
+
+      actividades.forEach(actividad => {
+        const tipo = actividad.tipo || 'otro'
+        const utilidad = actividad.utilidad || 0
+        if (utilidadesPorTipo.hasOwnProperty(tipo)) {
+          utilidadesPorTipo[tipo] += utilidad
+          actividadesPorTipo[tipo].push(actividad.id)
+        }
+      })
+
+      // Preparar datos para insertar/actualizar
+      const fechaCierreFinal = fechaCierre || new Date().toISOString().split('T')[0]
+      const utilidadesAClasificar = [
+        {
+          tipo: 'sanciones',
+          monto: sancionesPagadas,
+          descripcion: 'Multas pagadas por cuotas en mora',
+          detalles: { total_cuotas_con_sancion: cuotas.filter(c => c.estado === 'pagada' && c.valor_multa).length }
+        },
+        {
+          tipo: 'prestamos',
+          monto: interesesPrestamos,
+          descripcion: 'Intereses generados por préstamos',
+          detalles: { prestamos_ids: prestamosIds, total_prestamos: prestamosIds.length }
+        }
+      ]
+
+      // Agregar utilidades de actividades
+      Object.keys(utilidadesPorTipo).forEach(tipo => {
+        if (utilidadesPorTipo[tipo] > 0) {
+          utilidadesAClasificar.push({
+            tipo: tipo,
+            monto: utilidadesPorTipo[tipo],
+            descripcion: `Utilidades de ${tipo}`,
+            detalles: { actividades_ids: actividadesPorTipo[tipo], total_actividades: actividadesPorTipo[tipo].length }
+          })
+        }
+      })
+
+      // Guardar o actualizar utilidades clasificadas
+      const resultados = []
+      for (const utilidad of utilidadesAClasificar) {
+        const { data, error } = await supabase
+          .from('utilidades_clasificadas')
+          .upsert({
+            natillera_id: natilleraId,
+            tipo: utilidad.tipo,
+            monto: utilidad.monto,
+            fecha_cierre: fechaCierreFinal,
+            descripcion: utilidad.descripcion,
+            detalles: utilidad.detalles,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'natillera_id,tipo,fecha_cierre'
+          })
+          .select()
+
+        if (error) {
+          console.error(`Error guardando utilidad ${utilidad.tipo}:`, error)
+          resultados.push({ tipo: utilidad.tipo, error: error.message })
+        } else {
+          resultados.push({ tipo: utilidad.tipo, success: true, data: data[0] })
+        }
+      }
+
+      return {
+        success: true,
+        utilidades: resultados,
+        total: utilidadesAClasificar.reduce((sum, u) => sum + u.monto, 0)
+      }
+    } catch (error) {
+      console.error('Error clasificando y guardando utilidades:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
   return {
     natilleras,
     natillerasCompartidas,
@@ -766,7 +1018,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     cerrarNatillera,
     reasignarNatillera,
     eliminarNatillera,
-    calcularEstadisticas
+    calcularEstadisticas,
+    clasificarYGuardarUtilidades
   }
 })
 

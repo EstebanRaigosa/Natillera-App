@@ -97,3 +97,5 @@ GRANT SELECT ON vista_colaboradores_natillera TO authenticated;
 -- FIN DE LA MIGRACIÓN
 -- ============================================
 
+
+

@@ -143,26 +143,26 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('No autenticado')
 
-      // Buscar si el usuario ya existe por email
+      // Buscar si el usuario ya existe por email en auth.users
+      // y crear su perfil si no existe
       let usuarioId = null
       if (datos.email) {
-        const { data: userProfile, error: userError } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('email', datos.email.toLowerCase().trim())
-          .maybeSingle()
+        const { data: usuarioData, error: userError } = await supabase
+          .rpc('buscar_usuario_por_email', {
+            p_email: datos.email.toLowerCase().trim()
+          })
         
         // Verificar si hay un error en la consulta
         if (userError) {
           throw userError
         }
         
-        // Verificar si el usuario está registrado
-        if (!userProfile) {
+        // Verificar si el usuario existe
+        if (!usuarioData || usuarioData.length === 0 || !usuarioData[0].existe) {
           throw new Error('Este correo no está registrado como usuario')
         }
         
-        usuarioId = userProfile.id
+        usuarioId = usuarioData[0].usuario_id
       }
 
       // Verificar si ya existe una invitación para este usuario/email

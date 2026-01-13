@@ -279,6 +279,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -302,6 +303,9 @@ const id = props.id || route.params.id
 const actividades = ref([])
 const loading = ref(false)
 const modalNuevaActividad = ref(false)
+
+// Bloquear scroll del body cuando la modal está abierta
+useBodyScrollLock(modalNuevaActividad)
 
 const formActividad = reactive({
   tipo: 'rifa',

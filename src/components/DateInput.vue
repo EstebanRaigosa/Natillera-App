@@ -30,9 +30,10 @@
         :value="isoValue"
         @change="handleDateChange"
         type="date"
-        class="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+        class="sr-only"
         :required="required"
-        style="z-index: 0;"
+        tabindex="-1"
+        aria-hidden="true"
       />
       <!-- Botón para abrir calendario -->
       <button
@@ -169,16 +170,33 @@ function handleBlur(event) {
 }
 
 // Abrir el calendario nativo
-function openDatePicker() {
+function openDatePicker(event) {
+  event.preventDefault()
+  event.stopPropagation()
+  
   if (dateInputRef.value) {
-    // Intentar usar showPicker() si está disponible (Chrome, Edge)
+    // Intentar usar showPicker() si está disponible (Chrome, Edge, Safari 16.4+)
     if (typeof dateInputRef.value.showPicker === 'function') {
-      dateInputRef.value.showPicker().catch(() => {
-        // Si falla, hacer click en el input date
+      try {
+        const pickerPromise = dateInputRef.value.showPicker()
+        // Si retorna una promesa, manejar errores
+        if (pickerPromise && typeof pickerPromise.catch === 'function') {
+          pickerPromise.catch((error) => {
+            // Si falla (por ejemplo, en algunos navegadores), hacer click como fallback
+            console.log('showPicker no disponible, usando click como fallback:', error)
+            dateInputRef.value.focus()
+            dateInputRef.value.click()
+          })
+        }
+      } catch (error) {
+        // Si showPicker lanza un error, usar click como fallback
+        console.log('Error al usar showPicker, usando click como fallback:', error)
+        dateInputRef.value.focus()
         dateInputRef.value.click()
-      })
+      }
     } else {
-      // Fallback: hacer click en el input date
+      // Fallback para navegadores que no soportan showPicker
+      dateInputRef.value.focus()
       dateInputRef.value.click()
     }
   }

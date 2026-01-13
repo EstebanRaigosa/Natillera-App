@@ -42,22 +42,26 @@ const routes = [
       {
         path: 'login',
         name: 'Login',
-        component: Login
+        component: Login,
+        meta: { title: 'Iniciar Sesión' }
       },
       {
         path: 'register',
         name: 'Register',
-        component: Register
+        component: Register,
+        meta: { title: 'Registrarse' }
       },
       {
         path: 'welcome',
         name: 'Welcome',
-        component: Welcome
+        component: Welcome,
+        meta: { title: 'Bienvenido' }
       },
       {
         path: 'reset-password',
         name: 'ResetPassword',
-        component: ResetPassword
+        component: ResetPassword,
+        meta: { title: 'Restablecer Contraseña' }
       }
     ]
   },
@@ -69,7 +73,8 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: Dashboard
+        component: Dashboard,
+        meta: { title: 'Dashboard' }
       },
       {
         // Redirección para compatibilidad con links existentes
@@ -79,75 +84,88 @@ const routes = [
       {
         path: 'natilleras/crear',
         name: 'NatilleraCrear',
-        component: NatilleraCrear
+        component: NatilleraCrear,
+        meta: { title: 'Crear Natillera' }
       },
       {
         path: 'natilleras/:id',
         name: 'NatilleraDetalle',
         component: NatilleraDetalle,
-        props: true
+        props: true,
+        meta: { title: 'Detalle Natillera' }
       },
       {
         path: 'natilleras/:id/socios',
         name: 'Socios',
         component: Socios,
-        props: true
+        props: true,
+        meta: { title: 'Socios' }
       },
       {
         path: 'natilleras/:id/cuotas',
         name: 'CuotasMeses',
         component: CuotasMeses,
-        props: true
+        props: true,
+        meta: { title: 'Cuotas' }
       },
       {
         path: 'natilleras/:id/cuotas/:mes',
         name: 'Cuotas',
         component: Cuotas,
-        props: true
+        props: true,
+        meta: { title: 'Cuotas' }
       },
       {
         path: 'natilleras/:id/prestamos',
         name: 'Prestamos',
         component: Prestamos,
-        props: true
+        props: true,
+        meta: { title: 'Préstamos' }
       },
       {
         path: 'natilleras/:id/actividades',
         name: 'Actividades',
         component: Actividades,
-        props: true
+        props: true,
+        meta: { title: 'Actividades' }
       },
       {
         path: 'natilleras/:id/configuracion',
         name: 'NatilleraConfiguracion',
         component: NatilleraConfiguracion,
-        props: true
+        props: true,
+        meta: { title: 'Configuración Natillera' }
       },
       {
         path: 'configuracion',
         name: 'Configuracion',
-        component: Configuracion
+        component: Configuracion,
+        meta: { title: 'Configuración' }
       },
       {
         path: 'auditoria',
         name: 'Auditoria',
-        component: Auditoria
+        component: Auditoria,
+        meta: { title: 'Auditoría' }
       },
       {
         path: 'admin/chat',
         name: 'ChatAdmin',
-        component: ChatAdmin
+        component: ChatAdmin,
+        meta: { title: 'Chat Admin' }
       },
       {
         path: 'admin/data',
         name: 'DataAdmin',
-        component: DataAdmin
+        component: DataAdmin,
+        meta: { title: 'Data Admin' }
       },
       {
         path: 'invitacion/:token',
         name: 'AceptarInvitacion',
         component: AceptarInvitacion,
-        props: true
+        props: true,
+        meta: { title: 'Aceptar Invitación' }
       },
       // Rutas experimentales (solo en desarrollo)
       // Añade aquí rutas que quieras probar antes de llevarlas a producción
@@ -215,16 +233,24 @@ router.beforeEach(async (to, from, next) => {
 
 // Guard para hacer scroll al inicio en cada navegación (excepto NatilleraDetalle que tiene su lógica especial)
 router.afterEach((to, from) => {
+  // Actualizar el título de la página
+  const title = to.matched.find(record => record.meta.title)?.meta.title
+  if (title) {
+    document.title = `${title} | Natillerapp`
+  } else {
+    document.title = 'Natillerapp'
+  }
+
   // No hacer scroll si es la misma ruta (solo cambio de query params)
   if (to.path === from.path) {
     return
   }
-  
+
   // No hacer scroll en NatilleraDetalle (tiene su lógica especial para scroll a socios en mora)
   if (to.name === 'NatilleraDetalle') {
     return
   }
-  
+
   // Hacer scroll al inicio para todas las demás rutas
   window.scrollTo({
     top: 0,

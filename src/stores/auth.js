@@ -21,6 +21,12 @@ export const useAuthStore = defineStore('auth', () => {
   })
   const userEmail = computed(() => user.value?.email || '')
   const userName = computed(() => user.value?.user_metadata?.nombre || user.value?.email?.split('@')[0] || 'Usuario')
+  
+  // Verificar si el usuario necesita agregar un nombre de usuario
+  const needsUsername = computed(() => {
+    if (!user.value || !user.value.email_confirmed_at) return false
+    return !user.value.user_metadata?.nombre || user.value.user_metadata.nombre.trim() === ''
+  })
 
   async function checkAuth() {
     try {
@@ -196,6 +202,42 @@ async function register(email, password, nombre) {
     }
   }
 
+  async function updateDisplayName(nombre) {
+    try {
+      loading.value = true
+      error.value = null
+      
+      if (!nombre || nombre.trim().length < 2) {
+        throw new Error('El nombre debe tener al menos 2 caracteres')
+      }
+      
+      const { data, error: updateError } = await supabase.auth.updateUser({
+        data: {
+          nombre: nombre.trim()
+        }
+      })
+      
+      if (updateError) throw updateError
+      
+      // Actualizar el usuario en el store
+      if (data?.user) {
+        user.value = data.user
+      } else {
+        // Si no viene en la respuesta, obtener la sesión actualizada
+        const { data: { session } } = await supabase.auth.getSession()
+        user.value = session?.user || null
+      }
+      
+      return { success: true }
+    } catch (e) {
+      const errorMessage = e?.message || 'Error al actualizar el nombre de usuario'
+      error.value = errorMessage
+      return { success: false, error: errorMessage }
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function logout() {
     try {
       loading.value = true
@@ -311,11 +353,13 @@ async function register(email, password, nombre) {
     isEmailConfirmed,
     userEmail,
     userName,
+    needsUsername,
     checkAuth,
     login,
     register,
     resetPassword,
     updatePassword,
+    updateDisplayName,
     logout,
     loginWithGoogle
   }

@@ -378,13 +378,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const fechaLimiteStr = fechaLimiteDate.toISOString().split('T')[0]
         const fechaVencimientoStr = fechaVencimientoDate.toISOString().split('T')[0]
 
-        // Corregir estado: Pendiente -> Programada si fecha_actual < fecha_limite
-        // (solo si no tiene pagos parciales)
-        if (cuota.estado === 'pendiente' && fechaActualStr < fechaLimiteStr && (cuota.valor_pagado || 0) === 0) {
+        // Corregir estado según las reglas, considerando pagos parciales:
+        // - Pendiente/Parcial -> Programada si fecha_actual < fecha_limite
+        // - Programada -> Pendiente si fecha_actual >= fecha_limite
+        // - Pendiente/Parcial -> Mora si fecha_actual > fecha_vencimiento
+        
+        // Pendiente/Parcial -> Programada: si fecha_actual < fecha_limite
+        // (aplica tanto para cuotas sin pago como con pago parcial)
+        if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr < fechaLimiteStr) {
           cuotasAProgramada.push(cuota.id)
         }
         // Programada -> Pendiente: cuando fecha_actual >= fecha_limite
-        else if (cuota.estado === 'programada' && fechaActualStr >= fechaLimiteStr) {
+        // (aplica tanto para cuotas sin pago como con pago parcial)
+        else if (cuota.estado === 'programada' && fechaActualStr >= fechaLimiteStr && fechaActualStr <= fechaVencimientoStr) {
           cuotasAPendiente.push(cuota.id)
         }
         // Pendiente/Parcial -> Mora: cuando fecha_actual > fecha_vencimiento
@@ -1363,15 +1369,73 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const nuevoValorPagado = (cuotaActual.valor_pagado || 0) + valorPagado
       // Considerar la sanción dinámica calculada (o la guardada en BD) en el total a pagar
       // El total a pagar es: valor_cuota + sanción - valor_pagado_anterior
-      const totalAPagar = (cuotaActual.valor_cuota || 0) + sancionDinamica
+      // Usar sancionDinamica si existe, sino usar valor_multa guardado
+      const sancionAPagar = sancionDinamica > 0 ? sancionDinamica : (parseFloat(cuotaActual.valor_multa) || 0)
+      const totalAPagar = (cuotaActual.valor_cuota || 0) + sancionAPagar
       
-      // La cuota solo se marca como "pagada" cuando se paga el total completo (cuota + sanciones)
-      // Si solo se paga la cuota sin las sanciones, debe quedar como "parcial"
-      const nuevaEstado = nuevoValorPagado >= totalAPagar 
-        ? 'pagada' 
-        : nuevoValorPagado > 0 
-          ? 'parcial' 
-          : cuotaActual.estado
+      // Calcular el nuevo estado según las reglas:
+      // - Pagada: cuando se paga el total completo (cuota + sanciones)
+      // - Si hay pago parcial: calcular estado según fecha (programada, pendiente, mora)
+      // - Si no hay pago: mantener estado actual
+      let nuevaEstado
+      if (nuevoValorPagado >= totalAPagar) {
+        nuevaEstado = 'pagada'
+      } else if (nuevoValorPagado > 0) {
+        // Pago parcial: calcular estado según fecha límite y fecha de vencimiento
+        // Según REGLAS.md: cuotas con pago parcial siguen las mismas reglas de estado basadas en fecha
+        if (!cuotaActual.fecha_limite) {
+          // Si no hay fecha límite, usar 'parcial' como fallback
+          nuevaEstado = 'parcial'
+        } else {
+          const fechaActual = new Date()
+          fechaActual.setHours(0, 0, 0, 0)
+          
+          // Parsear fecha_limite correctamente
+          let fechaLimite
+          if (typeof cuotaActual.fecha_limite === 'string' && cuotaActual.fecha_limite.includes('-')) {
+            const [anio, mes, dia] = cuotaActual.fecha_limite.split('-').map(Number)
+            fechaLimite = new Date(anio, mes - 1, dia)
+          } else {
+            fechaLimite = new Date(cuotaActual.fecha_limite)
+          }
+          fechaLimite.setHours(0, 0, 0, 0)
+          
+          // Obtener fecha_vencimiento
+          let fechaVencimiento
+          if (cuotaActual.fecha_vencimiento) {
+            if (typeof cuotaActual.fecha_vencimiento === 'string' && cuotaActual.fecha_vencimiento.includes('-')) {
+              const [anio, mes, dia] = cuotaActual.fecha_vencimiento.split('-').map(Number)
+              fechaVencimiento = new Date(anio, mes - 1, dia)
+            } else {
+              fechaVencimiento = new Date(cuotaActual.fecha_vencimiento)
+            }
+          } else {
+            // Si no existe, usar fecha_limite como fallback
+            fechaVencimiento = new Date(fechaLimite)
+          }
+          fechaVencimiento.setHours(0, 0, 0, 0)
+          
+          // Aplicar reglas de estado según fecha:
+          // Programada: fecha_actual < fecha_limite
+          if (fechaActual < fechaLimite) {
+            nuevaEstado = 'programada'
+          }
+          // Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+          else if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
+            nuevaEstado = 'pendiente'
+          }
+          // En Mora: fecha_actual > fecha_vencimiento
+          else if (fechaActual > fechaVencimiento) {
+            nuevaEstado = 'mora'
+          } else {
+            // Fallback
+            nuevaEstado = 'parcial'
+          }
+        }
+      } else {
+        // Sin pago: mantener estado actual
+        nuevaEstado = cuotaActual.estado
+      }
 
       // Generar código único de comprobante solo si se está registrando un pago (no si ya existe)
       let codigoComprobante = cuotaActual.codigo_comprobante || null
@@ -1429,10 +1493,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
         comprobante_url: comprobante
       }
       
-      // Actualizar valor_multa en la BD con la sanción dinámica calculada (si es diferente)
+      // Actualizar valor_multa en la BD con la sanción dinámica calculada o mantener la existente
       // Esto asegura que la sanción quede guardada correctamente
-      if (cuotaActual.estado === 'mora' && sancionDinamica > 0 && sancionDinamica !== (cuotaActual.valor_multa || 0)) {
+      if (sancionDinamica > 0) {
+        // Si hay sanción dinámica calculada, usarla
         updateData.valor_multa = sancionDinamica
+      } else if (cuotaActual.valor_multa && cuotaActual.valor_multa > 0) {
+        // Si no hay sanción dinámica pero ya había una guardada, mantenerla
+        updateData.valor_multa = cuotaActual.valor_multa
       }
       
       // Solo agregar codigo_comprobante si existe un código generado
@@ -1508,6 +1576,177 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Verificar y actualizar otras cuotas en mora después de registrar un pago
       await actualizarEstadoMoraAutomatico()
+
+      // SIEMPRE registrar sanción en utilidades_clasificadas si la cuota está pagada y tiene sanción
+      // Determinar el valor de la sanción pagada: usar el valor_multa de la cuota actualizada (data)
+      const valorMultaEnBD = parseFloat(data.valor_multa) || 0
+      const valorMultaAnterior = parseFloat(cuotaActual.valor_multa) || 0
+      // Usar el valor de la BD si existe, sino el anterior, sino el calculado
+      const valorMultaPagada = valorMultaEnBD > 0 ? valorMultaEnBD : (valorMultaAnterior > 0 ? valorMultaAnterior : sancionAPagar)
+      
+      // SIMPLIFICADO: Si la cuota está pagada Y tiene sanción, registrar en utilidades
+      const debeRegistrarUtilidad = nuevaEstado === 'pagada' && valorMultaPagada > 0
+
+      console.log('🔍 [UTILIDADES] Verificando registro de sanción:', {
+        nuevaEstado,
+        valorMultaPagada,
+        valorMultaEnBD,
+        valorMultaAnterior,
+        sancionAPagar,
+        totalAPagar,
+        nuevoValorPagado,
+        estadoAnterior: cuotaActual.estado,
+        debeRegistrarUtilidad,
+        natilleraId,
+        cuotaId
+      })
+
+      // REGISTRAR SIEMPRE cuando hay sanción pagada
+      if (debeRegistrarUtilidad) {
+        console.log('✅ [UTILIDADES] Condición cumplida, procediendo a registrar...')
+        try {
+          // Obtener todos los socios_natillera de esta natillera
+          const { data: sociosNatillera, error: errorSocios } = await supabase
+            .from('socios_natillera')
+            .select('id')
+            .eq('natillera_id', natilleraId)
+
+          if (errorSocios) {
+            console.error('Error obteniendo socios_natillera:', errorSocios)
+            throw errorSocios
+          }
+
+          const socioNatilleraIds = (sociosNatillera || []).map(sn => sn.id)
+
+          if (socioNatilleraIds.length === 0) {
+            console.warn('⚠️ [UTILIDADES] No se encontraron socios_natillera para la natillera:', natilleraId)
+            // Continuar con el proceso aunque no haya socios, pero registrar la sanción de esta cuota
+          }
+
+          // Obtener todas las cuotas pagadas con sanción de esta natillera para calcular el total
+          let cuotasPagadasConSancion = []
+          if (socioNatilleraIds.length > 0) {
+            const { data, error: errorCuotas } = await supabase
+              .from('cuotas')
+              .select('valor_multa')
+              .in('socio_natillera_id', socioNatilleraIds)
+              .eq('estado', 'pagada')
+              .not('valor_multa', 'is', null)
+              .gt('valor_multa', 0)
+            
+            if (errorCuotas) {
+              console.error('❌ [UTILIDADES] Error obteniendo cuotas pagadas con sanción:', errorCuotas)
+              throw errorCuotas
+            }
+            cuotasPagadasConSancion = data || []
+          } else {
+            // Si no hay socios, al menos incluir esta cuota que se acaba de pagar
+            if (valorMultaPagada > 0) {
+              cuotasPagadasConSancion = [{ valor_multa: valorMultaPagada }]
+            }
+          }
+
+          // Calcular el total de sanciones pagadas
+          const totalSancionesPagadas = (cuotasPagadasConSancion || []).reduce(
+            (sum, c) => sum + (parseFloat(c.valor_multa) || 0),
+            0
+          )
+
+          console.log('💰 [UTILIDADES] Total sanciones pagadas calculado:', {
+            totalSancionesPagadas,
+            cuotasConSancion: cuotasPagadasConSancion?.length || 0,
+            valorMultaEstaCuota: valorMultaPagada
+          })
+
+          // Si el total es 0 pero esta cuota tiene sanción, usar el valor de esta cuota
+          const montoFinal = totalSancionesPagadas > 0 ? totalSancionesPagadas : valorMultaPagada
+          
+          if (montoFinal <= 0) {
+            console.warn('⚠️ [UTILIDADES] No hay monto de sanción para registrar')
+            return { success: true, data }
+          }
+
+          // Obtener el registro existente de utilidades_clasificadas para sanciones
+          const { data: utilidadExistente, error: errorUtilidadExistente } = await supabase
+            .from('utilidades_clasificadas')
+            .select('id, monto')
+            .eq('natillera_id', natilleraId)
+            .eq('tipo', 'sanciones')
+            .is('fecha_cierre', null)
+            .maybeSingle()
+
+          if (errorUtilidadExistente) {
+            console.error('Error obteniendo utilidad existente:', errorUtilidadExistente)
+            throw errorUtilidadExistente
+          }
+
+          // Contar cuántas cuotas tienen sanción pagada
+          const totalCuotasConSancion = (cuotasPagadasConSancion || []).length
+
+          if (utilidadExistente) {
+            // Actualizar el registro existente
+            console.log('📝 [UTILIDADES] Actualizando registro existente:', {
+              id: utilidadExistente.id,
+              montoAnterior: utilidadExistente.monto,
+              montoNuevo: montoFinal
+            })
+
+            const { data: updatedData, error: updateUtilidadError } = await supabase
+              .from('utilidades_clasificadas')
+              .update({
+                monto: montoFinal,
+                descripcion: 'Multas pagadas por cuotas en mora',
+                detalles: { total_cuotas_con_sancion: totalCuotasConSancion },
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', utilidadExistente.id)
+              .select()
+
+            if (updateUtilidadError) {
+              console.error('❌ [UTILIDADES] Error actualizando utilidad de sanciones:', updateUtilidadError)
+              throw updateUtilidadError
+            } else {
+              console.log('✅ [UTILIDADES] Utilidad de sanciones actualizada correctamente:', updatedData)
+            }
+          } else {
+            // Crear nuevo registro
+            console.log('📝 [UTILIDADES] Creando nuevo registro:', {
+              natilleraId,
+              tipo: 'sanciones',
+              monto: montoFinal,
+              totalCuotasConSancion
+            })
+
+            const { data: insertedData, error: insertUtilidadError } = await supabase
+              .from('utilidades_clasificadas')
+              .insert({
+                natillera_id: natilleraId,
+                tipo: 'sanciones',
+                monto: montoFinal,
+                fecha_cierre: null,
+                descripcion: 'Multas pagadas por cuotas en mora',
+                detalles: { total_cuotas_con_sancion: totalCuotasConSancion }
+              })
+              .select()
+
+            if (insertUtilidadError) {
+              console.error('❌ [UTILIDADES] Error insertando utilidad de sanciones:', insertUtilidadError)
+              throw insertUtilidadError
+            } else {
+              console.log('✅ [UTILIDADES] Utilidad de sanciones creada correctamente:', insertedData)
+            }
+          }
+        } catch (errorUtilidad) {
+          // No fallar el registro de pago si hay error al registrar la utilidad
+          console.error('❌ Error registrando sanción en utilidades:', errorUtilidad)
+        }
+      } else {
+        console.log('⏭️ No se registra utilidad de sanción:', {
+          razon: nuevaEstado !== 'pagada' ? 'Cuota no está pagada' :
+                 valorMultaPagada === 0 ? 'No hay sanción pagada' :
+                 cuotaActual.estado === 'pagada' ? 'Cuota ya estaba pagada' : 'Razón desconocida'
+        })
+      }
 
       // Registrar auditoría
       const auditoria = useAuditoria()

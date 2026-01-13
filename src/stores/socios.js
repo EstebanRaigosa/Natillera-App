@@ -38,33 +38,56 @@ export const useSociosStore = defineStore('socios', () => {
     }
   }
 
-  async function verificarTelefonoUnico(telefono, excluirSocioId = null) {
+  async function verificarTelefonoUnico(telefono, natilleraId, excluirSocioId = null) {
     try {
       if (!telefono || telefono.trim() === '') {
         return false // No válido si está vacío
       }
 
+      if (!natilleraId) {
+        throw new Error('natilleraId es requerido para verificar unicidad del teléfono')
+      }
+
       const telefonoLimpio = telefono.trim()
       
-      let query = supabase
+      // Buscar socios con ese teléfono
+      const { data: sociosConTelefono, error: errorSocios } = await supabase
         .from('socios')
         .select('id')
         .eq('telefono', telefonoLimpio)
 
-      // Si estamos editando, excluir el socio actual
-      if (excluirSocioId) {
-        query = query.neq('id', excluirSocioId)
+      if (errorSocios) {
+        throw errorSocios
       }
 
-      const { data, error } = await query.maybeSingle()
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 es "not found", que es lo esperado
-        throw error
+      if (!sociosConTelefono || sociosConTelefono.length === 0) {
+        // No hay socios con ese teléfono, es único
+        return true
       }
 
-      // Si data es null, el teléfono es único (no existe)
-      // Si data existe, el teléfono ya está en uso
-      return data === null
+      // Filtrar el socio actual si estamos editando
+      const socioIdsParaVerificar = excluirSocioId
+        ? sociosConTelefono.filter(s => s.id !== excluirSocioId).map(s => s.id)
+        : sociosConTelefono.map(s => s.id)
+
+      if (socioIdsParaVerificar.length === 0) {
+        // El único socio con ese teléfono es el que estamos editando, es único
+        return true
+      }
+
+      // Verificar si alguno de estos socios ya está en la natillera
+      const { data: sociosEnNatillera, error: errorNatillera } = await supabase
+        .from('socios_natillera')
+        .select('socio_id')
+        .eq('natillera_id', natilleraId)
+        .in('socio_id', socioIdsParaVerificar)
+
+      if (errorNatillera) {
+        throw errorNatillera
+      }
+
+      // Si no hay socios en la natillera con ese teléfono, es único
+      return !sociosEnNatillera || sociosEnNatillera.length === 0
     } catch (e) {
       console.error('Error verificando unicidad del teléfono:', e)
       return false // En caso de error, asumir que no es único
@@ -106,10 +129,10 @@ export const useSociosStore = defineStore('socios', () => {
 
       const telefonoLimpio = datosSocio.telefono.trim()
 
-      // Verificar unicidad del teléfono
-      const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio)
+      // Verificar unicidad del teléfono dentro de la natillera
+      const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, natilleraId)
       if (!telefonoUnico) {
-        throw new Error('Este número de teléfono ya está registrado para otro socio')
+        throw new Error('Este número de teléfono ya está registrado para otro socio en esta natillera')
       }
 
       // Generar documento automático si no se proporciona
@@ -160,11 +183,11 @@ export const useSociosStore = defineStore('socios', () => {
           .eq('id', socioId)
           .single()
 
-        // Si el teléfono es diferente, verificar unicidad nuevamente
+        // Si el teléfono es diferente, verificar unicidad nuevamente dentro de la natillera
         if (socioActual?.telefono !== telefonoLimpio) {
-          const telefonoUnicoParaActualizacion = await verificarTelefonoUnico(telefonoLimpio, socioId)
+          const telefonoUnicoParaActualizacion = await verificarTelefonoUnico(telefonoLimpio, natilleraId, socioId)
           if (!telefonoUnicoParaActualizacion) {
-            throw new Error('Este número de teléfono ya está registrado para otro socio')
+            throw new Error('Este número de teléfono ya está registrado para otro socio en esta natillera')
           }
         }
         
@@ -436,8 +459,12 @@ export const useSociosStore = defineStore('socios', () => {
     return actualizarSocioNatillera(id, { estado })
   }
 
-  async function actualizarDatosSocio(socioId, datos, natilleraId = null) {
+  async function actualizarDatosSocio(socioId, datos, natilleraId) {
     try {
+      if (!natilleraId) {
+        throw new Error('natilleraId es requerido para actualizar datos del socio')
+      }
+
       // Obtener datos anteriores para auditoría
       const { data: datosAnteriores, error: fetchAnterioresError } = await supabase
         .from('socios')
@@ -458,10 +485,10 @@ export const useSociosStore = defineStore('socios', () => {
 
         const telefonoLimpio = datos.telefono.trim()
         
-        // Verificar unicidad del teléfono (excluyendo el socio actual)
-        const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, socioId)
+        // Verificar unicidad del teléfono dentro de la natillera (excluyendo el socio actual)
+        const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, natilleraId, socioId)
         if (!telefonoUnico) {
-          throw new Error('Este número de teléfono ya está registrado para otro socio')
+          throw new Error('Este número de teléfono ya está registrado para otro socio en esta natillera')
         }
 
         datos.telefono = telefonoLimpio
@@ -474,9 +501,9 @@ export const useSociosStore = defineStore('socios', () => {
         .eq('id', socioId)
 
       if (updateError) {
-        // Verificar si es error de unicidad
+        // Verificar si es error de unicidad (aunque ya validamos antes, por si acaso)
         if (updateError.code === '23505' || updateError.message?.includes('unique') || updateError.message?.includes('duplicate')) {
-          throw new Error('Este número de teléfono ya está registrado para otro socio')
+          throw new Error('Este número de teléfono ya está registrado para otro socio en esta natillera')
         }
         throw updateError
       }

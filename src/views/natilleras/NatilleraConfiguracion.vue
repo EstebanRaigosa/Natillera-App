@@ -152,6 +152,425 @@
                 </div>
               </div>
 
+              <!-- Sección de Cierre de Natillera -->
+              <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50/80 to-purple-50/60 rounded-2xl border-2 border-purple-200/50 shadow-lg p-5 sm:p-6 mt-6">
+                <!-- Efectos decorativos -->
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-300/20 to-indigo-300/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/15 to-purple-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+                
+                <div class="relative z-10">
+                  <!-- Header -->
+                  <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                      <CurrencyDollarIcon class="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 class="text-lg font-display font-bold text-gray-800">
+                        Cierre de Natillera
+                      </h3>
+                      <p class="text-xs text-gray-600">
+                        Configura cómo se repartirán las utilidades al cerrar
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Configuración de Utilidades de Actividades -->
+                  <div class="mb-6">
+                    <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <CalendarDaysIcon class="w-4 h-4 text-purple-600" />
+                      Utilidades de Actividades
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">
+                      Selecciona si quieres configurar todas las actividades igual o cada una por separado
+                    </p>
+                    
+                    <!-- Selector de modo -->
+                    <div class="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-700">Modo de configuración</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          @click="configCierre.modoActividades = 'general'"
+                          :class="[
+                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center',
+                            configCierre.modoActividades === 'general'
+                              ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                          ]"
+                        >
+                          <div class="flex items-center justify-center gap-2">
+                            <UsersIcon 
+                              class="w-4 h-4 flex-shrink-0" 
+                              :class="configCierre.modoActividades === 'general' ? 'text-purple-600' : 'text-gray-400'" 
+                            />
+                            <span 
+                              :class="[
+                                'font-semibold text-sm',
+                                configCierre.modoActividades === 'general' ? 'text-purple-700' : 'text-gray-600'
+                              ]"
+                            >
+                              General
+                            </span>
+                            <div 
+                              v-if="configCierre.modoActividades === 'general'"
+                              class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0"
+                            >
+                              <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <p class="text-[10px] text-gray-500 mt-1">Igual para todas</p>
+                        </button>
+                        <button
+                          type="button"
+                          @click="configCierre.modoActividades = 'individual'"
+                          :class="[
+                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center',
+                            configCierre.modoActividades === 'individual'
+                              ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                          ]"
+                        >
+                          <div class="flex items-center justify-center gap-2">
+                            <ChartBarIcon 
+                              class="w-4 h-4 flex-shrink-0" 
+                              :class="configCierre.modoActividades === 'individual' ? 'text-purple-600' : 'text-gray-400'" 
+                            />
+                            <span 
+                              :class="[
+                                'font-semibold text-sm',
+                                configCierre.modoActividades === 'individual' ? 'text-purple-700' : 'text-gray-600'
+                              ]"
+                            >
+                              Individual
+                            </span>
+                            <div 
+                              v-if="configCierre.modoActividades === 'individual'"
+                              class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0"
+                            >
+                              <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <p class="text-[10px] text-gray-500 mt-1">Una por una</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Configuración General -->
+                    <div v-if="configCierre.modoActividades === 'general'" class="space-y-3">
+                      <p class="text-xs text-gray-500 mb-3">
+                        Esta configuración aplicará a todas las actividades (Rifas, Bingos, Ventas, Eventos, Otros)
+                      </p>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          @click="configCierre.actividades.general = 'equitativa'"
+                          :class="[
+                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                            configCierre.actividades.general === 'equitativa'
+                              ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-200'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                          ]"
+                        >
+                          <div class="flex items-center gap-3 mb-2">
+                            <div 
+                              :class="[
+                                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                configCierre.actividades.general === 'equitativa'
+                                  ? 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30'
+                                  : 'bg-gray-100 border-2 border-gray-200'
+                              ]"
+                            >
+                              <UsersIcon class="w-5 h-5" :class="configCierre.actividades.general === 'equitativa' ? 'text-white' : 'text-gray-400'" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                              <span 
+                                :class="[
+                                  'font-bold text-sm block',
+                                  configCierre.actividades.general === 'equitativa' ? 'text-purple-700' : 'text-gray-700'
+                                ]"
+                              >
+                                Equitativa
+                              </span>
+                            </div>
+                            <div 
+                              v-if="configCierre.actividades.general === 'equitativa'"
+                              class="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0"
+                            >
+                              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <p 
+                            :class="[
+                              'text-xs',
+                              configCierre.actividades.general === 'equitativa' ? 'text-purple-600' : 'text-gray-500'
+                            ]"
+                          >
+                            Las utilidades se reparten a partes iguales entre todos los socios
+                          </p>
+                        </button>
+                        <button
+                          type="button"
+                          @click="configCierre.actividades.general = 'proporcional'"
+                          :class="[
+                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                            configCierre.actividades.general === 'proporcional'
+                              ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-200'
+                              : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                          ]"
+                        >
+                          <div class="flex items-center gap-3 mb-2">
+                            <div 
+                              :class="[
+                                'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                                configCierre.actividades.general === 'proporcional'
+                                  ? 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30'
+                                  : 'bg-gray-100 border-2 border-gray-200'
+                              ]"
+                            >
+                              <ChartBarIcon class="w-5 h-5" :class="configCierre.actividades.general === 'proporcional' ? 'text-white' : 'text-gray-400'" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                              <span 
+                                :class="[
+                                  'font-bold text-sm block',
+                                  configCierre.actividades.general === 'proporcional' ? 'text-purple-700' : 'text-gray-700'
+                                ]"
+                              >
+                                Proporcional
+                              </span>
+                            </div>
+                            <div 
+                              v-if="configCierre.actividades.general === 'proporcional'"
+                              class="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0"
+                            >
+                              <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                              </svg>
+                            </div>
+                          </div>
+                          <p 
+                            :class="[
+                              'text-xs',
+                              configCierre.actividades.general === 'proporcional' ? 'text-purple-600' : 'text-gray-500'
+                            ]"
+                          >
+                            Las utilidades se reparten según lo ahorrado por cada socio
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Configuración Individual -->
+                    <div v-else class="space-y-4">
+                      <p class="text-xs text-gray-500 mb-3">
+                        Configura cómo se repartirán las utilidades para cada tipo de actividad
+                      </p>
+                      <div
+                        v-for="tipo in tiposActividades"
+                        :key="tipo.valor"
+                        class="relative overflow-hidden bg-white rounded-xl border border-gray-200 p-4 hover:border-purple-300 transition-all"
+                      >
+                        <div class="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 class="font-semibold text-gray-800 text-sm">{{ tipo.label }}</h4>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ tipo.descripcion }}</p>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            @click="configCierre.actividades[tipo.valor] = 'equitativa'"
+                            :class="[
+                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left',
+                              configCierre.actividades[tipo.valor] === 'equitativa'
+                                ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
+                                : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-white'
+                            ]"
+                          >
+                            <div class="flex items-center gap-2 mb-1">
+                              <UsersIcon 
+                                class="w-4 h-4 flex-shrink-0" 
+                                :class="configCierre.actividades[tipo.valor] === 'equitativa' ? 'text-purple-600' : 'text-gray-400'" 
+                              />
+                              <span 
+                                :class="[
+                                  'font-semibold text-xs',
+                                  configCierre.actividades[tipo.valor] === 'equitativa' ? 'text-purple-700' : 'text-gray-600'
+                                ]"
+                              >
+                                Equitativa
+                              </span>
+                              <div 
+                                v-if="configCierre.actividades[tipo.valor] === 'equitativa'"
+                                class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 ml-auto"
+                              >
+                                <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </div>
+                            </div>
+                            <p class="text-[10px] text-gray-500">A partes iguales</p>
+                          </button>
+                          <button
+                            type="button"
+                            @click="configCierre.actividades[tipo.valor] = 'proporcional'"
+                            :class="[
+                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left',
+                              configCierre.actividades[tipo.valor] === 'proporcional'
+                                ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
+                                : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-white'
+                            ]"
+                          >
+                            <div class="flex items-center gap-2 mb-1">
+                              <ChartBarIcon 
+                                class="w-4 h-4 flex-shrink-0" 
+                                :class="configCierre.actividades[tipo.valor] === 'proporcional' ? 'text-purple-600' : 'text-gray-400'" 
+                              />
+                              <span 
+                                :class="[
+                                  'font-semibold text-xs',
+                                  configCierre.actividades[tipo.valor] === 'proporcional' ? 'text-purple-700' : 'text-gray-600'
+                                ]"
+                              >
+                                Proporcional
+                              </span>
+                              <div 
+                                v-if="configCierre.actividades[tipo.valor] === 'proporcional'"
+                                class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 ml-auto"
+                              >
+                                <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </div>
+                            </div>
+                            <p class="text-[10px] text-gray-500">Según lo ahorrado</p>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Configuración de Utilidades de Préstamos -->
+                  <div>
+                    <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <BanknotesIcon class="w-4 h-4 text-amber-600" />
+                      Utilidades de Préstamos
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">
+                      Selecciona cómo se repartirán los intereses generados por los préstamos
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        @click="configCierre.prestamos = 'equitativa'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                          configCierre.prestamos === 'equitativa'
+                            ? 'border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-500/20 ring-2 ring-amber-200'
+                            : 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2">
+                          <div 
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.prestamos === 'equitativa'
+                                ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <UsersIcon class="w-5 h-5" :class="configCierre.prestamos === 'equitativa' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span 
+                              :class="[
+                                'font-bold text-sm block',
+                                configCierre.prestamos === 'equitativa' ? 'text-amber-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Equitativa
+                            </span>
+                          </div>
+                          <div 
+                            v-if="configCierre.prestamos === 'equitativa'"
+                            class="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p 
+                          :class="[
+                            'text-xs',
+                            configCierre.prestamos === 'equitativa' ? 'text-amber-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Los intereses se reparten a partes iguales entre todos los socios
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        @click="configCierre.prestamos = 'proporcional'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                          configCierre.prestamos === 'proporcional'
+                            ? 'border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-500/20 ring-2 ring-amber-200'
+                            : 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2">
+                          <div 
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.prestamos === 'proporcional'
+                                ? 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <ChartBarIcon class="w-5 h-5" :class="configCierre.prestamos === 'proporcional' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span 
+                              :class="[
+                                'font-bold text-sm block',
+                                configCierre.prestamos === 'proporcional' ? 'text-amber-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Proporcional
+                            </span>
+                          </div>
+                          <div 
+                            v-if="configCierre.prestamos === 'proporcional'"
+                            class="w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p 
+                          :class="[
+                            'text-xs',
+                            configCierre.prestamos === 'proporcional' ? 'text-amber-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Los intereses se reparten según lo ahorrado por cada socio
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
           <button 
             @click="guardarConfigBasica"
@@ -1291,7 +1710,8 @@ import {
   XMarkIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  SparklesIcon
+  SparklesIcon,
+  BanknotesIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -1366,6 +1786,29 @@ const configBasica = ref({
   periodicidad: 'mensual',
   fecha_inicio: new Date().toISOString().split('T')[0]
 })
+
+// Configuración de cierre
+const configCierre = ref({
+  modoActividades: 'general', // 'general' o 'individual'
+  actividades: {
+    general: 'equitativa', // Solo se usa cuando modoActividades es 'general'
+    rifa: 'equitativa',
+    bingo: 'equitativa',
+    venta: 'equitativa',
+    evento: 'equitativa',
+    otro: 'equitativa'
+  },
+  prestamos: 'equitativa' // 'equitativa' o 'proporcional'
+})
+
+// Tipos de actividades disponibles
+const tiposActividades = [
+  { valor: 'rifa', label: '🎟️ Rifas', descripcion: 'Utilidades generadas por rifas' },
+  { valor: 'bingo', label: '🎱 Bingos', descripcion: 'Utilidades generadas por bingos' },
+  { valor: 'venta', label: '🛒 Ventas', descripcion: 'Utilidades generadas por ventas' },
+  { valor: 'evento', label: '🎉 Eventos', descripcion: 'Utilidades generadas por eventos' },
+  { valor: 'otro', label: '📋 Otros', descripcion: 'Utilidades de otras actividades' }
+]
 
 // Generar lista de años (desde 2 años atrás hasta 5 años adelante)
 const anioActual = new Date().getFullYear()
@@ -1523,7 +1966,12 @@ async function guardarConfigBasica() {
     descripcion: configBasica.value.descripcion?.trim() || null,
     periodicidad: configBasica.value.periodicidad,
     fecha_inicio: configBasica.value.fecha_inicio,
-    cuotas_automaticas: configCuotasAuto.value.activo
+    cuotas_automaticas: configCuotasAuto.value.activo,
+    config_cierre: {
+      modoActividades: configCierre.value.modoActividades,
+      actividades: configCierre.value.actividades,
+      prestamos: configCierre.value.prestamos
+    }
   })
   
   if (result.success) {
@@ -1543,6 +1991,40 @@ async function guardarConfigBasica() {
       }
       configCuotasAuto.value = {
         activo: natillera.value.cuotas_automaticas !== false
+      }
+      // Cargar configuración de cierre
+      const configCierreActual = natillera.value.config_cierre || {}
+      const actividadesConfig = configCierreActual.actividades || {}
+      const modoActividades = configCierreActual.modoActividades || 'general'
+      
+      // Si viene en formato antiguo (sin modoActividades), determinar el modo
+      let modo = modoActividades
+      if (!configCierreActual.modoActividades && actividadesConfig.general) {
+        modo = 'general'
+      } else if (!configCierreActual.modoActividades && (actividadesConfig.rifa || actividadesConfig.bingo)) {
+        modo = 'individual'
+      }
+      
+      configCierre.value = {
+        modoActividades: modo,
+        actividades: modo === 'general' 
+          ? {
+              general: actividadesConfig.general || 'equitativa',
+              rifa: actividadesConfig.rifa || 'equitativa',
+              bingo: actividadesConfig.bingo || 'equitativa',
+              venta: actividadesConfig.venta || 'equitativa',
+              evento: actividadesConfig.evento || 'equitativa',
+              otro: actividadesConfig.otro || 'equitativa'
+            }
+          : {
+              general: actividadesConfig.general || 'equitativa',
+              rifa: actividadesConfig.rifa || 'equitativa',
+              bingo: actividadesConfig.bingo || 'equitativa',
+              venta: actividadesConfig.venta || 'equitativa',
+              evento: actividadesConfig.evento || 'equitativa',
+              otro: actividadesConfig.otro || 'equitativa'
+            },
+        prestamos: configCierreActual.prestamos || 'equitativa'
       }
     }
     // Cerrar la sección después de guardar
@@ -1857,6 +2339,32 @@ function actualizarValoresDesdeNatillera() {
     // Cargar configuración de cuotas automáticas
     configCuotasAuto.value = {
       activo: natillera.value.cuotas_automaticas !== false // Por defecto true
+    }
+    
+    // Cargar configuración de cierre
+    const configCierreActual = natillera.value.config_cierre || {}
+    const actividadesConfig = configCierreActual.actividades || {}
+    const modoActividades = configCierreActual.modoActividades || 'general'
+    
+    // Si viene en formato antiguo (sin modoActividades), determinar el modo
+    let modo = modoActividades
+    if (!configCierreActual.modoActividades && actividadesConfig.general) {
+      modo = 'general'
+    } else if (!configCierreActual.modoActividades && (actividadesConfig.rifa || actividadesConfig.bingo)) {
+      modo = 'individual'
+    }
+    
+    configCierre.value = {
+      modoActividades: modo,
+      actividades: {
+        general: actividadesConfig.general || 'equitativa',
+        rifa: actividadesConfig.rifa || 'equitativa',
+        bingo: actividadesConfig.bingo || 'equitativa',
+        venta: actividadesConfig.venta || 'equitativa',
+        evento: actividadesConfig.evento || 'equitativa',
+        otro: actividadesConfig.otro || 'equitativa'
+      },
+      prestamos: configCierreActual.prestamos || 'equitativa'
     }
     
     // Cargar configuración de sanciones

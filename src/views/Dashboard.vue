@@ -30,6 +30,99 @@
       </div>
     </div>
 
+    <!-- Invitaciones Pendientes -->
+    <div v-if="colaboradoresStore.misInvitaciones.length > 0" class="relative animate-fade-in-up">
+      <div class="relative bg-gradient-to-br from-blue-50 via-indigo-50/80 to-purple-50/60 rounded-3xl p-5 sm:p-6 border-2 border-blue-200/60 shadow-xl backdrop-blur-sm overflow-hidden">
+        <!-- Efectos decorativos -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-400/20 to-blue-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div class="relative z-10">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <EnvelopeIcon class="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 class="text-xl sm:text-2xl font-display font-bold bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 bg-clip-text text-transparent">
+                  Invitaciones Pendientes
+                </h2>
+                <p class="text-sm text-gray-600 mt-0.5">
+                  Tienes {{ colaboradoresStore.misInvitaciones.length }} invitación{{ colaboradoresStore.misInvitaciones.length > 1 ? 'es' : '' }} para colaborar
+                </p>
+              </div>
+            </div>
+            <div class="px-3 py-1.5 bg-blue-500 text-white rounded-full text-sm font-bold shadow-lg">
+              {{ colaboradoresStore.misInvitaciones.length }}
+            </div>
+          </div>
+
+          <!-- Lista de invitaciones -->
+          <div class="space-y-3">
+            <div
+              v-for="invitacion in colaboradoresStore.misInvitaciones"
+              :key="invitacion.id"
+              class="relative bg-white/80 backdrop-blur-sm border border-blue-200/60 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-blue-300 transition-all duration-300"
+            >
+              <!-- Efecto decorativo sutil -->
+              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+              
+              <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
+                <!-- Avatar y info -->
+                <div class="flex items-center gap-4 flex-1 min-w-0">
+                  <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white flex-shrink-0">
+                    <img
+                      :src="getNatilleraAvatarUrl(invitacion.natillera_nombre)"
+                      :alt="invitacion.natillera_nombre"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1 truncate">
+                      {{ invitacion.natillera_nombre }}
+                    </h3>
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                      <span class="flex items-center gap-1.5">
+                        <UserGroupIcon class="w-4 h-4 text-blue-500" />
+                        <span>Invitado por: <strong class="text-gray-800">{{ invitacion.invitado_por_nombre }}</strong></span>
+                      </span>
+                      <span class="text-gray-300 hidden sm:inline">•</span>
+                      <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold text-xs">
+                        {{ formatearRol(invitacion.rol) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="flex gap-2 sm:gap-3 flex-shrink-0">
+                  <button
+                    @click="aceptarInvitacion(invitacion)"
+                    :disabled="procesandoInvitacion === invitacion.id"
+                    class="px-4 py-2.5 sm:px-5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                  >
+                    <CheckIcon class="w-5 h-5" />
+                    <span class="hidden sm:inline">Aceptar</span>
+                    <span class="sm:hidden">Aceptar</span>
+                  </button>
+                  <button
+                    @click="rechazarInvitacion(invitacion)"
+                    :disabled="procesandoInvitacion === invitacion.id"
+                    class="px-4 py-2.5 sm:px-5 sm:py-3 bg-white border-2 border-gray-300 hover:border-red-300 hover:bg-red-50 text-gray-700 hover:text-red-700 font-semibold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                  >
+                    <XMarkIcon class="w-5 h-5" />
+                    <span class="hidden sm:inline">Rechazar</span>
+                    <span class="sm:hidden">Rechazar</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-1">
@@ -264,16 +357,6 @@
                 :key="`propia-${natillera.id}`"
                 class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
               >
-                <!-- Botón eliminar -->
-                <button
-                  v-if="puedeEliminarNatillera(natillera)"
-                  @click.stop="confirmarEliminarNatillera(natillera)"
-                  class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur-sm border border-red-200/50 text-red-600 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg hover:bg-red-50 hover:border-red-300 hover:scale-110 transform duration-200"
-                  title="Eliminar natillera"
-                >
-                  <TrashIcon class="w-4 h-4" />
-                </button>
-
                 <router-link 
                   :to="`/natilleras/${natillera.id}`"
                   class="block p-6"
@@ -322,8 +405,18 @@
                         </div>
                         <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
                       </div>
-                      <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                        <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
+                      <div class="flex items-center gap-2">
+                        <button
+                          v-if="puedeEliminarNatillera(natillera)"
+                          @click.stop="confirmarEliminarNatillera(natillera)"
+                          class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50"
+                          title="Eliminar natillera"
+                        >
+                          <TrashIcon class="w-4 h-4" />
+                        </button>
+                        <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
+                          <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -450,16 +543,6 @@
             :key="natillera.id"
             class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
           >
-            <!-- Botón eliminar -->
-            <button
-              v-if="puedeEliminarNatillera(natillera)"
-              @click.stop="confirmarEliminarNatillera(natillera)"
-              class="absolute top-3 right-3 z-20 p-2 bg-white/80 backdrop-blur-sm border border-red-200/50 text-red-600 rounded-lg transition-all opacity-0 group-hover:opacity-100 shadow-md hover:shadow-lg hover:bg-red-50 hover:border-red-300 hover:scale-110 transform duration-200"
-              title="Eliminar natillera"
-            >
-              <TrashIcon class="w-4 h-4" />
-            </button>
-
             <router-link 
               :to="`/natilleras/${natillera.id}`"
               class="block p-6"
@@ -508,8 +591,18 @@
                     </div>
                     <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
                   </div>
-                  <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                    <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
+                  <div class="flex items-center gap-2">
+                    <button
+                      v-if="puedeEliminarNatillera(natillera)"
+                      @click.stop="confirmarEliminarNatillera(natillera)"
+                      class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50"
+                      title="Eliminar natillera"
+                    >
+                      <TrashIcon class="w-4 h-4" />
+                    </button>
+                    <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
+                      <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -667,6 +760,7 @@ import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useUsersStore } from '../stores/users'
 import { useNotificationStore } from '../stores/notifications'
+import { useColaboradoresStore } from '../stores/colaboradores'
 import { supabase } from '../lib/supabase'
 import { getNatilleraAvatarUrl } from '../utils/avatars'
 import { 
@@ -678,19 +772,24 @@ import {
   PlusIcon,
   ChevronRightIcon,
   TrashIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  EnvelopeIcon,
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
 const usersStore = useUsersStore()
 const notificationStore = useNotificationStore()
+const colaboradoresStore = useColaboradoresStore()
 
 const totalRecaudado = ref(0)
 const filtro = ref('todas')
 const vistaActiva = ref('todas')
 const natilleraAEliminar = ref(null)
 const usuarioAutenticado = ref(null)
+const procesandoInvitacion = ref(null)
 
 const totalSocios = computed(() => {
   return natillerasStore.natilleras.reduce((sum, n) => {
@@ -842,11 +941,57 @@ async function eliminarNatilleraConfirmado() {
   }
 }
 
+async function aceptarInvitacion(invitacion) {
+  try {
+    procesandoInvitacion.value = invitacion.id
+    
+    const resultado = await colaboradoresStore.aceptarInvitacion(invitacion.token_invitacion)
+    
+    if (resultado.success) {
+      notificationStore.success(
+        `¡Ahora eres colaborador de "${resultado.data.natillera_nombre}"!`,
+        'Invitación aceptada'
+      )
+      // Recargar natilleras compartidas
+      await natillerasStore.fetchNatillerasCompartidas()
+    } else {
+      notificationStore.error(resultado.error || 'Error al aceptar la invitación')
+    }
+  } catch (e) {
+    notificationStore.error(e.message || 'Error al aceptar la invitación')
+  } finally {
+    procesandoInvitacion.value = null
+  }
+}
+
+async function rechazarInvitacion(invitacion) {
+  if (!confirm('¿Estás seguro de que deseas rechazar esta invitación?')) {
+    return
+  }
+
+  try {
+    procesandoInvitacion.value = invitacion.id
+    
+    const resultado = await colaboradoresStore.rechazarInvitacion(invitacion.token_invitacion)
+    
+    if (resultado.success) {
+      notificationStore.info('Invitación rechazada')
+    } else {
+      notificationStore.error(resultado.error || 'Error al rechazar la invitación')
+    }
+  } catch (e) {
+    notificationStore.error(e.message || 'Error al rechazar la invitación')
+  } finally {
+    procesandoInvitacion.value = null
+  }
+}
+
 onMounted(async () => {
   const { data: { user } } = await supabase.auth.getUser()
   usuarioAutenticado.value = user
   
   await usersStore.getCurrentUserProfile()
+  await colaboradoresStore.fetchMisInvitaciones()
   await natillerasStore.fetchTodasLasNatilleras()
   await calcularTotalRecaudado()
 })

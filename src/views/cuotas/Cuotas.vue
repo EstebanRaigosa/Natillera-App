@@ -68,7 +68,7 @@
     </div>
 
     <!-- Resumen del mes seleccionado (clickeable para filtrar) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
       <button 
         @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'"
         :class="[
@@ -120,12 +120,51 @@
           <p v-if="filtroEstado === 'mora'" class="text-xs text-red-600 font-bold mt-2 px-2 py-1 bg-red-100 rounded-full">✓ Filtrado</p>
         </div>
       </button>
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg">
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 backdrop-blur-sm shadow-lg">
+        <!-- Círculo decorativo -->
+        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
+          <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">${{ formatMoney(resumenMesActual.totalRecaudado || 0) }}</p>
+          <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Total Recaudado</p>
+        </div>
+      </div>
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 backdrop-blur-sm shadow-lg col-span-2 lg:col-span-1">
         <!-- Círculo decorativo -->
         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="relative z-10 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
-          <p class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">{{ (resumenMesActual.porcentajeRecaudado || 0).toFixed(0) }}%</p>
-          <p class="text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2">Recaudado</p>
+        <div class="relative z-10 p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+          <!-- Texto a la izquierda -->
+          <div class="flex-1">
+            <p class="text-xs sm:text-sm font-semibold text-purple-700 mb-1">Progreso de recaudación</p>
+            <p class="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600">{{ (resumenMesActual.porcentajeRecaudado || 0).toFixed(0) }}%</p>
+          </div>
+          <!-- Círculo de progreso a la derecha -->
+          <div class="relative flex-shrink-0">
+            <svg class="w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 transform -rotate-90" viewBox="0 0 100 100">
+              <!-- Círculo de fondo -->
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="8"
+                class="text-purple-200"
+              />
+              <!-- Círculo de progreso -->
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="8"
+                stroke-linecap="round"
+                class="text-purple-600 transition-all duration-500"
+                :stroke-dasharray="`${2 * Math.PI * 45}`"
+                :stroke-dashoffset="`${2 * Math.PI * 45 * (1 - (resumenMesActual.porcentajeRecaudado || 0) / 100)}`"
+              />
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -545,15 +584,26 @@
                 v-for="cuota in grupo.cuotas" 
                 :key="cuota.id"
                 @click="abrirModalDetalleCuota(cuota)"
-                class="relative overflow-hidden rounded-xl p-4 border cursor-pointer transition-all duration-300 hover:shadow-md group"
+                class="relative overflow-hidden rounded-xl p-4 border cursor-pointer transition-all duration-300 group"
                 :class="[
-                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/50 border-green-200/60 hover:border-green-300' : 
-                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400' : 
-                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300' : 
-                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
-                  'bg-orange-50/50 border-orange-200/60 hover:border-orange-300'
+                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-green-100 via-emerald-100 via-teal-50 to-green-50 border-2 border-green-400/80 shadow-lg shadow-green-200/60 hover:shadow-xl hover:shadow-green-300/70 hover:border-green-500' : 
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400 hover:shadow-md' : 
+                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300 hover:shadow-md' : 
+                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 hover:shadow-md' :
+                  'bg-orange-50/50 border-orange-200/60 hover:border-orange-300 hover:shadow-md'
                 ]"
               >
+                <!-- Efectos decorativos para cuotas pagadas -->
+                <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
+                  <!-- Círculos decorativos con blur para crear profundidad -->
+                  <div class="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-green-300/40 to-emerald-300/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                  <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-emerald-200/35 to-teal-200/25 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+                  <!-- Línea decorativa superior más visible -->
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 shadow-md"></div>
+                  <!-- Efecto de brillo sutil en hover -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </template>
+                
                 <!-- Indicador de pago parcial (considera cuota + sanción) -->
                 <div 
                   v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
@@ -580,7 +630,6 @@
                         <div>
                           <p class="font-bold text-gray-800 text-sm sm:text-base">
                             {{ getMesLabel(cuota.mes) }} {{ cuota.anio }}
-                            <span v-if="cuota.quincena" class="text-purple-600">- Q{{ cuota.quincena }}</span>
                           </p>
                           <p class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                             <CalendarDaysIcon class="w-3 h-3" />
@@ -588,16 +637,24 @@
                           </p>
                         </div>
                       </div>
+                      <!-- Badge de quincena -->
+                      <span 
+                        v-if="cuota.quincena"
+                        class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-full shadow-md border border-purple-400"
+                      >
+                        <span>{{ cuota.quincena === 1 ? '1er' : '2da' }} Quincena</span>
+                      </span>
                       <span 
                         :class="[
-                          'px-2 py-1 rounded-lg text-xs font-semibold',
-                          (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700 border border-green-200' :
+                          'px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1',
+                          (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border border-green-400 shadow-sm' :
                           (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700 border border-red-200' :
                           (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
                           (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                           'bg-orange-100 text-orange-700 border border-orange-200'
                         ]"
                       >
+                        <CheckCircleIcon v-if="(cuota.estadoReal || cuota.estado) === 'pagada'" class="w-3.5 h-3.5" />
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
                             (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
                             (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
@@ -623,34 +680,141 @@
                       </template>
                       <template v-else>
                         <p class="font-bold text-base sm:text-lg"
-                          :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 'text-gray-800'"
+                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 'text-gray-800'"
                         >
                           ${{ formatMoney(cuota.valor_cuota) }}
                         </p>
-                        <p class="text-xs text-gray-500">
+                        <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
+                        <p 
+                          v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && cuota.valor_pagado > cuota.valor_cuota"
+                          class="text-xs text-amber-600 font-semibold mt-0.5"
+                        >
+                          + Multa: ${{ formatMoney(cuota.valor_pagado - cuota.valor_cuota) }}
+                        </p>
+                        <p 
+                          class="text-xs mt-1"
+                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600 font-medium' : 'text-gray-500'"
+                        >
                           Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                         </p>
                       </template>
                     </div>
-                    <!-- Botón de pago -->
-                    <button
-                      v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
-                      @click.stop="abrirModalPago(cuota)"
-                      class="px-3 sm:px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 text-sm"
-                    >
-                      <CurrencyDollarIcon class="w-4 h-4" />
-                      <span class="hidden sm:inline">Pagar</span>
-                    </button>
-                    <!-- Botón de detalle si está pagada -->
-                    <button
-                      v-else
-                      @click.stop="abrirModalDetalleCuota(cuota)"
-                      class="px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-2 flex-shrink-0 text-sm"
-                    >
-                      <DocumentTextIcon class="w-4 h-4" />
-                      <span class="hidden sm:inline">Ver</span>
-                    </button>
+                    
+                    <!-- Botones de acción desktop: diseño diferente para pago parcial -->
+                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                      <!-- Diseño para pago parcial: 50% Pagar, 25% Editar, 25% Reenviar -->
+                      <div class="hidden sm:flex items-stretch gap-2" @click.stop>
+                        <!-- Botón Pagar: 50% -->
+                        <button 
+                          @click="abrirModalPago(cuota)"
+                          class="flex-[2] px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                        >
+                          <CurrencyDollarIcon class="w-5 h-5" />
+                          <span>Pagar</span>
+                        </button>
+                        
+                        <!-- Botón Editar: 25% -->
+                        <button 
+                          @click="abrirModalEditar(cuota)"
+                          class="flex-1 px-3 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
+                          title="Editar pago"
+                        >
+                          <PencilIcon class="w-4 h-4" />
+                          <span class="hidden lg:inline">Editar</span>
+                        </button>
+                        
+                        <!-- Botón Reenviar: 25% -->
+                        <button 
+                          @click="reenviarComprobante(cuota)"
+                          class="flex-1 px-3 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
+                          title="Reenviar comprobante"
+                        >
+                          <ArrowPathIcon class="w-4 h-4" />
+                          <span class="hidden lg:inline">Reenviar</span>
+                        </button>
+                      </div>
+                    </template>
+                    
+                    <!-- Diseño normal para otras cuotas desktop -->
+                    <template v-else>
+                      <div class="flex items-center justify-end gap-2 sm:flex-shrink-0" @click.stop>
+                        <button 
+                          v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+                          @click="abrirModalPago(cuota)"
+                          class="hidden sm:flex px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap items-center gap-2"
+                        >
+                          <CurrencyDollarIcon class="w-4 h-4" />
+                          <span>Pagar</span>
+                        </button>
+
+                        <button 
+                          v-if="cuota.estado === 'pagada'"
+                          @click="reenviarComprobante(cuota)"
+                          class="hidden sm:flex px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm items-center gap-2"
+                          title="Reenviar comprobante"
+                        >
+                          <ArrowPathIcon class="w-4 h-4" />
+                          <span>Reenviar</span>
+                        </button>
+                      </div>
+                    </template>
                   </div>
+                </div>
+                
+                <!-- Botones móvil: diseño diferente para pago parcial -->
+                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                  <!-- Diseño para pago parcial en móvil -->
+                  <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
+                    <!-- Botón Pagar: ancho completo -->
+                    <button 
+                      @click="abrirModalPago(cuota)"
+                      class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                    >
+                      <CurrencyDollarIcon class="w-5 h-5" />
+                      <span>Pagar</span>
+                    </button>
+                    
+                    <!-- Botones Editar y Reenviar: 50% cada uno -->
+                    <div class="flex gap-2">
+                      <button 
+                        @click="abrirModalEditar(cuota)"
+                        class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                      >
+                        <PencilIcon class="w-4 h-4" />
+                        <span>Editar</span>
+                      </button>
+                      
+                      <button 
+                        @click="reenviarComprobante(cuota)"
+                        class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                      >
+                        <ArrowPathIcon class="w-4 h-4" />
+                        <span>Reenviar</span>
+                      </button>
+                    </div>
+                  </div>
+                </template>
+                
+                <!-- Botón Pagar móvil: ancho completo solo para cuotas normales -->
+                <div v-else-if="(cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
+                  <button 
+                    @click="abrirModalPago(cuota)"
+                    class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                  >
+                    <CurrencyDollarIcon class="w-5 h-5" />
+                    <span>Pagar</span>
+                  </button>
+                </div>
+                
+                <!-- Botón Reenviar comprobante móvil: para cuotas pagadas -->
+                <div v-else-if="cuota.estado === 'pagada'" class="sm:hidden mt-2" @click.stop>
+                  <button 
+                    @click="reenviarComprobante(cuota)"
+                    class="w-full px-6 py-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                  >
+                    <ArrowPathIcon class="w-5 h-5" />
+                    <span>Reenviar Comprobante</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -664,15 +828,50 @@
           v-for="cuota in cuotasFiltradas" 
           :key="cuota.id"
           @click="abrirModalDetalleCuota(cuota)"
-          class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group"
+          class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border transition-all duration-300 cursor-pointer group"
           :class="[
-            (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-white via-green-50/40 to-emerald-50/30 border-green-200/60 hover:border-green-300' : 
-            (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400' : 
-            (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300' : 
-            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2' :
-            'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300'
+            (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-green-100 via-emerald-100 via-teal-50 to-green-50 border-2 border-green-400/80 shadow-xl shadow-green-200/70 hover:shadow-2xl hover:shadow-green-300/80 hover:border-green-500' : 
+            (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400 shadow-md hover:shadow-lg' : 
+            (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300 shadow-md hover:shadow-lg' : 
+            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 shadow-md hover:shadow-lg' :
+            'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300 shadow-md hover:shadow-lg'
           ]"
         >
+          <!-- Efectos decorativos para cuotas pagadas -->
+          <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
+            <!-- Círculos decorativos con blur para crear profundidad -->
+            <div class="absolute top-0 right-0 w-44 h-44 bg-gradient-to-br from-green-300/40 to-emerald-300/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div class="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-emerald-200/35 to-teal-200/25 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+            <!-- Línea decorativa superior más visible -->
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 shadow-md"></div>
+            <!-- Efecto de brillo sutil en hover -->
+            <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+          </template>
+          
+          <!-- Efectos decorativos de fondo para otros estados -->
+          <div 
+            v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+            :class="[
+              'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
+              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
+              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-300' :
+              'bg-orange-300'
+            ]"
+          ></div>
+          
+          <!-- Línea decorativa superior para otros estados -->
+          <div 
+            v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+            :class="[
+              'absolute top-0 left-0 right-0 h-0.5',
+              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
+              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-400/60' :
+              'bg-orange-400/60'
+            ]"
+          ></div>
+          
           <!-- Indicador de pago parcial -->
           <div 
             v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
@@ -690,30 +889,6 @@
             <InformationCircleIcon class="w-3 h-3" />
             <span>AJUSTE</span>
           </div>
-          
-          <!-- Efectos decorativos de fondo más sutiles -->
-          <div 
-            :class="[
-              'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
-              (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-300' : 
-              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
-              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-300' :
-              'bg-orange-300'
-            ]"
-          ></div>
-          
-          <!-- Línea decorativa superior más sutil -->
-          <div 
-            :class="[
-              'absolute top-0 left-0 right-0 h-0.5',
-              (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-400/60' : 
-              (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
-              (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-400/60' :
-              'bg-orange-400/60'
-            ]"
-          ></div>
           
           <div class="relative z-10">
             <!-- Layout para móvil: más ordenado y vertical -->
@@ -753,21 +928,6 @@
                       class="w-3.5 h-3.5 text-white"
                     />
                   </div>
-                  <!-- Badge de quincena más pequeño -->
-                  <span 
-                    v-if="cuota.quincena"
-                    class="absolute -top-1 -left-1 w-6 h-6 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-lg shadow-md border-2 border-white"
-                  >
-                    Q{{ cuota.quincena }}
-                  </span>
-                  <!-- Badge de ajuste -->
-                  <div 
-                    v-if="tieneAjuste(cuota)"
-                    class="absolute -bottom-1 -left-1 w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md border-2 border-white z-10"
-                    :title="getTextoAjuste(cuota)"
-                  >
-                    <InformationCircleIcon class="w-3 h-3 text-white" />
-                  </div>
                 </div>
                 
                 <!-- Información del socio más compacta -->
@@ -779,10 +939,9 @@
                     <!-- Badge de periodicidad más pequeño -->
                     <span 
                       v-if="cuota.quincena" 
-                      class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-semibold rounded-lg border border-purple-200"
+                      class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-full shadow-md border border-purple-400"
                     >
-                      <span>🗓️</span>
-                      <span>Quincenal</span>
+                      <span>{{ cuota.quincena === 1 ? '1er' : '2da' }} Quincena</span>
                     </span>
                     <span 
                       v-else
@@ -792,16 +951,26 @@
                       <span>Mensual</span>
                     </span>
                   </div>
-                  <p class="text-xs text-gray-600 flex items-center gap-1.5">
-                    <CalendarIcon class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                    <span>Vence: <span class="font-semibold">{{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}</span></span>
-                  </p>
+                  <div class="space-y-1">
+                    <p class="text-xs text-gray-600 flex items-center gap-1.5">
+                      <CalendarIcon class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      <span>Vence: <span class="font-semibold">{{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}</span></span>
+                    </p>
+                    <!-- Fecha de pago si está pagada -->
+                    <p 
+                      v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && cuota.fecha_pago"
+                      class="text-xs text-green-600 font-medium flex items-center gap-1.5"
+                    >
+                      <CheckCircleIcon class="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                      <span>Pagado: <span class="font-semibold">{{ formatDate(cuota.fecha_pago) }}</span></span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
               <!-- Sección inferior en móvil / derecha en desktop: Valores, estado y acciones -->
-              <div class="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3">
-                <!-- Valores y estado en una fila en móvil -->
+              <div class="flex flex-col gap-3">
+                <!-- Valores y estado en una fila -->
                 <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
                   <!-- Valores más compactos -->
                   <div class="text-left sm:text-right flex-shrink-0">
@@ -834,8 +1003,23 @@
                     </template>
                     <!-- Estado normal -->
                     <template v-else>
-                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">${{ formatMoney(cuota.valor_cuota) }}</p>
-                      <p class="text-xs font-medium mt-1" :class="cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400'">
+                      <p 
+                        class="text-lg sm:text-xl lg:text-2xl font-bold"
+                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 'text-gray-900'"
+                      >
+                        ${{ formatMoney(cuota.valor_cuota) }}
+                      </p>
+                      <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
+                      <p 
+                        v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && cuota.valor_pagado > cuota.valor_cuota"
+                        class="text-xs text-amber-600 font-semibold mt-0.5"
+                      >
+                        + Multa: ${{ formatMoney(cuota.valor_pagado - cuota.valor_cuota) }}
+                      </p>
+                      <p 
+                        class="text-xs font-medium mt-1"
+                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600 font-medium' : (cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400')"
+                      >
                         Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                       </p>
                     </template>
@@ -844,14 +1028,15 @@
                   <!-- Badge de estado más compacto -->
                   <span 
                     :class="[
-                      'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap',
-                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800 border border-green-200' : 
+                      'px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1',
+                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border border-green-400 shadow-sm' : 
                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
                       (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
                       (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                       'bg-orange-100 text-orange-800 border border-orange-200'
                     ]"
                   >
+                    <CheckCircleIcon v-if="(cuota.estadoReal || cuota.estado) === 'pagada'" class="w-3.5 h-3.5" />
                     {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 
                        (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : 
                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 
@@ -860,34 +1045,120 @@
                   </span>
                 </div>
 
-                <!-- Botones de acción en una fila en móvil -->
-                <div class="flex items-center justify-end gap-2" @click.stop>
-                  <button 
-                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
-                    @click="abrirModalEditar(cuota)"
-                    class="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Editar cuota"
-                  >
-                    <PencilIcon class="w-4 h-4" />
-                  </button>
+                <!-- Botones de acción: diseño diferente para pago parcial -->
+                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                  <!-- Diseño para pago parcial: 50% Pagar, 25% Editar, 25% Reenviar -->
+                  <div class="hidden sm:flex items-stretch gap-2 w-full" @click.stop>
+                    <!-- Botón Pagar: 50% -->
+                    <button 
+                      @click="abrirModalPago(cuota)"
+                      class="flex-[2] px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                    >
+                      <CurrencyDollarIcon class="w-5 h-5" />
+                      <span>Pagar</span>
+                    </button>
+                    
+                    <!-- Botón Editar: 25% -->
+                    <button 
+                      @click="abrirModalEditar(cuota)"
+                      class="flex-1 px-3 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
+                      title="Editar pago"
+                    >
+                      <PencilIcon class="w-4 h-4" />
+                      <span class="hidden lg:inline">Editar</span>
+                    </button>
+                    
+                    <!-- Botón Reenviar: 25% -->
+                    <button 
+                      @click="reenviarComprobante(cuota)"
+                      class="flex-1 px-3 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
+                      title="Reenviar comprobante"
+                    >
+                      <ArrowPathIcon class="w-4 h-4" />
+                      <span class="hidden lg:inline">Reenviar</span>
+                    </button>
+                  </div>
+                </template>
+                
+                <!-- Diseño normal para otras cuotas -->
+                <template v-else>
+                  <div class="flex items-center justify-end gap-2 sm:flex-shrink-0" @click.stop>
+                    <button 
+                      v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+                      @click="abrirModalPago(cuota)"
+                      class="hidden sm:flex px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap items-center gap-2"
+                    >
+                      <CurrencyDollarIcon class="w-4 h-4" />
+                      <span>Pagar</span>
+                    </button>
 
+                    <button 
+                      v-if="cuota.estado === 'pagada'"
+                      @click="reenviarComprobante(cuota)"
+                      class="hidden sm:flex px-4 py-2.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm items-center gap-2"
+                      title="Reenviar comprobante"
+                    >
+                      <ArrowPathIcon class="w-4 h-4" />
+                      <span>Reenviar</span>
+                    </button>
+                  </div>
+                </template>
+              </div>
+              
+              <!-- Botones móvil: diseño diferente para pago parcial -->
+              <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                <!-- Diseño para pago parcial en móvil -->
+                <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
+                  <!-- Botón Pagar: ancho completo -->
                   <button 
-                    v-if="cuota.estado !== 'pagada'"
                     @click="abrirModalPago(cuota)"
-                    class="px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap"
+                    class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
                   >
-                    Pagar
+                    <CurrencyDollarIcon class="w-5 h-5" />
+                    <span>Pagar</span>
                   </button>
-
-                  <button 
-                    v-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
-                    @click="reenviarComprobante(cuota)"
-                    class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Reenviar comprobante"
-                  >
-                    <ArrowPathIcon class="w-4 h-4" />
-                  </button>
+                  
+                  <!-- Botones Editar y Reenviar: 50% cada uno -->
+                  <div class="flex gap-2">
+                    <button 
+                      @click="abrirModalEditar(cuota)"
+                      class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                    >
+                      <PencilIcon class="w-4 h-4" />
+                      <span>Editar</span>
+                    </button>
+                    
+                    <button 
+                      @click="reenviarComprobante(cuota)"
+                      class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                    >
+                      <ArrowPathIcon class="w-4 h-4" />
+                      <span>Reenviar</span>
+                    </button>
+                  </div>
                 </div>
+              </template>
+              
+              <!-- Botón Pagar móvil: ancho completo solo para cuotas normales -->
+              <div v-else-if="(cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
+                <button 
+                  @click="abrirModalPago(cuota)"
+                  class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <CurrencyDollarIcon class="w-5 h-5" />
+                  <span>Pagar</span>
+                </button>
+              </div>
+              
+              <!-- Botón Reenviar comprobante móvil: para cuotas pagadas -->
+              <div v-else-if="cuota.estado === 'pagada'" class="sm:hidden mt-2" @click.stop>
+                <button 
+                  @click="reenviarComprobante(cuota)"
+                  class="w-full px-6 py-3.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
+                >
+                  <ArrowPathIcon class="w-5 h-5" />
+                  <span>Reenviar Comprobante</span>
+                </button>
               </div>
             </div>
           </div>
@@ -996,7 +1267,7 @@
                   <button 
                     v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
                     @click="reenviarComprobante(cuota)"
-                    class="px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                    class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-1"
                     title="Reenviar comprobante"
                   >
                     <ArrowPathIcon class="w-3 h-3" />
@@ -1235,14 +1506,17 @@
           </div>
 
           <!-- Información de fechas -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div :class="[
+            'grid gap-4',
+            cuotaDetalle.estado === 'pagada' && cuotaDetalle.fecha_pago ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+          ]">
             <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
                 <CalendarIcon class="w-5 h-5 text-gray-500" />
                 <p class="text-xs text-gray-500 font-medium">Fecha de Vencimiento</p>
               </div>
               <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_vencimiento) || 'N/A' }}</p>
-              <p class="text-xs text-gray-500 mt-1">Sin días de gracia</p>
+              <p class="text-xs text-gray-500 mt-1">Con días de gracia</p>
             </div>
             <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
@@ -1250,7 +1524,19 @@
                 <p class="text-xs text-gray-500 font-medium">Fecha Límite</p>
               </div>
               <p class="text-lg font-bold text-gray-800">{{ formatDate(cuotaDetalle.fecha_limite) }}</p>
-              <p class="text-xs text-gray-500 mt-1">Con días de gracia</p>
+              <p class="text-xs text-gray-500 mt-1">Sin días de gracia</p>
+            </div>
+            <!-- Fecha de Pago (solo si está pagada) -->
+            <div 
+              v-if="cuotaDetalle.estado === 'pagada' && cuotaDetalle.fecha_pago"
+              class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm"
+            >
+              <div class="flex items-center gap-3 mb-2">
+                <CheckCircleIcon class="w-5 h-5 text-green-600" />
+                <p class="text-xs text-gray-500 font-medium">Fecha de Pago</p>
+              </div>
+              <p class="text-lg font-bold text-green-700">{{ formatDate(cuotaDetalle.fecha_pago) }}</p>
+              <p class="text-xs text-green-600 mt-1 font-medium">Cuota pagada</p>
             </div>
           </div>
 
@@ -1315,6 +1601,138 @@
                   <p class="font-semibold text-gray-800">{{ cuotaDetalle.socio_natillera?.socio?.telefono }}</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Historial de Pagos -->
+          <div v-if="(cuotaDetalle.valor_pagado > 0 || cuotaDetalle.codigo_comprobante) && (historialPagosCuota.length > 0 || cargandoHistorialPagos)" class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-5 rounded-xl border border-indigo-200 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                <ClockIcon class="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p class="text-sm font-bold text-gray-800">Historial de Pagos</p>
+                <p class="text-xs text-gray-600">Registro completo de pagos realizados</p>
+              </div>
+            </div>
+
+            <!-- Loading state -->
+            <div v-if="cargandoHistorialPagos" class="flex items-center justify-center py-8">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+
+            <!-- Lista de pagos -->
+            <div v-else-if="historialPagosCuota.length > 0" class="space-y-3">
+              <div 
+                v-for="(pago, index) in historialPagosCuota" 
+                :key="index"
+                :class="[
+                  'p-4 rounded-lg border-2 transition-all',
+                  pago.es_actual 
+                    ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 shadow-md' 
+                    : pago.es_modificacion
+                    ? 'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-300 shadow-md'
+                    : 'bg-white border-indigo-200 shadow-sm hover:shadow-md'
+                ]"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-2">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                          pago.es_actual 
+                            ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                            : pago.es_modificacion
+                            ? 'bg-gradient-to-br from-orange-500 to-amber-600'
+                            : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                        ]"
+                      >
+                        <CheckCircleIcon class="w-4 h-4 text-white" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p 
+                          :class="[
+                            'text-sm font-bold',
+                            pago.es_actual ? 'text-green-700' : pago.es_modificacion ? 'text-orange-700' : 'text-gray-800'
+                          ]"
+                        >
+                          {{ pago.es_actual ? 'Pago Actual' : pago.es_modificacion ? 'Pago Modificado' : 'Pago Anterior' }}
+                        </p>
+                        <p v-if="pago.codigo_comprobante" class="text-xs font-mono text-gray-600 mt-0.5">
+                          Código: {{ pago.codigo_comprobante }}
+                        </p>
+                        <p v-if="pago.es_modificacion && pago.codigo_nuevo" class="text-xs text-orange-600 mt-1 font-semibold">
+                          → Modificado a código: {{ pago.codigo_nuevo }}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <!-- Si es una modificación, mostrar antes y después -->
+                    <div v-if="pago.es_modificacion" class="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <p class="text-xs font-semibold text-orange-800 mb-2">Detalle de la Modificación</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <p class="text-xs text-gray-600 mb-1">Valor Anterior</p>
+                          <p class="text-sm font-bold text-gray-700">
+                            ${{ formatMoney(pago.valor_pagado) }}
+                          </p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-600 mb-1">Valor Nuevo</p>
+                          <p class="text-sm font-bold text-orange-700">
+                            ${{ formatMoney(pago.valor_nuevo) }}
+                          </p>
+                        </div>
+                      </div>
+                      <div class="mt-2 pt-2 border-t border-orange-200">
+                        <p class="text-xs text-gray-500 mb-1">Fecha de Modificación</p>
+                        <p class="text-xs font-semibold text-gray-700">
+                          {{ formatDate(pago.fecha_actualizacion) }} {{ formatTime(pago.fecha_actualizacion) }}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <!-- Si no es modificación, mostrar información normal -->
+                    <div v-else class="grid grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Valor Pagado</p>
+                        <p 
+                          :class="[
+                            'text-lg font-bold',
+                            pago.es_actual ? 'text-green-700' : 'text-gray-700'
+                          ]"
+                        >
+                          ${{ formatMoney(pago.valor_pagado) }}
+                        </p>
+                      </div>
+                      <div>
+                        <p class="text-xs text-gray-500 mb-1">Fecha</p>
+                        <p class="text-sm font-semibold text-gray-700">
+                          {{ formatDate(pago.fecha_actualizacion) }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                          {{ formatTime(pago.fecha_actualizacion) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    v-if="pago.codigo_comprobante"
+                    @click="reenviarComprobantePorCodigo(pago.codigo_comprobante, pago.valor_pagado)"
+                    class="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 flex-shrink-0"
+                    title="Ver/Reenviar comprobante"
+                  >
+                    <ArrowPathIcon class="w-4 h-4" />
+                    Ver
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty state -->
+            <div v-else class="text-center py-6">
+              <p class="text-sm text-gray-500">No hay historial de pagos disponible</p>
             </div>
           </div>
         </div>
@@ -1783,11 +2201,13 @@
                   <CurrencyDollarIcon class="w-5 h-5" />
                 </div>
                 <input 
+                  ref="inputValorPagoRef"
                   :value="formatearValorPago(formPago.valor)"
                   @input="handleValorPagoInput($event)"
                   @focus="seleccionarValorPago"
                   @click="seleccionarValorPago"
-                  type="text" 
+                  type="text"
+                  inputmode="decimal"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
                   :placeholder="`Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`"
                   required
@@ -2061,6 +2481,29 @@
               <p style="font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -3px; line-height: 1;">
                 ${{ formatMoney(pagoRegistrado?.valor) }}
               </p>
+            </div>
+
+            <!-- Información de pago parcial anterior (si se completó un pago parcial) -->
+            <div v-if="pagoRegistrado?.teniaPagoParcial" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%); border-radius: 14px; padding: 16px; margin-top: 18px; border: 2px solid rgba(59, 130, 246, 0.4); backdrop-filter: blur(10px);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <div style="width: 28px; height: 28px; background: rgba(59, 130, 246, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 14px;">📋</span>
+                </div>
+                <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Pago Anterior</p>
+              </div>
+              
+              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Valor del Pago Anterior</p>
+                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorPagoAnterior || 0) }}</p>
+                <p v-if="pagoRegistrado?.fechaPagoAnterior" style="color: rgba(255,255,255,0.7); font-size: 9px; margin: 4px 0 0 0; font-weight: 500;">
+                  Fecha: {{ pagoRegistrado.fechaPagoAnterior }}
+                </p>
+              </div>
+              
+              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
+                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Pago Actual (Completado)</p>
+                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px; color: #10b981;">${{ formatMoney(pagoRegistrado?.valor || 0) }}</p>
+              </div>
             </div>
 
             <!-- Información de pago parcial (si aplica) -->
@@ -2364,7 +2807,8 @@
                   :value="formatearValorPago(formEditarCuota.valor_cuota)"
                   @input="handleValorCuotaEditarInput($event)"
                   @focus="$event.target.select()"
-                  type="text" 
+                  type="text"
+                  inputmode="numeric"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
                   placeholder="0"
                   required
@@ -2929,6 +3373,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import DatePicker from '../../components/DatePicker.vue'
 import * as XLSX from 'xlsx-js-style'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const props = defineProps({
   id: String
@@ -2951,9 +3396,24 @@ const cuotaEditando = ref(null)
 const pagoRegistrado = ref(null)
 const modalDetalleCuota = ref(false)
 const cuotaDetalle = ref(null)
+const historialPagosCuota = ref([])
+const cargandoHistorialPagos = ref(false)
 const modalDetalleSocio = ref(false)
 const modalHistorialAjustes = ref(false)
 const modalEditarSocio = ref(false)
+
+// Bloquear scroll del body cuando las modales están abiertas
+useBodyScrollLock(modalGenerarCuotas)
+useBodyScrollLock(modalPago)
+useBodyScrollLock(modalConfirmacion)
+useBodyScrollLock(modalConfirmarBorrar)
+useBodyScrollLock(modalExportar)
+useBodyScrollLock(modalEditarCuota)
+useBodyScrollLock(modalDetalleCuota)
+useBodyScrollLock(modalDetalleSocio)
+useBodyScrollLock(modalHistorialAjustes)
+useBodyScrollLock(modalEditarSocio)
+
 const socioSeleccionado = ref(null)
 const socioEditando = ref(null)
 const cuotasSocio = ref([])
@@ -2985,6 +3445,7 @@ const filtroPeriodicidad = ref('todos')
 const busquedaCuotas = ref('')
 const mostrarFiltros = ref(false)
 const inputBusquedaRef = ref(null)
+const inputValorPagoRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
 const vistaAgrupada = ref(false) // true = vista agrupada por socio
 
@@ -3278,14 +3739,61 @@ const checkMobileView = () => {
   }
 }
 
+// Manejo del historial para modales
+let modalHistoryState = null
+
+function handleModalBack(modalRef, modalName) {
+  watch(modalRef, (isOpen) => {
+    if (isOpen) {
+      // Verificar si hay otras modales abiertas
+      const hayOtrasModales = modalPago.value || modalEditarCuota.value || 
+                              modalDetalleSocio.value || modalHistorialAjustes.value ||
+                              modalEditarSocio.value || modalGenerarCuotas.value ||
+                              modalConfirmacion.value || modalConfirmarBorrar.value ||
+                              modalExportar.value
+      
+      // Si es la primera modal que se abre (no hay otras modales), agregar primero
+      // una entrada al historial que represente el estado "sin modales"
+      if (!hayOtrasModales) {
+        history.pushState({ modal: null }, '', window.location.href)
+      }
+      
+      // Agregar entrada al historial cuando se abre la modal
+      modalHistoryState = { modal: modalName }
+      history.pushState(modalHistoryState, '', window.location.href)
+    }
+  })
+}
+
+// Listener para el botón atrás del navegador
+function handlePopState(event) {
+  // Modal de detalle de cuota
+  if (modalDetalleCuota.value) {
+    modalDetalleCuota.value = false
+    // Si hay otra modal abierta debajo, no hacer nada más
+    // La modal inferior ya tiene su entrada en el historial (fue agregada cuando se abrió)
+    // El siguiente "atrás" naturalmente cerrará esa modal
+    // Si no hay otras modales, no hacer nada más porque ya hay una entrada en el historial
+    // que representa el estado "sin modales" (fue agregada cuando se abrió esta modal)
+    return
+  }
+}
+
+// Registrar watcher para la modal de detalle de cuota
+handleModalBack(modalDetalleCuota, 'detalleCuota')
+
 onMounted(() => {
   checkMobileView()
   window.addEventListener('resize', checkMobileView)
+  // Agregar listener para el botón atrás
+  window.addEventListener('popstate', handlePopState)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileView)
   document.removeEventListener('click', handleClickOutside)
+  // Remover listener para el botón atrás
+  window.removeEventListener('popstate', handlePopState)
 })
 
 // Lista de todos los meses
@@ -3369,7 +3877,7 @@ const cuotasMesActual = computed(() => {
 const cuotasFiltradas = computed(() => {
   let filtradas = cuotasMesActual.value.map(cuota => {
     // Calcular el estado real de cada cuota según las reglas
-    const estadoReal = calcularEstadoRealCuota(cuota)
+    const estadoReal = calcularEstadoRealCuota(cuota, diasGracia.value)
     return { ...cuota, estadoReal }
   })
 
@@ -3460,8 +3968,29 @@ const cuotasAgrupadasPorSocio = computed(() => {
     grupos[socioId].cuotas.push(cuota)
     grupos[socioId].total += cuota.valor_cuota || 0
     grupos[socioId].pagado += cuota.valor_pagado || 0
-    const pendiente = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
-    grupos[socioId].pendiente += pendiente > 0 ? pendiente : 0
+    
+    // Calcular pendiente: solo incluir cuotas que NO estén en estado programada
+    // Incluir cuotas pendientes, en mora o con pago parcial
+    const estadoReal = cuota.estadoReal || cuota.estado
+    if (estadoReal !== 'programada') {
+      const pendiente = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
+      grupos[socioId].pendiente += pendiente > 0 ? pendiente : 0
+    }
+  })
+  
+  // Ordenar las cuotas dentro de cada grupo: quincena 1 antes que quincena 2
+  Object.values(grupos).forEach(grupo => {
+    grupo.cuotas.sort((a, b) => {
+      // Si ambas tienen quincena, ordenar por quincena (1 antes que 2)
+      if (a.quincena && b.quincena) {
+        return a.quincena - b.quincena
+      }
+      // Si solo una tiene quincena, la que tiene quincena va primero
+      if (a.quincena && !b.quincena) return -1
+      if (!a.quincena && b.quincena) return 1
+      // Si ninguna tiene quincena, mantener el orden original
+      return 0
+    })
   })
   
   // Convertir a array y ordenar por nombre del socio
@@ -3477,6 +4006,11 @@ const totalesExcel = computed(() => {
   const totalValorCuota = cuotasFiltradas.value.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
   const totalValorPagado = cuotasFiltradas.value.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
   const totalPendiente = cuotasFiltradas.value.reduce((sum, c) => {
+    // Excluir cuotas programadas del cálculo del pendiente
+    const estadoReal = c.estadoReal || c.estado
+    if (estadoReal === 'programada') {
+      return sum
+    }
     const pendiente = (c.valor_cuota || 0) - (c.valor_pagado || 0)
     return sum + (pendiente > 0 ? pendiente : 0)
   }, 0)
@@ -3507,7 +4041,7 @@ const resumenMesActual = computed(() => {
   // Calcular estados reales y contar por estado
   const cuotasConEstadoReal = cuotas.map(c => ({
     ...c,
-    estadoReal: calcularEstadoRealCuota(c)
+    estadoReal: calcularEstadoRealCuota(c, diasGracia.value)
   }))
   
   // Calcular totales financieros
@@ -3515,13 +4049,17 @@ const resumenMesActual = computed(() => {
   const totalPagado = cuotasConEstadoReal.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
   const porcentajeRecaudado = totalValor > 0 ? (totalPagado / totalValor) * 100 : 0
   
+  // Calcular total recaudado (suma de todos los pagos, completos y parciales)
+  const totalRecaudado = cuotasConEstadoReal.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  
   return {
     pagadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'pagada').length,
     pendientes: cuotasConEstadoReal.filter(c => c.estadoReal === 'pendiente').length,
     enMora: cuotasConEstadoReal.filter(c => c.estadoReal === 'mora').length,
     programadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'programada').length,
     total: cuotasConEstadoReal.length,
-    porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado
+    porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado,
+    totalRecaudado: totalRecaudado
   }
 })
 
@@ -3649,15 +4187,13 @@ const id = props.id || route.params.id
 // - Programada: fecha_actual < fecha_limite
 // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
 // - En Mora: fecha_actual > fecha_vencimiento
-// - Pagada: valor_pagado >= (valor_cuota + sanción)
-// - Parcial: valor_pagado > 0 && valor_pagado < (valor_cuota + sanción)
-function calcularEstadoRealCuota(cuota) {
-  // Si está pagada completamente (incluyendo sanción), siempre es pagada
-  const sancion = getSancionCuota(cuota)
-  const totalAPagar = (cuota.valor_cuota || 0) + sancion
+// - Pagada: valor_pagado >= valor_cuota
+function calcularEstadoRealCuota(cuota, diasGracia) {
+  const valorCuota = cuota.valor_cuota || 0
   const valorPagado = cuota.valor_pagado || 0
   
-  if (valorPagado >= totalAPagar) {
+  // Pagada: valor_pagado >= valor_cuota (según REGLAS.md, sin incluir sanción)
+  if (valorPagado >= valorCuota) {
     return 'pagada'
   }
   
@@ -3677,37 +4213,35 @@ function calcularEstadoRealCuota(cuota) {
   }
   fechaLimite.setHours(0, 0, 0, 0)
   
-  // Parsear fecha_vencimiento (usa fecha_limite como fallback si no existe)
+  // Obtener fecha_vencimiento: usar el campo directamente si existe, o calcularlo
   let fechaVencimiento
-  const fechaVencimientoStr = cuota.fecha_vencimiento || cuota.fecha_limite
-  if (typeof fechaVencimientoStr === 'string' && fechaVencimientoStr.includes('-')) {
-    const [anio, mes, dia] = fechaVencimientoStr.split('-').map(Number)
-    fechaVencimiento = new Date(anio, mes - 1, dia)
+  if (cuota.fecha_vencimiento) {
+    // Usar fecha_vencimiento directamente si existe en la cuota
+    if (typeof cuota.fecha_vencimiento === 'string' && cuota.fecha_vencimiento.includes('-')) {
+      const [anio, mes, dia] = cuota.fecha_vencimiento.split('-').map(Number)
+      fechaVencimiento = new Date(anio, mes - 1, dia)
+    } else {
+      fechaVencimiento = new Date(cuota.fecha_vencimiento)
+    }
   } else {
-    fechaVencimiento = new Date(fechaVencimientoStr)
+    // Si no existe, calcularla como fecha_limite + dias_gracia (fallback)
+    const diasGraciaUsar = diasGracia !== undefined ? diasGracia : (diasGracia?.value || 3)
+    fechaVencimiento = new Date(fechaLimite)
+    fechaVencimiento.setDate(fechaVencimiento.getDate() + diasGraciaUsar)
   }
   fechaVencimiento.setHours(0, 0, 0, 0)
   
   // Programada: fecha_actual < fecha_limite
   if (fechaActual < fechaLimite) {
-    // Si tiene pago parcial antes de la fecha límite, es parcial
-    if (valorPagado > 0 && valorPagado < totalAPagar) {
-      return 'parcial'
-    }
     return 'programada'
   }
   
   // Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
   if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
-    // Si tiene pago parcial en período pendiente, es parcial
-    if (valorPagado > 0 && valorPagado < totalAPagar) {
-      return 'parcial'
-    }
     return 'pendiente'
   }
   
   // En Mora: fecha_actual > fecha_vencimiento
-  // Retornamos mora aunque tenga pago parcial - la UI mostrará ambos badges si aplica
   if (fechaActual > fechaVencimiento) {
     return 'mora'
   }
@@ -4011,9 +4545,112 @@ function formatDate(date) {
   return `${day}/${month}/${year}`
 }
 
-function abrirModalDetalleCuota(cuota) {
+function formatTime(date) {
+  if (!date) return ''
+  const d = new Date(date)
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+async function reenviarComprobantePorCodigo(codigoComprobante, valorPagado) {
+  if (!cuotaDetalle.value || !codigoComprobante) return
+  
+  // Crear un objeto cuota temporal con el código de comprobante del historial
+  const cuotaTemporal = {
+    ...cuotaDetalle.value,
+    codigo_comprobante: codigoComprobante,
+    valor_pagado: valorPagado
+  }
+  
+  // Usar la función existente de reenviar comprobante
+  await reenviarComprobante(cuotaTemporal)
+}
+
+async function abrirModalDetalleCuota(cuota) {
   cuotaDetalle.value = cuota
   modalDetalleCuota.value = true
+  // Cargar historial de pagos si la cuota tiene pagos
+  if (cuota && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)) {
+    await cargarHistorialPagosCuota(cuota.id)
+  } else {
+    historialPagosCuota.value = []
+  }
+}
+
+async function cargarHistorialPagosCuota(cuotaId) {
+  cargandoHistorialPagos.value = true
+  historialPagosCuota.value = []
+  
+  try {
+    // Obtener el historial de comprobantes de la cuota
+    const { data: historial, error } = await supabase
+      .from('historial_comprobantes')
+      .select('*')
+      .eq('cuota_id', cuotaId)
+      .order('fecha_actualizacion', { ascending: false })
+    
+    if (error) {
+      console.error('Error cargando historial de pagos:', error)
+      historialPagosCuota.value = []
+      return
+    }
+    
+    // Construir el array de pagos
+    const pagos = []
+    const codigosAgregados = new Set()
+    
+    // SIEMPRE agregar el pago actual primero si existe
+    if (cuotaDetalle.value && cuotaDetalle.value.codigo_comprobante && cuotaDetalle.value.valor_pagado > 0) {
+      const codigoActual = cuotaDetalle.value.codigo_comprobante
+      pagos.push({
+        codigo_comprobante: codigoActual,
+        valor_pagado: cuotaDetalle.value.valor_pagado,
+        fecha_actualizacion: cuotaDetalle.value.fecha_pago || cuotaDetalle.value.updated_at || new Date().toISOString(),
+        es_actual: true,
+        motivo: 'pago_registrado'
+      })
+      codigosAgregados.add(codigoActual)
+    }
+    
+    // Agregar los pagos del historial (excluyendo el actual si ya está agregado)
+    if (historial && historial.length > 0) {
+      historial.forEach(registro => {
+        // Agregar el código anterior si no está ya agregado (para evitar duplicar el actual)
+        if (registro.codigo_comprobante_anterior && !codigosAgregados.has(registro.codigo_comprobante_anterior)) {
+          // Si hay un código nuevo, significa que fue una modificación
+          const esModificacion = registro.codigo_comprobante_nuevo && 
+                                 registro.codigo_comprobante_nuevo !== registro.codigo_comprobante_anterior
+          
+          pagos.push({
+            codigo_comprobante: registro.codigo_comprobante_anterior,
+            valor_pagado: registro.valor_pagado_anterior,
+            fecha_actualizacion: registro.fecha_actualizacion,
+            es_actual: false,
+            es_modificacion: esModificacion,
+            motivo: registro.motivo || 'actualizacion_pago',
+            codigo_nuevo: registro.codigo_comprobante_nuevo,
+            valor_nuevo: registro.valor_pagado_nuevo
+          })
+          codigosAgregados.add(registro.codigo_comprobante_anterior)
+        }
+      })
+    }
+    
+    // Ordenar por fecha (más reciente primero)
+    pagos.sort((a, b) => {
+      const fechaA = new Date(a.fecha_actualizacion)
+      const fechaB = new Date(b.fecha_actualizacion)
+      return fechaB - fechaA
+    })
+    
+    historialPagosCuota.value = pagos
+  } catch (e) {
+    console.error('Error cargando historial de pagos:', e)
+    historialPagosCuota.value = []
+  } finally {
+    cargandoHistorialPagos.value = false
+  }
 }
 
 function abrirModalPago(cuota) {
@@ -4272,9 +4909,66 @@ function seleccionarMontoCuota(event) {
 }
 
 function seleccionarValorPago(event) {
-  const input = event?.target
+  const input = event?.target || inputValorPagoRef.value
   if (!input || typeof input.select !== 'function') return
+  
+  // Seleccionar el texto del input
   setTimeout(() => input.select(), 0)
+  
+  // Hacer scroll para mantener el campo visible cuando aparece el teclado en móvil
+  // Usamos nextTick para asegurar que el DOM esté actualizado
+  nextTick(() => {
+    // Delay para que el teclado aparezca primero en móvil
+    setTimeout(() => {
+      // Detectar si es móvil (pantalla pequeña o touch)
+      const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window
+      
+      if (isMobile) {
+        // Primero hacer scrollIntoView para llevar el input a la vista
+        input.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+          inline: 'nearest'
+        })
+        
+        // Luego, después de un delay adicional, ajustar la posición considerando el teclado
+        setTimeout(() => {
+          // Usar Visual Viewport API si está disponible (más preciso)
+          const viewport = window.visualViewport || window
+          const viewportHeight = viewport.height || window.innerHeight
+          const inputRect = input.getBoundingClientRect()
+          
+          // Altura estimada del teclado
+          const estimatedKeyboardHeight = window.visualViewport 
+            ? Math.max(window.innerHeight - viewportHeight, 250)
+            : 300
+          
+          // Calcular el espacio disponible sobre el teclado
+          const availableHeight = viewportHeight
+          const desiredTop = 80 // Posición deseada desde arriba (80px de padding)
+          
+          // Si el input está muy abajo o dentro del área del teclado
+          if (inputRect.top > (availableHeight - estimatedKeyboardHeight) || inputRect.top < desiredTop) {
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop
+            const inputTopRelative = inputRect.top + currentScroll
+            const targetScroll = inputTopRelative - desiredTop
+            
+            window.scrollTo({
+              top: Math.max(0, targetScroll),
+              behavior: 'smooth'
+            })
+          }
+        }, 500) // Delay adicional después del scrollIntoView inicial
+      } else {
+        // En desktop, usar scrollIntoView normal
+        input.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        })
+      }
+    }, 300) // Delay inicial para dar tiempo al teclado
+  })
 }
 
 async function handleGuardarSocio() {
@@ -4500,25 +5194,100 @@ async function guardarEdicionCuota() {
       // Calcular el nuevo estado basado en el valor pagado (incluyendo sanción)
       const sancion = getSancionCuota(cuotaEditando.value)
       const totalAPagar = valorCuota + sancion
-      let nuevoEstado = 'pendiente'
+      let nuevoEstado
+      
       if (nuevoValorPagado >= totalAPagar) {
         nuevoEstado = 'pagada'
       } else if (nuevoValorPagado > 0) {
-        nuevoEstado = 'parcial'
+        // Pago parcial: calcular estado según fecha límite y fecha de vencimiento
+        // Según REGLAS.md: cuotas con pago parcial siguen las mismas reglas de estado basadas en fecha
+        if (!cuotaEditando.value.fecha_limite) {
+          // Si no hay fecha límite, usar 'parcial' como fallback
+          nuevoEstado = 'parcial'
+        } else {
+          const fechaActual = new Date()
+          fechaActual.setHours(0, 0, 0, 0)
+          
+          // Parsear fecha_limite correctamente
+          let fechaLimite
+          if (typeof cuotaEditando.value.fecha_limite === 'string' && cuotaEditando.value.fecha_limite.includes('-')) {
+            const [anio, mes, dia] = cuotaEditando.value.fecha_limite.split('-').map(Number)
+            fechaLimite = new Date(anio, mes - 1, dia)
+          } else {
+            fechaLimite = new Date(cuotaEditando.value.fecha_limite)
+          }
+          fechaLimite.setHours(0, 0, 0, 0)
+          
+          // Obtener fecha_vencimiento
+          let fechaVencimiento
+          if (cuotaEditando.value.fecha_vencimiento) {
+            if (typeof cuotaEditando.value.fecha_vencimiento === 'string' && cuotaEditando.value.fecha_vencimiento.includes('-')) {
+              const [anio, mes, dia] = cuotaEditando.value.fecha_vencimiento.split('-').map(Number)
+              fechaVencimiento = new Date(anio, mes - 1, dia)
+            } else {
+              fechaVencimiento = new Date(cuotaEditando.value.fecha_vencimiento)
+            }
+          } else {
+            // Si no existe, usar fecha_limite como fallback
+            fechaVencimiento = new Date(fechaLimite)
+          }
+          fechaVencimiento.setHours(0, 0, 0, 0)
+          
+          // Aplicar reglas de estado según fecha:
+          // Programada: fecha_actual < fecha_limite
+          if (fechaActual < fechaLimite) {
+            nuevoEstado = 'programada'
+          }
+          // Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
+          else if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
+            nuevoEstado = 'pendiente'
+          }
+          // En Mora: fecha_actual > fecha_vencimiento
+          else if (fechaActual > fechaVencimiento) {
+            nuevoEstado = 'mora'
+          } else {
+            // Fallback
+            nuevoEstado = 'parcial'
+          }
+        }
       } else {
         // Si el valor pagado es 0, verificar la fecha de vencimiento
         const fechaActual = new Date()
         fechaActual.setHours(0, 0, 0, 0)
         
         if (cuotaEditando.value.fecha_limite) {
-          const fechaVencimiento = new Date(cuotaEditando.value.fecha_limite)
+          // Parsear fecha_limite correctamente
+          let fechaLimite
+          if (typeof cuotaEditando.value.fecha_limite === 'string' && cuotaEditando.value.fecha_limite.includes('-')) {
+            const [anio, mes, dia] = cuotaEditando.value.fecha_limite.split('-').map(Number)
+            fechaLimite = new Date(anio, mes - 1, dia)
+          } else {
+            fechaLimite = new Date(cuotaEditando.value.fecha_limite)
+          }
+          fechaLimite.setHours(0, 0, 0, 0)
+          
+          // Obtener fecha_vencimiento
+          let fechaVencimiento
+          if (cuotaEditando.value.fecha_vencimiento) {
+            if (typeof cuotaEditando.value.fecha_vencimiento === 'string' && cuotaEditando.value.fecha_vencimiento.includes('-')) {
+              const [anio, mes, dia] = cuotaEditando.value.fecha_vencimiento.split('-').map(Number)
+              fechaVencimiento = new Date(anio, mes - 1, dia)
+            } else {
+              fechaVencimiento = new Date(cuotaEditando.value.fecha_vencimiento)
+            }
+          } else {
+            fechaVencimiento = new Date(fechaLimite)
+          }
           fechaVencimiento.setHours(0, 0, 0, 0)
           
-          // Si la fecha de vencimiento aún no ha llegado, es programada
-          if (fechaVencimiento > fechaActual) {
+          // Aplicar reglas de estado según fecha
+          if (fechaActual < fechaLimite) {
             nuevoEstado = 'programada'
+          } else if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
+            nuevoEstado = 'pendiente'
+          } else if (fechaActual > fechaVencimiento) {
+            nuevoEstado = 'mora'
           } else {
-            // Si la fecha ya pasó, es pendiente
             nuevoEstado = 'pendiente'
           }
         } else {
@@ -4754,12 +5523,17 @@ async function handleRegistrarPago() {
     // Obtener la cuota actualizada para saber si es parcial o completa
     const cuotaActualizada = result.data
     const valorCuota = cuotaSeleccionada.value.valor_cuota
-    const valorPagadoTotal = cuotaActualizada?.valor_pagado || (cuotaSeleccionada.value.valor_pagado || 0) + valorPagado
+    const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
+    const valorPagadoTotal = cuotaActualizada?.valor_pagado || (valorPagadoAnterior + valorPagado)
     // Considerar la sanción al calcular el total a pagar
     const sancion = getSancionCuota(cuotaActualizada || cuotaSeleccionada.value)
     const totalAPagar = valorCuota + sancion
     const valorPendiente = totalAPagar - valorPagadoTotal
     const esParcial = valorPendiente > 0 && valorPagadoTotal < totalAPagar
+    
+    // Detectar si había un pago parcial anterior y ahora se completa
+    const teniaPagoParcial = valorPagadoAnterior > 0 && valorPagadoAnterior < totalAPagar
+    const seCompletoPago = !esParcial && teniaPagoParcial
     
     // Obtener el código del comprobante
     const codigoComprobante = cuotaActualizada?.codigo_comprobante || null
@@ -4784,7 +5558,17 @@ async function handleRegistrarPago() {
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
-      })
+      }),
+      // Información del pago parcial anterior (si existía)
+      teniaPagoParcial: seCompletoPago,
+      valorPagoAnterior: seCompletoPago ? valorPagadoAnterior : null,
+      fechaPagoAnterior: seCompletoPago && cuotaSeleccionada.value.fecha_pago 
+        ? new Date(cuotaSeleccionada.value.fecha_pago).toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        : null
     }
     
     console.log('pagoRegistrado.value completo:', pagoRegistrado.value)
@@ -4810,10 +5594,16 @@ function generarImagenComprobante() {
       const ctx = canvas.getContext('2d')
       
       const esParcial = pagoRegistrado.value?.esParcial || false
+      const teniaPagoParcial = pagoRegistrado.value?.teniaPagoParcial || false
       const codigoComprobante = pagoRegistrado.value?.codigoComprobante
       const width = 480
-      // Altura ajustada para pago parcial con más espacio
-      const height = esParcial ? 790 : 680
+      // Altura ajustada: más espacio si hay pago parcial o información de pago anterior
+      let height = 680
+      if (esParcial) {
+        height = 790
+      } else if (teniaPagoParcial) {
+        height = 750 // Espacio para información de pago anterior
+      }
       const scale = 2
       
       canvas.width = width * scale
@@ -4872,7 +5662,13 @@ function generarImagenComprobante() {
       
       // === TARJETA GLASSMORPHISM ===
       const cardY = 95
-      const cardHeight = esParcial ? 600 : 485
+      // Ajustar altura de la tarjeta según el contenido
+      let cardHeight = 485
+      if (esParcial) {
+        cardHeight = 600
+      } else if (teniaPagoParcial) {
+        cardHeight = 550 // Espacio para información de pago anterior
+      }
       const cardMargin = 24
       
       // Fondo de la tarjeta blanca con glassmorphism
@@ -4938,10 +5734,61 @@ function generarImagenComprobante() {
         console.warn('No hay código de comprobante para dibujar')
       }
       
+      // Si había un pago parcial anterior y se completó, mostrar información del pago anterior
+      let infoPagoAnteriorY = null
+      
+      if (teniaPagoParcial && !esParcial) {
+        // Ajustar posición si hay código
+        infoPagoAnteriorY = codigoY ? codigoY + 25 : badgeY + 50
+        const infoPagoAnteriorHeight = 90
+        
+        // Card para información de pago anterior
+        ctx.fillStyle = '#dbeafe'
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, infoPagoAnteriorY, cardInnerWidth, infoPagoAnteriorHeight, 14)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#3b82f6'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, infoPagoAnteriorY, cardInnerWidth, infoPagoAnteriorHeight, 14)
+        ctx.stroke()
+        
+        // Título "PAGO ANTERIOR"
+        ctx.fillStyle = '#1e40af'
+        ctx.font = 'bold 11px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('PAGO ANTERIOR', cardInnerX + 18, infoPagoAnteriorY + 22)
+        
+        // Valor del pago anterior
+        const valorPagoAnteriorY = infoPagoAnteriorY + 42
+        ctx.fillStyle = '#1e40af'
+        ctx.font = '10px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('Valor del Pago Anterior', cardInnerX + 18, valorPagoAnteriorY)
+        
+        ctx.fillStyle = '#1e3a8a'
+        ctx.font = 'bold 16px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPagoAnterior || 0), cardInnerX + 18, valorPagoAnteriorY + 20)
+        
+        // Pago actual (completado)
+        const pagoActualY = valorPagoAnteriorY + 35
+        ctx.fillStyle = '#1e40af'
+        ctx.font = '10px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('Pago Actual (Completado)', cardInnerX + 18, pagoActualY)
+        
+        ctx.fillStyle = '#10b981'
+        ctx.font = 'bold 16px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valor || 0), cardInnerX + 18, pagoActualY + 18)
+      }
+      
       // Si es pago parcial, mostrar información adicional
       if (esParcial) {
-        // Ajustar posición si hay código
-        const infoParcialY = codigoY ? codigoY + 25 : badgeY + 50
+        // Ajustar posición si hay código o información de pago anterior
+        const infoParcialY = infoPagoAnteriorY 
+          ? infoPagoAnteriorY + 100 
+          : (codigoY ? codigoY + 25 : badgeY + 50)
         const infoParcialHeight = 110
         
         // Card para información de pago parcial
@@ -5006,10 +5853,13 @@ function generarImagenComprobante() {
       }
       
       // === DETALLES EN CARDS ===
-      // Ajustar posición de los detalles si hay código
+      // Ajustar posición de los detalles según el contenido
       let detailsY
       if (esParcial) {
         detailsY = codigoY ? codigoY + 140 : badgeY + 165
+      } else if (teniaPagoParcial) {
+        // Si hay información de pago anterior, ajustar posición
+        detailsY = infoPagoAnteriorY ? infoPagoAnteriorY + 100 : (codigoY ? codigoY + 25 : badgeY + 60)
       } else {
         detailsY = codigoY ? codigoY + 25 : badgeY + 60
       }
