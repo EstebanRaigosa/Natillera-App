@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Supabase CLI binary
+supabase.exe
+supabase

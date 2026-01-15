@@ -4,6 +4,35 @@ import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { useCuotasStore } from './cuotas'
 
+// Función auxiliar para quitar el indicativo de país del teléfono
+function quitarIndicativoTelefono(telefono) {
+  if (!telefono) return ''
+  // Remover caracteres no numéricos excepto el signo +
+  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
+  
+  // Si comienza con +, quitar el signo
+  if (numeroLimpio.startsWith('+')) {
+    numeroLimpio = numeroLimpio.substring(1)
+  }
+  
+  // Quitar el indicativo de Colombia (57) si está presente
+  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
+  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+    numeroLimpio = numeroLimpio.substring(2)
+  }
+  
+  // Si solo tiene caracteres no numéricos, limpiar todo
+  if (!numeroLimpio || numeroLimpio.length === 0) {
+    numeroLimpio = telefono.replace(/\D/g, '')
+    // Aplicar la misma lógica de quitar el indicativo
+    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+      numeroLimpio = numeroLimpio.substring(2)
+    }
+  }
+  
+  return numeroLimpio.trim()
+}
+
 export const useSociosStore = defineStore('socios', () => {
   const socios = ref([])
   const sociosNatillera = ref([])
@@ -127,7 +156,8 @@ export const useSociosStore = defineStore('socios', () => {
         throw new Error('El número de teléfono es obligatorio')
       }
 
-      const telefonoLimpio = datosSocio.telefono.trim()
+      // Limpiar el teléfono y quitar el indicativo de país
+      const telefonoLimpio = quitarIndicativoTelefono(datosSocio.telefono)
 
       // Verificar unicidad del teléfono dentro de la natillera
       const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, natilleraId)
@@ -290,6 +320,23 @@ export const useSociosStore = defineStore('socios', () => {
         console.error('⚠️ Periodicidad guardada:', data.periodicidad)
       }
 
+      // Registrar auditoría (en segundo plano)
+      const auditoria = useAuditoria()
+      const nombreSocio = data.socio?.nombre || datosSocio.nombre || 'Socio'
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarCreacion(
+        'socio_natillera',
+        data.id,
+        `Se agregó el socio "${nombreSocio}" a la natillera con valor de cuota de $${valorCuotaFinal.toLocaleString('es-CO')} (${periodicidadFinal})`,
+        data,
+        natilleraId,
+        {
+          valor_cuota_individual: valorCuotaFinal,
+          periodicidad: periodicidadFinal,
+          socio_creado: !socioExistente, // Indica si se creó un nuevo socio o se usó uno existente
+          socio_id: socioId
+        }
+      ))
+
       sociosNatillera.value.push(data)
       return { success: true, data }
     } catch (e) {
@@ -349,12 +396,15 @@ export const useSociosStore = defineStore('socios', () => {
 
       console.log('🔵 Datos preparados para UPDATE:', datosParaUpdate)
 
-      // Actualizar los datos con .select() para verificar que se actualizó
+      // Actualizar los datos con .select() incluyendo la relación socio para obtener datos completos
       const { data: dataUpdate, error: updateError } = await supabase
         .from('socios_natillera')
         .update(datosParaUpdate)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          socio:socios(*)
+        `)
 
       if (updateError) {
         console.error('❌ Error en UPDATE:', updateError)
@@ -368,21 +418,9 @@ export const useSociosStore = defineStore('socios', () => {
         throw new Error('No se pudo actualizar el registro. Verifica los permisos o que el registro exista.')
       }
 
-      // Obtener los datos actualizados completos con relaciones
-      const { data, error: fetchError } = await supabase
-        .from('socios_natillera')
-        .select(`
-          *,
-          socio:socios(*)
-        `)
-        .eq('id', id)
-        .maybeSingle()
+      // Obtener el primer elemento del array (debería ser solo uno)
+      const data = dataUpdate[0]
 
-      if (fetchError) {
-        console.error('❌ Error obteniendo datos actualizados:', fetchError)
-        throw fetchError
-      }
-      
       if (!data) {
         console.error('❌ No se pudieron obtener los datos actualizados después del UPDATE')
         throw new Error('No se pudo obtener los datos actualizados del socio')
@@ -402,6 +440,11 @@ export const useSociosStore = defineStore('socios', () => {
       // Actualizar también las referencias en las cuotas ya cargadas
       const cuotasStore = useCuotasStore()
       cuotasStore.actualizarSocioNatilleraEnCuotas(id, data)
+
+      // Detectar cambio de periodicidad
+      const periodicidadAnterior = datosAnteriores.periodicidad || 'mensual'
+      const periodicidadNueva = datosParaUpdate.periodicidad || periodicidadAnterior
+      const cambioPeriodicidad = periodicidadAnterior !== periodicidadNueva
 
       // Si se cambió el valor_cuota_individual, actualizar todas las cuotas pendientes
       if (datosParaUpdate.valor_cuota_individual !== undefined) {
@@ -430,9 +473,25 @@ export const useSociosStore = defineStore('socios', () => {
         }
       }
 
+      // Retornar información sobre el cambio de periodicidad
+      const resultado = {
+        success: true,
+        data,
+        cambioPeriodicidad,
+        periodicidadAnterior,
+        periodicidadNueva
+      }
+
       // Registrar auditoría (en segundo plano)
       const auditoria = useAuditoria()
-      const nombreSocio = data.socio?.nombre || datosAnteriores?.socio?.nombre || 'Socio'
+      // Obtener nombre del socio de forma segura
+      let nombreSocio = 'Socio'
+      if (data && typeof data === 'object' && data.socio && typeof data.socio === 'object' && data.socio.nombre) {
+        nombreSocio = data.socio.nombre
+      } else if (datosAnteriores && typeof datosAnteriores === 'object' && datosAnteriores.socio && typeof datosAnteriores.socio === 'object' && datosAnteriores.socio.nombre) {
+        nombreSocio = datosAnteriores.socio.nombre
+      }
+      
       // La descripción se generará automáticamente con los detalles de los cambios
       registrarAuditoriaEnSegundoPlano(auditoria.registrarActualizacion(
         'socio_natillera',
@@ -440,12 +499,12 @@ export const useSociosStore = defineStore('socios', () => {
         null, // null para generar descripción automática
         datosAnteriores,
         data,
-        datosAnteriores?.natillera_id || data.natillera_id,
+        (datosAnteriores && datosAnteriores.natillera_id) || (data && data.natillera_id) || null,
         { campos_modificados: Object.keys(datos) }
       ))
 
       console.log('✅ actualizarSocioNatillera - Actualización completada exitosamente')
-      return { success: true, data }
+      return resultado
     } catch (e) {
       console.error('❌ actualizarSocioNatillera - Error:', e)
       error.value = e.message
@@ -483,8 +542,9 @@ export const useSociosStore = defineStore('socios', () => {
           throw new Error('El número de teléfono es obligatorio')
         }
 
-        const telefonoLimpio = datos.telefono.trim()
-        
+        // Limpiar el teléfono y quitar el indicativo de país
+        const telefonoLimpio = quitarIndicativoTelefono(datos.telefono)
+
         // Verificar unicidad del teléfono dentro de la natillera (excluyendo el socio actual)
         const telefonoUnico = await verificarTelefonoUnico(telefonoLimpio, natilleraId, socioId)
         if (!telefonoUnico) {
@@ -494,10 +554,22 @@ export const useSociosStore = defineStore('socios', () => {
         datos.telefono = telefonoLimpio
       }
 
+      // IMPORTANTE: Filtrar campos null o vacíos que tienen restricción NOT NULL
+      // No incluir documento si es null o vacío (mantendrá el valor anterior)
+      const datosParaUpdate = { ...datos }
+      if (datosParaUpdate.documento === null || datosParaUpdate.documento === undefined || (typeof datosParaUpdate.documento === 'string' && datosParaUpdate.documento.trim() === '')) {
+        delete datosParaUpdate.documento
+      }
+      
+      // No incluir email si es null (es opcional)
+      if (datosParaUpdate.email === null || datosParaUpdate.email === undefined || (typeof datosParaUpdate.email === 'string' && datosParaUpdate.email.trim() === '')) {
+        delete datosParaUpdate.email
+      }
+
       // Actualizar los datos
       const { error: updateError } = await supabase
         .from('socios')
-        .update(datos)
+        .update(datosParaUpdate)
         .eq('id', socioId)
 
       if (updateError) {

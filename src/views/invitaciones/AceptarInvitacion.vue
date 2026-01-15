@@ -259,7 +259,7 @@ async function rechazar() {
     const res = await colaboradoresStore.rechazarInvitacion(token)
     
     if (res.success) {
-      router.push('/natilleras')
+      router.push('/dashboard')
     } else {
       error.value = res.error
     }

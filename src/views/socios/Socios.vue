@@ -36,9 +36,9 @@
               </div>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button @click="modalImportar = true" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
+              <button @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
                 <ArrowUpTrayIcon class="w-5 h-5" />
-                <span class="hidden sm:inline">Importar CSV</span>
+                <span>Importar CSV</span>
               </button>
               <button @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
                 <PlusIcon class="w-5 h-5" />
@@ -1233,24 +1233,26 @@
                 :style="{ animationDelay: `${index * 0.05}s` }"
                 :class="[
                   cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50 border-2 border-green-300' :
+                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
                   cuotaData.estado === 'mora' 
-                    ? 'bg-red-50 border-2 border-red-300 animate-mora-highlight' :
+                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
+                  cuotaData.estado === 'programada'
+                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
                   (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota)
-                    ? 'bg-orange-50 border-2 border-orange-300' :
+                    ? 'bg-orange-50/90 border-[2.5px] border-orange-300/80 shadow-md shadow-orange-100/50 ring-1 ring-orange-200/40' :
                   cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50 border-2 border-amber-300' :
-                  'bg-green-50 border-2 border-green-200'
+                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
+                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
                 ]"
               >
               <!-- Efecto de resaltado para cuotas en mora -->
               <div 
-                v-if="cuotaData.estado === 'mora'"
+                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
                 class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
               ></div>
               <!-- Borde pulsante para cuotas en mora -->
               <div 
-                v-if="cuotaData.estado === 'mora'"
+                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
                 class="absolute inset-0 border-2 border-red-500 rounded-xl animate-pulse pointer-events-none z-0"
                 style="animation-duration: 1.5s;"
               ></div>
@@ -1280,34 +1282,34 @@
                         <!-- Pago parcial tiene prioridad sobre estado pagada -->
                         <span 
                           v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
                         >
                           PAGO PARCIAL
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-700"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
                         >
                           PAGADA
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700"
+                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
                         >
                           EN MORA
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
                             ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                           </span>
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
                         >
                           PENDIENTE
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700"
+                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
                         >
                           PROGRAMADA
                         </span>
@@ -1328,8 +1330,8 @@
                       <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
                         TOTAL PAGADO
                       </p>
-                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-orange-600 mb-1">
-                        PAGO PARCIAL
+                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-amber-600 mb-1">
+                        PENDIENTE
                       </p>
                       <p v-else class="text-xs font-medium text-gray-500 mb-1">
                         MONTO CUOTA
@@ -1408,35 +1410,35 @@
                       <!-- Badge de estado -->
                       <span 
                         v-if="cuotaData.estado === 'pagada'"
-                        class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
                       >
                         pagada
                       </span>
                       <span 
                         v-else-if="cuotaData.estado === 'mora'"
-                        class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
                       >
                         en mora
-                        <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                        <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
                           ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                         </span>
                       </span>
                       <!-- Badge pago parcial -->
                       <span 
                         v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                        class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
                       >
                         pago parcial
                       </span>
                       <span 
                         v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                        class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
                       >
                         pendiente
                       </span>
                       <span 
                         v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                        class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
                       >
                         programada
                       </span>
@@ -1532,17 +1534,19 @@
                 :style="{ animationDelay: `${index * 0.03}s` }"
                 :class="[
                   cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50 border-2 border-green-300' :
+                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
                   cuotaData.estado === 'mora' 
-                    ? 'bg-red-50 border-2 border-red-300 animate-mora-highlight' :
+                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
+                  cuotaData.estado === 'programada'
+                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
                   cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50 border-2 border-amber-300' :
-                  'bg-green-50 border-2 border-green-200'
+                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
+                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
                 ]"
               >
                 <!-- Efecto de resaltado para cuotas en mora -->
                 <div 
-                  v-if="cuotaData.estado === 'mora'"
+                  v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
                   class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
                 ></div>
                 <div class="p-4 sm:p-4 relative z-10">
@@ -1571,34 +1575,34 @@
                           <!-- Pago parcial tiene prioridad sobre estado pagada -->
                           <span 
                             v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
                           >
                             PAGO PARCIAL
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
                           >
                             PAGADA
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'mora'"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-100 text-red-700"
+                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
                           >
                             EN MORA
-                            <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                            <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
                               ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                             </span>
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
                           >
                             PENDIENTE
                           </span>
                           <span 
                             v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700"
+                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
                           >
                             PROGRAMADA
                           </span>
@@ -1699,35 +1703,35 @@
                         <!-- Badge de estado -->
                         <span 
                           v-if="cuotaData.estado === 'pagada'"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm"
+                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
                         >
                           pagada
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 border border-red-200 shadow-sm"
+                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
                         >
                           en mora
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-800 font-bold">
+                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
                             ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
                           </span>
                         </span>
                         <!-- Badge pago parcial -->
                         <span 
                           v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200 shadow-sm"
+                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
                         >
                           pago parcial
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm"
+                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
                         >
                           pendiente
                         </span>
                         <span 
                           v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 shadow-sm"
+                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
                         >
                           programada
                         </span>
@@ -2204,6 +2208,7 @@ import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { 
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -2254,6 +2259,7 @@ const modalAgregar = ref(false)
 const modalDetalle = ref(false)
 const modalImportar = ref(false)
 const modalCuotasSocio = ref(false)
+const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalProgreso = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
@@ -2528,7 +2534,7 @@ const resumenSocio = computed(() => {
 
   const totalAportado = cuotasSocio.value.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
   const totalPendiente = cuotasSocio.value
-    .filter(c => c.estado !== 'pagada')
+    .filter(c => c.estado === 'pendiente' || c.estado === 'parcial' || c.estado === 'mora')
     .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
 
   return {
@@ -2708,14 +2714,32 @@ function cerrarModal() {
 }
 
 // Función auxiliar para limpiar y formatear número de teléfono
+// Quita el indicativo de país (57 o +57) para dejar solo el número
 function limpiarNumeroTelefono(telefono) {
   if (!telefono) return ''
   // Remover caracteres no numéricos excepto el signo +
   let numeroLimpio = telefono.replace(/[^\d+]/g, '')
-  // Si comienza con +, mantenerlo, de lo contrario limpiar todo
-  if (!numeroLimpio.startsWith('+')) {
-    numeroLimpio = numeroLimpio.replace(/\D/g, '')
+  
+  // Si comienza con +, quitar el signo
+  if (numeroLimpio.startsWith('+')) {
+    numeroLimpio = numeroLimpio.substring(1)
   }
+  
+  // Quitar el indicativo de Colombia (57) si está presente
+  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
+  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+    numeroLimpio = numeroLimpio.substring(2)
+  }
+  
+  // Si solo tiene caracteres no numéricos, limpiar todo
+  if (!numeroLimpio || numeroLimpio.length === 0) {
+    numeroLimpio = telefono.replace(/\D/g, '')
+    // Aplicar la misma lógica de quitar el indicativo
+    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+      numeroLimpio = numeroLimpio.substring(2)
+    }
+  }
+  
   return numeroLimpio
 }
 
@@ -2859,10 +2883,206 @@ async function handleGuardarSocio() {
       return
     }
 
-    // Limpiar espacios y formatear el teléfono
-    const telefonoLimpio = formSocio.telefono.trim()
+    // Limpiar el teléfono y quitar el indicativo de país
+    const telefonoLimpio = limpiarNumeroTelefono(formSocio.telefono)
 
     if (socioEditando.value) {
+      // Detectar si cambió la periodicidad
+      const periodicidadAnterior = socioEditando.value.periodicidad || 'mensual'
+      const periodicidadNueva = formSocio.periodicidad || 'mensual'
+      const cambioPeriodicidad = periodicidadAnterior !== periodicidadNueva
+
+      // Si cambió la periodicidad, necesitamos eliminar y regenerar cuotas
+      if (cambioPeriodicidad) {
+        // IMPORTANTE: Guardar TODOS los datos necesarios ANTES de cerrar el modal
+        // porque cerrarModal() resetea el formulario
+        const socioNatilleraId = socioEditando.value.id
+        const socioId = socioEditando.value.socio?.id || null
+        
+        // Guardar todos los valores del formulario antes de que se reseteen
+        const nombreGuardado = formSocio.nombre || socioEditando.value.socio?.nombre || ''
+        const telefonoGuardado = telefonoLimpio || socioEditando.value.socio?.telefono || ''
+        const emailGuardado = formSocio.email || socioEditando.value.socio?.email || null
+        const documentoGuardado = formSocio.documento || socioEditando.value.socio?.documento || null
+        const avatarSeedGuardado = formSocio.avatar_seed || socioEditando.value.socio?.avatar_seed || null
+        
+        // IMPORTANTE: Guardar el valor de cuota - usar el del formulario si es válido, sino el anterior
+        let valorCuotaGuardado = typeof formSocio.valor_cuota === 'string' 
+          ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
+          : Number(formSocio.valor_cuota) || 0
+        
+        // Si el valor del formulario es 0 o inválido, usar el valor anterior del socio
+        if (valorCuotaGuardado <= 0 || isNaN(valorCuotaGuardado)) {
+          valorCuotaGuardado = socioEditando.value.valor_cuota_individual || 0
+        }
+        
+        // Cerrar el modal de edición primero
+        cerrarModal()
+        
+        // Iniciar el modal de progreso
+        progresoCreacion.value = {
+          paso: 1,
+          mensaje: 'Actualizando periodicidad...',
+          cuotasGeneradas: 0,
+          cuotasTotales: 0,
+          error: null,
+          exito: false,
+          nombreSocio: nombreGuardado
+        }
+        modalProgreso.value = true
+
+        try {
+          // Paso 1: Actualizar datos del socio (sin periodicidad aún)
+          // IMPORTANTE: Usar los valores guardados antes de cerrar el modal
+          const datosActualizados = {
+            nombre: nombreGuardado,
+            telefono: telefonoGuardado
+          }
+          
+          // Solo incluir email si tiene valor (usar valor guardado)
+          if (emailGuardado && emailGuardado.trim() !== '') {
+            datosActualizados.email = emailGuardado.trim()
+          }
+          
+          // Solo incluir documento si tiene valor (no puede ser null por constraint de BD)
+          if (documentoGuardado && documentoGuardado.trim() !== '') {
+            datosActualizados.documento = documentoGuardado.trim()
+          }
+          
+          if (avatarSeedGuardado) {
+            datosActualizados.avatar_seed = avatarSeedGuardado
+          }
+
+          // OPTIMIZACIÓN: Verificar unicidad del teléfono y actualizar datos en paralelo si es posible
+          // (Solo si hay datos para actualizar)
+          if (socioId && Object.keys(datosActualizados).length > 2) { // Más que solo nombre y telefono
+            const [telefonoExiste, resultDatos] = await Promise.all([
+              sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId),
+              sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
+            ])
+            
+            if (!telefonoExiste) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+              guardando.value = false
+              return
+            }
+            
+            if (!resultDatos.success) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
+              guardando.value = false
+              return
+            }
+          } else if (socioId) {
+            // Si solo hay nombre y teléfono, verificar teléfono primero
+            const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId)
+            if (!telefonoExiste) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+              guardando.value = false
+              return
+            }
+            
+            const resultDatos = await sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
+            if (!resultDatos.success) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
+              guardando.value = false
+              return
+            }
+          }
+
+          // Paso 2: Eliminar todas las cuotas del socio
+          progresoCreacion.value.paso = 2
+          progresoCreacion.value.mensaje = 'Eliminando cuotas anteriores...'
+
+          const resultEliminar = await cuotasStore.eliminarTodasLasCuotasSocio(socioNatilleraId)
+          
+          if (!resultEliminar.success) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = resultEliminar.error || 'Error al eliminar las cuotas anteriores'
+            guardando.value = false
+            return
+          }
+
+          // Paso 3: Actualizar periodicidad y valor de cuota
+          progresoCreacion.value.mensaje = 'Actualizando configuración...'
+          
+          // IMPORTANTE: Usar el valor de cuota guardado antes de cerrar el modal
+          const valorCuotaFinal = valorCuotaGuardado
+          
+          // Validar que el valor final sea válido
+          if (valorCuotaFinal <= 0 || isNaN(valorCuotaFinal)) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = 'El valor de la cuota debe ser mayor a cero'
+            guardando.value = false
+            return
+          }
+
+          const result = await sociosStore.actualizarSocioNatillera(socioNatilleraId, {
+            valor_cuota_individual: valorCuotaFinal,
+            periodicidad: periodicidadNueva
+          })
+
+          if (!result.success) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = result.error || 'Error al actualizar la periodicidad'
+            guardando.value = false
+            return
+          }
+
+          // Paso 4: Generar nuevas cuotas
+          progresoCreacion.value.paso = 2
+          progresoCreacion.value.mensaje = 'Generando cuotas con nueva periodicidad...'
+          
+          const natillera = natillerasStore.natilleraActual
+          const resultCuotas = await generarCuotasParaSocio(
+            id,
+            socioNatilleraId,
+            natillera,
+            valorCuotaFinal,
+            periodicidadNueva
+          )
+
+          if (resultCuotas.success) {
+            progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
+            progresoCreacion.value.paso = 3
+            progresoCreacion.value.exito = true
+            progresoCreacion.value.mensaje = '¡Periodicidad actualizada exitosamente!'
+            
+            // OPTIMIZACIÓN: Recargar cuotas y actualizar socio en paralelo
+            await Promise.all([
+              cuotasStore.fetchCuotasNatillera(id),
+              sociosStore.fetchSociosNatillera(id)
+            ])
+            
+            // Actualizar el socioSeleccionado si está abierto el modal de detalle
+            if (modalDetalle.value && socioSeleccionado.value?.id === socioNatilleraId) {
+              const socioActualizado = sociosStore.sociosNatillera.find(s => s.id === socioNatilleraId)
+              if (socioActualizado) {
+                socioSeleccionado.value = socioActualizado
+              }
+            }
+            
+            // Cerrar modal después de 1.5 segundos (reducido de 2)
+            setTimeout(() => {
+              cerrarModalProgreso()
+            }, 1500)
+          } else {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = resultCuotas.error || 'Error al generar las nuevas cuotas'
+          }
+        } catch (error) {
+          progresoCreacion.value.paso = 0
+          progresoCreacion.value.error = error.message || 'Error inesperado al cambiar la periodicidad'
+        } finally {
+          guardando.value = false
+        }
+        return
+      }
+
+      // Si no cambió la periodicidad, actualizar normalmente
       // Actualizar cuota del socio en socios_natillera
       const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
         valor_cuota_individual: formSocio.valor_cuota,
@@ -3398,6 +3618,9 @@ function tienePagoParcial(cuota) {
 
 // Función para abrir el modal de cuotas del socio
 async function verCuotasSocio(sn) {
+  // Desactivar animaciones de cuotas en mora al hacer clic en "ver cuotas"
+  animacionesCuotasMora.value = false
+  
   // Abrir la modal inmediatamente para una respuesta rápida
   socioParaCuotas.value = sn
   cuotasSocioPorMes.value = []
@@ -3464,11 +3687,32 @@ async function verCuotasSocio(sn) {
       const fechaVencimiento = new Date(fechaLimiteParaVencimiento)
       fechaVencimiento.setDate(fechaVencimiento.getDate() + diasGracia)
       
-      // Obtener sanción de esta cuota - solo usar valor_multa si las sanciones están activas
+      // Obtener sanción de esta cuota - priorizar valor_multa persistido sobre sanciones dinámicas
+      // Las multas deben persistir una vez asignadas, no recalcularse
       // Si las sanciones están inactivas, siempre usar 0
       let sancionCuota = 0
       if (sancionesActivas) {
-        sancionCuota = sancionesSocio[cuota.id] || cuota.valor_multa || 0
+        // IMPORTANTE: Priorizar valor_multa persistido sobre sanciones dinámicas
+        // Esto asegura que las multas escalonadas persistan correctamente
+        const valorMultaPersistido = parseFloat(cuota.valor_multa) || 0
+        
+        if (valorMultaPersistido > 0) {
+          // Si hay multa persistida, usarla (no recalcular)
+          sancionCuota = valorMultaPersistido
+        } else if (cuota.estado === 'mora') {
+          // Solo para cuotas en mora sin multa persistida, usar sanciones dinámicas
+          sancionCuota = sancionesSocio[cuota.id] || 0
+        } else {
+          // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente),
+          // seguir considerando la sanción hasta que se pague completamente
+          if (cuota.valor_multa && cuota.valor_multa > 0) {
+            const totalConSancion = (cuota.valor_cuota || 0) + cuota.valor_multa
+            // Solo retornar la sanción si aún no se ha pagado el total
+            if ((cuota.valor_pagado || 0) < totalConSancion) {
+              sancionCuota = cuota.valor_multa
+            }
+          }
+        }
       } else {
         // Si las sanciones están inactivas, no usar valor_multa antiguo
         sancionCuota = 0
@@ -3543,6 +3787,119 @@ function cerrarModalCuotasSocio() {
   cuotasSocioPorMes.value = []
   loadingCuotasSocio.value = false
 }
+
+// Función para manejar el botón atrás del navegador en móvil
+let modalHistoryState = null
+
+function handleModalBack(modalRef, modalName) {
+  watch(modalRef, (isOpen) => {
+    if (isOpen) {
+      // Verificar si hay otras modales abiertas
+      const hayOtrasModales = modalAgregar.value || modalDetalle.value || 
+                              modalImportar.value || modalProgreso.value ||
+                              socioAEliminar.value ||
+                              (modalName !== 'cuotasSocio' && modalCuotasSocio.value)
+      
+      // Si es la primera modal que se abre (no hay otras modales), agregar primero
+      // una entrada al historial que represente el estado "sin modales"
+      if (!hayOtrasModales) {
+        history.pushState({ modal: null }, '', window.location.href)
+      }
+      
+      // Agregar entrada al historial cuando se abre la modal
+      modalHistoryState = { modal: modalName }
+      history.pushState(modalHistoryState, '', window.location.href)
+    }
+  })
+}
+
+// Listener para el botón atrás del navegador
+function handlePopState(event) {
+  // Verificar modales en orden de z-index (las más altas primero)
+  // Esto asegura que se cierre primero la modal superior cuando hay modales anidadas
+  
+  // Modal de progreso (z-60 - más alta)
+  if (modalProgreso.value) {
+    modalProgreso.value = false
+    // Si hay otra modal abierta debajo, no hacer nada más
+    return
+  }
+  
+  // Modal de cuotas del socio (z-50)
+  if (modalCuotasSocio.value) {
+    cerrarModalCuotasSocio()
+    // Si hay otra modal abierta debajo, no hacer nada más
+    // La modal inferior ya tiene su entrada en el historial (fue agregada cuando se abrió)
+    // El siguiente "atrás" naturalmente cerrará esa modal
+    return
+  }
+  
+  // Modal de eliminar socio (z-50)
+  if (socioAEliminar.value) {
+    socioAEliminar.value = null
+    // Si hay otra modal abierta debajo, no hacer nada más
+    return
+  }
+  
+  // Modal Detalle (z-50)
+  if (modalDetalle.value) {
+    modalDetalle.value = false
+    // Si hay otra modal abierta debajo, agregar su estado al historial
+    if (modalAgregar.value) {
+      history.pushState({ modal: 'agregar' }, '', window.location.href)
+    } else if (modalImportar.value) {
+      history.pushState({ modal: 'importar' }, '', window.location.href)
+    } else {
+      // No hay otras modales, no hacer nada más porque ya hay una entrada en el historial
+      // que representa el estado "sin modales" (fue agregada cuando se abrió esta modal)
+    }
+    return
+  }
+  
+  // Modal Agregar (z-50)
+  if (modalAgregar.value) {
+    modalAgregar.value = false
+    // Si hay otra modal abierta debajo, agregar su estado al historial
+    if (modalImportar.value) {
+      history.pushState({ modal: 'importar' }, '', window.location.href)
+    } else {
+      // No hay otras modales, no hacer nada más
+    }
+    return
+  }
+  
+  // Modal Importar (z-50)
+  if (modalImportar.value) {
+    modalImportar.value = false
+    // No hay otras modales, no hacer nada más
+    return
+  }
+}
+
+// Registrar watchers para cada modal
+handleModalBack(modalCuotasSocio, 'cuotasSocio')
+handleModalBack(modalDetalle, 'detalle')
+handleModalBack(modalAgregar, 'agregar')
+handleModalBack(modalImportar, 'importar')
+handleModalBack(modalProgreso, 'progreso')
+watch(socioAEliminar, (value) => {
+  if (value) {
+    // Verificar si hay otras modales abiertas
+    const hayOtrasModales = modalAgregar.value || modalDetalle.value || 
+                            modalImportar.value || modalProgreso.value ||
+                            modalCuotasSocio.value
+    
+    // Si es la primera modal que se abre (no hay otras modales), agregar primero
+    // una entrada al historial que represente el estado "sin modales"
+    if (!hayOtrasModales) {
+      history.pushState({ modal: null }, '', window.location.href)
+    }
+    
+    // Agregar entrada al historial cuando se abre la modal
+    modalHistoryState = { modal: 'eliminarSocio' }
+    history.pushState(modalHistoryState, '', window.location.href)
+  }
+})
 
 // Función para navegar a la vista de cuotas con el mes seleccionado
 function navegarACuotasMes(mes) {
@@ -3736,6 +4093,31 @@ async function importarSocios() {
 
   importando.value = false
 
+  // Registrar auditoría de importación masiva
+  const auditoria = useAuditoria()
+  const descripcionImportacion = errores === 0
+    ? `Se importaron ${importados} socios desde CSV exitosamente`
+    : `Se importaron ${importados} socios desde CSV. ${errores} ${errores === 1 ? 'tuvo error' : 'tuvieron errores'}`
+  
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'CREATE',
+    entidad: 'socios_natillera',
+    entidadId: null, // Importación masiva, no tiene un ID único
+    descripcion: descripcionImportacion,
+    natilleraId: id,
+    datosNuevos: {
+      total_importados: importados,
+      total_errores: errores,
+      total_intentos: sociosPreview.value.length,
+      metodo: 'importacion_csv'
+    },
+    detalles: {
+      importacion_masiva: true,
+      archivo_csv: archivoCSV.value?.name || 'desconocido',
+      errores_detalle: erroresDetalle.length > 0 ? erroresDetalle.slice(0, 10) : null // Limitar a 10 errores para no sobrecargar
+    }
+  }))
+
   if (errores === 0) {
     exitoImportar.value = `Se importaron ${importados} socios exitosamente`
     sociosPreview.value = []
@@ -3928,6 +4310,21 @@ const sociosConCuotasEnMora = computed(() => {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
+  // Obtener días de gracia de la natillera
+  // Siempre calcular desde fecha_limite + dias_gracia para asegurar consistencia
+  const natillera = natillerasStore.natilleraActual
+  let diasGracia = 3 // Valor por defecto
+  
+  // Verificar si la natillera está cargada y coincide con el ID actual
+  if (natillera && natillera.id === id) {
+    diasGracia = natillera.reglas_multas?.dias_gracia ?? 3
+  }
+  
+  // Debug: Log para verificar días de gracia usados
+  if (process.env.NODE_ENV === 'development') {
+    console.log('📅 Días de gracia usados para cálculo de mora:', diasGracia, 'Natillera ID:', natillera?.id, 'ID actual:', id)
+  }
+  
   // Agrupar cuotas en mora por socio
   const sociosMap = {}
   
@@ -3960,14 +4357,41 @@ const sociosConCuotasEnMora = computed(() => {
     sociosMap[socioId].totalDeuda += deudaCuota
     sociosMap[socioId].cuotasMoraList.push(cuota)
     
-    // Calcular días de mora desde la cuota más antigua
+    // Calcular días de mora desde la cuota más antigua usando fecha_vencimiento (que incluye días de gracia)
+    // IMPORTANTE: Siempre calcular desde fecha_limite + dias_gracia para asegurar consistencia
+    let fechaVencimiento = null
+    
     if (cuota.fecha_limite) {
-      const fechaLimite = new Date(cuota.fecha_limite)
-      fechaLimite.setHours(0, 0, 0, 0)
+      // Siempre calcular fecha_vencimiento desde fecha_limite + dias_gracia
+      // para asegurar que los días de gracia se tomen en cuenta correctamente
+      if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+        const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+        fechaVencimiento = new Date(anio, mes - 1, dia)
+      } else {
+        fechaVencimiento = new Date(cuota.fecha_limite)
+      }
+      fechaVencimiento.setDate(fechaVencimiento.getDate() + diasGracia)
+    }
+    
+    if (fechaVencimiento) {
+      fechaVencimiento.setHours(0, 0, 0, 0)
       
-      if (!sociosMap[socioId].fechaMoraAntigua || fechaLimite < sociosMap[socioId].fechaMoraAntigua) {
-        sociosMap[socioId].fechaMoraAntigua = fechaLimite
-        sociosMap[socioId].diasMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+      if (!sociosMap[socioId].fechaMoraAntigua || fechaVencimiento < sociosMap[socioId].fechaMoraAntigua) {
+        sociosMap[socioId].fechaMoraAntigua = fechaVencimiento
+        const diasCalculados = Math.floor((hoy - fechaVencimiento) / (1000 * 60 * 60 * 24))
+        sociosMap[socioId].diasMora = diasCalculados
+        
+        // Debug: Log para verificar cálculo
+        if (process.env.NODE_ENV === 'development' && diasCalculados > 0) {
+          console.log('📊 Cálculo días mora:', {
+            socio: socioInfo?.nombre,
+            fechaLimite: cuota.fecha_limite,
+            diasGracia,
+            fechaVencimiento: fechaVencimiento.toISOString().split('T')[0],
+            hoy: hoy.toISOString().split('T')[0],
+            diasMora: diasCalculados
+          })
+        }
       }
     }
   })
@@ -4012,6 +4436,9 @@ onMounted(async () => {
   } finally {
     loadingCuotas.value = false
   }
+  
+  // Agregar listener para el botón atrás
+  window.addEventListener('popstate', handlePopState)
 })
 
 onUnmounted(() => {
@@ -4019,6 +4446,8 @@ onUnmounted(() => {
   if (clickOutsideListener) {
     document.removeEventListener('click', clickOutsideListener)
   }
+  // Remover listener para el botón atrás
+  window.removeEventListener('popstate', handlePopState)
 })
 </script>
 

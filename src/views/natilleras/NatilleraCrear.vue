@@ -659,6 +659,7 @@ import {
   InformationCircleIcon,
   SparklesIcon
 } from '@heroicons/vue/24/outline'
+import { parseDateLocal, formatDateToLocalISO, getCurrentDateISO } from '../../utils/formatDate'
 
 const router = useRouter()
 const natillerasStore = useNatillerasStore()
@@ -693,7 +694,7 @@ const aniosDisponibles = computed(() => {
 
 const form = reactive({
   nombre: '',
-  fecha_inicio: new Date().toISOString().split('T')[0],
+  fecha_inicio: getCurrentDateISO(),
   periodicidad: 'mensual',
   descripcion: '',
   // Período
@@ -723,7 +724,10 @@ const form = reactive({
 // Calcular automáticamente el período cuando cambia la fecha de inicio
 watch(() => form.fecha_inicio, (nuevaFecha) => {
   if (nuevaFecha) {
-    const fecha = new Date(nuevaFecha)
+    // Usar parseDateLocal para evitar problemas de zona horaria
+    const fecha = parseDateLocal(nuevaFecha)
+    if (!fecha || isNaN(fecha.getTime())) return
+    
     const mes = fecha.getMonth() + 1 // getMonth() devuelve 0-11
     const anio = fecha.getFullYear()
     
@@ -800,6 +804,10 @@ const cantidadMeses = computed(() => {
 async function handleSubmit() {
   error.value = ''
 
+  // Debug: Verificar la fecha antes de enviar
+  console.log('📅 Fecha de inicio antes de enviar:', form.fecha_inicio)
+  console.log('📅 Tipo de fecha:', typeof form.fecha_inicio)
+
   // Estructurar reglas_multas correctamente para activar las multas en la configuración
   const reglasMultas = form.multa_activa ? {
     activa: true,
@@ -833,9 +841,23 @@ async function handleSubmit() {
     }
   }
 
+  // Extraer año, mes y día directamente del string para evitar cualquier problema de zona horaria
+  // El input de tipo date devuelve un string YYYY-MM-DD que ya está en hora local
+  let fechaInicioFinal = form.fecha_inicio
+  if (typeof form.fecha_inicio === 'string' && form.fecha_inicio.match(/^(\d{4})-(\d{2})-(\d{2})$/)) {
+    // El string ya está en formato YYYY-MM-DD, usarlo directamente
+    // Esto evita cualquier procesamiento que pueda causar problemas de zona horaria
+    fechaInicioFinal = form.fecha_inicio
+  } else {
+    // Si no está en formato string YYYY-MM-DD, formatearlo
+    fechaInicioFinal = formatDateToLocalISO(form.fecha_inicio)
+  }
+
   const datos = {
     nombre: form.nombre,
-    fecha_inicio: form.fecha_inicio,
+    // Enviar la fecha directamente como string YYYY-MM-DD
+    // Supabase maneja correctamente los strings YYYY-MM-DD para campos DATE
+    fecha_inicio: fechaInicioFinal,
     periodicidad: form.periodicidad,
     descripcion: form.descripcion,
     avatar_seed: form.nombre, // Usar el nombre como seed del avatar
@@ -855,9 +877,16 @@ async function handleSubmit() {
     } : { activo: false }
   }
 
+  // Debug: Verificar los datos que se envían
+  console.log('📤 Datos a enviar:', datos)
+  console.log('📤 Fecha de inicio en datos:', datos.fecha_inicio)
+
   const result = await natillerasStore.crearNatillera(datos)
 
   if (result.success) {
+    // Debug: Verificar la fecha que se guardó
+    console.log('✅ Natillera creada:', result.data)
+    console.log('📅 Fecha de inicio guardada:', result.data.fecha_inicio)
     router.push(`/natilleras/${result.data.id}`)
   } else {
     error.value = result.error

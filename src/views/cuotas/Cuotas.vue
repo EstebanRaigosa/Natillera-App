@@ -2481,6 +2481,20 @@
               <p style="font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -3px; line-height: 1;">
                 ${{ formatMoney(pagoRegistrado?.valor) }}
               </p>
+              
+              <!-- Desglose de cuota y sanción si hay sanción -->
+              <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center;">
+                  <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px;">
+                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Cuota</p>
+                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
+                  </div>
+                  <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Sanción</p>
+                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; color: #fca5a5;">${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- Información de pago parcial anterior (si se completó un pago parcial) -->
@@ -2515,10 +2529,22 @@
                 <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Pago Parcial</p>
               </div>
               
-              <!-- Valor Total de la Cuota primero -->
+              <!-- Desglose de cuota y sanción si hay sanción -->
+              <div v-if="pagoRegistrado?.tieneSancion" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
+                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Cuota</p>
+                  <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuota || 0) }}</p>
+                </div>
+                <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Sanción</p>
+                  <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px; color: #fca5a5;">${{ formatMoney(pagoRegistrado?.sancion || 0) }}</p>
+                </div>
+              </div>
+              
+              <!-- Valor Total (cuota + sanción) si hay sanción, o solo cuota si no -->
               <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Valor Total de la Cuota</p>
-                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuota || 0) }}</p>
+                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">{{ pagoRegistrado?.tieneSancion ? 'Total a Pagar (Cuota + Sanción)' : 'Valor Total de la Cuota' }}</p>
+                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney((pagoRegistrado?.valorCuota || 0) + (pagoRegistrado?.sancion || 0)) }}</p>
               </div>
               
               <!-- Total Pagado y Pendiente lado a lado -->
@@ -2526,6 +2552,11 @@
                 <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
                   <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Total Pagado</p>
                   <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorPagadoTotal || 0) }}</p>
+                  <!-- Desglose del total pagado si hay sanción -->
+                  <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <p style="color: rgba(255,255,255,0.6); font-size: 7px; margin: 2px 0; font-weight: 500;">Cuota: ${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
+                    <p style="color: rgba(239, 68, 68, 0.8); font-size: 7px; margin: 2px 0; font-weight: 500;">Sanción: ${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
+                  </div>
                 </div>
                 <div style="background: rgba(251, 191, 36, 0.2); border-radius: 8px; padding: 10px; border: 1px solid rgba(251, 191, 36, 0.3);">
                   <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Pendiente</p>
@@ -5540,6 +5571,19 @@ async function handleRegistrarPago() {
     console.log('Código de comprobante obtenido:', codigoComprobante)
     console.log('Cuota actualizada completa:', cuotaActualizada)
     
+    // Calcular cuánto se pagó de cuota y cuánto de sanción
+    // Usar el valor_multa de la cuota actualizada si está disponible (es más preciso)
+    const valorMultaEnBD = parseFloat(cuotaActualizada?.valor_multa) || 0
+    const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
+    
+    // Si el valor pagado total es mayor que la cuota, la diferencia es la sanción pagada
+    // Pero no puede ser mayor que la sanción total
+    const valorCuotaPagada = Math.min(valorPagadoTotal, valorCuota)
+    const valorSancionPagada = Math.min(Math.max(0, valorPagadoTotal - valorCuota), sancionTotal)
+    
+    // Si hay sanción pendiente, también calcularla
+    const sancionPendiente = Math.max(0, sancionTotal - valorSancionPagada)
+    
     // Guardar info del pago para el modal de confirmación
     pagoRegistrado.value = {
       cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
@@ -5552,6 +5596,10 @@ async function handleRegistrarPago() {
       esParcial,
       descripcionCuota,
       codigoComprobante, // Código único del comprobante
+      sancion: sancionTotal, // Sanción total (pagada + pendiente)
+      valorSancionPagada, // Cuánto de sanción se pagó
+      valorCuotaPagada, // Cuánto de cuota se pagó
+      tieneSancion: sancionTotal > 0, // Indica si hay sanción
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
@@ -5596,13 +5644,17 @@ function generarImagenComprobante() {
       const esParcial = pagoRegistrado.value?.esParcial || false
       const teniaPagoParcial = pagoRegistrado.value?.teniaPagoParcial || false
       const codigoComprobante = pagoRegistrado.value?.codigoComprobante
+      const tieneSancion = pagoRegistrado.value?.tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0
       const width = 480
-      // Altura ajustada: más espacio si hay pago parcial o información de pago anterior
+      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior o desglose de sanción
       let height = 680
+      if (tieneSancion) {
+        height += 60 // Espacio adicional para el desglose
+      }
       if (esParcial) {
-        height = 790
+        height = 790 + (tieneSancion ? 60 : 0)
       } else if (teniaPagoParcial) {
-        height = 750 // Espacio para información de pago anterior
+        height = 750 + (tieneSancion ? 60 : 0) // Espacio para información de pago anterior
       }
       const scale = 2
       
@@ -5664,10 +5716,13 @@ function generarImagenComprobante() {
       const cardY = 95
       // Ajustar altura de la tarjeta según el contenido
       let cardHeight = 485
+      if (tieneSancion) {
+        cardHeight += 60 // Espacio adicional para el desglose
+      }
       if (esParcial) {
-        cardHeight = 600
+        cardHeight = 600 + (tieneSancion ? 60 : 0)
       } else if (teniaPagoParcial) {
-        cardHeight = 550 // Espacio para información de pago anterior
+        cardHeight = 550 + (tieneSancion ? 60 : 0) // Espacio para información de pago anterior
       }
       const cardMargin = 24
       
@@ -5720,10 +5775,58 @@ function generarImagenComprobante() {
       ctx.textAlign = 'center'
       ctx.fillText('Pago Verificado', width/2, badgeY + 21)
       
-      // === CÓDIGO DE COMPROBANTE (debajo de "Pago Verificado") ===
+      // === DESGLOSE DE CUOTA Y SANCIÓN (si hay sanción) ===
+      let desgloseY = null
+      
+      if (tieneSancion) {
+        desgloseY = badgeY + 45
+        const desgloseHeight = 50
+        
+        // Fondo para el desglose
+        ctx.fillStyle = 'rgba(248, 250, 252, 0.8)'
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, desgloseY, cardInnerWidth, desgloseHeight, 12)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#e2e8f0'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, desgloseY, cardInnerWidth, desgloseHeight, 12)
+        ctx.stroke()
+        
+        // Línea divisoria vertical
+        ctx.strokeStyle = '#e2e8f0'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(width/2, desgloseY + 10)
+        ctx.lineTo(width/2, desgloseY + desgloseHeight - 10)
+        ctx.stroke()
+        
+        // Cuota (izquierda)
+        ctx.fillStyle = '#64748b'
+        ctx.font = '9px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('CUOTA', width/2 - cardInnerWidth/4, desgloseY + 20)
+        
+        ctx.fillStyle = '#1e293b'
+        ctx.font = 'bold 16px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), width/2 - cardInnerWidth/4, desgloseY + 38)
+        
+        // Sanción (derecha)
+        ctx.fillStyle = '#64748b'
+        ctx.font = '9px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('SANCIÓN', width/2 + cardInnerWidth/4, desgloseY + 20)
+        
+        ctx.fillStyle = '#dc2626'
+        ctx.font = 'bold 16px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), width/2 + cardInnerWidth/4, desgloseY + 38)
+      }
+      
+      // === CÓDIGO DE COMPROBANTE (debajo del desglose o "Pago Verificado") ===
       let codigoY = null
       if (codigoComprobante) {
-        codigoY = badgeY + 45
+        codigoY = tieneSancion ? (desgloseY + 60) : (badgeY + 45)
         // Código en negrita y visible, sin etiqueta
         ctx.fillStyle = '#64748b'
         ctx.font = 'bold 12px monospace'
@@ -5789,7 +5892,8 @@ function generarImagenComprobante() {
         const infoParcialY = infoPagoAnteriorY 
           ? infoPagoAnteriorY + 100 
           : (codigoY ? codigoY + 25 : badgeY + 50)
-        const infoParcialHeight = 110
+        // Aumentar altura si hay sanción para mostrar el desglose
+        const infoParcialHeight = tieneSancion ? 150 : 110
         
         // Card para información de pago parcial
         ctx.fillStyle = '#fef3c7'
@@ -5809,24 +5913,74 @@ function generarImagenComprobante() {
         ctx.textAlign = 'left'
         ctx.fillText('PAGO PARCIAL', cardInnerX + 18, infoParcialY + 22)
         
-        // Valor Total de la Cuota primero (más destacado)
-        const valorCuotaY = infoParcialY + 42
-        ctx.fillStyle = '#92400e'
-        ctx.font = '10px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('Valor Total de la Cuota', cardInnerX + 18, valorCuotaY)
-        
-        ctx.fillStyle = '#78350f'
-        ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18, valorCuotaY + 20)
-        
-        // Línea divisoria
-        ctx.strokeStyle = '#fbbf24'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(cardInnerX + 18, valorCuotaY + 30)
-        ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 30)
-        ctx.stroke()
+        // Desglose de cuota y sanción si hay sanción
+        let valorCuotaY = infoParcialY + 42
+        if (tieneSancion) {
+          // Desglose lado a lado
+          ctx.fillStyle = '#92400e'
+          ctx.font = '9px Arial'
+          ctx.textAlign = 'left'
+          ctx.fillText('CUOTA', cardInnerX + 18, valorCuotaY)
+          
+          ctx.fillStyle = '#78350f'
+          ctx.font = 'bold 14px Arial'
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18, valorCuotaY + 18)
+          
+          // Sanción (derecha)
+          ctx.fillStyle = '#92400e'
+          ctx.font = '9px Arial'
+          ctx.textAlign = 'right'
+          ctx.fillText('SANCIÓN', cardInnerX + cardInnerWidth - 18, valorCuotaY)
+          
+          ctx.fillStyle = '#dc2626'
+          ctx.font = 'bold 14px Arial'
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.sancion || 0), cardInnerX + cardInnerWidth - 18, valorCuotaY + 18)
+          
+          // Línea divisoria
+          ctx.strokeStyle = '#fbbf24'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(cardInnerX + 18, valorCuotaY + 25)
+          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 25)
+          ctx.stroke()
+          
+          // Total a pagar (cuota + sanción)
+          valorCuotaY = valorCuotaY + 35
+          ctx.fillStyle = '#92400e'
+          ctx.font = '10px Arial'
+          ctx.textAlign = 'left'
+          ctx.fillText('Total a Pagar (Cuota + Sanción)', cardInnerX + 18, valorCuotaY)
+          
+          ctx.fillStyle = '#78350f'
+          ctx.font = 'bold 16px Arial'
+          ctx.fillText('$' + formatMoney((pagoRegistrado.value?.valorCuota || 0) + (pagoRegistrado.value?.sancion || 0)), cardInnerX + 18, valorCuotaY + 20)
+          
+          // Línea divisoria
+          ctx.strokeStyle = '#fbbf24'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(cardInnerX + 18, valorCuotaY + 30)
+          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 30)
+          ctx.stroke()
+        } else {
+          // Valor Total de la Cuota primero (más destacado) - sin sanción
+          ctx.fillStyle = '#92400e'
+          ctx.font = '10px Arial'
+          ctx.textAlign = 'left'
+          ctx.fillText('Valor Total de la Cuota', cardInnerX + 18, valorCuotaY)
+          
+          ctx.fillStyle = '#78350f'
+          ctx.font = 'bold 16px Arial'
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18, valorCuotaY + 20)
+          
+          // Línea divisoria
+          ctx.strokeStyle = '#fbbf24'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(cardInnerX + 18, valorCuotaY + 30)
+          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 30)
+          ctx.stroke()
+        }
         
         // Total Pagado y Pendiente lado a lado
         const totalPendienteY = valorCuotaY + 40
@@ -5840,6 +5994,18 @@ function generarImagenComprobante() {
         ctx.fillStyle = '#78350f'
         ctx.font = 'bold 14px Arial'
         ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPagadoTotal || 0), cardInnerX + 18, totalPendienteY + 18)
+        
+        // Desglose del total pagado si hay sanción
+        if (tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0) {
+          ctx.fillStyle = '#92400e'
+          ctx.font = '7px Arial'
+          ctx.textAlign = 'left'
+          ctx.fillText('Cuota: $' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), cardInnerX + 18, totalPendienteY + 35)
+          
+          ctx.fillStyle = '#dc2626'
+          ctx.font = '7px Arial'
+          ctx.fillText('Sanción: $' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), cardInnerX + 18, totalPendienteY + 45)
+        }
         
         // Pendiente (derecha)
         ctx.fillStyle = '#92400e'
@@ -6251,12 +6417,24 @@ watch(modalConfirmacion, async (nuevoValor) => {
 })
 
 function reenviarComprobante(cuota) {
-  // Calcular si es parcial
+  // Calcular si es parcial considerando la sanción
   const valorCuota = cuota.valor_cuota || 0
   const valorPagadoTotal = cuota.valor_pagado || 0
-  const valorPendiente = valorCuota - valorPagadoTotal
-  // Es parcial si hay un pago pero no cubre toda la cuota
-  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < valorCuota
+  const sancion = getSancionCuotaDetalle(cuota)
+  const totalAPagar = valorCuota + sancion
+  const valorPendiente = totalAPagar - valorPagadoTotal
+  // Es parcial si hay un pago pero no cubre toda la cuota + sanción
+  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
+  
+  // Calcular cuánto se pagó de cuota y cuánto de sanción
+  // Usar el valor_multa de la cuota si está disponible (es más preciso)
+  const valorMultaEnBD = parseFloat(cuota.valor_multa) || 0
+  const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
+  
+  // Si el valor pagado total es mayor que la cuota, la diferencia es la sanción pagada
+  // Pero no puede ser mayor que la sanción total
+  const valorCuotaPagada = Math.min(valorPagadoTotal, valorCuota)
+  const valorSancionPagada = Math.min(Math.max(0, valorPagadoTotal - valorCuota), sancionTotal)
   
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
@@ -6270,6 +6448,10 @@ function reenviarComprobante(cuota) {
     esParcial,
     codigoComprobante: cuota.codigo_comprobante || null, // Incluir código del comprobante
     descripcionCuota: cuota.descripcion || formatDate(cuota.fecha_limite),
+    sancion: sancionTotal, // Sanción total (pagada + pendiente)
+    valorSancionPagada, // Cuánto de sanción se pagó
+    valorCuotaPagada, // Cuánto de cuota se pagó
+    tieneSancion: sancionTotal > 0, // Indica si hay sanción
     fecha: cuota.fecha_pago 
       ? new Date(cuota.fecha_pago).toLocaleDateString('es-CO', {
           year: 'numeric',
@@ -6487,9 +6669,40 @@ async function cargarFechasDelMes(mes) {
       formCuotas.fecha_quincena2 = fecha2.toISOString().split('T')[0]
     }
   } else {
-    // Si no hay cuotas, limpiar las fechas
-    formCuotas.fecha_quincena1 = ''
-    formCuotas.fecha_quincena2 = ''
+    // Si no hay cuotas, calcular fechas por defecto
+    // Obtener días de gracia de la natillera
+    const { data: natillera } = await supabase
+      .from('natilleras')
+      .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
+      .eq('id', id)
+      .single()
+    
+    const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+    
+    // Usar anio_inicio como año base, con fallback a anio si no existe
+    const anioBase = natillera?.anio_inicio !== null && natillera?.anio_inicio !== undefined 
+      ? Number(natillera.anio_inicio) 
+      : (natillera?.anio !== null && natillera?.anio !== undefined 
+        ? Number(natillera.anio) 
+        : anioNatillera.value)
+    
+    // Calcular el año correcto para este mes basándose en el período de la natillera
+    const anioCorrectoParaFechas = calcularAnioMes(
+      mes,
+      natillera?.mes_inicio || mesInicio.value,
+      natillera?.mes_fin || mesFin.value,
+      anioBase
+    )
+    
+    // Calcular fechas por defecto
+    const fechasPorDefecto = calcularFechasPorDefecto(
+      mes,
+      anioCorrectoParaFechas,
+      diasGracia
+    )
+    
+    formCuotas.fecha_quincena1 = fechasPorDefecto.fecha_quincena1
+    formCuotas.fecha_quincena2 = fechasPorDefecto.fecha_quincena2
   }
 }
 
@@ -6567,45 +6780,8 @@ async function abrirModalGenerarCuotas() {
   const mesParaCalcular = formCuotas.mes || mesSeleccionado.value
   
   if (mesParaCalcular) {
-    // Primero intentar cargar fechas existentes si ya hay cuotas
+    // cargarFechasDelMes ahora calcula automáticamente las fechas por defecto si no hay cuotas
     await cargarFechasDelMes(mesParaCalcular)
-    
-    // Si no hay fechas cargadas (no hay cuotas existentes), calcular fechas por defecto
-    if (!formCuotas.fecha_quincena1 || !formCuotas.fecha_quincena2) {
-      // Obtener días de gracia de la natillera
-      const { data: natillera } = await supabase
-        .from('natilleras')
-        .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
-        .eq('id', id)
-        .single()
-      
-      const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
-      
-      // Usar anio_inicio como año base, con fallback a anio si no existe
-      const anioBase = natillera?.anio_inicio !== null && natillera?.anio_inicio !== undefined 
-        ? Number(natillera.anio_inicio) 
-        : (natillera?.anio !== null && natillera?.anio !== undefined 
-          ? Number(natillera.anio) 
-          : anioNatillera.value)
-      
-      // Calcular el año correcto para este mes basándose en el período de la natillera
-      const anioCorrecto = calcularAnioMes(
-        mesParaCalcular,
-        natillera?.mes_inicio || mesInicio.value,
-        natillera?.mes_fin || mesFin.value,
-        anioBase
-      )
-      
-      // Calcular fechas por defecto
-      const fechasPorDefecto = calcularFechasPorDefecto(
-        mesParaCalcular,
-        anioCorrecto,
-        diasGracia
-      )
-      
-      formCuotas.fecha_quincena1 = fechasPorDefecto.fecha_quincena1
-      formCuotas.fecha_quincena2 = fechasPorDefecto.fecha_quincena2
-    }
   }
 }
 

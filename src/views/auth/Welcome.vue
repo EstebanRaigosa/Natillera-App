@@ -2,8 +2,8 @@
   <div>
     <!-- Loading mientras verifica autenticación -->
     <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-      <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin"></div>
-      <p class="mt-4 text-gray-600">{{ loadingMessage }}</p>
+      <div class="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-white drop-shadow-lg">{{ loadingMessage }}</p>
     </div>
 
     <!-- Vista de error de OAuth (cancelación o error) -->
@@ -21,17 +21,17 @@
 
         <!-- Título -->
         <div class="text-center">
-          <h2 class="text-3xl font-display font-bold text-gray-800 mb-2">
+          <h2 class="text-3xl font-display font-bold text-white mb-2 drop-shadow-lg">
             {{ oauthErrorTitle }}
           </h2>
-          <p class="text-lg text-gray-600">
+          <p class="text-lg text-white/90 drop-shadow-md">
             {{ oauthErrorMessage }}
           </p>
         </div>
       </div>
 
       <!-- Mensaje informativo -->
-      <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 mb-6 border border-amber-200">
+      <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-white/50 shadow-xl">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
@@ -42,7 +42,7 @@
           </div>
           <div class="flex-1">
             <h3 class="font-semibold text-gray-800 mb-2">¿Qué pasó?</h3>
-            <p class="text-sm text-gray-600 leading-relaxed">
+            <p class="text-sm text-gray-700 leading-relaxed">
               {{ oauthErrorDescription }}
             </p>
           </div>
@@ -64,7 +64,7 @@
         <button 
           @click="retryGoogleLogin"
           :disabled="authStore.loading"
-          class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-sm border-2 border-white/80 rounded-xl font-semibold text-gray-800 hover:bg-white hover:border-white shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -92,17 +92,17 @@
 
         <!-- Título -->
         <div class="text-center">
-          <h2 class="text-3xl font-display font-bold text-gray-800 mb-2">
+          <h2 class="text-3xl font-display font-bold text-white mb-2 drop-shadow-lg">
             ¡Cuenta confirmada!
           </h2>
-          <p class="text-lg text-gray-600">
+          <p class="text-lg text-white/90 drop-shadow-md">
             Tu correo electrónico ha sido verificado exitosamente
           </p>
         </div>
       </div>
 
       <!-- Mensaje de bienvenida -->
-      <div class="bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl p-6 mb-6 border border-natillera-200">
+      <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-white/50 shadow-xl">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-10 h-10 bg-natillera-500 rounded-full flex items-center justify-center">
@@ -111,7 +111,7 @@
           </div>
           <div class="flex-1">
             <h3 class="font-semibold text-gray-800 mb-2">¡Bienvenido a Natillerapp!</h3>
-            <p class="text-sm text-gray-600 leading-relaxed">
+            <p class="text-sm text-gray-700 leading-relaxed">
               Ya estás listo para comenzar a gestionar tus natilleras comunitarias. 
               Podrás crear grupos de ahorro, registrar socios, controlar cuotas y mucho más.
             </p>
@@ -121,33 +121,33 @@
 
       <!-- Características destacadas -->
       <div class="space-y-3 mb-8">
-        <div class="flex items-center gap-3 text-sm text-gray-700">
-          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
+          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Gestiona múltiples natilleras desde un solo lugar</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-gray-700">
-          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
+          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Controla cuotas personalizadas por socio</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-gray-700">
-          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
+          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Administra préstamos y actividades</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-gray-700">
-          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center">
-            <svg class="w-4 h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
+          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -167,9 +167,9 @@
       </button>
 
       <!-- Información adicional -->
-      <p class="mt-6 text-center text-xs text-gray-500">
+      <p class="mt-6 text-center text-xs text-white/80 drop-shadow-md">
         ¿Ya tienes una cuenta? 
-        <router-link to="/auth/login" class="text-natillera-600 font-semibold hover:text-natillera-700">
+        <router-link to="/auth/login" class="text-white font-semibold hover:text-white/90 underline underline-offset-2">
           Inicia sesión aquí
         </router-link>
       </p>
@@ -287,6 +287,32 @@ onMounted(async () => {
     
     if (authStore.isAuthenticated) {
       clearInterval(checkSession)
+      
+      // Verificar si hay un teléfono pendiente de registro
+      const telefonoPendiente = localStorage.getItem('telefono_pendiente_registro')
+      if (telefonoPendiente && authStore.userEmail) {
+        // PRIMERO: Actualizar el perfil de usuario con el teléfono
+        const resultPerfil = await authStore.actualizarPerfilUsuarioConTelefono(telefonoPendiente)
+        
+        if (resultPerfil.success) {
+          console.log('Perfil de usuario actualizado con teléfono')
+        } else {
+          console.error('Error actualizando perfil de usuario:', resultPerfil.error)
+        }
+        
+        // SEGUNDO: Actualizar socios con el email del usuario registrado
+        const resultSocios = await authStore.actualizarSociosConEmail(telefonoPendiente, authStore.userEmail)
+        
+        if (resultSocios.success) {
+          console.log(`Socios actualizados: ${resultSocios.sociosActualizados}`)
+        } else {
+          console.error('Error actualizando socios:', resultSocios.error)
+        }
+        
+        // Limpiar el teléfono pendiente
+        localStorage.removeItem('telefono_pendiente_registro')
+      }
+      
       // Usuario autenticado exitosamente, redirigir al Dashboard
       router.replace('/dashboard')
       return

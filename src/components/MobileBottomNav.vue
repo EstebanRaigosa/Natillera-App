@@ -1,28 +1,28 @@
 <template>
   <nav 
     v-if="natilleraId"
-    class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-lg safe-area-inset-bottom"
+    class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-t border-emerald-600/30 shadow-lg safe-area-inset-bottom"
   >
     <div class="flex items-center justify-around px-1 py-2 max-w-screen-sm mx-auto">
       <!-- Inicio / Detalle Natillera -->
       <router-link
         :to="`/natilleras/${natilleraId}`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <HomeIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}`) ? 'text-white' : 'text-emerald-100'"
         >Inicio</span>
       </router-link>
 
@@ -31,27 +31,27 @@
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/socios`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}/socios`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <UsersIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/socios`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white' : 'text-emerald-100'"
         >Socios</span>
       </router-link>
       <button
         v-else
         @click="navegarAPrimeraNatillera('socios')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-gray-500 hover:text-gray-700"
+        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
       >
         <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6" />
         <span class="text-[9px] sm:text-[10px] font-semibold">Socios</span>
@@ -62,27 +62,27 @@
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/cuotas`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}/cuotas`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <CurrencyDollarIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white' : 'text-emerald-100'"
         >Cuotas</span>
       </router-link>
       <button
         v-else
         @click="navegarAPrimeraNatillera('cuotas')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-gray-500 hover:text-gray-700"
+        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
       >
         <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
         <span class="text-[9px] sm:text-[10px] font-semibold">Cuotas</span>
@@ -93,27 +93,27 @@
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/prestamos`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}/prestamos`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <BanknotesIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : 'text-emerald-100'"
         >Préstamos</span>
       </router-link>
       <button
         v-else
         @click="navegarAPrimeraNatillera('prestamos')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-gray-500 hover:text-gray-700"
+        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
       >
         <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
         <span class="text-[9px] sm:text-[10px] font-semibold">Préstamos</span>
@@ -124,27 +124,27 @@
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/actividades`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}/actividades`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <CalendarIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white' : 'text-emerald-100'"
         >Actividades</span>
       </router-link>
       <button
         v-else
         @click="navegarAPrimeraNatillera('actividades')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-gray-500 hover:text-gray-700"
+        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
       >
         <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
         <span class="text-[9px] sm:text-[10px] font-semibold">Actividades</span>
@@ -155,42 +155,42 @@
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/configuracion`"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <Cog6ToothIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-natillera-600' : 'text-gray-500'
+            isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : 'text-emerald-100'"
         >Config</span>
       </router-link>
       <router-link
         v-else
         to="/configuracion"
         class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive('/configuracion') ? 'text-natillera-600' : 'text-gray-500'"
+        :class="isActive('/configuracion') ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
       >
         <div 
           v-if="isActive('/configuracion')"
-          class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-natillera-600 rounded-full"
+          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
         ></div>
         <Cog6ToothIcon 
           :class="[
             'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive('/configuracion') ? 'text-natillera-600' : 'text-gray-500'
+            isActive('/configuracion') ? 'text-white' : 'text-emerald-100'
           ]"
         />
         <span 
           class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive('/configuracion') ? 'text-natillera-600' : 'text-gray-500'"
+          :class="isActive('/configuracion') ? 'text-white' : 'text-emerald-100'"
         >Ajustes</span>
       </router-link>
     </div>
@@ -249,10 +249,10 @@ function navegarAPrimeraNatillera(seccion) {
 
 <style scoped>
 .router-link-active {
-  color: var(--color-natillera-600);
+  color: white;
 }
 
 .router-link-active svg {
-  color: var(--color-natillera-600);
+  color: white;
 }
 </style>

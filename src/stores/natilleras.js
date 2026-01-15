@@ -490,7 +490,238 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         throw new Error('No tienes permisos para eliminar esta natillera. Solo el administrador puede eliminarla.')
       }
 
-      // Eliminar la natillera (esto activará la eliminación en cascada)
+      // Obtener todos los socios_natillera relacionados
+      const { data: sociosNatillera, error: errorSocios } = await supabase
+        .from('socios_natillera')
+        .select('id')
+        .eq('natillera_id', id)
+
+      if (errorSocios) {
+        console.warn('Error al obtener socios_natillera:', errorSocios)
+      }
+
+      const socioNatilleraIds = (sociosNatillera || []).map(s => s.id)
+
+      // Eliminar datos relacionados explícitamente (en orden inverso de dependencias)
+      // 1. Historial de comprobantes de préstamos
+      if (socioNatilleraIds.length > 0) {
+        const { error: errorHistorialPrestamos } = await supabase
+          .from('historial_comprobantes_prestamo')
+          .delete()
+          .in('socio_natillera_id', socioNatilleraIds)
+        
+        if (errorHistorialPrestamos) {
+          console.warn('Advertencia al eliminar historial_comprobantes_prestamo:', errorHistorialPrestamos)
+        }
+      }
+
+      // 2. Obtener préstamos relacionados
+      if (socioNatilleraIds.length > 0) {
+        const { data: prestamos, error: errorPrestamosFetch } = await supabase
+          .from('prestamos')
+          .select('id')
+          .in('socio_natillera_id', socioNatilleraIds)
+
+        if (!errorPrestamosFetch && prestamos) {
+          const prestamoIds = prestamos.map(p => p.id)
+
+          // 2a. Obtener pagos de préstamos antes de eliminarlos
+          if (prestamoIds.length > 0) {
+            const { data: pagosPrestamo, error: errorPagosFetch } = await supabase
+              .from('pagos_prestamo')
+              .select('id')
+              .in('prestamo_id', prestamoIds)
+
+            const pagoPrestamoIds = (pagosPrestamo || []).map(p => p.id)
+
+            // 2a1. Eliminar historial de comprobantes de préstamos relacionados con pagos
+            if (pagoPrestamoIds.length > 0) {
+              const { error: errorHistorialPagos } = await supabase
+                .from('historial_comprobantes_prestamo')
+                .delete()
+                .in('pago_prestamo_id', pagoPrestamoIds)
+              
+              if (errorHistorialPagos) {
+                console.warn('Advertencia al eliminar historial_comprobantes_prestamo (por pago_prestamo_id):', errorHistorialPagos)
+              }
+            }
+
+            // 2a2. Eliminar pagos de préstamos
+            if (!errorPagosFetch) {
+              const { error: errorPagosPrestamo } = await supabase
+                .from('pagos_prestamo')
+                .delete()
+                .in('prestamo_id', prestamoIds)
+              
+              if (errorPagosPrestamo) {
+                console.warn('Advertencia al eliminar pagos_prestamo:', errorPagosPrestamo)
+              }
+            }
+
+            // 2b. Eliminar plan de pagos de préstamos (si existe)
+            const { error: errorPlanPagos } = await supabase
+              .from('plan_pagos_prestamo')
+              .delete()
+              .in('prestamo_id', prestamoIds)
+            
+            if (errorPlanPagos) {
+              console.warn('Advertencia al eliminar plan_pagos_prestamo:', errorPlanPagos)
+            }
+
+            // 2c. Eliminar historial de refinanciaciones (si existe)
+            const { error: errorHistorialRefin } = await supabase
+              .from('historial_refinanciaciones')
+              .delete()
+              .in('prestamo_id', prestamoIds)
+            
+            if (errorHistorialRefin) {
+              console.warn('Advertencia al eliminar historial_refinanciaciones:', errorHistorialRefin)
+            }
+          }
+
+          // 2d. Eliminar préstamos
+          if (prestamoIds.length > 0) {
+            const { error: errorPrestamos } = await supabase
+              .from('prestamos')
+              .delete()
+              .in('id', prestamoIds)
+            
+            if (errorPrestamos) {
+              console.warn('Advertencia al eliminar prestamos:', errorPrestamos)
+            }
+          }
+        }
+      }
+
+      // 3. Eliminar historial de comprobantes de cuotas
+      if (socioNatilleraIds.length > 0) {
+        const { data: cuotas, error: errorCuotasFetch } = await supabase
+          .from('cuotas')
+          .select('id')
+          .in('socio_natillera_id', socioNatilleraIds)
+
+        if (!errorCuotasFetch && cuotas) {
+          const cuotaIds = cuotas.map(c => c.id)
+
+          if (cuotaIds.length > 0) {
+            const { error: errorHistorialCuotas } = await supabase
+              .from('historial_comprobantes')
+              .delete()
+              .in('cuota_id', cuotaIds)
+            
+            if (errorHistorialCuotas) {
+              console.warn('Advertencia al eliminar historial_comprobantes:', errorHistorialCuotas)
+            }
+          }
+        }
+      }
+
+      // 4. Eliminar cuotas
+      if (socioNatilleraIds.length > 0) {
+        const { error: errorCuotas } = await supabase
+          .from('cuotas')
+          .delete()
+          .in('socio_natillera_id', socioNatilleraIds)
+        
+        if (errorCuotas) {
+          console.warn('Advertencia al eliminar cuotas:', errorCuotas)
+        }
+      }
+
+      // 5. Eliminar multas (si existe la tabla)
+      if (socioNatilleraIds.length > 0) {
+        const { error: errorMultas } = await supabase
+          .from('multas')
+          .delete()
+          .in('socio_natillera_id', socioNatilleraIds)
+        
+        if (errorMultas) {
+          console.warn('Advertencia al eliminar multas:', errorMultas)
+        }
+      }
+
+      // 6. Eliminar utilidades clasificadas
+      const { error: errorUtilidades } = await supabase
+        .from('utilidades_clasificadas')
+        .delete()
+        .eq('natillera_id', id)
+      
+      if (errorUtilidades) {
+        console.warn('Advertencia al eliminar utilidades_clasificadas:', errorUtilidades)
+      }
+
+      // 7. Eliminar actividades
+      const { error: errorActividades } = await supabase
+        .from('actividades')
+        .delete()
+        .eq('natillera_id', id)
+      
+      if (errorActividades) {
+        console.warn('Advertencia al eliminar actividades:', errorActividades)
+      }
+
+      // 8. Eliminar historial
+      const { error: errorHistorial } = await supabase
+        .from('historial')
+        .delete()
+        .eq('natillera_id', id)
+      
+      if (errorHistorial) {
+        console.warn('Advertencia al eliminar historial:', errorHistorial)
+      }
+
+      // 9. Eliminar colaboradores
+      const { error: errorColaboradores } = await supabase
+        .from('natillera_colaboradores')
+        .delete()
+        .eq('natillera_id', id)
+      
+      if (errorColaboradores) {
+        console.warn('Advertencia al eliminar natillera_colaboradores:', errorColaboradores)
+      }
+
+      // 10. Eliminar socios_natillera
+      if (socioNatilleraIds.length > 0) {
+        const { error: errorSociosNatillera } = await supabase
+          .from('socios_natillera')
+          .delete()
+          .in('id', socioNatilleraIds)
+        
+        if (errorSociosNatillera) {
+          console.warn('Advertencia al eliminar socios_natillera:', errorSociosNatillera)
+        }
+      }
+
+      // 11. Registrar auditoría ANTES de eliminar la natillera (para que el natillera_id aún exista)
+      const auditoria = useAuditoria()
+      try {
+        await auditoria.registrarEliminacion(
+          'natillera',
+          id,
+          `Se eliminó la natillera "${natilleraData.nombre}" y todos sus registros relacionados`,
+          natilleraData,
+          id, // natilleraId - debe estar antes de eliminar
+          { 
+            eliminacion_cascada: true,
+            registros_eliminados: 'socios_natillera, cuotas, prestamos, multas, actividades, historial, auditoria'
+          }
+        )
+      } catch (auditError) {
+        // Si falla la auditoría, solo registrar en consola pero continuar con la eliminación
+        console.warn('Advertencia: No se pudo registrar la auditoría de eliminación:', auditError)
+      }
+
+      // 12. Eliminar auditoría relacionada (opcional, puede querer mantenerla)
+      const { error: errorAuditoria } = await supabase
+        .from('auditoria')
+        .delete()
+        .eq('natillera_id', id)
+      
+      if (errorAuditoria) {
+        console.warn('Advertencia al eliminar auditoria:', errorAuditoria)
+      }
+
+      // 13. Finalmente, eliminar la natillera
       const { error: deleteError } = await supabase
         .from('natilleras')
         .delete()
@@ -516,20 +747,6 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       if (natilleraActual.value?.id === id) {
         natilleraActual.value = null
       }
-
-      // Registrar auditoría (en segundo plano)
-      const auditoria = useAuditoria()
-      registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
-        'natillera',
-        id,
-        `Se eliminó la natillera "${natilleraData.nombre}" y todos sus registros relacionados`,
-        natilleraData,
-        id,
-        { 
-          eliminacion_cascada: true,
-          registros_eliminados: 'socios_natillera, cuotas, prestamos, multas, actividades, historial, auditoria'
-        }
-      ))
 
       return { success: true }
     } catch (e) {

@@ -1,143 +1,177 @@
-# 🌱 Natillera - Plataforma de Ahorro Comunitario
+# Supabase CLI
 
-Plataforma web gratuita para gestionar natilleras comunitarias con cuotas personalizadas por socio, préstamos internos, actividades y más.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-![Vue.js](https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=flat-square&logo=vue.js)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC?style=flat-square&logo=tailwind-css)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat-square&logo=supabase)
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-## ✨ Características
+This repository contains all the functionality for Supabase CLI.
 
-- 📊 **Dashboard intuitivo** - Visualiza el estado de tus natilleras
-- 👥 **Gestión de socios** - Cuotas individuales personalizadas
-- 💰 **Control de pagos** - Registro de cuotas, pagos parciales y mora
-- 🏦 **Préstamos internos** - Con cálculo de intereses
-- 🎟️ **Actividades** - Rifas, bingos y eventos que generan fondos
-- 📱 **WhatsApp** - Envío manual de recordatorios
-- 🔐 **Autenticación** - Login con email o Google
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-## 🚀 Instalación
+## Getting started
 
-### 1. Clonar e instalar dependencias
+### Install the CLI
 
-```bash
-cd natillera-app
-npm install
-```
-
-### 2. Configurar Supabase
-
-1. Crea una cuenta en [Supabase](https://supabase.com)
-2. Crea un nuevo proyecto
-3. Ve al SQL Editor y ejecuta el contenido de `supabase/schema.sql`
-4. Copia la URL y la clave anónima del proyecto
-
-### 3. Configurar variables de entorno
-
-Crea un archivo `.env` en la raíz del proyecto:
-
-```env
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu-clave-anonima
-```
-
-### 4. Ejecutar en desarrollo
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
 ```bash
-npm run dev
+npm i supabase --save-dev
 ```
 
-### 5. Construir para producción
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
+
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
 
 ```bash
-npm run build
+supabase bootstrap
 ```
 
-## 📁 Estructura del Proyecto
+Or using npx:
 
-```
-natillera-app/
-├── src/
-│   ├── components/       # Componentes reutilizables
-│   ├── layouts/          # Layouts de la app
-│   ├── lib/              # Cliente de Supabase
-│   ├── router/           # Configuración de rutas
-│   ├── stores/           # Pinia stores
-│   ├── views/            # Páginas de la aplicación
-│   │   ├── auth/         # Login y registro
-│   │   ├── natilleras/   # Gestión de natilleras
-│   │   ├── socios/       # Gestión de socios
-│   │   ├── cuotas/       # Gestión de cuotas
-│   │   ├── prestamos/    # Préstamos internos
-│   │   └── actividades/  # Rifas, eventos, etc.
-│   ├── App.vue
-│   ├── main.js
-│   └── style.css
-├── supabase/
-│   └── schema.sql        # Esquema de base de datos
-└── package.json
+```bash
+npx supabase bootstrap
 ```
 
-## 🗄️ Modelo de Datos
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
-| Tabla | Descripción |
-|-------|-------------|
-| `natilleras` | Información de cada natillera |
-| `socios` | Datos personales de participantes |
-| `socios_natillera` | Relación socio-natillera con cuota individual |
-| `cuotas` | Cuotas generadas por período |
-| `prestamos` | Préstamos internos del fondo |
-| `pagos_prestamo` | Abonos a préstamos |
-| `multas` | Multas aplicadas |
-| `actividades` | Rifas, eventos, ventas |
-| `historial` | Auditoría de acciones |
+## Docs
 
-## 🌐 Despliegue Gratuito
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
 
-### Frontend (Netlify)
+## Breaking changes
 
-1. Conecta tu repositorio en [Netlify](https://netlify.com)
-2. Configura las variables de entorno
-3. Build command: `npm run build`
-4. Publish directory: `dist`
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
 
-### Backend (Supabase)
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
 
-El backend ya está alojado en Supabase de forma gratuita.
+## Developing
 
-## 📱 Notificaciones WhatsApp
+To run from source:
 
-El sistema genera mensajes prellenados que se abren en WhatsApp Web/App para envío manual. Esto cumple con:
-
-- ✅ Costo cero
-- ✅ Legalidad (sin APIs no autorizadas)
-- ✅ Control humano
-- ✅ Cero riesgo de bloqueo
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor:
-
-1. Haz fork del proyecto
-2. Crea tu rama de feature (`git checkout -b feature/NuevaFuncionalidad`)
-3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/NuevaFuncionalidad`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto es de código abierto bajo la licencia MIT.
-
-## 🌱 Filosofía
-
-La plataforma está diseñada para ser:
-
-- **Comunitaria** - Para el beneficio de todos
-- **Gratuita** - Sin costos ocultos
-- **Transparente** - Toda la información visible
-- **Fácil de usar** - Accesible para todos
-- **Solidaria** - Promoviendo la cultura del ahorro
-
----
-
-Hecho con ❤️ para las comunidades de ahorro
+```sh
+# Go >= 1.22
+go run . help
+```

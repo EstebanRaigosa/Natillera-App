@@ -43,22 +43,11 @@ export function useSessionTimeout(timeoutMinutes = 10) {
   async function handleTimeout() {
     // Verificar nuevamente si está autenticado antes de cerrar
     if (authStore.isAuthenticated) {
-      // Registrar en auditoría que la sesión expiró por inactividad
-      const auditoria = useAuditoria()
-      registrarAuditoriaEnSegundoPlano(
-        auditoria.registrar({
-          tipoAccion: 'REGISTER',
-          entidad: 'configuracion',
-          descripcion: `Usuario ${authStore.userEmail} cerró sesión por inactividad (${timeoutMinutes} minutos)`,
-          detalles: {
-            metodo: 'session_timeout',
-            timeout_minutes: timeoutMinutes,
-            user_agent: navigator.userAgent
-          }
-        })
-      )
+      // NO registrar auditoría aquí porque logout() ya lo hace
+      // Además, si lo hacemos aquí con registrarAuditoriaEnSegundoPlano,
+      // puede ejecutarse después de que auth.uid() sea NULL
       
-      // Cerrar sesión
+      // Cerrar sesión (logout() ya registra la auditoría antes de cerrar)
       await authStore.logout()
       
       // Recargar la página para garantizar que se cierre todo lo que el usuario tenía abierto

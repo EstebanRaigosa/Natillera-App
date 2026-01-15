@@ -273,6 +273,45 @@ export const useCuotasStore = defineStore('cuotas', () => {
         let posicionAcumulativa = 1 // Cada socio empieza desde la posición 1
 
         cuotasSocio.forEach(cuota => {
+          // IMPORTANTE: Si la cuota ya tiene valor_multa asignado, usar ese valor
+          // Las multas deben persistir una vez asignadas, no recalcularse
+          const valorMultaExistente = parseFloat(cuota.valor_multa) || 0
+          if (valorMultaExistente > 0) {
+            // Usar la multa ya asignada, pero recalcular intereses adicionales si aplican
+            let interesesAdicionales = 0
+            const fechaLimiteStr = cuota.fecha_limite
+            if (fechaLimiteStr && configSanciones.interesesAdicionales?.activo) {
+              const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
+              const fechaLimite = new Date(anio, mes - 1, dia)
+              fechaLimite.setHours(0, 0, 0, 0)
+              const hoy = new Date()
+              hoy.setHours(0, 0, 0, 0)
+              const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+              
+              if (diasEnMora > 0) {
+                const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
+                const valorInteres = configSanciones.interesesAdicionales.valor || 0
+                if (diasParaInteres > 0 && valorInteres > 0) {
+                  const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
+                  interesesAdicionales = periodosInteres * valorInteres
+                }
+              }
+            }
+            
+            // La multa base ya está guardada, solo agregar intereses adicionales si aplican
+            // Nota: Si la multa guardada ya incluía intereses, esto podría duplicarlos
+            // Por seguridad, solo usar la multa guardada sin agregar intereses adicionales
+            sanciones[cuota.id] = valorMultaExistente
+            console.log(`💰 Sanción cuota ${cuota.id}: Usando multa persistida $${valorMultaExistente.toLocaleString()} (no se recalcula)`)
+            
+            // Avanzar posición acumulativa para mantener el conteo correcto
+            const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+            const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+            posicionAcumulativa += esMensualEnQuincenal ? 2 : 1
+            return // Continuar con la siguiente cuota
+          }
+
+          // Si no tiene multa asignada, calcularla normalmente
           const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
           const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
 
@@ -509,7 +548,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Si no hay en la lista local, consultar BD
             const { data: cuotasMoraBD } = await supabase
               .from('cuotas')
-              .select('id, socio_natillera_id, fecha_limite, fecha_vencimiento, quincena')
+              .select('id, socio_natillera_id, fecha_limite, fecha_vencimiento, quincena, valor_multa')
               .in('socio_natillera_id', socioIds)
               .eq('estado', 'mora')
             
@@ -560,60 +599,168 @@ export const useCuotasStore = defineStore('cuotas', () => {
           })
         }
 
-        // Actualizar cada cuota a mora individualmente para aplicar la multa correcta
-        for (const cuotaInfo of cuotasAMora) {
-          // Calcular la multa si las sanciones están activas y la cuota no tenía multa
-          let valorMulta = 0
-          if (configSanciones?.activa && !cuotaInfo.yaTeníaMulta) {
-            // Obtener la información completa de la cuota
-            const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
-            if (!cuotaActual) continue
-            
-            const periodicidadSocio = cuotaActual.socio_natillera?.periodicidad || 
-                                      (cuotaActual.quincena === null ? 'mensual' : 'quincenal')
-            const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
-            
-            // Obtener todas las cuotas en mora del socio (incluyendo las que están pasando ahora)
-            const cuotasMoraSocio = todasCuotasMoraPorSocio[cuotaInfo.socio_natillera_id] || []
-            
-            // Encontrar la posición de esta cuota en la lista ordenada
-            const indiceCuota = cuotasMoraSocio.findIndex(c => c.id === cuotaInfo.id)
-            if (indiceCuota === -1) continue
-            
-            // Calcular posición acumulativa contando las cuotas anteriores
-            let posicionAcumulativa = 1
-            for (let i = 0; i < indiceCuota; i++) {
-              const c = cuotasMoraSocio[i]
-              const periodicidadC = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
-              const esMensual = periodicidadNatillera === 'quincenal' && periodicidadC === 'mensual'
-              posicionAcumulativa += esMensual ? 2 : 1
+        // Calcular todas las multas primero (en orden) para asegurar posiciones correctas
+        // Esto es importante cuando múltiples cuotas pasan a mora al mismo tiempo
+        const multasCalculadas = new Map() // Map<cuotaId, valorMulta>
+        
+        if (configSanciones?.activa) {
+          // Agrupar cuotas por socio para calcular multas en orden
+          const cuotasPorSocioParaMulta = {}
+          cuotasAMora.forEach(c => {
+            if (!cuotasPorSocioParaMulta[c.socio_natillera_id]) {
+              cuotasPorSocioParaMulta[c.socio_natillera_id] = []
             }
+            cuotasPorSocioParaMulta[c.socio_natillera_id].push(c)
+          })
+          
+          // Calcular multas para cada socio en orden
+          Object.keys(cuotasPorSocioParaMulta).forEach(socioId => {
+            // Obtener todas las cuotas en mora del socio (ya existentes + las que están pasando)
+            const cuotasMoraSocio = todasCuotasMoraPorSocio[socioId] || []
             
-            // Calcular multa según la posición
-            if (configSanciones.tipo === 'simple') {
-              valorMulta = configSanciones.valorFijo || 0
-            } else if (configSanciones.tipo === 'escalonada') {
-              if (esMensualEnQuincenal) {
-                // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
-                const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
-                const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
-                valorMulta = sancionPos1 + sancionPos2
-              } else {
-                valorMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+            // Filtrar solo las cuotas nuevas que están pasando a mora (sin multa asignada)
+            const cuotasNuevasPasandoAMora = cuotasAMora
+              .filter(ca => ca.socio_natillera_id === socioId && !ca.yaTeníaMulta)
+              .map(ca => {
+                const cuotaCompleta = lista.find(lc => lc.id === ca.id)
+                return cuotaCompleta ? { ...ca, cuotaCompleta } : null
+              })
+              .filter(c => c !== null)
+            
+            // Ordenar las cuotas nuevas por fecha_limite
+            cuotasNuevasPasandoAMora.sort((a, b) => {
+              const fechaA = new Date(a.cuotaCompleta.fecha_limite || a.cuotaCompleta.fecha_vencimiento || 0)
+              const fechaB = new Date(b.cuotaCompleta.fecha_limite || b.cuotaCompleta.fecha_vencimiento || 0)
+              return fechaA - fechaB
+            })
+            
+            console.log(`🔍 Socio ${socioId}: ${cuotasMoraSocio.length} cuotas en mora total, ${cuotasNuevasPasandoAMora.length} nuevas pasando a mora`)
+            
+            // Calcular posición acumulativa considerando todas las cuotas en mora
+            let posicionAcumulativa = 1
+            
+            // Primero, contar las posiciones de las cuotas que ya estaban en mora (con multa asignada)
+            cuotasMoraSocio.forEach((c) => {
+              const valorMultaExistente = parseFloat(c.valor_multa) || 0
+              const estaPasandoAMora = cuotasAMora.find(ca => ca.id === c.id)
+              
+              // Si ya tiene multa asignada O ya estaba en mora antes, contar su posición
+              if (valorMultaExistente > 0 || (estaPasandoAMora && estaPasandoAMora.yaTeníaMulta)) {
+                const periodicidadC = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
+                const esMensual = periodicidadNatillera === 'quincenal' && periodicidadC === 'mensual'
+                posicionAcumulativa += esMensual ? 2 : 1
+                console.log(`  ⏭️ Cuota ${c.id} ya tiene multa (${valorMultaExistente}), posición ahora: ${posicionAcumulativa}`)
+              }
+            })
+            
+            // Ahora calcular multas para las cuotas nuevas que están pasando a mora
+            cuotasNuevasPasandoAMora.forEach((cuotaInfo) => {
+              const cuotaActual = cuotaInfo.cuotaCompleta
+              if (!cuotaActual) return
+              
+              const periodicidadSocio = cuotaActual.socio_natillera?.periodicidad || 
+                                        (cuotaActual.quincena === null ? 'mensual' : 'quincenal')
+              const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+              
+              let valorMulta = 0
+              const posicionInicial = posicionAcumulativa
+              
+              if (configSanciones.tipo === 'simple') {
+                valorMulta = configSanciones.valorFijo || 0
+              } else if (configSanciones.tipo === 'escalonada') {
+                if (esMensualEnQuincenal) {
+                  const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                  valorMulta = sancionPos1 + sancionPos2
+                  console.log(`  📊 Cuota ${cuotaInfo.id}: Posición ${posicionAcumulativa} ($${sancionPos1.toLocaleString()}) + Posición ${posicionAcumulativa + 1} ($${sancionPos2.toLocaleString()}) = $${valorMulta.toLocaleString()}`)
+                  posicionAcumulativa += 2
+                } else {
+                  valorMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  console.log(`  📊 Cuota ${cuotaInfo.id}: Posición ${posicionAcumulativa} = $${valorMulta.toLocaleString()}`)
+                  posicionAcumulativa += 1
+                }
+              }
+              
+              multasCalculadas.set(cuotaInfo.id, valorMulta)
+              console.log(`  ✅ Multa calculada: $${valorMulta.toLocaleString('es-CO')} para cuota ${cuotaInfo.id} (posición ${posicionInicial}${esMensualEnQuincenal ? `+${posicionInicial + 1}` : ''}), próxima posición: ${posicionAcumulativa}`)
+            })
+          })
+        }
+        
+        // ANTES de actualizar, verificar si hay multas incorrectas que necesitan corrección
+        // Si hay múltiples cuotas en mora del mismo socio con la misma multa en modo escalonado,
+        // es probable que se hayan guardado incorrectamente y necesiten recalcularse
+        if (configSanciones?.activa && configSanciones.tipo === 'escalonada') {
+          const socioIds = [...new Set(cuotasAMora.map(c => c.socio_natillera_id))]
+          
+          for (const socioId of socioIds) {
+            // Obtener todas las cuotas en mora de este socio (de la lista local)
+            const cuotasMoraSocio = lista.filter(c => 
+              c.socio_natillera_id === socioId && c.estado === 'mora'
+            )
+            
+            if (cuotasMoraSocio.length > 1) {
+              // Verificar si todas tienen la misma multa (lo cual es incorrecto en escalonada)
+              const multasUnicas = new Set(cuotasMoraSocio.map(c => parseFloat(c.valor_multa) || 0))
+              
+              if (multasUnicas.size === 1 && Array.from(multasUnicas)[0] > 0) {
+                // Todas tienen la misma multa, esto es incorrecto para escalonada
+                console.log(`⚠️ Detectadas ${cuotasMoraSocio.length} cuotas en mora del socio ${socioId} con la misma multa (${Array.from(multasUnicas)[0]}). Recalculando...`)
+                
+                // Ordenar por fecha_limite
+                cuotasMoraSocio.sort((a, b) => {
+                  const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+                  const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+                  return fechaA - fechaB
+                })
+                
+                // Recalcular multas correctamente
+                let posicionAcumulativa = 1
+                cuotasMoraSocio.forEach((c) => {
+                  const periodicidadSocio = c.socio_natillera?.periodicidad || 
+                                            (c.quincena === null ? 'mensual' : 'quincenal')
+                  const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+                  
+                  let nuevaMulta = 0
+                  if (esMensualEnQuincenal) {
+                    const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                    const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                    nuevaMulta = sancionPos1 + sancionPos2
+                    posicionAcumulativa += 2
+                  } else {
+                    nuevaMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                    posicionAcumulativa += 1
+                  }
+                  
+                  // Actualizar la multa calculada si es diferente
+                  const multaActual = parseFloat(c.valor_multa) || 0
+                  if (Math.abs(nuevaMulta - multaActual) > 0.01) {
+                    multasCalculadas.set(c.id, nuevaMulta)
+                    console.log(`  🔧 Corrigiendo multa de cuota ${c.id}: ${multaActual} → ${nuevaMulta}`)
+                  }
+                })
               }
             }
-            
-            console.log(`💰 Aplicando multa de $${valorMulta.toLocaleString('es-CO')} a cuota ${cuotaInfo.id} (posición ${posicionAcumulativa}${esMensualEnQuincenal ? `+${posicionAcumulativa + 1}` : ''})`)
           }
-
+        }
+        
+        // Ahora actualizar cada cuota a mora con su multa calculada
+        for (const cuotaInfo of cuotasAMora) {
           const datosActualizar = {
             estado: 'mora',
             fecha_mora: fechaActualStr
           }
 
-          // Solo actualizar valor_multa si hay multa que aplicar
-          if (valorMulta > 0) {
-            datosActualizar.valor_multa = valorMulta
+          // Usar la multa calculada si existe, o mantener la existente si ya tenía
+          const valorMultaCalculada = multasCalculadas.get(cuotaInfo.id)
+          if (valorMultaCalculada !== undefined && valorMultaCalculada > 0) {
+            datosActualizar.valor_multa = valorMultaCalculada
+          } else if (cuotaInfo.yaTeníaMulta) {
+            // Si ya tenía multa, mantenerla (no se recalcula)
+            const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
+            if (cuotaActual?.valor_multa) {
+              datosActualizar.valor_multa = cuotaActual.valor_multa
+            }
           }
 
           const { data: actualizadaMora, error: errorMora } = await supabase
@@ -627,6 +774,76 @@ export const useCuotasStore = defineStore('cuotas', () => {
             console.error('Error actualizando cuota en mora:', errorMora)
           } else if (actualizadaMora) {
             actualizaciones.push(actualizadaMora)
+          }
+        }
+        
+        // Si se corrigieron multas, también actualizar las cuotas que no están pasando a mora ahora
+        // pero que tienen multas incorrectas
+        if (multasCalculadas.size > 0 && configSanciones?.activa && configSanciones.tipo === 'escalonada') {
+          const cuotasACorregir = []
+          const socioIds = [...new Set(lista.filter(c => c.estado === 'mora').map(c => c.socio_natillera_id))]
+          
+          for (const socioId of socioIds) {
+            const cuotasMoraSocio = lista.filter(c => 
+              c.socio_natillera_id === socioId && c.estado === 'mora'
+            )
+            
+            if (cuotasMoraSocio.length > 1) {
+              const multasUnicas = new Set(cuotasMoraSocio.map(c => parseFloat(c.valor_multa) || 0))
+              
+              if (multasUnicas.size === 1 && Array.from(multasUnicas)[0] > 0) {
+                // Recalcular todas las multas de este socio
+                cuotasMoraSocio.sort((a, b) => {
+                  const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+                  const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+                  return fechaA - fechaB
+                })
+                
+                let posicionAcumulativa = 1
+                cuotasMoraSocio.forEach((c) => {
+                  // Solo corregir si no se calculó ya en el paso anterior
+                  if (!multasCalculadas.has(c.id)) {
+                    const periodicidadSocio = c.socio_natillera?.periodicidad || 
+                                              (c.quincena === null ? 'mensual' : 'quincenal')
+                    const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+                    
+                    let nuevaMulta = 0
+                    if (esMensualEnQuincenal) {
+                      const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                      const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                      nuevaMulta = sancionPos1 + sancionPos2
+                      posicionAcumulativa += 2
+                    } else {
+                      nuevaMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                      posicionAcumulativa += 1
+                    }
+                    
+                    const multaActual = parseFloat(c.valor_multa) || 0
+                    if (Math.abs(nuevaMulta - multaActual) > 0.01) {
+                      cuotasACorregir.push({ id: c.id, valor_multa: nuevaMulta })
+                      console.log(`  🔧 Corrigiendo multa de cuota ${c.id}: ${multaActual} → ${nuevaMulta}`)
+                    }
+                  }
+                })
+              }
+            }
+          }
+          
+          // Actualizar las cuotas que necesitan corrección
+          if (cuotasACorregir.length > 0) {
+            console.log(`🔧 Corrigiendo ${cuotasACorregir.length} cuotas con multas incorrectas...`)
+            for (const correccion of cuotasACorregir) {
+              const { data: actualizada, error } = await supabase
+                .from('cuotas')
+                .update({ valor_multa: correccion.valor_multa })
+                .eq('id', correccion.id)
+                .select()
+                .single()
+              
+              if (!error && actualizada) {
+                actualizaciones.push(actualizada)
+              }
+            }
           }
         }
       }
@@ -660,6 +877,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
   }
 
   // Función para recalcular multas de cuotas que ya están en mora pero no tienen multa aplicada
+  // También corrige multas incorrectas cuando hay múltiples cuotas con la misma multa en modo escalonado
   async function recalcularMultasCuotasMora(natilleraId) {
     try {
       // Obtener configuración de sanciones y periodicidad de la natillera
@@ -677,16 +895,104 @@ export const useCuotasStore = defineStore('cuotas', () => {
         return { success: true, recalculadas: 0 }
       }
 
-      // Obtener cuotas en mora sin multa aplicada
+      // PRIMERO: Corregir multas incorrectas en modo escalonado
+      // Si hay múltiples cuotas en mora del mismo socio con la misma multa, están incorrectas
+      let cuotasCorregidas = 0
+      if (configSanciones.tipo === 'escalonada') {
+        const cuotasMora = cuotas.value.filter(c => c.estado === 'mora')
+        const cuotasPorSocio = {}
+        
+        // Agrupar por socio
+        cuotasMora.forEach(c => {
+          if (!cuotasPorSocio[c.socio_natillera_id]) {
+            cuotasPorSocio[c.socio_natillera_id] = []
+          }
+          cuotasPorSocio[c.socio_natillera_id].push(c)
+        })
+        
+        // Verificar cada socio
+        for (const socioId of Object.keys(cuotasPorSocio)) {
+          const cuotasSocio = cuotasPorSocio[socioId]
+          
+          if (cuotasSocio.length > 1) {
+            // Ordenar por fecha_limite
+            cuotasSocio.sort((a, b) => {
+              const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+              const fechaB = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+              return fechaA - fechaB
+            })
+            
+            // Verificar si todas tienen la misma multa (incorrecto en escalonada)
+            const multasUnicas = new Set(cuotasSocio.map(c => parseFloat(c.valor_multa) || 0))
+            
+            if (multasUnicas.size === 1 && Array.from(multasUnicas)[0] > 0) {
+              // Todas tienen la misma multa, esto es incorrecto - recalcular
+              console.log(`⚠️ Detectadas ${cuotasSocio.length} cuotas en mora del socio ${socioId} con la misma multa (${Array.from(multasUnicas)[0]}). Corrigiendo...`)
+              
+              let posicionAcumulativa = 1
+              const correcciones = []
+              
+              cuotasSocio.forEach((c) => {
+                const periodicidadSocio = c.socio_natillera?.periodicidad || 
+                                          (c.quincena === null ? 'mensual' : 'quincenal')
+                const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
+                
+                let nuevaMulta = 0
+                if (esMensualEnQuincenal) {
+                  const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
+                  nuevaMulta = sancionPos1 + sancionPos2
+                  posicionAcumulativa += 2
+                } else {
+                  nuevaMulta = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
+                  posicionAcumulativa += 1
+                }
+                
+                const multaActual = parseFloat(c.valor_multa) || 0
+                if (Math.abs(nuevaMulta - multaActual) > 0.01) {
+                  correcciones.push({ id: c.id, valor_multa: nuevaMulta, multaAnterior: multaActual })
+                }
+              })
+              
+              // Aplicar correcciones
+              for (const correccion of correcciones) {
+                const { data: actualizada, error } = await supabase
+                  .from('cuotas')
+                  .update({ valor_multa: correccion.valor_multa })
+                  .eq('id', correccion.id)
+                  .select()
+                  .single()
+                
+                if (!error && actualizada) {
+                  // Actualizar en el array local
+                  const index = cuotas.value.findIndex(c => c.id === correccion.id)
+                  if (index !== -1) {
+                    cuotas.value[index] = {
+                      ...actualizada,
+                      socio_natillera: cuotas.value[index].socio_natillera
+                    }
+                  }
+                  cuotasCorregidas++
+                  console.log(`  ✅ Corregida cuota ${correccion.id}: $${correccion.multaAnterior.toLocaleString()} → $${correccion.valor_multa.toLocaleString()}`)
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // SEGUNDO: Recalcular multas para cuotas sin multa aplicada
       const cuotasMoraSinMulta = cuotas.value.filter(c => 
         c.estado === 'mora' && (!c.valor_multa || c.valor_multa === 0)
       )
 
-      if (cuotasMoraSinMulta.length === 0) {
-        return { success: true, recalculadas: 0 }
+      if (cuotasMoraSinMulta.length === 0 && cuotasCorregidas === 0) {
+        return { success: true, recalculadas: 0, corregidas: 0 }
       }
 
-      console.log(`🔄 Recalculando multas para ${cuotasMoraSinMulta.length} cuota(s) en mora sin multa...`)
+      if (cuotasMoraSinMulta.length > 0) {
+        console.log(`🔄 Recalculando multas para ${cuotasMoraSinMulta.length} cuota(s) en mora sin multa...`)
+      }
 
       // Para el tipo escalonado, necesitamos contar cuotas en mora por socio
       // Si la natillera es quincenal y el socio es mensual, contar cada cuota mensual como 2
@@ -742,7 +1048,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
         console.log(`✅ ${actualizaciones.length} multa(s) recalculada(s) y aplicada(s)`)
       }
 
-      return { success: true, recalculadas: actualizaciones.length }
+      return { 
+        success: true, 
+        recalculadas: actualizaciones.length,
+        corregidas: cuotasCorregidas
+      }
     } catch (e) {
       console.error('Error recalculando multas:', e)
       return { success: false, error: e.message }
@@ -1366,15 +1676,47 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
 
-      const nuevoValorPagado = (cuotaActual.valor_pagado || 0) + valorPagado
-      // Considerar la sanción dinámica calculada (o la guardada en BD) en el total a pagar
-      // El total a pagar es: valor_cuota + sanción - valor_pagado_anterior
       // Usar sancionDinamica si existe, sino usar valor_multa guardado
       const sancionAPagar = sancionDinamica > 0 ? sancionDinamica : (parseFloat(cuotaActual.valor_multa) || 0)
-      const totalAPagar = (cuotaActual.valor_cuota || 0) + sancionAPagar
+      const valorCuota = cuotaActual.valor_cuota || 0
+      const valorPagadoAnterior = cuotaActual.valor_pagado || 0
+      
+      // IMPORTANTE: Priorizar el pago de la sanción antes que la cuota
+      // Si hay sanción pendiente, primero se debe pagar la sanción completa
+      // El resto se abona a la cuota
+      let valorSancionPagada = 0
+      let valorCuotaPagado = 0
+      let nuevoValorPagado = valorPagadoAnterior
+      let sancionQuitada = false
+      
+      if (sancionAPagar > 0) {
+        // Hay sanción pendiente: primero pagar la sanción
+        if (valorPagado >= sancionAPagar) {
+          // El pago cubre la sanción completa
+          valorSancionPagada = sancionAPagar
+          valorCuotaPagado = valorPagado - sancionAPagar
+          nuevoValorPagado = valorPagadoAnterior + valorPagado
+          sancionQuitada = true // Se pagó la sanción completa, se quita
+        } else {
+          // El pago NO cubre la sanción completa
+          // Pagar la sanción completa y el resto a la cuota (pago parcial)
+          valorSancionPagada = valorPagado // Todo el pago va a la sanción
+          valorCuotaPagado = 0 // No queda nada para la cuota
+          nuevoValorPagado = valorPagadoAnterior + valorPagado
+          sancionQuitada = true // Se pagó la sanción (aunque sea parcial), se quita
+        }
+      } else {
+        // No hay sanción: el pago va directamente a la cuota
+        valorCuotaPagado = valorPagado
+        nuevoValorPagado = valorPagadoAnterior + valorPagado
+      }
+      
+      // Calcular el total a pagar (cuota + sanción pendiente)
+      // Si la sanción ya se pagó, no se incluye en el total
+      const totalAPagar = valorCuota + (sancionQuitada ? 0 : sancionAPagar)
       
       // Calcular el nuevo estado según las reglas:
-      // - Pagada: cuando se paga el total completo (cuota + sanciones)
+      // - Pagada: cuando se paga el total completo (cuota + sanciones pendientes)
       // - Si hay pago parcial: calcular estado según fecha (programada, pendiente, mora)
       // - Si no hay pago: mantener estado actual
       let nuevaEstado
@@ -1493,10 +1835,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
         comprobante_url: comprobante
       }
       
-      // Actualizar valor_multa en la BD con la sanción dinámica calculada o mantener la existente
-      // Esto asegura que la sanción quede guardada correctamente
-      if (sancionDinamica > 0) {
-        // Si hay sanción dinámica calculada, usarla
+      // Actualizar valor_multa en la BD
+      // IMPORTANTE: Solo quitar la sanción (valor_multa = 0) cuando la cuota esté completamente pagada
+      // Si la cuota queda con pago parcial, mantener la sanción para evitar que se recalcule
+      if (nuevaEstado === 'pagada' && sancionQuitada) {
+        // La cuota está completamente pagada y se pagó la sanción, quitar la sanción
+        updateData.valor_multa = 0
+      } else if (sancionQuitada && sancionAPagar > 0) {
+        // Se pagó la sanción pero la cuota queda parcial: mantener el valor_multa original
+        // para que no se recalcule cuando se llame a calcularSancionesTotales
+        // Usar el valor original de la sanción, no 0
+        updateData.valor_multa = sancionAPagar
+      } else if (sancionDinamica > 0) {
+        // Si hay sanción dinámica calculada y no se pagó, usarla
         updateData.valor_multa = sancionDinamica
       } else if (cuotaActual.valor_multa && cuotaActual.valor_multa > 0) {
         // Si no hay sanción dinámica pero ya había una guardada, mantenerla
@@ -1577,22 +1928,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Verificar y actualizar otras cuotas en mora después de registrar un pago
       await actualizarEstadoMoraAutomatico()
 
-      // SIEMPRE registrar sanción en utilidades_clasificadas si la cuota está pagada y tiene sanción
-      // Determinar el valor de la sanción pagada: usar el valor_multa de la cuota actualizada (data)
-      const valorMultaEnBD = parseFloat(data.valor_multa) || 0
-      const valorMultaAnterior = parseFloat(cuotaActual.valor_multa) || 0
-      // Usar el valor de la BD si existe, sino el anterior, sino el calculado
-      const valorMultaPagada = valorMultaEnBD > 0 ? valorMultaEnBD : (valorMultaAnterior > 0 ? valorMultaAnterior : sancionAPagar)
-      
-      // SIMPLIFICADO: Si la cuota está pagada Y tiene sanción, registrar en utilidades
-      const debeRegistrarUtilidad = nuevaEstado === 'pagada' && valorMultaPagada > 0
+      // Registrar sanción en utilidades_clasificadas si se pagó una sanción
+      // El valor de la sanción pagada es el que se calculó anteriormente (valorSancionPagada)
+      // Si se pagó la sanción (sancionQuitada = true), registrar en utilidades
+      const debeRegistrarUtilidad = sancionQuitada && valorSancionPagada > 0
+      const valorMultaPagada = valorSancionPagada
 
       console.log('🔍 [UTILIDADES] Verificando registro de sanción:', {
         nuevaEstado,
         valorMultaPagada,
-        valorMultaEnBD,
-        valorMultaAnterior,
         sancionAPagar,
+        valorSancionPagada,
+        sancionQuitada,
         totalAPagar,
         nuevoValorPagado,
         estadoAnterior: cuotaActual.estado,
@@ -1623,43 +1970,34 @@ export const useCuotasStore = defineStore('cuotas', () => {
             // Continuar con el proceso aunque no haya socios, pero registrar la sanción de esta cuota
           }
 
-          // Obtener todas las cuotas pagadas con sanción de esta natillera para calcular el total
-          let cuotasPagadasConSancion = []
-          if (socioNatilleraIds.length > 0) {
-            const { data, error: errorCuotas } = await supabase
-              .from('cuotas')
-              .select('valor_multa')
-              .in('socio_natillera_id', socioNatilleraIds)
-              .eq('estado', 'pagada')
-              .not('valor_multa', 'is', null)
-              .gt('valor_multa', 0)
-            
-            if (errorCuotas) {
-              console.error('❌ [UTILIDADES] Error obteniendo cuotas pagadas con sanción:', errorCuotas)
-              throw errorCuotas
-            }
-            cuotasPagadasConSancion = data || []
-          } else {
-            // Si no hay socios, al menos incluir esta cuota que se acaba de pagar
-            if (valorMultaPagada > 0) {
-              cuotasPagadasConSancion = [{ valor_multa: valorMultaPagada }]
-            }
+          // NOTA: Como ahora quitamos la sanción (valor_multa = 0) cuando se paga,
+          // no podemos buscar cuotas con valor_multa > 0 para calcular el total.
+          // En su lugar, usamos el registro existente en utilidades_clasificadas
+          // y le sumamos el valor de la sanción pagada en esta transacción.
+          
+          // Obtener el registro existente primero para saber el monto actual
+          const { data: utilidadExistenteTemp, error: errorUtilidadTemp } = await supabase
+            .from('utilidades_clasificadas')
+            .select('monto')
+            .eq('natillera_id', natilleraId)
+            .eq('tipo', 'sanciones')
+            .is('fecha_cierre', null)
+            .maybeSingle()
+
+          if (errorUtilidadTemp) {
+            console.error('Error obteniendo utilidad existente temporal:', errorUtilidadTemp)
+            throw errorUtilidadTemp
           }
 
-          // Calcular el total de sanciones pagadas
-          const totalSancionesPagadas = (cuotasPagadasConSancion || []).reduce(
-            (sum, c) => sum + (parseFloat(c.valor_multa) || 0),
-            0
-          )
+          // Calcular el monto final: monto existente + sanción pagada en esta transacción
+          const montoAnterior = parseFloat(utilidadExistenteTemp?.monto) || 0
+          const montoFinal = montoAnterior + valorMultaPagada
 
           console.log('💰 [UTILIDADES] Total sanciones pagadas calculado:', {
-            totalSancionesPagadas,
-            cuotasConSancion: cuotasPagadasConSancion?.length || 0,
-            valorMultaEstaCuota: valorMultaPagada
+            montoAnterior,
+            valorMultaPagada,
+            montoFinal
           })
-
-          // Si el total es 0 pero esta cuota tiene sanción, usar el valor de esta cuota
-          const montoFinal = totalSancionesPagadas > 0 ? totalSancionesPagadas : valorMultaPagada
           
           if (montoFinal <= 0) {
             console.warn('⚠️ [UTILIDADES] No hay monto de sanción para registrar')
@@ -1680,9 +2018,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
             throw errorUtilidadExistente
           }
 
-          // Contar cuántas cuotas tienen sanción pagada
-          const totalCuotasConSancion = (cuotasPagadasConSancion || []).length
-
           if (utilidadExistente) {
             // Actualizar el registro existente
             console.log('📝 [UTILIDADES] Actualizando registro existente:', {
@@ -1696,7 +2031,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               .update({
                 monto: montoFinal,
                 descripcion: 'Multas pagadas por cuotas en mora',
-                detalles: { total_cuotas_con_sancion: totalCuotasConSancion },
+                detalles: utilidadExistente.detalles || {},
                 updated_at: new Date().toISOString()
               })
               .eq('id', utilidadExistente.id)
@@ -1713,8 +2048,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             console.log('📝 [UTILIDADES] Creando nuevo registro:', {
               natilleraId,
               tipo: 'sanciones',
-              monto: montoFinal,
-              totalCuotasConSancion
+              monto: montoFinal
             })
 
             const { data: insertedData, error: insertUtilidadError } = await supabase
@@ -1725,7 +2059,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 monto: montoFinal,
                 fecha_cierre: null,
                 descripcion: 'Multas pagadas por cuotas en mora',
-                detalles: { total_cuotas_con_sancion: totalCuotasConSancion }
+                detalles: {}
               })
               .select()
 
@@ -1742,9 +2076,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       } else {
         console.log('⏭️ No se registra utilidad de sanción:', {
-          razon: nuevaEstado !== 'pagada' ? 'Cuota no está pagada' :
-                 valorMultaPagada === 0 ? 'No hay sanción pagada' :
-                 cuotaActual.estado === 'pagada' ? 'Cuota ya estaba pagada' : 'Razón desconocida'
+          razon: !sancionQuitada ? 'No se pagó la sanción' :
+                 valorSancionPagada === 0 ? 'No hay sanción pagada' : 'Razón desconocida',
+          sancionQuitada,
+          valorSancionPagada
         })
       }
 
@@ -3023,6 +3358,79 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+  // Función para eliminar todas las cuotas de un socio (usado cuando cambia la periodicidad)
+  // OPTIMIZADO: Obtiene natillera_id desde socios_natillera, luego elimina cuotas
+  async function eliminarTodasLasCuotasSocio(socioNatilleraId) {
+    try {
+      console.log('🗑️ Eliminando todas las cuotas del socio:', socioNatilleraId)
+      
+      // OPTIMIZACIÓN: Obtener natillera_id desde socios_natillera (la tabla cuotas no tiene natillera_id directamente)
+      const { data: socioNatillera, error: fetchError } = await supabase
+        .from('socios_natillera')
+        .select('natillera_id')
+        .eq('id', socioNatilleraId)
+        .maybeSingle()
+
+      if (fetchError) {
+        console.error('Error obteniendo datos de socio_natillera:', fetchError)
+        throw fetchError
+      }
+
+      const natilleraIdParaAuditoria = socioNatillera?.natillera_id || null
+
+      // Verificar si hay cuotas antes de intentar eliminarlas
+      const { count: cantidadCuotas, error: countError } = await supabase
+        .from('cuotas')
+        .select('*', { count: 'exact', head: true })
+        .eq('socio_natillera_id', socioNatilleraId)
+
+      if (countError && countError.code !== 'PGRST116') { // PGRST116 = no rows
+        console.error('Error contando cuotas:', countError)
+        throw countError
+      }
+
+      if (!cantidadCuotas || cantidadCuotas === 0) {
+        console.log('ℹ️ No hay cuotas para eliminar')
+        return { success: true, cuotasEliminadas: 0 }
+      }
+
+      // Eliminar todas las cuotas del socio (operación rápida)
+      const { error: deleteError } = await supabase
+        .from('cuotas')
+        .delete()
+        .eq('socio_natillera_id', socioNatilleraId)
+
+      if (deleteError) {
+        console.error('Error eliminando cuotas:', deleteError)
+        throw deleteError
+      }
+
+      console.log(`✅ ${cantidadCuotas} cuota(s) eliminada(s) exitosamente`)
+
+      // Registrar auditoría de eliminación (en segundo plano, con datos mínimos)
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
+        'cuota',
+        null,
+        `Se eliminaron ${cantidadCuotas} cuota(s) del socio por cambio de periodicidad`,
+        {
+          total_eliminadas: cantidadCuotas,
+          razon: 'cambio_periodicidad'
+        },
+        natilleraIdParaAuditoria,
+        {
+          accion: 'eliminacion_por_cambio_periodicidad',
+          socio_natillera_id: socioNatilleraId
+        }
+      ))
+
+      return { success: true, cuotasEliminadas: cantidadCuotas }
+    } catch (e) {
+      console.error('Error eliminando cuotas del socio:', e)
+      return { success: false, error: e.message, cuotasEliminadas: 0 }
+    }
+  }
+
   return {
     cuotas,
     loading,
@@ -3044,7 +3452,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
     buscarCuotaPorCodigo,
     actualizarCuota,
     actualizarSocioNatilleraEnCuotas,
-    actualizarCuotasPorCambioValorCuota
+    actualizarCuotasPorCambioValorCuota,
+    eliminarTodasLasCuotasSocio
   }
 })
 

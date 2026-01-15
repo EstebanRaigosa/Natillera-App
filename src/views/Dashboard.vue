@@ -124,7 +124,7 @@
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+    <div v-if="todasLasNatilleras.length > 0" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-1">
         <!-- Efecto decorativo -->
         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
@@ -357,6 +357,16 @@
                 :key="`propia-${natillera.id}`"
                 class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
               >
+                <!-- Botón eliminar FUERA del router-link, posicionado absolutamente -->
+                <button
+                  v-if="puedeEliminarNatillera(natillera)"
+                  @click="confirmarEliminarNatillera(natillera)"
+                  class="absolute bottom-[24px] right-[66px] z-30 w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50 shadow-sm"
+                  title="Eliminar natillera"
+                >
+                  <TrashIcon class="w-4 h-4" />
+                </button>
+
                 <router-link 
                   :to="`/natilleras/${natillera.id}`"
                   class="block p-6"
@@ -405,18 +415,8 @@
                         </div>
                         <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <button
-                          v-if="puedeEliminarNatillera(natillera)"
-                          @click.stop="confirmarEliminarNatillera(natillera)"
-                          class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50"
-                          title="Eliminar natillera"
-                        >
-                          <TrashIcon class="w-4 h-4" />
-                        </button>
-                        <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                          <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
-                        </div>
+                      <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
+                        <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
                       </div>
                     </div>
                   </div>
@@ -543,6 +543,16 @@
             :key="natillera.id"
             class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
           >
+            <!-- Botón eliminar FUERA del router-link, posicionado absolutamente -->
+            <button
+              v-if="puedeEliminarNatillera(natillera)"
+              @click="confirmarEliminarNatillera(natillera)"
+              class="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50 shadow-sm"
+              title="Eliminar natillera"
+            >
+              <TrashIcon class="w-4 h-4" />
+            </button>
+
             <router-link 
               :to="`/natilleras/${natillera.id}`"
               class="block p-6"
@@ -591,18 +601,8 @@
                     </div>
                     <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <button
-                      v-if="puedeEliminarNatillera(natillera)"
-                      @click.stop="confirmarEliminarNatillera(natillera)"
-                      class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50"
-                      title="Eliminar natillera"
-                    >
-                      <TrashIcon class="w-4 h-4" />
-                    </button>
-                    <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                      <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
-                    </div>
+                  <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
+                    <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
                   </div>
                 </div>
               </div>
@@ -707,47 +707,96 @@
     <!-- Modal de confirmación para eliminar natillera -->
     <div v-if="natilleraAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="natilleraAEliminar = null"></div>
-      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200">
-        <div class="flex items-center gap-4 mb-4">
-          <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <TrashIcon class="w-6 h-6 text-red-600" />
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-gray-800">Eliminar Natillera</h3>
-            <p class="text-sm text-gray-600">Esta acción no se puede deshacer</p>
-          </div>
-        </div>
+      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden">
+        <!-- Animación de fondo durante la eliminación -->
+        <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/50 via-red-100/30 to-red-50/50 animate-pulse"></div>
         
-        <div class="mb-6">
-          <p class="text-gray-700 mb-2">
-            ¿Estás seguro de que deseas eliminar la natillera <strong>"{{ natilleraAEliminar.nombre }}"</strong>?
-          </p>
-          <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-            <p class="font-semibold mb-1">⚠️ Se eliminarán permanentemente:</p>
-            <ul class="list-disc list-inside space-y-1 text-xs">
-              <li>Todos los socios asociados</li>
-              <li>Todas las cuotas</li>
-              <li>Todos los préstamos y pagos</li>
-              <li>Todas las actividades</li>
-              <li>Todos los registros de historial</li>
-            </ul>
+        <div class="relative z-10">
+          <div class="flex items-center gap-4 mb-4">
+            <div class="relative w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <TrashIcon v-if="!natillerasStore.loading" class="w-6 h-6 text-red-600" />
+              <!-- Animación de carga moderna -->
+              <div v-else class="relative w-6 h-6">
+                <div class="absolute inset-0 border-3 border-red-200 rounded-full"></div>
+                <div class="absolute inset-0 border-3 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            </div>
+            <div>
+              <h3 class="text-lg font-bold text-gray-800">
+                {{ natillerasStore.loading ? 'Eliminando Natillera...' : 'Eliminar Natillera' }}
+              </h3>
+              <p class="text-sm text-gray-600">
+                {{ natillerasStore.loading ? 'Por favor espera' : 'Esta acción no se puede deshacer' }}
+              </p>
+            </div>
           </div>
-        </div>
+          
+          <!-- Contenido del modal -->
+          <div v-if="!natillerasStore.loading" class="mb-6">
+            <p class="text-gray-700 mb-2">
+              ¿Estás seguro de que deseas eliminar la natillera <strong>"{{ natilleraAEliminar.nombre }}"</strong>?
+            </p>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              <p class="font-semibold mb-1">⚠️ Se eliminarán permanentemente:</p>
+              <ul class="list-disc list-inside space-y-1 text-xs">
+                <li>Todos los socios asociados</li>
+                <li>Todas las cuotas</li>
+                <li>Todos los préstamos y pagos</li>
+                <li>Todas las actividades</li>
+                <li>Todos los registros de historial</li>
+              </ul>
+            </div>
+          </div>
 
-        <div class="flex gap-3">
-          <button
-            @click="natilleraAEliminar = null"
-            class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            @click="eliminarNatilleraConfirmado"
-            :disabled="natillerasStore.loading"
-            class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ natillerasStore.loading ? 'Eliminando...' : 'Sí, Eliminar' }}
-          </button>
+          <!-- Estado de carga -->
+          <div v-else class="mb-6">
+            <div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-6 text-center">
+              <div class="flex flex-col items-center gap-4">
+                <!-- Animación de ondas -->
+                <div class="relative w-16 h-16">
+                  <div class="absolute inset-0 rounded-full bg-red-200 animate-ping opacity-75"></div>
+                  <div class="absolute inset-2 rounded-full bg-red-300 animate-ping opacity-50" style="animation-delay: 0.2s"></div>
+                  <div class="absolute inset-4 rounded-full bg-red-400 animate-ping opacity-25" style="animation-delay: 0.4s"></div>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <TrashIcon class="w-6 h-6 text-red-600" />
+                  </div>
+                </div>
+                <div>
+                  <p class="text-red-700 font-semibold text-base mb-1">Eliminando natillera...</p>
+                  <p class="text-red-600 text-sm">Esto puede tomar unos segundos</p>
+                </div>
+                <!-- Barra de progreso animada -->
+                <div class="w-full h-2 bg-red-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-gradient-to-r from-red-500 via-red-600 to-red-500 rounded-full animate-progress"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex gap-3">
+            <button
+              @click="natilleraAEliminar = null"
+              :disabled="natillerasStore.loading"
+              class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="eliminarNatilleraConfirmado"
+              :disabled="natillerasStore.loading"
+              class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+            >
+              <span v-if="!natillerasStore.loading">Sí, Eliminar</span>
+              <span v-else class="flex items-center justify-center gap-2">
+                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Eliminando...
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

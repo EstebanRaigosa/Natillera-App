@@ -298,3 +298,944 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   opacity: 0;
   transform: translateY(-5px);
 }
+
+/* Wave animation for login background */
+@keyframes wave {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(25px);
+  }
+}
+
+.animate-wave {
+  animation: wave 8s ease-in-out infinite;
+}
+
+/* Float animation for particles */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(10px) translateX(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-float-delayed-2 {
+  animation: float 12s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+/* Twinkle animation for small particles */
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* Gradient shift animation */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+/* 3D Float animations - muy lentas y suaves */
+@keyframes float-3d {
+  0%, 100% {
+    transform: translateY(0) translateX(0) translateZ(0) rotateX(0deg) rotateY(0deg);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px) translateZ(15px) rotateX(3deg) rotateY(3deg);
+  }
+  50% {
+    transform: translateY(15px) translateX(-10px) translateZ(-8px) rotateX(-3deg) rotateY(-3deg);
+  }
+  75% {
+    transform: translateY(-8px) translateX(8px) translateZ(12px) rotateX(2deg) rotateY(2deg);
+  }
+}
+
+.animate-float-3d {
+  animation: float-3d 40s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-float-3d-delayed {
+  animation: float-3d 48s ease-in-out infinite;
+  animation-delay: 6s;
+  transform-style: preserve-3d;
+}
+
+.animate-float-3d-delayed-2 {
+  animation: float-3d 56s ease-in-out infinite;
+  animation-delay: 12s;
+  transform-style: preserve-3d;
+}
+
+@keyframes float-3d-pulse {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-30px) translateX(15px) scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+.animate-float-3d-pulse {
+  animation: float-3d-pulse 28s ease-in-out infinite;
+}
+
+/* Morph animation - forma orgánica muy suave */
+@keyframes morph {
+  0%, 100% {
+    d: path("M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z");
+  }
+  33% {
+    d: path("M0,400 Q350,150 650,400 T1200,400 L1200,800 L0,800 Z");
+  }
+  66% {
+    d: path("M0,400 Q250,250 550,400 T1200,400 L1200,800 L0,800 Z");
+  }
+}
+
+.animate-morph {
+  animation: morph 32s ease-in-out infinite;
+}
+
+/* Wave muy suave animation */
+@keyframes wave-disruptive {
+  0%, 100% {
+    transform: translateX(0) translateY(0) scaleY(1);
+  }
+  25% {
+    transform: translateX(-15px) translateY(-8px) scaleY(1.05);
+  }
+  50% {
+    transform: translateX(8px) translateY(4px) scaleY(0.95);
+  }
+  75% {
+    transform: translateX(-8px) translateY(-4px) scaleY(1.02);
+  }
+}
+
+.animate-wave-disruptive {
+  animation: wave-disruptive 36s ease-in-out infinite;
+}
+
+/* 3D Rotate animation muy suave */
+@keyframes rotate-3d {
+  0%, 100% {
+    transform: rotate(0deg) rotateX(0deg) rotateY(0deg);
+  }
+  33% {
+    transform: rotate(8deg) rotateX(3deg) rotateY(2deg);
+  }
+  66% {
+    transform: rotate(-3deg) rotateX(-2deg) rotateY(-3deg);
+  }
+}
+
+.animate-rotate-3d {
+  animation: rotate-3d 36s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+/* Orbit animation muy suave */
+@keyframes orbit {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, -20px) rotate(90deg);
+  }
+  50% {
+    transform: translate(-15px, 30px) rotate(180deg);
+  }
+  75% {
+    transform: translate(15px, -15px) rotate(270deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 28s ease-in-out infinite;
+}
+
+.animate-orbit-delayed {
+  animation: orbit 32s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+/* Spin muy lento */
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-fast {
+  animation: spin-fast 80s linear infinite;
+}
+
+/* Energy pulse animation muy suave */
+@keyframes energy-pulse {
+  0%, 100% {
+    opacity: 0.2;
+    stroke-width: 3;
+  }
+  50% {
+    opacity: 0.7;
+    stroke-width: 4;
+  }
+}
+
+.animate-energy-pulse {
+  animation: energy-pulse 10s ease-in-out infinite;
+}
+
+.animate-energy-pulse-delayed {
+  animation: energy-pulse 12s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+/* Energy flow animation muy suave */
+@keyframes energy-flow {
+  0%, 100% {
+    opacity: 0.1;
+    stroke-width: 2;
+  }
+  50% {
+    opacity: 0.5;
+    stroke-width: 3;
+  }
+}
+
+.animate-energy-flow {
+  animation: energy-flow 14s ease-in-out infinite;
+}
+
+/* Squash and stretch animation muy suave */
+@keyframes squash-stretch {
+  0%, 100% {
+    transform: scaleX(1) scaleY(1);
+  }
+  25% {
+    transform: scaleX(1.15) scaleY(0.9);
+  }
+  50% {
+    transform: scaleX(0.9) scaleY(1.1);
+  }
+  75% {
+    transform: scaleX(1.05) scaleY(0.95);
+  }
+}
+
+.animate-squash-stretch {
+  animation: squash-stretch 24s ease-in-out infinite;
+}
+
+/* Twinkle muy suave */
+@keyframes twinkle-disruptive {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.4) rotate(45deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1) rotate(90deg);
+  }
+  75% {
+    opacity: 0.7;
+    transform: scale(1.25) rotate(135deg);
+  }
+}
+
+.animate-twinkle-disruptive {
+  animation: twinkle-disruptive 10s ease-in-out infinite;
+}
+
+/* Grid pulse animation muy suave */
+@keyframes grid-pulse {
+  0%, 100% {
+    opacity: 0.1;
+    transform: perspective(1000px) rotateX(60deg) translateZ(-200px) scale(1);
+  }
+  50% {
+    opacity: 0.15;
+    transform: perspective(1000px) rotateX(60deg) translateZ(-190px) scale(1.02);
+  }
+}
+
+.animate-grid-pulse {
+  animation: grid-pulse 16s ease-in-out infinite;
+}
+
+/* Glow sweep animation muy suave */
+@keyframes glow-sweep {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.45;
+    transform: translateY(-15px);
+  }
+}
+
+.animate-glow-sweep {
+  animation: glow-sweep 16s ease-in-out infinite;
+}
+
+/* Sweep animations muy suaves */
+@keyframes sweep-left {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translateX(-30px);
+  }
+  50% {
+    opacity: 0.22;
+    transform: translateX(0);
+  }
+}
+
+.animate-sweep-left {
+  animation: sweep-left 24s ease-in-out infinite;
+}
+
+@keyframes sweep-right {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translateX(30px);
+  }
+  50% {
+    opacity: 0.22;
+    transform: translateX(0);
+  }
+}
+
+.animate-sweep-right {
+  animation: sweep-right 28s ease-in-out infinite;
+}
+
+/* Ripple animation muy suave */
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.4);
+    opacity: 0;
+  }
+}
+
+.animate-ripple {
+  animation: ripple 16s ease-out infinite;
+}
+
+/* Pulse slow animation */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
+}
+
+/* 3D Perspective utility */
+.perspective-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.transform-gpu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Animación de crecimiento para partículas */
+@keyframes grow-slow {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+}
+
+.animate-grow-slow {
+  animation: grow-slow 8s ease-in-out infinite;
+}
+
+.animate-grow-slow-delayed {
+  animation: grow-slow 10s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-grow-slow-delayed-2 {
+  animation: grow-slow 12s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+/* Animación de movimiento horizontal lento */
+@keyframes move-horizontal-slow {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-horizontal-slow {
+  animation: move-horizontal-slow 25s linear infinite;
+}
+
+.animate-move-horizontal-medium {
+  animation: move-horizontal-slow 35s linear infinite;
+}
+
+.animate-move-horizontal-slower {
+  animation: move-horizontal-slow 45s linear infinite;
+}
+
+/* Animación de movimiento diagonal lento */
+@keyframes move-diagonal-slow {
+  0% {
+    transform: translate(-150px, -150px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(calc(100vw + 150px), calc(100vh + 150px));
+    opacity: 0;
+  }
+}
+
+.animate-move-diagonal-slow {
+  animation: move-diagonal-slow 30s linear infinite;
+}
+
+.animate-move-diagonal-medium {
+  animation: move-diagonal-slow 40s linear infinite;
+}
+
+/* Animación de movimiento vertical lento */
+@keyframes move-vertical-slow {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-vertical-slow {
+  animation: move-vertical-slow 28s linear infinite;
+}
+
+.animate-move-vertical-medium {
+  animation: move-vertical-slow 38s linear infinite;
+}
+
+/* Animación de movimiento horizontal inverso (de derecha a izquierda) */
+@keyframes move-horizontal-reverse-slow {
+  0% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(calc(-100vw - 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-horizontal-reverse-slow {
+  animation: move-horizontal-reverse-slow 25s linear infinite;
+}
+
+.animate-move-horizontal-reverse-medium {
+  animation: move-horizontal-reverse-slow 35s linear infinite;
+}
+
+.animate-move-horizontal-reverse-slower {
+  animation: move-horizontal-reverse-slow 45s linear infinite;
+}
+
+/* Animación de movimiento diagonal inverso (desde la derecha) */
+@keyframes move-diagonal-reverse-slow {
+  0% {
+    transform: translate(150px, -150px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(calc(-100vw - 150px), calc(100vh + 150px));
+    opacity: 0;
+  }
+}
+
+.animate-move-diagonal-reverse-slow {
+  animation: move-diagonal-reverse-slow 30s linear infinite;
+}
+
+.animate-move-diagonal-reverse-medium {
+  animation: move-diagonal-reverse-slow 40s linear infinite;
+}
+
+/* Animaciones rápidas para partículas pequeñas */
+@keyframes move-horizontal-fast {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateX(calc(100vw + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-horizontal-fast {
+  animation: move-horizontal-fast 12s linear infinite;
+}
+
+@keyframes move-diagonal-fast {
+  0% {
+    transform: translate(-150px, -150px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(calc(100vw + 150px), calc(100vh + 150px));
+    opacity: 0;
+  }
+}
+
+.animate-move-diagonal-fast {
+  animation: move-diagonal-fast 15s linear infinite;
+}
+
+@keyframes move-vertical-fast {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-vertical-fast {
+  animation: move-vertical-fast 14s linear infinite;
+}
+
+/* Animaciones de crecimiento más rápidas */
+@keyframes grow-fast {
+  0%, 100% {
+    transform: scale(0.7);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0.8;
+  }
+}
+
+.animate-grow-fast {
+  animation: grow-fast 5s ease-in-out infinite;
+}
+
+@keyframes grow-medium {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.75;
+  }
+}
+
+.animate-grow-medium {
+  animation: grow-medium 6.5s ease-in-out infinite;
+}
+
+/* Animaciones para partículas en la parte superior (de derecha a izquierda) */
+@keyframes move-top-right-to-left-fast {
+  0% {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(calc(-100vw - 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-top-right-to-left-fast {
+  animation: move-top-right-to-left-fast 18s linear infinite;
+}
+
+.animate-move-top-right-to-left-medium {
+  animation: move-top-right-to-left-fast 25s linear infinite;
+}
+
+.animate-move-top-right-to-left-slow {
+  animation: move-top-right-to-left-fast 32s linear infinite;
+}
+
+.animate-move-top-right-to-left-slower {
+  animation: move-top-right-to-left-fast 40s linear infinite;
+}
+
+/* Animación de movimiento desde la parte superior derecha hacia abajo */
+@keyframes move-top-right-down {
+  0% {
+    transform: translate(100px, -100px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(-50vw + 50px), calc(100vh + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-move-top-right-down {
+  animation: move-top-right-down 20s linear infinite;
+}
+
+.animate-move-top-right-down-medium {
+  animation: move-top-right-down 28s linear infinite;
+}
+
+.animate-move-top-right-down-slow {
+  animation: move-top-right-down 36s linear infinite;
+}
+
+.animate-move-top-right-down-slower {
+  animation: move-top-right-down 45s linear infinite;
+}
+
+/* Variación diagonal más pronunciada */
+@keyframes move-top-right-down-diagonal {
+  0% {
+    transform: translate(150px, -150px) rotate(45deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(calc(-50vw - 50px), calc(100vh + 150px)) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+.animate-move-top-right-down-diagonal {
+  animation: move-top-right-down-diagonal 22s linear infinite;
+}
+
+.animate-move-top-right-down-diagonal-medium {
+  animation: move-top-right-down-diagonal 30s linear infinite;
+}
+
+/* Animaciones de burbujas diagonales con rebote */
+@keyframes bubble-diagonal-bottom-right {
+  0% {
+    transform: translate(-100px, calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(50vw + 50px), -50px) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(100vw + 100px), calc(-100vh - 100px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-diagonal-bottom-left {
+  0% {
+    transform: translate(100px, calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(-50vw - 50px), -50px) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(-100vw - 100px), calc(-100vh - 100px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-diagonal-top-right {
+  0% {
+    transform: translate(-100px, -100px) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(50vw + 50px), calc(50vh + 50px)) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(100vw + 100px), calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-diagonal-top-left {
+  0% {
+    transform: translate(100px, -100px) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(-50vw - 50px), calc(50vh + 50px)) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(-100vw - 100px), calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Animación de burbuja que rebota (va y viene) */
+@keyframes bubble-bounce-diagonal {
+  0% {
+    transform: translate(-100px, calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(calc(50vw + 50px), -50px) scale(1.2);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(calc(100vw + 100px), calc(100vh + 100px)) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Clases de animación para burbujas */
+.animate-bubble-diagonal-bottom-right {
+  animation: bubble-diagonal-bottom-right 25s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-bottom-right-fast {
+  animation: bubble-diagonal-bottom-right 18s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-bottom-right-slow {
+  animation: bubble-diagonal-bottom-right 35s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-bottom-left {
+  animation: bubble-diagonal-bottom-left 27s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-bottom-left-fast {
+  animation: bubble-diagonal-bottom-left 20s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-bottom-left-slow {
+  animation: bubble-diagonal-bottom-left 38s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-right {
+  animation: bubble-diagonal-top-right 23s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-right-fast {
+  animation: bubble-diagonal-top-right 16s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-right-slow {
+  animation: bubble-diagonal-top-right 32s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-left {
+  animation: bubble-diagonal-top-left 29s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-left-fast {
+  animation: bubble-diagonal-top-left 22s ease-in-out infinite;
+}
+
+.animate-bubble-diagonal-top-left-slow {
+  animation: bubble-diagonal-top-left 40s ease-in-out infinite;
+}
+
+.animate-bubble-bounce-diagonal {
+  animation: bubble-bounce-diagonal 30s ease-in-out infinite;
+}
+
+.animate-bubble-bounce-diagonal-fast {
+  animation: bubble-bounce-diagonal 24s ease-in-out infinite;
+}
+
+.animate-bubble-bounce-diagonal-slow {
+  animation: bubble-bounce-diagonal 42s ease-in-out infinite;
+}
+
+/* Animación de progreso para la barra de carga */
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-progress {
+  animation: progress 2s ease-in-out infinite;
+}

@@ -29,11 +29,16 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
   })
 
   // Cargar configuración del usuario desde Supabase o localStorage
+  // TODO: Descomentar cuando se cree la tabla configuracion_usuario en Supabase
   async function cargarConfiguracion() {
     try {
       loading.value = true
       const authStore = useAuthStore()
       
+      // Por ahora solo usar localStorage hasta que se cree la tabla
+      cargarDesdeLocalStorage()
+      
+      /* COMENTADO: Implementación con Supabase - descomentar cuando la tabla exista
       if (!authStore.user?.id) {
         // Si no hay usuario, cargar desde localStorage
         cargarDesdeLocalStorage()
@@ -66,6 +71,7 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       } else {
         cargarDesdeLocalStorage()
       }
+      */
     } catch (e) {
       console.error('Error:', e)
       cargarDesdeLocalStorage()
@@ -112,6 +118,10 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
         configDiasGracia: configDiasGracia.value
       }))
 
+      // Por ahora solo usar localStorage hasta que se cree la tabla
+      return { success: true, message: 'Guardado localmente' }
+
+      /* COMENTADO: Implementación con Supabase - descomentar cuando la tabla exista
       if (!authStore.user?.id) {
         return { success: true, message: 'Guardado localmente' }
       }
@@ -139,6 +149,7 @@ export const useConfiguracionStore = defineStore('configuracion', () => {
       }
 
       return { success: true, message: 'Configuración guardada' }
+      */
     } catch (e) {
       error.value = e.message
       return { success: false, error: e.message }

@@ -1,39 +1,45 @@
 <template>
-  <div>
-    <h2 class="text-2xl font-display font-bold text-gray-800 text-center mb-6">
+  <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 p-6 sm:p-8">
+    <h2 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 text-center mb-6">
       Crear Cuenta
     </h2>
 
     <form @submit.prevent="handleRegister" class="space-y-5">
       <div>
-        <label class="label">Nombre completo</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre completo</label>
         <input 
           v-model="nombre"
           type="text" 
-          class="input-field"
+          class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
+                 focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
+                 transition-all duration-200 placeholder:text-gray-400 shadow-sm"
           placeholder="Tu nombre"
           required
         />
       </div>
 
       <div>
-        <label class="label">Correo electrónico</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Correo electrónico</label>
         <input 
           v-model="email"
           type="email" 
-          class="input-field"
+          class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl 
+                 focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
+                 transition-all duration-200 placeholder:text-gray-400 shadow-sm"
           placeholder="tu@correo.com"
           required
         />
       </div>
 
       <div>
-        <label class="label">Contraseña</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Contraseña</label>
         <div class="relative">
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="input-field pr-12"
+            class="w-full px-4 py-3 pr-12 bg-white border border-gray-200 rounded-xl 
+                   focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
+                   transition-all duration-200 placeholder:text-gray-400 shadow-sm"
             placeholder="Mínimo 6 caracteres"
             minlength="6"
             required
@@ -50,12 +56,14 @@
       </div>
 
       <div>
-        <label class="label">Confirmar contraseña</label>
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirmar contraseña</label>
         <div class="relative">
           <input 
             v-model="confirmPassword"
             :type="showConfirmPassword ? 'text' : 'password'" 
-            class="input-field pr-12"
+            class="w-full px-4 py-3 pr-12 bg-white border border-gray-200 rounded-xl 
+                   focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
+                   transition-all duration-200 placeholder:text-gray-400 shadow-sm"
             placeholder="Repite tu contraseña"
             required
           />
@@ -70,12 +78,12 @@
         </div>
       </div>
 
-      <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+      <div v-if="errorMessage" class="p-3 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 text-sm font-medium shadow-sm">
         {{ errorMessage }}
       </div>
 
       <!-- Mensaje de éxito mejorado -->
-      <div v-if="successMessage" class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl shadow-lg">
+      <div v-if="successMessage" class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl shadow-lg">
         <div class="flex items-start gap-4">
           <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,10 +142,10 @@
     <!-- Separador -->
     <div v-if="!successMessage" class="relative my-6">
       <div class="absolute inset-0 flex items-center">
-        <div class="w-full border-t border-gray-200"></div>
+        <div class="w-full border-t border-gray-300"></div>
       </div>
       <div class="relative flex justify-center text-sm">
-        <span class="px-4 bg-white text-gray-500 font-medium">O regístrate con</span>
+        <span class="px-4 bg-white/95 text-gray-600 font-semibold">O regístrate con</span>
       </div>
     </div>
 
@@ -146,7 +154,7 @@
       v-if="!successMessage"
       @click="handleGoogleLogin"
       :disabled="authStore.loading"
-      class="group relative w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white border-2 border-gray-200 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+      class="group relative w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-white border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
     >
       <!-- Logo de Google -->
       <svg class="w-5 h-5" viewBox="0 0 24 24">
@@ -158,9 +166,9 @@
       <span>Continuar con Google</span>
     </button>
 
-    <p v-if="!successMessage" class="mt-6 text-center text-sm text-gray-500">
+    <p v-if="!successMessage" class="mt-6 text-center text-sm text-gray-600 font-medium">
       ¿Ya tienes cuenta? 
-      <router-link to="/auth/login" class="text-natillera-600 font-semibold hover:text-natillera-700">
+      <router-link to="/auth/login" class="text-natillera-600 font-bold hover:text-natillera-700 underline decoration-2 underline-offset-2 transition-colors">
         Inicia sesión
       </router-link>
     </p>

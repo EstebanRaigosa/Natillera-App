@@ -3,22 +3,22 @@
     <!-- Sidebar -->
     <aside 
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-72 bg-white/90 backdrop-blur-xl border-r border-gray-100 transform transition-transform duration-300 lg:translate-x-0 lg:static',
+        'fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-r border-emerald-600/30 transform transition-transform duration-300 lg:translate-x-0 lg:static',
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
       <div class="flex flex-col h-full">
         <!-- Logo -->
-        <div class="p-6 border-b border-gray-100">
+        <div class="p-6 border-b border-emerald-600/30">
           <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-natillera-700 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/20">
+            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg shadow-black/20 border border-white/20">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <h1 class="font-display font-bold text-xl text-gray-800">Natillera</h1>
-              <p class="text-xs text-gray-400">Gestión comunitaria</p>
+              <h1 class="font-display font-bold text-xl text-white">Natillerapp</h1>
+              <p class="text-xs text-emerald-100">Gestión comunitaria</p>
             </div>
           </div>
         </div>
@@ -86,7 +86,8 @@
           </router-link>
 
           <div class="pt-4 pb-2">
-            <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Accesos Rápidos</p>
+            <p class="px-4 text-xs font-semibold text-emerald-100/90 uppercase tracking-wider mb-3">Accesos Rápidos</p>
+            <div class="mx-4 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
           </div>
 
           <!-- Natilleras Activas -->
@@ -101,25 +102,58 @@
             >
               <!-- Contenedor principal de la natillera -->
               <div 
-                class="flex items-center gap-2 pr-1 rounded-xl px-1 py-1 transition-all duration-200"
-                :class="[
-                  !natillera.es_propia 
-                    ? 'bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-100 border-2 border-blue-400 shadow-sm' 
-                    : ''
-                ]"
+                class="flex items-center gap-2 pr-1 rounded-xl px-1 py-1 transition-all duration-200 relative"
+                :class="{
+                  'border-2 border-sky-500/85 shadow-lg shadow-sky-600/35 bg-gradient-to-r from-sky-500/6 via-transparent to-sky-500/6': !natillera.es_propia
+                }"
               >
-                <!-- Link a la vista de detalle -->
-                <button
-                  @click="navegarANatillera(natillera.id)"
-                  class="nav-link flex-1 min-w-0 text-left"
-                  :class="[
-                    { 'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`) },
-                    !natillera.es_propia ? 'hover:bg-blue-200/60' : ''
-                  ]"
+                <!-- Indicador decorativo para natilleras compartidas -->
+                <div 
+                  v-if="!natillera.es_propia"
+                  class="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-sky-400 via-sky-500 to-sky-400 rounded-full shadow-md shadow-sky-500/50"
+                ></div>
+                
+                <!-- Link a la vista de detalle con tooltip -->
+                <div 
+                  class="flex-1 min-w-0 relative group"
                 >
-                  <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
-                  <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
-                </button>
+                  <button
+                    @click="navegarANatillera(natillera.id)"
+                    @touchstart.stop="mostrarTooltip(natillera.id, $event)"
+                    class="nav-link w-full min-w-0 text-left"
+                    :class="{
+                      'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`)
+                    }"
+                  >
+                    <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
+                    <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
+                    <UserGroupIcon 
+                      v-if="!natillera.es_propia" 
+                      class="w-4 h-4 flex-shrink-0 ml-1.5 text-sky-400 drop-shadow-sm" 
+                      title="Natillera compartida"
+                    />
+                  </button>
+                  <!-- Tooltip elegante y estilizado -->
+                  <div 
+                    class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2.5 px-5 py-2.5 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white text-xs font-semibold tracking-wide rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out whitespace-nowrap z-50 pointer-events-none transform backdrop-blur-lg border border-emerald-500/25"
+                    :class="{
+                      'opacity-0 invisible translate-y-1 scale-[0.98]': tooltipVisible !== natillera.id,
+                      'opacity-100 visible translate-y-0 scale-100': tooltipVisible === natillera.id,
+                      'lg:opacity-0 lg:invisible lg:translate-y-1 lg:scale-[0.98] lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0 lg:group-hover:scale-100': true
+                    }"
+                  >
+                    <!-- Efecto de brillo superior elegante -->
+                    <div class="absolute inset-0 rounded-xl bg-gradient-to-b from-white/12 via-white/4 to-transparent pointer-events-none"></div>
+                    <!-- Contenido del tooltip -->
+                    <div class="relative z-10">
+                      <span class="text-emerald-50/95 drop-shadow-sm font-medium">{{ natillera.nombre }}</span>
+                    </div>
+                    <!-- Flecha elegante y precisa -->
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+                      <div class="w-2.5 h-2.5 bg-gradient-to-br from-slate-800/98 to-slate-900/98 rotate-45 border-r border-b border-emerald-500/25 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"></div>
+                    </div>
+                  </div>
+                </div>
                 
                 <!-- Botón para abrir/cerrar desplegable -->
                 <button
@@ -127,12 +161,8 @@
                   :class="[
                     'p-2.5 rounded-xl transition-all duration-300 flex-shrink-0 shadow-lg border-2 relative z-10',
                     natilleraExpandida === natillera.id
-                      ? !natillera.es_propia
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 border-blue-400 shadow-blue-500/40'
-                        : 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white hover:from-natillera-600 hover:to-natillera-700 border-natillera-400 shadow-natillera-500/40'
-                      : !natillera.es_propia
-                        ? 'bg-white text-blue-600 hover:bg-blue-50 border-blue-200 hover:border-blue-300 hover:shadow-xl'
-                        : 'bg-white text-natillera-600 hover:bg-natillera-50 border-natillera-200 hover:border-natillera-300 hover:shadow-xl'
+                      ? 'bg-white/30 text-white hover:bg-white/40 border-white/40 shadow-black/30 backdrop-blur-sm'
+                      : 'bg-white/20 text-emerald-100 hover:bg-white/30 hover:text-white border-white/20 hover:border-white/40 hover:shadow-lg backdrop-blur-sm'
                   ]"
                   title="Ver opciones"
                 >
@@ -153,19 +183,9 @@
               >
                 <div 
                   v-if="natilleraExpandida === natillera.id" 
-                  :class="[
-                    'ml-2 mr-2 mt-2 mb-2 p-3 rounded-xl border-2 shadow-lg space-y-1.5 overflow-hidden',
-                    !natillera.es_propia
-                      ? 'bg-gradient-to-br from-blue-50 via-white to-indigo-50 border-blue-200'
-                      : 'bg-gradient-to-br from-natillera-50 via-white to-gray-50 border-natillera-200'
-                  ]"
+                  class="ml-2 mr-2 mt-2 mb-2 p-3 rounded-xl border-2 shadow-lg space-y-1.5 overflow-hidden bg-white/25 backdrop-blur-sm border-white/40"
                 >
-                  <div 
-                    :class="[
-                      'text-xs font-semibold uppercase tracking-wider mb-2 px-2',
-                      !natillera.es_propia ? 'text-blue-700' : 'text-natillera-700'
-                    ]"
-                  >
+                  <div class="text-xs font-semibold uppercase tracking-wider mb-2 px-2 text-white">
                     Opciones
                   </div>
                   <router-link
@@ -218,7 +238,7 @@
             </div>
           </template>
           <div v-else class="px-4 py-2">
-            <p class="text-xs text-gray-400 italic">No hay natilleras activas</p>
+            <p class="text-xs text-emerald-100/70 italic">No hay natilleras activas</p>
           </div>
 
           <!-- Nueva Natillera -->
@@ -267,8 +287,8 @@
           
           <!-- Info del usuario -->
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-gray-800 truncate text-sm">{{ authStore.userName }}</p>
-            <p class="text-xs text-gray-500 truncate">{{ authStore.userEmail }}</p>
+            <p class="font-semibold text-white truncate text-sm">{{ authStore.userName }}</p>
+            <p class="text-xs text-emerald-100 truncate">{{ authStore.userEmail }}</p>
           </div>
           
           <!-- Botón de logout con estilo -->
@@ -301,7 +321,7 @@
           >
             <Bars3Icon class="w-6 h-6" />
           </button>
-          <h1 class="font-display font-bold text-lg text-gray-800">Natillera</h1>
+          <h1 class="font-display font-bold text-lg text-gray-800">Natillerapp</h1>
           <div class="w-10"></div>
         </div>
       </header>
@@ -358,7 +378,9 @@ import {
   CurrencyDollarIcon,
   CalendarIcon,
   ClipboardDocumentListIcon,
-  ChatBubbleLeftRightIcon
+  ChatBubbleLeftRightIcon,
+  UserGroupIcon,
+  ShareIcon
 } from '@heroicons/vue/24/outline'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
@@ -372,6 +394,7 @@ const notificationStore = useNotificationStore()
 const sidebarOpen = ref(false)
 const natilleraExpandida = ref(null)
 const previousUnreadCount = ref(0)
+const tooltipVisible = ref(null) // ID de la natillera cuyo tooltip está visible en móvil
 
 // Verificar si el usuario es admin (raigo.16@gmail.com)
 const isAdmin = computed(() => {
@@ -423,7 +446,45 @@ function cerrarDesplegable() {
   cerrarSidebar()
 }
 
+function mostrarTooltip(natilleraId, event) {
+  // Solo mostrar tooltip en móvil (pantallas pequeñas)
+  if (window.innerWidth < 1024) {
+    if (tooltipVisible.value === natilleraId) {
+      // Si ya está visible, cerrarlo (primer tap mostró tooltip, segundo tap lo cierra)
+      tooltipVisible.value = null
+      return
+    }
+    
+    // Cerrar otros tooltips si hay alguno abierto
+    if (tooltipVisible.value !== null) {
+      tooltipVisible.value = null
+    }
+    
+    // Mostrar el nuevo tooltip
+    tooltipVisible.value = natilleraId
+    
+    // Cerrar automáticamente después de 4 segundos
+    setTimeout(() => {
+      if (tooltipVisible.value === natilleraId) {
+        tooltipVisible.value = null
+      }
+    }, 4000)
+  }
+}
+
 function navegarANatillera(natilleraId) {
+  // En móvil: si el tooltip está visible, cerrarlo pero no navegar (el usuario solo quería ver el nombre)
+  if (window.innerWidth < 1024 && tooltipVisible.value === natilleraId) {
+    tooltipVisible.value = null
+    // Esperar un momento antes de permitir navegación para evitar navegación accidental
+    return
+  }
+  
+  // Cerrar tooltip si está visible
+  if (tooltipVisible.value === natilleraId) {
+    tooltipVisible.value = null
+  }
+  
   const nuevaRuta = `/natilleras/${natilleraId}`
   const idActual = router.currentRoute.value.params.id
   
@@ -459,6 +520,19 @@ watch(() => supportStore.unreadCount, (newCount, oldCount) => {
   previousUnreadCount.value = newCount
 })
 
+// Cerrar tooltip al hacer click fuera o al tocar fuera
+function cerrarTooltipSiEsNecesario(event) {
+  // Solo en móvil
+  if (window.innerWidth < 1024 && tooltipVisible.value !== null) {
+    // Si el click/touch no fue dentro de un elemento con tooltip o el botón
+    const target = event.target
+    const tieneTooltip = target.closest('.group') || target.closest('.nav-link')
+    if (!tieneTooltip) {
+      tooltipVisible.value = null
+    }
+  }
+}
+
 onMounted(async () => {
   // Cargar todas las natilleras (propias y compartidas)
   await natillerasStore.fetchTodasLasNatilleras()
@@ -468,11 +542,18 @@ onMounted(async () => {
     supportStore.startChecking()
     previousUnreadCount.value = supportStore.unreadCount
   }
+  
+  // Agregar listener para cerrar tooltip al tocar fuera (móvil)
+  document.addEventListener('touchstart', cerrarTooltipSiEsNecesario)
+  document.addEventListener('click', cerrarTooltipSiEsNecesario)
 })
 
 onUnmounted(() => {
   // Detener verificación al desmontar
   supportStore.stopChecking()
+  // Remover listeners
+  document.removeEventListener('touchstart', cerrarTooltipSiEsNecesario)
+  document.removeEventListener('click', cerrarTooltipSiEsNecesario)
 })
 </script>
 
@@ -480,41 +561,42 @@ onUnmounted(() => {
 @reference "../style.css";
 
 .nav-link {
-  @apply flex items-center gap-3 px-4 py-3 text-gray-600 rounded-xl hover:bg-natillera-50 hover:text-natillera-700 transition-all duration-200;
+  @apply flex items-center gap-3 px-4 py-3 text-emerald-100 rounded-xl hover:bg-white/15 hover:text-white transition-all duration-200;
 }
 
 .nav-link-active {
-  @apply bg-gradient-to-r from-natillera-500 to-natillera-600 text-white shadow-lg shadow-natillera-500/25 hover:bg-natillera-600 hover:text-white;
+  @apply bg-white/30 text-white shadow-xl shadow-black/30 backdrop-blur-sm border-2 border-white/40 hover:bg-white/35 hover:text-white font-semibold;
 }
 
+
 .nav-link-sub {
-  @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 rounded-lg hover:bg-natillera-100 hover:text-natillera-700 transition-all duration-200 border border-transparent hover:border-natillera-200;
+  @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-emerald-100 rounded-lg hover:bg-white/10 hover:text-white transition-all duration-200 border border-transparent hover:border-white/20;
 }
 
 .nav-link-sub-active {
-  @apply bg-natillera-100 text-natillera-700 font-semibold border-natillera-300 shadow-sm;
+  @apply bg-white/25 text-white font-semibold border-white/40 shadow-md backdrop-blur-sm;
 }
 
 /* Panel de usuario fijo */
 .user-panel {
   @apply relative p-3.5 rounded-2xl overflow-hidden;
-  @apply bg-gradient-to-br from-white via-natillera-50/50 to-white;
-  @apply border border-natillera-200/60;
-  @apply shadow-lg shadow-natillera-500/10;
-  @apply backdrop-blur-xl;
+  @apply bg-white/15 backdrop-blur-xl;
+  @apply border border-white/20;
+  @apply shadow-xl shadow-black/30;
   @apply transition-all duration-300;
 }
 
 .user-panel:hover {
-  @apply shadow-xl shadow-natillera-500/20;
-  @apply border-natillera-300/80;
+  @apply shadow-2xl shadow-black/40;
+  @apply border-white/30;
+  @apply bg-white/20;
   transform: translateY(-2px);
 }
 
 /* Botón de logout elegante */
 .logout-btn {
   @apply relative p-2.5 rounded-xl overflow-hidden;
-  @apply text-gray-400;
+  @apply text-emerald-100;
   @apply transition-all duration-300;
   @apply border border-transparent;
 }
