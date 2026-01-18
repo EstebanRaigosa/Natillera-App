@@ -23,11 +23,15 @@
   <!-- Contenido principal -->
   <div v-else class="max-w-7xl mx-auto p-4 sm:p-6">
     <!-- Header -->
-    <div class="mb-6">
-      <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-2">
-        Administración de Datos
-      </h1>
-      <p class="text-gray-600">Consulta completa de toda la información en la base de datos</p>
+    <div class="relative mb-6">
+      <BackButton />
+      <div class="pt-12 sm:pt-0 pl-14 sm:pl-0">
+        <Breadcrumbs />
+        <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-2">
+          Administración de Datos
+        </h1>
+        <p class="text-gray-600">Consulta completa de toda la información en la base de datos</p>
+      </div>
     </div>
 
     <!-- Estadísticas generales -->
@@ -676,6 +680,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { supabase } from '../../lib/supabase'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { 
   XMarkIcon,
   UserGroupIcon,

@@ -1,22 +1,17 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header -->
-    <div>
-      <router-link 
-        :to="`/natilleras/${id}`" 
-        class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm"
-      >
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-        </div>
-        <span class="whitespace-nowrap">Volver a natillera</span>
-      </router-link>
-      <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
-        Configuración
-      </h1>
-      <p class="text-gray-500 mt-1">
-        Configura el período, días de gracia y mensajes para esta natillera
-      </p>
+    <div class="relative">
+      <BackButton :to="`/natilleras/${id}`" />
+      <div class="pt-12 sm:pt-0 pl-14 sm:pl-0">
+        <Breadcrumbs />
+        <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
+          Configuración
+        </h1>
+        <p class="text-gray-500 mt-1">
+          Configura el período, días de gracia y mensajes para esta natillera
+        </p>
+      </div>
     </div>
 
     <!-- Opciones de configuración con contenido expandible -->
@@ -1689,6 +1684,8 @@ import { useUsersStore } from '../../stores/users'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { 
   ArrowLeftIcon,
   CalendarDaysIcon,

@@ -8,22 +8,20 @@
     </div>
 
     <!-- Header -->
-    <div class="mb-8 animate-fade-in-up">
-      <router-link to="/natilleras" class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-md hover:shadow-natillera-200/50 transition-all duration-300 mb-2 sm:mb-4 text-xs sm:text-sm">
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-300 group-hover:scale-110">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-300" />
+    <div class="relative mb-8 animate-fade-in-up">
+      <BackButton />
+      <div class="pt-12 sm:pt-0 pl-14 sm:pl-0">
+        <Breadcrumbs />
+        <div class="relative">
+          <h1 class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
+            Crear Nueva Natillera
+          </h1>
+          <div class="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-natillera-400 via-emerald-400 to-natillera-400 rounded-full transform scale-x-0 animate-scale-x"></div>
         </div>
-        <span class="whitespace-nowrap">Volver a natilleras</span>
-      </router-link>
-      <div class="relative">
-        <h1 class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
-          Crear Nueva Natillera
-        </h1>
-        <div class="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-natillera-400 via-emerald-400 to-natillera-400 rounded-full transform scale-x-0 animate-scale-x"></div>
+        <p class="text-gray-500 mt-3 text-sm sm:text-base">
+          Configura tu grupo de ahorro comunitario
+        </p>
       </div>
-      <p class="text-gray-500 mt-3 text-sm sm:text-base">
-        Configura tu grupo de ahorro comunitario
-      </p>
     </div>
 
     <!-- Formulario -->
@@ -648,6 +646,8 @@ import { ref, reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { Transition } from 'vue'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { 
   ArrowLeftIcon,
   ExclamationTriangleIcon,

@@ -11,7 +11,7 @@ Este documento explica cómo configurar el restablecimiento de contraseña en Su
 3. Busca el template **"Reset Password"** o **"Recovery"**
 4. Configura el template:
 
-   - **Subject**: `Restablecer tu contraseña - Natillerapp`
+   - **Subject**: `Restablecer tu contraseña - Natilleraapp`
    - **Body**: Copia el contenido del archivo `reset-password.html` o `reset-password.txt`
 
    **Nota**: Supabase usa el nombre `recovery` para el template de reset password según la [documentación oficial](https://supabase.com/docs/guides/local-development/customizing-email-templates#authemailtemplateresetpassword).
@@ -68,7 +68,7 @@ Si estás usando Supabase localmente, puedes configurar el template en `supabase
 
 ```toml
 [auth.email.template.recovery]
-subject = "Restablecer tu contraseña - Natillerapp"
+subject = "Restablecer tu contraseña - Natilleraapp"
 content_path = "./supabase/email-templates/reset-password.html"
 ```
 

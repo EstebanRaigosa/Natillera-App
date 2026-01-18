@@ -8,22 +8,15 @@
 
     <!-- Header estilizado -->
     <div class="relative">
-      <router-link 
-        :to="`/natilleras/${id}`" 
-        class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm"
-      >
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-        </div>
-        <span class="whitespace-nowrap">Volver a natillera</span>
-      </router-link>
+      <Breadcrumbs />
       
       <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-lg sm:shadow-xl backdrop-blur-sm overflow-hidden">
+        <BackButton :to="`/natilleras/${id}`" />
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
-        <div class="relative z-10">
+        <div class="relative z-10 pt-12 sm:pt-0">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
               <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -134,15 +127,36 @@
       </div>
       <p class="text-gray-500 text-lg font-medium">No hay meses configurados para esta natillera</p>
     </div>
+
+    <!-- Botón flotante "Volver arriba" -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <button
+        v-if="mostrarBotonArriba"
+        @click="scrollToTop"
+        class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-r from-natillera-500 to-emerald-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center text-white touch-manipulation"
+        title="Volver arriba"
+      >
+        <ArrowUpIcon class="w-6 h-6 sm:w-7 sm:h-7" />
+      </button>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { supabase } from '../../lib/supabase'
-import { ArrowLeftIcon, ChevronRightIcon, CurrencyDollarIcon, CalendarDaysIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, ChevronRightIcon, CurrencyDollarIcon, CalendarDaysIcon, ArrowUpIcon } from '@heroicons/vue/24/outline'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 
 const props = defineProps({
   id: String
@@ -155,6 +169,7 @@ const id = props.id || route.params.id
 const mesInicio = ref(1)
 const mesFin = ref(11)
 const anioNatillera = ref(new Date().getFullYear())
+const mostrarBotonArriba = ref(false)
 
 // Lista de todos los meses
 const todosMeses = [
@@ -277,8 +292,26 @@ async function cargarNatillera() {
   }
 }
 
+// Función para manejar el scroll y mostrar/ocultar el botón
+function handleScroll() {
+  mostrarBotonArriba.value = window.scrollY > 300
+}
+
+// Función para hacer scroll hacia arriba
+function scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
 onMounted(() => {
   cargarNatillera()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 

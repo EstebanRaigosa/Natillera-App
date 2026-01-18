@@ -17,7 +17,9 @@
               </svg>
             </div>
             <div>
-              <h1 class="font-display font-bold text-xl text-white">Natillerapp</h1>
+              <h1 class="font-display font-bold text-xl">
+                <AppBrand class="text-white" />
+              </h1>
               <p class="text-xs text-emerald-100">Gestión comunitaria</p>
             </div>
           </div>
@@ -321,7 +323,9 @@
           >
             <Bars3Icon class="w-6 h-6" />
           </button>
-          <h1 class="font-display font-bold text-lg text-gray-800">Natillerapp</h1>
+          <h1 class="font-display font-bold text-lg">
+            <AppBrand />
+          </h1>
           <div class="w-10"></div>
         </div>
       </header>
@@ -384,6 +388,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
+import AppBrand from '../components/AppBrand.vue'
 
 const router = useRouter()
 const route = useRoute()

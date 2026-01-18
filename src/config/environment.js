@@ -1,5 +1,5 @@
 /**
- * Configuración de entorno para Natillerapp
+ * Configuración de entorno para Natilleraapp
  * 
  * Detecta automáticamente si estamos en desarrollo o producción
  * basándose en la URL actual y variables de entorno de Vite
@@ -120,7 +120,7 @@ export const ENV_INFO = {
 
 // Mostrar info del entorno al iniciar (solo en desarrollo)
 if (isDev || isLocalhost) {
-  console.log('🚀 Natillerapp - Entorno:', mode)
+  console.log('🚀 Natilleraapp - Entorno:', mode)
   console.log('📍 Base URL:', BASE_URL)
   console.log('🔧 Modo desarrollo:', isDev || isLocalhost ? 'Sí' : 'No')
 }

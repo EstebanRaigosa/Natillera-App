@@ -629,8 +629,11 @@ export const useSociosStore = defineStore('socios', () => {
     const cuotasPendientes = cuotas.filter(c => c.estado === 'pendiente').length
     const cuotasMora = cuotas.filter(c => c.estado === 'mora').length
     
+    // Calcular total aportado solo con valor_cuota (sin incluir sanciones)
+    // Las sanciones se reflejan en utilidades
     const totalAportado = cuotas
-      .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+      .filter(c => c.estado === 'pagada')
+      .reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
     
     const totalPendiente = cuotas
       .filter(c => c.estado !== 'pagada')

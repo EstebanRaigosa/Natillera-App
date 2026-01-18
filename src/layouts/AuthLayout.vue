@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex items-center justify-center p-0 relative overflow-hidden bg-gradient-to-br from-natillera-900 via-natillera-800 to-emerald-900">
+  <div class="h-screen flex items-center sm:items-center justify-start sm:justify-center p-0 relative overflow-hidden bg-gradient-to-br from-natillera-900 via-natillera-800 to-emerald-900">
     <!-- Fondo verde mate para móvil (sin gradiente animado) -->
     <div class="lg:hidden absolute inset-0 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700"></div>
     
@@ -392,18 +392,20 @@
       </div>
 
     <!-- Formulario centrado sobre el fondo -->
-    <div class="relative z-10 w-full flex flex-col justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
+    <div class="relative z-10 w-full flex flex-col justify-start sm:justify-center min-h-screen py-4 sm:py-0 p-2 sm:p-4 lg:p-7 overflow-y-auto">
       <!-- Contenido del formulario -->
       <div class="w-full max-w-md mx-auto">
         <!-- Logo y título -->
-        <div class="mb-4 sm:mb-5 animate-fade-in-up text-center">
+        <div class="mb-3 sm:mb-3 lg:mb-3 animate-fade-in-up text-center">
           <div class="flex items-center justify-center gap-2.5 sm:gap-3 mb-1.5">
             <div class="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-natillera-400 via-emerald-400 to-teal-400 rounded-xl sm:rounded-2xl shadow-2xl shadow-emerald-500/50 ring-4 ring-white/30 backdrop-blur-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-white drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.3);">NatillerApp</h1>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]" style="text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.3);">
+              <AppBrand class="text-white" />
+            </h1>
           </div>
           <p class="text-white/90 text-xs sm:text-sm drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] font-medium">Ahorro comunitario digital</p>
         </div>
@@ -414,7 +416,7 @@
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-xs text-white/80 mt-4 animate-fade-in-up stagger-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+        <p class="text-center text-xs text-white/80 mt-3 sm:mt-3 animate-fade-in-up stagger-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
           Gestión transparente para tu comunidad 🌱
         </p>
       </div>
@@ -423,5 +425,6 @@
 </template>
 
 <script setup>
+import AppBrand from '../components/AppBrand.vue'
 </script>
 

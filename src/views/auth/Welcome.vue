@@ -110,7 +110,7 @@
             </div>
           </div>
           <div class="flex-1">
-            <h3 class="font-semibold text-gray-800 mb-2">¡Bienvenido a Natillerapp!</h3>
+            <h3 class="font-semibold text-gray-800 mb-2">¡Bienvenido a <AppBrand />!</h3>
             <p class="text-sm text-gray-700 leading-relaxed">
               Ya estás listo para comenzar a gestionar tus natilleras comunitarias. 
               Podrás crear grupos de ahorro, registrar socios, controlar cuotas y mucho más.
@@ -183,6 +183,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
+import AppBrand from '../../components/AppBrand.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()

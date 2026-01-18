@@ -6,8 +6,29 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Header con saludo -->
-    <div class="relative">
+    <!-- Header móvil -->
+    <div class="relative sm:hidden mb-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-3xl font-display font-bold text-gray-800 mb-1">
+            ¡Hola, {{ authStore.userName }}! 👋
+          </h1>
+          <p class="text-gray-600 text-sm font-medium">
+            Panel de control
+          </p>
+        </div>
+        <router-link 
+          id="boton-crear-natillera-movil"
+          to="/natilleras/crear" 
+          class="w-12 h-12 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all flex-shrink-0"
+        >
+          <PlusIcon class="w-6 h-6 text-white" />
+        </router-link>
+      </div>
+    </div>
+
+    <!-- Header desktop -->
+    <div class="relative hidden sm:block">
       <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -63,15 +84,15 @@
             <div
               v-for="invitacion in colaboradoresStore.misInvitaciones"
               :key="invitacion.id"
-              class="relative bg-white/80 backdrop-blur-sm border border-blue-200/60 rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl hover:border-blue-300 transition-all duration-300"
+              class="relative bg-white/80 backdrop-blur-sm border border-blue-200/60 rounded-2xl p-3 sm:p-6 shadow-lg hover:shadow-xl hover:border-blue-300 transition-all duration-300"
             >
               <!-- Efecto decorativo sutil -->
               <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
               
-              <div class="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
-                <!-- Avatar y info -->
-                <div class="flex items-center gap-4 flex-1 min-w-0">
-                  <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white flex-shrink-0">
+              <div class="relative z-10 flex flex-col gap-2.5 sm:gap-4">
+                <!-- Avatar y nombre de natillera -->
+                <div class="flex items-center gap-2.5 sm:gap-4">
+                  <div class="w-12 h-12 sm:w-20 sm:h-20 rounded-lg sm:rounded-xl overflow-hidden shadow-md border-2 border-blue-200/60 bg-blue-50/50 flex-shrink-0 ring-1 ring-gray-100/50">
                     <img
                       :src="getNatilleraAvatarUrl(invitacion.natillera_nombre)"
                       :alt="invitacion.natillera_nombre"
@@ -79,41 +100,61 @@
                     />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1 truncate">
+                    <h3 class="font-display font-bold text-gray-800 text-base sm:text-2xl mb-0.5 sm:mb-1 truncate">
                       {{ invitacion.natillera_nombre }}
                     </h3>
-                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-                      <span class="flex items-center gap-1.5">
-                        <UserGroupIcon class="w-4 h-4 text-blue-500" />
-                        <span>Invitado por: <strong class="text-gray-800">{{ invitacion.invitado_por_nombre }}</strong></span>
-                      </span>
-                      <span class="text-gray-300 hidden sm:inline">•</span>
-                      <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold text-xs">
-                        {{ formatearRol(invitacion.rol) }}
-                      </span>
+                    <span class="inline-block px-2 py-0.5 sm:px-3 sm:py-1 bg-blue-100 text-blue-700 rounded-md sm:rounded-lg font-semibold text-xs sm:text-sm">
+                      {{ formatearRol(invitacion.rol) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Mensaje principal -->
+                <div class="bg-gradient-to-r from-blue-50 via-indigo-50/60 to-purple-50/40 border-l-4 border-blue-500 rounded-lg p-2.5 sm:p-5 shadow-sm">
+                  <div class="flex items-start gap-2 sm:gap-3">
+                    <div class="flex-shrink-0 w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
+                      <UserGroupIcon class="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm sm:text-base text-gray-800 leading-snug sm:leading-relaxed">
+                        <template v-if="invitacion.invitado_por_nombre || invitacion.invitado_por_email">
+                          <span v-if="invitacion.invitado_por_nombre" class="font-bold text-gray-900">{{ invitacion.invitado_por_nombre }}</span>
+                          <span v-if="invitacion.invitado_por_email" class="text-gray-600">
+                            <span v-if="invitacion.invitado_por_nombre"> (<span class="text-xs sm:text-sm">{{ invitacion.invitado_por_email }}</span>)</span>
+                            <span v-else>(<span class="text-xs sm:text-sm font-medium">{{ invitacion.invitado_por_email }}</span>)</span>
+                          </span>
+                        </template>
+                        <span v-else class="font-bold text-gray-900">Alguien</span>
+                        <span class="text-gray-700"> te invitó como </span>
+                        <span class="font-semibold text-indigo-700">{{ formatearRol(invitacion.rol) }}</span>
+                      </p>
                     </div>
                   </div>
                 </div>
 
+                <!-- Mensaje adicional de la invitación (notas) -->
+                <div v-if="invitacion.notas" class="bg-amber-50/80 border-l-4 border-amber-400 rounded-lg p-2.5 sm:p-4">
+                  <p class="text-xs sm:text-sm font-semibold text-amber-900 mb-0.5 sm:mb-1">💬 Mensaje:</p>
+                  <p class="text-xs sm:text-sm text-gray-700 whitespace-pre-wrap break-words leading-snug sm:leading-relaxed">{{ invitacion.notas }}</p>
+                </div>
+
                 <!-- Botones de acción -->
-                <div class="flex gap-2 sm:gap-3 flex-shrink-0">
+                <div class="flex gap-2 sm:gap-3 pt-1 sm:pt-2">
                   <button
                     @click="aceptarInvitacion(invitacion)"
                     :disabled="procesandoInvitacion === invitacion.id"
-                    class="px-4 py-2.5 sm:px-5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                    class="flex-1 px-3 py-2 sm:px-5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-lg sm:rounded-xl transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                   >
-                    <CheckIcon class="w-5 h-5" />
-                    <span class="hidden sm:inline">Aceptar</span>
-                    <span class="sm:hidden">Aceptar</span>
+                    <CheckIcon class="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Aceptar</span>
                   </button>
                   <button
                     @click="rechazarInvitacion(invitacion)"
                     :disabled="procesandoInvitacion === invitacion.id"
-                    class="px-4 py-2.5 sm:px-5 sm:py-3 bg-white border-2 border-gray-300 hover:border-red-300 hover:bg-red-50 text-gray-700 hover:text-red-700 font-semibold rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
+                    class="flex-1 px-3 py-2 sm:px-5 sm:py-3 bg-white border-2 border-gray-300 hover:border-red-300 hover:bg-red-50 text-gray-700 hover:text-red-700 font-semibold rounded-lg sm:rounded-xl transition-all shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base"
                   >
-                    <XMarkIcon class="w-5 h-5" />
-                    <span class="hidden sm:inline">Rechazar</span>
-                    <span class="sm:hidden">Rechazar</span>
+                    <XMarkIcon class="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Rechazar</span>
                   </button>
                 </div>
               </div>
@@ -123,8 +164,51 @@
       </div>
     </div>
 
-    <!-- Stats -->
-    <div v-if="todasLasNatilleras.length > 0" class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+    <!-- Stats móvil -->
+    <div v-if="todasLasNatilleras.length > 0" class="sm:hidden grid grid-cols-2 gap-3 mb-4">
+      <div class="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm p-4">
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mb-2">
+            <BanknotesIcon class="w-5 h-5 text-white" />
+          </div>
+          <p class="text-2xl font-display font-bold text-gray-800 mb-0.5">{{ natillerasStore.totalNatilleras }}</p>
+          <p class="text-xs font-semibold text-gray-600">Natilleras</p>
+        </div>
+      </div>
+
+      <div class="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm p-4">
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-2">
+            <UsersIcon class="w-5 h-5 text-white" />
+          </div>
+          <p class="text-2xl font-display font-bold text-gray-800 mb-0.5">{{ totalSocios }}</p>
+          <p class="text-xs font-semibold text-gray-600">Socios</p>
+        </div>
+      </div>
+
+      <div class="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm p-4">
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center mb-2">
+            <CurrencyDollarIcon class="w-5 h-5 text-white" />
+          </div>
+          <p class="text-2xl font-display font-bold text-gray-800 mb-0.5">${{ formatMoneyShort(totalRecaudado) }}</p>
+          <p class="text-xs font-semibold text-gray-600">Recaudado</p>
+        </div>
+      </div>
+
+      <div class="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm p-4">
+        <div class="flex flex-col items-center">
+          <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center mb-2">
+            <ChartBarIcon class="w-5 h-5 text-white" />
+          </div>
+          <p class="text-2xl font-display font-bold text-gray-800 mb-0.5">{{ natillerasStore.natillerasActivas.length }}</p>
+          <p class="text-xs font-semibold text-gray-600">Activas</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats desktop -->
+    <div v-if="todasLasNatilleras.length > 0" class="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-1">
         <!-- Efecto decorativo -->
         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
@@ -176,142 +260,195 @@
 
     <!-- Sección de Natilleras -->
     <div class="relative animate-fade-in-up stagger-5">
-      <div class="mb-6">
-        <h2 class="text-xl sm:text-2xl font-display font-bold text-gray-800">
+      <!-- Pestañas de navegación móvil -->
+      <div class="sm:hidden mb-4">
+        <div class="bg-gray-100 rounded-xl p-1 flex gap-1 mb-4">
+          <button
+            @click="vistaActiva = 'todas'"
+            :class="[
+              'flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all',
+              vistaActiva === 'todas'
+                ? 'bg-green-500 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            Todas
+          </button>
+          <button
+            @click="vistaActiva = 'propias'"
+            :class="[
+              'flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all',
+              vistaActiva === 'propias'
+                ? 'bg-green-500 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            Mis Natilleras
+          </button>
+          <button
+            @click="vistaActiva = 'compartidas'"
+            :class="[
+              'flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all',
+              vistaActiva === 'compartidas'
+                ? 'bg-green-500 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            Compartidas
+          </button>
+          <button
+            @click="vistaActiva = 'socio'"
+            :class="[
+              'flex-1 px-3 py-2 rounded-lg font-semibold text-sm transition-all',
+              vistaActiva === 'socio'
+                ? 'bg-green-500 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            ]"
+          >
+            Como socio
+          </button>
+        </div>
+      </div>
+
+      <!-- Encabezado y Filtros desktop -->
+      <div class="hidden sm:flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <!-- Encabezado -->
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
+            Tus Natilleras
+          </h2>
+          <p class="text-sm text-gray-600">Gestiona tus grupos de ahorro según tu rol</p>
+        </div>
+
+        <!-- Barra de Filtro Principal (Tipo) -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            @click="vistaActiva = 'todas'"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+              vistaActiva === 'todas'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+            ]"
+          >
+            <Squares2X2Icon class="w-4 h-4" />
+            <span>Todas</span>
+          </button>
+          <button
+            @click="vistaActiva = 'propias'"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+              vistaActiva === 'propias'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+            ]"
+          >
+            <BanknotesIcon class="w-4 h-4" />
+            <span>Mis Natilleras</span>
+          </button>
+          <button
+            @click="vistaActiva = 'compartidas'"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+              vistaActiva === 'compartidas'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+            ]"
+          >
+            <UserGroupIcon class="w-4 h-4" />
+            <span>Compartidas conmigo</span>
+          </button>
+          <button
+            @click="vistaActiva = 'socio'"
+            :class="[
+              'px-4 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2',
+              vistaActiva === 'socio'
+                ? 'bg-green-600 text-white shadow-md'
+                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+            ]"
+          >
+            <UserIcon class="w-4 h-4" />
+            <span>Como socio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Título y filtros móvil -->
+      <div class="sm:hidden flex items-center justify-between mb-4">
+        <h2 class="text-xl font-display font-bold text-gray-800">
           Tus Natilleras
         </h2>
-        <p class="text-sm text-gray-600 mt-1">Gestiona tus grupos de ahorro</p>
-      </div>
-
-      <!-- Tabs: Todas / Propias / Compartidas -->
-      <div class="flex gap-1 sm:gap-3 border-b border-gray-200 mb-6">
-        <button
-          @click="vistaActiva = 'todas'"
-          :class="[
-            'relative px-2 py-2 sm:px-4 sm:py-3 font-semibold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 flex-1 sm:flex-none justify-center',
-            vistaActiva === 'todas'
-              ? 'text-purple-600'
-              : 'text-gray-500 hover:text-gray-700'
-          ]"
-        >
-          <span class="flex items-center gap-1 sm:gap-2">
-            <Squares2X2Icon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span>Todas</span>
-            <span v-if="todasLasNatilleras.length > 0" class="px-1.5 py-0.5 sm:px-2 bg-purple-100 text-purple-700 rounded-full text-[10px] sm:text-xs font-bold">
-              {{ todasLasNatilleras.length }}
-            </span>
-          </span>
-          <div 
-            v-if="vistaActiva === 'todas'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-500 to-indigo-500"
-          ></div>
-        </button>
-        <button
-          @click="vistaActiva = 'propias'"
-          :class="[
-            'relative px-2 py-2 sm:px-4 sm:py-3 font-semibold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 flex-1 sm:flex-none justify-center',
-            vistaActiva === 'propias'
-              ? 'text-natillera-600'
-              : 'text-gray-500 hover:text-gray-700'
-          ]"
-        >
-          <span class="flex items-center gap-1 sm:gap-2">
-            <BanknotesIcon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span class="hidden sm:inline">Mis Natilleras</span>
-            <span class="sm:hidden">Mias</span>
-            <span v-if="natillerasStore.natilleras.length > 0" class="px-1.5 py-0.5 sm:px-2 bg-natillera-100 text-natillera-700 rounded-full text-[10px] sm:text-xs font-bold">
-              {{ natillerasStore.natilleras.length }}
-            </span>
-          </span>
-          <div 
-            v-if="vistaActiva === 'propias'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-natillera-500 to-emerald-500"
-          ></div>
-        </button>
-        <button
-          @click="vistaActiva = 'compartidas'"
-          :class="[
-            'relative px-2 py-2 sm:px-4 sm:py-3 font-semibold text-xs sm:text-sm transition-all whitespace-nowrap flex-shrink-0 flex-1 sm:flex-none justify-center',
-            vistaActiva === 'compartidas'
-              ? 'text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          ]"
-        >
-          <span class="flex items-center gap-1 sm:gap-2">
-            <UserGroupIcon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
-            <span class="hidden sm:inline">Compartidas Conmigo</span>
-            <span class="sm:hidden">Compartidas</span>
-            <span v-if="natillerasStore.natillerasCompartidas.length > 0" class="px-1.5 py-0.5 sm:px-2 bg-blue-100 text-blue-700 rounded-full text-[10px] sm:text-xs font-bold">
-              {{ natillerasStore.natillerasCompartidas.length }}
-            </span>
-          </span>
-          <div 
-            v-if="vistaActiva === 'compartidas'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-500"
-          ></div>
-        </button>
-      </div>
-
-      <!-- Filtros -->
-      <div class="flex flex-wrap gap-2 mb-6">
-        <button 
-          @click="filtro = 'todas'"
-          :class="[
-            'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
-            filtro === 'todas'
-              ? 'text-white shadow-lg'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200 hover:border-natillera-300 hover:shadow-md'
-          ]"
-        >
-          <div 
-            v-if="filtro === 'todas'"
-            class="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900"
-          ></div>
-          <span class="relative flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full" :class="filtro === 'todas' ? 'bg-white' : 'bg-gray-400'"></span>
-            Todas
-          </span>
-        </button>
-        <button 
-          @click="filtro = 'activa'"
-          :class="[
-            'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
-            filtro === 'activa'
-              ? 'text-white shadow-lg shadow-natillera-500/30'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200 hover:border-natillera-300 hover:shadow-md'
-          ]"
-        >
-          <div 
-            v-if="filtro === 'activa'"
-            class="absolute inset-0 bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500"
-          ></div>
-          <span class="relative flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full" :class="filtro === 'activa' ? 'bg-white' : 'bg-natillera-400'"></span>
+        <div class="flex items-center gap-2">
+          <button 
+            @click="filtro = 'activa'"
+            :class="[
+              'px-3 py-1.5 rounded-lg font-semibold text-xs transition-all',
+              filtro === 'activa'
+                ? 'bg-gray-200 text-gray-800'
+                : 'bg-gray-100 text-gray-600'
+            ]"
+          >
             Activas
-          </span>
-        </button>
-        <button 
-          @click="filtro = 'cerrada'"
-          :class="[
-            'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
-            filtro === 'cerrada'
-              ? 'text-white shadow-lg shadow-amber-500/30'
-              : 'bg-white/80 backdrop-blur-sm text-gray-600 border border-gray-200 hover:border-amber-300 hover:shadow-md'
-          ]"
-        >
-          <div 
-            v-if="filtro === 'cerrada'"
-            class="absolute inset-0 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600"
-          ></div>
-          <span class="relative flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full" :class="filtro === 'cerrada' ? 'bg-white' : 'bg-amber-400'"></span>
+          </button>
+          <button 
+            @click="filtro = 'cerrada'"
+            :class="[
+              'px-3 py-1.5 rounded-lg font-semibold text-xs transition-all',
+              filtro === 'cerrada'
+                ? 'bg-gray-200 text-gray-800'
+                : 'bg-gray-100 text-gray-600'
+            ]"
+          >
             Cerradas
-          </span>
-        </button>
+          </button>
+          <button class="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
+            <FunnelIcon class="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <!-- Loading -->
-      <div v-if="natillerasStore.loading" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+      <!-- Barra de Filtro Secundaria (Estado) desktop -->
+      <div class="hidden sm:flex items-center gap-3 mb-6">
+        <span class="text-sm font-semibold text-gray-700">ESTADO:</span>
+        <div class="flex gap-2">
+          <button 
+            @click="filtro = 'todas'"
+            :class="[
+              'px-4 py-1.5 rounded-full font-semibold text-sm transition-all',
+              filtro === 'todas'
+                ? 'border-2 border-green-600 text-green-600 bg-green-50'
+                : 'border-2 border-gray-300 text-gray-600 hover:border-gray-400'
+            ]"
+          >
+            Todas
+          </button>
+          <button 
+            @click="filtro = 'activa'"
+            :class="[
+              'px-4 py-1.5 rounded-full font-semibold text-sm transition-all',
+              filtro === 'activa'
+                ? 'border-2 border-green-600 text-green-600 bg-green-50'
+                : 'border-2 border-gray-300 text-gray-600 hover:border-gray-400'
+            ]"
+          >
+            Activas
+          </button>
+          <button 
+            @click="filtro = 'cerrada'"
+            :class="[
+              'px-4 py-1.5 rounded-full font-semibold text-sm transition-all',
+              filtro === 'cerrada'
+                ? 'border-2 border-green-600 text-green-600 bg-green-50'
+                : 'border-2 border-gray-300 text-gray-600 hover:border-gray-400'
+            ]"
+          >
+            Cerradas
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading - Solo mostrar si NO está verificando el modal (para evitar mostrar dos animaciones) -->
+      <div v-if="natillerasStore.loading && !verificandoModal" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
         <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
         <p class="text-gray-500 mt-4 font-medium">Cargando natilleras...</p>
       </div>
@@ -340,176 +477,141 @@
           </div>
         </div>
 
-        <div v-else class="space-y-6">
-          <!-- Sección: Natilleras Propias -->
-          <div v-if="todasLasNatillerasFiltradas.filter(n => n.es_propia).length > 0">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-natillera-300 to-transparent"></div>
-              <h3 class="text-sm font-bold text-natillera-700 uppercase tracking-wide flex items-center gap-2">
-                <BanknotesIcon class="w-4 h-4" />
-                Mis Natilleras ({{ todasLasNatillerasFiltradas.filter(n => n.es_propia).length }})
-              </h3>
-              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-natillera-300 to-transparent"></div>
-            </div>
-            <div class="grid gap-5 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
-              <div
-                v-for="natillera in todasLasNatillerasFiltradas.filter(n => n.es_propia)" 
-                :key="`propia-${natillera.id}`"
-                class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
-              >
-                <!-- Botón eliminar FUERA del router-link, posicionado absolutamente -->
-                <button
-                  v-if="puedeEliminarNatillera(natillera)"
-                  @click="confirmarEliminarNatillera(natillera)"
-                  class="absolute bottom-[24px] right-[66px] z-30 w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50 shadow-sm"
-                  title="Eliminar natillera"
-                >
-                  <TrashIcon class="w-4 h-4" />
-                </button>
-
-                <router-link 
-                  :to="`/natilleras/${natillera.id}`"
-                  class="block p-6"
-                >
-                  <!-- Efectos decorativos -->
-                  <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-                  <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-                  
-                  <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-4">
-                      <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 overflow-hidden border-2 border-white">
-                        <img 
-                          :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
-                          :alt="natillera.nombre"
-                          class="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span 
-                        :class="[
-                          'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm',
-                          natillera.estado === 'activa' 
-                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                            : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                        ]"
-                      >
-                        {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
-                      </span>
-                    </div>
-                    
-                    <h3 class="font-display font-bold text-gray-800 text-xl mb-2 group-hover:text-natillera-700 transition-colors">
+        <div v-else class="grid gap-5 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
+          <div
+            v-for="natillera in todasLasNatillerasFiltradas" 
+            :key="natillera.id"
+            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+          >
+            <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
+            <router-link 
+              :to="`/natilleras/${natillera.id}`"
+              class="block cursor-pointer flex-1 flex flex-col"
+            >
+              <!-- Cabecera de la tarjeta -->
+              <div class="p-5 pb-4 flex-1 flex flex-col">
+              <div class="flex items-start gap-4 mb-4">
+                <!-- Avatar grande de la natillera -->
+                <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm flex-shrink-0 ring-1 ring-gray-100/50" :class="{
+                  'bg-green-50': obtenerTipoNatillera(natillera).color === 'green',
+                  'bg-blue-50': obtenerTipoNatillera(natillera).color === 'blue',
+                  'bg-orange-50': obtenerTipoNatillera(natillera).color === 'orange'
+                }">
+                  <img 
+                    :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
+                    :alt="natillera.nombre"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <!-- Nombre y etiquetas -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2 mb-1">
+                    <h3 class="font-display font-bold text-gray-800 text-lg leading-tight">
                       {{ natillera.nombre }}
                     </h3>
-                    
-                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                      <span class="px-2.5 py-1 bg-natillera-100 text-natillera-700 rounded-lg font-semibold text-xs">
-                        {{ natillera.periodicidad }}
-                      </span>
-                      <span class="text-gray-400">•</span>
-                      <span class="text-gray-500">Desde {{ formatDate(natillera.fecha_inicio) }}</span>
-                    </div>
-
-                    <div class="pt-4 border-t border-gray-200/50 flex items-center justify-between">
-                      <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <UsersIcon class="w-4 h-4 text-gray-600" />
-                        </div>
-                        <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
-                      </div>
-                      <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                        <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </div>
+                    <!-- Estado ACTIVA en esquina superior derecha -->
+                    <span v-if="natillera.estado === 'activa'" class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-green-600">ACTIVA</span>
+                    </span>
+                    <span v-else class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-gray-600">CERRADA</span>
+                    </span>
                   </div>
-                </router-link>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección: Natilleras Compartidas -->
-          <div v-if="todasLasNatillerasFiltradas.filter(n => !n.es_propia).length > 0">
-            <div class="flex items-center gap-3 mb-4 mt-8">
-              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
-              <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wide flex items-center gap-2">
-                <UserGroupIcon class="w-4 h-4" />
-                Compartidas Conmigo ({{ todasLasNatillerasFiltradas.filter(n => !n.es_propia).length }})
-              </h3>
-              <div class="h-px flex-1 bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
-            </div>
-            <div class="grid gap-5 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
-              <div
-                v-for="natillera in todasLasNatillerasFiltradas.filter(n => !n.es_propia)" 
-                :key="`compartida-${natillera.id}`"
-                class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300"
-              >
-                <router-link 
-                  :to="`/natilleras/${natillera.id}`"
-                  class="block p-6"
-                >
-                  <!-- Efectos decorativos -->
-                  <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/15 to-indigo-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-                  <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-indigo-400/15 to-blue-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
                   
-                  <div class="relative z-10">
-                    <div class="flex items-start justify-between mb-4">
-                      <div class="flex items-start gap-3">
-                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 overflow-hidden border-2 border-white">
-                          <img 
-                            :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
-                            :alt="natillera.nombre"
-                            class="w-full h-full object-cover"
-                          />
-                        </div>
-                        <!-- Badge de rol -->
-                        <div class="px-2 py-1 bg-white/90 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm mt-0.5">
-                          <span :class="[
-                            'text-xs font-bold',
-                            natillera.mi_rol === 'co_administrador' ? 'text-purple-600' :
-                            natillera.mi_rol === 'colaborador' ? 'text-blue-600' : 'text-gray-600'
-                          ]">
-                            {{ formatearRol(natillera.mi_rol) }}
-                          </span>
-                        </div>
-                      </div>
-                      <span 
-                        :class="[
-                          'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm',
-                          natillera.estado === 'activa' 
-                            ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                            : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                        ]"
-                      >
-                        {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
-                      </span>
-                    </div>
-                    
-                    <h3 class="font-display font-bold text-gray-800 text-xl mb-2 group-hover:text-blue-700 transition-colors">
-                      {{ natillera.nombre }}
-                    </h3>
-                    
-                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                      <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold text-xs">
-                        {{ natillera.periodicidad }}
-                      </span>
-                      <span class="text-gray-400">•</span>
-                      <span class="text-gray-500">Desde {{ formatDate(natillera.fecha_inicio) }}</span>
-                    </div>
-
-                    <div class="pt-4 border-t border-gray-200/50 flex items-center justify-between">
-                      <div class="flex items-center gap-2 text-sm text-gray-600">
-                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <UsersIcon class="w-4 h-4 text-gray-600" />
-                        </div>
-                        <span class="font-semibold">{{ natillera.socios_count || 0 }} socios</span>
-                      </div>
-                      <div class="w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
-                        <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-all" />
-                      </div>
-                    </div>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Etiqueta de rol/estado -->
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold" :class="{
+                      'bg-green-100 text-green-700': obtenerTipoNatillera(natillera).color === 'green',
+                      'bg-blue-100 text-blue-700': obtenerTipoNatillera(natillera).color === 'blue',
+                      'bg-orange-100 text-orange-700': obtenerTipoNatillera(natillera).color === 'orange'
+                    }">
+                      {{ obtenerTipoNatillera(natillera).tipo }}
+                    </span>
+                    <!-- Fecha de inicio -->
+                    <span class="text-xs text-gray-600">
+                      Inicia: {{ formatDate(natillera.fecha_inicio) }}
+                    </span>
                   </div>
-                </router-link>
+                </div>
+              </div>
+
+              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Columna SOCIOS -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de usuarios -->
+                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
+                    <!-- Número total de socios -->
+                    <span class="text-lg font-bold text-gray-800">
+                      {{ natillera.socios_count || 0 }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Columna TOTAL RECAUDADO -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de bolsa de dinero -->
+                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
+                    <!-- Cantidad recaudada -->
+                    <span class="text-lg font-bold text-green-600">
+                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- Pie de la tarjeta: Rango de fechas -->
+              <div class="px-5 pb-5 pt-0 border-t border-gray-100">
+                <!-- Rango de fechas -->
+                <div class="flex items-center gap-1.5 text-xs text-gray-600">
+                  <CalendarIcon class="w-4 h-4 text-gray-400" />
+                  <span>{{ formatearRangoMeses(natillera) }}</span>
+                </div>
+              </div>
+            </router-link>
+            
+            <!-- Botón eliminar (fuera del router-link para que no active la navegación) -->
+            <button
+              v-if="puedeEliminarNatillera(natillera) && natillera.es_propia"
+              @click.stop="confirmarEliminarNatillera(natillera)"
+              class="absolute bottom-4 right-4 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+              title="Eliminar natillera"
+            >
+              <TrashIcon class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- Tarjeta crear nueva natillera -->
+          <router-link 
+            to="/natilleras/crear"
+            class="group relative overflow-hidden rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50/30 transition-all duration-300 flex flex-col h-full"
+          >
+            <!-- Cabecera de la tarjeta (mismo padding que las demás) -->
+            <div class="p-5 pb-4 flex-1 flex items-center justify-center">
+              <div class="text-center w-full">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 group-hover:bg-green-200 flex items-center justify-center transition-colors">
+                  <PlusIcon class="w-8 h-8 text-green-600" />
+                </div>
+                <h3 class="font-display font-bold text-gray-800 text-xl mb-2">Crear nueva natillera</h3>
+                <p class="text-sm text-gray-600">Inicia un nuevo grupo de ahorro</p>
               </div>
             </div>
-          </div>
+            <!-- Pie de la tarjeta (mismo padding que las demás) -->
+            <div class="px-5 pb-5 pt-0 border-t border-gray-100">
+              <div class="flex items-center justify-center gap-1.5 text-xs text-gray-600">
+                <PlusIcon class="w-4 h-4 text-gray-400" />
+                <span>Nueva natillera</span>
+              </div>
+            </div>
+          </router-link>
         </div>
       </template>
 
@@ -541,73 +643,129 @@
           <div
             v-for="natillera in natillerasFiltradas" 
             :key="natillera.id"
-            class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300"
+            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
           >
-            <!-- Botón eliminar FUERA del router-link, posicionado absolutamente -->
+            <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
+            <router-link 
+              :to="`/natilleras/${natillera.id}`"
+              class="block cursor-pointer flex-1 flex flex-col"
+            >
+              <!-- Cabecera de la tarjeta -->
+              <div class="p-5 pb-4 flex-1 flex flex-col">
+              <div class="flex items-start gap-4 mb-4">
+                <!-- Avatar grande de la natillera -->
+                <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm flex-shrink-0 bg-green-50 ring-1 ring-gray-100/50">
+                  <img 
+                    :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
+                    :alt="natillera.nombre"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                
+                <!-- Nombre y etiquetas -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2 mb-1">
+                    <h3 class="font-display font-bold text-gray-800 text-lg leading-tight">
+                      {{ natillera.nombre }}
+                    </h3>
+                    <!-- Estado ACTIVA en esquina superior derecha -->
+                    <span v-if="natillera.estado === 'activa'" class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-green-600">ACTIVA</span>
+                    </span>
+                    <span v-else class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-gray-600">CERRADA</span>
+                    </span>
+                  </div>
+                  
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Etiqueta de rol/estado -->
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-green-100 text-green-700">
+                      MÍA
+                    </span>
+                    <!-- Fecha de inicio -->
+                    <span class="text-xs text-gray-600">
+                      Inicia: {{ formatDate(natillera.fecha_inicio) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Columna SOCIOS -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de usuarios -->
+                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
+                    <!-- Número total de socios -->
+                    <span class="text-lg font-bold text-gray-800">
+                      {{ natillera.socios_count || 0 }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Columna TOTAL RECAUDADO -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de bolsa de dinero -->
+                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
+                    <!-- Cantidad recaudada -->
+                    <span class="text-lg font-bold text-green-600">
+                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- Pie de la tarjeta: Rango de fechas -->
+              <div class="px-5 pb-5 pt-0 border-t border-gray-100">
+                <!-- Rango de fechas -->
+                <div class="flex items-center gap-1.5 text-xs text-gray-600">
+                  <CalendarIcon class="w-4 h-4 text-gray-400" />
+                  <span>{{ formatearRangoMeses(natillera) }}</span>
+                </div>
+              </div>
+            </router-link>
+            
+            <!-- Botón eliminar (fuera del router-link para que no active la navegación) -->
             <button
               v-if="puedeEliminarNatillera(natillera)"
-              @click="confirmarEliminarNatillera(natillera)"
-              class="absolute top-4 left-4 z-30 w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 flex items-center justify-center transition-all hover:scale-110 active:scale-95 border border-red-200/50 shadow-sm"
+              @click.stop="confirmarEliminarNatillera(natillera)"
+              class="absolute bottom-4 right-4 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
               title="Eliminar natillera"
             >
               <TrashIcon class="w-4 h-4" />
             </button>
-
-            <router-link 
-              :to="`/natilleras/${natillera.id}`"
-              class="block p-6"
-            >
-              <!-- Efectos decorativos -->
-              <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-              <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-              
-              <div class="relative z-10">
-                <div class="flex items-start justify-between mb-4">
-                  <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 overflow-hidden border-2 border-white">
-                    <img 
-                      :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
-                      :alt="natillera.nombre"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span 
-                    :class="[
-                      'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm',
-                      natillera.estado === 'activa' 
-                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                        : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                    ]"
-                  >
-                    {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
-                  </span>
-                </div>
-                
-                <h3 class="font-display font-bold text-gray-800 text-xl mb-2 group-hover:text-natillera-700 transition-colors">
-                  {{ natillera.nombre }}
-                </h3>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                  <span class="px-2.5 py-1 bg-natillera-100 text-natillera-700 rounded-lg font-semibold text-xs">
-                    {{ natillera.periodicidad }}
-                  </span>
-                  <span class="text-gray-400">•</span>
-                  <span class="text-gray-500">Desde {{ formatDate(natillera.fecha_inicio) }}</span>
-                </div>
-
-                <div class="pt-4 border-t border-gray-200/50 flex items-center justify-between">
-                  <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <UsersIcon class="w-4 h-4 text-gray-600" />
-                    </div>
-                    <span class="font-semibold">{{ natillera.socios_count || 0 }} {{ natillera.socios_count === 1 ? 'socio' : 'socios' }}</span>
-                  </div>
-                  <div class="w-8 h-8 rounded-lg bg-natillera-100 group-hover:bg-natillera-200 flex items-center justify-center transition-colors">
-                    <ChevronRightIcon class="w-5 h-5 text-natillera-600 group-hover:translate-x-1 transition-all" />
-                  </div>
-                </div>
-              </div>
-            </router-link>
           </div>
+
+          <!-- Tarjeta crear nueva natillera -->
+          <router-link 
+            to="/natilleras/crear"
+            class="group relative overflow-hidden rounded-2xl bg-white border-2 border-dashed border-gray-300 hover:border-green-500 hover:bg-green-50/30 transition-all duration-300 flex flex-col h-full"
+          >
+            <!-- Cabecera de la tarjeta (mismo padding que las demás) -->
+            <div class="p-5 pb-4 flex-1 flex items-center justify-center">
+              <div class="text-center w-full">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 group-hover:bg-green-200 flex items-center justify-center transition-colors">
+                  <PlusIcon class="w-8 h-8 text-green-600" />
+                </div>
+                <h3 class="font-display font-bold text-gray-800 text-xl mb-2">Crear nueva natillera</h3>
+                <p class="text-sm text-gray-600">Inicia un nuevo grupo de ahorro</p>
+              </div>
+            </div>
+            <!-- Pie de la tarjeta (mismo padding que las demás) -->
+            <div class="px-5 pb-5 pt-0 border-t border-gray-100">
+              <div class="flex items-center justify-center gap-1.5 text-xs text-gray-600">
+                <PlusIcon class="w-4 h-4 text-gray-400" />
+                <span>Nueva natillera</span>
+              </div>
+            </div>
+          </router-link>
         </div>
       </template>
 
@@ -631,74 +789,111 @@
           <div
             v-for="natillera in natillerasCompartidasFiltradas" 
             :key="natillera.id"
-            class="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 border border-blue-200/50 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300"
+            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
           >
+            <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
             <router-link 
               :to="`/natilleras/${natillera.id}`"
-              class="block p-6"
+              class="block cursor-pointer flex-1 flex flex-col"
             >
-              <!-- Efectos decorativos -->
-              <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/15 to-indigo-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-              <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-indigo-400/15 to-blue-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-              
-              <div class="relative z-10">
-                <div class="flex items-start justify-between mb-4">
-                  <div class="flex items-start gap-3">
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 overflow-hidden border-2 border-white">
-                      <img 
-                        :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
-                        :alt="natillera.nombre"
-                        class="w-full h-full object-cover"
-                      />
-                    </div>
-                    <!-- Badge de rol -->
-                    <div class="px-2 py-1 bg-white/90 backdrop-blur-sm border border-blue-200 rounded-lg shadow-sm mt-0.5">
-                      <span :class="[
-                        'text-xs font-bold',
-                        natillera.mi_rol === 'co_administrador' ? 'text-purple-600' :
-                        natillera.mi_rol === 'colaborador' ? 'text-blue-600' : 'text-gray-600'
-                      ]">
-                        {{ formatearRol(natillera.mi_rol) }}
-                      </span>
-                    </div>
-                  </div>
-                  <span 
-                    :class="[
-                      'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm',
-                      natillera.estado === 'activa' 
-                        ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                        : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                    ]"
-                  >
-                    {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
-                  </span>
+              <!-- Cabecera de la tarjeta -->
+              <div class="p-5 pb-4 flex-1 flex flex-col">
+              <div class="flex items-start gap-4 mb-4">
+                <!-- Avatar grande de la natillera -->
+                <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-200/60 shadow-sm flex-shrink-0 bg-blue-50 ring-1 ring-gray-100/50">
+                  <img 
+                    :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
+                    :alt="natillera.nombre"
+                    class="w-full h-full object-cover"
+                  />
                 </div>
                 
-                <h3 class="font-display font-bold text-gray-800 text-xl mb-2 group-hover:text-blue-700 transition-colors">
-                  {{ natillera.nombre }}
-                </h3>
-                
-                <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                  <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg font-semibold text-xs">
-                    {{ natillera.periodicidad }}
-                  </span>
-                  <span class="text-gray-400">•</span>
-                  <span class="text-gray-500">Desde {{ formatDate(natillera.fecha_inicio) }}</span>
-                </div>
-
-                <div class="pt-4 border-t border-gray-200/50 flex items-center justify-between">
-                  <div class="flex items-center gap-2 text-sm text-gray-600">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <UsersIcon class="w-4 h-4 text-gray-600" />
-                    </div>
-                    <span class="font-semibold">{{ natillera.socios_count || 0 }} socios</span>
+                <!-- Nombre y etiquetas -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-start justify-between gap-2 mb-1">
+                    <h3 class="font-display font-bold text-gray-800 text-lg leading-tight">
+                      {{ natillera.nombre }}
+                    </h3>
+                    <!-- Estado ACTIVA en esquina superior derecha -->
+                    <span v-if="natillera.estado === 'activa'" class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-green-600">ACTIVA</span>
+                    </span>
+                    <span v-else class="flex items-center gap-1.5 flex-shrink-0">
+                      <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                      <span class="text-xs font-bold text-gray-600">CERRADA</span>
+                    </span>
                   </div>
-                  <div class="w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-colors">
-                    <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:translate-x-1 transition-all" />
+                  
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Etiqueta de rol/estado -->
+                    <span class="px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-700">
+                      COMPARTIDA
+                    </span>
+                    <!-- Fecha de inicio -->
+                    <span class="text-xs text-gray-600">
+                      Inicia: {{ formatDate(natillera.fecha_inicio) }}
+                    </span>
                   </div>
                 </div>
               </div>
+
+              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <!-- Columna SOCIOS -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de usuarios -->
+                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
+                    <!-- Número total de socios -->
+                    <span class="text-lg font-bold text-gray-800">
+                      {{ natillera.socios_count || 0 }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Columna TOTAL RECAUDADO -->
+                <div>
+                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
+                  <div class="flex items-center gap-2">
+                    <!-- Icono de bolsa de dinero -->
+                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
+                    <!-- Cantidad recaudada -->
+                    <span class="text-lg font-bold text-green-600">
+                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              </div>
+
+              <!-- Pie de la tarjeta: Rango de fechas -->
+              <div class="px-5 pb-5 pt-0 border-t border-gray-100">
+                <!-- Rango de fechas -->
+                <div class="flex items-center gap-1.5 text-xs text-gray-600">
+                  <CalendarIcon class="w-4 h-4 text-gray-400" />
+                  <span>{{ formatearRangoMeses(natillera) }}</span>
+                </div>
+              </div>
             </router-link>
+          </div>
+        </div>
+      </template>
+
+      <!-- Vista: Como socio -->
+      <template v-else-if="vistaActiva === 'socio'">
+        <div class="relative bg-gradient-to-br from-white via-orange-50/30 to-amber-50/20 rounded-3xl p-8 sm:p-12 border border-orange-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+          <div class="relative z-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 mb-6">
+              <UserIcon class="w-10 h-10 text-orange-600" />
+            </div>
+            <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-3">
+              Natilleras como socio
+            </h3>
+            <p class="text-gray-600 mt-2 text-base">
+              Esta funcionalidad está en desarrollo. Aquí aparecerán las natilleras donde participas como socio.
+            </p>
           </div>
         </div>
       </template>
@@ -800,31 +995,198 @@
         </div>
       </div>
     </div>
+
+    <!-- Animación de carga mientras se verifica el modal -->
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div 
+        v-if="verificandoModal" 
+        class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
+        @click.stop.prevent
+        @wheel.stop.prevent
+        @touchmove.stop.prevent
+        @scroll.stop.prevent
+        style="touch-action: none; overscroll-behavior: none;"
+      >
+        <!-- Efectos decorativos de fondo -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
+        </div>
+        
+        <div class="relative z-10 flex flex-col items-center">
+          <!-- Spinner moderno con gradientes y múltiples capas -->
+          <div class="relative w-24 h-24 mb-6">
+            <!-- Anillo exterior grande animado -->
+            <div class="absolute inset-0 border-4 border-green-200/50 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-transparent border-t-green-500 rounded-full animate-spin-smooth"></div>
+            
+            <!-- Anillo medio -->
+            <div class="absolute inset-2 border-4 border-emerald-200/50 rounded-full"></div>
+            <div class="absolute inset-2 border-4 border-transparent border-r-emerald-500 rounded-full animate-spin-reverse"></div>
+            
+            <!-- Anillo interior -->
+            <div class="absolute inset-4 border-4 border-teal-200/50 rounded-full"></div>
+            <div class="absolute inset-4 border-4 border-transparent border-b-teal-500 rounded-full animate-spin-smooth" style="animation-duration: 0.6s;"></div>
+            
+            <!-- Círculo central con gradiente animado -->
+            <div class="absolute inset-6 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-glow-pulse">
+              <BanknotesIcon class="w-5 h-5 text-white" />
+            </div>
+            
+            <!-- Partículas flotantes -->
+            <div class="absolute -top-2 left-1/2 w-2 h-2 bg-green-400 rounded-full animate-float-1"></div>
+            <div class="absolute top-1/4 -right-2 w-2 h-2 bg-emerald-400 rounded-full animate-float-2"></div>
+            <div class="absolute -bottom-2 left-1/4 w-2 h-2 bg-teal-400 rounded-full animate-float-3"></div>
+          </div>
+          
+          <!-- Texto de carga con efecto -->
+          <div class="text-center">
+            <p class="text-gray-700 font-semibold text-lg mb-1 animate-fade-in-out">
+              {{ mensajeCargaActual }}
+            </p>
+            <div class="flex gap-1 justify-center mt-2">
+              <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+              <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+              <div class="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Modal para crear primera natillera -->
+    <Transition
+      enter-active-class="transition duration-500 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-300 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div 
+        v-if="mostrarModalCrearNatillera && !verificandoModal" 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <!-- Overlay con blur -->
+        <div 
+          class="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          @click="mostrarModalCrearNatillera = false"
+        ></div>
+        
+        <!-- Modal con animación -->
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-200 overflow-hidden transform transition-all duration-700">
+          <!-- Efectos decorativos de fondo -->
+          <div class="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
+          <div class="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 animate-pulse" style="animation-delay: 0.5s"></div>
+          
+          <div class="relative z-10">
+            <!-- Mensaje de Bienvenida -->
+            <div class="text-center mb-8 animate-fade-in-up">
+              <!-- Icono animado -->
+              <div class="relative w-20 h-20 mx-auto mb-4">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce">
+                  <BanknotesIcon class="w-10 h-10 text-white" />
+                </div>
+                <!-- Anillos pulsantes -->
+                <div class="absolute inset-0 rounded-2xl border-4 border-green-400 animate-ping opacity-75"></div>
+                <div class="absolute inset-0 rounded-2xl border-4 border-green-300 animate-ping opacity-50" style="animation-delay: 0.3s"></div>
+              </div>
+              
+              <h2 class="text-2xl font-display font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
+                ¡Bienvenido! 👋
+              </h2>
+              <p class="text-gray-600 text-base leading-relaxed mb-4">
+                Estamos emocionados de tenerte aquí.
+              </p>
+              <p class="text-gray-700 text-base font-medium mb-2">
+                Para empezar, crea tu primera natillera.
+              </p>
+            </div>
+
+            <!-- Explicación breve -->
+            <div class="bg-green-50 rounded-xl p-4 mb-6 border border-green-200/50">
+              <p class="text-sm text-gray-700 text-center leading-relaxed">
+                Una natillera te permite gestionar ahorros grupales de forma organizada, llevar control de cuotas, préstamos y actividades con tu comunidad de manera sencilla y eficiente.
+              </p>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex flex-col gap-3">
+              <!-- Botón principal con animación muy visible -->
+              <router-link
+                :to="esSocioEnAlgunaNatillera ? '/dashboard' : '/natilleras/crear'"
+                @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
+                class="relative w-full px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-2xl hover:shadow-green-500/50 transform hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2 text-lg overflow-hidden group animate-pulse-button"
+                style="animation: pulse-glow 2s ease-in-out infinite, scale-bounce 1.5s ease-in-out infinite;"
+              >
+                <!-- Efecto de brillo animado continuo -->
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" style="animation: shimmer 2s linear infinite;"></div>
+                <!-- Anillos de pulso múltiples -->
+                <div class="absolute inset-0 rounded-xl bg-green-400 opacity-0 animate-ping-ring" style="animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+                <div class="absolute inset-0 rounded-xl bg-green-300 opacity-0 animate-ping-ring" style="animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite 0.5s;"></div>
+                <!-- Borde brillante animado -->
+                <div class="absolute inset-0 rounded-xl border-2 border-white/50 animate-border-pulse" style="animation: border-pulse 1.5s ease-in-out infinite;"></div>
+                <!-- Contenido del botón -->
+                <div class="relative z-10 flex items-center gap-2 animate-content-bounce" style="animation: content-bounce 2s ease-in-out infinite;">
+                  <PlusIcon v-if="!esSocioEnAlgunaNatillera" class="w-6 h-6 animate-spin-slow" style="animation: spin-slow 3s linear infinite;" />
+                  <ArrowRightIcon v-else class="w-6 h-6 animate-bounce" style="animation: bounce 1s ease-in-out infinite;" />
+                  <span class="font-bold">{{ esSocioEnAlgunaNatillera ? 'Navegar como socio' : 'Crear nueva natillera' }}</span>
+                </div>
+              </router-link>
+
+              <!-- Botón para crear más tarde -->
+              <button
+                @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
+                class="w-full px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 text-gray-700 font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Crear más tarde
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated, onBeforeUnmount, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useUsersStore } from '../stores/users'
 import { useNotificationStore } from '../stores/notifications'
 import { useColaboradoresStore } from '../stores/colaboradores'
 import { supabase } from '../lib/supabase'
-import { getNatilleraAvatarUrl } from '../utils/avatars'
+import { getNatilleraAvatarUrl, getAvatarUrl } from '../utils/avatars'
+import { formatDate } from '../utils/formatDate'
 import { 
   BanknotesIcon, 
   UsersIcon, 
+  UserIcon,
   UserGroupIcon,
   CurrencyDollarIcon, 
   ChartBarIcon,
   PlusIcon,
   ChevronRightIcon,
+  ArrowRightIcon,
   TrashIcon,
   Squares2X2Icon,
   EnvelopeIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  BuildingOfficeIcon,
+  Cog6ToothIcon,
+  ClockIcon,
+  FunnelIcon,
+  ChevronUpIcon,
+  CalendarIcon
 } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
@@ -839,6 +1201,26 @@ const vistaActiva = ref('todas')
 const natilleraAEliminar = ref(null)
 const usuarioAutenticado = ref(null)
 const procesandoInvitacion = ref(null)
+const recaudadoPorNatillera = ref({})
+const progresoPorNatillera = ref({})
+const mostrarModalCrearNatillera = ref(false)
+const natillerasDondeEsSocio = ref([])
+const verificandoModal = ref(true) // Estado para la animación de carga
+const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
+const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
+
+// Mensajes de carga que rotarán
+const mensajesCarga = [
+  'Ajustando condensador de flujo...',
+  'Preparando todo para ti',
+  'Cargando natilleras',
+  'Abriendo el DRS',
+  'Echandole mas agua a la sopa',
+  'Poniendo neumaticos blandos',
+  'Cargando informacion'
+]
+const mensajeCargaActual = ref(mensajesCarga[0])
+let intervaloMensajeCarga = null
 
 const totalSocios = computed(() => {
   return natillerasStore.natilleras.reduce((sum, n) => {
@@ -882,9 +1264,267 @@ const todasLasNatillerasFiltradas = computed(() => {
   })
 })
 
+// Verificar si el usuario es socio en alguna natillera
+async function verificarNatillerasDondeEsSocio() {
+  try {
+    if (!usuarioAutenticado.value) return
+    
+    // Buscar el socio asociado al usuario por email
+    const { data: socios, error } = await supabase
+      .from('socios')
+      .select('id')
+      .eq('email', usuarioAutenticado.value.email)
+      .limit(1)
+    
+    if (error || !socios || socios.length === 0) {
+      natillerasDondeEsSocio.value = []
+      return
+    }
+    
+    const socioId = socios[0].id
+    
+    // Buscar natilleras donde este socio está registrado
+    const { data: sociosNatillera, error: errorSN } = await supabase
+      .from('socios_natillera')
+      .select('natillera_id')
+      .eq('socio_id', socioId)
+    
+    if (errorSN || !sociosNatillera || sociosNatillera.length === 0) {
+      natillerasDondeEsSocio.value = []
+      return
+    }
+    
+    natillerasDondeEsSocio.value = sociosNatillera.map(sn => sn.natillera_id)
+  } catch (e) {
+    console.error('Error verificando natilleras donde es socio:', e)
+    natillerasDondeEsSocio.value = []
+  }
+}
+
+// Verificar si el modal ya fue mostrado antes (solo para usuarios que son socios)
+const yaSeMostroModal = () => {
+  if (!usuarioAutenticado.value?.id) return false
+  const key = `modal_bienvenida_mostrado_${usuarioAutenticado.value.id}`
+  return localStorage.getItem(key) === 'true'
+}
+
+const marcarModalComoMostrado = () => {
+  const key = `modal_bienvenida_mostrado_${usuarioAutenticado.value?.id || 'anon'}`
+  localStorage.setItem(key, 'true')
+}
+
+// Computed para saber si es socio
+const esSocioEnAlgunaNatillera = computed(() => {
+  return natillerasDondeEsSocio.value.length > 0
+})
+
+// Mostrar modal según las condiciones específicas
+const debeMostrarModal = computed(() => {
+  // No mostrar si está cargando
+  if (natillerasStore.loading) return false
+  
+  // No mostrar si no hay usuario autenticado aún
+  if (!usuarioAutenticado.value) return false
+  
+  // Verificar si tiene natilleras propias o compartidas
+  const tieneNatilleras = todasLasNatilleras.value.length > 0
+  const esSocio = esSocioEnAlgunaNatillera.value
+  
+  // Condición 1: Si NO tiene natilleras (ni propias/compartidas, ni como socio)
+  // SIEMPRE mostrar, sin importar localStorage
+  if (!tieneNatilleras && !esSocio) {
+    return true
+  }
+  
+  // Condición 2: Si tiene natilleras SOLO como socio (no propias ni compartidas)
+  // Mostrar solo la primera vez (usar localStorage)
+  if (!tieneNatilleras && esSocio) {
+    return !yaSeMostroModal()
+  }
+  
+  // Si tiene natilleras propias o compartidas, no mostrar
+  return false
+})
+
+// Funciones para controlar el scroll del body
+function bloquearScroll() {
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+  document.body.style.width = '100%'
+}
+
+function desbloquearScroll() {
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.width = ''
+}
+
+// Variable para mantener el índice anterior fuera del intervalo
+let indiceMensajeAnterior = -1
+
+// Función para iniciar la rotación de mensajes de carga (aleatoria)
+function iniciarRotacionMensajes() {
+  // Limpiar intervalo anterior si existe
+  if (intervaloMensajeCarga) {
+    clearInterval(intervaloMensajeCarga)
+    intervaloMensajeCarga = null
+  }
+  
+  // Seleccionar un mensaje aleatorio inicial
+  indiceMensajeAnterior = Math.floor(Math.random() * mensajesCarga.length)
+  mensajeCargaActual.value = mensajesCarga[indiceMensajeAnterior]
+  
+  // Cambiar mensaje cada 2 segundos de forma aleatoria
+  intervaloMensajeCarga = setInterval(() => {
+    let nuevoIndice
+    // Si hay más de un mensaje, asegurarse de que no se repita el anterior
+    if (mensajesCarga.length > 1) {
+      do {
+        nuevoIndice = Math.floor(Math.random() * mensajesCarga.length)
+      } while (nuevoIndice === indiceMensajeAnterior)
+    } else {
+      nuevoIndice = 0
+    }
+    
+    indiceMensajeAnterior = nuevoIndice
+    mensajeCargaActual.value = mensajesCarga[nuevoIndice]
+  }, 2000)
+}
+
+// Función para detener la rotación de mensajes
+function detenerRotacionMensajes() {
+  if (intervaloMensajeCarga) {
+    clearInterval(intervaloMensajeCarga)
+    intervaloMensajeCarga = null
+  }
+}
+
+// Función auxiliar para finalizar la verificación y mostrar el modal si corresponde
+async function finalizarVerificacionYMostrarModal() {
+  // Evitar múltiples ejecuciones simultáneas
+  if (finalizandoVerificacion.value || !verificandoModal.value) {
+    return
+  }
+  
+  // IMPORTANTE: Verificar que todo esté listo, especialmente que las natilleras hayan terminado de cargar
+  if (!usuarioAutenticado.value) {
+    return // No hay usuario, no hacer nada
+  }
+  
+  // Verificar explícitamente que las natilleras hayan terminado de cargar
+  if (natillerasStore.loading) {
+    return // Las natilleras aún están cargando, esperar
+  }
+  
+  // Marcar que estamos finalizando
+  finalizandoVerificacion.value = true
+  
+  try {
+    // Asegurar que se haya verificado si es socio
+    await verificarNatillerasDondeEsSocio()
+    
+    // Verificar una vez más que las natilleras terminaron de cargar (por si cambió durante la verificación)
+    if (natillerasStore.loading) {
+      finalizandoVerificacion.value = false
+      return // Si aún está cargando, salir y esperar al watch
+    }
+    
+    // Esperar un momento para que los computed se actualicen
+    await new Promise(resolve => setTimeout(resolve, 200))
+    
+    // Verificar una última vez que todo está listo
+    if (!natillerasStore.loading && usuarioAutenticado.value) {
+      // Detener rotación de mensajes
+      detenerRotacionMensajes()
+      
+      // Desbloquear scroll del body
+      desbloquearScroll()
+      
+      // TODO está listo, ocultar animación de carga
+      verificandoModal.value = false
+      
+      // Pequeño delay antes de mostrar el modal para suavizar la transición
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      // Mostrar el modal si corresponde
+      if (debeMostrarModal.value) {
+        mostrarModalCrearNatillera.value = true
+      }
+    }
+  } finally {
+    finalizandoVerificacion.value = false
+  }
+}
+
+// Watch para controlar el bloqueo de scroll cuando se muestra/oculta la animación
+watch(verificandoModal, (mostrando) => {
+  if (mostrando) {
+    bloquearScroll()
+    // Iniciar rotación con un pequeño delay para asegurar que el DOM esté listo
+    setTimeout(() => {
+      iniciarRotacionMensajes()
+    }, 100)
+  } else {
+    desbloquearScroll()
+    detenerRotacionMensajes()
+  }
+}, { immediate: true }) // immediate: true para que se ejecute al montar el componente
+
+// Watch para cuando termine de cargar las natilleras - este es el momento principal
+watch(() => natillerasStore.loading, async (loading, oldLoading) => {
+  // Si las natilleras empiezan a cargar y no está la animación visible, mostrarla
+  if (!oldLoading && loading && usuarioAutenticado.value && !verificandoModal.value) {
+    verificandoModal.value = true
+  }
+  
+  // Solo actuar cuando cambie de true a false (terminó de cargar) y si aún está verificando
+  if (oldLoading && !loading && usuarioAutenticado.value && verificandoModal.value) {
+    await finalizarVerificacionYMostrarModal()
+  }
+})
+
+// Watch de respaldo: si el usuario se autentica después de que terminó la carga
+watch(() => usuarioAutenticado.value, async (usuario) => {
+  if (usuario && !natillerasStore.loading && verificandoModal.value) {
+    await finalizarVerificacionYMostrarModal()
+  }
+})
+
+// Watch para cuando se verifique si es socio - solo si aún está verificando
+watch(esSocioEnAlgunaNatillera, async () => {
+  if (usuarioAutenticado.value && !natillerasStore.loading && verificandoModal.value) {
+    await finalizarVerificacionYMostrarModal()
+  }
+})
+
 async function calcularTotalRecaudado() {
   try {
-    const natilleraIds = natillerasStore.natilleras.map(n => n.id)
+    // OPTIMIZACIÓN: Calcular total recaudado sumando los valores ya calculados por natillera
+    // Si ya se calculó el recaudado por natillera, usar esos datos
+    // Asegurar que siempre sean arrays antes de usar map
+    const natillerasArray = Array.isArray(natillerasStore.natilleras) ? natillerasStore.natilleras : []
+    const natillerasCompartidasArray = Array.isArray(natillerasStore.natillerasCompartidas) ? natillerasStore.natillerasCompartidas : []
+    
+    // Filtrar IDs válidos (no null, no undefined)
+    const idsNatilleras = natillerasArray.map(n => n?.id).filter(id => id != null)
+    const idsNatillerasCompartidas = natillerasCompartidasArray.map(n => n?.id).filter(id => id != null)
+    const todasIds = [...idsNatilleras, ...idsNatillerasCompartidas]
+    
+    if (todasIds.length === 0) {
+      totalRecaudado.value = 0
+      return
+    }
+
+    // Si ya tenemos los recaudados por natillera calculados, sumarlos
+    if (Object.keys(recaudadoPorNatillera.value).length > 0) {
+      totalRecaudado.value = todasIds.reduce((sum, id) => {
+        return sum + (recaudadoPorNatillera.value[id] || 0)
+      }, 0)
+      return
+    }
+
+    // Si no están calculados aún, hacer la query directamente (caso inicial)
+    const natilleraIds = idsNatilleras
     
     if (natilleraIds.length === 0) {
       totalRecaudado.value = 0
@@ -928,13 +1568,288 @@ function formatMoneyShort(value) {
   return formatMoney(value)
 }
 
-function formatDate(date) {
-  if (!date) return ''
-  const d = new Date(date)
-  const day = String(d.getDate()).padStart(2, '0')
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const year = d.getFullYear()
-  return `${day}/${month}/${year}`
+async function calcularRecaudadoYProgresoPorNatillera() {
+  try {
+    // Asegurar que siempre sean arrays antes de usar map
+    const natillerasArray = Array.isArray(natillerasStore.natilleras) ? natillerasStore.natilleras : []
+    const natillerasCompartidasArray = Array.isArray(natillerasStore.natillerasCompartidas) ? natillerasStore.natillerasCompartidas : []
+    
+    // Filtrar IDs válidos (no null, no undefined)
+    const idsNatilleras = natillerasArray.map(n => n?.id).filter(id => id != null)
+    const idsNatillerasCompartidas = natillerasCompartidasArray.map(n => n?.id).filter(id => id != null)
+    const todasIds = [...idsNatilleras, ...idsNatillerasCompartidas]
+    
+    if (todasIds.length === 0) {
+      return
+    }
+
+    // Obtener todos los socios_natillera de todas las natilleras en una sola query
+    const { data: todosSociosNatillera } = await supabase
+      .from('socios_natillera')
+      .select('id, natillera_id')
+      .in('natillera_id', todasIds)
+    
+    if (!todosSociosNatillera || todosSociosNatillera.length === 0) {
+      // Inicializar todos los valores en 0
+      todasIds.forEach(id => {
+        recaudadoPorNatillera.value[id] = 0
+        progresoPorNatillera.value[id] = 0
+      })
+      return
+    }
+
+    // Agrupar socio_natillera_ids por natillera_id
+    const sociosPorNatillera = {}
+    todosSociosNatillera.forEach(sn => {
+      if (!sociosPorNatillera[sn.natillera_id]) {
+        sociosPorNatillera[sn.natillera_id] = []
+      }
+      sociosPorNatillera[sn.natillera_id].push(sn.id)
+    })
+
+    // Obtener todas las cuotas de todas las natilleras en una sola query
+    const todosSocioNatilleraIds = todosSociosNatillera.map(sn => sn.id)
+    const { data: todasCuotas } = await supabase
+      .from('cuotas')
+      .select('socio_natillera_id, valor_cuota, valor_pagado')
+      .in('socio_natillera_id', todosSocioNatilleraIds)
+
+    // Crear un mapa rápido de socio_natillera_id -> natillera_id
+    const mapaSocioNatillera = {}
+    todosSociosNatillera.forEach(sn => {
+      mapaSocioNatillera[sn.id] = sn.natillera_id
+    })
+
+    // Agrupar cuotas por natillera_id
+    const cuotasPorNatillera = {}
+    todasCuotas?.forEach(cuota => {
+      const natilleraId = mapaSocioNatillera[cuota.socio_natillera_id]
+      if (!cuotasPorNatillera[natilleraId]) {
+        cuotasPorNatillera[natilleraId] = []
+      }
+      cuotasPorNatillera[natilleraId].push(cuota)
+    })
+
+    // Calcular recaudado y progreso para cada natillera (en paralelo con procesamiento local)
+    todasIds.forEach(natilleraId => {
+      const cuotas = cuotasPorNatillera[natilleraId] || []
+      const totalCuota = cuotas.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
+      const totalPagado = cuotas.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+      
+      recaudadoPorNatillera.value[natilleraId] = totalPagado
+      progresoPorNatillera.value[natilleraId] = totalCuota > 0 ? (totalPagado / totalCuota) * 100 : 0
+    })
+  } catch (e) {
+    console.error('Error calculando recaudado por natillera:', e)
+  }
+}
+
+function obtenerRecaudadoNatillera(natilleraId) {
+  return recaudadoPorNatillera.value[natilleraId] || 0
+}
+
+function obtenerProgresoNatillera(natilleraId) {
+  return Math.min(100, Math.max(0, progresoPorNatillera.value[natilleraId] || 0))
+}
+
+function formatearPeriodicidad(periodicidad) {
+  const periodos = {
+    quincenal: 'QUINCENAL',
+    mensual: 'MENSUAL',
+    semanal: 'SEMANAL'
+  }
+  return periodos[periodicidad?.toLowerCase()] || periodicidad?.toUpperCase() || 'MENSUAL'
+}
+
+function obtenerTipoNatillera(natillera) {
+  if (natillera.es_propia) return { tipo: 'MÍA', color: 'green' }
+  if (natillera.mi_rol) return { tipo: 'COMPARTIDA', color: 'blue' }
+  return { tipo: 'SOCIO', color: 'blue' }
+}
+
+// Función para obtener las iniciales de un nombre
+function obtenerIniciales(nombre) {
+  if (!nombre) return '??'
+  const palabras = nombre.trim().split(/\s+/)
+  if (palabras.length >= 2) {
+    return (palabras[0][0] + palabras[palabras.length - 1][0]).toUpperCase()
+  }
+  return nombre.substring(0, 2).toUpperCase()
+}
+
+// Función para formatear el rango de meses (Ene 2024 - Dic 2024)
+function formatearRangoMeses(natillera) {
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  
+  const mesInicio = natillera.mes_inicio || 1
+  const anioInicio = natillera.anio_inicio || natillera.anio || new Date().getFullYear()
+  const mesFin = natillera.mes_fin || 12
+  const anioFin = natillera.anio || anioInicio
+  
+  const mesInicioTexto = meses[mesInicio - 1] || 'Ene'
+  const mesFinTexto = meses[mesFin - 1] || 'Dic'
+  
+  if (anioInicio === anioFin) {
+    return `${mesInicioTexto} ${anioInicio} - ${mesFinTexto} ${anioFin}`
+  }
+  return `${mesInicioTexto} ${anioInicio} - ${mesFinTexto} ${anioFin}`
+}
+
+// Función optimizada para cargar socios de TODAS las natilleras en una sola query
+async function cargarTodosLosSocios(natilleraIds) {
+  try {
+    // Asegurar que natilleraIds sea un array
+    if (!natilleraIds) {
+      console.warn('cargarTodosLosSocios: natilleraIds es null o undefined')
+      return
+    }
+    
+    // Convertir a array si no lo es y filtrar valores válidos
+    let idsArray = []
+    if (Array.isArray(natilleraIds)) {
+      // Crear una copia del array y filtrar valores válidos
+      idsArray = [...natilleraIds].filter(id => id != null && id !== undefined)
+    } else {
+      console.warn('cargarTodosLosSocios: natilleraIds no es un array:', typeof natilleraIds, natilleraIds)
+      return
+    }
+    
+    // Validación final: asegurar que idsArray es un array válido
+    if (!Array.isArray(idsArray)) {
+      console.error('cargarTodosLosSocios: idsArray no es un array después del filtrado:', typeof idsArray, idsArray)
+      idsArray = [] // Forzar a array vacío
+    }
+    
+    // Validación adicional: verificar que idsArray tiene el método forEach
+    if (typeof idsArray.forEach !== 'function') {
+      console.error('cargarTodosLosSocios: idsArray no tiene método forEach:', idsArray)
+      idsArray = [] // Forzar a array vacío
+    }
+    
+    if (idsArray.length === 0) {
+      return
+    }
+    // OPTIMIZACIÓN: Una sola query para todos los socios de todas las natilleras
+    const { data: todosSociosNatillera, error } = await supabase
+      .from('socios_natillera')
+      .select(`
+        id,
+        natillera_id,
+        socio:socios(id, nombre, avatar_seed, avatar_style)
+      `)
+      .in('natillera_id', idsArray)
+      .order('created_at', { ascending: true })
+    
+    if (error) throw error
+    
+    // Agrupar socios por natillera_id
+    // Validación adicional: asegurar que idsArray sigue siendo un array
+    if (!Array.isArray(idsArray)) {
+      console.error('cargarTodosLosSocios: idsArray no es un array después de la validación:', typeof idsArray, idsArray)
+      return
+    }
+    
+    // Validación adicional: verificar que idsArray tiene el método forEach antes de usarlo
+    if (typeof idsArray.forEach !== 'function') {
+      console.error('cargarTodosLosSocios: idsArray no tiene método forEach antes de usarlo:', {
+        tipo: typeof idsArray,
+        esArray: Array.isArray(idsArray),
+        valor: idsArray,
+        constructor: idsArray?.constructor?.name
+      })
+      return
+    }
+    
+    const sociosAgrupados = {}
+    try {
+      idsArray.forEach(id => {
+        sociosAgrupados[id] = []
+      })
+    } catch (forEachError) {
+      console.error('cargarTodosLosSocios: Error en forEach:', {
+        error: forEachError,
+        idsArray: idsArray,
+        tipo: typeof idsArray,
+        esArray: Array.isArray(idsArray),
+        constructor: idsArray?.constructor?.name
+      })
+      throw forEachError
+    }
+    
+    (todosSociosNatillera || []).forEach(sn => {
+      if (sn.natillera_id && sociosAgrupados[sn.natillera_id]) {
+        // Solo guardar los primeros 6 por natillera
+        if (sociosAgrupados[sn.natillera_id].length < 6) {
+          sociosAgrupados[sn.natillera_id].push({
+            id: sn.id,
+            nombre: sn.socio?.nombre || 'Sin nombre',
+            avatar_seed: sn.socio?.avatar_seed,
+            avatar_style: sn.socio?.avatar_style || 'adventurer',
+            iniciales: obtenerIniciales(sn.socio?.nombre)
+          })
+        }
+      }
+    })
+    
+    // Guardar en caché todos los resultados
+    Object.keys(sociosAgrupados).forEach(natilleraId => {
+      sociosPorNatillera.value[natilleraId] = sociosAgrupados[natilleraId]
+    })
+  } catch (e) {
+    console.error('Error cargando socios de natilleras:', e)
+  }
+}
+
+// Función para obtener socios de una natillera (usa caché si está disponible)
+async function obtenerSociosNatillera(natilleraId) {
+  // Si ya tenemos los socios en caché, retornarlos
+  if (sociosPorNatillera.value[natilleraId]) {
+    return sociosPorNatillera.value[natilleraId]
+  }
+  
+  // Si no están en caché, cargar solo para esta natillera (fallback)
+  try {
+    const { data: sociosNatillera, error } = await supabase
+      .from('socios_natillera')
+      .select(`
+        id,
+        socio:socios(id, nombre, avatar_seed, avatar_style)
+      `)
+      .eq('natillera_id', natilleraId)
+      .limit(6)
+    
+    if (error) throw error
+    
+    const socios = (sociosNatillera || []).map(sn => ({
+      id: sn.id,
+      nombre: sn.socio?.nombre || 'Sin nombre',
+      avatar_seed: sn.socio?.avatar_seed,
+      avatar_style: sn.socio?.avatar_style || 'adventurer',
+      iniciales: obtenerIniciales(sn.socio?.nombre)
+    }))
+    
+    // Guardar en caché
+    sociosPorNatillera.value[natilleraId] = socios
+    return socios
+  } catch (e) {
+    console.error('Error obteniendo socios de natillera:', e)
+    return []
+  }
+}
+
+// Función para obtener el color de fondo de avatar según índice
+function obtenerColorAvatar(index) {
+  const colores = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-purple-500',
+    'bg-pink-500',
+    'bg-yellow-500',
+    'bg-indigo-500',
+    'bg-red-500',
+    'bg-teal-500'
+  ]
+  return colores[index % colores.length]
 }
 
 function formatearRol(rol) {
@@ -1035,13 +1950,306 @@ async function rechazarInvitacion(invitacion) {
   }
 }
 
-onMounted(async () => {
+// Función auxiliar para inicializar el componente
+async function inicializarComponente() {
   const { data: { user } } = await supabase.auth.getUser()
   usuarioAutenticado.value = user
   
-  await usersStore.getCurrentUserProfile()
-  await colaboradoresStore.fetchMisInvitaciones()
+  if (!user) {
+    verificandoModal.value = false
+    return
+  }
+  
+  // Si las natilleras están cargando, mostrar la animación de carga
+  if (natillerasStore.loading) {
+    verificandoModal.value = true
+  }
+  
+  // OPTIMIZACIÓN CRÍTICA: Cargar SOLO datos esenciales primero - natilleras son lo más importante
+  // Datos no críticos (perfil, invitaciones) se cargan DESPUÉS de mostrar la UI
   await natillerasStore.fetchTodasLasNatilleras()
-  await calcularTotalRecaudado()
+  
+  // Si después de cargar las natilleras aún están cargando, mantener la animación
+  if (natillerasStore.loading) {
+    verificandoModal.value = true
+  }
+  
+  // OPTIMIZACIÓN: Calcular recaudado por natillera primero, luego usar esos datos para el total
+  // Asegurar que siempre sean arrays antes de usar map
+  const natillerasArray = Array.isArray(natillerasStore.natilleras) ? natillerasStore.natilleras : []
+  const natillerasCompartidasArray = Array.isArray(natillerasStore.natillerasCompartidas) ? natillerasStore.natillerasCompartidas : []
+  
+  // Filtrar IDs válidos (no null, no undefined)
+  const idsNatilleras = natillerasArray.map(n => n?.id).filter(id => id != null)
+  const idsNatillerasCompartidas = natillerasCompartidasArray.map(n => n?.id).filter(id => id != null)
+  const todasIds = [...idsNatilleras, ...idsNatillerasCompartidas]
+  
+  // Validación final: asegurar que todasIds es un array válido antes de pasarlo
+  if (!Array.isArray(todasIds)) {
+    console.error('inicializarComponente: todasIds no es un array:', typeof todasIds, todasIds)
+    // Forzar a array vacío si no es un array
+    const todasIdsArray = []
+    await Promise.all([
+      calcularRecaudadoYProgresoPorNatillera(),
+      cargarTodosLosSocios(todasIdsArray)
+    ])
+  } else {
+    // OPTIMIZACIÓN: Calcular recaudado y cargar TODOS los socios en paralelo (una sola query para socios)
+    await Promise.all([
+      calcularRecaudadoYProgresoPorNatillera(),
+      cargarTodosLosSocios(todasIds)
+    ])
+  }
+  
+  // Calcular total recaudado usando los datos ya calculados (evita query duplicada)
+  calcularTotalRecaudado()
+  
+  // IMPORTANTE: Ocultar animación de carga ANTES de cargar datos no críticos
+  // para que el usuario vea la UI lo antes posible
+  if (!natillerasStore.loading && verificandoModal.value) {
+    await finalizarVerificacionYMostrarModal()
+  }
+  
+  // OPTIMIZACIÓN: Cargar datos no críticos DESPUÉS de mostrar la UI (carga diferida)
+  // Esto mejora significativamente la percepción de velocidad
+  Promise.all([
+    usersStore.getCurrentUserProfile(),
+    colaboradoresStore.fetchMisInvitaciones()
+  ]).catch(err => console.error('Error cargando datos secundarios:', err))
+}
+
+onMounted(async () => {
+  // Activar animación de carga al inicio
+  verificandoModal.value = true
+  await inicializarComponente()
+})
+
+// Limpiar intervalo cuando el componente se desmonte
+onBeforeUnmount(() => {
+  detenerRotacionMensajes()
+  desbloquearScroll()
+})
+
+// Cuando el usuario regresa a esta ruta (desde otra página)
+onActivated(async () => {
+  // Si las natilleras están cargando al regresar, mostrar la animación
+  if (natillerasStore.loading && !verificandoModal.value) {
+    verificandoModal.value = true
+  }
+  
+  // Si no hay usuario autenticado o las natilleras ya están cargadas, no hacer nada
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || (!natillerasStore.loading && !verificandoModal.value)) {
+    return
+  }
+  
+  // Si las natilleras necesitan recargarse o están cargando, inicializar
+  if (natillerasStore.loading || todasLasNatilleras.value.length === 0) {
+    await inicializarComponente()
+  }
 })
 </script>
+
+<style scoped>
+/* Animación de pulso y brillo */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.8), 0 0 60px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.3);
+  }
+}
+
+/* Animación de escala continua */
+@keyframes scale-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Animación de brillo deslizante */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+/* Animación de anillos de pulso */
+@keyframes ping-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Animación de borde pulsante */
+@keyframes border-pulse {
+  0%, 100% {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* Animación de contenido que rebota suavemente */
+@keyframes content-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Animación de rotación lenta del icono */
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Clase para la animación de shimmer */
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+/* Clase para la animación de ping ring */
+.animate-ping-ring {
+  animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Clase para la animación de border pulse */
+.animate-border-pulse {
+  animation: border-pulse 1.5s ease-in-out infinite;
+}
+
+/* Clase para la animación de contenido */
+.animate-content-bounce {
+  animation: content-bounce 2s ease-in-out infinite;
+}
+
+/* Clase para la animación de spin slow */
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+/* Clase para el botón con pulso y brillo */
+.animate-pulse-button {
+  animation: pulse-glow 2s ease-in-out infinite, scale-bounce 1.5s ease-in-out infinite;
+}
+
+/* Animación de rotación suave */
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 1s linear infinite;
+}
+
+/* Animación de rotación reversa */
+.animate-spin-reverse {
+  animation: spin-smooth 0.8s linear infinite reverse;
+}
+
+/* Animación de brillo pulsante para el centro */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Animaciones de partículas flotantes */
+@keyframes float-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(10px, -15px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes float-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-12px, 10px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(8px, 12px) scale(1.15);
+    opacity: 1;
+  }
+}
+
+.animate-float-1 {
+  animation: float-1 2s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-2 2.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-3 {
+  animation: float-3 2.2s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* Animación de fade in-out para el texto */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+</style>

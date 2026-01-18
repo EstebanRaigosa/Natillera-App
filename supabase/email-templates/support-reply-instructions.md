@@ -2,12 +2,12 @@
 
 ## 📋 Descripción
 
-Esta plantilla HTML está diseñada para responder mensajes de soporte desde Gmail, manteniendo la identidad visual de Natillerapp.
+Esta plantilla HTML está diseñada para responder mensajes de soporte desde Gmail, manteniendo la identidad visual de Natilleraapp.
 
 ## 🎨 Características
 
 - ✅ Diseño responsive y compatible con Gmail
-- ✅ Identidad visual de Natillerapp (colores, fuentes, estilo)
+- ✅ Identidad visual de Natilleraapp (colores, fuentes, estilo)
 - ✅ Número de ticket dinámico mediante variable
 - ✅ Botón de respuesta que pre-configura el asunto del correo
 - ✅ Estilos inline para máxima compatibilidad

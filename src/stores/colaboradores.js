@@ -175,7 +175,7 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
             ? `usuario_id.eq.${usuarioId}` 
             : `email_invitado.eq.${datos.email.toLowerCase().trim()}`
         )
-        .single()
+        .maybeSingle()
 
       if (existente) {
         if (existente.estado === 'aceptada') {
@@ -183,6 +183,69 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
         }
         if (existente.estado === 'pendiente') {
           throw new Error('Ya existe una invitación pendiente para este correo')
+        }
+        // Si existe una invitación rechazada o revocada, actualizarla en lugar de crear una nueva
+        if (existente.estado === 'rechazada' || existente.estado === 'revocada') {
+          // Determinar permisos según el rol
+          let permisos = datos.permisos || PERMISOS_POR_ROL[datos.rol] || PERMISOS_POR_ROL.visor
+
+          // Generar nuevo token para la invitación
+          const nuevoToken = crypto.randomUUID()
+
+          // Actualizar la invitación existente
+          const { data, error: updateError } = await supabase
+            .from('natillera_colaboradores')
+            .update({
+              rol: datos.rol || 'visor',
+              permisos,
+              invitado_por: user.id,
+              notas: datos.notas,
+              estado: 'pendiente',
+              token_invitacion: nuevoToken,
+              fecha_invitacion: new Date().toISOString(),
+              fecha_respuesta: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existente.id)
+            .select(`
+              *,
+              natillera:natilleras(nombre)
+            `)
+            .single()
+
+          if (updateError) throw updateError
+
+          // Actualizar en la lista local si existe
+          const index = colaboradores.value.findIndex(c => c.id === existente.id)
+          if (index !== -1) {
+            colaboradores.value[index] = {
+              ...data,
+              nombre_usuario: datos.email,
+              email_usuario: datos.email
+            }
+          } else {
+            // Agregar a la lista local
+            colaboradores.value.unshift({
+              ...data,
+              nombre_usuario: datos.email,
+              email_usuario: datos.email
+            })
+          }
+
+          // Registrar auditoría
+          const auditoria = useAuditoria()
+          registrarAuditoriaEnSegundoPlano(
+            auditoria.registrar({
+              tipoAccion: 'UPDATE',
+              entidad: 'colaborador',
+              entidadId: data.id,
+              descripcion: `Se reenvió invitación a ${datos.email} como ${datos.rol} a la natillera (estado anterior: ${existente.estado})`,
+              natilleraId,
+              detalles: { rol: datos.rol, permisos, estado_anterior: existente.estado }
+            })
+          )
+
+          return { success: true, data }
         }
       }
 

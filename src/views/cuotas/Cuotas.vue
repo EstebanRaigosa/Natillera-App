@@ -8,15 +8,7 @@
 
     <!-- Header estilizado -->
     <div class="relative">
-      <router-link 
-        :to="`/natilleras/${id}/cuotas`" 
-        class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm"
-      >
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-        </div>
-        <span class="whitespace-nowrap">Volver a meses</span>
-      </router-link>
+      <Breadcrumbs />
       
       <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Círculos decorativos -->
@@ -3403,6 +3395,8 @@ import {
   CalendarDaysIcon
 } from '@heroicons/vue/24/outline'
 import DatePicker from '../../components/DatePicker.vue'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import * as XLSX from 'xlsx-js-style'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
@@ -5692,7 +5686,7 @@ function generarImagenComprobante() {
       ctx.textAlign = 'left'
       ctx.fillText('Comprobante de Pago', 32, 52)
       
-      // "natillerapp" a la derecha (pequeño, gris claro)
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.font = '12px Arial'
       ctx.textAlign = 'right'
@@ -6272,14 +6266,19 @@ async function compartirWhatsApp() {
     // Convertir canvas a blob
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
     
-    const archivo = new File([blob], `comprobante-${Date.now()}.png`, { type: 'image/png' })
+    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
+    const nombreArchivo = `comprobante-${pagoRegistrado.value.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+    
+    // Crear mensaje con el nombre del socio
+    const mensajeCompartir = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".\n\n¡Gracias por estar al día! 🙌`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
       await navigator.share({
         files: [archivo],
-        title: 'Comprobante de Pago',
-        text: `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".\n\n¡Gracias por estar al día! 🙌`
+        title: `Comprobante de Pago - ${pagoRegistrado.value.socioNombre}`,
+        text: mensajeCompartir
       })
       
       // Registrar auditoría de envío de comprobante

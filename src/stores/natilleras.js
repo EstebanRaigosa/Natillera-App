@@ -85,20 +85,30 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         return true
       })
 
-      // Para cada natillera, obtener el conteo de socios
-      const natillerasConConteo = await Promise.all(
-        natillerasFiltradas.map(async (natillera) => {
-          const { count } = await supabase
-            .from('socios_natillera')
-            .select('*', { count: 'exact', head: true })
-            .eq('natillera_id', natillera.id)
-          
-          return {
-            ...natillera,
-            socios_count: count || 0
-          }
-        })
-      )
+      // OPTIMIZACIÓN: Obtener todos los conteos de socios en una sola query en lugar de N queries
+      const natilleraIds = natillerasFiltradas.map(n => n.id)
+      const conteosMap = {}
+      
+      if (natilleraIds.length > 0) {
+        // Usar una query para obtener todos los conteos a la vez
+        const { data: todosSociosNatillera } = await supabase
+          .from('socios_natillera')
+          .select('natillera_id')
+          .in('natillera_id', natilleraIds)
+        
+        // Contar manualmente por natillera_id (más eficiente que N queries)
+        if (todosSociosNatillera) {
+          todosSociosNatillera.forEach(sn => {
+            conteosMap[sn.natillera_id] = (conteosMap[sn.natillera_id] || 0) + 1
+          })
+        }
+      }
+
+      // Agregar conteo a cada natillera
+      const natillerasConConteo = natillerasFiltradas.map(natillera => ({
+        ...natillera,
+        socios_count: conteosMap[natillera.id] || 0
+      }))
 
       natilleras.value = natillerasConConteo
     } catch (e) {
@@ -136,24 +146,34 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         return
       }
 
-      // Formatear las natilleras compartidas
-      const natillerasConInfo = await Promise.all(
-        (colaboraciones || [])
-          .filter(c => c.natillera) // Filtrar las que tienen natillera válida
-          .map(async (colab) => {
-            const { count } = await supabase
-              .from('socios_natillera')
-              .select('*', { count: 'exact', head: true })
-              .eq('natillera_id', colab.natillera.id)
-            
-            return {
-              ...colab.natillera,
-              socios_count: count || 0,
-              mi_rol: colab.rol,
-              mis_permisos: colab.permisos
-            }
+      // Filtrar colaboraciones válidas
+      const colaboracionesValidas = (colaboraciones || []).filter(c => c.natillera)
+      
+      // OPTIMIZACIÓN: Obtener todos los conteos de socios en una sola query
+      const natilleraIdsCompartidas = colaboracionesValidas.map(c => c.natillera.id)
+      const conteosMapCompartidas = {}
+      
+      if (natilleraIdsCompartidas.length > 0) {
+        const { data: todosSociosNatillera } = await supabase
+          .from('socios_natillera')
+          .select('natillera_id')
+          .in('natillera_id', natilleraIdsCompartidas)
+        
+        // Contar manualmente por natillera_id
+        if (todosSociosNatillera) {
+          todosSociosNatillera.forEach(sn => {
+            conteosMapCompartidas[sn.natillera_id] = (conteosMapCompartidas[sn.natillera_id] || 0) + 1
           })
-      )
+        }
+      }
+
+      // Formatear las natilleras compartidas con conteos ya calculados
+      const natillerasConInfo = colaboracionesValidas.map(colab => ({
+        ...colab.natillera,
+        socios_count: conteosMapCompartidas[colab.natillera.id] || 0,
+        mi_rol: colab.rol,
+        mis_permisos: colab.permisos
+      }))
 
       natillerasCompartidas.value = natillerasConInfo
     } catch (e) {
@@ -884,13 +904,13 @@ export const useNatillerasStore = defineStore('natilleras', () => {
 
     // Calcular totalAportado: solo el valor de las cuotas normales, sin incluir sanciones
     // Las sanciones ya se cuentan en utilidadesRecogidas
+    // Usar valor_cuota en lugar de valor_pagado porque valor_cuota es el valor base sin sanción
     const totalAportado = cuotas
       .filter(c => c.estado === 'pagada')
       .reduce((sum, c) => {
-        const valorPagado = c.valor_pagado || 0
-        const sancionPagada = c.valor_multa || 0
-        // Restar la sanción del valor pagado para obtener solo la cuota normal
-        return sum + (valorPagado - sancionPagada)
+        // valor_cuota es el valor de la cuota sin sanción
+        const valorCuota = c.valor_cuota || 0
+        return sum + valorCuota
       }, 0)
 
     // Calcular totalPendiente: incluir valor de cuota pendiente + sanciones pendientes
@@ -923,10 +943,29 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       .reduce((sum, a) => sum + (a.utilidad || 0), 0)
 
     // Calcular utilidades recogidas:
-    // 1. Sanciones de cuotas pagadas (solo las que ya fueron pagadas)
-    const sancionesPagadas = cuotas
-      .filter(c => c.estado === 'pagada' && c.valor_multa)
-      .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+    // 1. Sanciones de cuotas pagadas - Obtener desde utilidades_clasificadas
+    let sancionesPagadas = 0
+    if (natillera.id) {
+      try {
+        const { data: utilidadSanciones } = await supabase
+          .from('utilidades_clasificadas')
+          .select('monto')
+          .eq('natillera_id', natillera.id)
+          .eq('tipo', 'sanciones')
+          .is('fecha_cierre', null)
+          .maybeSingle()
+
+        if (utilidadSanciones) {
+          sancionesPagadas = parseFloat(utilidadSanciones.monto || 0)
+        }
+      } catch (e) {
+        console.error('Error obteniendo sanciones desde utilidades_clasificadas:', e)
+        // Fallback: calcular desde cuotas si hay error
+        sancionesPagadas = cuotas
+          .filter(c => c.estado === 'pagada' && c.valor_multa)
+          .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+      }
+    }
 
     // 2. Intereses de préstamos (pagados y activos con pagos realizados)
     let interesesPrestamos = 0

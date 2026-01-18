@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <!-- Contenedor glassmorphism -->
-    <div class="bg-white/75 backdrop-blur-2xl rounded-3xl border-2 border-emerald-200/30 p-6 sm:p-8 lg:p-10 relative overflow-hidden" style="box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.3), 0 10px 40px -10px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1), 0 25px 80px -20px rgba(0, 0, 0, 0.15);">
+    <div class="bg-white/75 backdrop-blur-2xl rounded-3xl border-2 border-emerald-200/30 p-5 sm:p-5 lg:p-8 relative overflow-hidden sm:max-h-[90vh] overflow-y-auto" style="box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.3), 0 10px 40px -10px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1), 0 25px 80px -20px rgba(0, 0, 0, 0.15);">
       <!-- Tinte verde difuminado y transparente -->
       <div class="absolute inset-0 bg-gradient-to-br from-emerald-200/25 via-emerald-300/20 to-teal-200/25 backdrop-blur-[80px] rounded-3xl pointer-events-none"></div>
       <div class="absolute inset-0 bg-gradient-to-tr from-emerald-100/20 via-emerald-200/15 to-emerald-300/20 backdrop-blur-[60px] rounded-3xl pointer-events-none"></div>
@@ -12,7 +12,7 @@
       
       <div class="relative z-10">
         <!-- Header con animación - centrado -->
-        <div class="flex flex-col items-center gap-1.5 sm:gap-2 mb-4 sm:mb-5 animate-fade-in-up">
+        <div class="flex flex-col items-center gap-1 sm:gap-1.5 mb-3 sm:mb-3 animate-fade-in-up">
           <div class="relative text-center">
             <h2 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-natillera-700 via-emerald-700 to-teal-700 bg-clip-text text-transparent mb-1 blur-[0.5px] drop-shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
               Iniciar Sesión
@@ -30,7 +30,7 @@
         </div>
 
       <!-- Selector de método de login -->
-      <div class="mb-4 sm:mb-5 animate-fade-in-up">
+      <div class="mb-2 sm:mb-3 animate-fade-in-up">
         <div class="relative flex gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-gray-100 rounded-xl sm:rounded-2xl border border-gray-200/50">
           <!-- Efecto de fondo animado para el botón activo -->
           <div 
@@ -93,7 +93,7 @@
 
       <!-- Mensaje informativo si el teléfono ya está registrado -->
       <Transition name="error-slide">
-        <div v-if="telefonoYaRegistrado && loginMethod === 'email'" class="relative overflow-hidden p-3 sm:p-4 bg-gradient-to-br from-blue-50 via-indigo-50/95 to-purple-50 border border-blue-200/80 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up mb-4 sm:mb-5">
+        <div v-if="telefonoYaRegistrado && loginMethod === 'email'" class="relative overflow-hidden p-2.5 sm:p-3 bg-gradient-to-br from-blue-50 via-indigo-50/95 to-purple-50 border border-blue-200/80 rounded-xl shadow-lg shadow-blue-500/10 animate-fade-in-up mb-3 sm:mb-4">
           <div class="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/5 to-blue-500/0 animate-shimmer"></div>
           <div class="relative flex items-start gap-2 sm:gap-3">
             <div class="flex-shrink-0 mt-0.5">
@@ -119,10 +119,10 @@
       </Transition>
 
       <!-- Formulario de Login por Email -->
-      <form v-if="loginMethod === 'email'" @submit.prevent="handleLogin" class="space-y-3 sm:space-y-4 animate-fade-in-up stagger-1">
+      <form v-if="loginMethod === 'email'" @submit.prevent="handleLogin" class="space-y-4 sm:space-y-3 animate-fade-in-up stagger-1">
         <!-- Campo Email -->
         <div class="group">
-          <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1 sm:mb-1.5 flex items-center gap-1 sm:gap-1.5">
+          <label class="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-1.5 flex items-center gap-1 sm:gap-1.5">
           <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
           </svg>
@@ -132,17 +132,16 @@
             <input 
             v-model="email"
             type="email" 
-            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 transition-all duration-200 placeholder:text-gray-400 text-sm sm:text-base text-gray-900 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus:scale-[1.01] focus:shadow-lg focus:shadow-natillera-500/20"
+            class="w-full px-3 sm:px-4 py-3.5 sm:py-2.5 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-natillera-500 focus:border-natillera-500 transition-all duration-200 placeholder:text-gray-500 text-base sm:text-base text-gray-900 transition-colors hover:border-natillera-400"
             placeholder="tu@correo.com"
             required
           />
-            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-500/0 via-emerald-500/0 to-natillera-500/0 opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>
           </div>
         </div>
 
       <!-- Campo Contraseña -->
       <div class="group">
-        <label class="block text-sm sm:text-base font-medium text-gray-700 mb-1 sm:mb-1.5 flex items-center gap-1 sm:gap-1.5">
+        <label class="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-1 flex items-center gap-1 sm:gap-1.5">
           <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
           </svg>
@@ -152,7 +151,7 @@
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="w-full px-3 sm:px-4 py-3 sm:py-4 bg-white border border-white/20 rounded-xl focus:ring-2 focus:ring-emerald-400/50 focus:border-emerald-400 transition-all duration-200 placeholder:text-gray-400 text-base sm:text-lg text-gray-900 pr-10 sm:pr-12 transition-all duration-300 hover:shadow-lg hover:border-emerald-300 focus:scale-[1.02] focus:shadow-xl focus:shadow-emerald-500/20"
+            class="w-full px-3 sm:px-4 py-3.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 placeholder:text-gray-500 text-base sm:text-base text-gray-900 pr-10 sm:pr-12 transition-colors hover:border-emerald-400"
             placeholder="••••••••"
             required
           />
@@ -166,7 +165,7 @@
           </button>
         </div>
         <!-- Enlace olvidé contraseña -->
-        <div class="mt-1 sm:mt-1.5 text-right">
+        <div class="mt-2 sm:mt-1 text-right">
           <button
             type="button"
             @click="showForgotPasswordModal = true"
@@ -179,7 +178,7 @@
 
       <!-- Mensaje de error con animación mejorado -->
       <Transition name="error-slide">
-        <div v-if="errorMessage" class="relative overflow-hidden p-3 sm:p-4 bg-gradient-to-br from-red-50 via-red-50/95 to-rose-50 border border-red-200/80 rounded-xl shadow-lg shadow-red-500/10 animate-fade-in-up">
+        <div v-if="errorMessage" class="relative overflow-hidden p-2.5 sm:p-3 bg-gradient-to-br from-red-50 via-red-50/95 to-rose-50 border border-red-200/80 rounded-xl shadow-lg shadow-red-500/10 animate-fade-in-up">
           <!-- Efecto de fondo animado -->
           <div class="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/5 to-red-500/0 animate-shimmer"></div>
           
@@ -206,20 +205,20 @@
       <!-- Botón de envío mejorado -->
       <button 
         type="submit" 
-        class="group relative w-full overflow-hidden bg-gradient-to-r from-emerald-500 via-natillera-500 to-teal-500 text-white font-semibold rounded-xl py-2.5 sm:py-3 shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+        class="group relative w-full overflow-hidden bg-gradient-to-r from-emerald-500 via-natillera-500 to-teal-500 text-white font-semibold rounded-xl py-4 sm:py-2.5 text-base sm:text-sm shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
         :disabled="authStore.loading"
       >
         <!-- Efecto shimmer -->
         <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
         
         <span v-if="authStore.loading" class="relative z-10 animate-spin">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </span>
         <span v-else class="relative z-10 flex items-center gap-1.5 sm:gap-2">
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 sm:w-5 sm:h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
           </svg>
           Ingresar
@@ -228,7 +227,7 @@
       </form>
 
       <!-- Separador (solo para login por email) -->
-      <div v-if="loginMethod === 'email'" class="relative my-4 sm:my-5 animate-fade-in-up stagger-2">
+      <div v-if="loginMethod === 'email'" class="relative my-2.5 sm:my-3 animate-fade-in-up stagger-2">
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-gray-300/50"></div>
         </div>
@@ -242,10 +241,10 @@
         v-if="loginMethod === 'email'"
         @click="handleGoogleLogin"
         :disabled="authStore.loading"
-        class="group relative w-full flex items-center justify-center gap-2 sm:gap-2.5 px-4 py-2.5 sm:py-3 bg-white border-2 border-gray-300 rounded-xl font-semibold text-sm text-gray-800 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-fade-in-up stagger-2"
+        class="group relative w-full flex items-center justify-center gap-2 sm:gap-2.5 px-4 py-4 sm:py-2.5 bg-white border-2 border-gray-300 rounded-xl font-semibold text-base sm:text-sm text-gray-800 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-fade-in-up stagger-2"
       >
       <!-- Logo de Google -->
-      <svg class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" viewBox="0 0 24 24">
+      <svg class="w-6 h-6 sm:w-6 sm:h-6 flex-shrink-0" viewBox="0 0 24 24">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -394,7 +393,7 @@
       </div>
 
       <!-- Enlace de registro -->
-      <div class="mt-4 sm:mt-5 text-center animate-fade-in-up stagger-3">
+      <div class="mt-2.5 sm:mt-3 text-center animate-fade-in-up stagger-3">
         <p class="text-xs sm:text-sm text-gray-600">
           ¿No tienes cuenta? 
           <router-link 

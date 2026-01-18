@@ -23,6 +23,7 @@
   <!-- Contenido principal (solo si tiene acceso) -->
   <div v-else class="max-w-6xl mx-auto p-4 sm:p-6">
     <div class="mb-6">
+      <Breadcrumbs />
       <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-2">
         Centro de Soporte
       </h1>
@@ -239,7 +240,7 @@
                   A
                 </div>
                 <div>
-                  <p class="font-semibold text-gray-800">Soporte Natillerapp</p>
+                  <p class="font-semibold text-gray-800">Soporte <AppBrand /></p>
                   <p class="text-xs text-gray-500">{{ formatDate(msg.created_at) }}</p>
                 </div>
               </div>
@@ -338,6 +339,8 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/auth'
 import { useSupportStore } from '../../stores/support'
 import { useNotificationStore } from '../../stores/notifications'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import AppBrand from '../../components/AppBrand.vue'
 import { ChevronRightIcon, XMarkIcon, PaperClipIcon, TrashIcon, EnvelopeIcon, DocumentIcon, PhotoIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
 import { generateShortTicketNumber, generateSupportSubject, generateSupportEmailBody } from '../../utils/ticketHelper'
 import emailjs from '@emailjs/browser'
@@ -514,8 +517,8 @@ function generateEmailHTML(ticketNumber, replyMessage, userEmail) {
           <!-- Header con gradiente -->
           <tr>
             <td style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="margin: 0; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">
-                🌱 Natillerapp
+              <h1 style="margin: 0; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
+                🌱 <span style="color: #ffffff;">Natiller</span><span style="color: #d1fae5;">app</span>
               </h1>
               <p style="margin: 8px 0 0 0; font-size: 16px; color: rgba(255, 255, 255, 0.95); font-weight: 500;">
                 Soporte Técnico
@@ -599,7 +602,7 @@ function generateEmailHTML(ticketNumber, replyMessage, userEmail) {
                 Responde a este correo y nuestro equipo te asistirá lo antes posible.
               </p>
               <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
-                © 2024 Natillerapp. Plataforma de Ahorro Comunitario Digital. 🌱
+                © 2024 <span style="color: #111827;">Natiller</span><span style="color: #22c55e;">app</span>. Plataforma de Ahorro Comunitario Digital. 🌱
               </p>
             </td>
           </tr>

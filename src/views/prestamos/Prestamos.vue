@@ -8,15 +8,7 @@
 
     <!-- Header estilizado -->
     <div class="relative">
-      <router-link 
-        :to="`/natilleras/${id}`" 
-        class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm"
-      >
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-        </div>
-        <span class="whitespace-nowrap">Volver a natillera</span>
-      </router-link>
+      <Breadcrumbs />
       
       <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <!-- Círculos decorativos -->
@@ -2777,6 +2769,7 @@ import {
 import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
 import DateInput from '../../components/DateInput.vue'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const notificationStore = useNotificationStore()
@@ -3960,10 +3953,17 @@ function generarImagenComprobanteAbono() {
       ctx.textAlign = 'left'
       ctx.fillText('Comprobante de Abono', 32, 52)
       
-      // "natillerapp" a la derecha (pequeño, gris claro)
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
+      // "natillerapp" a la derecha (pequeño, gris claro con contorno negro)
       ctx.font = '12px Arial'
       ctx.textAlign = 'right'
+      // Contorno negro
+      ctx.strokeStyle = 'rgba(0,0,0,1)'
+      ctx.lineWidth = 0.7
+      ctx.lineJoin = 'round'
+      ctx.miterLimit = 2
+      ctx.strokeText('natillerapp', width - 32, 52)
+      // Relleno
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.fillText('natillerapp', width - 32, 52)
       
       // Línea decorativa con gradiente verde-azul
@@ -4329,14 +4329,19 @@ async function compartirWhatsAppAbono() {
     // Convertir canvas a blob
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
     
-    const archivo = new File([blob], `comprobante-abono-${Date.now()}.png`, { type: 'image/png' })
+    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
+    const nombreArchivo = `comprobante-abono-${comprobanteAbono.value.socioNombre?.replace(/\s+/g, '-') || 'abono'}-${Date.now()}.png`
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+    
+    // Crear mensaje con el nombre del socio
+    const mensajeCompartir = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
       await navigator.share({
         files: [archivo],
-        title: 'Comprobante de Abono',
-        text: `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
+        title: `Comprobante de Abono - ${comprobanteAbono.value.socioNombre}`,
+        text: mensajeCompartir
       })
       
       // Registrar auditoría de envío de comprobante
@@ -6441,10 +6446,17 @@ async function generarImagenPrestamo() {
       ctx.textAlign = 'left'
       ctx.fillText('Información del Préstamo', 32, 52)
       
-      // "natillerapp" a la derecha
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
+      // "natillerapp" a la derecha (con contorno negro)
       ctx.font = '12px Arial'
       ctx.textAlign = 'right'
+      // Contorno negro
+      ctx.strokeStyle = 'rgba(0,0,0,1)'
+      ctx.lineWidth = 0.7
+      ctx.lineJoin = 'round'
+      ctx.miterLimit = 2
+      ctx.strokeText('natillerapp', width - 32, 52)
+      // Relleno
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.fillText('natillerapp', width - 32, 52)
       
       // Línea decorativa con gradiente verde-azul
@@ -6882,14 +6894,21 @@ async function compartirPrestamoWhatsApp() {
     
     // Convertir canvas a blob
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-    const archivo = new File([blob], `prestamo-${Date.now()}.png`, { type: 'image/png' })
+    
+    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
+    const nombreSocio = prestamoDetalle.value.socio_natillera?.socio?.nombre || 'prestamo'
+    const nombreArchivo = `prestamo-${nombreSocio.replace(/\s+/g, '-')}-${Date.now()}.png`
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+    
+    // Crear mensaje con el nombre del socio
+    const mensajeCompartir = `Hola ${nombreSocio} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
       await navigator.share({
         files: [archivo],
-        title: 'Información del Préstamo',
-        text: `Hola ${prestamoDetalle.value.socio_natillera?.socio?.nombre} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+        title: `Información del Préstamo - ${nombreSocio}`,
+        text: mensajeCompartir
       })
     } else {
       // Fallback: descargar y abrir WhatsApp con mensaje

@@ -13,102 +13,177 @@
     </div>
 
     <template v-else-if="natillera">
-      <!-- Header estilizado -->
-      <div class="relative">
-        <router-link to="/natilleras" class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm">
-          <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-            <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-          </div>
-          <span class="whitespace-nowrap">Volver</span>
-        </router-link>
-        
-        <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-          <!-- Círculos decorativos -->
-          <div class="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-0 w-36 sm:w-48 h-36 sm:h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-          
-          <div class="relative z-10">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
-              <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                <div class="w-10 h-10 sm:w-12 sm:h-14 lg:w-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0 overflow-hidden border-2 border-white">
-                  <img 
-                    :src="getNatilleraAvatarUrl(natillera.nombre, natillera.avatar_seed)" 
-                    :alt="natillera.nombre"
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 lg:gap-3 mb-1 sm:mb-2">
-                    <h1 class="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent break-words">
-                      {{ natillera.nombre }}
-                    </h1>
-                    <span 
-                      :class="[
-                        'px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs lg:text-sm font-bold shadow-sm',
-                        natillera.estado === 'activa' 
-                          ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                          : 'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200'
-                      ]"
-                    >
-                      {{ natillera.estado }}
-                    </span>
-                  </div>
-                  <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
-                    <p class="flex items-center gap-1">
-                      <CalendarDaysIcon class="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-                      <span class="hidden xs:inline">Desde </span>{{ formatDate(natillera.fecha_inicio) }}
-                    </p>
-                    <span class="text-gray-300 hidden sm:inline">•</span>
-                    <p class="flex items-center gap-1 text-natillera-600 font-medium">
-                      <CalendarDaysIcon class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span class="hidden xs:inline">Período: </span>{{ rangoMesesTexto }}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      <!-- Breadcrumbs (solo desktop) -->
+      <div class="hidden sm:block relative mb-4">
+        <Breadcrumbs />
+      </div>
 
-              <div class="flex flex-wrap gap-1.5 sm:gap-2">
-                <button 
-                  @click="modalBuscarComprobante = true"
-                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm border-2 border-gray-200 text-gray-700 font-semibold rounded-lg sm:rounded-xl hover:border-natillera-300 hover:bg-natillera-50 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
+      <!-- Header principal -->
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden mb-4 sm:mb-6">
+        <!-- Círculos decorativos -->
+        <div class="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-36 sm:w-48 h-36 sm:h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
+        
+        <!-- Botón volver atrás en esquina superior izquierda (solo móvil) -->
+        <BackButton />
+        
+        <!-- Badge de estado en esquina superior derecha (móvil) -->
+        <div class="absolute top-3 right-3 sm:hidden z-20">
+          <div class="flex items-center gap-1.5">
+            <div 
+              :class="[
+                'w-2 h-2 rounded-full',
+                natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500'
+              ]"
+            ></div>
+            <span 
+              :class="[
+                'px-2 py-1 rounded-full text-xs font-bold',
+                natillera.estado === 'activa' 
+                  ? 'bg-green-100 text-green-700 border border-green-300' 
+                  : 'bg-amber-100 text-amber-700 border border-amber-300'
+              ]"
+            >
+              {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="relative z-10 pt-12 sm:pt-0">
+          <!-- Información superior -->
+          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
+            <div class="flex-1 min-w-0">
+              <h1 class="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent mb-2 break-words">
+                {{ nombreNatilleraPascalCase }}
+              </h1>
+              
+              <p class="text-gray-600 text-sm sm:text-base mb-1">
+                Período: {{ rangoMesesTexto }}
+              </p>
+              
+              <p class="text-gray-600 text-xs sm:text-sm">
+                Desde {{ formatDate(natillera.fecha_inicio) }}
+              </p>
+            </div>
+            
+            <!-- Estado actual (solo desktop) -->
+            <div class="hidden sm:flex items-center gap-2 sm:gap-3">
+              <span class="text-gray-600 text-xs sm:text-sm font-medium">ESTADO ACTUAL</span>
+              <div class="flex items-center gap-2">
+                <div 
+                  :class="[
+                    'w-3 h-3 rounded-full',
+                    natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500'
+                  ]"
+                ></div>
+                <span 
+                  :class="[
+                    'px-3 py-1 rounded-full text-xs sm:text-sm font-bold',
+                    natillera.estado === 'activa' 
+                      ? 'bg-green-100 text-green-700 border border-green-300' 
+                      : 'bg-amber-100 text-amber-700 border border-amber-300'
+                  ]"
                 >
-                  <MagnifyingGlassIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
-                  <span class="hidden sm:inline">Buscar Comprobante</span>
-                  <span class="sm:hidden">Busc. Comprobante</span>
-                </button>
-                <router-link 
-                  :to="`/natilleras/${id}/configuracion`"
-                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/80 backdrop-blur-sm border-2 border-gray-200 text-gray-700 font-semibold rounded-lg sm:rounded-xl hover:border-natillera-300 hover:bg-natillera-50 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
-                >
-                  <Cog6ToothIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
-                  <span class="hidden sm:inline">Configuración</span>
-                  <span class="sm:hidden">Config</span>
-                </router-link>
-                <button 
-                  @click="abrirFormularioInvitarColaborador"
-                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 text-blue-700 font-semibold rounded-lg sm:rounded-xl hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
-                >
-                  <UsersIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
-                  <span class="hidden sm:inline">Invitar Colaboradores</span>
-                  <span class="sm:hidden">Invitar Colab.</span>
-                </button>
-                <button 
-                  @click="modalWhatsApp = true"
-                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-700 font-semibold rounded-lg sm:rounded-xl hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
-                >
-                  <ChatBubbleLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-5 flex-shrink-0" />
-                  <span>Notificar</span>
-                </button>
-                <button 
-                  v-if="natillera.estado === 'activa'"
-                  @click="handleCerrarNatillera"
-                  class="inline-flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 text-red-600 font-semibold rounded-lg sm:rounded-xl hover:from-red-100 hover:to-orange-100 hover:border-red-400 hover:shadow-md transition-all text-[10px] sm:text-xs lg:text-sm shadow-sm"
-                >
-                  Cerrar
-                </button>
+                  {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
+                </span>
               </div>
             </div>
           </div>
+          
+          <!-- Indicadores financieros -->
+          <div class="space-y-4 sm:space-y-0">
+            <!-- Fila superior en móvil: SOCIOS, RECAUDADO, PENDIENTE, UTILIDADES -->
+            <!-- Fila única en desktop: todos los 5 indicadores -->
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
+              <div class="flex flex-col">
+                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">SOCIOS</p>
+                <p class="text-gray-800 text-xl sm:text-2xl lg:text-3xl font-extrabold">{{ estadisticas.totalSocios }}</p>
+              </div>
+              <div class="flex flex-col">
+                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">RECAUDADO</p>
+                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold">
+                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
+                </p>
+              </div>
+              <div class="flex flex-col">
+                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">PENDIENTE</p>
+                <p class="text-amber-700 text-xl sm:text-2xl lg:text-3xl font-extrabold">
+                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalPendiente) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalPendiente) }}</span>
+                </p>
+              </div>
+              <div class="flex flex-col">
+                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">UTILIDADES</p>
+                <p class="text-gray-800 text-xl sm:text-2xl lg:text-3xl font-extrabold">
+                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}</span>
+                </p>
+              </div>
+              <div class="hidden sm:flex flex-col">
+                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">FONDO TOTAL</p>
+                <p class="text-indigo-700 text-xl sm:text-2xl lg:text-3xl font-extrabold">${{ formatMoney(estadisticas.fondoTotal) }}</p>
+              </div>
+            </div>
+            
+            <!-- Fila inferior en móvil: FONDO TOTAL -->
+            <div class="flex items-center justify-between pt-4 border-t-2 border-indigo-300 sm:hidden">
+              <p class="text-gray-600 text-xs sm:text-sm font-medium">FONDO TOTAL</p>
+              <p class="text-indigo-700 text-2xl sm:text-3xl lg:text-4xl font-extrabold">${{ formatMoney(estadisticas.fondoTotal) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de acciones rápidas -->
+      <div class="relative bg-white rounded-2xl sm:rounded-3xl p-3 sm:py-2 sm:px-4 lg:py-2.5 lg:px-5 shadow-lg border border-gray-200 mb-4 sm:mb-6 overflow-hidden">
+        <div class="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 lg:gap-4">
+          <button 
+            @click="modalBuscarComprobante = true"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            <MagnifyingGlassIcon class="w-5 h-5 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+            <span class="text-xs sm:text-sm text-center">
+              <span class="sm:hidden">Buscar Comprob.</span>
+              <span class="hidden sm:inline">Buscar Comprobante</span>
+            </span>
+          </button>
+          
+          <router-link 
+            :to="`/natilleras/${id}/configuracion`"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            <Cog6ToothIcon class="w-5 h-5 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+            <span class="text-xs sm:text-sm">Configurar</span>
+          </router-link>
+          
+          <button 
+            @click="abrirFormularioInvitarColaborador"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all"
+          >
+            <UsersIcon class="w-5 h-5 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span class="text-xs sm:text-sm text-center">
+              <span class="sm:hidden">Invitar Colabor.</span>
+              <span class="hidden sm:inline">Invitar Colaboradores</span>
+            </span>
+          </button>
+          
+          <button 
+            @click="modalWhatsApp = true"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all"
+          >
+            <ChatBubbleLeftIcon class="w-5 h-5 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span class="text-xs sm:text-sm">Notificar</span>
+          </button>
+          
+          <button 
+            v-if="natillera.estado === 'activa'"
+            @click="handleCerrarNatillera"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-all"
+          >
+            <DocumentCheckIcon class="w-5 h-5 sm:w-5 sm:h-5 flex-shrink-0" />
+            <span class="text-xs sm:text-sm">Cerrar Natillera</span>
+          </button>
         </div>
       </div>
 
@@ -160,259 +235,130 @@
         </div>
       </div>
 
-      <!-- Indicadores -->
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-        <!-- Efectos decorativos -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div class="relative z-10">
-          <!-- Header clickeable en móvil, siempre visible en desktop -->
-          <button
-            @click="indicadoresExpandidos = !indicadoresExpandidos"
-            class="w-full md:pointer-events-none group relative flex items-center justify-between gap-3 p-4 sm:p-6 pb-4 sm:pb-5 md:pb-6 transition-all duration-200 hover:bg-gradient-to-r hover:from-natillera-50/80 hover:to-emerald-50/60 active:bg-gradient-to-r active:from-natillera-100/80 active:to-emerald-100/70 rounded-t-3xl md:hover:bg-transparent md:active:bg-transparent border-b-2 md:border-b-0 border-natillera-200/30 md:border-0"
-            :class="{ 'bg-gradient-to-r from-natillera-50/60 to-emerald-50/40 md:bg-transparent': indicadoresExpandidos }"
-          >
-            <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-              <div class="relative flex-shrink-0">
-                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30 group-hover:shadow-xl group-hover:shadow-natillera-500/40 group-hover:scale-105 transition-all duration-200">
-                  <ChartBarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <!-- Badge con número de indicadores (solo móvil) -->
-                <div class="md:hidden absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                  <span class="text-[10px] font-extrabold text-white">5</span>
-                </div>
-              </div>
-              <div class="flex flex-col items-start flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800 group-hover:text-natillera-700 transition-colors">
-                    Indicadores
-                  </h2>
-                  <!-- Badge visible en móvil -->
-                  <span class="md:hidden px-2 py-0.5 bg-gradient-to-r from-natillera-100 to-emerald-100 text-natillera-700 rounded-full text-[10px] font-bold border border-natillera-200/50">
-                    5 métricas
-                  </span>
-                </div>
-                <p class="text-xs sm:text-sm text-gray-500 font-medium hidden md:block mt-0.5">
-                  Métricas y estadísticas de la natillera
-                </p>
-                <!-- Texto de ayuda en móvil -->
-                <p class="md:hidden text-[11px] text-natillera-600 font-semibold mt-0.5">
-                  Tocar para ver total recaudado, utilidades y mas
-                </p>
-              </div>
-            </div>
-            <!-- Icono chevron mejorado (solo visible en móvil) -->
-            <div class="md:hidden flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-natillera-100 via-natillera-50 to-emerald-100 flex items-center justify-center border-2 border-natillera-200/60 shadow-md group-hover:shadow-lg group-hover:border-natillera-300 group-hover:scale-105 transition-all duration-200">
-              <ChevronDownIcon 
-                class="w-5 h-5 text-natillera-600 transition-transform duration-300 ease-in-out" 
-                :class="{ 'rotate-180': indicadoresExpandidos }"
-              />
-            </div>
-          </button>
-          
-          <!-- Grid de indicadores (colapsable en móvil, siempre visible en desktop) -->
-          <div 
-            class="transition-all duration-300 ease-in-out overflow-hidden md:!block"
-            :class="[
-              indicadoresExpandidos ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 md:max-h-none md:opacity-100'
-            ]"
-          >
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 px-4 sm:px-6 pb-4 sm:pb-6">
-            <!-- Indicador: Socios -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-white to-indigo-50/40 border-2 border-blue-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 group">
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-blue-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
-                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-blue-500/20 backdrop-blur-sm border border-blue-400/30">
-                  <UsersIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-              
-              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
-                <!-- Valor numérico destacado -->
-                <p class="text-2xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">{{ estadisticas.totalSocios }}</p>
-                <!-- Etiqueta -->
-                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Socios</p>
-              </div>
-            </div>
 
-            <!-- Indicador: Recaudado -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-green-50 via-white to-emerald-50/40 border-2 border-green-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-green-500/20 transition-all duration-300 group">
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/25 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-400/35 group-hover:to-emerald-400/30 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-300/20 to-green-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
-                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-green-500/90 to-emerald-600/90 rounded-md flex items-center justify-center shadow-sm shadow-green-500/20 backdrop-blur-sm border border-green-400/30">
-                  <CurrencyDollarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-              
-              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
-                <!-- Valor numérico destacado -->
-                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-green-600 via-green-700 to-emerald-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalAportado) }}</p>
-                <!-- Etiqueta -->
-                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Recaudado</p>
-              </div>
-            </div>
-
-            <!-- Indicador: Pendiente -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50 via-white to-orange-50/40 border-2 border-amber-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-amber-500/20 transition-all duration-300 group">
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/25 to-orange-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-400/35 group-hover:to-orange-400/30 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-300/20 to-amber-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
-                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-amber-500/90 to-orange-600/90 rounded-md flex items-center justify-center shadow-sm shadow-amber-500/20 backdrop-blur-sm border border-amber-400/30">
-                  <ExclamationTriangleIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-              
-              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
-                <!-- Valor numérico destacado -->
-                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-amber-600 via-amber-700 to-orange-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.totalPendiente) }}</p>
-                <!-- Etiqueta -->
-                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Pendiente</p>
-              </div>
-            </div>
-
-            <!-- Indicador: Utilidades -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-50 via-white to-cyan-50/40 border-2 border-teal-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-teal-500/20 transition-all duration-300 group">
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-400/25 to-cyan-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-teal-400/35 group-hover:to-cyan-400/30 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-300/20 to-teal-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
-                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-teal-500/90 to-cyan-600/90 rounded-md flex items-center justify-center shadow-sm shadow-teal-500/20 backdrop-blur-sm border border-teal-400/30">
-                  <BanknotesIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-              
-              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
-                <!-- Valor numérico destacado -->
-                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-teal-600 via-teal-700 to-cyan-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</p>
-                <!-- Etiqueta -->
-                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Utilidades</p>
-              </div>
-            </div>
-
-            <!-- Indicador: Fondo Total -->
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-purple-50 via-white to-indigo-50/40 border-2 border-purple-300/60 backdrop-blur-sm shadow-xl hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group">
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/25 to-indigo-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-400/35 group-hover:to-indigo-400/30 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/20 to-purple-300/15 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Icono pequeño en esquina superior derecha -->
-              <div class="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-20">
-                <div class="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-purple-500/90 to-indigo-600/90 rounded-md flex items-center justify-center shadow-sm shadow-purple-500/20 backdrop-blur-sm border border-purple-400/30">
-                  <ChartBarIcon class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-              </div>
-              
-              <div class="relative z-10 pt-8 pb-4 px-4 sm:pt-5 sm:pb-6 sm:px-6 flex flex-col items-center justify-center min-h-[110px] sm:min-h-[120px]">
-                <!-- Valor numérico destacado -->
-                <p class="text-xl sm:text-3xl lg:text-4xl font-extrabold bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 bg-clip-text text-transparent text-center mb-2 leading-tight">${{ formatMoneyShort(estadisticas.fondoTotal) }}</p>
-                <!-- Etiqueta -->
-                <p class="text-xs sm:text-sm lg:text-base text-gray-600 font-bold text-center uppercase tracking-wide">Fondo Total</p>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Menú de Navegación -->
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-4 sm:p-6 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-        <!-- Efectos decorativos -->
-        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-        
+      <!-- Menú Principal -->
+      <div class="relative bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-200 overflow-hidden">
         <div class="relative z-10">
           <!-- Título del menú -->
-          <div class="flex items-center gap-2 mb-4 sm:mb-5">
-            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
-              <Bars3Icon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div class="flex items-center justify-between mb-4 sm:mb-6">
+            <div>
+              <h2 class="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-gray-900 mb-1">
+                Menú Principal
+              </h2>
+              <p class="hidden sm:block text-sm sm:text-base text-gray-600">
+                Gestiona los módulos centrales de tu círculo de ahorro
+              </p>
             </div>
-            <h2 class="text-lg sm:text-xl font-display font-bold text-gray-800">
-              Menú de Opciones
-            </h2>
+            <div class="hidden sm:flex items-center gap-2 text-xs text-gray-500">
+              <Squares2X2Icon class="w-4 h-4" />
+              <span>NAVEGACIÓN</span>
+            </div>
           </div>
           
           <!-- Grid de opciones: 2 columnas en móvil, 4 en desktop -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <router-link 
               :to="`/natilleras/${id}/socios`"
-              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-blue-50/50 to-indigo-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-blue-200/60 shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 hover:-translate-y-1.5 hover:border-blue-400 hover:from-blue-50 hover:via-indigo-50/70 hover:to-blue-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
               <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-400/30 group-hover:to-indigo-400/25 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-indigo-300/15 to-blue-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-indigo-300/25 group-hover:to-blue-300/20 transition-all duration-300"></div>
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-indigo-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-200/60 group-hover:to-indigo-200/40 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-100/30 to-blue-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
-              <!-- Efecto de brillo al hover -->
-              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
-              
-              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 group-hover:shadow-xl group-hover:shadow-blue-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
-                <UsersIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              <!-- Ícono con fondo colorido -->
+              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <UsersIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
               </div>
-              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">Socios</span>
+              
+              <!-- Título y descripción -->
+              <div class="relative z-10 text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-blue-700 transition-colors">
+                  Socios
+                </h3>
+                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
+                  Administración de miembros y roles del grupo.
+                </p>
+              </div>
             </router-link>
             
             <router-link 
               :to="`/natilleras/${id}/cuotas`"
-              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-green-50/50 to-emerald-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-green-200/60 shadow-xl hover:shadow-2xl hover:shadow-green-500/30 hover:-translate-y-1.5 hover:border-green-400 hover:from-green-50 hover:via-emerald-50/70 hover:to-green-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
               <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-400/30 group-hover:to-emerald-400/25 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-emerald-300/15 to-green-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-emerald-300/25 group-hover:to-green-300/20 transition-all duration-300"></div>
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100/50 to-emerald-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-200/60 group-hover:to-emerald-200/40 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100/30 to-green-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
-              <!-- Efecto de brillo al hover -->
-              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
-              
-              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 via-emerald-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/40 group-hover:shadow-xl group-hover:shadow-green-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
-                <CurrencyDollarIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              <!-- Ícono con fondo colorido -->
+              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <CurrencyDollarIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
               </div>
-              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-green-700 transition-colors duration-300">Cuotas</span>
+              
+              <!-- Título y descripción -->
+              <div class="relative z-10 text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-green-700 transition-colors">
+                  Cuotas
+                </h3>
+                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
+                  Registro y control de aportes periódicos.
+                </p>
+              </div>
             </router-link>
             
             <router-link 
               :to="`/natilleras/${id}/prestamos`"
-              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-amber-200/60 shadow-xl hover:shadow-2xl hover:shadow-amber-500/30 hover:-translate-y-1.5 hover:border-amber-400 hover:from-amber-50 hover:via-orange-50/70 hover:to-amber-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
               <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/20 to-orange-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-400/30 group-hover:to-orange-400/25 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-orange-300/15 to-amber-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-orange-300/25 group-hover:to-amber-300/20 transition-all duration-300"></div>
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-orange-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-200/60 group-hover:to-orange-200/40 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-100/30 to-amber-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
-              <!-- Efecto de brillo al hover -->
-              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
-              
-              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/40 group-hover:shadow-xl group-hover:shadow-amber-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
-                <BanknotesIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              <!-- Ícono con fondo colorido -->
+              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <BanknotesIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
               </div>
-              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-amber-700 transition-colors duration-300">Préstamos</span>
+              
+              <!-- Título y descripción -->
+              <div class="relative z-10 text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-amber-700 transition-colors">
+                  Préstamos
+                </h3>
+                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
+                  Solicitudes, desembolsos y tabla de amortización.
+                </p>
+              </div>
             </router-link>
             
             <router-link 
               :to="`/natilleras/${id}/actividades`"
-              class="group relative flex flex-col items-center justify-center gap-3 px-4 py-5 sm:px-5 sm:py-6 bg-gradient-to-br from-white via-purple-50/50 to-indigo-50/30 text-gray-900 font-bold text-sm sm:text-base rounded-2xl border-2 border-purple-200/60 shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 hover:-translate-y-1.5 hover:border-purple-400 hover:from-purple-50 hover:via-indigo-50/70 hover:to-purple-50/50 transition-all duration-300 cursor-pointer overflow-hidden"
+              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
               <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/20 to-indigo-400/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-400/30 group-hover:to-indigo-400/25 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-indigo-300/15 to-purple-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2 group-hover:from-indigo-300/25 group-hover:to-purple-300/20 transition-all duration-300"></div>
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100/50 to-indigo-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-200/60 group-hover:to-indigo-200/40 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-100/30 to-purple-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
               
-              <!-- Efecto de brillo al hover -->
-              <div class="absolute inset-0 bg-gradient-to-br from-transparent via-white/0 to-transparent opacity-0 group-hover:opacity-100 group-hover:via-white/20 transition-all duration-500 transform -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%]"></div>
-              
-              <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/40 group-hover:shadow-xl group-hover:shadow-purple-500/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10 border-2 border-white/30">
-                <CalendarIcon class="w-7 h-7 sm:w-8 sm:h-8 text-white drop-shadow-lg" />
+              <!-- Ícono con fondo colorido -->
+              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <CalendarIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
               </div>
-              <span class="text-center relative z-10 font-bold text-gray-900 group-hover:text-purple-700 transition-colors duration-300">Actividades</span>
+              
+              <!-- Título y descripción -->
+              <div class="relative z-10 text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-purple-700 transition-colors">
+                  Actividades
+                </h3>
+                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
+                  Eventos, rifas y fondos extraordinarios.
+                </p>
+              </div>
             </router-link>
           </div>
         </div>
@@ -2265,6 +2211,91 @@
       </div>
     </div>
 
+    <!-- Modal Sin Socios -->
+    <div v-if="modalSinSocios" data-modal="sin-socios" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSinSocios = false"></div>
+      <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <UsersIcon class="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 class="text-2xl font-display font-bold">
+                  Sin Socios
+                </h3>
+                <p class="text-white/90 text-sm">
+                  Tu natillera está lista para comenzar
+                </p>
+              </div>
+            </div>
+            <button 
+              @click="modalSinSocios = false"
+              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="overflow-y-auto flex-1 p-6 space-y-6">
+          <!-- Ilustración/Icono -->
+          <div class="flex justify-center">
+            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-natillera-100 to-emerald-100 flex items-center justify-center shadow-lg">
+              <UsersIcon class="w-16 h-16 text-natillera-600" />
+            </div>
+          </div>
+
+          <!-- Mensaje principal -->
+          <div class="text-center space-y-3">
+            <h4 class="text-xl font-display font-bold text-gray-800">
+              ¡Comienza tu natillera agregando socios!
+            </h4>
+            <p class="text-gray-600 leading-relaxed">
+              Para que tu natillera pueda empezar a funcionar, necesitas agregar al menos un socio. Los socios son los participantes que realizarán los aportes mensuales o quincenales.
+            </p>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-blue-200">
+            <div class="flex items-start gap-3">
+              <InformationCircleIcon class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div class="flex-1">
+                <p class="font-semibold text-gray-800 mb-1">¿Qué sigue después?</p>
+                <p class="text-sm text-gray-600">
+                  Una vez agregues socios, podrás gestionar cuotas, préstamos, actividades y mucho más para tu natillera.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
+          <button 
+            @click="modalSinSocios = false; router.push(`/natilleras/${id}/socios?agregar=true`)"
+            class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <PlusIcon class="w-5 h-5" />
+            <span>Crear Primer Socio</span>
+          </button>
+          <button 
+            @click="modalSinSocios = false"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
     <div class="hidden">
       <ColaboradoresManager
@@ -2308,7 +2339,8 @@ import {
   ArrowPathIcon,
   Bars3Icon,
   ChartBarIcon,
-  Squares2X2Icon
+  Squares2X2Icon,
+  DocumentCheckIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -2317,6 +2349,8 @@ import { useAuthStore } from '../../stores/auth'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
 
@@ -2361,8 +2395,8 @@ const cuotasNatillera = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
 const configSancionesActiva = ref(false)
 const prestamosVencidos = ref([]) // Préstamos con cuotas vencidas agrupadas por socio
-const indicadoresExpandidos = ref(false) // Estado del desplegable de indicadores en móvil
 const modalCierreNatillera = ref(false) // Modal de cierre de natillera
+const modalSinSocios = ref(false) // Modal para cuando no hay socios
 const datosCierre = ref([]) // Datos de cierre para cada socio
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
 
@@ -2374,6 +2408,7 @@ useBodyScrollLock(modalBuscarComprobante)
 useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalSociosEnMora)
 useBodyScrollLock(modalCierreNatillera)
+useBodyScrollLock(modalSinSocios)
 
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
@@ -2490,6 +2525,20 @@ const cuotasAgrupadasPorMes = computed(() => {
 })
 
 const natillera = computed(() => natillerasStore.natilleraActual)
+
+// Verificar si la natillera tiene socios
+const tieneSocios = computed(() => {
+  return natillera.value?.socios_natillera && natillera.value.socios_natillera.length > 0
+})
+
+// Convertir nombre a Upper Camel Case (con espacios)
+const nombreNatilleraPascalCase = computed(() => {
+  if (!natillera.value?.nombre) return ''
+  return natillera.value.nombre
+    .split(/\s+/)
+    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+    .join(' ')
+})
 
 // Usuario autenticado y admin
 const usuarioAutenticado = ref(null)
@@ -3085,7 +3134,9 @@ const resumenSocio = computed(() => {
   const pendientes = cuotasSocio.value.filter(c => c.estado === 'pendiente' || c.estado === 'parcial')
   const enMora = cuotasSocio.value.filter(c => c.estado === 'mora')
 
-  const totalAportado = cuotasSocio.value.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  // Calcular total aportado solo con valor_cuota (sin incluir sanciones)
+  // Las sanciones se reflejan en utilidades
+  const totalAportado = pagadas.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
   const totalPendiente = cuotasSocio.value
     .filter(c => c.estado !== 'pagada')
     .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
@@ -3137,14 +3188,36 @@ async function calcularEstadisticasAsync() {
   }
 }
 
+function volverAtras() {
+  // Navegar siempre al dashboard
+  router.push('/dashboard')
+}
+
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
 function formatMoneyShort(value) {
-  const num = value || 0
-  // Mostrar el número completo con formato de miles
-  return new Intl.NumberFormat('es-CO').format(num)
+  const num = Math.abs(value || 0)
+  
+  if (num >= 1000000) {
+    // Millones: 1M, 1.5M, 2.3M
+    const millones = num / 1000000
+    if (millones % 1 === 0) {
+      return `${millones}M`
+    }
+    return `${millones.toFixed(1)}M`
+  } else if (num >= 1000) {
+    // Miles: 3.5K, 450K
+    const miles = num / 1000
+    if (miles % 1 === 0) {
+      return `${miles}K`
+    }
+    return `${miles.toFixed(1)}K`
+  }
+  
+  // Menos de 1000: mostrar el número completo
+  return num.toString()
 }
 
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
@@ -3245,10 +3318,29 @@ async function calcularDatosCierre() {
     // Calcular utilidades totales
     const utilidadActividades = actividades.reduce((sum, a) => sum + (a.utilidad || 0), 0)
     
-    // Obtener sanciones pagadas e intereses de préstamos
-    const sancionesPagadas = cuotas
-      .filter(c => c.estado === 'pagada' && c.valor_multa)
-      .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+    // Obtener sanciones pagadas desde utilidades_clasificadas
+    let sancionesPagadas = 0
+    try {
+      const { data: utilidadSanciones } = await supabase
+        .from('utilidades_clasificadas')
+        .select('monto')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', 'sanciones')
+        .is('fecha_cierre', null)
+        .maybeSingle()
+
+      if (utilidadSanciones) {
+        sancionesPagadas = parseFloat(utilidadSanciones.monto || 0)
+      }
+    } catch (e) {
+      console.error('Error obteniendo sanciones desde utilidades_clasificadas:', e)
+      // Fallback: calcular desde cuotas si hay error
+      sancionesPagadas = cuotas
+        .filter(c => c.estado === 'pagada' && c.valor_multa)
+        .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+    }
+    
+    // Obtener intereses de préstamos
     
     let interesesPrestamos = 0
     if (prestamos && prestamos.length > 0) {
@@ -3276,12 +3368,13 @@ async function calcularDatosCierre() {
     const utilidadesTotales = sancionesPagadas + interesesPrestamos + utilidadActividades
     
     // Calcular total aportado (cuotas pagadas sin sanciones)
+    // Usar valor_cuota directamente porque es el valor base sin sanción
+    // Las sanciones se reflejan en utilidades
     const totalAportado = cuotas
       .filter(c => c.estado === 'pagada')
       .reduce((sum, c) => {
-        const valorPagado = c.valor_pagado || 0
-        const sancionPagada = c.valor_multa || 0
-        return sum + (valorPagado - sancionPagada)
+        const valorCuota = c.valor_cuota || 0
+        return sum + valorCuota
       }, 0)
     
     // Calcular datos para cada socio
@@ -3881,9 +3974,15 @@ function handlePopState(event) {
   if (modalBuscarComprobante.value) {
     modalBuscarComprobante.value = false
     // No hay otras modales, volver a la página anterior
+    // Asegurar scroll antes de navegar
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     router.back()
     return
   }
+  
+  // Si no hay modales abiertas y se presionó atrás, asegurar que el scroll esté en la parte superior
+  // Esto previene que el navegador restaure una posición de scroll anterior
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 
 // Registrar watchers para cada modal
@@ -3936,6 +4035,19 @@ watch(natillera, async () => {
   }
 }, { deep: true })
 
+// Watch para asegurar scroll al inicio cuando se entra a la vista
+watch(() => route.name, (newName, oldName) => {
+  if (newName === 'NatilleraDetalle' && newName !== oldName) {
+    // Asegurar que el scroll esté en la parte superior al entrar a la vista
+    nextTick(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      }, 50)
+    })
+  }
+}, { immediate: true })
+
 // Watch para detectar cambios en el ID de la natillera y recargar datos
 watch(() => id.value, async (newId, oldId) => {
   // Solo recargar si el ID realmente cambió
@@ -3973,6 +4085,14 @@ watch(() => id.value, async (newId, oldId) => {
 })
 
 onMounted(async () => {
+  // Asegurar que el scroll esté en la parte superior al montar
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  
+  // Prevenir restauración automática del scroll del navegador
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual'
+  }
+  
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
   
@@ -4021,9 +4141,16 @@ onMounted(async () => {
       .then(() => cuotasStore.recalcularMultasCuotasMora(natilleraId))
       .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     
-    // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
     await nextTick()
-    if (sociosEnMora.value && sociosEnMora.value.length > 0) {
+    
+    // Si no hay socios, mostrar modal para agregar socios
+    if (!tieneSocios.value) {
+      setTimeout(() => {
+        modalSinSocios.value = true
+      }, 500)
+    }
+    // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
+    else if (sociosEnMora.value && sociosEnMora.value.length > 0) {
       if (puedeMostrarModalSociosEnMora()) {
         setTimeout(() => {
           modalSociosEnMora.value = true
@@ -4036,6 +4163,11 @@ onMounted(async () => {
       //   scrollToBannerSociosEnMora()
       // }, 800)
     }
+    
+    // Asegurar scroll en la parte superior después de que el contenido se haya renderizado
+    setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }, 100)
   } catch (error) {
     console.error('Error cargando datos de natillera:', error)
   }

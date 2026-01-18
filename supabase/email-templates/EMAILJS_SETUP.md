@@ -96,7 +96,7 @@ Para que el sistema de respuestas funcione correctamente, necesitas crear un nue
 
 Si prefieres crear el template manualmente, aquí está el contenido mínimo:
 
-**From Name:** `Soporte Natillerapp`  
+**From Name:** `Soporte Natilleraapp`  
 **From Email:** `soporte@natillerapp.com`  
 **Reply To:** `soporte@natillerapp.com`  
 **To:** `{{to_email}}`  

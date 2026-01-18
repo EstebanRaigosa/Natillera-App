@@ -8,22 +8,15 @@
 
     <!-- Header estilizado -->
     <div class="relative">
-      <router-link 
-        :to="`/natilleras/${id}`" 
-        class="group inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200 mb-2 sm:mb-4 text-xs sm:text-sm"
-      >
-        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-natillera-500/10 to-emerald-500/10 flex items-center justify-center group-hover:from-natillera-500/20 group-hover:to-emerald-500/20 transition-all duration-200">
-          <ArrowLeftIcon class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600 group-hover:text-natillera-700 group-hover:-translate-x-0.5 transition-all duration-200" />
-        </div>
-        <span class="whitespace-nowrap">Volver a natillera</span>
-      </router-link>
+      <Breadcrumbs />
       
       <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <BackButton :to="`/natilleras/${id}`" />
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="relative z-10 pt-12 sm:pt-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-accent-500 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg shadow-accent-500/30 flex-shrink-0">
               <CalendarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -280,6 +273,8 @@ import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { 
   ArrowLeftIcon,
   PlusIcon,
