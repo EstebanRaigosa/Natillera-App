@@ -118,6 +118,10 @@
   .stat-label {
     @apply text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2 sm:mt-2.5 leading-tight;
   }
+  
+  .bg-gradient-radial {
+    background-image: radial-gradient(circle, var(--tw-gradient-stops));
+  }
 }
 
 /* Custom scrollbar */
