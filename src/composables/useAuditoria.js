@@ -310,6 +310,7 @@ export function useAuditoria() {
     entidadId = null,
     descripcion,
     natilleraId = null,
+    natilleraNombre = null, // Nombre de la natillera (opcional, se obtiene de la BD si no se proporciona)
     datosAnteriores = null,
     datosNuevos = null,
     detalles = null,
@@ -391,9 +392,9 @@ export function useAuditoria() {
       console.log('[Auditoría v3] - entidadIdFinal:', entidadIdFinal)
       console.log('[Auditoría v3] - natilleraIdFinal:', natilleraIdFinal)
 
-      // Obtener nombre de la natillera si existe (SOLO si tenemos un UUID válido verificado)
-      let natilleraNombre = null
-      if (natilleraIdFinal !== null && esUUIDValido(natilleraIdFinal)) {
+      // Obtener nombre de la natillera si no se proporcionó y tenemos un UUID válido
+      let natilleraNombreFinal = natilleraNombre
+      if (!natilleraNombreFinal && natilleraIdFinal !== null && esUUIDValido(natilleraIdFinal)) {
         try {
           console.log('[Auditoría v3] Obteniendo nombre de natillera con ID:', natilleraIdFinal)
           const { data: natillera } = await supabase
@@ -403,13 +404,13 @@ export function useAuditoria() {
             .single()
           
           if (natillera) {
-            natilleraNombre = natillera.nombre
+            natilleraNombreFinal = natillera.nombre
           }
         } catch (e) {
           console.warn('[Auditoría v3] No se pudo obtener el nombre de la natillera:', e)
         }
-      } else if (natilleraIdFinal !== null) {
-        console.error('[Auditoría v3] ALERTA: natilleraIdFinal no es null pero no es UUID válido:', natilleraIdFinal)
+      } else if (natilleraIdFinal !== null && !natilleraNombreFinal) {
+        console.warn('[Auditoría v3] No se pudo obtener el nombre de la natillera (puede que ya haya sido eliminada)')
       }
 
       // Calcular cambios si hay datos anteriores y nuevos
@@ -430,7 +431,7 @@ export function useAuditoria() {
         usuario_id: user.id,
         usuario_email: user.email || null,
         natillera_id: natilleraIdParaInsertar,
-        natillera_nombre: natilleraNombre,
+        natillera_nombre: natilleraNombreFinal,
         tipo_accion: tipoAccion,
         entidad: entidad,
         entidad_id: entidadIdParaInsertar,
@@ -523,13 +524,14 @@ export function useAuditoria() {
   /**
    * Registra la eliminación de una entidad
    */
-  async function registrarEliminacion(entidad, entidadId, descripcion, datosAnteriores, natilleraId = null, detalles = null) {
+  async function registrarEliminacion(entidad, entidadId, descripcion, datosAnteriores, natilleraId = null, detalles = null, natilleraNombre = null) {
     return registrar({
       tipoAccion: 'DELETE',
       entidad,
       entidadId,
       descripcion,
       natilleraId,
+      natilleraNombre, // Nombre de la natillera (útil cuando se elimina la natillera)
       datosAnteriores,
       detalles
     })

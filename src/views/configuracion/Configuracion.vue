@@ -36,14 +36,26 @@
           <div class="flex gap-1">
             <button 
               @click="insertarVariable('nombre')"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ]"
               title="Insertar nombre del socio"
             >
               {{nombre}}
             </button>
             <button 
               @click="insertarVariable('monto')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor 
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar monto de la cuota"
             >
               {{monto}}
@@ -56,7 +68,11 @@
         <textarea
           ref="textareaIndividual"
           v-model="configStore.mensajeIndividual"
-          class="input-field min-h-[150px] font-mono text-sm"
+          :disabled="esVisor"
+          :class="[
+            'input-field min-h-[150px] font-mono text-sm',
+            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+          ]"
           placeholder="Escribe el mensaje individual..."
         ></textarea>
         
@@ -85,7 +101,11 @@
         </p>
         <textarea
           v-model="configStore.mensajeGeneral"
-          class="input-field min-h-[150px] font-mono text-sm"
+          :disabled="esVisor"
+          :class="[
+            'input-field min-h-[150px] font-mono text-sm',
+            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+          ]"
           placeholder="Escribe el mensaje general..."
         ></textarea>
         
@@ -111,56 +131,88 @@
           <div class="flex gap-1 flex-wrap">
             <button 
               @click="insertarVariableCuota('nombre', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ]"
               title="Insertar nombre del socio"
             >
               {{nombre}}
             </button>
             <button 
               @click="insertarVariableCuota('mes', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar mes"
             >
               {{mes}}
             </button>
             <button 
               @click="insertarVariableCuota('anio', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar año"
             >
               {{anio}}
             </button>
             <button 
               @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar valor de la cuota"
             >
               {{valor_cuota}}
             </button>
             <button 
               @click="insertarVariableCuota('sancion', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+              ]"
               title="Insertar sanción"
             >
               {{sancion}}
             </button>
             <button 
               @click="insertarVariableCuota('total', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              ]"
               title="Insertar total a pagar"
             >
               {{total}}
             </button>
             <button 
               @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ]"
               title="Insertar fecha de vencimiento"
             >
               {{fecha_vencimiento}}
             </button>
             <button 
               @click="insertarVariableCuota('dias_mora', 'mensajeCuotaMora')"
-              class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'
+              ]"
               title="Insertar días en mora"
             >
               {{dias_mora}}
@@ -173,7 +225,11 @@
         <textarea
           ref="textareaCuotaMora"
           v-model="configStore.mensajeCuotaMora"
-          class="input-field min-h-[150px] font-mono text-sm"
+          :disabled="esVisor"
+          :class="[
+            'input-field min-h-[150px] font-mono text-sm',
+            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+          ]"
           placeholder="Escribe el mensaje para cuota en mora..."
         ></textarea>
         
@@ -199,42 +255,66 @@
           <div class="flex gap-1 flex-wrap">
             <button 
               @click="insertarVariableCuota('nombre', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ]"
               title="Insertar nombre del socio"
             >
               {{nombre}}
             </button>
             <button 
               @click="insertarVariableCuota('mes', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar mes"
             >
               {{mes}}
             </button>
             <button 
               @click="insertarVariableCuota('anio', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar año"
             >
               {{anio}}
             </button>
             <button 
               @click="insertarVariableCuota('valor_cuota', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-100 text-green-700 hover:bg-green-200'
+              ]"
               title="Insertar valor de la cuota"
             >
               {{valor_cuota}}
             </button>
             <button 
               @click="insertarVariableCuota('total', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              ]"
               title="Insertar total a pagar"
             >
               {{total}}
             </button>
             <button 
               @click="insertarVariableCuota('fecha_vencimiento', 'mensajeCuotaPendiente')"
-              class="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              :disabled="esVisor"
+              :class="[
+                'px-2 py-1 text-xs rounded-lg transition-colors',
+                esVisor ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ]"
               title="Insertar fecha de vencimiento"
             >
               {{fecha_vencimiento}}
@@ -247,7 +327,11 @@
         <textarea
           ref="textareaCuotaPendiente"
           v-model="configStore.mensajeCuotaPendiente"
-          class="input-field min-h-[150px] font-mono text-sm"
+          :disabled="esVisor"
+          :class="[
+            'input-field min-h-[150px] font-mono text-sm',
+            esVisor ? 'bg-gray-100 cursor-not-allowed opacity-75' : ''
+          ]"
           placeholder="Escribe el mensaje para cuota pendiente..."
         ></textarea>
         
@@ -262,7 +346,7 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+      <div v-if="!esVisor" class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
         <button 
           @click="restaurarDefecto"
           class="btn-secondary inline-flex items-center justify-center gap-2"
@@ -278,6 +362,17 @@
           <CheckIcon class="w-4 h-4" />
           {{ configStore.loading ? 'Guardando...' : 'Guardar cambios' }}
         </button>
+      </div>
+      
+      <!-- Mensaje informativo para visores -->
+      <div v-if="esVisor" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+        <div class="flex items-start gap-3">
+          <EyeIcon class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p class="text-sm font-semibold text-blue-800 mb-1">Modo de solo lectura</p>
+            <p class="text-sm text-blue-700">Como visor, puedes consultar la configuración pero no puedes modificarla.</p>
+          </div>
+        </div>
       </div>
 
       <!-- Mensaje de éxito/error -->
@@ -295,6 +390,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useConfiguracionStore } from '../../stores/configuracion'
+import { useColaboradoresStore } from '../../stores/colaboradores'
+import { useRoute } from 'vue-router'
 import { 
   ChatBubbleLeftRightIcon,
   UserIcon,
@@ -309,10 +406,14 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const configStore = useConfiguracionStore()
+const colaboradoresStore = useColaboradoresStore()
+const route = useRoute()
 const textareaIndividual = ref(null)
 const textareaCuotaMora = ref(null)
 const textareaCuotaPendiente = ref(null)
 const mensaje = ref(null)
+const esVisor = ref(false)
+const natilleraIdActual = ref(null)
 
 // Vista previa del mensaje individual con datos de ejemplo
 const vistaPreviewIndividual = computed(() => {
@@ -428,8 +529,45 @@ function restaurarDefecto() {
   }
 }
 
-onMounted(() => {
-  configStore.cargarConfiguracion()
+async function verificarRolVisor() {
+  try {
+    // Obtener natilleraId desde la ruta si está disponible
+    const natilleraId = route.params.id || route.query.natilleraId
+    
+    if (natilleraId) {
+      natilleraIdActual.value = natilleraId
+      const rol = await colaboradoresStore.obtenerMiRol(natilleraId)
+      
+      // Verificar si es visor y tiene permiso de configurar
+      if (rol === 'visor') {
+        const tienePermisoConfigurar = await colaboradoresStore.tienePermiso(natilleraId, 'configurar')
+        esVisor.value = tienePermisoConfigurar
+      } else {
+        esVisor.value = false
+      }
+    } else {
+      // Si no hay natilleraId en la ruta, verificar en todas las natilleras compartidas
+      // Si el usuario es visor con permiso de configurar en alguna natillera, aplicar restricción
+      const resultado = await colaboradoresStore.fetchNatillerasCompartidas()
+      if (resultado.success && resultado.data) {
+        const esVisorEnAlguna = resultado.data.some(natillera => 
+          natillera.mi_rol === 'visor' && 
+          natillera.mis_permisos?.configurar === true
+        )
+        esVisor.value = esVisorEnAlguna
+      } else {
+        esVisor.value = false
+      }
+    }
+  } catch (e) {
+    console.error('Error verificando rol visor:', e)
+    esVisor.value = false
+  }
+}
+
+onMounted(async () => {
+  await configStore.cargarConfiguracion()
+  await verificarRolVisor()
 })
 </script>
 

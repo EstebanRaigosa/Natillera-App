@@ -212,13 +212,58 @@ async function register(email, password, nombre) {
         throw new Error('El nombre debe tener al menos 2 caracteres')
       }
       
+      const nombreTrimmed = nombre.trim()
+      
+      // Obtener el usuario actual
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        throw new Error('No hay usuario autenticado')
+      }
+      
+      // Actualizar user_metadata en Supabase Auth
       const { data, error: updateError } = await supabase.auth.updateUser({
         data: {
-          nombre: nombre.trim()
+          nombre: nombreTrimmed
         }
       })
       
       if (updateError) throw updateError
+      
+      // También actualizar la tabla user_profiles
+      const { error: profileUpdateError } = await supabase
+        .from('user_profiles')
+        .update({
+          nombre: nombreTrimmed,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id)
+      
+      if (profileUpdateError) {
+        // Si el perfil no existe, intentar crearlo
+        if (profileUpdateError.code === 'PGRST116' || profileUpdateError.message?.includes('No rows')) {
+          // Intentar crear el perfil si no existe
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: currentUser.id,
+              email: currentUser.email,
+              nombre: nombreTrimmed,
+              rol: 'usuario',
+              activo: true,
+              permisos: {},
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+          
+          if (insertError) {
+            console.warn('Error creando perfil de usuario:', insertError)
+            // No lanzar error aquí, ya que el user_metadata se actualizó correctamente
+          }
+        } else {
+          console.warn('Error actualizando perfil de usuario:', profileUpdateError)
+          // No lanzar error aquí, ya que el user_metadata se actualizó correctamente
+        }
+      }
       
       // Actualizar el usuario en el store
       if (data?.user) {

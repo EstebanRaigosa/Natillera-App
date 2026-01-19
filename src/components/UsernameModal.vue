@@ -10,7 +10,6 @@
     <div
       v-if="show"
       class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      @click.self="handleClose"
     >
       <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
         <!-- Header -->
@@ -70,19 +69,11 @@
               </p>
             </div>
 
-            <div class="flex gap-3 pt-2">
-              <button
-                type="button"
-                @click="handleClose"
-                :disabled="loading"
-                class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
+            <div class="pt-2">
               <button
                 type="submit"
                 :disabled="loading || !username.trim() || username.trim().length < 2"
-                class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 <span v-else>Guardar</span>
@@ -96,8 +87,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
 const props = defineProps({
   show: {
@@ -108,14 +100,39 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
+const router = useRouter()
 const authStore = useAuthStore()
 const username = ref('')
 const loading = ref(false)
 const error = ref('')
 
+// Prevenir que se cierre con ESC
+function handleKeydown(event) {
+  if (event.key === 'Escape' && props.show) {
+    event.preventDefault()
+    event.stopPropagation()
+    // No hacer nada, el modal no debe cerrarse con ESC
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
+
 // Limpiar formulario cuando se abre el modal
 watch(() => props.show, (newValue) => {
   if (newValue) {
+    // Verificar si hay usuario autenticado
+    if (!authStore.isAuthenticated || !authStore.user) {
+      emit('close')
+      router.push({ name: 'Login' })
+      return
+    }
+    
     username.value = ''
     error.value = ''
     // Intentar prellenar con el email si no hay nombre
@@ -126,13 +143,22 @@ watch(() => props.show, (newValue) => {
   }
 })
 
-function handleClose() {
-  if (!loading.value) {
+// Observar cambios en la autenticación mientras el modal está abierto
+watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+  if (props.show && !isAuthenticated) {
     emit('close')
+    router.push({ name: 'Login' })
   }
-}
+})
 
 async function handleSubmit() {
+  // Verificar autenticación antes de guardar
+  if (!authStore.isAuthenticated || !authStore.user) {
+    emit('close')
+    router.push({ name: 'Login' })
+    return
+  }
+  
   if (!username.value.trim() || username.value.trim().length < 2) {
     error.value = 'El nombre debe tener al menos 2 caracteres'
     return
@@ -146,7 +172,7 @@ async function handleSubmit() {
     
     if (result.success) {
       emit('saved')
-      handleClose()
+      emit('close')
     } else {
       error.value = result.error || 'Error al guardar el nombre de usuario'
     }

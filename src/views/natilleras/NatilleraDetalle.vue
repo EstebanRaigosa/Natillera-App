@@ -6,11 +6,72 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Loading -->
-    <div v-if="natillerasStore.loading" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-400 mt-4">Cargando natillera...</p>
-    </div>
+    <!-- Pantalla de carga completa -->
+    <template v-if="cargandoNatillera">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div 
+          key="loading-screen"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
+          @click.stop.prevent
+          @wheel.stop.prevent
+          @touchmove.stop.prevent
+          @scroll.stop.prevent
+          style="touch-action: none; overscroll-behavior: none;"
+        >
+          <!-- Efectos decorativos de fondo -->
+          <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
+          </div>
+          
+          <div class="relative z-10 flex flex-col items-center">
+            <!-- Spinner moderno con gradientes y múltiples capas -->
+            <div class="relative w-24 h-24 mb-6">
+              <!-- Anillo exterior grande animado -->
+              <div class="absolute inset-0 border-4 border-green-200/50 rounded-full"></div>
+              <div class="absolute inset-0 border-4 border-transparent border-t-green-500 rounded-full animate-spin-smooth"></div>
+              
+              <!-- Anillo medio -->
+              <div class="absolute inset-2 border-4 border-emerald-200/50 rounded-full"></div>
+              <div class="absolute inset-2 border-4 border-transparent border-r-emerald-500 rounded-full animate-spin-reverse"></div>
+              
+              <!-- Anillo interior -->
+              <div class="absolute inset-4 border-4 border-teal-200/50 rounded-full"></div>
+              <div class="absolute inset-4 border-4 border-transparent border-b-teal-500 rounded-full animate-spin-smooth" style="animation-duration: 0.6s;"></div>
+              
+              <!-- Círculo central con gradiente animado -->
+              <div class="absolute inset-6 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-glow-pulse">
+                <BanknotesIcon class="w-5 h-5 text-white" />
+              </div>
+              
+              <!-- Partículas flotantes -->
+              <div class="absolute -top-2 left-1/2 w-2 h-2 bg-green-400 rounded-full animate-float-1"></div>
+              <div class="absolute top-1/4 -right-2 w-2 h-2 bg-emerald-400 rounded-full animate-float-2"></div>
+              <div class="absolute -bottom-2 left-1/4 w-2 h-2 bg-teal-400 rounded-full animate-float-3"></div>
+            </div>
+            
+            <!-- Texto de carga con efecto -->
+            <div class="text-center">
+              <p class="text-gray-700 font-semibold text-lg mb-1 animate-fade-in-out">
+                {{ mensajeCargaActual }}
+              </p>
+              <div class="flex gap-1 justify-center mt-2">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                <div class="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </template>
 
     <template v-else-if="natillera">
       <!-- Breadcrumbs (solo desktop) -->
@@ -139,6 +200,7 @@
       <div class="relative bg-white rounded-2xl sm:rounded-3xl p-3 sm:py-2 sm:px-4 lg:py-2.5 lg:px-5 shadow-lg border border-gray-200 mb-4 sm:mb-6 overflow-hidden">
         <div class="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 lg:gap-4">
           <button 
+            v-if="puedeBuscarComprobante"
             @click="modalBuscarComprobante = true"
             class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
@@ -150,6 +212,7 @@
           </button>
           
           <router-link 
+            v-if="puedeConfigurar"
             :to="`/natilleras/${id}/configuracion`"
             class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
@@ -158,6 +221,7 @@
           </router-link>
           
           <button 
+            v-if="puedeInvitarColaboradores"
             @click="abrirFormularioInvitarColaborador"
             class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-all"
           >
@@ -169,6 +233,7 @@
           </button>
           
           <button 
+            v-if="puedeNotificar"
             @click="modalWhatsApp = true"
             class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all"
           >
@@ -177,7 +242,7 @@
           </button>
           
           <button 
-            v-if="natillera.estado === 'activa'"
+            v-if="puedeCerrarNatillera && natillera.estado === 'activa'"
             @click="handleCerrarNatillera"
             class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-all"
           >
@@ -258,6 +323,7 @@
           <!-- Grid de opciones: 2 columnas en móvil, 4 en desktop -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             <router-link 
+              v-if="puedeVerSocios"
               :to="`/natilleras/${id}/socios`"
               class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
@@ -284,6 +350,7 @@
             </router-link>
             
             <router-link 
+              v-if="puedeVerCuotas"
               :to="`/natilleras/${id}/cuotas`"
               class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
@@ -310,6 +377,7 @@
             </router-link>
             
             <router-link 
+              v-if="puedeVerPrestamos"
               :to="`/natilleras/${id}/prestamos`"
               class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
@@ -336,6 +404,7 @@
             </router-link>
             
             <router-link 
+              v-if="puedeVerActividades"
               :to="`/natilleras/${id}/actividades`"
               class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
             >
@@ -2346,6 +2415,7 @@ import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useAuthStore } from '../../stores/auth'
+import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
@@ -2365,6 +2435,7 @@ const sociosStore = useSociosStore()
 const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
+const colaboradoresStore = useColaboradoresStore()
 
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
@@ -2399,6 +2470,26 @@ const modalCierreNatillera = ref(false) // Modal de cierre de natillera
 const modalSinSocios = ref(false) // Modal para cuando no hay socios
 const datosCierre = ref([]) // Datos de cierre para cada socio
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
+const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
+
+// Mensajes de carga que rotarán
+const mensajesCarga = [
+  'Calienta toda la suplencia...',
+  'En poco estará todo listo',
+  'Cargando datos de natilleras',
+  'Ajustando condensador de flujo...',
+  'Preparando todo para ti',
+  'Cargando natillera...',
+  'Abriendo el DRS',
+  'Echandole mas agua a la sopa',
+  'Poniendo neumaticos blandos',
+  'Cargando informacion'
+]
+const mensajeCargaActual = ref(mensajesCarga[0])
+let intervaloMensajeCarga = null
+
+// Variable para mantener el índice anterior fuera del intervalo
+let indiceMensajeAnterior = -1
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalWhatsApp)
@@ -2434,6 +2525,56 @@ const formConfigMeses = ref({
   mes_fin: 11,
   anio: new Date().getFullYear()
 })
+
+// Funciones para controlar el scroll del body
+function bloquearScroll() {
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+  document.body.style.width = '100%'
+}
+
+function desbloquearScroll() {
+  document.body.style.overflow = ''
+  document.body.style.position = ''
+  document.body.style.width = ''
+}
+
+// Función para iniciar la rotación de mensajes de carga (aleatoria)
+function iniciarRotacionMensajes() {
+  // Limpiar intervalo anterior si existe
+  if (intervaloMensajeCarga) {
+    clearInterval(intervaloMensajeCarga)
+    intervaloMensajeCarga = null
+  }
+  
+  // Seleccionar un mensaje aleatorio inicial
+  indiceMensajeAnterior = Math.floor(Math.random() * mensajesCarga.length)
+  mensajeCargaActual.value = mensajesCarga[indiceMensajeAnterior]
+  
+  // Cambiar mensaje cada 2 segundos de forma aleatoria
+  intervaloMensajeCarga = setInterval(() => {
+    let nuevoIndice
+    // Si hay más de un mensaje, asegurarse de que no se repita el anterior
+    if (mensajesCarga.length > 1) {
+      do {
+        nuevoIndice = Math.floor(Math.random() * mensajesCarga.length)
+      } while (nuevoIndice === indiceMensajeAnterior)
+    } else {
+      nuevoIndice = 0
+    }
+    
+    indiceMensajeAnterior = nuevoIndice
+    mensajeCargaActual.value = mensajesCarga[nuevoIndice]
+  }, 2000)
+}
+
+// Función para detener la rotación de mensajes
+function detenerRotacionMensajes() {
+  if (intervaloMensajeCarga) {
+    clearInterval(intervaloMensajeCarga)
+    intervaloMensajeCarga = null
+  }
+}
 
 function abrirConfigMeses() {
   formConfigMeses.value = {
@@ -2543,6 +2684,8 @@ const nombreNatilleraPascalCase = computed(() => {
 // Usuario autenticado y admin
 const usuarioAutenticado = ref(null)
 const adminActual = ref(null)
+const miRol = ref(null)
+const misPermisos = ref(null)
 
 // Verificar si el usuario es superusuario
 const esSuperUsuario = computed(() => {
@@ -2555,6 +2698,66 @@ const esSuperUsuario = computed(() => {
 const esAdmin = computed(() => {
   if (!usuarioAutenticado.value || !natillera.value) return false
   return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
+})
+
+// Verificar si el usuario es visor
+const esVisor = computed(() => {
+  return miRol.value === 'visor'
+})
+
+// Computed properties para verificar permisos específicos
+const puedeVerSocios = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.editar_socios === true
+})
+
+const puedeVerCuotas = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.gestionar_cuotas === true
+})
+
+const puedeVerPrestamos = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.gestionar_prestamos === true
+})
+
+const puedeVerActividades = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.gestionar_actividades === true
+})
+
+const puedeConfigurar = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.configurar === true
+})
+
+const puedeBuscarComprobante = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.buscar_comprobante === true
+})
+
+const puedeInvitarColaboradores = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.invitar_colaboradores === true
+})
+
+const puedeNotificar = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.notificar === true
+})
+
+const puedeCerrarNatillera = computed(() => {
+  if (esAdmin.value) return true
+  if (!misPermisos.value) return false
+  return misPermisos.value.permisos?.cerrar_natillera === true
 })
 
 // Cargar información del administrador actual
@@ -4052,27 +4255,35 @@ watch(() => route.name, (newName, oldName) => {
 watch(() => id.value, async (newId, oldId) => {
   // Solo recargar si el ID realmente cambió
   if (newId && newId !== oldId) {
+    // Mostrar pantalla de carga cuando cambia el ID
+    cargandoNatillera.value = true
     try {
-      // OPTIMIZACIÓN: Cargar datos en paralelo
+      // OPTIMIZACIÓN: Cargar SOLO datos esenciales primero
       const [natilleraResult, cuotasResult] = await Promise.all([
         natillerasStore.fetchNatillera(newId),
         cuotasStore.fetchCuotasNatillera(newId, { skipMoraUpdate: true })
       ])
       
-      configStore.cargarConfiguracion()
       cuotasNatillera.value = cuotasResult || []
       
-      // Cargar datos secundarios en paralelo
-      const [estadisticasResult, prestamosResult, sancionesResult] = await Promise.all([
+      // Cargar configuración (no bloquea)
+      configStore.cargarConfiguracion()
+      
+      // Ocultar pantalla de carga INMEDIATAMENTE después de datos esenciales
+      await nextTick()
+      cargandoNatillera.value = false
+      
+      // Cargar datos secundarios EN SEGUNDO PLANO (no bloquean la UI)
+      Promise.all([
         calcularEstadisticasAsync(),
         obtenerPrestamosVencidos(),
         cuotasStore.calcularSancionesTotales(newId, cuotasResult)
-      ])
-      
-      if (sancionesResult.success) {
-        sancionesPorCuota.value = sancionesResult.sanciones || {}
-        configSancionesActiva.value = sancionesResult.configActiva || false
-      }
+      ]).then(([estadisticasResult, prestamosResult, sancionesResult]) => {
+        if (sancionesResult?.success) {
+          sancionesPorCuota.value = sancionesResult.sanciones || {}
+          configSancionesActiva.value = sancionesResult.configActiva || false
+        }
+      }).catch(err => console.warn('Error cargando datos secundarios:', err))
       
       // Actualizar mora en segundo plano
       cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, newId)
@@ -4080,11 +4291,30 @@ watch(() => id.value, async (newId, oldId) => {
         .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     } catch (error) {
       console.error('Error recargando datos de natillera:', error)
+      // Ocultar pantalla de carga incluso si hay error
+      cargandoNatillera.value = false
     }
   }
 })
 
+// Watch para controlar el bloqueo de scroll cuando se muestra/oculta la animación
+watch(cargandoNatillera, (mostrando) => {
+  if (mostrando) {
+    bloquearScroll()
+    // Iniciar rotación con un pequeño delay para asegurar que el DOM esté listo
+    setTimeout(() => {
+      iniciarRotacionMensajes()
+    }, 100)
+  } else {
+    desbloquearScroll()
+    detenerRotacionMensajes()
+  }
+}, { immediate: true })
+
 onMounted(async () => {
+  // Activar pantalla de carga al inicio
+  cargandoNatillera.value = true
+  
   // Asegurar que el scroll esté en la parte superior al montar
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   
@@ -4103,79 +4333,120 @@ onMounted(async () => {
   try {
     const natilleraId = props.id || route.params.id
     
-    // OPTIMIZACIÓN: Cargar datos en paralelo para mostrar la UI más rápido
-    // Fase 1: Cargar datos esenciales en paralelo (sin bloquear la UI)
+    // OPTIMIZACIÓN: Cargar SOLO datos esenciales primero para mostrar la UI lo más rápido posible
+    // Fase 1: Cargar datos críticos en paralelo (solo lo necesario para renderizar)
     const [natilleraResult, cuotasResult] = await Promise.all([
       natillerasStore.fetchNatillera(natilleraId),
       // skipMoraUpdate: true para carga rápida inicial (mora se actualiza después)
       cuotasStore.fetchCuotasNatillera(natilleraId, { skipMoraUpdate: true })
     ])
     
-    // Cargar configuración (no bloquea)
-    configStore.cargarConfiguracion()
-    
-    // Cargar información del administrador
-    await cargarAdminActual()
-    
-    // Asignar cuotas inmediatamente para mostrar socios en mora
+    // Asignar cuotas inmediatamente
     cuotasNatillera.value = cuotasResult || []
     
-    // Fase 2: Cargar datos secundarios en paralelo (no bloquean la visualización inicial)
-    // Esto permite que el banner de socios en mora se muestre rápidamente
-    const [estadisticasResult, prestamosResult, sancionesResult] = await Promise.all([
+    // Cargar configuración (no bloquea, se ejecuta en paralelo)
+    configStore.cargarConfiguracion()
+    
+    // Cargar información del administrador (no crítico, puede ser en paralelo)
+    cargarAdminActual().catch(err => console.warn('Error cargando admin:', err))
+    
+    // Obtener el rol y permisos del usuario en la natillera
+    // Esperar a que natillera.value esté disponible
+    await nextTick()
+    if (natillera.value) {
+      if (!esAdmin.value) {
+        try {
+          const rol = await colaboradoresStore.obtenerMiRol(natilleraId)
+          miRol.value = rol
+          
+          // Obtener los permisos del usuario
+          const permisos = await colaboradoresStore.obtenerMisPermisos(natilleraId)
+          misPermisos.value = permisos
+        } catch (err) {
+          console.warn('Error obteniendo rol y permisos del usuario:', err)
+          miRol.value = null
+          misPermisos.value = null
+        }
+      } else {
+        // Si es admin, no necesita verificar rol, tiene todos los permisos
+        miRol.value = 'administrador'
+        misPermisos.value = {
+          rol: 'administrador',
+          esAdmin: true,
+          permisos: {
+            ver: true,
+            editar_socios: true,
+            gestionar_cuotas: true,
+            gestionar_prestamos: true,
+            gestionar_actividades: true,
+            ver_auditoria: true,
+            configurar: true,
+            buscar_comprobante: true,
+            invitar_colaboradores: true,
+            notificar: true,
+            cerrar_natillera: true
+          }
+        }
+      }
+    }
+    
+    // IMPORTANTE: Ocultar pantalla de carga INMEDIATAMENTE después de tener datos esenciales
+    // Esto permite que el usuario vea la UI mientras se cargan datos secundarios
+    await nextTick()
+    cargandoNatillera.value = false
+    
+    // Fase 2: Cargar datos secundarios EN SEGUNDO PLANO (no bloquean la UI)
+    // Estas operaciones se ejecutan después de que la pantalla de carga se oculta
+    Promise.all([
       calcularEstadisticasAsync(),
       obtenerPrestamosVencidos(),
       cuotasStore.calcularSancionesTotales(natilleraId, cuotasResult)
-    ])
-    
-    // Aplicar sanciones calculadas
-    if (sancionesResult.success) {
-      sancionesPorCuota.value = sancionesResult.sanciones || {}
-      configSancionesActiva.value = sancionesResult.configActiva || false
-      console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
-    }
+    ]).then(([estadisticasResult, prestamosResult, sancionesResult]) => {
+      // Aplicar sanciones calculadas
+      if (sancionesResult?.success) {
+        sancionesPorCuota.value = sancionesResult.sanciones || {}
+        configSancionesActiva.value = sancionesResult.configActiva || false
+        console.log('💰 Sanciones calculadas:', Object.keys(sancionesPorCuota.value).length, 'cuotas')
+      }
+    }).catch(err => console.warn('Error cargando datos secundarios:', err))
     
     // Fase 3: Actualizar mora/multas en segundo plano (no bloquea la UI)
-    // Esto se ejecuta después de que la UI ya está visible
     cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, natilleraId)
       .then(() => cuotasStore.recalcularMultasCuotasMora(natilleraId))
       .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     
-    await nextTick()
-    
-    // Si no hay socios, mostrar modal para agregar socios
-    if (!tieneSocios.value) {
-      setTimeout(() => {
-        modalSinSocios.value = true
-      }, 500)
-    }
-    // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
-    else if (sociosEnMora.value && sociosEnMora.value.length > 0) {
-      if (puedeMostrarModalSociosEnMora()) {
-        setTimeout(() => {
-          modalSociosEnMora.value = true
-          incrementarContadorModalSociosEnMora()
-        }, 500)
-      }
-      
-      // Scroll automático al banner deshabilitado
-      // setTimeout(() => {
-      //   scrollToBannerSociosEnMora()
-      // }, 800)
-    }
-    
-    // Asegurar scroll en la parte superior después de que el contenido se haya renderizado
+    // Asegurar scroll en la parte superior
     setTimeout(() => {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-    }, 100)
+    }, 50)
+    
+    // Mostrar modales después de un pequeño delay para que la UI se renderice primero
+    setTimeout(() => {
+      // Si no hay socios, mostrar modal para agregar socios
+      if (!tieneSocios.value) {
+        modalSinSocios.value = true
+      }
+      // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
+      else if (sociosEnMora.value && sociosEnMora.value.length > 0) {
+        if (puedeMostrarModalSociosEnMora()) {
+          modalSociosEnMora.value = true
+          incrementarContadorModalSociosEnMora()
+        }
+      }
+    }, 300)
   } catch (error) {
     console.error('Error cargando datos de natillera:', error)
+    // Ocultar pantalla de carga incluso si hay error
+    cargandoNatillera.value = false
   }
 })
 
 onUnmounted(() => {
   // Remover listener del botón atrás
   window.removeEventListener('popstate', handlePopState)
+  // Limpiar intervalos y desbloquear scroll
+  detenerRotacionMensajes()
+  desbloquearScroll()
 })
 </script>
 
@@ -4323,5 +4594,96 @@ onUnmounted(() => {
 .animate-sweep-hover {
   animation: sweep-hover 3.5s ease-in-out infinite;
   width: 80%;
+}
+
+/* Animaciones para la pantalla de carga */
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 1s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: spin-smooth 0.8s linear infinite reverse;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes float-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(10px, -15px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes float-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-12px, 10px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(8px, 12px) scale(1.15);
+    opacity: 1;
+  }
+}
+
+.animate-float-1 {
+  animation: float-1 2s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-2 2.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.animate-float-3 {
+  animation: float-3 2.2s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
 }
 </style>

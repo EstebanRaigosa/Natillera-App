@@ -447,8 +447,8 @@
         </div>
       </div>
 
-      <!-- Loading - Solo mostrar si NO está verificando el modal (para evitar mostrar dos animaciones) -->
-      <div v-if="natillerasStore.loading && !verificandoModal" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+      <!-- Loading - Solo mostrar si NO está verificando el modal y NO se está eliminando una natillera -->
+      <div v-if="natillerasStore.loading && !verificandoModal && !eliminandoNatillera" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
         <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
         <p class="text-gray-500 mt-4 font-medium">Cargando natilleras...</p>
       </div>
@@ -901,10 +901,10 @@
 
     <!-- Modal de confirmación para eliminar natillera -->
     <div v-if="natilleraAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="natilleraAEliminar = null"></div>
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalEliminacion"></div>
       <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden">
-        <!-- Animación de fondo durante la eliminación -->
-        <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/50 via-red-100/30 to-red-50/50 animate-pulse"></div>
+        <!-- Animación de fondo sutil durante la eliminación -->
+        <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/30 via-red-100/20 to-red-50/30"></div>
         
         <div class="relative z-10">
           <div class="flex items-center gap-4 mb-4">
@@ -926,8 +926,8 @@
             </div>
           </div>
           
-          <!-- Contenido del modal -->
-          <div v-if="!natillerasStore.loading" class="mb-6">
+          <!-- Contenido del modal - siempre visible -->
+          <div class="mb-6">
             <p class="text-gray-700 mb-2">
               ¿Estás seguro de que deseas eliminar la natillera <strong>"{{ natilleraAEliminar.nombre }}"</strong>?
             </p>
@@ -941,37 +941,20 @@
                 <li>Todos los registros de historial</li>
               </ul>
             </div>
-          </div>
-
-          <!-- Estado de carga -->
-          <div v-else class="mb-6">
-            <div class="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-lg p-6 text-center">
-              <div class="flex flex-col items-center gap-4">
-                <!-- Animación de ondas -->
-                <div class="relative w-16 h-16">
-                  <div class="absolute inset-0 rounded-full bg-red-200 animate-ping opacity-75"></div>
-                  <div class="absolute inset-2 rounded-full bg-red-300 animate-ping opacity-50" style="animation-delay: 0.2s"></div>
-                  <div class="absolute inset-4 rounded-full bg-red-400 animate-ping opacity-25" style="animation-delay: 0.4s"></div>
-                  <div class="absolute inset-0 flex items-center justify-center">
-                    <TrashIcon class="w-6 h-6 text-red-600" />
-                  </div>
-                </div>
-                <div>
-                  <p class="text-red-700 font-semibold text-base mb-1">Eliminando natillera...</p>
-                  <p class="text-red-600 text-sm">Esto puede tomar unos segundos</p>
-                </div>
-                <!-- Barra de progreso animada -->
-                <div class="w-full h-2 bg-red-100 rounded-full overflow-hidden">
-                  <div class="h-full bg-gradient-to-r from-red-500 via-red-600 to-red-500 rounded-full animate-progress"></div>
-                </div>
-              </div>
+            <!-- Indicador sutil de carga durante la eliminación -->
+            <div v-if="natillerasStore.loading" class="mt-4 flex items-center gap-2 text-sm text-red-600">
+              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Eliminando natillera, por favor espera...</span>
             </div>
           </div>
 
           <!-- Botones -->
           <div class="flex gap-3">
             <button
-              @click="natilleraAEliminar = null"
+              @click="cerrarModalEliminacion"
               :disabled="natillerasStore.loading"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -1006,7 +989,7 @@
       leave-to-class="opacity-0"
     >
       <div 
-        v-if="verificandoModal" 
+        v-if="verificandoModal && !eliminandoNatillera" 
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
         @click.stop.prevent
         @wheel.stop.prevent
@@ -1199,6 +1182,7 @@ const totalRecaudado = ref(0)
 const filtro = ref('todas')
 const vistaActiva = ref('todas')
 const natilleraAEliminar = ref(null)
+const eliminandoNatillera = ref(false) // Flag para rastrear cuando se está eliminando una natillera
 const usuarioAutenticado = ref(null)
 const procesandoInvitacion = ref(null)
 const recaudadoPorNatillera = ref({})
@@ -1211,6 +1195,9 @@ const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
 
 // Mensajes de carga que rotarán
 const mensajesCarga = [
+  'Calienta toda la suplencia...',
+  'En poco estará todo listo',
+  'Cargando datos de natilleras',
   'Ajustando condensador de flujo...',
   'Preparando todo para ti',
   'Cargando natilleras',
@@ -1221,6 +1208,18 @@ const mensajesCarga = [
 ]
 const mensajeCargaActual = ref(mensajesCarga[0])
 let intervaloMensajeCarga = null
+
+// Mensajes específicos para eliminación de natillera
+const mensajesEliminacion = [
+  'Eliminando socios asociados...',
+  'Borrando cuotas y registros...',
+  'Limpiando préstamos y pagos...',
+  'Eliminando actividades...',
+  'Removiendo historial...',
+  'Finalizando eliminación...'
+]
+const mensajeEliminacionActual = ref(mensajesEliminacion[0])
+let intervaloMensajeEliminacion = null
 
 const totalSocios = computed(() => {
   return natillerasStore.natilleras.reduce((sum, n) => {
@@ -1396,6 +1395,46 @@ function detenerRotacionMensajes() {
   if (intervaloMensajeCarga) {
     clearInterval(intervaloMensajeCarga)
     intervaloMensajeCarga = null
+  }
+}
+
+// Variable para mantener el índice anterior de mensajes de eliminación
+let indiceMensajeEliminacionAnterior = -1
+
+// Función para iniciar la rotación de mensajes de eliminación
+function iniciarRotacionMensajesEliminacion() {
+  // Limpiar intervalo anterior si existe
+  if (intervaloMensajeEliminacion) {
+    clearInterval(intervaloMensajeEliminacion)
+    intervaloMensajeEliminacion = null
+  }
+  
+  // Seleccionar un mensaje aleatorio inicial
+  indiceMensajeEliminacionAnterior = Math.floor(Math.random() * mensajesEliminacion.length)
+  mensajeEliminacionActual.value = mensajesEliminacion[indiceMensajeEliminacionAnterior]
+  
+  // Cambiar mensaje cada 2 segundos de forma aleatoria
+  intervaloMensajeEliminacion = setInterval(() => {
+    let nuevoIndice
+    // Si hay más de un mensaje, asegurarse de que no se repita el anterior
+    if (mensajesEliminacion.length > 1) {
+      do {
+        nuevoIndice = Math.floor(Math.random() * mensajesEliminacion.length)
+      } while (nuevoIndice === indiceMensajeEliminacionAnterior)
+    } else {
+      nuevoIndice = 0
+    }
+    
+    indiceMensajeEliminacionAnterior = nuevoIndice
+    mensajeEliminacionActual.value = mensajesEliminacion[nuevoIndice]
+  }, 2000)
+}
+
+// Función para detener la rotación de mensajes de eliminación
+function detenerRotacionMensajesEliminacion() {
+  if (intervaloMensajeEliminacion) {
+    clearInterval(intervaloMensajeEliminacion)
+    intervaloMensajeEliminacion = null
   }
 }
 
@@ -1876,32 +1915,50 @@ function puedeEliminarNatillera(natillera) {
 
 function confirmarEliminarNatillera(natillera) {
   natilleraAEliminar.value = natillera
+  eliminandoNatillera.value = false // Asegurar que el flag esté en false al abrir el modal
+}
+
+function cerrarModalEliminacion() {
+  natilleraAEliminar.value = null
+  eliminandoNatillera.value = false
+  detenerRotacionMensajesEliminacion()
 }
 
 async function eliminarNatilleraConfirmado() {
   if (!natilleraAEliminar.value) return
 
-  const resultado = await natillerasStore.eliminarNatillera(natilleraAEliminar.value.id)
+  // Marcar que se está eliminando para mostrar la pantalla de carga específica
+  eliminandoNatillera.value = true
+  // Iniciar rotación de mensajes de eliminación
+  iniciarRotacionMensajesEliminacion()
   
-  if (resultado.success) {
-    natilleraAEliminar.value = null
-    await natillerasStore.fetchNatilleras()
-    await calcularTotalRecaudado()
-    notificationStore.success('Natillera eliminada exitosamente', 'Éxito')
-  } else {
-    const mensajeError = resultado.error || 'Error desconocido al eliminar la natillera'
+  try {
+    const resultado = await natillerasStore.eliminarNatillera(natilleraAEliminar.value.id)
     
-    if (mensajeError.includes('permisos') || mensajeError.includes('42501')) {
-      notificationStore.error(
-        `${mensajeError}\n\nPor favor, ejecuta la migración SQL en Supabase: add_cascade_delete_policies.sql`,
-        'Error de permisos'
-      )
+    if (resultado.success) {
+      cerrarModalEliminacion()
+      await natillerasStore.fetchNatilleras()
+      await calcularTotalRecaudado()
+      notificationStore.success('Natillera eliminada exitosamente', 'Éxito')
     } else {
-      notificationStore.error(
-        `Error al eliminar la natillera:\n\n${mensajeError}\n\nRevisa la consola del navegador (F12) para más detalles.`,
-        'Error'
-      )
+      const mensajeError = resultado.error || 'Error desconocido al eliminar la natillera'
+      
+      if (mensajeError.includes('permisos') || mensajeError.includes('42501')) {
+        notificationStore.error(
+          `${mensajeError}\n\nPor favor, ejecuta la migración SQL en Supabase: add_cascade_delete_policies.sql`,
+          'Error de permisos'
+        )
+      } else {
+        notificationStore.error(
+          `Error al eliminar la natillera:\n\n${mensajeError}\n\nRevisa la consola del navegador (F12) para más detalles.`,
+          'Error'
+        )
+      }
     }
+  } finally {
+    // Siempre resetear el flag y detener rotación, incluso si hay error
+    eliminandoNatillera.value = false
+    detenerRotacionMensajesEliminacion()
   }
 }
 
@@ -2024,9 +2081,10 @@ onMounted(async () => {
   await inicializarComponente()
 })
 
-// Limpiar intervalo cuando el componente se desmonte
+// Limpiar intervalos cuando el componente se desmonte
 onBeforeUnmount(() => {
   detenerRotacionMensajes()
+  detenerRotacionMensajesEliminacion()
   desbloquearScroll()
 })
 
@@ -2170,6 +2228,20 @@ onActivated(async () => {
 
 .animate-spin-smooth {
   animation: spin-smooth 1s linear infinite;
+}
+
+/* Animación de barra de progreso */
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-progress {
+  animation: progress 1.5s ease-in-out infinite;
 }
 
 /* Animación de rotación reversa */

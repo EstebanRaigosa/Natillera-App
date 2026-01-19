@@ -7,9 +7,9 @@
         <p class="text-sm text-gray-500">Gestiona quién puede acceder a esta natillera</p>
       </div>
       <button
+        v-if="!esColaborador && puedeInvitar"
         @click="abrirModalInvitar"
-        :disabled="!puedeInvitar"
-        class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-natillera-500 to-emerald-600 rounded-xl shadow-lg shadow-natillera-500/25 hover:shadow-xl hover:shadow-natillera-500/30 hover:from-natillera-600 hover:to-emerald-700 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:from-natillera-500 disabled:hover:to-emerald-600"
+        class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-gradient-to-r from-natillera-500 to-emerald-600 rounded-xl shadow-lg shadow-natillera-500/25 hover:shadow-xl hover:shadow-natillera-500/30 hover:from-natillera-600 hover:to-emerald-700 transition-all duration-300 active:scale-[0.98]"
       >
         <UserPlusIcon class="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
         <span class="whitespace-nowrap">Invitar Colaborador</span>
@@ -21,7 +21,12 @@
       <div class="flex items-start gap-3">
         <ExclamationTriangleIcon class="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
         <p class="text-sm text-amber-700">
-          No tienes permisos para gestionar colaboradores. Solo el administrador o co-administradores pueden invitar o modificar colaboradores.
+          <template v-if="esColaborador">
+            Como colaborador, solo puedes eliminarte a ti mismo de esta natillera. No puedes modificar información de otros colaboradores ni editar tu propio rol.
+          </template>
+          <template v-else>
+            No tienes permisos para gestionar colaboradores. Solo el administrador o co-administradores pueden invitar o modificar colaboradores.
+          </template>
         </p>
       </div>
     </div>
@@ -130,49 +135,63 @@
               </div>
 
               <!-- Acciones -->
-              <div v-if="puedeInvitar" class="flex items-center gap-2">
-                <!-- Acciones para colaboradores activos o pendientes -->
-                <template v-if="colaborador.estado !== 'revocada'">
+              <div v-if="(!esColaborador && puedeInvitar) || (esColaborador && esMiColaborador(colaborador))" class="flex items-center gap-2">
+                <!-- Si es colaborador, solo puede eliminarse a sí mismo -->
+                <template v-if="esColaborador && esMiColaborador(colaborador)">
                   <button
                     v-if="colaborador.estado === 'aceptada'"
-                    @click="abrirModalEditar(colaborador)"
-                    class="p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-colors"
-                    title="Editar permisos"
-                  >
-                    <PencilIcon class="w-4 h-4" />
-                  </button>
-                  <button
-                    v-if="colaborador.estado === 'pendiente'"
-                    @click="reenviarInvitacion(colaborador)"
-                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Reenviar invitación"
-                  >
-                    <ArrowPathIcon class="w-4 h-4" />
-                  </button>
-                  <button
-                    @click="confirmarRevocacion(colaborador)"
+                    @click="confirmarEliminacion(colaborador)"
                     class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    :title="colaborador.estado === 'pendiente' ? 'Cancelar invitación' : 'Revocar acceso'"
+                    title="Eliminarme de esta natillera"
                   >
                     <XMarkIcon class="w-4 h-4" />
                   </button>
                 </template>
-                <!-- Acciones para colaboradores revocados -->
-                <template v-else>
-                  <button
-                    @click="reenviarInvitacion(colaborador)"
-                    class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Reenviar invitación"
-                  >
-                    <ArrowPathIcon class="w-4 h-4" />
-                  </button>
-                  <button
-                    @click="confirmarEliminacion(colaborador)"
-                    class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar completamente"
-                  >
-                    <TrashIcon class="w-4 h-4" />
-                  </button>
+                <!-- Si tiene permisos completos (admin o co-admin), puede gestionar todos -->
+                <template v-else-if="!esColaborador && puedeInvitar">
+                  <!-- Acciones para colaboradores activos o pendientes -->
+                  <template v-if="colaborador.estado !== 'revocada'">
+                    <button
+                      v-if="colaborador.estado === 'aceptada' && !esColaborador && miRol !== 'colaborador'"
+                      @click="abrirModalEditar(colaborador)"
+                      class="p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-colors"
+                      title="Editar permisos"
+                    >
+                      <PencilIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      v-if="colaborador.estado === 'pendiente'"
+                      @click="reenviarInvitacion(colaborador)"
+                      class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Reenviar invitación"
+                    >
+                      <ArrowPathIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="confirmarRevocacion(colaborador)"
+                      class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      :title="colaborador.estado === 'pendiente' ? 'Cancelar invitación' : 'Revocar acceso'"
+                    >
+                      <XMarkIcon class="w-4 h-4" />
+                    </button>
+                  </template>
+                  <!-- Acciones para colaboradores revocados -->
+                  <template v-else>
+                    <button
+                      @click="reenviarInvitacion(colaborador)"
+                      class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Reenviar invitación"
+                    >
+                      <ArrowPathIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="confirmarEliminacion(colaborador)"
+                      class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Eliminar completamente"
+                    >
+                      <TrashIcon class="w-4 h-4" />
+                    </button>
+                  </template>
                 </template>
               </div>
             </div>
@@ -235,66 +254,110 @@
               <div>
                 <label class="label font-semibold text-gray-700">Rol *</label>
                 <div class="grid grid-cols-1 gap-3 mt-2">
-                  <label
+                  <div
                     v-for="rol in rolesDisponibles"
                     :key="rol.value"
                     :class="[
-                      'relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all',
+                      'rounded-xl border-2 transition-all',
                       formulario.rol === rol.value
                         ? 'border-natillera-400 bg-natillera-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-gray-200'
                     ]"
                   >
-                    <input
-                      type="radio"
-                      v-model="formulario.rol"
-                      :value="rol.value"
-                      class="sr-only"
-                    />
-                    <div class="flex-1">
-                      <div class="flex items-center gap-2">
-                        <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
-                        <span :class="['px-2 py-0.5 text-xs font-bold rounded-full', obtenerClaseRol(rol.value)]">
-                          {{ rol.value }}
-                        </span>
-                      </div>
-                      <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
-                    </div>
-                    <div :class="[
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center ml-3',
-                      formulario.rol === rol.value
-                        ? 'border-natillera-500 bg-natillera-500'
-                        : 'border-gray-300'
-                    ]">
-                      <CheckIcon v-if="formulario.rol === rol.value" class="w-3 h-3 text-white" />
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Permisos personalizados (solo para rol colaborador) -->
-              <Transition name="fade">
-                <div v-if="formulario.rol === 'colaborador'" class="space-y-3">
-                  <label class="label font-semibold text-gray-700">Permisos específicos</label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <label
-                      v-for="(info, permiso) in permisosEditables"
-                      :key="permiso"
-                      class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      :class="[
+                        'relative flex items-start p-4 cursor-pointer transition-all',
+                        formulario.rol === rol.value
+                          ? ''
+                          : 'hover:bg-gray-50'
+                      ]"
                     >
                       <input
-                        type="checkbox"
-                        v-model="formulario.permisos[permiso]"
-                        class="w-4 h-4 rounded border-gray-300 text-natillera-500 focus:ring-natillera-500"
+                        type="radio"
+                        v-model="formulario.rol"
+                        :value="rol.value"
+                        class="sr-only"
                       />
-                      <div class="flex-1 min-w-0">
-                        <span class="text-sm font-medium text-gray-700">{{ info.nombre }}</span>
-                        <p class="text-xs text-gray-500 truncate">{{ info.descripcion }}</p>
+                      <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                          <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
+                          <span :class="['px-2 py-0.5 text-xs font-bold rounded-full', obtenerClaseRol(rol.value)]">
+                            {{ rol.value }}
+                          </span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
+                      </div>
+                      <div :class="[
+                        'w-5 h-5 rounded-full border-2 flex items-center justify-center ml-3',
+                        formulario.rol === rol.value
+                          ? 'border-natillera-500 bg-natillera-500'
+                          : 'border-gray-300'
+                      ]">
+                        <CheckIcon v-if="formulario.rol === rol.value" class="w-3 h-3 text-white" />
                       </div>
                     </label>
+                    
+                    <!-- Permisos personalizados (desplegados dentro de cada opción de rol) -->
+                    <Transition name="fade">
+                      <div v-if="(formulario.rol === 'colaborador' || formulario.rol === 'visor') && formulario.rol === rol.value" class="px-4 pb-4 border-t border-natillera-200 mt-2 pt-4">
+                        <label class="text-sm font-semibold text-gray-700 mb-3 block">Permisos específicos</label>
+                        
+                        <!-- Para colaborador: switches con Gestionar/Consultar -->
+                        <div v-if="formulario.rol === 'colaborador'" class="space-y-4">
+                          <div
+                            v-for="(info, permiso) in permisosEditables"
+                            :key="permiso"
+                            class="p-4 bg-white rounded-lg border border-gray-200"
+                          >
+                            <h4 class="text-sm font-semibold text-gray-800 mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
+                            <div class="flex items-center justify-between gap-4">
+                              <span class="text-sm text-gray-600 flex-1">Consultar</span>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  v-model="formulario.permisos[permiso].consultar"
+                                  class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
+                              </label>
+                            </div>
+                            <div class="flex items-center justify-between gap-4 mt-3">
+                              <span class="text-sm text-gray-600 flex-1">Gestionar</span>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  v-model="formulario.permisos[permiso].gestionar"
+                                  class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Para visor: checkboxes simples con "Ver [Nombre]" -->
+                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <label
+                            v-for="(info, permiso) in permisosEditables"
+                            :key="permiso"
+                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/60 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              v-model="formulario.permisos[permiso]"
+                              class="w-4 h-4 rounded border-gray-300 text-natillera-500 focus:ring-natillera-500"
+                            />
+                            <div class="flex-1 min-w-0">
+                              <span class="text-sm font-medium text-gray-700">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
+                              <p class="text-xs text-gray-500 truncate">{{ info.descripcion }}</p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </Transition>
                   </div>
                 </div>
-              </Transition>
+              </div>
 
               <!-- Notas -->
               <div>
@@ -331,7 +394,7 @@
     <!-- Modal Editar Colaborador -->
     <Teleport to="body">
       <Transition name="modal">
-        <div v-if="modalEditar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div v-if="modalEditar && !esColaborador && miRol !== 'colaborador'" class="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalEditar"></div>
           <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <!-- Header -->
@@ -352,50 +415,94 @@
               <div>
                 <label class="label font-semibold text-gray-700">Rol</label>
                 <div class="grid grid-cols-1 gap-3 mt-2">
-                  <label
+                  <div
                     v-for="rol in rolesDisponibles"
                     :key="rol.value"
                     :class="[
-                      'relative flex items-start p-4 rounded-xl border-2 cursor-pointer transition-all',
+                      'rounded-xl border-2 transition-all',
                       formularioEditar.rol === rol.value
                         ? 'border-blue-400 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-gray-200'
                     ]"
                   >
-                    <input
-                      type="radio"
-                      v-model="formularioEditar.rol"
-                      :value="rol.value"
-                      class="sr-only"
-                    />
-                    <div class="flex-1">
-                      <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
-                      <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Permisos -->
-              <Transition name="fade">
-                <div v-if="formularioEditar.rol === 'colaborador'" class="space-y-3">
-                  <label class="label font-semibold text-gray-700">Permisos</label>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <label
-                      v-for="(info, permiso) in permisosEditables"
-                      :key="permiso"
-                      class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      :class="[
+                        'relative flex items-start p-4 cursor-pointer transition-all',
+                        formularioEditar.rol === rol.value
+                          ? ''
+                          : 'hover:bg-gray-50'
+                      ]"
                     >
                       <input
-                        type="checkbox"
-                        v-model="formularioEditar.permisos[permiso]"
-                        class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                        type="radio"
+                        v-model="formularioEditar.rol"
+                        :value="rol.value"
+                        class="sr-only"
                       />
-                      <span class="text-sm font-medium text-gray-700">{{ info.nombre }}</span>
+                      <div class="flex-1">
+                        <span class="font-semibold text-gray-800">{{ rol.nombre }}</span>
+                        <p class="text-sm text-gray-500 mt-1">{{ rol.descripcion }}</p>
+                      </div>
                     </label>
+                    
+                    <!-- Permisos (desplegados dentro de cada opción de rol) -->
+                    <Transition name="fade">
+                      <div v-if="(formularioEditar.rol === 'colaborador' || formularioEditar.rol === 'visor') && formularioEditar.rol === rol.value" class="px-4 pb-4 border-t border-blue-200 mt-2 pt-4">
+                        <label class="text-sm font-semibold text-gray-700 mb-3 block">Permisos</label>
+                        
+                        <!-- Para colaborador: switches con Gestionar/Consultar -->
+                        <div v-if="formularioEditar.rol === 'colaborador'" class="space-y-4">
+                          <div
+                            v-for="(info, permiso) in permisosEditables"
+                            :key="permiso"
+                            class="p-4 bg-white rounded-lg border border-gray-200"
+                          >
+                            <h4 class="text-sm font-semibold text-gray-800 mb-3">{{ nombresPermisos[permiso] || info.nombre }}</h4>
+                            <div class="flex items-center justify-between gap-4">
+                              <span class="text-sm text-gray-600 flex-1">Consultar</span>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  v-model="formularioEditar.permisos[permiso].consultar"
+                                  class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                              </label>
+                            </div>
+                            <div class="flex items-center justify-between gap-4 mt-3">
+                              <span class="text-sm text-gray-600 flex-1">Gestionar</span>
+                              <label class="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  v-model="formularioEditar.permisos[permiso].gestionar"
+                                  class="sr-only peer"
+                                />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- Para visor: checkboxes simples con "Ver [Nombre]" -->
+                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <label
+                            v-for="(info, permiso) in permisosEditables"
+                            :key="permiso"
+                            class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/60 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              v-model="formularioEditar.permisos[permiso]"
+                              class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                            />
+                            <span class="text-sm font-medium text-gray-700">Ver {{ nombresPermisos[permiso] || info.nombre }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </Transition>
                   </div>
                 </div>
-              </Transition>
+              </div>
             </div>
 
             <!-- Footer -->
@@ -470,10 +577,15 @@
                 <TrashIcon class="w-8 h-8 text-red-500" />
               </div>
               <h3 class="text-lg font-display font-bold text-gray-800 mb-2">
-                ¿Eliminar completamente?
+                {{ esColaborador && esMiColaborador(colaboradorEliminando) ? '¿Salir de esta natillera?' : '¿Eliminar completamente?' }}
               </h3>
               <p class="text-gray-500 mb-2">
-                Se eliminará completamente a <strong>{{ colaboradorEliminando?.nombre_usuario || colaboradorEliminando?.email_usuario }}</strong> de la lista de colaboradores.
+                <template v-if="esColaborador && esMiColaborador(colaboradorEliminando)">
+                  Se eliminará tu acceso a esta natillera. Ya no podrás ver ni gestionar información de esta natillera.
+                </template>
+                <template v-else>
+                  Se eliminará completamente a <strong>{{ colaboradorEliminando?.nombre_usuario || colaboradorEliminando?.email_usuario }}</strong> de la lista de colaboradores.
+                </template>
               </p>
               <p class="text-sm text-red-600 font-medium mb-6">
                 Esta acción no se puede deshacer.
@@ -529,6 +641,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useColaboradoresStore, PERMISOS_DISPONIBLES, PERMISOS_POR_ROL } from '../stores/colaboradores'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
+import { supabase } from '../lib/supabase'
 import {
   UserPlusIcon,
   UsersIcon,
@@ -594,6 +707,10 @@ const eliminando = ref(false)
 const notificacion = ref(null)
 const puedeInvitar = ref(false)
 const errorEmail = ref(null)
+const miRol = ref(null)
+const miUsuarioId = ref(null)
+const miEmail = ref(null)
+const esColaborador = computed(() => miRol.value === 'colaborador')
 
 // Formulario invitar
 const formulario = ref({
@@ -638,6 +755,72 @@ const permisosEditables = computed(() => {
   })
   return editables
 })
+
+// Mapeo de nombres de permisos para mostrar
+const nombresPermisos = {
+  editar_socios: 'Socios',
+  gestionar_cuotas: 'Cuotas',
+  gestionar_prestamos: 'Préstamos',
+  gestionar_actividades: 'Actividades',
+  ver_auditoria: 'Auditoría',
+  configurar: 'Configuración'
+}
+
+// Función para inicializar permisos con estructura gestionar/consultar
+function inicializarPermisosColaborador(permisosBase) {
+  const permisos = {}
+  Object.keys(permisosEditables.value).forEach(permiso => {
+    // Si el permiso base es true, activar ambos gestionar y consultar
+    // Si es false, solo consultar activo por defecto (como pidió el usuario)
+    const valorBase = permisosBase[permiso] || false
+    permisos[permiso] = {
+      gestionar: valorBase,
+      consultar: true // Consultar siempre activo por defecto
+    }
+  })
+  return permisos
+}
+
+// Función para convertir permisos de estructura antigua a nueva (para compatibilidad)
+function normalizarPermisos(permisos, rol) {
+  if (rol === 'colaborador') {
+    // Si ya tiene la estructura nueva (con gestionar/consultar), mantenerla
+    // Si tiene estructura antigua (booleanos), convertirla
+    const normalizados = {}
+    Object.keys(permisosEditables.value).forEach(permiso => {
+      if (permisos[permiso] && typeof permisos[permiso] === 'object' && 'gestionar' in permisos[permiso]) {
+        normalizados[permiso] = permisos[permiso]
+      } else {
+        const valor = permisos[permiso] || false
+        normalizados[permiso] = {
+          gestionar: valor,
+          consultar: valor || true // Si gestionar está activo, consultar también
+        }
+      }
+    })
+    return normalizados
+  }
+  // Para otros roles (visor, etc.), mantener estructura simple
+  return permisos
+}
+
+// Función para convertir permisos de estructura nueva a antigua (para guardar)
+function convertirPermisosParaGuardar(permisos, rol) {
+  if (rol === 'colaborador') {
+    const convertidos = {}
+    Object.keys(permisos).forEach(permiso => {
+      if (permisos[permiso] && typeof permisos[permiso] === 'object' && 'gestionar' in permisos[permiso]) {
+        // Si tiene gestionar o consultar, el permiso está activo
+        convertidos[permiso] = permisos[permiso].gestionar || permisos[permiso].consultar
+      } else {
+        convertidos[permiso] = permisos[permiso]
+      }
+    })
+    return convertidos
+  }
+  // Para visor y otros roles, mantener estructura simple
+  return permisos
+}
 
 // Computed
 const adminInicial = computed(() => 
@@ -729,11 +912,19 @@ function cerrarModalInvitar() {
 
 // Watch para actualizar permisos cuando cambia el rol
 watch(() => formulario.value.rol, (nuevoRol) => {
-  formulario.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
+  if (nuevoRol === 'colaborador') {
+    formulario.value.permisos = inicializarPermisosColaborador(PERMISOS_POR_ROL[nuevoRol])
+  } else {
+    formulario.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
+  }
 })
 
 watch(() => formularioEditar.value.rol, (nuevoRol) => {
-  formularioEditar.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
+  if (nuevoRol === 'colaborador') {
+    formularioEditar.value.permisos = inicializarPermisosColaborador(PERMISOS_POR_ROL[nuevoRol])
+  } else {
+    formularioEditar.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
+  }
 })
 
 // Limpiar error cuando cambia el email
@@ -751,10 +942,13 @@ async function enviarInvitacion() {
   enviandoInvitacion.value = true
   
   try {
+    // Convertir permisos para guardar (de estructura nueva a antigua si es colaborador)
+    const permisosParaGuardar = convertirPermisosParaGuardar(formulario.value.permisos, formulario.value.rol)
+    
     const resultado = await colaboradoresStore.invitarColaborador(props.natilleraId, {
       email: formulario.value.email,
       rol: formulario.value.rol,
-      permisos: formulario.value.permisos,
+      permisos: permisosParaGuardar,
       notas: formulario.value.notas
     })
 
@@ -792,10 +986,17 @@ async function enviarInvitacion() {
 
 // Modal Editar
 function abrirModalEditar(colaborador) {
+  // Si es colaborador, no puede editar
+  if (esColaborador.value) {
+    mostrarNotificacion('error', 'No tienes permisos para editar colaboradores')
+    return
+  }
+  
   colaboradorEditando.value = colaborador
+  const permisosNormalizados = normalizarPermisos(colaborador.permisos, colaborador.rol)
   formularioEditar.value = {
     rol: colaborador.rol,
-    permisos: { ...colaborador.permisos }
+    permisos: permisosNormalizados
   }
   modalEditar.value = true
 }
@@ -808,13 +1009,23 @@ function cerrarModalEditar() {
 async function guardarCambios() {
   if (!colaboradorEditando.value) return
 
+  // Si es colaborador, no puede editar
+  if (esColaborador.value) {
+    mostrarNotificacion('error', 'No tienes permisos para editar colaboradores')
+    cerrarModalEditar()
+    return
+  }
+
   guardandoCambios.value = true
   try {
+    // Convertir permisos para guardar (de estructura nueva a antigua si es colaborador)
+    const permisosParaGuardar = convertirPermisosParaGuardar(formularioEditar.value.permisos, formularioEditar.value.rol)
+    
     const resultado = await colaboradoresStore.actualizarColaborador(
       colaboradorEditando.value.id,
       {
         rol: formularioEditar.value.rol,
-        permisos: formularioEditar.value.permisos
+        permisos: permisosParaGuardar
       }
     )
 
@@ -925,7 +1136,15 @@ async function ejecutarEliminacion() {
     const resultado = await colaboradoresStore.eliminarColaborador(colaboradorEliminando.value.id)
 
     if (resultado.success) {
-      mostrarNotificacion('exito', 'Colaborador eliminado completamente')
+      if (esColaborador.value && esMiColaborador(colaboradorEliminando.value)) {
+        mostrarNotificacion('exito', 'Has salido de esta natillera')
+        // Redirigir al dashboard después de un breve delay
+        setTimeout(() => {
+          window.location.href = '/dashboard'
+        }, 1500)
+      } else {
+        mostrarNotificacion('exito', 'Colaborador eliminado completamente')
+      }
       cerrarModalEliminar()
       await cargarColaboradores()
     } else {
@@ -951,9 +1170,67 @@ async function cargarColaboradores() {
   loading.value = false
 }
 
+// Verificar si un colaborador es el usuario actual
+function esMiColaborador(colaborador) {
+  if (!miUsuarioId.value && !miEmail.value) return false
+  
+  // Verificar por usuario_id si existe
+  if (colaborador.usuario_id && miUsuarioId.value) {
+    return colaborador.usuario_id === miUsuarioId.value
+  }
+  
+  // Verificar por email si no hay usuario_id (invitación pendiente)
+  if (colaborador.email_usuario && miEmail.value) {
+    return colaborador.email_usuario.toLowerCase() === miEmail.value.toLowerCase()
+  }
+  
+  return false
+}
+
+async function obtenerMiRolYUsuario() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      miUsuarioId.value = null
+      miEmail.value = null
+      miRol.value = null
+      return
+    }
+    
+    miUsuarioId.value = user.id
+    miEmail.value = user.email || null
+    
+    // Si es admin, no necesitamos verificar rol
+    if (props.esAdmin || props.adminId === user.id) {
+      miRol.value = 'administrador'
+      return
+    }
+    
+    // Obtener el rol del usuario en la natillera
+    const rol = await colaboradoresStore.obtenerMiRol(props.natilleraId)
+    miRol.value = rol
+  } catch (e) {
+    console.error('Error obteniendo rol del usuario:', e)
+    miUsuarioId.value = null
+    miEmail.value = null
+    miRol.value = null
+  }
+}
+
 async function verificarPermisos() {
   if (props.esAdmin) {
     puedeInvitar.value = true
+    return
+  }
+  
+  // Asegurarse de que el rol esté actualizado
+  if (!miRol.value) {
+    await obtenerMiRolYUsuario()
+  }
+  
+  // Si es colaborador, nunca puede invitar o editar, incluso si tiene el permiso configurar
+  if (miRol.value === 'colaborador' || esColaborador.value) {
+    puedeInvitar.value = false
     return
   }
   
@@ -961,12 +1238,14 @@ async function verificarPermisos() {
 }
 
 onMounted(async () => {
+  await obtenerMiRolYUsuario()
   await verificarPermisos()
   await cargarColaboradores()
 })
 
 // Watch para recargar cuando cambia la natillera
 watch(() => props.natilleraId, async () => {
+  await obtenerMiRolYUsuario()
   await verificarPermisos()
   await cargarColaboradores()
 })

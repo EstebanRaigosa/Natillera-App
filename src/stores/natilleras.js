@@ -712,7 +712,10 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         }
       }
 
-      // 11. Registrar auditoría ANTES de eliminar la natillera (para que el natillera_id aún exista)
+      // 11. Registrar auditoría de eliminación ANTES de eliminar la natillera
+      // IMPORTANTE: Con la constraint ON DELETE SET NULL (ver migración fix_auditoria_cascade_to_set_null.sql),
+      // este registro se preservará incluso después de eliminar la natillera.
+      // El natillera_id será NULL pero natillera_nombre se mantiene como backup para identificar la natillera eliminada.
       const auditoria = useAuditoria()
       try {
         await auditoria.registrarEliminacion(
@@ -723,23 +726,19 @@ export const useNatillerasStore = defineStore('natilleras', () => {
           id, // natilleraId - debe estar antes de eliminar
           { 
             eliminacion_cascada: true,
-            registros_eliminados: 'socios_natillera, cuotas, prestamos, multas, actividades, historial, auditoria'
-          }
+            registros_eliminados: 'socios_natillera, cuotas, prestamos, multas, actividades, historial'
+          },
+          natilleraData.nombre // Pasar el nombre directamente para asegurar que se guarde
         )
       } catch (auditError) {
         // Si falla la auditoría, solo registrar en consola pero continuar con la eliminación
         console.warn('Advertencia: No se pudo registrar la auditoría de eliminación:', auditError)
       }
 
-      // 12. Eliminar auditoría relacionada (opcional, puede querer mantenerla)
-      const { error: errorAuditoria } = await supabase
-        .from('auditoria')
-        .delete()
-        .eq('natillera_id', id)
-      
-      if (errorAuditoria) {
-        console.warn('Advertencia al eliminar auditoria:', errorAuditoria)
-      }
+      // NOTA: No eliminamos la auditoría relacionada manualmente.
+      // Con la constraint ON DELETE SET NULL, todos los registros de auditoría relacionados
+      // se mantendrán con natillera_id = NULL cuando se elimine la natillera.
+      // El registro de eliminación se puede identificar por: tipo_accion = 'DELETE' y entidad = 'natillera'
 
       // 13. Finalmente, eliminar la natillera
       const { error: deleteError } = await supabase

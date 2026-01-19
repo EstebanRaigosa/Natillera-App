@@ -32,11 +32,11 @@
               </div>
             </div>
             <div class="flex flex-wrap gap-2">
-              <button @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
+              <button v-if="!esVisor" @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
                 <ArrowUpTrayIcon class="w-5 h-5" />
                 <span>Importar CSV</span>
               </button>
-              <button @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
+              <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
                 <PlusIcon class="w-5 h-5" />
                 <span>Agregar Socio</span>
               </button>
@@ -305,7 +305,7 @@
         <p class="text-gray-500 mb-8 text-sm sm:text-base">
           Agrega el primer socio para comenzar a gestionar las cuotas
         </p>
-        <button @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
+        <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
           <PlusIcon class="w-5 h-5" />
           Agregar Primer Socio
         </button>
@@ -417,6 +417,7 @@
                   Ver cuotas
                 </button>
                 <button 
+                  v-if="!esVisor"
                   @click.stop="editarSocio(sn)"
                   class="p-2 text-blue-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
                   title="Editar"
@@ -425,6 +426,7 @@
                   <PencilIcon class="w-5 h-5" />
                 </button>
                 <button 
+                  v-if="!esVisor"
                   @click.stop="confirmarEliminarSocio(sn)"
                   class="p-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
                   title="Eliminar socio"
@@ -433,6 +435,7 @@
                   <TrashIcon class="w-5 h-5" />
                 </button>
                 <button 
+                  v-if="!esVisor"
                   @click.stop="toggleEstado(sn)"
                   class="p-2 text-amber-600 hover:text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 bg-amber-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
                   title="Desactivar"
@@ -443,7 +446,7 @@
               </template>
               <!-- Solo botón de activar cuando está inactivo - Destacado con color vibrante -->
               <button 
-                v-else
+                v-else-if="!esVisor"
                 @click.stop="toggleEstado(sn)"
                 class="px-4 py-2.5 text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-2 border-green-400 rounded-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2 animate-pulse hover:animate-none relative z-20"
                 style="filter: none !important;"
@@ -658,6 +661,7 @@
         <!-- Botones de acción -->
         <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
           <button 
+            v-if="!esVisor"
             @click="modalDetalle = false; editarSocio(socioSeleccionado)"
             class="btn-secondary flex-1 inline-flex items-center justify-center gap-2"
           >
@@ -666,7 +670,7 @@
           </button>
           <button 
             @click="modalDetalle = false"
-            class="btn-primary flex-1"
+            :class="esVisor ? 'btn-primary w-full' : 'btn-primary flex-1'"
           >
             Cerrar
           </button>
@@ -1199,6 +1203,7 @@
               >
                 <!-- Encabezado del mes -->
                 <div 
+                  v-if="!esVisor"
                   @click.stop="navegarACuotasMes(grupoMes.mes)"
                   class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm cursor-pointer hover:from-natillera-300 hover:via-natillera-200 hover:to-emerald-300 transition-all duration-200 active:scale-[0.98]"
                   title="Haz clic para ver las cuotas de este mes"
@@ -1216,6 +1221,22 @@
                   </div>
                   <div class="flex-shrink-0">
                     <ArrowRightIcon class="w-5 h-5 sm:w-6 sm:h-6 text-natillera-600" />
+                  </div>
+                </div>
+                <div 
+                  v-else
+                  class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm"
+                >
+                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-pink-300 flex items-center justify-center text-4xl sm:text-5xl shadow-xl flex-shrink-0">
+                    {{ getMesEmoji(grupoMes.mes) }}
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="font-bold text-gray-900 text-xl sm:text-2xl">
+                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
+                    </h4>
+                    <p class="text-base text-gray-700 font-semibold">
+                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
+                    </p>
                   </div>
                 </div>
                 
@@ -2202,6 +2223,7 @@ import { useCuotasStore } from '../../stores/cuotas'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
+import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -2252,6 +2274,7 @@ const cuotasStore = useCuotasStore()
 const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const notificationStore = useNotificationStore()
+const colaboradoresStore = useColaboradoresStore()
 
 const modalAgregar = ref(false)
 const modalDetalle = ref(false)
@@ -2284,6 +2307,7 @@ const socioAEliminar = ref(null)
 const guardando = ref(false)
 const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga
+const miRol = ref(null)
 
 // Variables para el modal de progreso de creación de socio
 const progresoCreacion = ref({
@@ -2499,6 +2523,21 @@ const periodicidadNatillera = computed(() => {
     return natillerasStore.natilleraActual.periodicidad || 'mensual'
   }
   return 'mensual'
+})
+
+// Verificar si el usuario es visor
+const esVisor = computed(() => {
+  return miRol.value === 'visor'
+})
+
+// Usuario autenticado
+const usuarioAutenticado = ref(null)
+
+// Verificar si el usuario es admin
+const esAdmin = computed(() => {
+  const natillera = natillerasStore.natilleraActual
+  if (!natillera || !usuarioAutenticado.value) return false
+  return natillera.admin_id === usuarioAutenticado.value.id
 })
 
 // Texto del label de cuota según periodicidad
@@ -4417,9 +4456,31 @@ function irACuotas() {
 }
 
 onMounted(async () => {
+  // Obtener usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser()
+  usuarioAutenticado.value = user
+  
   // Cargar natillera actual para obtener su periodicidad
   if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
     await natillerasStore.fetchNatillera(id)
+  }
+  
+  // Obtener el rol del usuario en la natillera
+  await nextTick()
+  const natillera = natillerasStore.natilleraActual
+  if (natillera) {
+    if (!esAdmin.value) {
+      try {
+        const rol = await colaboradoresStore.obtenerMiRol(id)
+        miRol.value = rol
+      } catch (err) {
+        console.warn('Error obteniendo rol del usuario:', err)
+        miRol.value = null
+      }
+    } else {
+      // Si es admin, no necesita verificar rol
+      miRol.value = 'administrador'
+    }
   }
   
   // Cargar socios y marcar carga inicial como completada

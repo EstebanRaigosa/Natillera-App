@@ -41,12 +41,12 @@
               </div>
             </div>
             <div class="flex gap-2 flex-wrap">
-              <button @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center justify-center gap-2 flex-1 md:flex-none text-sm sm:text-base">
+              <button v-if="!esVisor" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center justify-center gap-2 flex-1 md:flex-none text-sm sm:text-base">
                 <PlusIcon class="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Generar Cuotas</span>
               </button>
               <button 
-                v-if="mesSeleccionado && cuotasPendientesMes.length > 0"
+                v-if="!esVisor && mesSeleccionado && cuotasPendientesMes.length > 0"
                 @click="confirmarBorrarCuotasMes" 
                 class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:from-red-100 hover:to-orange-100 hover:border-red-400 hover:shadow-lg transition-all shadow-md flex-1 md:flex-none text-sm sm:text-base"
               >
@@ -370,7 +370,7 @@
         <p class="text-gray-600 mt-2 mb-8 text-base">
           Genera las cuotas de este mes para comenzar a registrar pagos
         </p>
-        <button @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center gap-2 shadow-lg">
+        <button v-if="!esVisor" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center gap-2 shadow-lg">
           <PlusIcon class="w-5 h-5" />
           Generar Cuotas de {{ mesSeleccionadoLabel }}
         </button>
@@ -698,6 +698,7 @@
                       <div class="hidden sm:flex items-stretch gap-2" @click.stop>
                         <!-- Botón Pagar: 50% -->
                         <button 
+                          v-if="!esVisor"
                           @click="abrirModalPago(cuota)"
                           class="flex-[2] px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
                         >
@@ -707,6 +708,7 @@
                         
                         <!-- Botón Editar: 25% -->
                         <button 
+                          v-if="!esVisor"
                           @click="abrirModalEditar(cuota)"
                           class="flex-1 px-3 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
                           title="Editar pago"
@@ -731,7 +733,7 @@
                     <template v-else>
                       <div class="flex items-center justify-end gap-2 sm:flex-shrink-0" @click.stop>
                         <button 
-                          v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+                          v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
                           @click="abrirModalPago(cuota)"
                           class="hidden sm:flex px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap items-center gap-2"
                         >
@@ -759,6 +761,7 @@
                   <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
                     <!-- Botón Pagar: ancho completo -->
                     <button 
+                      v-if="!esVisor"
                       @click="abrirModalPago(cuota)"
                       class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
                     >
@@ -767,7 +770,7 @@
                     </button>
                     
                     <!-- Botones Editar y Reenviar: 50% cada uno -->
-                    <div class="flex gap-2">
+                    <div v-if="!esVisor" class="flex gap-2">
                       <button 
                         @click="abrirModalEditar(cuota)"
                         class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
@@ -788,7 +791,7 @@
                 </template>
                 
                 <!-- Botón Pagar móvil: ancho completo solo para cuotas normales -->
-                <div v-else-if="(cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
+                <div v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
                   <button 
                     @click="abrirModalPago(cuota)"
                     class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
@@ -1043,6 +1046,7 @@
                   <div class="hidden sm:flex items-stretch gap-2 w-full" @click.stop>
                     <!-- Botón Pagar: 50% -->
                     <button 
+                      v-if="!esVisor"
                       @click="abrirModalPago(cuota)"
                       class="flex-[2] px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
                     >
@@ -1052,6 +1056,7 @@
                     
                     <!-- Botón Editar: 25% -->
                     <button 
+                      v-if="!esVisor"
                       @click="abrirModalEditar(cuota)"
                       class="flex-1 px-3 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-1.5"
                       title="Editar pago"
@@ -1076,7 +1081,7 @@
                 <template v-else>
                   <div class="flex items-center justify-end gap-2 sm:flex-shrink-0" @click.stop>
                     <button 
-                      v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'"
+                      v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
                       @click="abrirModalPago(cuota)"
                       class="hidden sm:flex px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm whitespace-nowrap items-center gap-2"
                     >
@@ -1103,6 +1108,7 @@
                 <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
                   <!-- Botón Pagar: ancho completo -->
                   <button 
+                    v-if="!esVisor"
                     @click="abrirModalPago(cuota)"
                     class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
                   >
@@ -1111,7 +1117,7 @@
                   </button>
                   
                   <!-- Botones Editar y Reenviar: 50% cada uno -->
-                  <div class="flex gap-2">
+                  <div v-if="!esVisor" class="flex gap-2">
                     <button 
                       @click="abrirModalEditar(cuota)"
                       class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
@@ -1132,7 +1138,7 @@
               </template>
               
               <!-- Botón Pagar móvil: ancho completo solo para cuotas normales -->
-              <div v-else-if="(cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
+              <div v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'" class="sm:hidden mt-2" @click.stop>
                 <button 
                   @click="abrirModalPago(cuota)"
                   class="w-full px-6 py-3.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg text-sm flex items-center justify-center gap-2"
@@ -1242,7 +1248,7 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-2">
                   <button 
-                    v-if="cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
+                    v-if="!esVisor && (cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))))"
                     @click="abrirModalEditar(cuota)"
                     class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                     title="Editar cuota"
@@ -1250,7 +1256,7 @@
                     <PencilIcon class="w-3 h-3" />
                   </button>
                   <button 
-                    v-if="cuota.estado !== 'pagada'"
+                    v-if="!esVisor && cuota.estado !== 'pagada'"
                     @click="abrirModalPago(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
                   >
@@ -3358,6 +3364,7 @@ import { useRoute } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
 import { useNatillerasStore } from '../../stores/natilleras'
+import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 // Ya no necesitamos html2canvas, dibujamos directamente en canvas
@@ -3408,6 +3415,7 @@ const route = useRoute()
 const cuotasStore = useCuotasStore()
 const sociosStore = useSociosStore()
 const natillerasStore = useNatillerasStore()
+const colaboradoresStore = useColaboradoresStore()
 
 const modalGenerarCuotas = ref(false)
 const modalPago = ref(false)
@@ -3473,6 +3481,8 @@ const inputBusquedaRef = ref(null)
 const inputValorPagoRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
 const vistaAgrupada = ref(false) // true = vista agrupada por socio
+const miRol = ref(null)
+const usuarioAutenticado = ref(null)
 
 // Configuración de exportación a Excel
 const columnasDisponibles = [
@@ -4289,6 +4299,18 @@ const mesParam = computed(() => {
 })
 
 const resumen = computed(() => cuotasStore.calcularResumenCuotas())
+
+// Verificar si el usuario es visor
+const esVisor = computed(() => {
+  return miRol.value === 'visor'
+})
+
+// Verificar si el usuario es admin
+const esAdmin = computed(() => {
+  const natillera = natillerasStore.natilleraActual
+  if (!natillera || !usuarioAutenticado.value) return false
+  return natillera.admin_id === usuarioAutenticado.value.id
+})
 
 // Cuando cambia el mes seleccionado (por interacción del usuario, NO durante inicialización)
 watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
@@ -6930,6 +6952,10 @@ function handleClickOutside(event) {
 }
 
 onMounted(async () => {
+  // Obtener usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser()
+  usuarioAutenticado.value = user
+  
   // Marcar que estamos inicializando para evitar que el watch se dispare
   inicializando.value = true
   const tiempoInicio = performance.now()
@@ -6941,6 +6967,24 @@ onMounted(async () => {
       cuotasStore.fetchCuotasNatillera(id),
       cargarConteoSocios() // Importante: cargar conteo de socios para verificar si faltan cuotas
     ])
+    
+    // Obtener el rol del usuario en la natillera
+    await nextTick()
+    const natillera = natillerasStore.natilleraActual
+    if (natillera) {
+      if (!esAdmin.value) {
+        try {
+          const rol = await colaboradoresStore.obtenerMiRol(id)
+          miRol.value = rol
+        } catch (err) {
+          console.warn('Error obteniendo rol del usuario:', err)
+          miRol.value = null
+        }
+      } else {
+        // Si es admin, no necesita verificar rol
+        miRol.value = 'administrador'
+      }
+    }
     
     // Los datos de días de gracia y sanciones ya están cargados en cargarNatillera()
     console.log('📅 Días de gracia:', diasGracia.value, '| Sanciones activas:', sancionesActivas.value)

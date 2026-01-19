@@ -22,7 +22,11 @@ export const PERMISOS_DISPONIBLES = {
   gestionar_prestamos: { nombre: 'Gestionar Préstamos', descripcion: 'Puede crear y gestionar préstamos' },
   gestionar_actividades: { nombre: 'Gestionar Actividades', descripcion: 'Puede crear y gestionar actividades y rifas' },
   ver_auditoria: { nombre: 'Ver Auditoría', descripcion: 'Puede ver el historial de cambios' },
-  configurar: { nombre: 'Configurar', descripcion: 'Puede modificar configuración y gestionar colaboradores' }
+  configurar: { nombre: 'Configurar', descripcion: 'Puede modificar configuración y gestionar colaboradores' },
+  buscar_comprobante: { nombre: 'Buscar Comprobante', descripcion: 'Puede buscar comprobantes de pago' },
+  invitar_colaboradores: { nombre: 'Invitar Colaboradores', descripcion: 'Puede invitar colaboradores a la natillera' },
+  notificar: { nombre: 'Notificar', descripcion: 'Puede enviar notificaciones por WhatsApp' },
+  cerrar_natillera: { nombre: 'Cerrar Natillera', descripcion: 'Puede cerrar la natillera' }
 }
 
 /**
@@ -36,7 +40,11 @@ export const PERMISOS_POR_ROL = {
     gestionar_prestamos: true,
     gestionar_actividades: true,
     ver_auditoria: true,
-    configurar: true
+    configurar: true,
+    buscar_comprobante: true,
+    invitar_colaboradores: true,
+    notificar: true,
+    cerrar_natillera: false
   },
   colaborador: {
     ver: true,
@@ -45,16 +53,24 @@ export const PERMISOS_POR_ROL = {
     gestionar_prestamos: false,
     gestionar_actividades: false,
     ver_auditoria: false,
-    configurar: false
+    configurar: false,
+    buscar_comprobante: true,
+    invitar_colaboradores: true,
+    notificar: true,
+    cerrar_natillera: true
   },
   visor: {
     ver: true,
-    editar_socios: false,
-    gestionar_cuotas: false,
-    gestionar_prestamos: false,
-    gestionar_actividades: false,
-    ver_auditoria: false,
-    configurar: false
+    editar_socios: true,
+    gestionar_cuotas: true,
+    gestionar_prestamos: true,
+    gestionar_actividades: true,
+    ver_auditoria: true,
+    configurar: true,
+    buscar_comprobante: true,
+    invitar_colaboradores: false,
+    notificar: false,
+    cerrar_natillera: false
   }
 }
 

@@ -569,7 +569,7 @@
               <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
           <button 
             @click="guardarConfigBasica"
-                  :disabled="guardandoBasica"
+                  :disabled="guardandoBasica || esVisor"
                   class="btn-primary text-sm bg-gradient-to-r from-natillera-500 to-emerald-600"
           >
                   {{ guardandoBasica ? 'Guardando...' : 'Guardar Información' }}
@@ -944,13 +944,13 @@
 
               <!-- Botones -->
               <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-green-200">
-                <button @click="restaurarDefectoMensajes" class="btn-secondary text-sm">
+                <button @click="restaurarDefectoMensajes" :disabled="esVisor" class="btn-secondary text-sm">
             <ArrowPathIcon class="w-4 h-4" />
                   Restaurar
           </button>
           <button 
             @click="guardarMensajes"
-            :disabled="guardandoMensajes"
+            :disabled="guardandoMensajes || esVisor"
                   class="btn-primary flex-1 sm:flex-none text-sm bg-gradient-to-r from-green-500 to-emerald-600"
           >
             {{ guardandoMensajes ? 'Guardando...' : 'Guardar Mensajes' }}
@@ -1093,7 +1093,7 @@
               <div class="flex justify-end pt-4 border-t border-blue-200 mt-4">
           <button 
             @click="guardarConfigPeriodo"
-                  :disabled="guardandoPeriodo"
+                  :disabled="guardandoPeriodo || esVisor"
                   class="btn-primary text-sm bg-gradient-to-r from-blue-500 to-indigo-600"
           >
                   {{ guardandoPeriodo ? 'Guardando...' : 'Guardar Período' }}
@@ -1168,7 +1168,7 @@
               <div class="flex justify-end pt-4 border-t border-amber-200 mt-4">
                 <button 
                   @click="guardarConfigDiasGracia"
-                  :disabled="guardandoDiasGracia"
+                  :disabled="guardandoDiasGracia || esVisor"
                   class="btn-primary text-sm bg-gradient-to-r from-amber-500 to-orange-600"
                 >
                   {{ guardandoDiasGracia ? 'Guardando...' : 'Guardar Días de Gracia' }}
@@ -1456,7 +1456,7 @@
               <div class="flex justify-end pt-4 border-t border-red-200 mt-4">
                 <button 
                   @click="guardarConfigSanciones"
-                  :disabled="guardandoSanciones"
+                  :disabled="guardandoSanciones || esVisor"
                   class="btn-primary text-sm bg-gradient-to-r from-red-500 to-rose-600"
                 >
                   {{ guardandoSanciones ? 'Guardando...' : 'Guardar Sanciones' }}
@@ -1715,6 +1715,7 @@ const route = useRoute()
 const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const usersStore = useUsersStore()
+const colaboradoresStore = useColaboradoresStore()
 const guardandoBasica = ref(false)
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
@@ -1725,6 +1726,7 @@ const mensaje = ref(null)
 const textareaIndividual = ref(null)
 const seccionActiva = ref(null) // 'basica', 'mensajes', 'periodo', 'diasGracia', 'sanciones', 'reasignar' o null
 const tipoMensajeActivo = ref('individual') // 'individual', 'general', 'mora', 'pendiente'
+const esVisor = ref(false)
 
 // Reasignación
 const usuarioAutenticado = ref(null)
@@ -1759,6 +1761,26 @@ const esAdmin = computed(() => {
   if (!usuarioAutenticado.value || !natillera.value) return false
   return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
 })
+
+// Verificar si el usuario es visor
+async function verificarRolVisor() {
+  try {
+    if (!id.value) return
+    
+    const rol = await colaboradoresStore.obtenerMiRol(id.value)
+    
+    // Verificar si es visor y tiene permiso de configurar
+    if (rol === 'visor') {
+      const tienePermisoConfigurar = await colaboradoresStore.tienePermiso(id.value, 'configurar')
+      esVisor.value = tienePermisoConfigurar
+    } else {
+      esVisor.value = false
+    }
+  } catch (e) {
+    console.error('Error verificando rol visor:', e)
+    esVisor.value = false
+  }
+}
 
 // Configuración de meses
 const meses = [
@@ -2566,6 +2588,9 @@ onMounted(async () => {
   
   // Cargar la natillera
   await natillerasStore.fetchNatillera(id.value)
+  
+  // Verificar si el usuario es visor (después de cargar la natillera para tener el id)
+  await verificarRolVisor()
   
   // Actualizar valores después de cargar la natillera
   actualizarValoresDesdeNatillera()

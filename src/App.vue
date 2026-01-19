@@ -89,6 +89,14 @@ onUnmounted(() => {
 // Observar cambios en el estado de autenticación para iniciar/detener el timeout
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   sessionTimeout.onAuthStateChange()
+  
+  // Si el usuario se desautentica mientras el modal está abierto, redirigir al login
+  if (!isAuthenticated && showUsernameModal.value) {
+    showUsernameModal.value = false
+    if (!route.path.startsWith('/auth/')) {
+      router.push({ name: 'Login' })
+    }
+  }
 })
 
 // Función para verificar si debemos mostrar el modal
