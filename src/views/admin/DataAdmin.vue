@@ -21,7 +21,7 @@
   </div>
 
   <!-- Contenido principal -->
-  <div v-else class="max-w-7xl mx-auto p-4 sm:p-6">
+  <div v-else class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto p-4 sm:p-6">
     <!-- Header -->
     <div class="relative mb-6">
       <BackButton />

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <!-- Contenedor glassmorphism -->
-    <div class="bg-white/75 backdrop-blur-2xl rounded-3xl border-2 border-emerald-200/30 p-5 sm:p-5 lg:p-8 relative overflow-hidden sm:max-h-[90vh] overflow-y-auto" style="box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.3), 0 10px 40px -10px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1), 0 25px 80px -20px rgba(0, 0, 0, 0.15);">
+    <div class="login-form-container bg-white/75 backdrop-blur-2xl rounded-3xl border-2 border-emerald-200/30 p-5 sm:p-5 lg:p-8 relative overflow-hidden sm:max-h-[90vh] overflow-y-auto" style="box-shadow: 0 20px 60px -15px rgba(16, 185, 129, 0.3), 0 10px 40px -10px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1), 0 25px 80px -20px rgba(0, 0, 0, 0.15);">
       <!-- Tinte verde difuminado y transparente -->
       <div class="absolute inset-0 bg-gradient-to-br from-emerald-200/25 via-emerald-300/20 to-teal-200/25 backdrop-blur-[80px] rounded-3xl pointer-events-none"></div>
       <div class="absolute inset-0 bg-gradient-to-tr from-emerald-100/20 via-emerald-200/15 to-emerald-300/20 backdrop-blur-[60px] rounded-3xl pointer-events-none"></div>
@@ -20,10 +20,10 @@
             <div class="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1/2 h-0.5 bg-gradient-to-r from-natillera-400 via-emerald-400 to-teal-400 rounded-full transform scale-x-0 animate-scale-x"></div>
           </div>
           
-          <div class="relative inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border border-amber-200 rounded-full shadow-sm transform hover:scale-105 transition-transform duration-300">
-            <span class="relative flex items-center gap-1 sm:gap-1.5 text-amber-700 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
-              <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-amber-500 rounded-full animate-ping"></span>
-              <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-amber-500 rounded-full absolute"></span>
+          <div class="relative inline-flex items-center gap-1 sm:gap-1.5 lg:gap-1 xl:gap-1.5 px-2.5 sm:px-3 lg:px-1.5 xl:px-3 py-1 sm:py-1.5 lg:py-0.5 xl:py-1.5 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border border-amber-200 rounded-full shadow-sm transform hover:scale-105 transition-transform duration-300">
+            <span class="relative flex items-center gap-1 sm:gap-1.5 lg:gap-0.5 xl:gap-1.5 text-amber-700 text-[9px] sm:text-[10px] lg:text-[8px] xl:text-[10px] font-bold uppercase tracking-wider">
+              <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-1 lg:h-1 xl:w-1.5 xl:h-1.5 bg-amber-500 rounded-full animate-ping"></span>
+              <span class="w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-1 lg:h-1 xl:w-1.5 xl:h-1.5 bg-amber-500 rounded-full absolute"></span>
               Versión Beta
             </span>
           </div>
@@ -31,12 +31,12 @@
 
       <!-- Selector de método de login -->
       <div class="mb-2 sm:mb-3 animate-fade-in-up">
-        <div class="relative flex gap-1.5 sm:gap-2 p-1 sm:p-1.5 bg-gray-100 rounded-xl sm:rounded-2xl border border-gray-200/50">
+        <div class="relative flex gap-1.5 sm:gap-2 lg:gap-1 xl:gap-1.5 p-1 sm:p-1.5 lg:p-[3px] xl:p-1.5 bg-gray-100 rounded-xl sm:rounded-2xl border border-gray-200/50">
           <!-- Efecto de fondo animado para el botón activo -->
           <div 
           :class="[
-            'absolute top-1 sm:top-1.5 bottom-1 sm:bottom-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 shadow-lg transition-all duration-300 ease-out',
-            loginMethod === 'email' ? 'left-1 sm:left-1.5 right-1/2' : 'left-1/2 right-1 sm:right-1.5'
+            'absolute top-1 sm:top-1.5 lg:top-[3px] xl:top-1.5 bottom-1 sm:bottom-1.5 lg:bottom-[3px] xl:bottom-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 shadow-lg transition-all duration-300 ease-out',
+            loginMethod === 'email' ? 'left-1 sm:left-1.5 lg:left-[3px] xl:left-1.5 right-1/2' : 'left-1/2 right-1 sm:right-1.5 lg:right-[3px] xl:right-1.5'
           ]"
           ></div>
           
@@ -44,7 +44,7 @@
           type="button"
           @click="loginMethod = 'email'; resetearEstadoTelefono()"
           :class="[
-            'relative z-10 flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300',
+            'relative z-10 flex-1 flex items-center justify-center gap-1.5 sm:gap-2 lg:gap-1.5 xl:gap-2 py-2.5 sm:py-3 lg:py-1.5 xl:py-3 px-3 sm:px-4 lg:px-2.5 xl:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base lg:text-[11px] xl:text-base transition-all duration-300',
             loginMethod === 'email' 
               ? 'text-white shadow-sm sm:shadow-md transform scale-[1.01] sm:scale-[1.02]' 
               : 'text-gray-600 hover:text-gray-800 hover:bg-white/50 active:bg-white/70'
@@ -52,7 +52,7 @@
         >
           <svg 
             :class="[
-              'w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0',
+              'w-4 h-4 sm:w-5 sm:h-5 lg:w-3 lg:h-3 xl:w-5 xl:h-5 transition-all duration-300 flex-shrink-0',
               loginMethod === 'email' ? 'text-white' : 'text-natillera-600'
             ]" 
             fill="none" 
@@ -69,7 +69,7 @@
         <button
           type="button"
           :class="[
-            'relative z-10 flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base transition-all duration-300',
+            'relative z-10 flex-1 flex items-center justify-center gap-1.5 sm:gap-2 lg:gap-1.5 xl:gap-2 py-2.5 sm:py-3 lg:py-1.5 xl:py-3 px-3 sm:px-4 lg:px-2.5 xl:px-4 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm md:text-base lg:text-[11px] xl:text-base transition-all duration-300',
             loginMethod === 'telefono' 
               ? 'text-white shadow-sm sm:shadow-md transform scale-[1.01] sm:scale-[1.02]' 
               : 'text-gray-600 hover:text-gray-800 hover:bg-white/50 active:bg-white/70'
@@ -77,7 +77,7 @@
         >
           <svg 
             :class="[
-              'w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 flex-shrink-0',
+              'w-4 h-4 sm:w-5 sm:h-5 lg:w-3 lg:h-3 xl:w-5 xl:h-5 transition-all duration-300 flex-shrink-0',
               loginMethod === 'telefono' ? 'text-white' : 'text-natillera-600'
             ]" 
             fill="none" 
@@ -411,6 +411,19 @@
       </div>
     </div>
 
+    <!-- Log de información del sistema (solo visible en dev mode) -->
+    <div v-if="isDevMode" class="fixed top-2 left-2 z-50">
+      <div class="bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-lg shadow-lg border border-white/10 font-mono">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3 gap-1">
+          <span class="text-emerald-400">Resolución:</span>
+          <span class="text-white">{{ screenInfo.resolution }}</span>
+          <span class="hidden sm:inline text-gray-400">|</span>
+          <span class="text-emerald-400">Navegador:</span>
+          <span class="text-white">{{ screenInfo.browser }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal de Olvidé mi contraseña -->
     <Transition
       enter-active-class="transition duration-300 ease-out"
@@ -628,9 +641,66 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { isDev, isLocalhost } from '../../config/environment'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Detectar modo desarrollo
+const isDevMode = isDev || isLocalhost
+
+// Información de pantalla y navegador (para visualización en dev mode y consola)
+const screenInfo = ref({
+  resolution: '',
+  browser: ''
+})
+
+function detectarNavegador() {
+  const userAgent = navigator.userAgent
+  let browser = 'Desconocido'
+  
+  if (userAgent.indexOf('Firefox') > -1) {
+    browser = 'Firefox'
+  } else if (userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edg') === -1) {
+    browser = 'Chrome'
+  } else if (userAgent.indexOf('Safari') > -1 && userAgent.indexOf('Chrome') === -1) {
+    browser = 'Safari'
+  } else if (userAgent.indexOf('Edg') > -1) {
+    browser = 'Edge'
+  } else if (userAgent.indexOf('Opera') > -1 || userAgent.indexOf('OPR') > -1) {
+    browser = 'Opera'
+  }
+  
+  return browser
+}
+
+function actualizarInfoPantalla() {
+  const resolution = `${window.innerWidth} x ${window.innerHeight}`
+  const browser = detectarNavegador()
+  
+  // Actualizar ref para visualización en dev mode
+  if (isDevMode) {
+    screenInfo.value = {
+      resolution,
+      browser
+    }
+  }
+  
+  // Siempre loguear en consola
+  console.log('%c📱 Información del Sistema', 'color: #22c55e; font-weight: bold; font-size: 14px;')
+  console.log(`%cResolución: %c${resolution}`, 'color: #86efac; font-weight: bold;', 'color: #ffffff;')
+  console.log(`%cNavegador: %c${browser}`, 'color: #86efac; font-weight: bold;', 'color: #ffffff;')
+  console.log('─'.repeat(50))
+}
+
+onMounted(() => {
+  actualizarInfoPantalla()
+  window.addEventListener('resize', actualizarInfoPantalla)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', actualizarInfoPantalla)
+})
 
 // Watcher para cerrar el modal cuando el usuario se autentica (solo si no es el admin)
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {

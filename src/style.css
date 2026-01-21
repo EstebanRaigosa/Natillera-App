@@ -30,6 +30,9 @@
   
   /* Custom breakpoint for extra small devices */
   --breakpoint-xs: 375px;
+  
+  /* Custom breakpoint for medium-large screens (1024px tablets) */
+  --breakpoint-mlg: 1200px;
 }
 
 @layer base {
@@ -117,6 +120,493 @@
   
   .stat-label {
     @apply text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2 sm:mt-2.5 leading-tight;
+  }
+}
+
+/* Ajustes específicos para pantallas de 1024px (tablets en modo vertical) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Reducir padding en contenedores principales */
+  .max-w-6xl,
+  .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Ajustar tamaños de fuente para mejor legibilidad */
+  h1 {
+    font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
+  }
+  
+  /* Reducir gaps en grids para aprovechar mejor el espacio */
+  .grid {
+    gap: 0.75rem;
+  }
+  
+  /* Desactivar animaciones de carga del formulario */
+  .animate-fade-in-up,
+  .animate-slide-in,
+  .animate-scale-x {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  /* Desactivar delays de animaciones stagger */
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4,
+  .stagger-5 {
+    animation-delay: 0s !important;
+  }
+  
+  /* Reducir ancho del contenedor del formulario */
+  .max-w-md {
+    max-width: 18rem !important; /* Reducido aún más para evitar cortes */
+  }
+  
+  /* Ajustar altura del formulario de login y eliminar scroll */
+  .login-form-container {
+    max-height: 75vh !important;
+    padding: 0.875rem !important;
+    overflow-y: hidden !important; /* Eliminar scroll vertical */
+    /* Reducir efectos de blur que pueden causar efecto doble */
+    backdrop-filter: none !important;
+    /* Asegurar que el contenido no se desborde */
+    overflow-x: hidden !important;
+  }
+  
+  /* Eliminar blur de las capas de fondo del formulario */
+  .login-form-container .absolute.inset-0 {
+    backdrop-filter: none !important;
+  }
+  
+  /* Reducir tamaño de botones principales en formulario */
+  .login-form-container form button[type="submit"] {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.3 !important;
+    min-height: 2rem !important;
+    max-height: 2.25rem !important;
+    height: 2.25rem !important;
+    /* Asegurar centrado perfecto */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    /* Simplificar gradiente - usar color sólido */
+    background: #16a34a !important;
+    background-image: none !important;
+    /* Eliminar efectos que causan efecto doble */
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+    border: none !important;
+  }
+  
+  /* Eliminar hover effects en botón principal */
+  .login-form-container form button[type="submit"]:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Eliminar efecto shimmer en botones */
+  .login-form-container form button[type="submit"] .absolute.inset-0 {
+    display: none !important;
+  }
+  
+  /* Eliminar gradiente del botón - usar color sólido */
+  .login-form-container form button[type="submit"].bg-gradient-to-r {
+    background: #16a34a !important;
+    background-image: none !important;
+    background-color: #16a34a !important;
+  }
+  
+  /* Asegurar que no haya elementos superpuestos causando efecto doble */
+  .login-form-container form button[type="submit"] * {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  /* Reducir tamaño de iconos en botón principal */
+  .login-form-container form button[type="submit"] svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+    transform: none !important;
+  }
+  
+  /* Reducir gap entre elementos en botones */
+  .login-form-container button.flex.items-center.gap-2,
+  .login-form-container button.flex.items-center.gap-1\.5,
+  .login-form-container button.flex.items-center.gap-2\.5 {
+    gap: 0.375rem !important;
+  }
+  
+  /* Ajustar contenedor del selector de método (Email/Teléfono) */
+  .login-form-container .relative.flex.gap-1\.5,
+  .login-form-container .relative.flex.gap-2,
+  .login-form-container .relative.flex.sm\:gap-2,
+  .login-form-container .relative.flex.p-1,
+  .login-form-container .relative.flex.sm\:p-1\.5 {
+    padding: 0.375rem !important;
+    margin-bottom: 0.75rem !important;
+    gap: 0.375rem !important;
+    overflow: visible !important;
+    width: 100% !important;
+    display: flex !important;
+  }
+  
+  /* Reducir tamaño de botones del selector de método (Email/Teléfono) - Regla general */
+  .login-form-container .relative.flex button[type="button"],
+  .login-form-container button[type="button"].relative.z-10,
+  .login-form-container button[type="button"].relative.z-10.sm\:py-3,
+  .login-form-container button[type="button"].relative.z-10.md\:text-base {
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+    line-height: 1.2 !important;
+    min-height: 1.75rem !important;
+    max-height: 1.75rem !important;
+    height: 1.75rem !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+    /* Asegurar centrado perfecto */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    /* Eliminar efectos que causan efecto doble */
+    box-shadow: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+  }
+  
+  /* Regla adicional para sobrescribir cualquier clase de padding de Tailwind */
+  .login-form-container .relative.flex button[type="button"].py-2\.5,
+  .login-form-container .relative.flex button[type="button"].sm\:py-3,
+  .login-form-container .relative.flex button[type="button"][class*="py-"] {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  /* Regla adicional para sobrescribir cualquier clase de texto de Tailwind */
+  .login-form-container .relative.flex button[type="button"].text-xs,
+  .login-form-container .relative.flex button[type="button"].text-sm,
+  .login-form-container .relative.flex button[type="button"].text-base,
+  .login-form-container .relative.flex button[type="button"].sm\:text-sm,
+  .login-form-container .relative.flex button[type="button"].md\:text-base,
+  .login-form-container .relative.flex button[type="button"][class*="text-"] {
+    font-size: 0.6875rem !important;
+  }
+  
+  .login-form-container button[type="button"].relative.z-10:hover,
+  .login-form-container button[type="button"].relative.z-10.sm\:py-3:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    scale: 1 !important;
+  }
+  
+  /* Simplificar el fondo animado del selector - usar color sólido */
+  .login-form-container .relative.flex .absolute.bg-gradient-to-r,
+  .login-form-container .relative.flex .absolute.top-1,
+  .login-form-container .relative.flex .absolute.sm\:top-1\.5,
+  .login-form-container .relative.flex .absolute.bottom-1,
+  .login-form-container .relative.flex .absolute.sm\:bottom-1\.5 {
+    background: #16a34a !important;
+    background-image: none !important;
+    background-color: #16a34a !important;
+    box-shadow: none !important;
+    top: 0.375rem !important;
+    bottom: 0.375rem !important;
+  }
+  
+  /* Reducir tamaño de iconos en botones del selector */
+  .login-form-container button[type="button"].relative.z-10 svg,
+  .login-form-container button[type="button"].relative.z-10 .w-4,
+  .login-form-container button[type="button"].relative.z-10 .w-5,
+  .login-form-container button[type="button"].relative.z-10 .h-4,
+  .login-form-container button[type="button"].relative.z-10 .h-5,
+  .login-form-container button[type="button"].relative.z-10 .sm\:w-5,
+  .login-form-container button[type="button"].relative.z-10 .sm\:h-5 {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+    transform: none !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Asegurar centrado del contenido interno de los botones Email/Teléfono */
+  .login-form-container button[type="button"].relative.z-10 span {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Centrar icono y texto juntos en botones Email/Teléfono */
+  .login-form-container button[type="button"].relative.z-10.flex.items-center,
+  .login-form-container button[type="button"].relative.z-10.gap-1\.5,
+  .login-form-container button[type="button"].relative.z-10.gap-2,
+  .login-form-container button[type="button"].relative.z-10.sm\:gap-2 {
+    justify-content: center !important;
+    gap: 0.25rem !important;
+  }
+  
+  /* Sobrescribir específicamente el texto dentro de los botones */
+  .login-form-container button[type="button"].relative.z-10 span,
+  .login-form-container button[type="button"].relative.z-10 .text-xs,
+  .login-form-container button[type="button"].relative.z-10 .text-sm,
+  .login-form-container button[type="button"].relative.z-10 .text-base,
+  .login-form-container button[type="button"].relative.z-10 .sm\:text-sm,
+  .login-form-container button[type="button"].relative.z-10 .md\:text-base {
+    font-size: 0.6875rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* Reducir tamaño de botón de Google */
+  .login-form-container button.border-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.75rem !important;
+    min-height: 2rem !important;
+    max-height: 2.25rem !important;
+    height: 2.25rem !important;
+    /* Eliminar efectos que causan efecto doble */
+    box-shadow: none !important;
+    transform: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  .login-form-container button.border-2:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Reducir tamaño de icono de Google */
+  .login-form-container button.border-2 svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+  
+  /* Reducir tamaño de campos de entrada */
+  .login-form-container input[type="email"],
+  .login-form-container input[type="password"],
+  .login-form-container input[type="text"],
+  .login-form-container input[type="tel"] {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Reducir tamaño de labels */
+  .login-form-container label.block {
+    font-size: 0.8125rem !important;
+    margin-bottom: 0.375rem !important;
+  }
+  
+  /* Reducir tamaño de iconos en labels */
+  .login-form-container label.block svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+  
+  /* Reducir tamaño del botón de mostrar/ocultar contraseña */
+  .login-form-container .relative button[type="button"].absolute {
+    padding: 0.375rem !important;
+  }
+  
+  .login-form-container .relative button[type="button"].absolute svg {
+    width: 0.875rem !important;
+    height: 0.875rem !important;
+  }
+  
+  /* Reducir espacios entre elementos del formulario */
+  .login-form-container form.space-y-4,
+  .login-form-container form.space-y-3 {
+    gap: 0.5rem !important;
+  }
+  
+  /* Reducir margen inferior de los grupos de campos */
+  .login-form-container .group {
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Reducir tamaño del título del formulario "Iniciar Sesión" */
+  .login-form-container h2 {
+    font-size: 1.125rem !important;
+    margin-bottom: 0.25rem !important;
+    /* Eliminar blur y sombras que causan efecto doble */
+    filter: none !important;
+    text-shadow: none !important;
+  }
+  
+  /* Eliminar sombras del contenedor del selector de método */
+  .login-form-container .relative.flex.gap-1\.5 .absolute,
+  .login-form-container .relative.flex.gap-2 .absolute {
+    box-shadow: none !important;
+  }
+  
+  /* Asegurar que no haya elementos superpuestos en botones Email/Teléfono */
+  .login-form-container button[type="button"].relative.z-10 * {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  
+  /* Eliminar efectos shimmer de todos los botones */
+  .login-form-container button .absolute.inset-0 {
+    display: none !important;
+  }
+  
+  /* Reducir tamaño del badge "Versión Beta" */
+  .login-form-container .inline-flex.items-center {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  
+  .login-form-container .inline-flex.items-center span {
+    font-size: 0.625rem !important;
+  }
+  
+  /* Reducir padding del header del formulario */
+  .login-form-container .flex.flex-col.items-center {
+    margin-bottom: 0.5rem !important;
+    gap: 0.25rem !important;
+  }
+  
+  /* Reducir tamaño de los iconos SVG en el header */
+  .login-form-container .flex.flex-col.items-center svg {
+    width: 0.5rem !important;
+    height: 0.5rem !important;
+  }
+  
+  /* Reducir márgenes del separador */
+  .login-form-container .relative.my-2\.5,
+  .login-form-container .relative.my-3 {
+    margin-top: 0.375rem !important;
+    margin-bottom: 0.375rem !important;
+  }
+  
+  /* Reducir márgenes del botón de envío */
+  .login-form-container button[type="submit"] {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  /* Asegurar centrado perfecto del contenido interno del botón */
+  .login-form-container button[type="submit"] .relative {
+    line-height: 1.3 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+  
+  .login-form-container button[type="submit"] .relative.flex {
+    line-height: 1.3 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Asegurar que el texto esté perfectamente centrado */
+  .login-form-container button[type="submit"] span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.3 !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+  
+  /* Centrar el icono y texto juntos */
+  .login-form-container button[type="submit"] .relative.flex.items-center {
+    justify-content: center !important;
+    gap: 0.375rem !important;
+    width: 100% !important;
+  }
+  
+  
+  /* Reducir padding del contenedor principal del layout de auth */
+  .h-screen.flex.items-center {
+    padding: 0.5rem !important;
+  }
+  
+  /* Reducir tamaño del logo y título en AuthLayout */
+  .h-screen .w-12.h-12,
+  .h-screen .w-16.h-16 {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+  
+  .h-screen h1.text-2xl,
+  .h-screen h1.text-3xl,
+  .h-screen h1.text-4xl {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Reducir margen inferior del header en AuthLayout */
+  .h-screen .mb-3 {
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Reducir padding del contenedor del formulario en AuthLayout */
+  .h-screen .p-2,
+  .h-screen .p-4,
+  .h-screen .p-7 {
+    padding: 0.5rem !important;
+  }
+  
+  /* Reducir tamaño del texto del enlace "¿Olvidaste tu contraseña?" */
+  .login-form-container button[type="button"].text-xs,
+  .login-form-container button[type="button"].text-sm {
+    font-size: 0.6875rem !important;
+    margin-top: 0.25rem !important;
+  }
+  
+  /* Reducir tamaño del texto del separador "O continúa con" */
+  .login-form-container .px-5.py-1\.5 {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.6875rem !important;
+  }
+  
+  /* Reducir tamaño del texto del enlace de registro */
+  .login-form-container ~ div .text-xs,
+  .login-form-container ~ div .text-sm {
+    font-size: 0.6875rem !important;
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Ocultar textos descriptivos de las opciones en NatilleraDetalle - solo mostrar títulos */
+  /* Ocultar textos descriptivos de las tarjetas de opciones (Socios, Cuotas, Préstamos, Actividades) */
+  /* Estos textos tienen clase "hidden sm:block" que los muestra desde 640px, pero los ocultamos en 1024px */
+  p.hidden.sm\\:block.text-sm.text-gray-600.leading-relaxed,
+  p.hidden.sm\\:block.text-sm.text-gray-600,
+  .relative.z-10 p.hidden.sm\\:block,
+  .relative.z-10.text-center p.hidden.sm\\:block,
+  .relative.z-10.text-center.sm\\:text-left p.hidden.sm\\:block,
+  .group.relative.flex.flex-col p.hidden.sm\\:block,
+  .group.relative.flex.flex-col.items-center p.hidden.sm\\:block,
+  .group.relative.flex.flex-col.items-center.sm\\:items-start p.hidden.sm\\:block {
+    display: none !important;
   }
 }
 
@@ -1238,4 +1728,384 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 
 .animate-progress {
   animation: progress 2s ease-in-out infinite;
+}
+
+/* ============================================
+   OPTIMIZACIONES ESPECÍFICAS PARA iOS/iPHONE
+   ============================================ */
+
+/* Mejoras generales de rendimiento y touch para iOS */
+@supports (-webkit-touch-callout: none) {
+  /* Detectar iOS Safari */
+  
+  /* Optimización de scroll para iOS */
+  html {
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
+  }
+  
+  body {
+    /* Mejorar rendimiento de scroll y animaciones */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevenir zoom accidental en doble tap */
+    touch-action: pan-x pan-y;
+  }
+  
+  /* Optimización de botones para mejor respuesta táctil en iOS */
+  button,
+  a,
+  [role="button"],
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent,
+  input[type="button"],
+  input[type="submit"] {
+    /* Eliminar delay de 300ms en iOS */
+    touch-action: manipulation;
+    /* Mejorar feedback visual al tocar */
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.3);
+    /* Optimizar renderizado */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Mejorar rendimiento de transiciones */
+    will-change: transform;
+    /* Prevenir selección de texto accidental */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Mejorar calidad de renderizado */
+    -webkit-font-smoothing: antialiased;
+    /* Asegurar que los botones siempre sean clickeables */
+    pointer-events: auto !important;
+    cursor: pointer;
+    /* Asegurar que estén por encima de otros elementos */
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Asegurar que elementos superpuestos no bloqueen los botones */
+  button *,
+  [role="button"] * {
+    pointer-events: none;
+  }
+  
+  /* Permitir clicks en iconos dentro de botones */
+  button svg,
+  button img,
+  [role="button"] svg,
+  [role="button"] img {
+    pointer-events: none;
+  }
+  
+  /* Optimización específica para botones con gradientes */
+  button.bg-gradient-to-r,
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent {
+    /* Forzar aceleración por hardware */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    /* Mejorar renderizado de gradientes */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+  
+  /* Mejorar respuesta de cards y elementos interactivos */
+  .card,
+  .card-hover,
+  [class*="card"] {
+    /* Optimizar renderizado */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Mejorar scroll dentro de cards */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Optimización de inputs para iOS */
+  input,
+  textarea,
+  select {
+    /* Mejorar renderizado */
+    -webkit-appearance: none;
+    appearance: none;
+    /* Mejorar calidad de texto */
+    -webkit-font-smoothing: antialiased;
+    /* Prevenir zoom en focus (iOS Safari) */
+    font-size: 16px;
+  }
+  
+  /* Prevenir zoom en inputs en iOS (solo si el viewport lo permite) */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+  
+  /* Optimización de animaciones para mejor rendimiento en iOS */
+  .animate-fade-in-up,
+  .animate-slide-in,
+  .animate-scale-x,
+  [class*="animate-"] {
+    /* Aceleración por hardware */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Mejorar renderizado */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Optimizar composición */
+    will-change: transform, opacity;
+  }
+  
+  /* Optimización de backdrop-filter (costoso en iOS) */
+  .backdrop-blur-sm,
+  [class*="backdrop-blur"] {
+    /* Reducir uso de backdrop-filter en iOS para mejor rendimiento */
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    /* Forzar aceleración por hardware */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Mejorar scroll en contenedores con overflow */
+  [class*="overflow"],
+  .scrollbar-hide,
+  .scrollbar-thin {
+    -webkit-overflow-scrolling: touch;
+    /* Optimizar scroll */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Optimización de modales y overlays */
+  [class*="modal"],
+  [class*="overlay"],
+  [class*="fixed"] {
+    /* Mejorar renderizado de elementos fijos */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Optimizar composición */
+    will-change: transform, opacity;
+  }
+  
+  /* Mejorar respuesta de elementos con hover en iOS */
+  @media (hover: none) and (pointer: coarse) {
+    /* En dispositivos táctiles, usar active en lugar de hover */
+    button:active,
+    a:active,
+    .btn-primary:active,
+    .btn-secondary:active,
+    .btn-accent:active {
+      opacity: 0.8;
+      transform: scale(0.98);
+    }
+  }
+  
+  /* Optimización de imágenes y SVGs */
+  img,
+  svg {
+    /* Mejorar renderizado */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    /* Prevenir selección accidental */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Mejorar rendimiento de transiciones */
+  * {
+    /* Optimizar transiciones en iOS */
+    -webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Reducir animaciones complejas en iOS para mejor rendimiento */
+  @media (prefers-reduced-motion: no-preference) {
+    /* Mantener animaciones pero optimizadas */
+    .animate-float-3d,
+    .animate-float-3d-delayed,
+    .animate-float-3d-delayed-2 {
+      /* Simplificar animaciones 3D complejas en iOS */
+      animation-duration: 20s;
+      transform-style: flat;
+    }
+  }
+  
+  /* Mejorar área táctil mínima (44x44px recomendado por Apple) */
+  button,
+  a[role="button"],
+  .btn-primary,
+  .btn-secondary,
+  .btn-accent {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Optimización de listas y grids */
+  ul,
+  ol,
+  [class*="grid"],
+  [class*="flex"] {
+    /* Mejorar scroll y renderizado */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevenir pull-to-refresh accidental en iOS Safari */
+  body {
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Mejorar rendimiento de sombras (costosas en iOS) */
+  [class*="shadow"] {
+    /* Reducir complejidad de sombras en iOS */
+    will-change: box-shadow;
+  }
+}
+
+/* Optimizaciones adicionales para todos los dispositivos móviles */
+/* NOTA: Estas optimizaciones son mejoras universales que benefician tanto iOS como Android
+   sin cambiar el comportamiento funcional existente */
+@media (max-width: 768px) {
+  /* Mejorar respuesta táctil en todos los móviles (mejora universal, no afecta funcionalidad) */
+  button,
+  a,
+  [role="button"] {
+    /* touch-action: manipulation elimina el delay de 300ms - mejora para ambos sistemas */
+    touch-action: manipulation;
+    /* Solo cambia el color del highlight, no afecta funcionalidad */
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
+  }
+  
+  /* Área táctil mínima recomendada (mejora de usabilidad universal) */
+  button,
+  a[role="button"] {
+    min-height: 44px;
+  }
+  
+  /* Optimizar scroll (mejora de rendimiento universal) */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Estilos específicos para dispositivos iOS detectados por JavaScript */
+.ios-device {
+  /* Mejoras adicionales para iOS */
+  -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
+}
+
+.ios-device button,
+.ios-device a,
+.ios-device [role="button"] {
+  /* Mejorar respuesta táctil en iOS */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Asegurar que los botones siempre sean clickeables */
+  pointer-events: auto !important;
+  cursor: pointer;
+  /* Mejorar área táctil */
+  position: relative;
+  z-index: 1;
+}
+
+/* Feedback visual cuando se toca un botón en iOS */
+.ios-device button.touch-active,
+.ios-device [role="button"].touch-active {
+  opacity: 0.8;
+  transform: scale(0.98);
+  transition: opacity 0.1s, transform 0.1s;
+}
+
+/* Optimizaciones para dispositivos táctiles en general */
+.touch-device button,
+.touch-device a,
+.touch-device [role="button"] {
+  /* Área táctil mínima mejorada */
+  min-height: 44px;
+  min-width: 44px;
+  /* Mejor feedback visual */
+  -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
+  /* Asegurar que siempre sean clickeables */
+  pointer-events: auto !important;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+/* Optimizaciones para dispositivos lentos */
+.slow-device {
+  /* Reducir animaciones complejas */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  /* Desactivar animaciones costosas */
+  .animate-float-3d,
+  .animate-float-3d-delayed,
+  .animate-float-3d-delayed-2,
+  .animate-morph,
+  .animate-wave-disruptive,
+  .animate-rotate-3d,
+  .animate-orbit,
+  .animate-orbit-delayed {
+    animation: none !important;
+  }
+  
+  /* Reducir efectos de backdrop-filter */
+  .backdrop-blur-sm,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  /* Simplificar sombras */
+  [class*="shadow"] {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+}
+
+/* Mejoras adicionales para viewport en iOS */
+@supports (-webkit-touch-callout: none) {
+  /* Asegurar que el contenido no se desborde en iOS */
+  html,
+  body {
+    position: relative;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
+  /* Prevenir scroll horizontal accidental */
+  * {
+    max-width: 100%;
+  }
+  
+  /* Mejorar renderizado de elementos fijos en iOS */
+  [class*="fixed"] {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+  
+  /* Optimizar modales y overlays en iOS */
+  [class*="modal"],
+  [class*="overlay"] {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -webkit-overflow-scrolling: touch;
+  }
 }

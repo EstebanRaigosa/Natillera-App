@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden relative">
+  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
@@ -160,13 +160,23 @@
                 <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">SOCIOS</p>
                 <p class="text-gray-800 text-xl sm:text-2xl lg:text-3xl font-extrabold">{{ estadisticas.totalSocios }}</p>
               </div>
-              <div class="flex flex-col">
-                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">RECAUDADO</p>
-                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold">
+              <button 
+                @click="modalDesgloseRecaudacion = true"
+                class="flex flex-col group relative cursor-pointer hover:bg-green-50/50 active:bg-green-100/50 rounded-lg p-2 -m-2 transition-all duration-200"
+              >
+                <!-- Punto indicador sutil en la esquina superior derecha -->
+                <div class="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full opacity-70 group-hover:opacity-100 group-hover:scale-125 transition-all duration-200 animate-pulse"></div>
+                
+                <div class="flex items-center gap-1 mb-1">
+                  <p class="text-gray-600 text-xs sm:text-sm font-medium underline decoration-dotted decoration-green-400/50 underline-offset-2 group-hover:decoration-green-500/70 transition-colors">
+                    RECAUDADO
+                  </p>
+                </div>
+                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold group-hover:text-green-700 transition-colors">
                   <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
                   <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
                 </p>
-              </div>
+              </button>
               <div class="flex flex-col">
                 <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">PENDIENTE</p>
                 <p class="text-amber-700 text-xl sm:text-2xl lg:text-3xl font-extrabold">
@@ -2280,6 +2290,156 @@
       </div>
     </div>
 
+    <!-- Modal Desglose Recaudación -->
+    <div v-if="modalDesgloseRecaudacion" data-modal="desglose-recaudacion" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseRecaudacion = false"></div>
+      </Transition>
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0 sm:scale-100"
+        leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+      >
+        <div class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+          <!-- Header con gradiente -->
+          <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+            <!-- Efectos decorativos -->
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+            
+            <div class="relative z-10 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-display font-bold">
+                    Desglose de Recaudación
+                  </h3>
+                  <p class="text-white/90 text-sm">
+                    Por tipo de pago
+                  </p>
+                </div>
+              </div>
+              <button 
+                @click="modalDesgloseRecaudacion = false"
+                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenido -->
+          <div class="overflow-y-auto flex-1 p-6 space-y-4">
+            <!-- Recaudado en Efectivo -->
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
+                    <p class="text-gray-500 text-xs">Pagos realizados en efectivo</p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}
+              </p>
+            </div>
+            
+            <!-- Recaudado en Transferencia -->
+            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
+                    <p class="text-gray-500 text-xs">Pagos realizados por transferencia</p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}
+              </p>
+            </div>
+            
+            <!-- Total Recaudado -->
+            <div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 rounded-xl p-5 border-2 border-purple-300 relative overflow-hidden">
+              <!-- Efectos decorativos -->
+              <div class="absolute top-0 right-0 w-24 h-24 bg-purple-200/30 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+              <div class="absolute bottom-0 left-0 w-20 h-20 bg-indigo-200/30 rounded-full -ml-10 -mb-10 blur-xl"></div>
+              
+              <div class="relative z-10">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-gray-700 text-sm font-semibold">TOTAL RECAUDADO</p>
+                      <p class="text-gray-500 text-xs">Suma de todos los pagos</p>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-purple-700 text-3xl sm:text-4xl font-extrabold mt-3">
+                  ${{ formatMoney(estadisticas.totalAportado) }}
+                </p>
+                
+                <!-- Porcentajes -->
+                <div class="mt-4 pt-4 border-t border-purple-200 space-y-2">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Efectivo:</span>
+                    <span class="font-semibold text-green-700">
+                      {{ estadisticas.totalAportado > 0 ? ((estadisticas.totalRecaudadoEfectivo || 0) / estadisticas.totalAportado * 100).toFixed(1) : 0 }}%
+                    </span>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Transferencia:</span>
+                    <span class="font-semibold text-blue-700">
+                      {{ estadisticas.totalAportado > 0 ? ((estadisticas.totalRecaudadoTransferencia || 0) / estadisticas.totalAportado * 100).toFixed(1) : 0 }}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+            <button 
+              @click="modalDesgloseRecaudacion = false"
+              class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </div>
+
     <!-- Modal Sin Socios -->
     <div v-if="modalSinSocios" data-modal="sin-socios" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSinSocios = false"></div>
@@ -2444,6 +2604,7 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalSociosEnMora = ref(false)
+const modalDesgloseRecaudacion = ref(false)
 const loadingCuotasSocio = ref(false)
 const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
@@ -3361,7 +3522,9 @@ const estadisticas = ref({
   totalPendiente: 0,
   utilidadActividades: 0,
   utilidadesRecogidas: 0,
-  fondoTotal: 0
+  fondoTotal: 0,
+  totalRecaudadoEfectivo: 0,
+  totalRecaudadoTransferencia: 0
 })
 
 // Función para calcular estadísticas de forma asíncrona
@@ -3374,7 +3537,9 @@ async function calcularEstadisticasAsync() {
       totalPendiente: 0,
       utilidadActividades: 0,
       utilidadesRecogidas: 0,
-      fondoTotal: 0
+      fondoTotal: 0,
+      totalRecaudadoEfectivo: 0,
+      totalRecaudadoTransferencia: 0
     }
     return
   }
@@ -3387,7 +3552,9 @@ async function calcularEstadisticasAsync() {
     totalPendiente: 0,
     utilidadActividades: 0,
     utilidadesRecogidas: 0,
-    fondoTotal: 0
+    fondoTotal: 0,
+    totalRecaudadoEfectivo: 0,
+    totalRecaudadoTransferencia: 0
   }
 }
 

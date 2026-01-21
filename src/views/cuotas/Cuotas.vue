@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
+  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
@@ -60,7 +60,7 @@
     </div>
 
     <!-- Resumen del mes seleccionado (clickeable para filtrar) -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
       <button 
         @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'"
         :class="[
@@ -180,7 +180,7 @@
         
         <!-- Botón Quitar Filtros -->
         <button
-          v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos' || busquedaCuotas.trim()"
+          v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos' || filtroTipoPago !== 'todos' || busquedaCuotas.trim()"
           @click="quitarFiltros"
           class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-xl font-semibold text-sm text-red-700 hover:from-red-100 hover:to-orange-100 hover:border-red-400 hover:shadow-lg transition-all shadow-md"
         >
@@ -190,7 +190,7 @@
       </div>
       
       <!-- Indicador de filtros activos -->
-      <div v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos' || busquedaCuotas.trim()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-natillera-50 to-emerald-50 border border-natillera-200 rounded-xl text-sm text-natillera-700 shadow-sm">
+      <div v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos' || filtroTipoPago !== 'todos' || busquedaCuotas.trim()" class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-natillera-50 to-emerald-50 border border-natillera-200 rounded-xl text-sm text-natillera-700 shadow-sm">
         <span class="w-2.5 h-2.5 rounded-full bg-natillera-500 animate-pulse shadow-sm"></span>
         <span class="font-semibold">Filtros activos</span>
       </div>
@@ -297,6 +297,102 @@
                   ]"
                 >
                   {{ cuotasMesActual.filter(c => c.quincena).length }}
+                </span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros de Forma de Pago -->
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+          <!-- Etiqueta -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <FunnelIcon class="w-5 h-5 text-gray-400" />
+            <span class="text-sm font-semibold text-gray-700">Filtros de forma de pago</span>
+          </div>
+          
+          <!-- Botones en la misma línea -->
+          <div class="flex flex-wrap gap-2 flex-1">
+            <!-- Botón Todos -->
+            <button
+              @click="filtroTipoPago = 'todos'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroTipoPago === 'todos'
+                  ? 'text-white shadow-lg'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroTipoPago === 'todos'"
+                class="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full" :class="filtroTipoPago === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
+                Todos
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroTipoPago === 'todos' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                  ]"
+                >
+                  {{ cuotasMesActual.length }}
+                </span>
+              </span>
+            </button>
+
+            <!-- Efectivo -->
+            <button
+              @click="filtroTipoPago = filtroTipoPago === 'efectivo' ? 'todos' : 'efectivo'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroTipoPago === 'efectivo'
+                  ? 'text-white shadow-lg shadow-green-500/30'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroTipoPago === 'efectivo'"
+                class="absolute inset-0 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="text-lg">💵</span>
+                Efectivo
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroTipoPago === 'efectivo' ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600'
+                  ]"
+                >
+                  {{ cuotasMesActual.filter(c => (c.tipo_pago || 'efectivo') === 'efectivo').length }}
+                </span>
+              </span>
+            </button>
+
+            <!-- Transferencia -->
+            <button
+              @click="filtroTipoPago = filtroTipoPago === 'transferencia' ? 'todos' : 'transferencia'"
+              :class="[
+                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                filtroTipoPago === 'transferencia'
+                  ? 'text-white shadow-lg shadow-blue-500/30'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:shadow-md'
+              ]"
+            >
+              <div 
+                v-if="filtroTipoPago === 'transferencia'"
+                class="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600"
+              ></div>
+              <span class="relative flex items-center gap-2">
+                <span class="text-lg">💳</span>
+                Transferencia
+                <span 
+                  :class="[
+                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    filtroTipoPago === 'transferencia' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
+                  ]"
+                >
+                  {{ cuotasMesActual.filter(c => c.tipo_pago === 'transferencia').length }}
                 </span>
               </span>
             </button>
@@ -455,46 +551,47 @@
           </button>
           
           <!-- Toggle de vista -->
-          <!-- Vista móvil: Switch animado -->
-          <div class="md:hidden w-full relative bg-gray-100 rounded-2xl p-1.5 shadow-inner border-2 border-gray-200">
-            <!-- Indicador deslizante animado -->
-            <div 
-              class="absolute top-1.5 bottom-1.5 rounded-xl bg-gradient-to-r from-natillera-500 to-emerald-600 shadow-lg transition-all duration-300 ease-out"
-              :style="{
-                width: 'calc(50% - 3px)',
-                left: vistaAgrupada ? 'calc(50% + 1.5px)' : '3px',
-                transform: vistaAgrupada ? 'translateX(0)' : 'translateX(0)'
-              }"
-            ></div>
-            
-            <!-- Botones -->
-            <div class="relative flex items-center">
-              <button
-                @click="vistaAgrupada = false; vistaExcel = false"
-                class="flex-1 relative z-10 py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
-                :class="!vistaAgrupada && !vistaExcel ? 'text-white' : 'text-gray-600'"
-              >
-                <Squares2X2Icon class="w-5 h-5" />
-                <span>Tarjetas</span>
-              </button>
-              <button
-                @click="vistaAgrupada = true; vistaExcel = false"
-                class="flex-1 relative z-10 py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
-                :class="vistaAgrupada && !vistaExcel ? 'text-white' : 'text-gray-600'"
-              >
-                <UserGroupIcon class="w-5 h-5" />
-                <span>Por Socio</span>
-              </button>
-            </div>
+          <!-- Vista móvil: Solo 3 opciones (sin Excel) -->
+          <div class="md:hidden w-full grid grid-cols-3 gap-2">
+            <button
+              @click="vistaAgrupada = false; vistaExcel = false; vistaLista = false"
+              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
+              :class="!vistaAgrupada && !vistaExcel && !vistaLista 
+                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+            >
+              <Squares2X2Icon class="w-5 h-5" />
+              <span>Tarjetas</span>
+            </button>
+            <button
+              @click="vistaAgrupada = true; vistaExcel = false; vistaLista = false"
+              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
+              :class="vistaAgrupada && !vistaExcel && !vistaLista 
+                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+            >
+              <UserGroupIcon class="w-5 h-5" />
+              <span>Por Socio</span>
+            </button>
+            <button
+              @click="vistaLista = true; vistaExcel = false; vistaAgrupada = false"
+              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
+              :class="vistaLista && !vistaExcel && !vistaAgrupada 
+                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
+                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
+            >
+              <ListBulletIcon class="w-5 h-5" />
+              <span>Lista</span>
+            </button>
           </div>
           
           <!-- Vista desktop: Botones normales -->
           <div class="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl px-4 py-2.5 self-stretch shadow-md">
             <button
-              @click="vistaAgrupada = false; vistaExcel = false"
+              @click="vistaAgrupada = false; vistaExcel = false; vistaLista = false"
               :class="[
                 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
-                !vistaAgrupada && !vistaExcel
+                !vistaAgrupada && !vistaExcel && !vistaLista
                   ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
                   : 'text-gray-600 hover:bg-gray-50'
               ]"
@@ -503,10 +600,10 @@
               <span>Tarjetas</span>
             </button>
             <button
-              @click="vistaAgrupada = true; vistaExcel = false"
+              @click="vistaAgrupada = true; vistaExcel = false; vistaLista = false"
               :class="[
                 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
-                vistaAgrupada && !vistaExcel
+                vistaAgrupada && !vistaExcel && !vistaLista
                   ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
                   : 'text-gray-600 hover:bg-gray-50'
               ]"
@@ -515,10 +612,22 @@
               <span>Por Socio</span>
             </button>
             <button
-              @click="vistaExcel = true; vistaAgrupada = false"
+              @click="vistaLista = true; vistaExcel = false; vistaAgrupada = false"
               :class="[
                 'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
-                vistaExcel && !vistaAgrupada
+                vistaLista && !vistaExcel && !vistaAgrupada
+                  ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
+                  : 'text-gray-600 hover:bg-gray-50'
+              ]"
+            >
+              <ListBulletIcon class="w-4 h-4" />
+              <span>Lista</span>
+            </button>
+            <button
+              @click="vistaExcel = true; vistaAgrupada = false; vistaLista = false"
+              :class="[
+                'px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm font-semibold',
+                vistaExcel && !vistaAgrupada && !vistaLista
                   ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white shadow-lg' 
                   : 'text-gray-600 hover:bg-gray-50'
               ]"
@@ -531,7 +640,7 @@
       </div>
 
       <!-- Vista Agrupada por Socio -->
-      <template v-if="vistaAgrupada && !vistaExcel">
+      <template v-if="vistaAgrupada && !vistaExcel && !vistaLista">
         <div class="space-y-4">
           <div 
             v-for="grupo in cuotasAgrupadasPorSocio" 
@@ -818,7 +927,7 @@
       </template>
 
       <!-- Vista Tarjetas -->
-      <template v-else-if="!vistaExcel && !vistaAgrupada">
+      <template v-else-if="!vistaExcel && !vistaAgrupada && !vistaLista">
         <div 
           v-for="cuota in cuotasFiltradas" 
           :key="cuota.id"
@@ -1163,8 +1272,79 @@
         </div>
       </template>
 
+      <!-- Vista Lista Simple -->
+      <template v-else-if="vistaLista && !vistaExcel && !vistaAgrupada">
+        <div class="space-y-1">
+          <div 
+            v-for="cuota in cuotasFiltradas" 
+            :key="cuota.id"
+            @click="abrirModalDetalleCuota(cuota)"
+            :class="[
+              'px-3 py-2 border rounded-md transition-all cursor-pointer',
+              (cuota.estadoReal || cuota.estado) === 'pagada' 
+                ? 'bg-green-50 border-green-200 hover:bg-green-100 hover:border-green-300' : 
+              (cuota.estadoReal || cuota.estado) === 'mora' 
+                ? 'bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300' : 
+              (cuota.estadoReal || cuota.estado) === 'programada' 
+                ? 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300' : 
+              'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-300'
+            ]"
+          >
+            <!-- Línea 1: Nombre -->
+            <div class="mb-1 flex items-center gap-2">
+              <UserIconSolid class="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <p class="text-sm font-bold text-gray-900 truncate">
+                {{ cuota.socio_natillera?.socio?.nombre || 'Socio' }}
+              </p>
+            </div>
+            
+            <!-- Línea 2: Valor | Estado | Fecha | Botón Pagar -->
+            <div class="flex items-center gap-2 text-xs">
+              <!-- Valor Cuota -->
+              <span class="font-bold text-gray-800">
+                ${{ formatMoney(cuota.valor_cuota) }}
+              </span>
+              
+              <!-- Separador -->
+              <span class="text-gray-300">|</span>
+              
+              <!-- Estado -->
+              <span 
+                :class="[
+                  'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
+                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700' : 
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700' : 
+                  (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' : 
+                  'bg-orange-100 text-orange-700'
+                ]"
+              >
+                {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) }}
+              </span>
+              
+              <!-- Separador -->
+              <span class="text-gray-300">|</span>
+              
+              <!-- Fecha Vencimiento -->
+              <span class="text-gray-600">
+                {{ formatDate(cuota.fecha_vencimiento || cuota.fecha_limite) }}
+              </span>
+              
+              <!-- Botón Pagar -->
+              <button
+                v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
+                @click.stop="abrirModalPago(cuota)"
+                class="ml-auto px-2.5 py-1 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-md transition-all shadow-sm hover:shadow-md flex items-center gap-1"
+              >
+                <CurrencyDollarIcon class="w-3 h-3" />
+                <span>Pagar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+
       <!-- Vista Excel (Tabla) -->
-      <div v-else class="card overflow-x-auto shadow-xl">
+      <div v-else-if="vistaExcel && !vistaLista && !vistaAgrupada" class="card overflow-x-auto shadow-xl">
         <table class="w-full border-collapse">
           <thead>
             <tr class="bg-gradient-to-r from-natillera-50 via-emerald-50 to-teal-50 border-b-2 border-natillera-200">
@@ -2079,10 +2259,10 @@
 
     <!-- Modal Registrar Pago -->
     <div v-if="modalPago" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'"></div>
+      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] flex flex-col">
+        <!-- Header con gradiente (fijo) -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2107,8 +2287,8 @@
           </div>
         </div>
 
-        <!-- Contenido -->
-        <div class="p-6 space-y-6">
+        <!-- Contenido con scroll -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
           <!-- Card de información del socio -->
           <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
             <!-- Alerta de ajustes si existe -->
@@ -2183,7 +2363,195 @@
             </div>
           </div>
 
-          <form @submit.prevent="handleRegistrarPago" class="space-y-5">
+          <div class="space-y-5">
+            <!-- Campo de tipo de pago -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-3">
+                Tipo de pago <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <!-- Opción Efectivo -->
+                <button
+                  type="button"
+                  @click="formPago.tipo_pago = 'efectivo'"
+                  :class="[
+                    'relative p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    formPago.tipo_pago === 'efectivo'
+                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  <div class="flex flex-col items-center gap-2">
+                    <!-- Icono -->
+                    <div :class="[
+                      'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                      formPago.tipo_pago === 'efectivo'
+                        ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-400'
+                    ]">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                      </svg>
+                    </div>
+                    <!-- Texto -->
+                    <span :class="[
+                      'font-semibold text-sm',
+                      formPago.tipo_pago === 'efectivo'
+                        ? 'text-natillera-700'
+                        : 'text-gray-600'
+                    ]">
+                      Efectivo
+                    </span>
+                    <!-- Indicador de selección -->
+                    <div v-if="formPago.tipo_pago === 'efectivo'" class="absolute top-2 right-2">
+                      <div class="w-5 h-5 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Opción Transferencia -->
+                <button
+                  type="button"
+                  @click="formPago.tipo_pago = 'transferencia'"
+                  :class="[
+                    'relative p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    formPago.tipo_pago === 'transferencia'
+                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  <div class="flex flex-col items-center gap-2">
+                    <!-- Icono -->
+                    <div :class="[
+                      'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                      formPago.tipo_pago === 'transferencia'
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-400'
+                    ]">
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                      </svg>
+                    </div>
+                    <!-- Texto -->
+                    <span :class="[
+                      'font-semibold text-sm',
+                      formPago.tipo_pago === 'transferencia'
+                        ? 'text-blue-700'
+                        : 'text-gray-600'
+                    ]">
+                      Transferencia
+                    </span>
+                    <!-- Indicador de selección -->
+                    <div v-if="formPago.tipo_pago === 'transferencia'" class="absolute top-2 right-2">
+                      <div class="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Desplegable de Actividades Pendientes -->
+            <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+              <button
+                type="button"
+                @click="actividadesDesplegableAbierto = !actividadesDesplegableAbierto"
+                class="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 hover:from-purple-100 hover:via-indigo-100 hover:to-blue-100 transition-all duration-200"
+              >
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <SparklesIcon class="w-5 h-5 text-white" />
+                  </div>
+                  <div class="text-left">
+                    <p class="font-semibold text-gray-800">Actividades pendientes</p>
+                    <p class="text-xs text-gray-600 mt-0.5">
+                      <span v-if="cargandoActividades">Cargando...</span>
+                      <span v-else-if="actividadesPendientes.length === 0">No hay actividades pendientes</span>
+                      <span v-else>{{ actividadesPendientes.length }} actividad{{ actividadesPendientes.length !== 1 ? 'es' : '' }} pendiente{{ actividadesPendientes.length !== 1 ? 's' : '' }}</span>
+                    </p>
+                  </div>
+                </div>
+                <ChevronDownIcon 
+                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', actividadesDesplegableAbierto ? 'rotate-180' : '']" 
+                />
+              </button>
+              
+              <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-[1000px]"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="opacity-100 max-h-[1000px]"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div v-show="actividadesDesplegableAbierto" class="border-t border-gray-200 bg-white">
+                  <div v-if="cargandoActividades" class="p-6 text-center">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
+                    <p class="text-sm text-gray-500 mt-2">Cargando actividades...</p>
+                  </div>
+                  <div v-else-if="actividadesPendientes.length === 0" class="p-6 text-center">
+                    <p class="text-sm text-gray-500">No hay actividades pendientes</p>
+                  </div>
+                  <div v-else class="p-4 space-y-3 max-h-64 overflow-y-auto">
+                    <div
+                      v-for="(actividad, index) in actividadesPendientes"
+                      :key="actividad.id"
+                      class="bg-gradient-to-br from-gray-50 to-purple-50/30 rounded-lg p-4 border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all"
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-2 mb-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <span class="text-white text-xs font-bold">{{ index + 1 }}</span>
+                            </div>
+                            <h4 class="font-semibold text-gray-800 truncate">
+                              {{ actividad.actividad?.nombre || 'Actividad' }}
+                            </h4>
+                          </div>
+                          <p v-if="actividad.actividad?.descripcion" class="text-xs text-gray-600 mb-2 line-clamp-2">
+                            {{ actividad.actividad.descripcion }}
+                          </p>
+                          <div class="flex items-center gap-4 flex-wrap">
+                            <div>
+                              <p class="text-xs text-gray-500 mb-0.5">Valor asignado</p>
+                              <p class="text-sm font-semibold text-gray-700">
+                                ${{ formatMoney(actividad.valor_asignado || 0) }}
+                              </p>
+                            </div>
+                            <div v-if="actividad.valor_pagado > 0">
+                              <p class="text-xs text-gray-500 mb-0.5">Ya pagado</p>
+                              <p class="text-sm font-semibold text-green-600">
+                                ${{ formatMoney(actividad.valor_pagado || 0) }}
+                              </p>
+                            </div>
+                            <div>
+                              <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
+                              <p class="text-sm font-bold text-orange-600">
+                                ${{ formatMoney(actividad.valor_pendiente || 0) }}
+                              </p>
+                            </div>
+                          </div>
+                          <div v-if="actividad.actividad?.fecha_limite_pago" class="mt-2 flex items-center gap-1.5">
+                            <CalendarIcon class="w-3.5 h-3.5 text-gray-400" />
+                            <p class="text-xs text-gray-500">
+                              Fecha límite: {{ formatDate(actividad.actividad.fecha_limite_pago) }}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+
             <!-- Campo de valor del pago -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -2204,6 +2572,7 @@
                   @input="handleValorPagoInput($event)"
                   @focus="seleccionarValorPago"
                   @click="seleccionarValorPago"
+                  @keydown.enter.prevent="handleRegistrarPago"
                   type="text"
                   inputmode="decimal"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
@@ -2219,25 +2588,28 @@
                 <span v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado < (cuotaSeleccionada?.valor_cuota || 0))" class="text-red-500 text-xs">(incluye multa)</span>
               </p>
             </div>
+          </div>
+        </div>
 
-            <!-- Botones -->
-            <div class="flex gap-3 pt-2">
-              <button 
-                type="button"
-                @click="modalPago = false"
-                class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="cuotasStore.loading || !formPago.valor || formPago.valor <= 0"
-              >
-                {{ cuotasStore.loading ? 'Registrando...' : 'Registrar Pago' }}
-              </button>
-            </div>
-          </form>
+        <!-- Footer con botones (fijo) -->
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4">
+          <div class="flex gap-3">
+            <button 
+              type="button"
+              @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'"
+              class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="button"
+              @click="handleRegistrarPago"
+              class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="cuotasStore.loading || !formPago.valor || formPago.valor <= 0"
+            >
+              {{ cuotasStore.loading ? 'Registrando...' : 'Registrar Pago' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -2575,14 +2947,27 @@
               </div>
             </div>
 
-            <!-- Fecha y Estado -->
-            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-              <div style="flex: 1;">
+            <!-- Fecha, Tipo de Pago y Estado -->
+            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
                 <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Fecha de Pago</p>
                 <p style="font-weight: 700; font-size: 12px; margin: 0; letter-spacing: -0.2px;">{{ pagoRegistrado?.fecha }}</p>
               </div>
-              <div style="flex: 1; text-align: right;">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Estado</p>
+              <div>
+                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Tipo de Pago</p>
+                <div :style="pagoRegistrado?.tipoPago === 'transferencia'
+                  ? 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 8px; border: 2px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);'
+                  : 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 8px; border: 2px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);'">
+                  <span style="font-size: 14px;">{{ pagoRegistrado?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
+                  <p :style="'font-weight: 700; font-size: 13px; margin: 0; letter-spacing: -0.2px;' + (pagoRegistrado?.tipoPago === 'transferencia' ? ' color: #3b82f6;' : ' color: #22c55e;')">
+                    {{ pagoRegistrado?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+              <div>
+                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600; text-align: right;">Estado</p>
                 <div :style="pagoRegistrado?.esParcial 
                   ? 'display: inline-flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);'
                   : 'display: inline-flex; align-items: center; gap: 6px; background: rgba(167, 243, 208, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(167, 243, 208, 0.3);'">
@@ -3233,6 +3618,268 @@
       </div>
     </div>
 
+    <!-- Modal de Progreso de Actualización de Socio - DISEÑO ULTRA MODERNO -->
+    <Transition name="modal-fade">
+      <div v-if="modalProgreso" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <!-- Fondo con efecto glassmorphism -->
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-black/60 to-teal-900/30 backdrop-blur-xl"></div>
+        
+        <!-- Partículas decorativas flotantes -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-emerald-400 rounded-full animate-float-particle opacity-60"></div>
+          <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-green-300 rounded-full animate-float-particle-slow opacity-40" style="animation-delay: 0.5s"></div>
+          <div class="absolute bottom-1/3 left-1/3 w-2 h-2 bg-teal-400 rounded-full animate-float-particle opacity-50" style="animation-delay: 1s"></div>
+          <div class="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full animate-float-particle-slow opacity-70" style="animation-delay: 1.5s"></div>
+        </div>
+        
+        <Transition name="modal-scale" appear>
+          <div class="relative w-full max-w-sm">
+            <!-- Tarjeta principal con efecto 3D -->
+            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
+              <!-- Gradiente superior decorativo -->
+              <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 opacity-10"></div>
+              
+              <!-- Anillos orbitales decorativos (cuando está procesando) -->
+              <div v-if="!progresoCreacion.exito && !progresoCreacion.error" class="absolute inset-0 flex items-center justify-center pointer-events-none" style="top: -20px">
+                <div class="w-40 h-40 border border-emerald-200/30 rounded-full animate-orbit-slow"></div>
+                <div class="absolute w-32 h-32 border border-green-200/40 rounded-full animate-orbit-reverse"></div>
+              </div>
+
+              <div class="relative p-8 pb-10">
+                <!-- Icono principal con múltiples capas de animación -->
+                <div class="relative mx-auto mb-8 w-28 h-28">
+                  <!-- Aura exterior pulsante -->
+                  <div 
+                    :class="[
+                      'absolute -inset-4 rounded-full transition-all duration-700',
+                      progresoCreacion.exito 
+                        ? 'bg-emerald-400/20 animate-pulse-success' 
+                        : progresoCreacion.error && progresoCreacion.paso === 0
+                          ? 'bg-red-400/20 animate-pulse'
+                          : 'bg-gradient-to-r from-emerald-400/15 via-green-400/20 to-teal-400/15 animate-pulse-slow'
+                    ]"
+                  ></div>
+                  
+                  <!-- Anillo giratorio exterior -->
+                  <div 
+                    v-if="!progresoCreacion.exito && progresoCreacion.paso > 0"
+                    class="absolute -inset-2 rounded-full border-2 border-dashed border-emerald-300/40 animate-spin-very-slow"
+                  ></div>
+                  
+                  <!-- Círculo principal -->
+                  <div 
+                    :class="[
+                      'absolute inset-0 rounded-full flex items-center justify-center transition-all duration-700 transform',
+                      progresoCreacion.exito 
+                        ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-2xl shadow-emerald-500/50 scale-110' 
+                        : progresoCreacion.error && progresoCreacion.paso === 0
+                          ? 'bg-gradient-to-br from-red-400 via-rose-500 to-pink-500 shadow-2xl shadow-red-500/40'
+                          : 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-xl shadow-emerald-500/30'
+                    ]"
+                  >
+                    <!-- Efecto de brillo interior -->
+                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+                    
+                    <!-- Estado: Actualizando socio -->
+                    <template v-if="progresoCreacion.paso === 1">
+                      <div class="relative">
+                        <UserIcon class="w-12 h-12 text-white drop-shadow-lg animate-bounce-gentle" />
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+                          <PencilIcon class="w-3 h-3 text-emerald-500" />
+                        </div>
+                      </div>
+                    </template>
+                    
+                    <!-- Estado: Generando cuotas -->
+                    <template v-else-if="progresoCreacion.paso === 2">
+                      <div class="relative">
+                        <SparklesIcon class="w-12 h-12 text-white drop-shadow-lg animate-sparkle" />
+                        <!-- Mini estrellas que salen -->
+                        <div class="absolute -top-2 -right-2 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                        <div class="absolute -bottom-1 -left-2 w-1.5 h-1.5 bg-yellow-200 rounded-full animate-ping" style="animation-delay: 0.3s"></div>
+                      </div>
+                    </template>
+                    
+                    <!-- Estado: Completado con éxito -->
+                    <template v-else-if="progresoCreacion.paso === 3 && progresoCreacion.exito">
+                      <CheckCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-success-pop" />
+                    </template>
+                    
+                    <!-- Estado: Error -->
+                    <template v-else-if="progresoCreacion.error && progresoCreacion.paso === 0">
+                      <XCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-shake" />
+                    </template>
+                    
+                    <!-- Estado: Iniciando -->
+                    <template v-else>
+                      <div class="relative w-12 h-12">
+                        <div class="absolute inset-0 border-4 border-white/30 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
+                        <div class="absolute inset-2 border-2 border-transparent border-b-white/60 rounded-full animate-spin-reverse"></div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- Nombre del socio con tipografía elegante -->
+                <h3 class="text-2xl font-display font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-clip-text text-transparent text-center mb-1">
+                  {{ progresoCreacion.nombreSocio }}
+                </h3>
+
+                <!-- Mensaje de progreso con animación sutil -->
+                <p 
+                  :class="[
+                    'text-center text-base font-medium mb-6 transition-all duration-500',
+                    progresoCreacion.exito ? 'text-emerald-600' : 
+                    progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-gray-500'
+                  ]"
+                >
+                  {{ progresoCreacion.mensaje }}
+                </p>
+
+                <!-- Timeline de pasos - Diseño minimalista y elegante -->
+                <div class="relative mb-8">
+                  <!-- Línea de conexión -->
+                  <div class="absolute top-4 left-8 right-8 h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      class="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-700 ease-out rounded-full"
+                      :style="{ width: `${((progresoCreacion.paso - 1) / 2) * 100}%` }"
+                    ></div>
+                  </div>
+                  
+                  <div class="relative flex justify-between">
+                    <!-- Paso 1: Socio -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 1 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso > 1">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <UserIcon v-else-if="progresoCreacion.paso === 1" class="w-4 h-4" />
+                        <span v-else class="text-xs font-bold">1</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-emerald-600' : 'text-gray-400']">Socio</span>
+                    </div>
+                    
+                    <!-- Paso 2: Cuotas -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 2 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso > 2">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <SparklesIcon v-else-if="progresoCreacion.paso === 2" class="w-4 h-4 animate-pulse" />
+                        <span v-else class="text-xs font-bold">2</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-emerald-600' : 'text-gray-400']">Cuotas</span>
+                    </div>
+                    
+                    <!-- Paso 3: Listo -->
+                    <div class="flex flex-col items-center">
+                      <div 
+                        :class="[
+                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
+                          progresoCreacion.paso >= 3 
+                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                            : 'bg-gray-100 text-gray-400'
+                        ]"
+                      >
+                        <template v-if="progresoCreacion.paso >= 3">
+                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </template>
+                        <span v-else class="text-xs font-bold">3</span>
+                      </div>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-emerald-600' : 'text-gray-400']">¡Listo!</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Badge de cuotas generadas - Diseño premium -->
+                <Transition
+                  enter-active-class="transition-all duration-500 ease-out"
+                  enter-from-class="opacity-0 scale-90 translate-y-4"
+                  enter-to-class="opacity-100 scale-100 translate-y-0"
+                >
+                  <div 
+                    v-if="progresoCreacion.paso >= 2 && progresoCreacion.cuotasGeneradas > 0"
+                    class="flex justify-center"
+                  >
+                    <div class="relative group">
+                      <!-- Glow effect -->
+                      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                      
+                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl">
+                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                          <SparklesIcon class="w-5 h-5 text-white" />
+                        </div>
+                        <div class="text-left">
+                          <p class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                            {{ progresoCreacion.cuotasGeneradas }}
+                          </p>
+                          <p class="text-xs text-gray-500 font-medium">cuotas generadas</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+
+                <!-- Mensaje de éxito final -->
+                <Transition
+                  enter-active-class="transition-all duration-700 delay-300"
+                  enter-from-class="opacity-0 translate-y-2"
+                  enter-to-class="opacity-100 translate-y-0"
+                >
+                  <div v-if="progresoCreacion.exito" class="mt-6 text-center">
+                    <p class="text-sm text-gray-400">El modal se cerrará automáticamente...</p>
+                  </div>
+                </Transition>
+
+                <!-- Mensaje de error con botón de cerrar -->
+                <div v-if="progresoCreacion.error && progresoCreacion.paso === 0" class="mt-6 text-center">
+                  <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
+                    <p class="text-sm text-red-600">{{ progresoCreacion.error }}</p>
+                  </div>
+                  <button 
+                    @click="cerrarModalProgreso"
+                    class="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:-translate-y-0.5 transition-all duration-300"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+
+              <!-- Barra de progreso inferior decorativa -->
+              <div class="h-1.5 bg-gray-100">
+                <div 
+                  v-if="progresoCreacion.paso > 0 && !progresoCreacion.error"
+                  class="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 transition-all duration-700 ease-out"
+                  :style="{ width: `${(progresoCreacion.paso / 3) * 100}%` }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
+
     <!-- Modal Detalle Socio -->
     <div v-if="modalDetalleSocio" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalleSocio = false"></div>
@@ -3399,8 +4046,12 @@ import {
   UsersIcon,
   ArrowRightIcon,
   UserGroupIcon,
-  CalendarDaysIcon
+  CalendarDaysIcon,
+  SparklesIcon,
+  XCircleIcon,
+  ListBulletIcon
 } from '@heroicons/vue/24/outline'
+import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
@@ -3434,6 +4085,7 @@ const cargandoHistorialPagos = ref(false)
 const modalDetalleSocio = ref(false)
 const modalHistorialAjustes = ref(false)
 const modalEditarSocio = ref(false)
+const modalProgreso = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalGenerarCuotas)
@@ -3446,6 +4098,7 @@ useBodyScrollLock(modalDetalleCuota)
 useBodyScrollLock(modalDetalleSocio)
 useBodyScrollLock(modalHistorialAjustes)
 useBodyScrollLock(modalEditarSocio)
+useBodyScrollLock(modalProgreso)
 
 const socioSeleccionado = ref(null)
 const socioEditando = ref(null)
@@ -3455,6 +4108,17 @@ const mostrarContacto = ref(false)
 const errorSocio = ref('')
 const estadoGuardadoSocio = ref('') // '', 'guardando', 'generando'
 const natilleraNombre = ref('')
+
+// Variables para el modal de progreso de actualización de socio
+const progresoCreacion = ref({
+  paso: 0, // 0: iniciando, 1: actualizando socio, 2: generando cuotas, 3: completado
+  mensaje: '',
+  cuotasGeneradas: 0,
+  cuotasTotales: 0,
+  error: null,
+  exito: false,
+  nombreSocio: ''
+})
 const comprobanteRef = ref(null)
 const generandoImagen = ref(false)
 const scrollComprobanteRef = ref(null)
@@ -3465,6 +4129,9 @@ const dropdownMesRef = ref(null)
 const sancionesDinamicas = ref({}) // Sanciones calculadas dinámicamente
 const sancionesActivas = ref(false) // Indica si las sanciones están activadas
 const diasGracia = ref(3) // Días de gracia de la natillera
+const actividadesPendientes = ref([]) // Actividades pendientes del socio
+const actividadesDesplegableAbierto = ref(false) // Estado del desplegable de actividades
+const cargandoActividades = ref(false) // Estado de carga de actividades
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -3475,12 +4142,14 @@ const inicializando = ref(true) // Flag para evitar que el watch se dispare dura
 const generandoCuotas = ref(false) // Flag para evitar ejecuciones paralelas de generación
 const filtroEstado = ref('todos')
 const filtroPeriodicidad = ref('todos')
+const filtroTipoPago = ref('todos')
 const busquedaCuotas = ref('')
 const mostrarFiltros = ref(false)
 const inputBusquedaRef = ref(null)
 const inputValorPagoRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
 const vistaAgrupada = ref(false) // true = vista agrupada por socio
+const vistaLista = ref(false) // true = vista lista simple
 const miRol = ref(null)
 const usuarioAutenticado = ref(null)
 
@@ -3766,11 +4435,16 @@ const exportarAExcel = async () => {
   }
 }
 
-// Forzar vista de tarjetas en móvil (solo para Excel, no para agrupada)
+// Forzar desactivar vista Excel en móvil (solo disponible en desktop)
 const checkMobileView = () => {
   if (window.innerWidth < 768) { // md breakpoint de Tailwind
-    vistaExcel.value = false
-    // Permitir vista agrupada en móvil
+    if (vistaExcel.value) {
+      vistaExcel.value = false
+      // Si estaba en Excel, cambiar a tarjetas por defecto
+      if (!vistaAgrupada.value && !vistaLista.value) {
+        // Ya está en tarjetas por defecto
+      }
+    }
   }
 }
 
@@ -3919,8 +4593,8 @@ const cuotasFiltradas = computed(() => {
   // Filtro por estado (usando estadoReal)
   if (filtroEstado.value !== 'todos') {
     if (filtroEstado.value === 'pendiente') {
-      // Pendientes incluye tanto 'pendiente' como 'programada' (según las reglas)
-      filtradas = filtradas.filter(c => c.estadoReal === 'pendiente' || c.estadoReal === 'programada')
+      // Solo mostrar cuotas con estado 'pendiente', excluir 'programada'
+      filtradas = filtradas.filter(c => c.estadoReal === 'pendiente')
     } else {
       filtradas = filtradas.filter(c => c.estadoReal === filtroEstado.value)
     }
@@ -3931,6 +4605,14 @@ const cuotasFiltradas = computed(() => {
     filtradas = filtradas.filter(c => !c.quincena)
   } else if (filtroPeriodicidad.value === 'quincenal') {
     filtradas = filtradas.filter(c => c.quincena)
+  }
+
+  // Filtro por tipo de pago
+  if (filtroTipoPago.value !== 'todos') {
+    filtradas = filtradas.filter(c => {
+      const tipoPago = c.tipo_pago || 'efectivo'
+      return tipoPago === filtroTipoPago.value
+    })
   }
 
   // Filtro por búsqueda
@@ -4185,7 +4867,8 @@ const socioSeleccionadoEsMensual = computed(() => {
 })
 
 const formPago = reactive({
-  valor: 0
+  valor: 0,
+  tipo_pago: 'efectivo' // Por defecto: efectivo, puede ser 'transferencia'
 })
 
 const formEditarCuota = reactive({
@@ -4323,6 +5006,7 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
   if (nuevoMes && nuevoMes !== mesAnterior) {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
+    filtroTipoPago.value = 'todos' // Resetear filtro de tipo de pago
     
     // Evitar ejecuciones paralelas de generación de cuotas
     if (generandoCuotas.value) {
@@ -4700,12 +5384,89 @@ async function cargarHistorialPagosCuota(cuotaId) {
   }
 }
 
+async function cargarActividadesPendientes(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) {
+    console.log('❌ cargarActividadesPendientes: No hay cuota o socio_natillera_id')
+    actividadesPendientes.value = []
+    return
+  }
+
+  console.log('🔍 cargarActividadesPendientes: socio_natillera_id =', cuota.socio_natillera_id)
+  cargandoActividades.value = true
+  try {
+    // Obtener actividades pendientes del socio (estado = 'pendiente')
+    const { data, error } = await supabase
+      .from('socios_actividad')
+      .select(`
+        *,
+        actividad:actividades(
+          id,
+          nombre,
+          descripcion,
+          fecha_limite_pago,
+          estado
+        )
+      `)
+      .eq('socio_natillera_id', cuota.socio_natillera_id)
+      .eq('estado', 'pendiente')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('❌ Error en consulta socios_actividad:', error)
+      throw error
+    }
+
+    console.log('📊 Resultado de consulta socios_actividad:', data)
+    console.log('📊 Cantidad de registros encontrados:', data?.length || 0)
+
+    if (data && data.length > 0) {
+      console.log('📋 Detalle de registros:')
+      data.forEach((sa, index) => {
+        console.log(`  ${index + 1}. Estado: ${sa.estado}, Actividad: ${sa.actividad?.nombre || 'N/A'}, Estado actividad: ${sa.actividad?.estado || 'N/A'}`)
+      })
+    }
+
+    // Filtrar solo actividades en curso
+    const actividadesFiltradas = (data || []).filter(sa => {
+      const actividad = sa.actividad
+      if (!actividad) {
+        console.log('⚠️ Registro sin actividad relacionada:', sa.id)
+        return false
+      }
+      const enCurso = actividad.estado === 'en_curso'
+      if (!enCurso) {
+        console.log(`⚠️ Actividad "${actividad.nombre}" no está en curso (estado: ${actividad.estado})`)
+      }
+      return enCurso
+    })
+
+    console.log('📊 Actividades filtradas (en curso):', actividadesFiltradas.length)
+
+    // Calcular el valor pendiente para cada actividad
+    actividadesPendientes.value = actividadesFiltradas.map(sa => ({
+      ...sa,
+      valor_pendiente: (parseFloat(sa.valor_asignado || 0)) - (parseFloat(sa.valor_pagado || 0))
+    }))
+
+    console.log('✅ Actividades pendientes finales:', actividadesPendientes.value.length)
+  } catch (e) {
+    console.error('❌ Error cargando actividades pendientes:', e)
+    actividadesPendientes.value = []
+  } finally {
+    cargandoActividades.value = false
+  }
+}
+
 function abrirModalPago(cuota) {
   cuotaSeleccionada.value = cuota
   // Inicializar con el total a pagar completo (incluye cuota + sanciones)
   const totalAPagar = getTotalAPagar(cuota)
   formPago.valor = totalAPagar > 0 ? totalAPagar : 0
+  formPago.tipo_pago = 'efectivo' // Reiniciar tipo de pago por defecto
   modalPago.value = true
+  actividadesDesplegableAbierto.value = false
+  // Cargar actividades pendientes del socio
+  cargarActividadesPendientes(cuota)
 }
 
 function abrirModalHistorialAjustes(cuota) {
@@ -4917,6 +5678,90 @@ function cerrarModalEditarSocio() {
   })
 }
 
+// Función para limpiar número de teléfono (igual que en Socios.vue)
+function limpiarNumeroTelefono(telefono) {
+  if (!telefono) return ''
+  // Remover caracteres no numéricos excepto el signo +
+  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
+  
+  // Si comienza con +, quitar el signo
+  if (numeroLimpio.startsWith('+')) {
+    numeroLimpio = numeroLimpio.substring(1)
+  }
+  
+  // Quitar el indicativo de Colombia (57) si está presente
+  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
+  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+    numeroLimpio = numeroLimpio.substring(2)
+  }
+  
+  // Si solo tiene caracteres no numéricos, limpiar todo
+  if (!numeroLimpio || numeroLimpio.length === 0) {
+    numeroLimpio = telefono.replace(/\D/g, '')
+    // Aplicar la misma lógica de quitar el indicativo
+    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
+      numeroLimpio = numeroLimpio.substring(2)
+    }
+  }
+  
+  return numeroLimpio
+}
+
+// Función para generar cuotas para un socio (igual que en Socios.vue)
+async function generarCuotasParaSocio(natilleraId, socioNatilleraId, natillera, valorCuota, periodicidad) {
+  try {
+    console.log('🚀 Iniciando generación optimizada de cuotas...')
+    console.log('📋 Datos para generación:', {
+      natilleraId,
+      socioNatilleraId,
+      valorCuota,
+      periodicidad,
+      natilleraDisponible: !!natillera,
+      natilleraNombre: natillera?.nombre,
+      natilleraMesInicio: natillera?.mes_inicio,
+      natilleraMesFin: natillera?.mes_fin,
+      natilleraAnio: natillera?.anio,
+      natilleraAnioInicio: natillera?.anio_inicio
+    })
+    
+    // Usar la nueva función batch que es ~10x más rápida
+    const result = await cuotasStore.generarCuotasBatchParaSocio(
+      natilleraId,
+      socioNatilleraId,
+      valorCuota,
+      periodicidad,
+      natillera
+    )
+    
+    console.log('📊 Resultado de generación:', result)
+    
+    if (result.success) {
+      progresoCreacion.value.cuotasGeneradas = result.cuotasGeneradas
+      console.log(`✅ Cuotas generadas exitosamente en ${result.tiempoMs?.toFixed(0) || 0}ms`)
+    } else {
+      console.error('❌ Error en generación:', result.error)
+    }
+    
+    return result
+  } catch (error) {
+    console.error('❌ Error generando cuotas automáticas:', error)
+    return { success: false, error: error.message, cuotasGeneradas: 0 }
+  }
+}
+
+function cerrarModalProgreso() {
+  modalProgreso.value = false
+  progresoCreacion.value = {
+    paso: 0,
+    mensaje: '',
+    cuotasGeneradas: 0,
+    cuotasTotales: 0,
+    error: null,
+    exito: false,
+    nombreSocio: ''
+  }
+}
+
 // Formatear valor de cuota con separadores de miles
 function formatearValorCuota(value) {
   if (!value && value !== 0) return ''
@@ -5028,6 +5873,203 @@ async function handleGuardarSocio() {
       console.log('🟢 socioEditando.value:', socioEditando.value)
       console.log('🟢 formSocio:', formSocio)
       
+      // Limpiar el teléfono y quitar el indicativo de país
+      const telefonoLimpio = limpiarNumeroTelefono(formSocio.telefono)
+      
+      // Detectar si cambió la periodicidad
+      const periodicidadAnterior = socioEditando.value.periodicidad || 'mensual'
+      const periodicidadNueva = formSocio.periodicidad || 'mensual'
+      const cambioPeriodicidad = periodicidadAnterior !== periodicidadNueva
+      
+      // Si cambió la periodicidad, necesitamos eliminar y regenerar cuotas
+      if (cambioPeriodicidad) {
+        // IMPORTANTE: Guardar TODOS los datos necesarios ANTES de cerrar el modal
+        // porque cerrarModalEditarSocio() resetea el formulario
+        const socioNatilleraId = socioEditando.value.id
+        const socioId = socioEditando.value.socio?.id || null
+        
+        // Guardar todos los valores del formulario antes de que se reseteen
+        const nombreGuardado = formSocio.nombre || socioEditando.value.socio?.nombre || ''
+        const telefonoGuardado = telefonoLimpio || socioEditando.value.socio?.telefono || ''
+        const emailGuardado = formSocio.email || socioEditando.value.socio?.email || null
+        const documentoGuardado = formSocio.documento || socioEditando.value.socio?.documento || null
+        const avatarSeedGuardado = formSocio.avatar_seed || socioEditando.value.socio?.avatar_seed || null
+        
+        // IMPORTANTE: Guardar el valor de cuota - usar el del formulario si es válido, sino el anterior
+        let valorCuotaGuardado = typeof formSocio.valor_cuota === 'string' 
+          ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
+          : Number(formSocio.valor_cuota) || 0
+        
+        // Si el valor del formulario es 0 o inválido, usar el valor anterior del socio
+        if (valorCuotaGuardado <= 0 || isNaN(valorCuotaGuardado)) {
+          valorCuotaGuardado = socioEditando.value.valor_cuota_individual || 0
+        }
+        
+        // Cerrar el modal de edición primero
+        cerrarModalEditarSocio()
+        
+        // Iniciar el modal de progreso
+        progresoCreacion.value = {
+          paso: 1,
+          mensaje: 'Actualizando periodicidad...',
+          cuotasGeneradas: 0,
+          cuotasTotales: 0,
+          error: null,
+          exito: false,
+          nombreSocio: nombreGuardado
+        }
+        modalProgreso.value = true
+
+        try {
+          // Paso 1: Actualizar datos del socio (sin periodicidad aún)
+          // IMPORTANTE: Usar los valores guardados antes de cerrar el modal
+          const datosActualizados = {
+            nombre: nombreGuardado,
+            telefono: telefonoGuardado
+          }
+          
+          // Solo incluir email si tiene valor (usar valor guardado)
+          if (emailGuardado && emailGuardado.trim() !== '') {
+            datosActualizados.email = emailGuardado.trim()
+          }
+          
+          // Solo incluir documento si tiene valor (no puede ser null por constraint de BD)
+          if (documentoGuardado && documentoGuardado.trim() !== '') {
+            datosActualizados.documento = documentoGuardado.trim()
+          }
+          
+          if (avatarSeedGuardado) {
+            datosActualizados.avatar_seed = avatarSeedGuardado
+          }
+
+          // OPTIMIZACIÓN: Verificar unicidad del teléfono y actualizar datos en paralelo si es posible
+          // (Solo si hay datos para actualizar)
+          if (socioId && Object.keys(datosActualizados).length > 2) { // Más que solo nombre y telefono
+            const [telefonoExiste, resultDatos] = await Promise.all([
+              sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId),
+              sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
+            ])
+            
+            if (!telefonoExiste) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+              estadoGuardadoSocio.value = ''
+              return
+            }
+            
+            if (!resultDatos.success) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
+              estadoGuardadoSocio.value = ''
+              return
+            }
+          } else if (socioId) {
+            // Si solo hay nombre y teléfono, verificar teléfono primero
+            const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId)
+            if (!telefonoExiste) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+              estadoGuardadoSocio.value = ''
+              return
+            }
+            
+            const resultDatos = await sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
+            if (!resultDatos.success) {
+              progresoCreacion.value.paso = 0
+              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
+              estadoGuardadoSocio.value = ''
+              return
+            }
+          }
+
+          // Paso 2: Eliminar todas las cuotas del socio
+          progresoCreacion.value.paso = 2
+          progresoCreacion.value.mensaje = 'Eliminando cuotas anteriores...'
+
+          const resultEliminar = await cuotasStore.eliminarTodasLasCuotasSocio(socioNatilleraId)
+          
+          if (!resultEliminar.success) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = resultEliminar.error || 'Error al eliminar las cuotas anteriores'
+            estadoGuardadoSocio.value = ''
+            return
+          }
+
+          // Paso 3: Actualizar periodicidad y valor de cuota
+          progresoCreacion.value.mensaje = 'Actualizando configuración...'
+          
+          // IMPORTANTE: Usar el valor de cuota guardado antes de cerrar el modal
+          const valorCuotaFinal = valorCuotaGuardado
+          
+          // Validar que el valor final sea válido
+          if (valorCuotaFinal <= 0 || isNaN(valorCuotaFinal)) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = 'El valor de la cuota debe ser mayor a cero'
+            estadoGuardadoSocio.value = ''
+            return
+          }
+
+          const result = await sociosStore.actualizarSocioNatillera(socioNatilleraId, {
+            valor_cuota_individual: valorCuotaFinal,
+            periodicidad: periodicidadNueva
+          })
+
+          if (!result.success) {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = result.error || 'Error al actualizar la periodicidad'
+            estadoGuardadoSocio.value = ''
+            return
+          }
+
+          // Paso 4: Generar nuevas cuotas
+          progresoCreacion.value.paso = 2
+          progresoCreacion.value.mensaje = 'Generando cuotas con nueva periodicidad...'
+          
+          // Asegurar que la natillera esté cargada
+          let natillera = natillerasStore.natilleraActual
+          if (!natillera || natillera.id !== id) {
+            await natillerasStore.fetchNatillera(id)
+            natillera = natillerasStore.natilleraActual
+          }
+          
+          const resultCuotas = await generarCuotasParaSocio(
+            id,
+            socioNatilleraId,
+            natillera,
+            valorCuotaFinal,
+            periodicidadNueva
+          )
+
+          if (resultCuotas.success) {
+            progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
+            progresoCreacion.value.paso = 3
+            progresoCreacion.value.exito = true
+            progresoCreacion.value.mensaje = '¡Periodicidad actualizada exitosamente!'
+            
+            // OPTIMIZACIÓN: Recargar cuotas y actualizar socio en paralelo
+            await Promise.all([
+              cuotasStore.fetchCuotasNatillera(id),
+              sociosStore.fetchSociosNatillera(id)
+            ])
+            
+            // Cerrar modal después de 1.5 segundos
+            setTimeout(() => {
+              cerrarModalProgreso()
+            }, 1500)
+          } else {
+            progresoCreacion.value.paso = 0
+            progresoCreacion.value.error = resultCuotas.error || 'Error al generar las nuevas cuotas'
+          }
+        } catch (error) {
+          progresoCreacion.value.paso = 0
+          progresoCreacion.value.error = error.message || 'Error inesperado al cambiar la periodicidad'
+        } finally {
+          estadoGuardadoSocio.value = ''
+        }
+        return
+      }
+
+      // Si no cambió la periodicidad, actualizar normalmente
       // Actualizar cuota del socio en socios_natillera
       // Asegurar que el valor sea un número y se guarde exactamente como se ingresa
       const valorCuotaNumerico = typeof formSocio.valor_cuota === 'string' 
@@ -5061,9 +6103,17 @@ async function handleGuardarSocio() {
 
       // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
       if (socioEditando.value.socio?.id) {
+        // Verificar unicidad del teléfono dentro de la natillera (excepto el propio socio)
+        const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioEditando.value.socio.id)
+        if (!telefonoExiste) {
+          errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+          estadoGuardadoSocio.value = ''
+          return
+        }
+
         const datosActualizados = {
           nombre: formSocio.nombre,
-          telefono: formSocio.telefono || null,
+          telefono: telefonoLimpio,
           email: formSocio.email || null,
           documento: formSocio.documento || null
         }
@@ -5085,7 +6135,13 @@ async function handleGuardarSocio() {
         )
         
         if (!resultDatos.success) {
-          throw new Error(resultDatos.error || 'Error al actualizar los datos del socio')
+          if (resultDatos.error?.includes('unique') || resultDatos.error?.includes('duplicate')) {
+            errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
+          } else {
+            errorSocio.value = resultDatos.error || 'Error al actualizar los datos del socio'
+          }
+          estadoGuardadoSocio.value = ''
+          return
         }
       }
 
@@ -5097,92 +6153,16 @@ async function handleGuardarSocio() {
       console.log('✅ Socio_natillera actualizado correctamente')
       
       if (result.success) {
-        // Cambiar estado a "generando cuotas"
-        estadoGuardadoSocio.value = 'generando'
-        
-        // Usar el mes seleccionado en la vista de cuotas (como si se usara el menú de generar cuotas)
-        const mesParaGenerar = mesSeleccionado.value || (new Date().getMonth() + 1)
-        
-        // Obtener días de gracia de la natillera
-        const { data: natillera } = await supabase
-          .from('natilleras')
-          .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
-          .eq('id', id)
-          .single()
-        
-        const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
-        
-        // Usar anio_inicio como año base, con fallback a anio si no existe
-        const anioBase = natillera?.anio_inicio !== null && natillera?.anio_inicio !== undefined 
-          ? Number(natillera.anio_inicio) 
-          : (natillera?.anio !== null && natillera?.anio !== undefined 
-            ? Number(natillera.anio) 
-            : anioNatillera.value)
-        
-        // Calcular el año correcto para este mes basándose en el período de la natillera
-        const anioParaGenerar = calcularAnioMes(
-          mesParaGenerar,
-          natillera?.mes_inicio || mesInicio.value,
-          natillera?.mes_fin || mesFin.value,
-          anioBase
-        )
-        
-        // Calcular fechas por defecto para el mes seleccionado
-        const fechasPorDefecto = calcularFechasPorDefecto(mesParaGenerar, anioParaGenerar, diasGracia)
-        
-        // Obtener el nombre del mes para el label
-        const mesLabel = todosMeses.find(m => m.value === mesParaGenerar)?.label || ''
-        
-        // Función para calcular fecha de vencimiento (sumando días de gracia a la fecha límite)
-        function calcularFechaVencimiento(fechaLimiteStr) {
-          if (!fechaLimiteStr) return fechaLimiteStr
-          // Parsear la fecha manualmente para evitar problemas de zona horaria
-          const [anio, mes, dia] = fechaLimiteStr.split('-').map(Number)
-          const fechaLimite = new Date(anio, mes - 1, dia)
-          fechaLimite.setDate(fechaLimite.getDate() + diasGracia)
-          // Formatear manualmente para evitar problemas de zona horaria
-          const year = fechaLimite.getFullYear()
-          const month = String(fechaLimite.getMonth() + 1).padStart(2, '0')
-          const day = String(fechaLimite.getDate()).padStart(2, '0')
-          return `${year}-${month}-${day}`
-        }
-        
-        // Generar cuotas solo para el socio editado (mismo proceso que el menú "Generar Cuotas")
-        try {
-          const resultGenerar = await cuotasStore.generarCuotasPeriodo(
-            id,
-            {
-              mensual: { 
-                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
-                limite: fechasPorDefecto.fecha_quincena2 
-              },
-              quincena1: { 
-                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena1), 
-                limite: fechasPorDefecto.fecha_quincena1 
-              },
-              quincena2: { 
-                vencimiento: calcularFechaVencimiento(fechasPorDefecto.fecha_quincena2), 
-                limite: fechasPorDefecto.fecha_quincena2 
-              }
-            },
-            mesLabel,
-            mesParaGenerar,
-            anioParaGenerar,
-            socioEditando.value.id // Solo para el socio editado
-          )
-          
-          if (resultGenerar.success) {
-            console.log(`✅ Cuotas regeneradas para el socio ${formSocio.nombre} en ${mesLabel} ${anioParaGenerar}`)
-          }
-        } catch (error) {
-          console.error('Error regenerando cuotas:', error)
-          // No mostrar error al usuario, solo loguear
+        // Los stores ya actualizan localmente los datos, no es necesario recargar
+        // Solo recargar cuotas si cambió el valor de cuota individual
+        const cuotaCambio = socioEditando.value.valor_cuota_individual !== valorCuotaNumerico
+        if (cuotaCambio) {
+          // Recargar cuotas para ver los cambios
+          await cuotasStore.fetchCuotasNatillera(id)
         }
         
         // Recargar datos de los socios para actualizar la vista
         await sociosStore.fetchSociosNatillera(id)
-        // Recargar cuotas para ver los cambios (importante: después de actualizar socios)
-        await cuotasStore.fetchCuotasNatillera(id)
         cargarConteoSocios() // Recargar conteo de socios también
         estadoGuardadoSocio.value = ''
         cerrarModalEditarSocio()
@@ -5563,7 +6543,9 @@ async function handleRegistrarPago() {
 
   const result = await cuotasStore.registrarPago(
     cuotaSeleccionada.value.id,
-    valorPagado
+    valorPagado,
+    null, // comprobante
+    formPago.tipo_pago // tipo_pago
   )
 
   if (result.success) {
@@ -5616,6 +6598,7 @@ async function handleRegistrarPago() {
       valorSancionPagada, // Cuánto de sanción se pagó
       valorCuotaPagada, // Cuánto de cuota se pagó
       tieneSancion: sancionTotal > 0, // Indica si hay sanción
+      tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
@@ -5640,6 +6623,9 @@ async function handleRegistrarPago() {
     modalPago.value = false
     modalConfirmacion.value = true
     cuotaSeleccionada.value = null
+    // Reiniciar formulario
+    formPago.valor = 0
+    formPago.tipo_pago = 'efectivo'
     
     // Recargar cuotas para actualizar el resumen
     await cuotasStore.fetchCuotasNatillera(id)
@@ -5662,15 +6648,17 @@ function generarImagenComprobante() {
       const codigoComprobante = pagoRegistrado.value?.codigoComprobante
       const tieneSancion = pagoRegistrado.value?.tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0
       const width = 480
-      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior o desglose de sanción
+      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior, desglose de sanción o tipo de pago
       let height = 680
       if (tieneSancion) {
         height += 60 // Espacio adicional para el desglose
       }
+      // Agregar espacio para el tipo de pago (siempre se muestra)
+      height += 75
       if (esParcial) {
-        height = 790 + (tieneSancion ? 60 : 0)
+        height = 790 + (tieneSancion ? 60 : 0) + 75
       } else if (teniaPagoParcial) {
-        height = 750 + (tieneSancion ? 60 : 0) // Espacio para información de pago anterior
+        height = 750 + (tieneSancion ? 60 : 0) + 75 // Espacio para información de pago anterior
       }
       const scale = 2
       
@@ -5735,10 +6723,12 @@ function generarImagenComprobante() {
       if (tieneSancion) {
         cardHeight += 60 // Espacio adicional para el desglose
       }
+      // Agregar espacio para el tipo de pago (siempre se muestra)
+      cardHeight += 75
       if (esParcial) {
-        cardHeight = 600 + (tieneSancion ? 60 : 0)
+        cardHeight = 600 + (tieneSancion ? 60 : 0) + 75
       } else if (teniaPagoParcial) {
-        cardHeight = 550 + (tieneSancion ? 60 : 0) // Espacio para información de pago anterior
+        cardHeight = 550 + (tieneSancion ? 60 : 0) + 75 // Espacio para información de pago anterior
       }
       const cardMargin = 24
       
@@ -6147,6 +7137,53 @@ function generarImagenComprobante() {
       ctx.font = 'bold 15px Arial'
       ctx.fillText(pagoRegistrado.value?.fecha || 'Fecha no disponible', cardInnerX + 18, fechaY + 46)
       
+      // Card: Tipo de Pago con mejor estilo y fondo blanco para contraste
+      const tipoPagoY = fechaY + 75
+      // Fondo blanco sólido para mejor contraste
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, tipoPagoY, cardInnerWidth, 62, 14)
+      ctx.fill()
+      
+      // Sombra sutil en las cards
+      ctx.shadowColor = 'rgba(0,0,0,0.08)'
+      ctx.shadowBlur = 6
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 3
+      
+      const tipoPago = pagoRegistrado.value?.tipoPago || 'efectivo'
+      const esTransferencia = tipoPago === 'transferencia'
+      
+      // Borde según el tipo de pago
+      ctx.strokeStyle = esTransferencia ? '#3b82f6' : '#22c55e'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, tipoPagoY, cardInnerWidth, 62, 14)
+      ctx.stroke()
+      
+      // Resetear sombra
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      // Label "FORMA DE PAGO"
+      ctx.fillStyle = esTransferencia ? '#3b82f6' : '#22c55e'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('FORMA DE PAGO', cardInnerX + 18, tipoPagoY + 24)
+      
+      // Icono y texto del tipo de pago con color según tipo
+      ctx.fillStyle = esTransferencia ? '#3b82f6' : '#22c55e'
+      ctx.font = 'bold 16px Arial'
+      const tipoPagoTexto = esTransferencia ? '💳 Transferencia' : '💵 Efectivo'
+      ctx.fillText(tipoPagoTexto, cardInnerX + 18, tipoPagoY + 46)
+      
+      // Ajustar altura de la tarjeta si es necesario
+      if (tipoPagoY + 75 > cardY + cardHeight) {
+        cardHeight = tipoPagoY + 75 - cardY
+      }
+      
       // === BOTÓN DE CONFIRMACIÓN ===
       // El botón debe quedar fuera de la tarjeta blanca, al final, igual en ambos casos
       const btnY = cardY + cardHeight + 20
@@ -6473,6 +7510,7 @@ function reenviarComprobante(cuota) {
     valorSancionPagada, // Cuánto de sanción se pagó
     valorCuotaPagada, // Cuánto de cuota se pagó
     tieneSancion: sancionTotal > 0, // Indica si hay sanción
+    tipoPago: cuota.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
     fecha: cuota.fecha_pago 
       ? new Date(cuota.fecha_pago).toLocaleDateString('es-CO', {
           year: 'numeric',
@@ -6816,6 +7854,7 @@ function confirmarBorrarCuotasMes() {
 function quitarFiltros() {
   filtroEstado.value = 'todos'
   filtroPeriodicidad.value = 'todos'
+  filtroTipoPago.value = 'todos'
   busquedaCuotas.value = ''
   mostrarFiltros.value = false
 }

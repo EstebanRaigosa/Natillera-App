@@ -912,6 +912,21 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         return sum + valorCuota
       }, 0)
 
+    // Calcular recaudado por tipo de pago
+    const totalRecaudadoEfectivo = cuotas
+      .filter(c => c.estado === 'pagada' && c.tipo_pago === 'efectivo')
+      .reduce((sum, c) => {
+        const valorCuota = c.valor_cuota || 0
+        return sum + valorCuota
+      }, 0)
+
+    const totalRecaudadoTransferencia = cuotas
+      .filter(c => c.estado === 'pagada' && c.tipo_pago === 'transferencia')
+      .reduce((sum, c) => {
+        const valorCuota = c.valor_cuota || 0
+        return sum + valorCuota
+      }, 0)
+
     // Calcular totalPendiente: incluir valor de cuota pendiente + sanciones pendientes
     const cuotasPendientes = cuotas.filter(c => {
       return c.estado !== 'pagada' && c.estado !== 'programada'
@@ -1042,7 +1057,9 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalPendiente,
       utilidadActividades,
       utilidadesRecogidas,
-      fondoTotal: totalAportado + utilidadesRecogidas
+      fondoTotal: totalAportado + utilidadesRecogidas,
+      totalRecaudadoEfectivo,
+      totalRecaudadoTransferencia
     }
   }
 

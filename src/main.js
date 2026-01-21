@@ -108,6 +108,115 @@ if (typeof window !== 'undefined' && !isDevelopment) {
   }, { passive: true })
 }
 
+// Optimizaciones específicas para iOS/iPhone
+if (typeof window !== 'undefined') {
+  // Detectar iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  
+  if (isIOS) {
+    // Prevenir zoom en doble tap SOLO en elementos no interactivos (no en botones)
+    let lastTouchEnd = 0
+    let touchStartTarget = null
+    
+    document.addEventListener('touchstart', function(event) {
+      // Guardar el elemento que recibió el touchstart
+      touchStartTarget = event.target
+    }, { passive: true })
+    
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now()
+      const target = event.target || touchStartTarget
+      
+      // NUNCA prevenir eventos en botones o elementos interactivos
+      const isInteractive = target && (
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'A' ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'SELECT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.closest('button') ||
+        target.closest('a[href]') ||
+        target.closest('[role="button"]') ||
+        target.closest('[onclick]') ||
+        target.closest('label') ||
+        target.isContentEditable
+      )
+      
+      // Solo prevenir zoom en doble tap si NO es un elemento interactivo
+      if (!isInteractive && now - lastTouchEnd <= 300) {
+        event.preventDefault()
+      }
+      
+      lastTouchEnd = now
+      touchStartTarget = null
+    }, false)
+    
+    // Mejorar respuesta de botones en iOS
+    // Agregar clase 'ios-device' al body para estilos específicos
+    document.body.classList.add('ios-device')
+    
+    // Asegurar que los botones siempre funcionen correctamente en iOS
+    // Agregar listener para mejorar la detección de touch en botones
+    document.addEventListener('touchstart', function(event) {
+      const target = event.target
+      const button = target.closest('button') || 
+                     target.closest('[role="button"]') ||
+                     (target.tagName === 'BUTTON' ? target : null) ||
+                     (target.tagName === 'A' && target.hasAttribute('href') ? target : null)
+      
+      if (button && !button.disabled && !button.hasAttribute('disabled')) {
+        // Agregar clase temporal para feedback visual
+        button.classList.add('touch-active')
+        
+        // Asegurar que el botón tenga los estilos correctos
+        button.style.pointerEvents = 'auto'
+        button.style.cursor = 'pointer'
+        
+        // Remover clase después de un tiempo
+        setTimeout(() => {
+          if (button) {
+            button.classList.remove('touch-active')
+          }
+        }, 200)
+      }
+    }, { passive: true })
+    
+    // Optimizar scroll en iOS
+    document.addEventListener('touchmove', function(event) {
+      // Permitir scroll nativo en elementos scrollables
+      const target = event.target
+      if (target && (target.scrollHeight > target.clientHeight || 
+          target.closest('[style*="overflow"]') || 
+          target.closest('.overflow-auto') ||
+          target.closest('.overflow-scroll'))) {
+        return
+      }
+    }, { passive: true })
+    
+    // Mejorar rendimiento de animaciones en iOS
+    // Reducir animaciones complejas si el dispositivo es lento
+    const isSlowDevice = navigator.hardwareConcurrency <= 2 || 
+                        (navigator.deviceMemory && navigator.deviceMemory <= 2)
+    
+    if (isSlowDevice) {
+      document.body.classList.add('slow-device')
+    }
+  }
+  
+  // Optimización universal para mejorar respuesta táctil
+  // Eliminar delay de 300ms en todos los dispositivos táctiles
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    // Agregar clase para estilos específicos de dispositivos táctiles
+    document.body.classList.add('touch-device')
+    
+    // Mejorar respuesta de botones en todos los dispositivos táctiles
+    document.addEventListener('touchstart', function() {
+      // Este listener pasivo ayuda a mejorar la respuesta
+    }, { passive: true })
+  }
+}
+
 const app = createApp(App)
 
 app.use(createPinia())

@@ -1066,6 +1066,16 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const tiempoInicio = performance.now()
 
+      // Obtener el nombre de la natillera
+      const { data: natillera, error: natilleraError } = await supabase
+        .from('natilleras')
+        .select('nombre')
+        .eq('id', natilleraId)
+        .single()
+
+      if (natilleraError) throw natilleraError
+      const nombreNatillera = natillera?.nombre || ''
+
       // Construir query para obtener socios activos (incluyendo nombre para auditoría)
       let query = supabase
         .from('socios_natillera')
@@ -1212,6 +1222,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             
             // Crear primera quincena CON el pago migrado
             const estadoQ1 = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaQuincena1.vencimiento, fechaQuincena1.limite)
+            const nombreSocio = socio.socio?.nombre || ''
             cuotasACrear.push({
               socio_natillera_id: socio.id,
               valor_cuota: nuevoValorCuota,
@@ -1220,7 +1231,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fecha_limite: fechaQuincena1.limite,
               mes, anio, quincena: 1,
               estado: estadoQ1,
-              descripcion: `${mesLabel} - 1ra Quincena`
+              descripcion: `${mesLabel} - 1ra Quincena`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
             
             // Crear segunda quincena SIN pago
@@ -1232,7 +1245,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fecha_limite: fechaQuincena2.limite,
               mes, anio, quincena: 2,
               estado: calcularEstadoInicial(fechaQuincena2.vencimiento, fechaQuincena2.limite),
-              descripcion: `${mesLabel} - 2da Quincena`
+              descripcion: `${mesLabel} - 2da Quincena`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
           } else {
             // Caso normal: ya era quincenal o no tenía cuotas
@@ -1242,15 +1257,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
               const valorPagado = cuotaQ1.valor_pagado || 0
               const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ1.estado, fechaQuincena1.vencimiento, fechaQuincena1.limite)
               datosAnterioresPorId[cuotaQ1.id] = { ...cuotaQ1, socio }
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasAActualizar.push({
                 id: cuotaQ1.id,
                 fecha_vencimiento: fechaQuincena1.vencimiento,
                 fecha_limite: fechaQuincena1.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
-                descripcion: `${mesLabel} - 1ra Quincena`
+                descripcion: `${mesLabel} - 1ra Quincena`,
+                nombre_socio: nombreSocio
               })
             } else {
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasACrear.push({
                 socio_natillera_id: socio.id,
                 valor_cuota: nuevoValorCuota,
@@ -1259,7 +1277,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_limite: fechaQuincena1.limite,
                 mes, anio, quincena: 1,
                 estado: calcularEstadoInicial(fechaQuincena1.vencimiento, fechaQuincena1.limite),
-                descripcion: `${mesLabel} - 1ra Quincena`
+                descripcion: `${mesLabel} - 1ra Quincena`,
+                nombre_natillera: nombreNatillera,
+                nombre_socio: nombreSocio
               })
             }
 
@@ -1268,15 +1288,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
               const valorPagado = cuotaQ2.valor_pagado || 0
               const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaQ2.estado, fechaQuincena2.vencimiento, fechaQuincena2.limite)
               datosAnterioresPorId[cuotaQ2.id] = { ...cuotaQ2, socio }
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasAActualizar.push({
                 id: cuotaQ2.id,
                 fecha_vencimiento: fechaQuincena2.vencimiento,
                 fecha_limite: fechaQuincena2.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
-                descripcion: `${mesLabel} - 2da Quincena`
+                descripcion: `${mesLabel} - 2da Quincena`,
+                nombre_socio: nombreSocio
               })
             } else {
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasACrear.push({
                 socio_natillera_id: socio.id,
                 valor_cuota: nuevoValorCuota,
@@ -1285,7 +1308,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_limite: fechaQuincena2.limite,
                 mes, anio, quincena: 2,
                 estado: calcularEstadoInicial(fechaQuincena2.vencimiento, fechaQuincena2.limite),
-                descripcion: `${mesLabel} - 2da Quincena`
+                descripcion: `${mesLabel} - 2da Quincena`,
+                nombre_natillera: nombreNatillera,
+                nombre_socio: nombreSocio
               })
             }
           }
@@ -1322,6 +1347,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             
             // Crear cuota mensual CON los pagos migrados
             const estadoMensual = calcularNuevoEstado(pagoMigrado, nuevoValorCuota, 'pendiente', fechaMensual.vencimiento, fechaMensual.limite)
+            const nombreSocio = socio.socio?.nombre || ''
             cuotasACrear.push({
               socio_natillera_id: socio.id,
               valor_cuota: nuevoValorCuota,
@@ -1330,7 +1356,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fecha_limite: fechaMensual.limite,
               mes, anio, quincena: null,
               estado: estadoMensual,
-              descripcion: `Cuota ${mesLabel}`
+              descripcion: `Cuota ${mesLabel}`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
           } else {
             // Caso normal: ya era mensual o no tenía cuotas
@@ -1339,15 +1367,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
               const valorPagado = cuotaMensual.valor_pagado || 0
               const nuevoEstado = calcularNuevoEstado(valorPagado, nuevoValorCuota, cuotaMensual.estado, fechaMensual.vencimiento, fechaMensual.limite)
               datosAnterioresPorId[cuotaMensual.id] = { ...cuotaMensual, socio }
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasAActualizar.push({
                 id: cuotaMensual.id,
                 fecha_vencimiento: fechaMensual.vencimiento,
                 fecha_limite: fechaMensual.limite,
                 valor_cuota: nuevoValorCuota,
                 estado: nuevoEstado,
-                descripcion: `Cuota ${mesLabel}`
+                descripcion: `Cuota ${mesLabel}`,
+                nombre_socio: nombreSocio
               })
             } else {
+              const nombreSocio = socio.socio?.nombre || ''
               cuotasACrear.push({
                 socio_natillera_id: socio.id,
                 valor_cuota: nuevoValorCuota,
@@ -1356,7 +1387,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 fecha_limite: fechaMensual.limite,
                 mes, anio, quincena: null,
                 estado: calcularEstadoInicial(fechaMensual.vencimiento, fechaMensual.limite),
-                descripcion: `Cuota ${mesLabel}`
+                descripcion: `Cuota ${mesLabel}`,
+                nombre_natillera: nombreNatillera,
+                nombre_socio: nombreSocio
               })
             }
           }
@@ -1415,7 +1448,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fecha_limite: cuota.fecha_limite,
               valor_cuota: cuota.valor_cuota,
               estado: cuota.estado,
-              descripcion: cuota.descripcion
+              descripcion: cuota.descripcion,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: cuota.nombre_socio || null
             })
             .eq('id', cuota.id)
             .select()
@@ -1560,7 +1595,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return codigo
   }
 
-  async function registrarPago(cuotaId, valorPagado, comprobante = null) {
+  async function registrarPago(cuotaId, valorPagado, comprobante = null, tipoPago = null) {
     try {
       loading.value = true
       error.value = null
@@ -1833,6 +1868,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
         estado: nuevaEstado,
         fecha_pago: fechaPagoActualizada,
         comprobante_url: comprobante
+      }
+      
+      // Agregar tipo_pago si se proporciona
+      if (tipoPago) {
+        updateData.tipo_pago = tipoPago
       }
       
       // Actualizar valor_multa en la BD
@@ -2414,12 +2454,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const [sociosResult, natilleraResult] = await Promise.all([
         supabase
           .from('socios_natillera')
-          .select('id, periodicidad, valor_cuota_individual')
+          .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre)')
           .eq('natillera_id', natilleraId)
           .eq('estado', 'activo'),
         supabase
           .from('natilleras')
-          .select('reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
+          .select('nombre, reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
           .eq('id', natilleraId)
           .single()
       ])
@@ -2429,6 +2469,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       
       const sociosRapido = sociosResult.data
       const natillera = natilleraResult.data
+      const nombreNatillera = natillera?.nombre || ''
 
       if (!sociosRapido || sociosRapido.length === 0) {
         return { success: false, error: 'No hay socios activos' }
@@ -2593,10 +2634,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
 
-      // Obtener información completa de los socios que necesitan cuota (con valor_cuota_individual)
+      // Obtener información completa de los socios que necesitan cuota (con valor_cuota_individual y nombre)
       const { data: sociosCompletos, error: sociosCompletosError } = await supabase
         .from('socios_natillera')
-        .select('id, periodicidad, valor_cuota_individual')
+        .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre)')
         .in('id', sociosSinCuota)
         .eq('estado', 'activo')
       
@@ -2617,6 +2658,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           const tieneQ2 = cuotasDelSocio.some(c => c.quincena === 2)
           
           // Crear solo las quincenas que faltan
+          const nombreSocio = socio.socio?.nombre || ''
           if (!tieneQ1) {
             cuotasACrear.push({
               socio_natillera_id: socio.id,
@@ -2628,7 +2670,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               anio: anioAGenerar,
               quincena: 1,
               estado: calcularEstadoInicial(fechaVencimientoQuincena1Str, fechaLimiteQuincena1Str),
-              descripcion: `${mesLabel} - 1ra Quincena`
+              descripcion: `${mesLabel} - 1ra Quincena`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
           }
           
@@ -2643,7 +2687,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               anio: anioAGenerar,
               quincena: 2,
               estado: calcularEstadoInicial(fechaVencimientoQuincena2Str, fechaLimiteQuincena2Str),
-              descripcion: `${mesLabel} - 2da Quincena`
+              descripcion: `${mesLabel} - 2da Quincena`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
           }
         } else {
@@ -2651,6 +2697,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
           
           if (!tieneMensual) {
+            const nombreSocio = socio.socio?.nombre || ''
             cuotasACrear.push({
               socio_natillera_id: socio.id,
               valor_cuota: valorCuota,
@@ -2661,7 +2708,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
               anio: anioAGenerar,
               quincena: null,
               estado: calcularEstadoInicial(fechaVencimientoQuincena2Str, fechaLimiteQuincena2Str),
-              descripcion: `Cuota ${mesLabel}`
+              descripcion: `Cuota ${mesLabel}`,
+              nombre_natillera: nombreNatillera,
+              nombre_socio: nombreSocio
             })
           }
         }
@@ -3110,10 +3159,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
       
       // IMPORTANTE: Obtener datos frescos de la natillera directamente de la BD
-      // para asegurar que tenemos todos los campos necesarios
+      // para asegurar que tenemos todos los campos necesarios, especialmente el nombre
       let natillera = natilleraParam
       
-      if (!natillera || !natillera.mes_inicio || !natillera.mes_fin) {
+      // Si no hay natillera o le faltan campos importantes, obtenerla desde BD
+      // También verificar que tenga el nombre para asegurar que se guarde en las cuotas
+      if (!natillera || !natillera.mes_inicio || !natillera.mes_fin || !natillera.nombre) {
         console.log('📡 Obteniendo datos de natillera desde BD...')
         const { data: natilleraDB, error: natilleraError } = await supabase
           .from('natilleras')
@@ -3139,6 +3190,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
         anio_inicio: natillera.anio_inicio,
         reglas_multas: natillera.reglas_multas
       })
+      
+      // Obtener el nombre del socio
+      const { data: socioNatillera, error: socioError } = await supabase
+        .from('socios_natillera')
+        .select('socio:socios(id, nombre)')
+        .eq('id', socioNatilleraId)
+        .single()
+      
+      if (socioError) {
+        console.error('⚠️ Error obteniendo nombre del socio:', socioError)
+      }
+      
+      const nombreSocio = socioNatillera?.socio?.nombre || ''
       
       // Obtener configuración de días de gracia
       const reglasMultas = natillera.reglas_multas || {}
@@ -3253,7 +3317,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
             fecha_limite: fechaLimiteQ1,
             fecha_vencimiento: fechaVencimientoQ1,
             estado: calcularEstado(fechaVencimientoQ1, fechaLimiteQ1),
-            descripcion: `${mesLabel} - 1ra Quincena`
+            descripcion: `${mesLabel} - 1ra Quincena`,
+            nombre_natillera: natillera.nombre || '',
+            nombre_socio: nombreSocio
           })
           
           // Segunda quincena
@@ -3270,7 +3336,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
             fecha_limite: fechaLimiteQ2,
             fecha_vencimiento: fechaVencimientoQ2,
             estado: calcularEstado(fechaVencimientoQ2, fechaLimiteQ2),
-            descripcion: `${mesLabel} - 2da Quincena`
+            descripcion: `${mesLabel} - 2da Quincena`,
+            nombre_natillera: natillera.nombre || '',
+            nombre_socio: nombreSocio
           })
         } else {
           // Mensual
@@ -3292,7 +3360,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
             fecha_limite: fechaLimite,
             fecha_vencimiento: fechaVencimiento,
             estado: calcularEstado(fechaVencimiento, fechaLimite),
-            descripcion: `Cuota ${mesLabel}`
+            descripcion: `Cuota ${mesLabel}`,
+            nombre_natillera: natillera.nombre || '',
+            nombre_socio: nombreSocio
           })
         }
       }

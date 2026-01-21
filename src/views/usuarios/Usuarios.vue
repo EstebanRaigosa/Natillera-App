@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl mx-auto space-y-6">
+  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6">
     <!-- Header -->
     <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
       <!-- Efectos decorativos -->

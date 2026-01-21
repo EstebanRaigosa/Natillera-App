@@ -1,10 +1,32 @@
 <template>
   <div class="min-h-screen flex">
+    <!-- Área de activación hover (solo en lg, 1024px-1279px) -->
+    <div 
+      v-if="isLgScreen && !sidebarHover"
+      @mouseenter="sidebarHover = true; hoverAreaActive = true"
+      @mouseleave="hoverAreaActive = false"
+      class="fixed inset-y-0 left-0 w-5 z-50 group cursor-pointer"
+      style="background: transparent;"
+    >
+      <!-- Indicador visual -->
+      <div 
+        class="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-28 bg-gradient-to-r from-natillera-500/90 to-emerald-500/90 backdrop-blur-sm rounded-r-xl flex items-center justify-center shadow-xl border-r-2 border-natillera-400/60 transition-all duration-300 group-hover:from-natillera-500 group-hover:to-emerald-500 group-hover:w-6 group-hover:h-32 group-hover:shadow-2xl"
+      >
+        <ChevronRightIcon class="w-5 h-5 text-white transition-all duration-300 group-hover:scale-110" :class="hoverAreaActive ? 'animate-pulse' : 'animate-pulse'" />
+      </div>
+    </div>
+    
     <!-- Sidebar -->
     <aside 
+      @mouseenter="clearSidebarTimeout(); sidebarHover = true; hoverAreaActive = false"
+      @mouseleave="startSidebarTimeout()"
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-r border-emerald-600/30 transform transition-transform duration-300 lg:translate-x-0 lg:static',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        'fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-r border-emerald-600/30 transform transition-transform duration-300',
+        // En pantallas xl (1280px+): siempre visible y estático
+        'xl:translate-x-0 xl:static',
+        // En lg (1024px-1279px): oculto por defecto, visible con hover
+        // En móvil/tablet (<1024px): controlado por sidebarOpen
+        (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
       <div class="flex flex-col h-full">
@@ -265,9 +287,15 @@
 
     <!-- Usuario - Siempre visible fijo en la parte inferior izquierda -->
     <div 
+      @mouseenter="handleUserPanelMouseEnter"
+      @mouseleave="handleUserPanelMouseLeave"
       :class="[
         'fixed bottom-0 left-0 w-72 p-3 z-50 transition-all duration-300',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        // En xl (1280px+): siempre visible
+        'xl:translate-x-0',
+        // En lg (1024px-1279px): visible con hover
+        // En móvil: controlado por sidebarOpen
+        (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
       <div class="user-panel group">
@@ -307,7 +335,7 @@
 
     <!-- Overlay móvil -->
     <div 
-      v-if="sidebarOpen"
+      v-if="sidebarOpen && !isLgScreen"
       @click="sidebarOpen = false"
       class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
     ></div>
@@ -332,7 +360,7 @@
 
       <!-- Contenido de la página -->
       <div 
-        class="flex-1 p-3 sm:p-4 lg:p-8 w-full min-h-0"
+        class="flex-1 p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
         :class="route.params.id ? 'pb-20 lg:pb-3' : 'pb-3'"
       >
         <router-view />
@@ -378,6 +406,7 @@ import {
   Bars3Icon,
   Cog6ToothIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   UsersIcon,
   CurrencyDollarIcon,
   CalendarIcon,
@@ -397,9 +426,13 @@ const natillerasStore = useNatillerasStore()
 const supportStore = useSupportStore()
 const notificationStore = useNotificationStore()
 const sidebarOpen = ref(false)
+const sidebarHover = ref(false) // Para controlar el hover en pantallas lg (1024px)
+const hoverAreaActive = ref(false) // Para mostrar el indicador cuando el mouse está cerca
 const natilleraExpandida = ref(null)
 const previousUnreadCount = ref(0)
 const tooltipVisible = ref(null) // ID de la natillera cuyo tooltip está visible en móvil
+const isLgScreen = ref(false) // Detecta si estamos en breakpoint lg (1024px)
+let sidebarHoverTimeout = null // Timeout para cerrar el sidebar con delay
 
 // Verificar si el usuario es admin (raigo.16@gmail.com)
 const isAdmin = computed(() => {
@@ -538,7 +571,51 @@ function cerrarTooltipSiEsNecesario(event) {
   }
 }
 
+function clearSidebarTimeout() {
+  if (sidebarHoverTimeout) {
+    clearTimeout(sidebarHoverTimeout)
+    sidebarHoverTimeout = null
+  }
+}
+
+function startSidebarTimeout() {
+  clearSidebarTimeout()
+  // Pequeño delay antes de cerrar para permitir movimiento del mouse entre sidebar y panel de usuario
+  sidebarHoverTimeout = setTimeout(() => {
+    if (isLgScreen.value) {
+      sidebarHover.value = false
+    }
+  }, 150) // 150ms de delay
+}
+
+function handleUserPanelMouseEnter() {
+  clearSidebarTimeout()
+  if (isLgScreen.value) {
+    sidebarHover.value = true
+  }
+}
+
+function handleUserPanelMouseLeave() {
+  if (isLgScreen.value) {
+    startSidebarTimeout()
+  }
+}
+
+function actualizarTamañoPantalla() {
+  const width = window.innerWidth
+  isLgScreen.value = width >= 1024 && width < 1280
+  // Si salimos del rango lg, resetear el hover
+  if (!isLgScreen.value) {
+    clearSidebarTimeout()
+    sidebarHover.value = false
+  }
+}
+
 onMounted(async () => {
+  // Detectar tamaño de pantalla inicial
+  actualizarTamañoPantalla()
+  window.addEventListener('resize', actualizarTamañoPantalla)
+  
   // Cargar todas las natilleras (propias y compartidas)
   await natillerasStore.fetchTodasLasNatilleras()
   
@@ -556,7 +633,10 @@ onMounted(async () => {
 onUnmounted(() => {
   // Detener verificación al desmontar
   supportStore.stopChecking()
+  // Limpiar timeout
+  clearSidebarTimeout()
   // Remover listeners
+  window.removeEventListener('resize', actualizarTamañoPantalla)
   document.removeEventListener('touchstart', cerrarTooltipSiEsNecesario)
   document.removeEventListener('click', cerrarTooltipSiEsNecesario)
 })
