@@ -3940,6 +3940,12 @@ watch(socioAEliminar, (value) => {
 
 // Función para navegar a la vista de cuotas con el mes seleccionado
 function navegarACuotasMes(mes) {
+  // Validar que el ID sea válido antes de navegar
+  if (!id || id === 'undefined' || id === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', id)
+    router.push('/dashboard')
+    return
+  }
   // Cerrar la modal primero
   cerrarModalCuotasSocio()
   // Navegar a la vista de cuotas con el mes como parámetro de ruta
@@ -4447,11 +4453,23 @@ const totalCuotasEnMora = computed(() => {
 
 // Navegar a préstamos
 function irAPrestamos() {
+  // Validar que el ID sea válido antes de navegar
+  if (!id || id === 'undefined' || id === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', id)
+    router.push('/dashboard')
+    return
+  }
   router.push(`/natilleras/${id}/prestamos`)
 }
 
 // Navegar a cuotas
 function irACuotas() {
+  // Validar que el ID sea válido antes de navegar
+  if (!id || id === 'undefined' || id === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', id)
+    router.push('/dashboard')
+    return
+  }
   router.push(`/natilleras/${id}/cuotas`)
 }
 

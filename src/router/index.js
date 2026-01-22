@@ -206,6 +206,21 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
+  // Validar parámetros de ruta para evitar URLs con "undefined"
+  // Verificar si hay parámetros inválidos (undefined, null, o string "undefined")
+  const params = to.params || {}
+  const hasInvalidParams = Object.keys(params).some(key => {
+    const value = params[key]
+    return value === undefined || value === null || value === 'undefined' || value === 'null' || value === ''
+  })
+  
+  if (hasInvalidParams) {
+    // Si hay parámetros inválidos, redirigir al dashboard
+    console.warn('Parámetros de ruta inválidos detectados, redirigiendo al dashboard', params)
+    next({ name: 'Dashboard' })
+    return
+  }
+  
   // Verificar si la ruta requiere autenticación
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!authStore.isAuthenticated) {

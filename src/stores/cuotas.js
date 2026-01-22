@@ -512,12 +512,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
 
         // Si las sanciones están activas, calcular multas de forma acumulativa
+        // Declarar todasCuotasMoraPorSocio fuera del if para que esté disponible en todo el bloque
+        let todasCuotasMoraPorSocio = {}
+        
         if (configSanciones?.activa) {
           // Obtener todas las cuotas en mora existentes de los socios afectados
           const socioIds = [...new Set(cuotasAMora.map(c => c.socio_natillera_id))]
-          
-          // Obtener todas las cuotas en mora existentes (ya en BD) y las que están pasando a mora
-          let todasCuotasMoraPorSocio = {}
           
           // Obtener todas las cuotas en mora (ya existentes + las que están pasando a mora)
           // Primero obtener las que ya están en mora desde la lista local

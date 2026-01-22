@@ -172,7 +172,7 @@
                     RECAUDADO
                   </p>
                 </div>
-                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold group-hover:text-green-700 transition-colors">
+                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold group-hover:text-green-700 transition-colors sm:text-left">
                   <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
                   <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
                 </p>
@@ -2509,7 +2509,7 @@
         <!-- Footer -->
         <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
           <button 
-            @click="modalSinSocios = false; router.push(`/natilleras/${id}/socios?agregar=true`)"
+            @click="modalSinSocios = false; if (id && id !== 'undefined' && id !== 'null') { router.push(`/natilleras/${id}/socios?agregar=true`) } else { router.push('/dashboard') }"
             class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl flex items-center justify-center gap-2"
           >
             <PlusIcon class="w-5 h-5" />
@@ -3268,6 +3268,9 @@ const sociosEnMora = computed(() => {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
+  // Obtener días de gracia de la natillera
+  const diasGracia = natillera.value?.reglas_multas?.dias_gracia || 3
+  
   // Agrupar cuotas por socio
   const sociosMap = {}
   
@@ -3306,8 +3309,12 @@ const sociosEnMora = computed(() => {
         }
       }
       
-      // Contar cuotas en mora
-      if (cuota.estado === 'mora') {
+      // IMPORTANTE: Calcular el estado real de la cuota basándose en fechas, no solo en el estado guardado
+      // Esto asegura que las cuotas que deberían estar en mora se detecten aunque no estén actualizadas en la BD
+      const estadoReal = calcularEstadoRealCuota(cuota, diasGracia)
+      
+      // Contar cuotas en mora (usar estado real calculado, no solo el estado guardado)
+      if (estadoReal === 'mora') {
         sociosMap[socioId].cuotasMora++
         const deudaCuota = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
         const sancionCuota = sancionesPorCuota.value[cuota.id] || 0
@@ -3365,28 +3372,48 @@ const sociosEnMora = computed(() => {
     .filter(s => s.cuotasMora > 0 || s.tienePrestamosVencidos)
     .map(s => {
       // Calcular días de mora (basado en la cuota más antigua en mora)
+      // IMPORTANTE: Los días de mora se calculan desde fecha_vencimiento, no desde fecha_limite
+      // fecha_vencimiento = fecha_limite + días de gracia
       let diasMora = 0
       if (s.cuotasMoraList.length > 0) {
-        const fechasLimite = s.cuotasMoraList
-          .filter(c => c.fecha_limite)
+        const fechasVencimiento = s.cuotasMoraList
+          .filter(c => c.fecha_limite || c.fecha_vencimiento)
           .map(c => {
-            const fechaStr = c.fecha_limite
-            let fechaLimite
-            if (typeof fechaStr === 'string') {
-              const [anio, mes, dia] = fechaStr.split('-').map(Number)
-              fechaLimite = new Date(anio, mes - 1, dia)
+            // Usar fecha_vencimiento si existe, sino calcularla como fecha_limite + días de gracia
+            let fechaVencimiento
+            if (c.fecha_vencimiento) {
+              const fechaStr = c.fecha_vencimiento
+              if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                const [anio, mes, dia] = fechaStr.split('-').map(Number)
+                fechaVencimiento = new Date(anio, mes - 1, dia)
+              } else {
+                fechaVencimiento = new Date(fechaStr)
+              }
+            } else if (c.fecha_limite) {
+              // Calcular fecha_vencimiento = fecha_limite + días de gracia
+              const fechaStr = c.fecha_limite
+              let fechaLimite
+              if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+                const [anio, mes, dia] = fechaStr.split('-').map(Number)
+                fechaLimite = new Date(anio, mes - 1, dia)
+              } else {
+                fechaLimite = new Date(fechaStr)
+              }
+              fechaLimite.setHours(0, 0, 0, 0)
+              fechaVencimiento = new Date(fechaLimite)
+              fechaVencimiento.setDate(fechaVencimiento.getDate() + diasGracia)
             } else {
-              fechaLimite = new Date(fechaStr)
+              return null
             }
-            fechaLimite.setHours(0, 0, 0, 0)
-            return fechaLimite
+            fechaVencimiento.setHours(0, 0, 0, 0)
+            return fechaVencimiento
           })
-          .filter(f => !isNaN(f.getTime()))
+          .filter(f => f !== null && !isNaN(f.getTime()))
           .sort((a, b) => a - b)
         
-        if (fechasLimite.length > 0) {
-          const fechaMasAntigua = fechasLimite[0]
-          diasMora = Math.floor((hoy - fechaMasAntigua) / (1000 * 60 * 60 * 24))
+        if (fechasVencimiento.length > 0) {
+          const fechaVencimientoMasAntigua = fechasVencimiento[0]
+          diasMora = Math.floor((hoy - fechaVencimientoMasAntigua) / (1000 * 60 * 60 * 24))
           diasMora = Math.max(0, diasMora)
         }
       }
@@ -3934,6 +3961,13 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
 
 // Función para navegar a la vista de préstamos del socio
 function verPrestamoSocio(socioMora) {
+  // Validar que el ID sea válido antes de navegar
+  if (!id.value || id.value === 'undefined' || id.value === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', id.value)
+    router.push('/dashboard')
+    return
+  }
+  
   if (socioMora.prestamoId) {
     // Navegar a la vista de préstamos con el ID del préstamo en el query
     router.push({

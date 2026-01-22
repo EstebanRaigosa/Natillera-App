@@ -887,7 +887,13 @@ async function handleSubmit() {
     // Debug: Verificar la fecha que se guardó
     console.log('✅ Natillera creada:', result.data)
     console.log('📅 Fecha de inicio guardada:', result.data.fecha_inicio)
-    router.push(`/natilleras/${result.data.id}`)
+    // Validar que el ID sea válido antes de navegar
+    if (result.data.id && result.data.id !== 'undefined' && result.data.id !== 'null') {
+      router.push(`/natilleras/${result.data.id}`)
+    } else {
+      console.warn('ID de natillera inválido después de crear, redirigiendo al dashboard', result.data.id)
+      router.push('/dashboard')
+    }
   } else {
     error.value = result.error
   }

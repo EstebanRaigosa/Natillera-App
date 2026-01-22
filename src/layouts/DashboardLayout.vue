@@ -213,6 +213,7 @@
                     Opciones
                   </div>
                   <router-link
+                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
                     :to="`/natilleras/${natillera.id}/socios`"
                     class="nav-link-sub"
                     :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/socios` }"
@@ -222,6 +223,7 @@
                     <span>Socios</span>
                   </router-link>
                   <router-link
+                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
                     :to="`/natilleras/${natillera.id}/cuotas`"
                     class="nav-link-sub"
                     :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/cuotas` }"
@@ -231,6 +233,7 @@
                     <span>Cuotas</span>
                   </router-link>
                   <router-link
+                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
                     :to="`/natilleras/${natillera.id}/prestamos`"
                     class="nav-link-sub"
                     :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/prestamos` }"
@@ -240,6 +243,7 @@
                     <span>Préstamos</span>
                   </router-link>
                   <router-link
+                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
                     :to="`/natilleras/${natillera.id}/actividades`"
                     class="nav-link-sub"
                     :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/actividades` }"
@@ -249,6 +253,7 @@
                     <span>Actividades</span>
                   </router-link>
                   <router-link
+                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
                     :to="`/natilleras/${natillera.id}/configuracion`"
                     class="nav-link-sub"
                     :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/configuracion` }"
@@ -511,6 +516,13 @@ function mostrarTooltip(natilleraId, event) {
 }
 
 function navegarANatillera(natilleraId) {
+  // Validar que el ID sea válido antes de navegar
+  if (!natilleraId || natilleraId === 'undefined' || natilleraId === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', natilleraId)
+    router.push('/dashboard')
+    return
+  }
+  
   // En móvil: si el tooltip está visible, cerrarlo pero no navegar (el usuario solo quería ver el nombre)
   if (window.innerWidth < 1024 && tooltipVisible.value === natilleraId) {
     tooltipVisible.value = null
@@ -523,11 +535,12 @@ function navegarANatillera(natilleraId) {
     tooltipVisible.value = null
   }
   
-  const nuevaRuta = `/natilleras/${natilleraId}`
+  const idString = String(natilleraId)
+  const nuevaRuta = `/natilleras/${idString}`
   const idActual = router.currentRoute.value.params.id
   
   // Siempre navegar si el ID es diferente
-  if (idActual !== String(natilleraId)) {
+  if (idActual !== idString) {
     router.push(nuevaRuta)
   } else {
     // Si ya estás en esa natillera pero en una subruta, navegar a la vista principal

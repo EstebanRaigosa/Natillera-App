@@ -216,7 +216,12 @@ const natillerasStore = useNatillerasStore()
 
 // Extraer el ID de natillera de la ruta actual
 const natilleraId = computed(() => {
-  return route.params.id || null
+  const id = route.params.id
+  // Validar que el ID sea válido (no undefined, null, o string "undefined")
+  if (!id || id === 'undefined' || id === 'null') {
+    return null
+  }
+  return id
 })
 
 // Verificar si una ruta está activa
@@ -238,8 +243,14 @@ function navegarAPrimeraNatillera(seccion) {
   const todasLasNatilleras = natillerasStore.todasLasNatilleras
   const natilleraActiva = todasLasNatilleras.find(n => n.estado === 'activa')
   
-  if (natilleraActiva) {
-    router.push(`/natilleras/${natilleraActiva.id}/${seccion}`)
+  if (natilleraActiva && natilleraActiva.id) {
+    // Validar que el ID sea válido antes de navegar
+    const id = String(natilleraActiva.id)
+    if (id && id !== 'undefined' && id !== 'null') {
+      router.push(`/natilleras/${id}/${seccion}`)
+    } else {
+      router.push('/dashboard')
+    }
   } else {
     // Si no hay natilleras activas, ir al dashboard
     router.push('/dashboard')

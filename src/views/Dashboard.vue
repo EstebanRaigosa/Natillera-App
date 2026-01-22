@@ -506,7 +506,7 @@
                 
                 <!-- Nombre y etiquetas -->
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between gap-2 mb-1">
+                  <div class="flex items-start justify-between gap-2 mb-1 pr-10">
                     <h3 class="font-display font-bold text-gray-800 text-lg leading-tight">
                       {{ natillera.nombre }}
                     </h3>
@@ -571,22 +571,23 @@
               <!-- Pie de la tarjeta: Rango de fechas -->
               <div class="px-5 pb-5 pt-0 border-t border-gray-100">
                 <!-- Rango de fechas -->
-                <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                  <CalendarIcon class="w-4 h-4 text-gray-400" />
-                  <span>{{ formatearRangoMeses(natillera) }}</span>
+                <div class="flex items-center justify-between gap-2 text-xs text-gray-600">
+                  <div class="flex items-center gap-1.5">
+                    <CalendarIcon class="w-4 h-4 text-gray-400" />
+                    <span>{{ formatearRangoMeses(natillera) }}</span>
+                  </div>
+                  <!-- Botón eliminar dentro del pie de la tarjeta -->
+                  <button
+                    v-if="puedeEliminarNatillera(natillera) && natillera.es_propia"
+                    @click.stop="confirmarEliminarNatillera(natillera)"
+                    class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
+                    title="Eliminar natillera"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </router-link>
-            
-            <!-- Botón eliminar (fuera del router-link para que no active la navegación) -->
-            <button
-              v-if="puedeEliminarNatillera(natillera) && natillera.es_propia"
-              @click.stop="confirmarEliminarNatillera(natillera)"
-              class="absolute bottom-4 right-4 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
-              title="Eliminar natillera"
-            >
-              <TrashIcon class="w-4 h-4" />
-            </button>
           </div>
 
           <!-- Tarjeta crear nueva natillera -->
@@ -664,7 +665,7 @@
                 
                 <!-- Nombre y etiquetas -->
                 <div class="flex-1 min-w-0">
-                  <div class="flex items-start justify-between gap-2 mb-1">
+                  <div class="flex items-start justify-between gap-2 mb-1 pr-10">
                     <h3 class="font-display font-bold text-gray-800 text-lg leading-tight">
                       {{ natillera.nombre }}
                     </h3>
@@ -725,22 +726,23 @@
               <!-- Pie de la tarjeta: Rango de fechas -->
               <div class="px-5 pb-5 pt-0 border-t border-gray-100">
                 <!-- Rango de fechas -->
-                <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                  <CalendarIcon class="w-4 h-4 text-gray-400" />
-                  <span>{{ formatearRangoMeses(natillera) }}</span>
+                <div class="flex items-center justify-between gap-2 text-xs text-gray-600">
+                  <div class="flex items-center gap-1.5">
+                    <CalendarIcon class="w-4 h-4 text-gray-400" />
+                    <span>{{ formatearRangoMeses(natillera) }}</span>
+                  </div>
+                  <!-- Botón eliminar dentro del pie de la tarjeta -->
+                  <button
+                    v-if="puedeEliminarNatillera(natillera)"
+                    @click.stop="confirmarEliminarNatillera(natillera)"
+                    class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
+                    title="Eliminar natillera"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </router-link>
-            
-            <!-- Botón eliminar (fuera del router-link para que no active la navegación) -->
-            <button
-              v-if="puedeEliminarNatillera(natillera)"
-              @click.stop="confirmarEliminarNatillera(natillera)"
-              class="absolute bottom-4 right-4 z-10 w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
-              title="Eliminar natillera"
-            >
-              <TrashIcon class="w-4 h-4" />
-            </button>
           </div>
 
           <!-- Tarjeta crear nueva natillera -->

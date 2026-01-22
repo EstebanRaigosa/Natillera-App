@@ -47,7 +47,10 @@
           <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-green-500/30 mx-auto">
             <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">${{ formatMoney(totalIngresos) }}</p>
+          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
+            <span class="sm:hidden">${{ formatMoneyCompact(totalIngresos) }}</span>
+            <span class="hidden sm:inline">${{ formatMoney(totalIngresos) }}</span>
+          </p>
           <p class="text-xs sm:text-sm font-semibold text-gray-600">Ingresos</p>
         </div>
       </div>
@@ -59,7 +62,10 @@
           <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/30 mx-auto">
             <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">${{ formatMoney(totalGastos) }}</p>
+          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
+            <span class="sm:hidden">${{ formatMoneyCompact(totalGastos) }}</span>
+            <span class="hidden sm:inline">${{ formatMoney(totalGastos) }}</span>
+          </p>
           <p class="text-xs sm:text-sm font-semibold text-gray-600">Gastos</p>
         </div>
       </div>
@@ -71,7 +77,10 @@
           <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30 mx-auto">
             <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">${{ formatMoney(utilidadTotal) }}</p>
+          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
+            <span class="sm:hidden">${{ formatMoneyCompact(utilidadTotal) }}</span>
+            <span class="hidden sm:inline">${{ formatMoney(utilidadTotal) }}</span>
+          </p>
           <p class="text-xs sm:text-sm font-semibold text-gray-600">Utilidad</p>
         </div>
       </div>
@@ -147,15 +156,24 @@
             <div class="grid grid-cols-3 gap-3 sm:gap-4">
               <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
                 <p class="text-xs text-gray-500 font-medium mb-1">Ingresos</p>
-                <p class="font-bold text-green-600 text-sm sm:text-base">${{ formatMoney(actividad.ingresos) }}</p>
+                <p class="font-bold text-green-600 text-sm sm:text-base">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.ingresos) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.ingresos) }}</span>
+                </p>
               </div>
               <div class="relative bg-gradient-to-br from-red-50 via-rose-50 to-red-50/50 rounded-xl p-3 sm:p-4 border border-red-200/50 backdrop-blur-sm">
                 <p class="text-xs text-gray-500 font-medium mb-1">Gastos</p>
-                <p class="font-bold text-red-600 text-sm sm:text-base">${{ formatMoney(actividad.gastos) }}</p>
+                <p class="font-bold text-red-600 text-sm sm:text-base">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.gastos) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.gastos) }}</span>
+                </p>
               </div>
               <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 rounded-xl p-3 sm:p-4 border border-purple-200/50 backdrop-blur-sm">
                 <p class="text-xs text-gray-500 font-medium mb-1">Utilidad</p>
-                <p class="font-bold text-purple-600 text-sm sm:text-base">${{ formatMoney(actividad.utilidad) }}</p>
+                <p class="font-bold text-purple-600 text-sm sm:text-base">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.utilidad) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
+                </p>
               </div>
             </div>
           </template>
@@ -171,11 +189,17 @@
               </div>
               <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-3 sm:p-4 border border-blue-200/50 backdrop-blur-sm">
                 <p class="text-xs text-gray-500 font-medium mb-1">Total asignado</p>
-                <p class="font-bold text-blue-600 text-sm sm:text-base">${{ formatMoney(actividad.total_asignado || 0) }}</p>
+                <p class="font-bold text-blue-600 text-sm sm:text-base">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_asignado || 0) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.total_asignado || 0) }}</span>
+                </p>
               </div>
               <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
                 <p class="text-xs text-gray-500 font-medium mb-1">Total recaudado</p>
-                <p class="font-bold text-green-600 text-sm sm:text-base">${{ formatMoney(actividad.total_pagado || 0) }}</p>
+                <p class="font-bold text-green-600 text-sm sm:text-base">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_pagado || 0) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.total_pagado || 0) }}</span>
+                </p>
               </div>
             </div>
           </template>
@@ -578,11 +602,17 @@
             </div>
             <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-4 border border-blue-200/50">
               <p class="text-xs text-gray-500 font-medium mb-1">Total asignado</p>
-              <p class="font-bold text-blue-600 text-base">${{ formatMoney(actividadSeleccionada.total_asignado || 0) }}</p>
+              <p class="font-bold text-blue-600 text-base">
+                <span class="sm:hidden">${{ formatMoneyCompact(actividadSeleccionada.total_asignado || 0) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(actividadSeleccionada.total_asignado || 0) }}</span>
+              </p>
             </div>
             <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-4 border border-green-200/50">
               <p class="text-xs text-gray-500 font-medium mb-1">Total recaudado</p>
-              <p class="font-bold text-green-600 text-base">${{ formatMoney(actividadSeleccionada.total_pagado || 0) }}</p>
+              <p class="font-bold text-green-600 text-base">
+                <span class="sm:hidden">${{ formatMoneyCompact(actividadSeleccionada.total_pagado || 0) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(actividadSeleccionada.total_pagado || 0) }}</span>
+              </p>
             </div>
           </div>
 
@@ -596,7 +626,7 @@
               <div 
                 v-for="socioAct in sociosActividad" 
                 :key="socioAct.id"
-                class="flex items-center justify-between p-4 bg-white rounded-xl border-2 transition-all"
+                class="p-4 bg-white rounded-xl border-2 transition-all"
                 :class="{
                   'border-green-200 bg-green-50/30': socioAct.estado === 'pagado',
                   'border-amber-200 bg-amber-50/30': socioAct.estado === 'parcial',
@@ -604,26 +634,15 @@
                   'border-gray-200 bg-gray-50/30': socioAct.estado === 'pendiente'
                 }"
               >
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-800">{{ socioAct.socio_natillera?.socio?.nombre || 'Sin nombre' }}</p>
-                  <p class="text-xs text-gray-500">{{ socioAct.socio_natillera?.socio?.telefono || '' }}</p>
-                </div>
-                <div class="flex items-center gap-4">
-                  <div class="text-right">
-                    <p class="text-xs text-gray-500 mb-1">Asignado</p>
-                    <p class="font-bold text-gray-800">${{ formatMoney(socioAct.valor_asignado) }}</p>
+                <!-- Header: Nombre y Badge (móvil y desktop) -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800 truncate">{{ socioAct.socio_natillera?.socio?.nombre || 'Sin nombre' }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ socioAct.socio_natillera?.socio?.telefono || '' }}</p>
                   </div>
-                  <div class="text-right">
-                    <p class="text-xs text-gray-500 mb-1">Pagado</p>
-                    <p class="font-bold text-green-600">${{ formatMoney(socioAct.valor_pagado || 0) }}</p>
-                  </div>
-                  <div class="text-right">
-                    <p class="text-xs text-gray-500 mb-1">Pendiente</p>
-                    <p class="font-bold text-red-600">${{ formatMoney((socioAct.valor_asignado || 0) - (socioAct.valor_pagado || 0)) }}</p>
-                  </div>
-                  <div>
+                  <div class="flex-shrink-0">
                     <span 
-                      class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm"
+                      class="inline-block px-3 py-1.5 rounded-full text-xs font-bold shadow-sm whitespace-nowrap"
                       :class="{
                         'bg-green-100 text-green-700 border border-green-200': socioAct.estado === 'pagado',
                         'bg-amber-100 text-amber-700 border border-amber-200': socioAct.estado === 'parcial',
@@ -633,6 +652,31 @@
                     >
                       {{ getEstadoLabel(socioAct.estado) }}
                     </span>
+                  </div>
+                </div>
+                
+                <!-- Valores: Grid responsive -->
+                <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                  <div class="text-center sm:text-right">
+                    <p class="text-xs text-gray-500 mb-1">Asignado</p>
+                    <p class="font-bold text-gray-800 text-sm sm:text-base break-words">
+                      <span class="sm:hidden">${{ formatMoneyCompact(socioAct.valor_asignado) }}</span>
+                      <span class="hidden sm:inline">${{ formatMoney(socioAct.valor_asignado) }}</span>
+                    </p>
+                  </div>
+                  <div class="text-center sm:text-right">
+                    <p class="text-xs text-gray-500 mb-1">Pagado</p>
+                    <p class="font-bold text-green-600 text-sm sm:text-base break-words">
+                      <span class="sm:hidden">${{ formatMoneyCompact(socioAct.valor_pagado || 0) }}</span>
+                      <span class="hidden sm:inline">${{ formatMoney(socioAct.valor_pagado || 0) }}</span>
+                    </p>
+                  </div>
+                  <div class="text-center sm:text-right">
+                    <p class="text-xs text-gray-500 mb-1">Pendiente</p>
+                    <p class="font-bold text-red-600 text-sm sm:text-base break-words">
+                      <span class="sm:hidden">${{ formatMoneyCompact((socioAct.valor_asignado || 0) - (socioAct.valor_pagado || 0)) }}</span>
+                      <span class="hidden sm:inline">${{ formatMoney((socioAct.valor_asignado || 0) - (socioAct.valor_pagado || 0)) }}</span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -653,6 +697,7 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
+import { formatDate } from '../../utils/formatDate.js'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -731,13 +776,30 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
-function formatDate(date) {
-  if (!date) return ''
-  const d = new Date(date)
-  const day = String(d.getDate()).padStart(2, '0')
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const year = d.getFullYear()
-  return `${day}/${month}/${year}`
+function formatMoneyCompact(value) {
+  const num = Number(value) || 0
+  if (num === 0) return '0'
+  
+  const absNum = Math.abs(num)
+  const sign = num < 0 ? '-' : ''
+  
+  if (absNum >= 1000000) {
+    // Millones
+    const millions = absNum / 1000000
+    if (millions % 1 === 0) {
+      return `${sign}${millions}M`
+    }
+    return `${sign}${millions.toFixed(1)}M`
+  } else if (absNum >= 1000) {
+    // Miles
+    const thousands = absNum / 1000
+    if (thousands % 1 === 0) {
+      return `${sign}${thousands}k`
+    }
+    return `${sign}${thousands.toFixed(1)}k`
+  }
+  
+  return new Intl.NumberFormat('es-CO').format(num)
 }
 
 function getIconoActividad(tipo) {

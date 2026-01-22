@@ -35,18 +35,15 @@
                     </div>
                   </div>
                 </div>
-                <p class="text-gray-600 mt-1 text-sm sm:text-base font-medium">
-                  Gestiona los cobros y registra pagos por mes
-                </p>
               </div>
             </div>
             <div class="flex gap-2 flex-wrap">
-              <button v-if="!esVisor" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center justify-center gap-2 flex-1 md:flex-none text-sm sm:text-base">
+              <button v-if="!esVisor && esUsuarioAdmin" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center justify-center gap-2 flex-1 md:flex-none text-sm sm:text-base">
                 <PlusIcon class="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Generar Cuotas</span>
               </button>
               <button 
-                v-if="!esVisor && mesSeleccionado && cuotasPendientesMes.length > 0"
+                v-if="!esVisor && esUsuarioAdmin && mesSeleccionado && cuotasPendientesMes.length > 0"
                 @click="confirmarBorrarCuotasMes" 
                 class="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 text-red-600 font-semibold rounded-xl hover:from-red-100 hover:to-orange-100 hover:border-red-400 hover:shadow-lg transition-all shadow-md flex-1 md:flex-none text-sm sm:text-base"
               >
@@ -466,7 +463,7 @@
         <p class="text-gray-600 mt-2 mb-8 text-base">
           Genera las cuotas de este mes para comenzar a registrar pagos
         </p>
-        <button v-if="!esVisor" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center gap-2 shadow-lg">
+        <button v-if="!esVisor && esUsuarioAdmin" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center gap-2 shadow-lg">
           <PlusIcon class="w-5 h-5" />
           Generar Cuotas de {{ mesSeleccionadoLabel }}
         </button>
@@ -674,6 +671,18 @@
                     >
                       Pendiente: ${{ formatMoney(grupo.pendiente) }}
                     </span>
+                    <span 
+                      v-if="grupo.actividadesPendientes > 0"
+                      class="text-sm font-semibold text-purple-600"
+                    >
+                      Actividades: ${{ formatMoney(grupo.actividadesPendientes) }}
+                    </span>
+                    <span 
+                      class="text-sm font-bold"
+                      :class="grupo.totalAPagar > 0 ? 'text-red-700' : 'text-gray-500'"
+                    >
+                      Total a Pagar: ${{ formatMoney(grupo.totalAPagar) }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -770,20 +779,46 @@
                       <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
                         <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                         <p class="font-bold text-base sm:text-lg text-orange-600">
-                          ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                          ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                         </p>
                         <p class="text-xs text-gray-500 mt-0.5">
-                          Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                          Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                        </p>
+                        <p 
+                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                          class="text-xs font-semibold mt-0.5 text-purple-600"
+                        >
+                          + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
                         </p>
                         <p class="text-xs font-medium text-green-600 mt-0.5">
                           Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                         </p>
                       </template>
                       <template v-else>
-                        <p class="font-bold text-base sm:text-lg"
-                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 'text-gray-800'"
+                        <p 
+                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
+                          class="text-xs text-gray-500 mb-0.5"
                         >
-                          ${{ formatMoney(cuota.valor_cuota) }}
+                          Total a Pagar
+                        </p>
+                        <p class="font-bold text-base sm:text-lg"
+                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 
+                                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 
+                                  getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? 'text-orange-600' : 'text-gray-800'"
+                        >
+                          ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
+                        </p>
+                        <p 
+                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
+                          class="text-xs text-gray-500 mt-0.5"
+                        >
+                          Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                        </p>
+                        <p 
+                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                          class="text-xs font-semibold mt-0.5 text-purple-600"
+                        >
+                          + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
                         </p>
                         <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
                         <p 
@@ -1082,13 +1117,19 @@
                     <template v-if="(cuota.estadoReal || cuota.estado) === 'mora'">
                       <p class="text-xs text-gray-500 mb-0.5">Total a Pagar</p>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
-                        ${{ formatMoney(getTotalAPagar(cuota)) }}
+                        ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                       </p>
                       <p class="text-xs text-gray-500 mt-1">
                         Cuota: ${{ formatMoney(cuota.valor_cuota) }}
                       </p>
                       <p v-if="getSancionCuota(cuota) > 0" class="text-xs font-semibold mt-0.5 text-red-600">
                         + Multa: ${{ formatMoney(getSancionCuota(cuota)) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        class="text-xs font-semibold mt-0.5 text-purple-600"
+                      >
+                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
                       </p>
                       <p v-if="cuota.valor_pagado > 0" class="text-xs font-medium mt-0.5 text-green-600">
                         Pagado: ${{ formatMoney(cuota.valor_pagado) }}
@@ -1097,9 +1138,17 @@
                     <!-- Estado parcial -->
                     <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
                       <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
-                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</p>
+                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
+                        ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
+                      </p>
                       <p class="text-xs text-gray-500 mt-1">
-                        Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                        Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        class="text-xs font-semibold mt-0.5 text-purple-600"
+                      >
+                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
                       </p>
                       <p class="text-xs font-medium mt-0.5 text-green-600">
                         Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
@@ -1108,10 +1157,29 @@
                     <!-- Estado normal -->
                     <template v-else>
                       <p 
-                        class="text-lg sm:text-xl lg:text-2xl font-bold"
-                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 'text-gray-900'"
+                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
+                        class="text-xs text-gray-500 mb-0.5"
                       >
-                        ${{ formatMoney(cuota.valor_cuota) }}
+                        Total a Pagar
+                      </p>
+                      <p 
+                        class="text-lg sm:text-xl lg:text-2xl font-bold"
+                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 
+                                getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? 'text-orange-600' : 'text-gray-900'"
+                      >
+                        ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
+                        class="text-xs text-gray-500 mt-1"
+                      >
+                        Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        class="text-xs font-semibold mt-0.5 text-purple-600"
+                      >
+                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
                       </p>
                       <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
                       <p 
@@ -1388,21 +1456,30 @@
                 <!-- Estado mora con multa -->
                 <template v-if="cuota.estado === 'mora'">
                   <div class="space-y-0.5">
-                    <div>${{ formatMoney(getTotalAPagar(cuota)) }}</div>
+                    <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
                     <div v-if="getSancionCuota(cuota) > 0" class="text-xs text-red-500 font-semibold">+ Multa: ${{ formatMoney(getSancionCuota(cuota)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
                   </div>
                 </template>
                 <!-- Estado parcial -->
                 <template v-else-if="cuota.estado === 'parcial'">
                   <div class="space-y-0.5">
-                    <div>${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
-                    <div class="text-xs text-gray-500 font-normal">Inicial: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
+                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
                   </div>
                 </template>
                 <!-- Estado normal -->
                 <div v-else>
-                  ${{ formatMoney(cuota.valor_cuota) }}
+                  <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="space-y-0.5">
+                    <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
+                    <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
+                  </div>
+                  <div v-else>
+                    ${{ formatMoney(cuota.valor_cuota) }}
+                  </div>
                 </div>
               </td>
               <td class="px-4 py-3 text-sm text-right" :class="cuota.valor_pagado > 0 ? 'text-green-600 font-medium' : 'text-gray-400'">
@@ -2290,19 +2367,19 @@
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6">
           <!-- Card de información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
             <!-- Alerta de ajustes si existe -->
-            <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-4 p-3 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+            <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
               <button
                 @click.stop="abrirModalHistorialAjustes(cuotaSeleccionada)"
-                class="group w-full flex items-center justify-between gap-3 cursor-pointer"
+                class="group w-full flex items-center justify-between gap-2 cursor-pointer"
               >
-                <div class="flex items-center gap-3 flex-1 min-w-0">
-                  <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                    <InformationCircleIcon class="w-5 h-5 text-white" />
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                    <InformationCircleIcon class="w-4 h-4 text-white" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                    <p class="text-xs font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
                       Esta cuota tiene ajustes de valor
                     </p>
                     <p class="text-xs text-blue-600 mt-0.5">
@@ -2310,30 +2387,30 @@
                     </p>
                   </div>
                 </div>
-                <ChevronRightIcon class="w-5 h-5 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                <ChevronRightIcon class="w-4 h-4 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
               </button>
             </div>
             
-            <div class="flex items-center gap-3 mb-4">
+            <div class="flex items-center gap-2 mb-2">
               <img 
                 :src="getAvatarUrl(cuotaSeleccionada?.socio_natillera?.socio?.nombre || cuotaSeleccionada?.socio_natillera?.id, cuotaSeleccionada?.socio_natillera?.socio?.avatar_seed, cuotaSeleccionada?.socio_natillera?.socio?.avatar_style)" 
                 :alt="cuotaSeleccionada?.socio_natillera?.socio?.nombre"
-                class="w-14 h-14 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
               />
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 truncate">
+                <p class="font-semibold text-gray-800 truncate text-sm">
                   {{ cuotaSeleccionada?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500 mt-1">
+                <p class="text-xs text-gray-500 mt-0.5">
                   {{ cuotaSeleccionada?.descripcion && !tieneAjuste(cuotaSeleccionada) ? cuotaSeleccionada.descripcion : 'Cuota' }}
                 </p>
               </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-200">
+            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
               <div>
-                <p class="text-xs text-gray-500 mb-1">Valor Cuota</p>
-                <p class="font-bold text-gray-800 text-lg">
+                <p class="text-xs text-gray-500 mb-0.5">Valor Cuota</p>
+                <p class="font-bold text-gray-800 text-base">
                   ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
                 </p>
                 <p v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado <= (cuotaSeleccionada?.valor_cuota || 0))" class="text-xs text-red-600 font-semibold">
@@ -2341,21 +2418,21 @@
                 </p>
               </div>
               <div v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
-                <p class="text-xs text-gray-500 mb-1">Ya Pagado</p>
-                <p class="font-bold text-green-600 text-lg">
+                <p class="text-xs text-gray-500 mb-0.5">Ya Pagado</p>
+                <p class="font-bold text-green-600 text-base">
                   ${{ formatMoney(cuotaSeleccionada.valor_pagado) }}
                 </p>
               </div>
               <div>
                 <template v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado >= (cuotaSeleccionada?.valor_cuota || 0)">
-                  <p class="text-xs text-gray-500 mb-1">Sanción</p>
-                  <p class="font-bold text-lg text-red-600">
+                  <p class="text-xs text-gray-500 mb-0.5">Sanción</p>
+                  <p class="font-bold text-base text-red-600">
                     ${{ formatMoney(getSancionCuotaDetalle(cuotaSeleccionada)) }}
                   </p>
                 </template>
                 <template v-else>
-                  <p class="text-xs text-gray-500 mb-1">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
-                  <p :class="['font-bold text-lg', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                  <p class="text-xs text-gray-500 mb-0.5">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
+                  <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
                     ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
                   </p>
                 </template>
@@ -2366,36 +2443,36 @@
           <div class="space-y-5">
             <!-- Campo de tipo de pago -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-3">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
                 Tipo de pago <span class="text-red-500">*</span>
               </label>
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-2">
                 <!-- Opción Efectivo -->
                 <button
                   type="button"
                   @click="formPago.tipo_pago = 'efectivo'"
                   :class="[
-                    'relative p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'efectivo'
                       ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
                       : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                   ]"
                 >
-                  <div class="flex flex-col items-center gap-2">
+                  <div class="flex flex-col items-center gap-1.5">
                     <!-- Icono -->
                     <div :class="[
-                      'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                      'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formPago.tipo_pago === 'efectivo'
                         ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-400'
                     ]">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                       </svg>
                     </div>
                     <!-- Texto -->
                     <span :class="[
-                      'font-semibold text-sm',
+                      'font-semibold text-xs',
                       formPago.tipo_pago === 'efectivo'
                         ? 'text-natillera-700'
                         : 'text-gray-600'
@@ -2403,9 +2480,9 @@
                       Efectivo
                     </span>
                     <!-- Indicador de selección -->
-                    <div v-if="formPago.tipo_pago === 'efectivo'" class="absolute top-2 right-2">
-                      <div class="w-5 h-5 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div v-if="formPago.tipo_pago === 'efectivo'" class="absolute top-1.5 right-1.5">
+                      <div class="w-4 h-4 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
                       </div>
@@ -2418,27 +2495,27 @@
                   type="button"
                   @click="formPago.tipo_pago = 'transferencia'"
                   :class="[
-                    'relative p-4 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'transferencia'
                       ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
                       : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                   ]"
                 >
-                  <div class="flex flex-col items-center gap-2">
+                  <div class="flex flex-col items-center gap-1.5">
                     <!-- Icono -->
                     <div :class="[
-                      'w-12 h-12 rounded-full flex items-center justify-center transition-all',
+                      'w-9 h-9 rounded-full flex items-center justify-center transition-all',
                       formPago.tipo_pago === 'transferencia'
                         ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-400'
                     ]">
-                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
                       </svg>
                     </div>
                     <!-- Texto -->
                     <span :class="[
-                      'font-semibold text-sm',
+                      'font-semibold text-xs',
                       formPago.tipo_pago === 'transferencia'
                         ? 'text-blue-700'
                         : 'text-gray-600'
@@ -2446,9 +2523,9 @@
                       Transferencia
                     </span>
                     <!-- Indicador de selección -->
-                    <div v-if="formPago.tipo_pago === 'transferencia'" class="absolute top-2 right-2">
-                      <div class="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                        <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div v-if="formPago.tipo_pago === 'transferencia'" class="absolute top-1.5 right-1.5">
+                      <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
                       </div>
@@ -2499,50 +2576,49 @@
                   <div v-else-if="actividadesPendientes.length === 0" class="p-6 text-center">
                     <p class="text-sm text-gray-500">No hay actividades pendientes</p>
                   </div>
-                  <div v-else class="p-4 space-y-3 max-h-64 overflow-y-auto">
+                  <div v-else class="p-2 space-y-2 max-h-64 overflow-y-auto">
                     <div
                       v-for="(actividad, index) in actividadesPendientes"
                       :key="actividad.id"
-                      class="bg-gradient-to-br from-gray-50 to-purple-50/30 rounded-lg p-4 border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all"
+                      @click="toggleActividadSeleccionada(actividad.id)"
+                      :class="[
+                        'bg-gradient-to-br rounded-lg p-2.5 border transition-all cursor-pointer',
+                        actividadesSeleccionadas.has(actividad.id)
+                          ? 'from-purple-100 to-indigo-100 border-purple-400 shadow-md'
+                          : 'from-gray-50 to-purple-50/30 border-gray-200 hover:border-purple-300 hover:shadow-sm'
+                      ]"
                     >
-                      <div class="flex items-start justify-between gap-3">
+                      <div class="flex items-center gap-2.5">
+                        <!-- Checkbox -->
+                        <div class="flex-shrink-0">
+                          <div :class="[
+                            'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+                            actividadesSeleccionadas.has(actividad.id)
+                              ? 'bg-purple-500 border-purple-500'
+                              : 'bg-white border-gray-300'
+                          ]">
+                            <svg v-if="actividadesSeleccionadas.has(actividad.id)" class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                        <!-- Contenido compacto -->
                         <div class="flex-1 min-w-0">
-                          <div class="flex items-center gap-2 mb-2">
-                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <span class="text-white text-xs font-bold">{{ index + 1 }}</span>
-                            </div>
-                            <h4 class="font-semibold text-gray-800 truncate">
-                              {{ actividad.actividad?.nombre || 'Actividad' }}
+                          <div class="flex items-center justify-between gap-2 mb-1">
+                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                              {{ actividad.actividad?.descripcion || 'Actividad' }}
                             </h4>
-                          </div>
-                          <p v-if="actividad.actividad?.descripcion" class="text-xs text-gray-600 mb-2 line-clamp-2">
-                            {{ actividad.actividad.descripcion }}
-                          </p>
-                          <div class="flex items-center gap-4 flex-wrap">
-                            <div>
-                              <p class="text-xs text-gray-500 mb-0.5">Valor asignado</p>
-                              <p class="text-sm font-semibold text-gray-700">
-                                ${{ formatMoney(actividad.valor_asignado || 0) }}
-                              </p>
-                            </div>
-                            <div v-if="actividad.valor_pagado > 0">
-                              <p class="text-xs text-gray-500 mb-0.5">Ya pagado</p>
-                              <p class="text-sm font-semibold text-green-600">
-                                ${{ formatMoney(actividad.valor_pagado || 0) }}
-                              </p>
-                            </div>
-                            <div>
-                              <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
-                              <p class="text-sm font-bold text-orange-600">
-                                ${{ formatMoney(actividad.valor_pendiente || 0) }}
-                              </p>
-                            </div>
-                          </div>
-                          <div v-if="actividad.actividad?.fecha_limite_pago" class="mt-2 flex items-center gap-1.5">
-                            <CalendarIcon class="w-3.5 h-3.5 text-gray-400" />
-                            <p class="text-xs text-gray-500">
-                              Fecha límite: {{ formatDate(actividad.actividad.fecha_limite_pago) }}
+                            <p class="text-xs font-bold text-orange-600 flex-shrink-0">
+                              ${{ formatMoney(actividad.valor_pendiente || 0) }}
                             </p>
+                          </div>
+                          <div class="flex items-center gap-3 text-xs">
+                            <span class="text-gray-500">
+                              Asignado: <span class="font-semibold text-gray-700">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
+                            </span>
+                            <span v-if="actividad.valor_pagado > 0" class="text-green-600">
+                              Pagado: <span class="font-semibold">${{ formatMoney(actividad.valor_pagado || 0) }}</span>
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -2576,17 +2652,27 @@
                   type="text"
                   inputmode="decimal"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
-                  :placeholder="`Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`"
+                  :placeholder="getTotalActividadesSeleccionadas() > 0 ? 'Ingresa el valor total' : `Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`"
                   required
                 />
               </div>
-              <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
-                <span>Máximo disponible:</span>
-                <span :class="['font-semibold', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                  ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
-                </span>
-                <span v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado < (cuotaSeleccionada?.valor_cuota || 0))" class="text-red-500 text-xs">(incluye multa)</span>
-              </p>
+              <div class="space-y-1">
+                <p class="text-xs text-gray-500 flex items-center gap-1">
+                  <span>Total cuota:</span>
+                  <span :class="['font-semibold', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                    ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
+                  </span>
+                  <span v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado < (cuotaSeleccionada?.valor_cuota || 0))" class="text-red-500 text-xs">(incluye multa)</span>
+                </p>
+                <p v-if="getTotalActividadesSeleccionadas() > 0" class="text-xs text-purple-600 flex items-center gap-1">
+                  <span>+ Actividades seleccionadas:</span>
+                  <span class="font-semibold">${{ formatMoney(getTotalActividadesSeleccionadas()) }}</span>
+                </p>
+                <p v-if="getTotalActividadesSeleccionadas() > 0" class="text-xs text-gray-700 font-semibold flex items-center gap-1">
+                  <span>Total a pagar:</span>
+                  <span class="text-natillera-600">${{ formatMoney(getTotalAPagarConActividades(cuotaSeleccionada)) }}</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -2852,16 +2938,20 @@
                 ${{ formatMoney(pagoRegistrado?.valor) }}
               </p>
               
-              <!-- Desglose de cuota y sanción si hay sanción -->
-              <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; text-align: center;">
+              <!-- Desglose de cuota, sanción y actividades -->
+              <div v-if="(pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0) || pagoRegistrado?.tieneActividades" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
+                <div :style="pagoRegistrado?.tieneActividades ? 'display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;' : 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;'" style="text-align: center;">
                   <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px;">
                     <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Cuota</p>
                     <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
                   </div>
-                  <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                  <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
                     <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Sanción</p>
                     <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; color: #fca5a5;">${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
+                  </div>
+                  <div v-if="pagoRegistrado?.tieneActividades" style="background: rgba(168, 85, 247, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(168, 85, 247, 0.3);">
+                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Actividades</p>
+                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; color: #c084fc;">${{ formatMoney(pagoRegistrado?.valorActividades || 0) }}</p>
                   </div>
                 </div>
               </div>
@@ -2975,6 +3065,54 @@
                   <p :style="'font-weight: 700; font-size: 15px; margin: 0; letter-spacing: -0.2px;' + (pagoRegistrado?.esParcial ? ' color: #fbbf24;' : ' color: #a7f3d0;')">
                     {{ pagoRegistrado?.esParcial ? 'Parcial' : 'Pagado' }}
                   </p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Actividades Pagadas -->
+            <div v-if="pagoRegistrado?.tieneActividades && pagoRegistrado?.actividadesPagadas?.length > 0" style="margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.2);">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <div style="width: 28px; height: 28px; background: rgba(168, 85, 247, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                  <span style="font-size: 14px;">✨</span>
+                </div>
+                <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Actividades Pagadas</p>
+              </div>
+              
+              <div style="background: rgba(255,255,255,0.95); border-radius: 14px; padding: 14px; border: 2px solid #a855f7; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid rgba(168, 85, 247, 0.2);">
+                  <p style="color: #7c3aed; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; font-weight: 700;">Total Actividades</p>
+                  <p style="font-weight: 700; font-size: 18px; margin: 0; letter-spacing: -0.5px; color: #7c3aed;">${{ formatMoney(pagoRegistrado?.valorActividades || 0) }}</p>
+                </div>
+                
+                <div style="space-y: 8px;">
+                  <div 
+                    v-for="(actividad, index) in pagoRegistrado.actividadesPagadas" 
+                    :key="actividad.id"
+                    style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%); border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(168, 85, 247, 0.25);"
+                    :style="{ marginBottom: index < pagoRegistrado.actividadesPagadas.length - 1 ? '8px' : '0' }"
+                  >
+                    <div style="display: flex; align-items: start; justify-content: space-between; gap: 10px;">
+                      <div style="flex: 1; min-width: 0;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                          <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 4px rgba(168, 85, 247, 0.3);">
+                            <span style="font-size: 10px; font-weight: 700; color: white;">{{ index + 1 }}</span>
+                          </div>
+                          <p style="font-weight: 700; font-size: 12px; margin: 0; color: #1e293b; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            {{ actividad.descripcion }}
+                          </p>
+                        </div>
+                        <p style="color: #64748b; font-size: 9px; margin: 0; font-weight: 500; text-transform: capitalize; margin-left: 26px;">
+                          {{ actividad.tipo || 'Actividad' }}
+                        </p>
+                      </div>
+                      <div style="text-align: right; flex-shrink: 0;">
+                        <p style="color: #64748b; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Valor</p>
+                        <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.3px; color: #7c3aed;">
+                          ${{ formatMoney(actividad.valor_pendiente || 0) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -4012,6 +4150,7 @@ import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
+import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 // Ya no necesitamos html2canvas, dibujamos directamente en canvas
@@ -4067,6 +4206,12 @@ const cuotasStore = useCuotasStore()
 const sociosStore = useSociosStore()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
+const authStore = useAuthStore()
+
+// Verificar si el usuario es raigo.16@gmail.com
+const esUsuarioAdmin = computed(() => {
+  return authStore.userEmail === 'raigo.16@gmail.com'
+})
 
 const modalGenerarCuotas = ref(false)
 const modalPago = ref(false)
@@ -4132,6 +4277,8 @@ const diasGracia = ref(3) // Días de gracia de la natillera
 const actividadesPendientes = ref([]) // Actividades pendientes del socio
 const actividadesDesplegableAbierto = ref(false) // Estado del desplegable de actividades
 const cargandoActividades = ref(false) // Estado de carga de actividades
+const actividadesSeleccionadas = ref(new Set()) // IDs de actividades seleccionadas
+const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -4665,10 +4812,12 @@ const cuotasAgrupadasPorSocio = computed(() => {
   cuotasFiltradas.value.forEach(cuota => {
     const socioId = cuota.socio_natillera?.id || 'sin-socio'
     const socio = cuota.socio_natillera?.socio
+    const socioNatilleraId = cuota.socio_natillera_id
     
     if (!grupos[socioId]) {
       grupos[socioId] = {
         socioId,
+        socioNatilleraId, // Guardar para buscar actividades pendientes
         socio: {
           nombre: socio?.nombre || 'Socio',
           avatar_seed: socio?.avatar_seed,
@@ -4678,7 +4827,9 @@ const cuotasAgrupadasPorSocio = computed(() => {
         cuotas: [],
         total: 0,
         pagado: 0,
-        pendiente: 0
+        pendiente: 0,
+        actividadesPendientes: 0, // Total de actividades pendientes
+        totalAPagar: 0 // Total a pagar (pendiente + actividades pendientes)
       }
     }
     
@@ -4692,6 +4843,17 @@ const cuotasAgrupadasPorSocio = computed(() => {
     if (estadoReal !== 'programada') {
       const pendiente = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
       grupos[socioId].pendiente += pendiente > 0 ? pendiente : 0
+    }
+  })
+  
+  // Agregar actividades pendientes y calcular total a pagar
+  Object.values(grupos).forEach(grupo => {
+    if (grupo.socioNatilleraId) {
+      grupo.actividadesPendientes = actividadesPendientesPorSocio.value[grupo.socioNatilleraId] || 0
+      grupo.totalAPagar = grupo.pendiente + grupo.actividadesPendientes
+    } else {
+      grupo.actividadesPendientes = 0
+      grupo.totalAPagar = grupo.pendiente
     }
   })
   
@@ -4890,10 +5052,16 @@ function handleValorPagoInput(event) {
   } else {
     const numero = parseInt(valor, 10)
     if (!isNaN(numero) && numero >= 0) {
-      // Usar la función getTotalAPagar que incluye la sanción dinámica
-      const maxValor = getTotalAPagar(cuotaSeleccionada.value)
-      // Limitar al máximo disponible
-      formPago.valor = Math.min(numero, maxValor)
+      // Si hay actividades seleccionadas, no limitar el tope superior
+      const totalActividades = getTotalActividadesSeleccionadas()
+      if (totalActividades > 0) {
+        // Permitir cualquier valor cuando hay actividades seleccionadas
+        formPago.valor = numero
+      } else {
+        // Limitar al máximo disponible solo cuando no hay actividades
+        const maxValor = getTotalAPagar(cuotaSeleccionada.value)
+        formPago.valor = Math.min(numero, maxValor)
+      }
     }
   }
 }
@@ -4996,6 +5164,19 @@ const esAdmin = computed(() => {
 })
 
 // Cuando cambia el mes seleccionado (por interacción del usuario, NO durante inicialización)
+// Watch para cargar actividades pendientes cuando cambien las cuotas filtradas
+watch(cuotasFiltradas, async () => {
+  // Cargar actividades pendientes tanto en vista agrupada como en tarjetas individuales
+  await cargarActividadesPendientesPorSocio()
+}, { immediate: false })
+
+// Watch para cargar actividades cuando se cambie a vista agrupada
+watch(vistaAgrupada, async (nuevaVista) => {
+  if (nuevaVista) {
+    await cargarActividadesPendientesPorSocio()
+  }
+})
+
 watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
   // Ignorar durante la inicialización para evitar múltiples cargas
   if (inicializando.value) {
@@ -5075,10 +5256,8 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
-// Función para recalcular sanciones del mes actual
+// Función para recalcular sanciones del mes actual Y todas las cuotas en mora
 async function recalcularSancionesMes() {
-  if (!mesSeleccionado.value) return
-  
   // Si las sanciones no están activadas, no calcular
   if (!sancionesActivas.value) {
     // Limpiar sanciones dinámicas si están desactivadas
@@ -5086,33 +5265,49 @@ async function recalcularSancionesMes() {
     return
   }
   
-  // Calcular el año correcto para este mes basándose en el período de la natillera
-  const anioCorrecto = calcularAnioMes(
-    mesSeleccionado.value,
-    mesInicio.value,
-    mesFin.value,
-    anioNatillera.value
-  )
+  // IMPORTANTE: Calcular sanciones para TODAS las cuotas en mora, no solo las del mes seleccionado
+  // Esto asegura que las sanciones se muestren correctamente sin importar el mes
+  const cuotasEnMora = cuotasStore.cuotas.filter(c => c.estado === 'mora')
   
-  // Obtener las cuotas del mes actual
-  const cuotasDelMes = cuotasStore.cuotas.filter(c => {
-    if (!c.fecha_limite) return false
-    const fecha = new Date(c.fecha_limite)
-    const mes = fecha.getMonth() + 1
-    const anio = fecha.getFullYear()
-    return mes === mesSeleccionado.value && anio === anioCorrecto
-  })
+  // También incluir cuotas del mes seleccionado si hay un mes seleccionado
+  let cuotasACalcular = [...cuotasEnMora]
   
-  if (cuotasDelMes.length === 0) return
+  if (mesSeleccionado.value) {
+    // Calcular el año correcto para este mes basándose en el período de la natillera
+    const anioCorrecto = calcularAnioMes(
+      mesSeleccionado.value,
+      mesInicio.value,
+      mesFin.value,
+      anioNatillera.value
+    )
+    
+    // Obtener las cuotas del mes actual
+    const cuotasDelMes = cuotasStore.cuotas.filter(c => {
+      if (!c.fecha_limite) return false
+      const fecha = new Date(c.fecha_limite)
+      const mes = fecha.getMonth() + 1
+      const anio = fecha.getFullYear()
+      return mes === mesSeleccionado.value && anio === anioCorrecto
+    })
+    
+    // Agregar cuotas del mes que no estén ya en la lista
+    cuotasDelMes.forEach(c => {
+      if (!cuotasACalcular.find(ca => ca.id === c.id)) {
+        cuotasACalcular.push(c)
+      }
+    })
+  }
   
-  // Recalcular sanciones dinámicas para las cuotas del mes
-  const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasDelMes)
+  if (cuotasACalcular.length === 0) return
+  
+  // Recalcular sanciones dinámicas para todas las cuotas (en mora + mes seleccionado)
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasACalcular)
   if (resultSanciones.success) {
-    // Actualizar solo las sanciones de las cuotas del mes actual
+    // Actualizar todas las sanciones calculadas
     Object.keys(resultSanciones.sanciones || {}).forEach(cuotaId => {
       sancionesDinamicas.value[cuotaId] = resultSanciones.sanciones[cuotaId]
     })
-    console.log('💰 Sanciones recalculadas para el mes:', Object.keys(resultSanciones.sanciones || {}).length, 'cuotas')
+    console.log('💰 Sanciones recalculadas:', Object.keys(resultSanciones.sanciones || {}).length, 'cuotas (en mora + mes seleccionado)')
   }
 }
 
@@ -5124,7 +5319,18 @@ function getSancionCuota(cuota) {
   
   // Para cuotas en mora, usar la sanción calculada dinámicamente
   if (cuota.estado === 'mora') {
-    return sancionesDinamicas.value[cuota.id] || cuota.valor_multa || 0
+    // Si ya está calculada, usarla
+    if (sancionesDinamicas.value[cuota.id]) {
+      return sancionesDinamicas.value[cuota.id]
+    }
+    // Si no está calculada pero hay valor_multa guardado, usarlo
+    if (cuota.valor_multa && cuota.valor_multa > 0) {
+      return cuota.valor_multa
+    }
+    // Si está en mora pero no tiene sanción calculada ni guardada,
+    // podría ser que aún no se haya calculado. Retornar 0 por ahora
+    // (se calculará en el próximo recalcularSancionesMes)
+    return 0
   }
   
   // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente),
@@ -5182,6 +5388,20 @@ function getTotalAPagar(cuota) {
   if (!cuota) return 0
   const sancion = getSancionCuota(cuota)
   return (cuota.valor_cuota || 0) + sancion - (cuota.valor_pagado || 0)
+}
+
+// Obtener el total de actividades pendientes de un socio
+function getActividadesPendientesSocio(socioNatilleraId) {
+  if (!socioNatilleraId) return 0
+  return actividadesPendientesPorSocio.value[socioNatilleraId] || 0
+}
+
+// Obtener el total a pagar incluyendo actividades pendientes
+function getTotalAPagarConActividadesSocio(cuota) {
+  if (!cuota) return 0
+  const totalCuota = getTotalAPagar(cuota)
+  const actividadesPendientes = getActividadesPendientesSocio(cuota.socio_natillera_id)
+  return totalCuota + actividadesPendientes
 }
 
 // Calcular días en mora desde fecha_limite
@@ -5384,6 +5604,82 @@ async function cargarHistorialPagosCuota(cuotaId) {
   }
 }
 
+// Función para cargar actividades pendientes de todos los socios
+async function cargarActividadesPendientesPorSocio() {
+  try {
+    // Obtener todos los socio_natillera_id únicos de las cuotas filtradas
+    const socioNatilleraIds = [...new Set(
+      cuotasFiltradas.value
+        .map(c => c.socio_natillera_id)
+        .filter(id => id)
+    )]
+
+    if (socioNatilleraIds.length === 0) {
+      actividadesPendientesPorSocio.value = {}
+      return
+    }
+
+    // Obtener todas las actividades pendientes de estos socios
+    const { data: sociosActividadData, error: errorSociosActividad } = await supabase
+      .from('socios_actividad')
+      .select('*')
+      .in('socio_natillera_id', socioNatilleraIds)
+      .in('estado', ['pendiente', 'parcial', 'mora'])
+
+    if (errorSociosActividad) {
+      console.error('❌ Error cargando actividades pendientes por socio:', errorSociosActividad)
+      return
+    }
+
+    if (!sociosActividadData || sociosActividadData.length === 0) {
+      actividadesPendientesPorSocio.value = {}
+      return
+    }
+
+    // Obtener los IDs de las actividades
+    const actividadIds = [...new Set(sociosActividadData.map(sa => sa.actividad_id))]
+
+    // Obtener las actividades correspondientes
+    const { data: actividadesData, error: errorActividades } = await supabase
+      .from('actividades')
+      .select('id, tipo, descripcion, fecha_limite_pago, estado')
+      .in('id', actividadIds)
+
+    if (errorActividades) {
+      console.error('❌ Error cargando actividades:', errorActividades)
+      return
+    }
+
+    // Crear un mapa de actividades por ID
+    const actividadesMap = new Map((actividadesData || []).map(a => [a.id, a]))
+
+    // Calcular total por socio
+    const totalesPorSocio = {}
+    
+    sociosActividadData.forEach(sa => {
+      const actividad = actividadesMap.get(sa.actividad_id)
+      
+      // Solo contar actividades en curso
+      if (actividad && actividad.estado === 'en_curso') {
+        const valorAsignado = parseFloat(sa.valor_asignado || 0)
+        const valorPagado = parseFloat(sa.valor_pagado || 0)
+        const valorPendiente = Math.max(0, valorAsignado - valorPagado)
+        
+        if (!totalesPorSocio[sa.socio_natillera_id]) {
+          totalesPorSocio[sa.socio_natillera_id] = 0
+        }
+        
+        totalesPorSocio[sa.socio_natillera_id] += valorPendiente
+      }
+    })
+
+    actividadesPendientesPorSocio.value = totalesPorSocio
+  } catch (e) {
+    console.error('❌ Error cargando actividades pendientes por socio:', e)
+    actividadesPendientesPorSocio.value = {}
+  }
+}
+
 async function cargarActividadesPendientes(cuota) {
   if (!cuota || !cuota.socio_natillera_id) {
     console.log('❌ cargarActividadesPendientes: No hay cuota o socio_natillera_id')
@@ -5394,61 +5690,95 @@ async function cargarActividadesPendientes(cuota) {
   console.log('🔍 cargarActividadesPendientes: socio_natillera_id =', cuota.socio_natillera_id)
   cargandoActividades.value = true
   try {
-    // Obtener actividades pendientes del socio (estado = 'pendiente')
-    const { data, error } = await supabase
+    // Obtener actividades pendientes del socio
+    // Filtrar por socio_natillera_id y estado = 'pendiente' en la tabla socios_actividad
+    const { data: sociosActividadData, error: errorSociosActividad } = await supabase
       .from('socios_actividad')
-      .select(`
-        *,
-        actividad:actividades(
-          id,
-          nombre,
-          descripcion,
-          fecha_limite_pago,
-          estado
-        )
-      `)
+      .select('*')
       .eq('socio_natillera_id', cuota.socio_natillera_id)
       .eq('estado', 'pendiente')
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('❌ Error en consulta socios_actividad:', error)
-      throw error
+    if (errorSociosActividad) {
+      console.error('❌ Error en consulta socios_actividad:', errorSociosActividad)
+      throw errorSociosActividad
     }
 
-    console.log('📊 Resultado de consulta socios_actividad:', data)
-    console.log('📊 Cantidad de registros encontrados:', data?.length || 0)
+    console.log('📊 Resultado de consulta socios_actividad:', sociosActividadData)
+    console.log('📊 Cantidad de registros encontrados:', sociosActividadData?.length || 0)
 
-    if (data && data.length > 0) {
-      console.log('📋 Detalle de registros:')
-      data.forEach((sa, index) => {
-        console.log(`  ${index + 1}. Estado: ${sa.estado}, Actividad: ${sa.actividad?.nombre || 'N/A'}, Estado actividad: ${sa.actividad?.estado || 'N/A'}`)
+    if (!sociosActividadData || sociosActividadData.length === 0) {
+      actividadesPendientes.value = []
+      return
+    }
+
+    // Obtener los IDs de las actividades
+    const actividadIds = [...new Set(sociosActividadData.map(sa => sa.actividad_id))]
+
+    // Obtener las actividades correspondientes
+    // Nota: La tabla actividades no tiene columna 'nombre', usa 'descripcion' y 'tipo'
+    const { data: actividadesData, error: errorActividades } = await supabase
+      .from('actividades')
+      .select('id, tipo, descripcion, fecha_limite_pago, estado')
+      .in('id', actividadIds)
+
+    if (errorActividades) {
+      console.error('❌ Error en consulta actividades:', errorActividades)
+      throw errorActividades
+    }
+
+    // Crear un mapa de actividades por ID para acceso rápido
+    const actividadesMap = new Map((actividadesData || []).map(a => [a.id, a]))
+
+    // Combinar datos y filtrar solo actividades en curso
+    const actividadesFiltradas = sociosActividadData
+      .map(sa => {
+        const actividad = actividadesMap.get(sa.actividad_id)
+        return { ...sa, actividad }
       })
-    }
-
-    // Filtrar solo actividades en curso
-    const actividadesFiltradas = (data || []).filter(sa => {
-      const actividad = sa.actividad
-      if (!actividad) {
-        console.log('⚠️ Registro sin actividad relacionada:', sa.id)
-        return false
-      }
-      const enCurso = actividad.estado === 'en_curso'
+      .filter(sa => {
+        if (!sa.actividad) {
+          console.log('⚠️ Registro sin actividad relacionada:', sa.id)
+          return false
+        }
+        // Validar que la actividad esté en curso y que el estado en socios_actividad sea pendiente
+        const enCurso = sa.actividad.estado === 'en_curso'
+        const estadoPendiente = sa.estado === 'pendiente'
+        
       if (!enCurso) {
-        console.log(`⚠️ Actividad "${actividad.nombre}" no está en curso (estado: ${actividad.estado})`)
+        console.log(`⚠️ Actividad "${sa.actividad.descripcion || sa.actividad.tipo}" no está en curso (estado: ${sa.actividad.estado})`)
       }
-      return enCurso
-    })
+        if (!estadoPendiente) {
+          console.log(`⚠️ Registro de socio_actividad no está pendiente (estado: ${sa.estado})`)
+        }
+        
+        return enCurso && estadoPendiente
+      })
 
-    console.log('📊 Actividades filtradas (en curso):', actividadesFiltradas.length)
+    console.log('📊 Actividades filtradas (en curso y pendientes):', actividadesFiltradas.length)
 
     // Calcular el valor pendiente para cada actividad
-    actividadesPendientes.value = actividadesFiltradas.map(sa => ({
-      ...sa,
-      valor_pendiente: (parseFloat(sa.valor_asignado || 0)) - (parseFloat(sa.valor_pagado || 0))
-    }))
+    actividadesPendientes.value = actividadesFiltradas.map(sa => {
+      const valorAsignado = parseFloat(sa.valor_asignado || 0)
+      const valorPagado = parseFloat(sa.valor_pagado || 0)
+      const valorPendiente = Math.max(0, valorAsignado - valorPagado)
+      
+      return {
+        ...sa,
+        valor_pendiente: valorPendiente
+      }
+    })
 
     console.log('✅ Actividades pendientes finales:', actividadesPendientes.value.length)
+    if (actividadesPendientes.value.length > 0) {
+      console.log('📋 Actividades pendientes:', actividadesPendientes.value.map(a => ({
+        descripcion: a.actividad?.descripcion,
+        tipo: a.actividad?.tipo,
+        valor_asignado: a.valor_asignado,
+        valor_pagado: a.valor_pagado,
+        valor_pendiente: a.valor_pendiente
+      })))
+    }
   } catch (e) {
     console.error('❌ Error cargando actividades pendientes:', e)
     actividadesPendientes.value = []
@@ -5465,8 +5795,134 @@ function abrirModalPago(cuota) {
   formPago.tipo_pago = 'efectivo' // Reiniciar tipo de pago por defecto
   modalPago.value = true
   actividadesDesplegableAbierto.value = false
+  actividadesSeleccionadas.value.clear() // Limpiar selección al abrir modal
   // Cargar actividades pendientes del socio
   cargarActividadesPendientes(cuota)
+}
+
+// Función para alternar selección de actividad
+function toggleActividadSeleccionada(actividadId) {
+  if (actividadesSeleccionadas.value.has(actividadId)) {
+    actividadesSeleccionadas.value.delete(actividadId)
+  } else {
+    actividadesSeleccionadas.value.add(actividadId)
+  }
+  // Actualizar el valor del pago para incluir actividades seleccionadas
+  actualizarValorPagoConActividades()
+}
+
+// Calcular el total de actividades seleccionadas
+function getTotalActividadesSeleccionadas() {
+  let total = 0
+  actividadesPendientes.value.forEach(actividad => {
+    if (actividadesSeleccionadas.value.has(actividad.id)) {
+      total += parseFloat(actividad.valor_pendiente || 0)
+    }
+  })
+  return total
+}
+
+// Función para obtener el total a pagar incluyendo actividades seleccionadas
+function getTotalAPagarConActividades(cuota) {
+  const totalCuota = getTotalAPagar(cuota)
+  const totalActividades = getTotalActividadesSeleccionadas()
+  return totalCuota + totalActividades
+}
+
+// Actualizar el valor del pago cuando se seleccionan/deseleccionan actividades
+function actualizarValorPagoConActividades() {
+  if (!cuotaSeleccionada.value) return
+  
+  const totalCuota = getTotalAPagar(cuotaSeleccionada.value)
+  const totalActividades = getTotalActividadesSeleccionadas()
+  
+  // Si hay actividades seleccionadas, actualizar el valor automáticamente
+  if (totalActividades > 0) {
+    formPago.valor = totalCuota + totalActividades
+  } else {
+    // Si no hay actividades, mantener el valor actual o el total de la cuota
+    if (formPago.valor > totalCuota) {
+      formPago.valor = totalCuota
+    }
+  }
+}
+
+// Registrar pagos de actividades seleccionadas
+async function registrarPagosActividades(valorTotalActividades) {
+  if (!cuotaSeleccionada.value || actividadesSeleccionadas.value.size === 0) return
+  
+  try {
+    // Obtener las actividades seleccionadas con sus valores pendientes
+    const actividadesParaPagar = actividadesPendientes.value
+      .filter(a => actividadesSeleccionadas.value.has(a.id))
+      .map(a => ({
+        id: a.id,
+        valor_pendiente: a.valor_pendiente,
+        valor_pagado_actual: a.valor_pagado || 0,
+        valor_asignado: a.valor_asignado || 0
+      }))
+    
+    // Calcular el total de actividades seleccionadas
+    const totalActividades = actividadesParaPagar.reduce((sum, a) => sum + a.valor_pendiente, 0)
+    
+    // Si el valor total es mayor o igual al total de actividades, pagar todas completamente
+    // Si es menor, distribuir proporcionalmente
+    let valorRestante = valorTotalActividades
+    
+    if (valorRestante >= totalActividades) {
+      // Pagar todas las actividades completamente
+      for (const actividad of actividadesParaPagar) {
+        const nuevoValorPagado = actividad.valor_asignado
+        
+        const { error } = await supabase
+          .from('socios_actividad')
+          .update({
+            valor_pagado: nuevoValorPagado
+            // El estado se actualiza automáticamente por el trigger
+          })
+          .eq('id', actividad.id)
+        
+        if (error) {
+          console.error(`Error actualizando actividad ${actividad.id}:`, error)
+        } else {
+          console.log(`✅ Pago completo registrado para actividad ${actividad.id}`)
+        }
+      }
+    } else {
+      // Distribuir proporcionalmente
+      for (const actividad of actividadesParaPagar) {
+        if (valorRestante <= 0) break
+        
+        // Calcular cuánto pagar de esta actividad (proporcional)
+        const porcentaje = actividad.valor_pendiente / totalActividades
+        const valorAPagar = Math.min(valorRestante, Math.round(actividad.valor_pendiente * porcentaje))
+        
+        // Calcular nuevo valor pagado
+        const nuevoValorPagado = actividad.valor_pagado_actual + valorAPagar
+        
+        // Actualizar la actividad en la base de datos
+        const { error } = await supabase
+          .from('socios_actividad')
+          .update({
+            valor_pagado: nuevoValorPagado
+            // El estado se actualiza automáticamente por el trigger
+          })
+          .eq('id', actividad.id)
+        
+        if (error) {
+          console.error(`Error actualizando actividad ${actividad.id}:`, error)
+        } else {
+          console.log(`✅ Pago parcial registrado para actividad ${actividad.id}: $${valorAPagar}`)
+          valorRestante -= valorAPagar
+        }
+      }
+    }
+    
+    // Recargar actividades pendientes para reflejar los cambios
+    await cargarActividadesPendientes(cuotaSeleccionada.value)
+  } catch (error) {
+    console.error('Error registrando pagos de actividades:', error)
+  }
 }
 
 function abrirModalHistorialAjustes(cuota) {
@@ -6537,23 +6993,51 @@ async function handleRegistrarPago() {
   if (!cuotaSeleccionada.value) return
 
   const valorPagado = formPago.valor
+  const totalActividades = getTotalActividadesSeleccionadas()
+  const valorCuota = getTotalAPagar(cuotaSeleccionada.value)
+  
+  // Si hay actividades seleccionadas, el valor pagado incluye cuota + actividades
+  // Necesitamos separar cuánto va a la cuota y cuánto a las actividades
+  const valorParaCuota = Math.min(valorPagado, valorCuota)
+  const valorParaActividades = valorPagado - valorParaCuota
+  
   const socioNombre = cuotaSeleccionada.value.socio_natillera?.socio?.nombre
   const socioTelefono = cuotaSeleccionada.value.socio_natillera?.socio?.telefono
   const descripcionCuota = cuotaSeleccionada.value.descripcion || formatDate(cuotaSeleccionada.value.fecha_limite)
 
+  // Registrar pago de la cuota
   const result = await cuotasStore.registrarPago(
     cuotaSeleccionada.value.id,
-    valorPagado,
+    valorParaCuota, // Solo el valor de la cuota
     null, // comprobante
     formPago.tipo_pago // tipo_pago
   )
+  
+  // Obtener información de actividades pagadas antes de registrar
+  const actividadesPagadas = totalActividades > 0 
+    ? actividadesPendientes.value
+        .filter(a => actividadesSeleccionadas.value.has(a.id))
+        .map(a => ({
+          id: a.id,
+          descripcion: a.actividad?.descripcion || 'Actividad',
+          tipo: a.actividad?.tipo || 'otro',
+          valor_pendiente: a.valor_pendiente,
+          valor_asignado: a.valor_asignado,
+          valor_pagado_anterior: a.valor_pagado || 0
+        }))
+    : []
+  
+  // Si hay actividades seleccionadas y el pago fue exitoso, registrar pagos de actividades
+  if (result.success && totalActividades > 0 && valorParaActividades > 0) {
+    await registrarPagosActividades(valorParaActividades)
+  }
 
   if (result.success) {
     // Obtener la cuota actualizada para saber si es parcial o completa
     const cuotaActualizada = result.data
     const valorCuota = cuotaSeleccionada.value.valor_cuota
     const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
-    const valorPagadoTotal = cuotaActualizada?.valor_pagado || (valorPagadoAnterior + valorPagado)
+    const valorPagadoTotal = cuotaActualizada?.valor_pagado || (valorPagadoAnterior + valorParaCuota)
     // Considerar la sanción al calcular el total a pagar
     const sancion = getSancionCuota(cuotaActualizada || cuotaSeleccionada.value)
     const totalAPagar = valorCuota + sancion
@@ -6587,9 +7071,9 @@ async function handleRegistrarPago() {
       cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
       socioNombre,
       socioTelefono,
-      valor: valorPagado, // Valor del pago actual
+      valor: valorPagado, // Valor total del pago (cuota + actividades)
       valorCuota,
-      valorPagadoTotal, // Total acumulado pagado
+      valorPagadoTotal, // Total acumulado pagado en la cuota
       valorPendiente,
       esParcial,
       descripcionCuota,
@@ -6615,7 +7099,12 @@ async function handleRegistrarPago() {
             month: 'long',
             day: 'numeric'
           })
-        : null
+        : null,
+      // Información de actividades pagadas
+      tieneActividades: totalActividades > 0,
+      valorActividades: totalActividades,
+      cantidadActividades: actividadesSeleccionadas.value.size,
+      actividadesPagadas: actividadesPagadas
     }
     
     console.log('pagoRegistrado.value completo:', pagoRegistrado.value)
@@ -6623,15 +7112,21 @@ async function handleRegistrarPago() {
     modalPago.value = false
     modalConfirmacion.value = true
     cuotaSeleccionada.value = null
-    // Reiniciar formulario
+    // Reiniciar formulario y limpiar selección de actividades
     formPago.valor = 0
     formPago.tipo_pago = 'efectivo'
+    actividadesSeleccionadas.value.clear()
     
     // Recargar cuotas para actualizar el resumen
     await cuotasStore.fetchCuotasNatillera(id)
     
     // Recalcular sanciones dinámicas después de registrar el pago
     await recalcularSancionesMes()
+    
+    // Recargar actividades pendientes por socio si está en vista agrupada
+    if (vistaAgrupada.value) {
+      await cargarActividadesPendientesPorSocio()
+    }
   } else {
     alert('Error: ' + result.error)
   }
@@ -6647,18 +7142,25 @@ function generarImagenComprobante() {
       const teniaPagoParcial = pagoRegistrado.value?.teniaPagoParcial || false
       const codigoComprobante = pagoRegistrado.value?.codigoComprobante
       const tieneSancion = pagoRegistrado.value?.tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0
+      const tieneActividades = pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0
+      const cantidadActividades = tieneActividades ? pagoRegistrado.value.actividadesPagadas.length : 0
       const width = 480
-      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior, desglose de sanción o tipo de pago
+      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior, desglose de sanción/actividades, tipo de pago o actividades
       let height = 680
-      if (tieneSancion) {
+      // Agregar espacio para el desglose si hay sanción o actividades (el desglose siempre se muestra si hay alguno)
+      if (tieneSancion || tieneActividades) {
         height += 60 // Espacio adicional para el desglose
       }
       // Agregar espacio para el tipo de pago (siempre se muestra)
       height += 75
+      // Agregar espacio para el detalle de actividades (si hay)
+      if (tieneActividades) {
+        height += 80 + (cantidadActividades * 50) // Espacio base + espacio por cada actividad
+      }
       if (esParcial) {
-        height = 790 + (tieneSancion ? 60 : 0) + 75
+        height = 790 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0)
       } else if (teniaPagoParcial) {
-        height = 750 + (tieneSancion ? 60 : 0) + 75 // Espacio para información de pago anterior
+        height = 750 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0) // Espacio para información de pago anterior
       }
       const scale = 2
       
@@ -6720,15 +7222,20 @@ function generarImagenComprobante() {
       const cardY = 95
       // Ajustar altura de la tarjeta según el contenido
       let cardHeight = 485
-      if (tieneSancion) {
+      // Agregar espacio para el desglose si hay sanción o actividades
+      if (tieneSancion || tieneActividades) {
         cardHeight += 60 // Espacio adicional para el desglose
       }
       // Agregar espacio para el tipo de pago (siempre se muestra)
       cardHeight += 75
+      // Agregar espacio para el detalle de actividades (si hay)
+      if (tieneActividades) {
+        cardHeight += 80 + (cantidadActividades * 50) // Espacio base + espacio por cada actividad
+      }
       if (esParcial) {
-        cardHeight = 600 + (tieneSancion ? 60 : 0) + 75
+        cardHeight = 600 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0)
       } else if (teniaPagoParcial) {
-        cardHeight = 550 + (tieneSancion ? 60 : 0) + 75 // Espacio para información de pago anterior
+        cardHeight = 550 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0) // Espacio para información de pago anterior
       }
       const cardMargin = 24
       
@@ -6781,12 +7288,29 @@ function generarImagenComprobante() {
       ctx.textAlign = 'center'
       ctx.fillText('Pago Verificado', width/2, badgeY + 21)
       
-      // === DESGLOSE DE CUOTA Y SANCIÓN (si hay sanción) ===
+      // === CÓDIGO DE COMPROBANTE (debajo de "Pago Verificado") ===
+      // Siempre reservar el mismo espacio para mantener consistencia
+      const codigoY = badgeY + 40
+      if (codigoComprobante) {
+        // Código en negrita y visible, centrado
+        ctx.fillStyle = '#64748b'
+        ctx.font = 'bold 12px monospace'
+        ctx.textAlign = 'center'
+        ctx.fillText(codigoComprobante, width/2, codigoY)
+        console.log('Código dibujado en el comprobante:', codigoComprobante)
+      } else {
+        console.warn('No hay código de comprobante para dibujar')
+        // No dibujar nada, pero mantener el espacio reservado
+      }
+      
+      // === DESGLOSE DE CUOTA, SANCIÓN Y ACTIVIDADES ===
       let desgloseY = null
       
-      if (tieneSancion) {
-        desgloseY = badgeY + 45
+      // Mostrar desglose si hay sanción o actividades
+      if (tieneSancion || tieneActividades) {
+        desgloseY = codigoY + 20
         const desgloseHeight = 50
+        const cantidadColumnas = (tieneSancion ? 1 : 0) + (tieneActividades ? 1 : 0) + 1 // Cuota siempre + sanción + actividades
         
         // Fondo para el desglose
         ctx.fillStyle = 'rgba(248, 250, 252, 0.8)'
@@ -6800,55 +7324,185 @@ function generarImagenComprobante() {
         ctx.roundRect(cardInnerX, desgloseY, cardInnerWidth, desgloseHeight, 12)
         ctx.stroke()
         
-        // Línea divisoria vertical
-        ctx.strokeStyle = '#e2e8f0'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(width/2, desgloseY + 10)
-        ctx.lineTo(width/2, desgloseY + desgloseHeight - 10)
-        ctx.stroke()
+        // Calcular ancho de cada columna
+        const anchoColumna = cardInnerWidth / cantidadColumnas
         
-        // Cuota (izquierda)
+        // Cuota (siempre primera columna)
+        let columnaActual = 0
         ctx.fillStyle = '#64748b'
         ctx.font = '9px Arial'
         ctx.textAlign = 'center'
-        ctx.fillText('CUOTA', width/2 - cardInnerWidth/4, desgloseY + 20)
+        ctx.fillText('CUOTA', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
         
         ctx.fillStyle = '#1e293b'
         ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), width/2 - cardInnerWidth/4, desgloseY + 38)
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
         
-        // Sanción (derecha)
-        ctx.fillStyle = '#64748b'
-        ctx.font = '9px Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText('SANCIÓN', width/2 + cardInnerWidth/4, desgloseY + 20)
+        // Líneas divisorias verticales
+        if (cantidadColumnas > 1) {
+          for (let i = 1; i < cantidadColumnas; i++) {
+            ctx.strokeStyle = '#e2e8f0'
+            ctx.lineWidth = 1
+            ctx.beginPath()
+            ctx.moveTo(cardInnerX + anchoColumna * i, desgloseY + 10)
+            ctx.lineTo(cardInnerX + anchoColumna * i, desgloseY + desgloseHeight - 10)
+            ctx.stroke()
+          }
+        }
         
-        ctx.fillStyle = '#dc2626'
-        ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), width/2 + cardInnerWidth/4, desgloseY + 38)
+        // Sanción (segunda columna si hay)
+        if (tieneSancion) {
+          columnaActual++
+          ctx.fillStyle = '#64748b'
+          ctx.font = '9px Arial'
+          ctx.textAlign = 'center'
+          ctx.fillText('SANCIÓN', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
+          
+          ctx.fillStyle = '#dc2626'
+          ctx.font = 'bold 16px Arial'
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
+        }
+        
+        // Actividades (última columna si hay)
+        if (tieneActividades) {
+          columnaActual++
+          ctx.fillStyle = '#64748b'
+          ctx.font = '9px Arial'
+          ctx.textAlign = 'center'
+          ctx.fillText('ACTIVIDADES', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
+          
+          ctx.fillStyle = '#7c3aed'
+          ctx.font = 'bold 16px Arial'
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorActividades || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
+        }
       }
       
-      // === CÓDIGO DE COMPROBANTE (debajo del desglose o "Pago Verificado") ===
-      let codigoY = null
-      if (codigoComprobante) {
-        codigoY = tieneSancion ? (desgloseY + 60) : (badgeY + 45)
-        // Código en negrita y visible, sin etiqueta
+      // === ACTIVIDADES PAGADAS (si hay) - Detalle de cada actividad ===
+      let actividadesY = null
+      if (tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
+        // Posicionar después del desglose si existe, o después del código
+        actividadesY = desgloseY ? (desgloseY + 60) : (codigoY + 20)
+        
+        // Fondo blanco con borde púrpura para mejor contraste
+        const actividadesHeight = 70 + (cantidadActividades * 48)
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
+        ctx.fill()
+        
+        // Sombra sutil
+        ctx.shadowColor = 'rgba(168, 85, 247, 0.2)'
+        ctx.shadowBlur = 8
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 4
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
+        ctx.fill()
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        // Borde púrpura
+        ctx.strokeStyle = '#a855f7'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
+        ctx.stroke()
+        
+        // Título "ACTIVIDADES PAGADAS"
+        ctx.fillStyle = '#7c3aed'
+        ctx.font = 'bold 11px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('✨ ACTIVIDADES PAGADAS', cardInnerX + 18, actividadesY + 22)
+        
+        // Total de actividades
+        const totalActividadesY = actividadesY + 40
         ctx.fillStyle = '#64748b'
-        ctx.font = 'bold 12px monospace'
-        ctx.textAlign = 'center'
-        ctx.fillText(codigoComprobante, width/2, codigoY)
-        console.log('Código dibujado en el comprobante:', codigoComprobante)
-      } else {
-        console.warn('No hay código de comprobante para dibujar')
+        ctx.font = '9px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('TOTAL ACTIVIDADES', cardInnerX + 18, totalActividadesY)
+        
+        // Valor total (ajustado para que no se salga)
+        const valorTotalTexto = '$' + formatMoney(pagoRegistrado.value?.valorActividades || 0)
+        ctx.fillStyle = '#7c3aed'
+        ctx.font = 'bold 18px Arial'
+        ctx.textAlign = 'right'
+        // Calcular el ancho del texto y asegurarse de que no se salga
+        const valorTotalWidth = ctx.measureText(valorTotalTexto).width
+        const maxX = cardInnerX + cardInnerWidth - 18
+        const valorX = Math.min(maxX, maxX - (valorTotalWidth > (cardInnerWidth - 36) ? valorTotalWidth - (cardInnerWidth - 36) : 0))
+        ctx.fillText(valorTotalTexto, valorX, totalActividadesY + 15)
+        
+        // Lista de actividades
+        let actividadItemY = totalActividadesY + 30
+        pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
+          // Fondo para cada actividad (gradiente púrpura suave)
+          const actividadGradient = ctx.createLinearGradient(cardInnerX + 12, actividadItemY, cardInnerX + 12, actividadItemY + 42)
+          actividadGradient.addColorStop(0, 'rgba(168, 85, 247, 0.08)')
+          actividadGradient.addColorStop(1, 'rgba(139, 92, 246, 0.05)')
+          ctx.fillStyle = actividadGradient
+          ctx.beginPath()
+          ctx.roundRect(cardInnerX + 12, actividadItemY, cardInnerWidth - 24, 42, 10)
+          ctx.fill()
+          
+          // Borde sutil púrpura
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)'
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.roundRect(cardInnerX + 12, actividadItemY, cardInnerWidth - 24, 42, 10)
+          ctx.stroke()
+          
+          // Número de actividad (con fondo púrpura)
+          ctx.fillStyle = '#a855f7'
+          ctx.beginPath()
+          ctx.roundRect(cardInnerX + 24, actividadItemY + 8, 18, 18, 6)
+          ctx.fill()
+          ctx.fillStyle = '#ffffff'
+          ctx.font = 'bold 10px Arial'
+          ctx.textAlign = 'center'
+          ctx.fillText((index + 1).toString(), cardInnerX + 33, actividadItemY + 20)
+          
+          // Descripción de la actividad (truncada si es muy larga)
+          const descripcion = actividad.descripcion || 'Actividad'
+          const maxDescWidth = cardInnerWidth - 24 - 50 - 80 // Ancho disponible menos número, menos valor
+          ctx.font = 'bold 12px Arial'
+          const descripcionWidth = ctx.measureText(descripcion).width
+          const descripcionTruncada = descripcionWidth > maxDescWidth 
+            ? descripcion.substring(0, Math.floor((maxDescWidth / descripcionWidth) * descripcion.length) - 3) + '...' 
+            : descripcion
+          ctx.fillStyle = '#1e293b'
+          ctx.textAlign = 'left'
+          ctx.fillText(descripcionTruncada, cardInnerX + 50, actividadItemY + 16)
+          
+          // Tipo de actividad
+          ctx.fillStyle = '#64748b'
+          ctx.font = '9px Arial'
+          const tipoTexto = (actividad.tipo || 'otro').charAt(0).toUpperCase() + (actividad.tipo || 'otro').slice(1)
+          ctx.fillText(tipoTexto, cardInnerX + 50, actividadItemY + 30)
+          
+          // Valor de la actividad (ajustado para que no se salga)
+          const valorTexto = '$' + formatMoney(actividad.valor_pendiente || 0)
+          ctx.fillStyle = '#7c3aed'
+          ctx.font = 'bold 14px Arial'
+          ctx.textAlign = 'right'
+          const valorWidth = ctx.measureText(valorTexto).width
+          const maxValorX = cardInnerX + cardInnerWidth - 30
+          const valorX = Math.min(maxValorX, maxValorX - (valorWidth > 70 ? valorWidth - 70 : 0))
+          ctx.fillText(valorTexto, valorX, actividadItemY + 26)
+          
+          actividadItemY += 48
+        })
       }
       
       // Si había un pago parcial anterior y se completó, mostrar información del pago anterior
       let infoPagoAnteriorY = null
       
       if (teniaPagoParcial && !esParcial) {
-        // Ajustar posición si hay código
-        infoPagoAnteriorY = codigoY ? codigoY + 25 : badgeY + 50
+        // Ajustar posición si hay actividades o desglose
+        infoPagoAnteriorY = tieneActividades 
+          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
+          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
         const infoPagoAnteriorHeight = 90
         
         // Card para información de pago anterior
@@ -6894,12 +7548,14 @@ function generarImagenComprobante() {
       
       // Si es pago parcial, mostrar información adicional
       if (esParcial) {
-        // Ajustar posición si hay código o información de pago anterior
+        // Ajustar posición si hay actividades, desglose o información de pago anterior
         const infoParcialY = infoPagoAnteriorY 
           ? infoPagoAnteriorY + 100 
-          : (codigoY ? codigoY + 25 : badgeY + 50)
-        // Aumentar altura si hay sanción para mostrar el desglose
-        const infoParcialHeight = tieneSancion ? 150 : 110
+          : (tieneActividades 
+            ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
+            : (desgloseY ? (desgloseY + 60) : (codigoY + 20)))
+        // Aumentar altura si hay sanción o actividades para mostrar el desglose
+        const infoParcialHeight = (tieneSancion || tieneActividades) ? 150 : 110
         
         // Card para información de pago parcial
         ctx.fillStyle = '#fef3c7'
@@ -6919,28 +7575,50 @@ function generarImagenComprobante() {
         ctx.textAlign = 'left'
         ctx.fillText('PAGO PARCIAL', cardInnerX + 18, infoParcialY + 22)
         
-        // Desglose de cuota y sanción si hay sanción
+        // Desglose de cuota, sanción y actividades
         let valorCuotaY = infoParcialY + 42
-        if (tieneSancion) {
-          // Desglose lado a lado
+        const cantidadColumnasParcial = (tieneSancion ? 1 : 0) + (tieneActividades ? 1 : 0) + 1 // Cuota siempre + sanción + actividades
+        const anchoColumnaParcial = (cardInnerWidth - 36) / cantidadColumnasParcial
+        
+        if (tieneSancion || tieneActividades) {
+          // Desglose con columnas
+          let columnaParcial = 0
+          
+          // Cuota (siempre primera)
           ctx.fillStyle = '#92400e'
           ctx.font = '9px Arial'
           ctx.textAlign = 'left'
-          ctx.fillText('CUOTA', cardInnerX + 18, valorCuotaY)
+          ctx.fillText('CUOTA', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
           
           ctx.fillStyle = '#78350f'
           ctx.font = 'bold 14px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18, valorCuotaY + 18)
+          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
           
-          // Sanción (derecha)
-          ctx.fillStyle = '#92400e'
-          ctx.font = '9px Arial'
-          ctx.textAlign = 'right'
-          ctx.fillText('SANCIÓN', cardInnerX + cardInnerWidth - 18, valorCuotaY)
+          // Sanción (si hay)
+          if (tieneSancion) {
+            columnaParcial++
+            ctx.fillStyle = '#92400e'
+            ctx.font = '9px Arial'
+            ctx.textAlign = 'left'
+            ctx.fillText('SANCIÓN', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
+            
+            ctx.fillStyle = '#dc2626'
+            ctx.font = 'bold 14px Arial'
+            ctx.fillText('$' + formatMoney(pagoRegistrado.value?.sancion || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
+          }
           
-          ctx.fillStyle = '#dc2626'
-          ctx.font = 'bold 14px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.sancion || 0), cardInnerX + cardInnerWidth - 18, valorCuotaY + 18)
+          // Actividades (si hay)
+          if (tieneActividades) {
+            columnaParcial++
+            ctx.fillStyle = '#92400e'
+            ctx.font = '9px Arial'
+            ctx.textAlign = 'left'
+            ctx.fillText('ACTIVIDADES', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
+            
+            ctx.fillStyle = '#7c3aed'
+            ctx.font = 'bold 14px Arial'
+            ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorActividades || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
+          }
           
           // Línea divisoria
           ctx.strokeStyle = '#fbbf24'
@@ -6950,16 +7628,28 @@ function generarImagenComprobante() {
           ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 25)
           ctx.stroke()
           
-          // Total a pagar (cuota + sanción)
+          // Total a pagar (cuota + sanción + actividades)
           valorCuotaY = valorCuotaY + 35
           ctx.fillStyle = '#92400e'
           ctx.font = '10px Arial'
           ctx.textAlign = 'left'
-          ctx.fillText('Total a Pagar (Cuota + Sanción)', cardInnerX + 18, valorCuotaY)
+          let totalTexto = 'Total a Pagar'
+          if (tieneSancion && tieneActividades) {
+            totalTexto = 'Total (Cuota + Sanción + Actividades)'
+          } else if (tieneSancion) {
+            totalTexto = 'Total (Cuota + Sanción)'
+          } else if (tieneActividades) {
+            totalTexto = 'Total (Cuota + Actividades)'
+          }
+          ctx.fillText(totalTexto, cardInnerX + 18, valorCuotaY)
+          
+          const totalAPagar = (pagoRegistrado.value?.valorCuota || 0) + 
+                             (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
+                             (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
           
           ctx.fillStyle = '#78350f'
           ctx.font = 'bold 16px Arial'
-          ctx.fillText('$' + formatMoney((pagoRegistrado.value?.valorCuota || 0) + (pagoRegistrado.value?.sancion || 0)), cardInnerX + 18, valorCuotaY + 20)
+          ctx.fillText('$' + formatMoney(totalAPagar), cardInnerX + 18, valorCuotaY + 20)
           
           // Línea divisoria
           ctx.strokeStyle = '#fbbf24'
@@ -7028,12 +7718,23 @@ function generarImagenComprobante() {
       // Ajustar posición de los detalles según el contenido
       let detailsY
       if (esParcial) {
-        detailsY = codigoY ? codigoY + 140 : badgeY + 165
+        // Si hay pago parcial, calcular según actividades, desglose o código
+        detailsY = tieneActividades 
+          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
+          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
+        // Ajustar para el bloque de pago parcial
+        const infoParcialY = infoPagoAnteriorY 
+          ? infoPagoAnteriorY + 100 
+          : detailsY
+        detailsY = infoParcialY + ((tieneSancion || tieneActividades) ? 150 : 110) + 20
       } else if (teniaPagoParcial) {
         // Si hay información de pago anterior, ajustar posición
-        detailsY = infoPagoAnteriorY ? infoPagoAnteriorY + 100 : (codigoY ? codigoY + 25 : badgeY + 60)
+        detailsY = infoPagoAnteriorY ? infoPagoAnteriorY + 100 : (codigoY + 20)
       } else {
-        detailsY = codigoY ? codigoY + 25 : badgeY + 60
+        // Sin pago parcial ni anterior: calcular según actividades, desglose o código
+        detailsY = tieneActividades 
+          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
+          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
       }
       
       // Card: Socio con mejor estilo
@@ -7329,8 +8030,18 @@ async function compartirWhatsApp() {
     const nombreArchivo = `comprobante-${pagoRegistrado.value.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
     const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
     
-    // Crear mensaje con el nombre del socio
-    const mensajeCompartir = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".\n\n¡Gracias por estar al día! 🙌`
+    // Crear mensaje con el nombre del socio y actividades si hay
+    let mensajeCompartir = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".`
+    
+    if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
+      mensajeCompartir += `\n\n✨ *Actividades incluidas:*\n`
+      pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
+        mensajeCompartir += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
+      })
+      mensajeCompartir += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
+    }
+    
+    mensajeCompartir += `\n\n¡Gracias por estar al día! 🙌`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -7372,7 +8083,17 @@ async function compartirWhatsApp() {
       setTimeout(() => {
         const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
         if (telefono) {
-          const mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago. ¡Gracias por estar al día! 🙌`
+          let mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago.`
+          
+          if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
+            mensaje += `\n\n✨ *Actividades incluidas:*\n`
+            pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
+              mensaje += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
+            })
+            mensaje += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
+          }
+          
+          mensaje += `\n\n¡Gracias por estar al día! 🙌`
           window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
           
           // Registrar auditoría de envío de comprobante (fallback)
@@ -7407,7 +8128,17 @@ async function compartirWhatsApp() {
       // Fallback: solo abrir WhatsApp con texto
       const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
       if (telefono) {
-        const mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera.\n\n¡Gracias por estar al día! 🙌`
+        let mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera.`
+        
+        if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
+          mensaje += `\n\n✨ *Actividades incluidas:*\n`
+          pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
+            mensaje += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
+          })
+          mensaje += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
+        }
+        
+        mensaje += `\n\n¡Gracias por estar al día! 🙌`
         window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
         
         // Registrar auditoría de envío de comprobante (solo texto)
@@ -7474,7 +8205,7 @@ watch(modalConfirmacion, async (nuevoValor) => {
   }
 })
 
-function reenviarComprobante(cuota) {
+async function reenviarComprobante(cuota) {
   // Calcular si es parcial considerando la sanción
   const valorCuota = cuota.valor_cuota || 0
   const valorPagadoTotal = cuota.valor_pagado || 0
@@ -7494,12 +8225,68 @@ function reenviarComprobante(cuota) {
   const valorCuotaPagada = Math.min(valorPagadoTotal, valorCuota)
   const valorSancionPagada = Math.min(Math.max(0, valorPagadoTotal - valorCuota), sancionTotal)
   
+  // Buscar actividades pagadas relacionadas con esta cuota (mismo socio_natillera_id y fecha de pago similar)
+  let actividadesPagadas = []
+  let totalActividades = 0
+  
+  if (cuota.socio_natillera_id && cuota.fecha_pago) {
+    try {
+      // Buscar actividades que fueron pagadas alrededor de la misma fecha (mismo día)
+      const fechaPago = new Date(cuota.fecha_pago)
+      const fechaInicio = new Date(fechaPago)
+      fechaInicio.setHours(0, 0, 0, 0)
+      const fechaFin = new Date(fechaPago)
+      fechaFin.setHours(23, 59, 59, 999)
+      
+      // Obtener actividades pagadas del socio
+      const { data: sociosActividadData } = await supabase
+        .from('socios_actividad')
+        .select(`
+          *,
+          actividades(
+            id,
+            tipo,
+            descripcion
+          )
+        `)
+        .eq('socio_natillera_id', cuota.socio_natillera_id)
+        .gte('updated_at', fechaInicio.toISOString())
+        .lte('updated_at', fechaFin.toISOString())
+        .in('estado', ['pagado', 'parcial'])
+      
+      if (sociosActividadData && sociosActividadData.length > 0) {
+        // Filtrar solo las que tienen valor pagado
+        actividadesPagadas = sociosActividadData
+          .filter(sa => {
+            const actividad = Array.isArray(sa.actividades) ? sa.actividades[0] : sa.actividades
+            return actividad && sa.valor_pagado > 0
+          })
+          .map(sa => {
+            const actividad = Array.isArray(sa.actividades) ? sa.actividades[0] : sa.actividades
+            const valorPendiente = Math.max(0, (sa.valor_asignado || 0) - (sa.valor_pagado || 0))
+            return {
+              id: sa.id,
+              descripcion: actividad?.descripcion || 'Actividad',
+              tipo: actividad?.tipo || 'otro',
+              valor_pendiente: sa.valor_pagado, // Para reenvío, mostrar lo que se pagó
+              valor_asignado: sa.valor_asignado,
+              valor_pagado_anterior: 0
+            }
+          })
+        
+        totalActividades = actividadesPagadas.reduce((sum, a) => sum + (a.valor_pendiente || 0), 0)
+      }
+    } catch (error) {
+      console.error('Error obteniendo actividades para reenvío:', error)
+    }
+  }
+  
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
     cuotaId: cuota.id, // ID de la cuota para auditoría
     socioNombre: cuota.socio_natillera?.socio?.nombre,
     socioTelefono: cuota.socio_natillera?.socio?.telefono,
-    valor: valorPagadoTotal, // Para reenvío, mostrar el total pagado
+    valor: valorPagadoTotal + totalActividades, // Total pagado (cuota + actividades)
     valorCuota,
     valorPagadoTotal,
     valorPendiente,
@@ -7519,7 +8306,12 @@ function reenviarComprobante(cuota) {
           hour: '2-digit',
           minute: '2-digit'
         })
-      : 'Fecha no registrada'
+      : 'Fecha no registrada',
+    // Información de actividades pagadas
+    tieneActividades: totalActividades > 0,
+    valorActividades: totalActividades,
+    cantidadActividades: actividadesPagadas.length,
+    actividadesPagadas: actividadesPagadas
   }
   
   // Registrar auditoría de reenvío de comprobante
@@ -8058,17 +8850,17 @@ onMounted(async () => {
       }
     }
     
-    // 3. Calcular sanciones solo si están activadas (en segundo plano si no es crítico)
-    if (sancionesActivas.value && mesSeleccionado.value) {
+    // 3. Calcular sanciones para todas las cuotas en mora (en segundo plano si no es crítico)
+    if (sancionesActivas.value) {
       // Ejecutar sin await para no bloquear la UI
-      cuotasStore.calcularSancionesTotales(id).then(resultSanciones => {
-        if (resultSanciones.success) {
-          sancionesDinamicas.value = resultSanciones.sanciones || {}
-        }
-      })
+      // Usar recalcularSancionesMes que ahora calcula para todas las cuotas en mora
+      recalcularSancionesMes()
     } else {
       sancionesDinamicas.value = {}
     }
+    
+    // 4. Cargar actividades pendientes por socio (en segundo plano)
+    cargarActividadesPendientesPorSocio()
     
     const tiempoFin = performance.now()
     console.log(`✅ Inicialización completada en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)

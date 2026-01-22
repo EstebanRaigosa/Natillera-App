@@ -23,7 +23,13 @@ const router = useRouter()
 
 function volverAtras() {
   if (props.to) {
-    router.push(props.to)
+    // Validar que la ruta no contenga "undefined" o "null"
+    if (props.to.includes('undefined') || props.to.includes('null')) {
+      console.warn('Ruta inválida detectada en BackButton, redirigiendo al dashboard', props.to)
+      router.push('/dashboard')
+    } else {
+      router.push(props.to)
+    }
   } else {
     // Si no hay ruta específica, ir al dashboard
     router.push('/dashboard')
