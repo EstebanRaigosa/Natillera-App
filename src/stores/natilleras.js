@@ -853,7 +853,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             let posicionAcumulativa = 1 // Cada socio empieza desde la posición 1
 
             cuotasSocio.forEach(cuota => {
-              const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+              const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === 0 || cuota.quincena === null ? 'mensual' : 'quincenal')
               const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
 
               let multaBase = 0

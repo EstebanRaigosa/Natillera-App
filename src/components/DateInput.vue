@@ -2,11 +2,14 @@
   <div class="relative w-full">
     <!-- Input de texto visible con formato dd/MM/yyyy -->
     <div class="relative w-full">
-      <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-        <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Icono de calendario a la izquierda -->
+      <div class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-natillera-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </div>
+      
+      <!-- Input de texto -->
       <input
         ref="textInputRef"
         :value="displayValue"
@@ -16,33 +19,42 @@
         @click.stop
         type="text"
         :placeholder="placeholder"
+        :disabled="disabled"
         :class="[
-          'w-full input-field pl-12 pr-14 text-base font-semibold focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 bg-white hover:border-natillera-300 transition-all relative z-10',
+          'w-full input-field pl-11 sm:pl-12 pr-12 text-base font-semibold focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 transition-all relative z-10',
+          disabled ? 'bg-gray-100 text-gray-600 cursor-not-allowed hover:border-natillera-200' : 'bg-white hover:border-natillera-300',
           inputClass
         ]"
-        :required="required"
+        :required="required && !disabled"
         maxlength="10"
         inputmode="numeric"
       />
+      
       <!-- Input date oculto para el calendario nativo -->
       <input
         ref="dateInputRef"
         :value="isoValue"
         @change="handleDateChange"
         type="date"
-        class="sr-only"
-        :required="required"
-        tabindex="-1"
-        aria-hidden="true"
+        class="date-input-hidden"
+        :required="required && !disabled"
+        :disabled="disabled"
       />
-      <!-- Botón para abrir calendario -->
+      
+      <!-- Botón/icono calendario a la derecha -->
       <button
         type="button"
-        @click.stop="openDatePicker"
-        class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-auto z-20 p-1.5 rounded-lg text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 active:bg-natillera-100 transition-all duration-200"
-        title="Abrir calendario"
+        :disabled="disabled"
+        class="date-input-calendar-button"
+        :class="[
+          disabled
+            ? 'cursor-default text-gray-500'
+            : 'text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 active:bg-natillera-100 transition-all duration-200 cursor-pointer'
+        ]"
+        :title="disabled ? 'Fecha calculada automáticamente' : 'Abrir calendario'"
+        @click.stop="!disabled && openDatePicker($event)"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       </button>
@@ -51,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -67,6 +79,10 @@ const props = defineProps({
     default: ''
   },
   required: {
+    type: Boolean,
+    default: false
+  },
+  disabled: {
     type: Boolean,
     default: false
   }
@@ -174,31 +190,47 @@ function openDatePicker(event) {
   event.preventDefault()
   event.stopPropagation()
   
-  if (dateInputRef.value) {
-    // Intentar usar showPicker() si está disponible (Chrome, Edge, Safari 16.4+)
-    if (typeof dateInputRef.value.showPicker === 'function') {
-      try {
-        const pickerPromise = dateInputRef.value.showPicker()
-        // Si retorna una promesa, manejar errores
-        if (pickerPromise && typeof pickerPromise.catch === 'function') {
-          pickerPromise.catch((error) => {
-            // Si falla (por ejemplo, en algunos navegadores), hacer click como fallback
-            console.log('showPicker no disponible, usando click como fallback:', error)
-            dateInputRef.value.focus()
-            dateInputRef.value.click()
-          })
+  if (dateInputRef.value && !props.disabled) {
+    // Hacer el input date accesible temporalmente
+    dateInputRef.value.style.pointerEvents = 'auto'
+    dateInputRef.value.style.zIndex = '30'
+    
+    nextTick(() => {
+      if (dateInputRef.value) {
+        // Intentar usar showPicker() si está disponible
+        if (typeof dateInputRef.value.showPicker === 'function') {
+          dateInputRef.value.showPicker()
+            .then(() => {
+              // Restaurar después de abrir
+              setTimeout(() => {
+                if (dateInputRef.value) {
+                  dateInputRef.value.style.pointerEvents = 'none'
+                  dateInputRef.value.style.zIndex = '1'
+                }
+              }, 100)
+            })
+            .catch(() => {
+              // Si falla, usar click directo
+              dateInputRef.value.click()
+              setTimeout(() => {
+                if (dateInputRef.value) {
+                  dateInputRef.value.style.pointerEvents = 'none'
+                  dateInputRef.value.style.zIndex = '1'
+                }
+              }, 100)
+            })
+        } else {
+          // Fallback: hacer click directo en el input date
+          dateInputRef.value.click()
+          setTimeout(() => {
+            if (dateInputRef.value) {
+              dateInputRef.value.style.pointerEvents = 'none'
+              dateInputRef.value.style.zIndex = '1'
+            }
+          }, 100)
         }
-      } catch (error) {
-        // Si showPicker lanza un error, usar click como fallback
-        console.log('Error al usar showPicker, usando click como fallback:', error)
-        dateInputRef.value.focus()
-        dateInputRef.value.click()
       }
-    } else {
-      // Fallback para navegadores que no soportan showPicker
-      dateInputRef.value.focus()
-      dateInputRef.value.click()
-    }
+    })
   }
 }
 
@@ -225,3 +257,40 @@ watch(() => props.modelValue, (newValue) => {
 }, { immediate: true })
 </script>
 
+<style scoped>
+.date-input-calendar-button {
+  position: absolute !important;
+  right: 0.5rem !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 20 !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.375rem;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .date-input-calendar-button {
+    right: 0.75rem !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+  }
+}.date-input-hidden {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  cursor: pointer !important;
+}
+</style>

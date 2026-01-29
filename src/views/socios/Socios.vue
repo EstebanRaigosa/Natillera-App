@@ -10,14 +10,14 @@
     <div class="relative">
       <Breadcrumbs />
       
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl px-6 py-4 sm:px-8 sm:py-5 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
         <BackButton :to="`/natilleras/${id}`" />
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
-        <div class="relative z-10 pt-12 sm:pt-0">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div class="relative z-10 pt-4 sm:pt-0">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pl-14 sm:pl-0">
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
                 <UsersIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -26,7 +26,7 @@
                 <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
                   Socios
                 </h1>
-                <p class="text-gray-600 mt-1 text-sm sm:text-base font-medium">
+                <p class="text-gray-600 mt-0.5 text-sm sm:text-base font-medium">
                   Gestiona los participantes y sus cuotas personalizadas
                 </p>
               </div>
@@ -372,7 +372,16 @@
                 <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1 truncate">
                   {{ sn.socio?.nombre }}
                 </h3>
-                <p class="text-sm text-gray-500 truncate">{{ sn.socio?.email || 'Sin correo' }}</p>
+                <p class="text-sm text-gray-500 truncate mt-1 flex items-center gap-1.5">
+                  <EnvelopeIcon class="w-3.5 h-3.5 flex-shrink-0" />
+                  <span v-if="sn.socio?.email">{{ sn.socio.email }}</span>
+                  <span v-else class="text-gray-400">Sin correo</span>
+                </p>
+                <p class="text-sm text-gray-500 truncate mt-1 flex items-center gap-1.5">
+                  <PhoneIcon class="w-3.5 h-3.5 flex-shrink-0" />
+                  <span v-if="sn.socio?.telefono">{{ sn.socio.telefono }}</span>
+                  <span v-else class="text-gray-400">Sin teléfono</span>
+                </p>
               </div>
             </div>
             <span 
@@ -398,14 +407,7 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-4 border-t border-gray-200/50">
-            <div class="text-sm text-gray-500 flex items-center gap-1.5">
-              <PhoneIcon class="w-4 h-4 flex-shrink-0" />
-              <span v-if="sn.socio?.telefono" class="truncate">{{ sn.socio.telefono }}</span>
-              <span v-else class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs font-medium rounded-md border border-gray-200">
-                Sin teléfono
-              </span>
-            </div>
+          <div class="flex items-center justify-end pt-4 border-t border-gray-200/50">
             <div class="flex gap-2 flex-shrink-0">
               <!-- Botones solo visibles cuando está activo -->
               <template v-if="sn.estado === 'activo'">
@@ -419,7 +421,7 @@
                 <button 
                   v-if="!esVisor"
                   @click.stop="editarSocio(sn)"
-                  class="p-2 text-blue-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
+                  class="p-2 text-blue-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
                   title="Editar"
                   aria-label="Editar socio"
                 >
@@ -428,7 +430,7 @@
                 <button 
                   v-if="!esVisor"
                   @click.stop="confirmarEliminarSocio(sn)"
-                  class="p-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
+                  class="p-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
                   title="Eliminar socio"
                   aria-label="Eliminar socio"
                 >
@@ -437,7 +439,7 @@
                 <button 
                   v-if="!esVisor"
                   @click.stop="toggleEstado(sn)"
-                  class="p-2 text-amber-600 hover:text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 bg-amber-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md"
+                  class="p-2 text-amber-600 hover:text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 bg-amber-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
                   title="Desactivar"
                   aria-label="Desactivar socio"
                 >
@@ -839,7 +841,7 @@
                   v-for="seed in avatarSeeds"
                   :key="seed"
                   type="button"
-                  @click="formSocio.avatar_seed = seed"
+                  @click="formSocio.avatar_seed = seed; mostrarAvatares = false"
                   :class="[
                     'p-1 rounded-lg transition-all',
                     formSocio.avatar_seed === seed 

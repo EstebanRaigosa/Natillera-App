@@ -128,6 +128,13 @@ export const useSociosStore = defineStore('socios', () => {
       loading.value = true
       error.value = null
 
+      // Verificar que el usuario esté autenticado antes de continuar
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !session) {
+        console.error('❌ Error de autenticación:', sessionError)
+        throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
+      }
+
       // VALIDACIÓN CRÍTICA: Asegurar que valorCuota sea un número y se guarde exactamente como se ingresa
       let valorCuotaFinal = valorCuota
       if (typeof valorCuota === 'string') {
@@ -236,6 +243,11 @@ export const useSociosStore = defineStore('socios', () => {
           .eq('id', socioId)
 
         if (updateError) {
+          // Verificar si es error de autenticación
+          if (updateError.code === 'PGRST301' || updateError.status === 401 || updateError.message?.includes('Unauthorized')) {
+            console.error('❌ Error de autenticación al actualizar socio:', updateError)
+            throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
+          }
           // Verificar si es error de unicidad
           if (updateError.code === '23505' || updateError.message?.includes('unique') || updateError.message?.includes('duplicate')) {
             throw new Error('Este número de teléfono ya está registrado para otro socio')
@@ -251,6 +263,11 @@ export const useSociosStore = defineStore('socios', () => {
           .single()
 
         if (socioError) {
+          // Verificar si es error de autenticación
+          if (socioError.code === 'PGRST301' || socioError.status === 401 || socioError.message?.includes('Unauthorized')) {
+            console.error('❌ Error de autenticación al crear socio:', socioError)
+            throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
+          }
           // Verificar si es error de unicidad
           if (socioError.code === '23505' || socioError.message?.includes('unique') || socioError.message?.includes('duplicate')) {
             throw new Error('Este número de teléfono ya está registrado para otro socio')
@@ -297,6 +314,10 @@ export const useSociosStore = defineStore('socios', () => {
 
       if (vincularError) {
         console.error('❌ Error al guardar socio en natillera:', vincularError)
+        // Verificar si es error de autenticación
+        if (vincularError.code === 'PGRST301' || vincularError.status === 401 || vincularError.message?.includes('Unauthorized')) {
+          throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
+        }
         throw vincularError
       }
       
@@ -336,6 +357,100 @@ export const useSociosStore = defineStore('socios', () => {
           socio_id: socioId
         }
       ))
+
+      // Asignar actividades en curso al nuevo socio
+      try {
+        // Obtener información de la natillera para determinar periodicidad
+        const { data: natilleraData } = await supabase
+          .from('natilleras')
+          .select('periodicidad, nombre')
+          .eq('id', natilleraId)
+          .single()
+
+        if (natilleraData) {
+          // Buscar actividades en curso
+          const { data: actividadesEnCurso, error: actividadesError } = await supabase
+            .from('actividades')
+            .select('*')
+            .eq('natillera_id', natilleraId)
+            .eq('estado', 'en_curso')
+
+          if (!actividadesError && actividadesEnCurso && actividadesEnCurso.length > 0) {
+            console.log(`📋 Encontradas ${actividadesEnCurso.length} actividades en curso para asignar al nuevo socio`)
+
+            // Función helper para determinar la quincena según la periodicidad
+            const determinarQuincenaParaSocio = (periodicidadSocio, quincenaActividad) => {
+              // IMPORTANTE: Si el socio es mensual, SIEMPRE retornar 0 para que coincida con cuotas mensuales (quincena 0 o null)
+              // Esto aplica tanto si la natillera es mensual como si es quincenal
+              if (periodicidadSocio === 'mensual') {
+                return 0
+              }
+              
+              // Si la natillera es mensual, siempre 0
+              if (!natilleraData || natilleraData.periodicidad === 'mensual') {
+                return 0
+              }
+              
+              // Si la natillera es quincenal y el socio es quincenal, usar la quincena de la actividad
+              if (natilleraData.periodicidad === 'quincenal') {
+                return quincenaActividad || null
+              }
+              
+              return 0
+            }
+
+            // Para cada actividad en curso, crear registro en socios_actividad
+            for (const actividad of actividadesEnCurso) {
+              // Verificar si ya existe un registro para esta actividad (para obtener el valor_asignado)
+              const { data: sociosActividadExistentes } = await supabase
+                .from('socios_actividad')
+                .select('valor_asignado')
+                .eq('actividad_id', actividad.id)
+                .limit(1)
+
+              // Determinar el valor_asignado
+              let valorAsignado = 0
+              if (sociosActividadExistentes && sociosActividadExistentes.length > 0) {
+                // Si hay registros existentes, usar el valor_asignado del primero
+                // (asumiendo que si la actividad tiene valores iguales, todos tendrán el mismo valor)
+                valorAsignado = Number(sociosActividadExistentes[0].valor_asignado) || 0
+              }
+
+              // Determinar la quincena según la periodicidad del socio y la actividad
+              const quincenaFinal = determinarQuincenaParaSocio(periodicidadFinal, actividad.quincena_pago)
+
+              // Crear registro en socios_actividad
+              const nuevoRegistro = {
+                actividad_id: actividad.id,
+                socio_natillera_id: data.id,
+                valor_asignado: valorAsignado,
+                valor_pagado: 0,
+                estado: 'pendiente',
+                fecha_limite_pago: actividad.fecha_limite_pago,
+                mes_pago: actividad.mes_pago,
+                anio_pago: actividad.anio_pago,
+                quincena_pago: quincenaFinal,
+                nombre_socio: nombreSocio,
+                nombre_natillera: natilleraData.nombre || null
+              }
+
+              const { error: insertError } = await supabase
+                .from('socios_actividad')
+                .insert(nuevoRegistro)
+
+              if (insertError) {
+                console.error(`⚠️ Error al asignar actividad ${actividad.id} al nuevo socio:`, insertError)
+                // No lanzar error, solo registrar en consola para no interrumpir la creación del socio
+              } else {
+                console.log(`✅ Actividad "${actividad.descripcion}" asignada al nuevo socio con valor $${valorAsignado}`)
+              }
+            }
+          }
+        }
+      } catch (errorAsignacion) {
+        // No lanzar error, solo registrar en consola para no interrumpir la creación del socio
+        console.error('⚠️ Error al asignar actividades en curso al nuevo socio:', errorAsignacion)
+      }
 
       sociosNatillera.value.push(data)
       return { success: true, data }

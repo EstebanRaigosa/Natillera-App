@@ -147,18 +147,19 @@
           </svg>
           Contraseña
         </label>
-        <div class="relative">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-lg border border-gray-300 bg-white focus-within:ring-1 focus-within:ring-emerald-400 focus-within:border-emerald-400 transition-colors hover:border-emerald-400">
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="w-full px-3 sm:px-4 py-3.5 sm:py-3 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition-all duration-200 placeholder:text-gray-500 text-base sm:text-base text-gray-900 pr-10 sm:pr-12 transition-colors hover:border-emerald-400"
-            placeholder="••••••••"
+            class="flex-1 min-w-0 border-0 bg-transparent px-3 sm:px-4 py-3.5 sm:py-3 pr-12 text-base text-gray-900 placeholder:text-gray-500 focus:ring-0 focus:outline-none"
+            placeholder="Ingrese su contraseña"
             required
           />
           <button 
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+            class="absolute inset-y-0 right-0 flex w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-emerald-600 hover:bg-emerald-50/50 transition-all duration-200 active:scale-95 z-10"
+            aria-label="Mostrar/ocultar contraseña"
           >
             <EyeIcon v-if="!showPassword" class="w-5 h-5" />
             <EyeSlashIcon v-else class="w-5 h-5" />

@@ -10,12 +10,13 @@
     <div class="relative">
       <Breadcrumbs />
       
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl px-6 py-4 sm:px-8 sm:py-5 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <BackButton :to="`/natilleras/${id}`" />
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pl-14 sm:pl-0">
           <div class="flex items-center gap-3">
             <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
               <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -24,7 +25,7 @@
               <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
                 Préstamos
               </h1>
-              <p class="text-gray-600 mt-1 text-sm sm:text-base font-medium">
+              <p class="text-gray-600 mt-0.5 text-sm sm:text-base font-medium">
                 Gestiona los préstamos internos del fondo
               </p>
             </div>
@@ -2770,6 +2771,7 @@ import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
 import DateInput from '../../components/DateInput.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const notificationStore = useNotificationStore()

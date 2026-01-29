@@ -33,13 +33,11 @@
 
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">Contraseña</label>
-        <div class="relative">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all duration-200">
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="w-full px-4 py-3 pr-12 bg-white border border-gray-200 rounded-xl 
-                   focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
-                   transition-all duration-200 placeholder:text-gray-400 shadow-sm"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Mínimo 6 caracteres"
             minlength="6"
             required
@@ -47,7 +45,8 @@
           <button 
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            class="absolute inset-y-0 right-0 flex w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-natillera-600 hover:bg-natillera-50/50 transition-colors z-10"
+            aria-label="Mostrar/ocultar contraseña"
           >
             <EyeIcon v-if="!showPassword" class="w-5 h-5" />
             <EyeSlashIcon v-else class="w-5 h-5" />
@@ -57,20 +56,19 @@
 
       <div>
         <label class="block text-sm font-semibold text-gray-700 mb-2">Confirmar contraseña</label>
-        <div class="relative">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all duration-200">
           <input 
             v-model="confirmPassword"
             :type="showConfirmPassword ? 'text' : 'password'" 
-            class="w-full px-4 py-3 pr-12 bg-white border border-gray-200 rounded-xl 
-                   focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 
-                   transition-all duration-200 placeholder:text-gray-400 shadow-sm"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Repite tu contraseña"
             required
           />
           <button 
             type="button"
             @click="showConfirmPassword = !showConfirmPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            class="absolute inset-y-0 right-0 flex w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-natillera-600 hover:bg-natillera-50/50 transition-colors z-10"
+            aria-label="Mostrar/ocultar contraseña"
           >
             <EyeIcon v-if="!showConfirmPassword" class="w-5 h-5" />
             <EyeSlashIcon v-else class="w-5 h-5" />

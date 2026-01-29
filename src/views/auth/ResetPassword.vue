@@ -92,11 +92,11 @@
           </svg>
           Nueva contraseña
         </label>
-        <div class="relative">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:scale-[1.02] focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="input-field pr-12 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-natillera-500/20"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Mínimo 6 caracteres"
             minlength="6"
             required
@@ -104,7 +104,8 @@
           <button 
             type="button"
             @click="showPassword = !showPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+            class="absolute inset-y-0 right-0 flex w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-natillera-600 hover:bg-natillera-50/50 transition-all duration-200 hover:scale-110 active:scale-95 z-10"
+            aria-label="Mostrar/ocultar contraseña"
           >
             <EyeIcon v-if="!showPassword" class="w-5 h-5" />
             <EyeSlashIcon v-else class="w-5 h-5" />
@@ -121,11 +122,11 @@
           </svg>
           Confirmar nueva contraseña
         </label>
-        <div class="relative">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:scale-[1.02] focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
           <input 
             v-model="confirmPassword"
             :type="showConfirmPassword ? 'text' : 'password'" 
-            class="input-field pr-12 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus:scale-[1.02] focus:shadow-lg focus:shadow-natillera-500/20"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Repite tu contraseña"
             minlength="6"
             required
@@ -133,7 +134,8 @@
           <button 
             type="button"
             @click="showConfirmPassword = !showConfirmPassword"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-natillera-600 hover:bg-natillera-50 rounded-lg transition-all duration-200 hover:scale-110 active:scale-95"
+            class="absolute inset-y-0 right-0 flex w-12 flex-shrink-0 items-center justify-center text-gray-400 hover:text-natillera-600 hover:bg-natillera-50/50 transition-all duration-200 hover:scale-110 active:scale-95 z-10"
+            aria-label="Mostrar/ocultar contraseña"
           >
             <EyeIcon v-if="!showConfirmPassword" class="w-5 h-5" />
             <EyeSlashIcon v-else class="w-5 h-5" />

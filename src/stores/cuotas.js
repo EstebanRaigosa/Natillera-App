@@ -34,7 +34,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Primero obtener los IDs de socios_natillera de esta natillera
       const { data: sociosNatillera, error: sociosError } = await supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, socio:socios(*)')
+        .select('id, valor_cuota_individual, periodicidad, socio:socios(*)')
         .eq('natillera_id', natilleraId)
 
       if (sociosError) throw sociosError
@@ -305,14 +305,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
             console.log(`💰 Sanción cuota ${cuota.id}: Usando multa persistida $${valorMultaExistente.toLocaleString()} (no se recalcula)`)
             
             // Avanzar posición acumulativa para mantener el conteo correcto
-            const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+            const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === 0 || cuota.quincena === null ? 'mensual' : 'quincenal')
             const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
             posicionAcumulativa += esMensualEnQuincenal ? 2 : 1
             return // Continuar con la siguiente cuota
           }
 
           // Si no tiene multa asignada, calcularla normalmente
-          const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === null ? 'mensual' : 'quincenal')
+          const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === 0 || cuota.quincena === null ? 'mensual' : 'quincenal')
           const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
 
           let multaBase = 0
@@ -646,7 +646,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               
               // Si ya tiene multa asignada O ya estaba en mora antes, contar su posición
               if (valorMultaExistente > 0 || (estaPasandoAMora && estaPasandoAMora.yaTeníaMulta)) {
-                const periodicidadC = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
+                const periodicidadC = c.socio_natillera?.periodicidad || (c.quincena === 0 || c.quincena === null ? 'mensual' : 'quincenal')
                 const esMensual = periodicidadNatillera === 'quincenal' && periodicidadC === 'mensual'
                 posicionAcumulativa += esMensual ? 2 : 1
                 console.log(`  ⏭️ Cuota ${c.id} ya tiene multa (${valorMultaExistente}), posición ahora: ${posicionAcumulativa}`)
@@ -659,7 +659,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               if (!cuotaActual) return
               
               const periodicidadSocio = cuotaActual.socio_natillera?.periodicidad || 
-                                        (cuotaActual.quincena === null ? 'mensual' : 'quincenal')
+                                        (cuotaActual.quincena === 0 || cuotaActual.quincena === null ? 'mensual' : 'quincenal')
               const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
               
               let valorMulta = 0
@@ -718,7 +718,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 let posicionAcumulativa = 1
                 cuotasMoraSocio.forEach((c) => {
                   const periodicidadSocio = c.socio_natillera?.periodicidad || 
-                                            (c.quincena === null ? 'mensual' : 'quincenal')
+                                            (c.quincena === 0 || c.quincena === null ? 'mensual' : 'quincenal')
                   const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
                   
                   let nuevaMulta = 0
@@ -804,7 +804,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
                   // Solo corregir si no se calculó ya en el paso anterior
                   if (!multasCalculadas.has(c.id)) {
                     const periodicidadSocio = c.socio_natillera?.periodicidad || 
-                                              (c.quincena === null ? 'mensual' : 'quincenal')
+                                              (c.quincena === 0 || c.quincena === null ? 'mensual' : 'quincenal')
                     const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
                     
                     let nuevaMulta = 0
@@ -1001,7 +1001,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
         cuotas.value
           .filter(c => c.estado === 'mora')
           .forEach(c => {
-            const periodicidadSocio = c.socio_natillera?.periodicidad || (c.quincena === null ? 'mensual' : 'quincenal')
+            const periodicidadSocio = c.socio_natillera?.periodicidad || (c.quincena === 0 || c.quincena === null ? 'mensual' : 'quincenal')
             // Si natillera es quincenal y socio es mensual, contar como 2 cuotas
             const pesoCuota = (periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual') ? 2 : 1
             cuotasMoraPorSocio[c.socio_natillera_id] = (cuotasMoraPorSocio[c.socio_natillera_id] || 0) + pesoCuota
@@ -1115,7 +1115,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Crear mapa de cuotas existentes para búsqueda O(1)
       const mapaCuotasExistentes = {}
       ;(cuotasExistentes || []).forEach(cuota => {
-        const key = `${cuota.socio_natillera_id}-${cuota.quincena || 'mensual'}`
+        const key = `${cuota.socio_natillera_id}-${cuota.quincena === 0 || cuota.quincena === null || cuota.quincena === undefined ? 'mensual' : cuota.quincena}`
         mapaCuotasExistentes[key] = cuota
       })
       
@@ -1595,7 +1595,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return codigo
   }
 
-  async function registrarPago(cuotaId, valorPagado, comprobante = null, tipoPago = null) {
+  async function registrarPago(cuotaId, valorPagado, comprobante = null, tipoPago = null, valorActividades = 0) {
     try {
       loading.value = true
       error.value = null
@@ -1664,7 +1664,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               // Calcular posición acumulativa contando las cuotas anteriores
               for (let i = 0; i < indiceCuota; i++) {
                 const c = cuotasMoraSocio[i]
-                const esMensual = c.quincena === null
+                const esMensual = c.quincena === 0 || c.quincena === null
                 const esMensualEnQuincenalC = periodicidadNatillera === 'quincenal' && esMensual
                 posicionAcumulativa += esMensualEnQuincenalC ? 2 : 1
               }
@@ -1715,40 +1715,68 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const sancionAPagar = sancionDinamica > 0 ? sancionDinamica : (parseFloat(cuotaActual.valor_multa) || 0)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
+      const valorActividadesPendientes = parseFloat(valorActividades) || 0
       
-      // IMPORTANTE: Priorizar el pago de la sanción antes que la cuota
-      // Si hay sanción pendiente, primero se debe pagar la sanción completa
-      // El resto se abona a la cuota
+      // IMPORTANTE: Orden de pago según requerimientos:
+      // 1. Primero se paga la sanción
+      // 2. Segundo se pagan las actividades
+      // 3. Tercero se paga la cuota
+      
       let valorSancionPagada = 0
+      let valorActividadesPagado = 0
       let valorCuotaPagado = 0
       let nuevoValorPagado = valorPagadoAnterior
       let sancionQuitada = false
+      let valorRestante = valorPagado
       
-      if (sancionAPagar > 0) {
-        // Hay sanción pendiente: primero pagar la sanción
-        if (valorPagado >= sancionAPagar) {
+      // Paso 1: Pagar sanción primero
+      if (sancionAPagar > 0 && valorRestante > 0) {
+        if (valorRestante >= sancionAPagar) {
           // El pago cubre la sanción completa
           valorSancionPagada = sancionAPagar
-          valorCuotaPagado = valorPagado - sancionAPagar
-          nuevoValorPagado = valorPagadoAnterior + valorPagado
-          sancionQuitada = true // Se pagó la sanción completa, se quita
+          valorRestante -= sancionAPagar
+          sancionQuitada = true
         } else {
           // El pago NO cubre la sanción completa
-          // Pagar la sanción completa y el resto a la cuota (pago parcial)
-          valorSancionPagada = valorPagado // Todo el pago va a la sanción
-          valorCuotaPagado = 0 // No queda nada para la cuota
-          nuevoValorPagado = valorPagadoAnterior + valorPagado
-          sancionQuitada = true // Se pagó la sanción (aunque sea parcial), se quita
+          valorSancionPagada = valorRestante
+          valorRestante = 0
+          sancionQuitada = true // Se pagó la sanción (aunque sea parcial)
         }
-      } else {
-        // No hay sanción: el pago va directamente a la cuota
-        valorCuotaPagado = valorPagado
-        nuevoValorPagado = valorPagadoAnterior + valorPagado
       }
       
-      // Calcular el total a pagar (cuota + sanción pendiente)
+      // Paso 2: Pagar actividades segundo
+      if (valorActividadesPendientes > 0 && valorRestante > 0) {
+        if (valorRestante >= valorActividadesPendientes) {
+          // El pago cubre todas las actividades
+          valorActividadesPagado = valorActividadesPendientes
+          valorRestante -= valorActividadesPendientes
+        } else {
+          // El pago NO cubre todas las actividades (pago parcial)
+          valorActividadesPagado = valorRestante
+          valorRestante = 0
+        }
+      }
+      
+      // Paso 3: Pagar cuota tercero (con lo que reste)
+      if (valorRestante > 0) {
+        const valorCuotaPendiente = valorCuota - valorPagadoAnterior
+        if (valorRestante >= valorCuotaPendiente) {
+          // El pago cubre la cuota completa
+          valorCuotaPagado = valorCuotaPendiente
+          valorRestante -= valorCuotaPendiente
+        } else {
+          // El pago NO cubre la cuota completa (pago parcial)
+          valorCuotaPagado = valorRestante
+          valorRestante = 0
+        }
+      }
+      
+      // Actualizar el valor pagado total (solo cuota, no incluye sanción ni actividades)
+      nuevoValorPagado = valorPagadoAnterior + valorCuotaPagado
+      
+      // Calcular el total a pagar (cuota + sanción pendiente + actividades pendientes)
       // Si la sanción ya se pagó, no se incluye en el total
-      const totalAPagar = valorCuota + (sancionQuitada ? 0 : sancionAPagar)
+      const totalAPagar = valorCuota + (sancionQuitada ? 0 : sancionAPagar) + (valorActividadesPagado >= valorActividadesPendientes ? 0 : (valorActividadesPendientes - valorActividadesPagado))
       
       // Calcular el nuevo estado según las reglas:
       // - Pagada: cuando se paga el total completo (cuota + sanciones pendientes)
@@ -1894,6 +1922,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
         updateData.valor_multa = cuotaActual.valor_multa
       }
       
+      // Guardar cuánto se abonó a sanción (campo valor_pagado_sancion)
+      const sancionPagadaAnterior = parseFloat(cuotaActual.valor_pagado_sancion) || 0
+      updateData.valor_pagado_sancion = sancionPagadaAnterior + valorSancionPagada
+      
       // Solo agregar codigo_comprobante si existe un código generado
       // Esto evita errores si la columna no existe en la BD (migración no ejecutada)
       if (codigoComprobante) {
@@ -1947,6 +1979,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
         
         data = result.data
         updateError = result.error
+      }
+      
+      // Si falla por columna valor_pagado_sancion (no existe en BD), reintentar sin ella
+      if (updateError && updateError.message && (
+        updateError.message.includes('valor_pagado_sancion') ||
+        (updateError.message.includes('column') && updateData.valor_pagado_sancion !== undefined)
+      )) {
+        delete updateData.valor_pagado_sancion
+        const retryMulta = await supabase
+          .from('cuotas')
+          .update(updateData)
+          .eq('id', cuotaId)
+          .select('*')
+          .maybeSingle()
+        data = retryMulta.data
+        updateError = retryMulta.error
       }
 
       if (updateError) throw updateError
@@ -2176,7 +2224,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       ))
 
-      return { success: true, data }
+      return { 
+        success: true, 
+        data,
+        valorSancionPagada,
+        valorActividadesPagado,
+        valorCuotaPagado
+      }
     } catch (e) {
       error.value = e.message
       return { success: false, error: e.message }
@@ -2502,7 +2556,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             break
           }
         } else {
-          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === 0 || c.quincena === null || c.quincena === undefined)
           if (!tieneMensual) {
             todosTienenCuotas = false
             break
@@ -2565,7 +2619,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             sociosSinCuota.push(socio.id)
           }
         } else {
-          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === 0 || c.quincena === null || c.quincena === undefined)
           if (!tieneMensual) {
             sociosSinCuota.push(socio.id)
           }
@@ -2694,7 +2748,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           }
         } else {
           // Mensual - solo crear si no tiene cuota mensual
-          const tieneMensual = cuotasDelSocio.some(c => c.quincena === null || c.quincena === undefined)
+          const tieneMensual = cuotasDelSocio.some(c => c.quincena === 0 || c.quincena === null || c.quincena === undefined)
           
           if (!tieneMensual) {
             const nombreSocio = socio.socio?.nombre || ''

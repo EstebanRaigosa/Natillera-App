@@ -1,22 +1,104 @@
 <template>
-  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
+  <!-- Pantalla de carga inicial -->
+  <Transition
+    enter-active-class="transition duration-500 ease-out"
+    enter-from-class="opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="transition duration-300 ease-in"
+    leave-from-class="opacity-100"
+    leave-to-class="opacity-0"
+  >
+    <div v-if="inicializando" class="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
+      <!-- Fondo con gradiente animado -->
+      <div class="absolute inset-0 bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50"></div>
+      
+      <!-- Efectos decorativos de fondo -->
+      <div class="absolute inset-0 overflow-hidden">
+        <!-- Círculos grandes animados -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-natillera-200/40 to-emerald-200/30 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-200/40 to-natillera-200/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-natillera-100/30 via-emerald-100/20 to-teal-100/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="relative z-10 flex flex-col items-center justify-center">
+        <!-- Contenedor del spinner -->
+        <div class="relative mb-8">
+          <!-- Círculo exterior con gradiente -->
+          <div class="relative w-32 h-32">
+            <!-- Anillo exterior animado -->
+            <div class="absolute inset-0 rounded-full border-4 border-transparent bg-gradient-to-r from-natillera-200 via-emerald-200 to-teal-200 p-1">
+              <div class="w-full h-full rounded-full bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50"></div>
+            </div>
+            
+            <!-- Anillo medio giratorio -->
+            <div class="absolute inset-2 rounded-full border-4 border-transparent border-t-natillera-500 border-r-emerald-500 animate-spin" style="animation-duration: 1.5s;"></div>
+            
+            <!-- Anillo interior giratorio (dirección opuesta) -->
+            <div class="absolute inset-4 rounded-full border-3 border-transparent border-b-teal-500 border-l-natillera-400 animate-spin" style="animation-duration: 1s; animation-direction: reverse;"></div>
+            
+            <!-- Icono central con efecto de pulso -->
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="relative">
+                <!-- Fondo del icono con pulso -->
+                <div class="absolute inset-0 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-xl animate-pulse"></div>
+                <!-- Icono -->
+                <div class="relative bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full p-4 shadow-2xl shadow-natillera-500/50">
+                  <CurrencyDollarIcon class="w-10 h-10 text-white" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Partículas decorativas alrededor -->
+          <div class="absolute -top-4 -left-4 w-3 h-3 bg-natillera-400 rounded-full animate-ping" style="animation-delay: 0s;"></div>
+          <div class="absolute -top-2 -right-6 w-2 h-2 bg-emerald-400 rounded-full animate-ping" style="animation-delay: 0.5s;"></div>
+          <div class="absolute -bottom-4 -left-6 w-2.5 h-2.5 bg-teal-400 rounded-full animate-ping" style="animation-delay: 1s;"></div>
+          <div class="absolute -bottom-2 -right-4 w-3 h-3 bg-natillera-300 rounded-full animate-ping" style="animation-delay: 1.5s;"></div>
+        </div>
+
+        <!-- Texto principal -->
+        <div class="text-center space-y-3">
+          <h2 class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-natillera-700 via-emerald-700 to-teal-700 bg-clip-text text-transparent animate-pulse">
+            Cargando Cuotas
+          </h2>
+          <div class="flex items-center justify-center gap-2">
+            <div class="w-2 h-2 bg-natillera-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+            <div class="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
+          </div>
+          <p class="text-gray-600 text-base sm:text-lg font-medium mt-4">
+            Preparando la información
+          </p>
+        </div>
+
+        <!-- Barra de progreso decorativa -->
+        <div class="mt-8 w-64 h-1.5 bg-gray-200/50 rounded-full overflow-hidden shadow-inner">
+          <div class="h-full bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 rounded-full progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </Transition>
+
+  <div v-if="!inicializando" class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Header estilizado -->
-    <div class="relative">
+    <!-- Header estilizado - Desktop -->
+    <div class="relative hidden md:block">
       <Breadcrumbs />
       
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl p-6 sm:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl px-6 py-4 sm:px-8 sm:py-5 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
+        <BackButton :to="`/natilleras/${id}/cuotas`" />
         <!-- Círculos decorativos -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
         
         <div class="relative z-10">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pl-14 sm:pl-0">
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
                 <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -56,12 +138,54 @@
       </div>
     </div>
 
-    <!-- Resumen del mes seleccionado (clickeable para filtrar) -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+    <!-- Header móvil - Diseño según imagen -->
+    <div class="relative md:hidden -mt-6 -mx-6 mb-[10px]">
+      <div class="relative bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl px-[20px] py-[10px] mt-6 mx-6 shadow-lg border border-green-100/50 overflow-hidden">
+        <!-- Botón de volver y Título alineados -->
+        <div class="flex items-center gap-3 mb-2">
+          <button 
+            @click="$router.push(`/natilleras/${id}/cuotas`)"
+            class="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md flex-shrink-0"
+          >
+            <ArrowLeftIcon class="w-4 h-4 text-gray-700" />
+          </button>
+          <h1 class="text-2xl font-bold text-gray-800">Cuotas y Pagos</h1>
+        </div>
+        
+        <!-- Contenido del header -->
+        <div class="flex items-center pb-1">
+          <!-- Lado izquierdo: Ícono verde y texto -->
+          <div class="flex items-center gap-2.5">
+            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+              <CurrencyDollarIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="flex items-center gap-2">
+              <p class="text-sm text-gray-500 font-medium leading-tight">PERIODO</p>
+              <button 
+                @click="abrirSelectorMes"
+                class="flex items-center gap-2 px-4 py-3 bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-200"
+              >
+                <span v-if="mesSeleccionado" class="text-xl">{{ getMesEmoji(mesSeleccionado) }}</span>
+                <div class="flex flex-col items-start">
+                  <p class="text-xs text-gray-500 font-medium uppercase leading-tight text-left">MES</p>
+                  <div class="flex items-baseline gap-1.5">
+                    <span class="text-base font-bold text-gray-800">{{ mesSeleccionadoLabel || 'Seleccionar' }}</span>
+                    <span v-if="mesSeleccionado" class="text-xs text-gray-500">{{ anioMesSeleccionado }}</span>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen del mes seleccionado - Desktop -->
+    <div class="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
       <button 
         @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'"
         :class="[
-          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg',
+          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2',
           filtroEstado === 'pagada' 
             ? 'border-green-300 shadow-xl shadow-green-500/20 scale-105 ring-2 ring-green-400' 
             : 'border-green-200/50 hover:shadow-xl hover:-translate-y-1 hover:border-green-300'
@@ -78,7 +202,7 @@
       <button 
         @click="filtroEstado = filtroEstado === 'pendiente' ? 'todos' : 'pendiente'"
         :class="[
-          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg',
+          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2',
           filtroEstado === 'pendiente' 
             ? 'border-amber-300 shadow-xl shadow-amber-500/20 scale-105 ring-2 ring-amber-400' 
             : 'border-amber-200/50 hover:shadow-xl hover:-translate-y-1 hover:border-amber-300'
@@ -95,7 +219,7 @@
       <button 
         @click="filtroEstado = filtroEstado === 'mora' ? 'todos' : 'mora'"
         :class="[
-          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-red-50/30 to-rose-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg',
+          'relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-red-50/30 to-rose-50/20 border backdrop-blur-sm cursor-pointer transition-all duration-300 shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2',
           filtroEstado === 'mora' 
             ? 'border-red-300 shadow-xl shadow-red-500/20 scale-105 ring-2 ring-red-400' 
             : 'border-red-200/50 hover:shadow-xl hover:-translate-y-1 hover:border-red-300'
@@ -158,8 +282,87 @@
       </div>
     </div>
 
-    <!-- Botón para mostrar/ocultar filtros -->
-    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <!-- Resumen del mes seleccionado - Móvil (2x2) -->
+    <div class="md:hidden grid grid-cols-2 gap-3 mt-1 mb-3">
+      <!-- Tarjeta Pagadas -->
+      <button 
+        @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'; cerrarFiltros()"
+        :class="[
+          'relative overflow-hidden rounded-xl p-4 flex flex-col items-start transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2',
+          filtroEstado === 'pagada'
+            ? 'bg-green-100 border-2 border-green-400 shadow-lg shadow-green-500/20 scale-105'
+            : 'bg-green-50/80 border-2 border-transparent shadow-sm hover:shadow-md hover:bg-green-100/90'
+        ]"
+      >
+        <div class="flex items-center justify-between w-full mb-2">
+          <p class="text-xs font-medium text-gray-700 uppercase">PAGADAS</p>
+          <span v-if="filtroEstado === 'pagada'" class="flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full text-xs font-bold">✓</span>
+        </div>
+        <p class="text-3xl font-bold text-green-600 leading-tight">{{ resumenMesActual.pagadas }}</p>
+      </button>
+      
+      <!-- Tarjeta Pendientes -->
+      <button 
+        @click="filtroEstado = filtroEstado === 'pendiente' ? 'todos' : 'pendiente'; cerrarFiltros()"
+        :class="[
+          'relative overflow-hidden rounded-xl p-4 flex flex-col items-start transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2',
+          filtroEstado === 'pendiente'
+            ? 'bg-amber-100 border-2 border-amber-400 shadow-lg shadow-amber-500/20 scale-105'
+            : 'bg-amber-50/80 border-2 border-transparent shadow-sm hover:shadow-md hover:bg-amber-100/90'
+        ]"
+      >
+        <div class="flex items-center justify-between w-full mb-2">
+          <p class="text-xs font-medium text-gray-700 uppercase">PENDIENTES</p>
+          <span v-if="filtroEstado === 'pendiente'" class="flex items-center justify-center w-5 h-5 bg-amber-500 text-white rounded-full text-xs font-bold">✓</span>
+        </div>
+        <p class="text-3xl font-bold text-orange-500 leading-tight">{{ resumenMesActual.pendientes }}</p>
+      </button>
+      
+      <!-- Tarjeta En Mora -->
+      <button 
+        @click="filtroEstado = filtroEstado === 'mora' ? 'todos' : 'mora'; cerrarFiltros()"
+        :class="[
+          'relative overflow-hidden rounded-xl p-4 flex flex-col items-start transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2',
+          filtroEstado === 'mora'
+            ? 'bg-pink-100 border-2 border-red-400 shadow-lg shadow-red-500/20 scale-105'
+            : 'bg-pink-50/80 border-2 border-transparent shadow-sm hover:shadow-md hover:bg-pink-100/90'
+        ]"
+      >
+        <div class="flex items-center justify-between w-full mb-2">
+          <p class="text-xs font-medium text-gray-700 uppercase">EN MORA</p>
+          <span v-if="filtroEstado === 'mora'" class="flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full text-xs font-bold">✓</span>
+        </div>
+        <p class="text-3xl font-bold text-red-500 leading-tight">{{ resumenMesActual.enMora }}</p>
+      </button>
+      
+      <!-- Tarjeta Total Recaudado -->
+      <button 
+        @click="modalDesgloseRecaudacion = true"
+        class="relative overflow-hidden rounded-xl bg-green-50/80 p-4 flex flex-col items-start shadow-sm hover:shadow-md hover:bg-green-100/90 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 w-full"
+      >
+        <p class="text-xs font-medium text-gray-700 uppercase mb-2">TOTAL RECAUDADO</p>
+        <p class="text-2xl font-bold text-green-600 leading-tight">${{ formatMoney(resumenMesActual.totalRecaudado || 0) }}</p>
+      </button>
+    </div>
+
+    <!-- Barra de progreso móvil -->
+    <div class="md:hidden mb-[10px]">
+      <div class="bg-white rounded-xl shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-medium text-purple-800 uppercase">PROGRESO DE RECAUDACIÓN</p>
+          <p class="text-xs font-medium text-purple-800">{{ (resumenMesActual.porcentajeRecaudado || 0).toFixed(0) }}%</p>
+        </div>
+        <div class="relative w-full h-3 bg-purple-100 rounded-full overflow-hidden">
+          <div 
+            class="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-600 to-pink-500 rounded-full transition-all duration-500"
+            :style="{ width: `${resumenMesActual.porcentajeRecaudado || 0}%` }"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botón para mostrar/ocultar filtros - Desktop -->
+    <div class="hidden md:flex items-center justify-between mb-4 flex-wrap gap-3">
       <div class="flex items-center gap-2">
         <button
           @click="mostrarFiltros = !mostrarFiltros"
@@ -193,17 +396,55 @@
       </div>
     </div>
 
-    <!-- Filtros elegantes -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0 -translate-y-4"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-4"
-    >
-      <div v-show="mostrarFiltros" class="card bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg mb-4 backdrop-blur-sm">
-      <div class="flex flex-col gap-4">
+    <!-- Botón para mostrar/ocultar filtros - Móvil -->
+    <div class="md:hidden mt-4">
+      <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+        <div class="flex items-center gap-2 p-2">
+          <button
+            @click="mostrarFiltros = !mostrarFiltros"
+            class="flex-1 flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex items-center gap-2">
+              <FunnelIcon class="w-5 h-5 text-gray-600" />
+              <span class="text-sm font-semibold text-gray-700">Mostrar Filtros</span>
+              <span 
+                v-if="cantidadFiltrosActivos > 0"
+                class="flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-natillera-500 text-white text-xs font-bold rounded-full"
+              >
+                {{ cantidadFiltrosActivos }}
+              </span>
+            </div>
+            <ChevronDownIcon 
+              :class="[
+                'w-4 h-4 text-gray-600 transition-transform duration-300',
+                mostrarFiltros ? 'rotate-180' : ''
+              ]"
+            />
+          </button>
+          
+          <!-- Botón Quitar Filtros - Móvil -->
+          <button
+            v-if="filtroEstado !== 'todos' || filtroPeriodicidad !== 'todos' || filtroTipoPago !== 'todos' || busquedaCuotas.trim()"
+            @click="quitarFiltros"
+            class="flex items-center justify-center gap-2 px-3 py-3 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-300 rounded-lg font-semibold text-xs text-red-700 hover:from-red-100 hover:to-orange-100 hover:border-red-400 hover:shadow-lg transition-all shadow-md"
+            title="Quitar Filtros"
+          >
+            <XMarkIcon class="w-4 h-4" />
+            <span class="hidden sm:inline">Quitar</span>
+          </button>
+        </div>
+
+        <!-- Filtros elegantes -->
+        <Transition
+          enter-active-class="transition-all duration-300 ease-out overflow-hidden"
+          enter-from-class="opacity-0 max-h-0"
+          enter-to-class="opacity-100 max-h-[2000px]"
+          leave-active-class="transition-all duration-200 ease-in overflow-hidden"
+          leave-from-class="opacity-100 max-h-[2000px]"
+          leave-to-class="opacity-0 max-h-0"
+        >
+          <div v-show="mostrarFiltros" class="border-t border-gray-200 bg-gray-50/50">
+            <div class="flex flex-col gap-4 p-4">
         <!-- Filtros de Periodicidad -->
         <div class="flex flex-col sm:flex-row sm:items-center gap-3">
           <!-- Etiqueta -->
@@ -213,12 +454,12 @@
           </div>
           
           <!-- Botones en la misma línea -->
-          <div class="flex flex-wrap gap-2 flex-1">
+          <div class="flex flex-nowrap gap-1 sm:gap-2 flex-1">
             <!-- Botón Todos -->
             <button
-              @click="filtroPeriodicidad = 'todos'"
+              @click="filtroPeriodicidad = 'todos'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroPeriodicidad === 'todos'
                   ? 'text-white shadow-lg'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:shadow-md'
@@ -228,12 +469,12 @@
                 v-if="filtroPeriodicidad === 'todos'"
                 class="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full" :class="filtroPeriodicidad === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" :class="filtroPeriodicidad === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
                 Todos
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroPeriodicidad === 'todos' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
                   ]"
                 >
@@ -244,9 +485,9 @@
 
             <!-- Mensual -->
             <button
-              @click="filtroPeriodicidad = filtroPeriodicidad === 'mensual' ? 'todos' : 'mensual'"
+              @click="filtroPeriodicidad = filtroPeriodicidad === 'mensual' ? 'todos' : 'mensual'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroPeriodicidad === 'mensual'
                   ? 'text-white shadow-lg shadow-natillera-500/30'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-natillera-300 hover:shadow-md'
@@ -256,25 +497,26 @@
                 v-if="filtroPeriodicidad === 'mensual'"
                 class="absolute inset-0 bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="text-lg">📅</span>
-                Mensual
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="text-sm sm:text-lg">📅</span>
+                <span class="hidden sm:inline">Mensual</span>
+                <span class="sm:hidden">Mens.</span>
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroPeriodicidad === 'mensual' ? 'bg-white/20 text-white' : 'bg-natillera-100 text-natillera-600'
                   ]"
                 >
-                  {{ cuotasMesActual.filter(c => !c.quincena).length }}
+                  {{ cuotasMesActual.filter(c => c.quincena === 0 || c.quincena === null || !c.quincena).length }}
                 </span>
               </span>
             </button>
 
             <!-- Quincenal -->
             <button
-              @click="filtroPeriodicidad = filtroPeriodicidad === 'quincenal' ? 'todos' : 'quincenal'"
+              @click="filtroPeriodicidad = filtroPeriodicidad === 'quincenal' ? 'todos' : 'quincenal'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroPeriodicidad === 'quincenal'
                   ? 'text-white shadow-lg shadow-purple-500/30'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-purple-300 hover:shadow-md'
@@ -284,12 +526,13 @@
                 v-if="filtroPeriodicidad === 'quincenal'"
                 class="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="text-lg">🗓️</span>
-                Quincenal
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="text-sm sm:text-lg">🗓️</span>
+                <span class="hidden sm:inline">Quincenal</span>
+                <span class="sm:hidden">Quinc.</span>
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroPeriodicidad === 'quincenal' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
                   ]"
                 >
@@ -309,12 +552,12 @@
           </div>
           
           <!-- Botones en la misma línea -->
-          <div class="flex flex-wrap gap-2 flex-1">
+          <div class="flex flex-nowrap gap-1 sm:gap-2 flex-1">
             <!-- Botón Todos -->
             <button
-              @click="filtroTipoPago = 'todos'"
+              @click="filtroTipoPago = 'todos'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroTipoPago === 'todos'
                   ? 'text-white shadow-lg'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:shadow-md'
@@ -324,12 +567,12 @@
                 v-if="filtroTipoPago === 'todos'"
                 class="absolute inset-0 bg-gradient-to-r from-gray-700 via-gray-800 to-gray-900"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full" :class="filtroTipoPago === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" :class="filtroTipoPago === 'todos' ? 'bg-white' : 'bg-gray-400'"></span>
                 Todos
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroTipoPago === 'todos' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
                   ]"
                 >
@@ -340,9 +583,9 @@
 
             <!-- Efectivo -->
             <button
-              @click="filtroTipoPago = filtroTipoPago === 'efectivo' ? 'todos' : 'efectivo'"
+              @click="filtroTipoPago = filtroTipoPago === 'efectivo' ? 'todos' : 'efectivo'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroTipoPago === 'efectivo'
                   ? 'text-white shadow-lg shadow-green-500/30'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:shadow-md'
@@ -352,12 +595,13 @@
                 v-if="filtroTipoPago === 'efectivo'"
                 class="absolute inset-0 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="text-lg">💵</span>
-                Efectivo
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="text-sm sm:text-lg">💵</span>
+                <span class="hidden sm:inline">Efectivo</span>
+                <span class="sm:hidden">Efect.</span>
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroTipoPago === 'efectivo' ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600'
                   ]"
                 >
@@ -368,9 +612,9 @@
 
             <!-- Transferencia -->
             <button
-              @click="filtroTipoPago = filtroTipoPago === 'transferencia' ? 'todos' : 'transferencia'"
+              @click="filtroTipoPago = filtroTipoPago === 'transferencia' ? 'todos' : 'transferencia'; cerrarFiltros()"
               :class="[
-                'group relative px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 overflow-hidden',
+                'group relative px-2 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 overflow-hidden flex-shrink-0',
                 filtroTipoPago === 'transferencia'
                   ? 'text-white shadow-lg shadow-blue-500/30'
                   : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:shadow-md'
@@ -380,12 +624,13 @@
                 v-if="filtroTipoPago === 'transferencia'"
                 class="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600"
               ></div>
-              <span class="relative flex items-center gap-2">
-                <span class="text-lg">💳</span>
-                Transferencia
+              <span class="relative flex items-center gap-1 sm:gap-2">
+                <span class="text-sm sm:text-lg">💳</span>
+                <span class="hidden sm:inline">Transferencia</span>
+                <span class="sm:hidden">Transf.</span>
                 <span 
                   :class="[
-                    'px-2 py-0.5 rounded-full text-xs font-bold',
+                    'px-1 py-0.5 sm:px-2 rounded-full text-[9px] sm:text-xs font-bold',
                     filtroTipoPago === 'transferencia' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'
                   ]"
                 >
@@ -397,8 +642,10 @@
         </div>
 
         <!-- Barra de búsqueda -->
-        <div class="relative">
-          <MagnifyingGlassIcon class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div class="relative w-full">
+          <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+            <MagnifyingGlassIcon class="w-5 h-5 text-gray-400" />
+          </div>
           <input 
             ref="inputBusquedaRef"
             v-model="busquedaCuotas"
@@ -407,18 +654,21 @@
             @keydown.esc="busquedaCuotas = ''"
             class="w-full pl-12 pr-12 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 focus:bg-white transition-all shadow-sm"
           />
-          <button
-            v-if="busquedaCuotas.trim()"
-            @click="busquedaCuotas = ''"
-            class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Limpiar búsqueda"
-          >
-            <XMarkIcon class="w-5 h-5" />
-          </button>
+          <div v-if="busquedaCuotas.trim()" class="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
+            <button
+              @click="busquedaCuotas = ''"
+              class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
         </div>
+            </div>
+          </div>
+        </Transition>
       </div>
     </div>
-    </Transition>
 
     <!-- Lista de cuotas - Indicador de carga mejorado -->
     <div v-if="cuotasStore.loading || inicializando" class="flex flex-col items-center justify-center py-16 px-4">
@@ -498,8 +748,8 @@
 
     <!-- Lista de cuotas filtradas -->
     <div v-else class="space-y-4">
-      <!-- Título, contador y toggle de vista -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <!-- Título, contador y toggle de vista - Desktop -->
+      <div class="hidden md:flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <!-- Título de sección de cuotas - Armónico y destacado -->
         <div v-if="cuotasMesActual.length > 0" class="flex-1 min-w-0">
           <div class="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-white via-natillera-50/80 to-emerald-50/60 border-2 border-natillera-300/50 shadow-lg sm:shadow-xl backdrop-blur-sm px-3 sm:px-5 py-2.5 sm:py-3.5">
@@ -546,41 +796,6 @@
             <ArrowDownTrayIcon class="w-4 h-4" />
             <span class="hidden sm:inline">Exportar</span>
           </button>
-          
-          <!-- Toggle de vista -->
-          <!-- Vista móvil: Solo 3 opciones (sin Excel) -->
-          <div class="md:hidden w-full grid grid-cols-3 gap-2">
-            <button
-              @click="vistaAgrupada = false; vistaExcel = false; vistaLista = false"
-              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
-              :class="!vistaAgrupada && !vistaExcel && !vistaLista 
-                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
-            >
-              <Squares2X2Icon class="w-5 h-5" />
-              <span>Tarjetas</span>
-            </button>
-            <button
-              @click="vistaAgrupada = true; vistaExcel = false; vistaLista = false"
-              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
-              :class="vistaAgrupada && !vistaExcel && !vistaLista 
-                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
-            >
-              <UserGroupIcon class="w-5 h-5" />
-              <span>Por Socio</span>
-            </button>
-            <button
-              @click="vistaLista = true; vistaExcel = false; vistaAgrupada = false"
-              class="py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm border-2"
-              :class="vistaLista && !vistaExcel && !vistaAgrupada 
-                ? 'bg-gradient-to-r from-natillera-500 to-emerald-600 text-white border-transparent shadow-lg' 
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'"
-            >
-              <ListBulletIcon class="w-5 h-5" />
-              <span>Lista</span>
-            </button>
-          </div>
           
           <!-- Vista desktop: Botones normales -->
           <div class="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl px-4 py-2.5 self-stretch shadow-md">
@@ -636,6 +851,56 @@
         </div>
       </div>
 
+      <!-- Sección móvil: Cuotas del Mes y Toggles -->
+      <div class="md:hidden space-y-4">
+        <!-- Sección "Cuotas del Mes" - Sin tarjeta -->
+        <div v-if="cuotasMesActual.length > 0" class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CurrencyDollarIcon class="w-6 h-6 text-white" />
+            </div>
+            <span class="text-base font-semibold text-gray-800">Cuotas del Mes</span>
+          </div>
+          <span class="px-3 py-1.5 bg-green-500 text-white text-xs font-normal rounded-full whitespace-nowrap">
+            {{ cuotasFiltradas.length === cuotasMesActual.length ? cuotasMesActual.length : `${cuotasFiltradas.length}/${cuotasMesActual.length}` }} Total
+          </span>
+        </div>
+
+        <!-- Toggles de vista móvil -->
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            @click="vistaAgrupada = false; vistaExcel = false; vistaLista = false"
+            class="py-3 px-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
+            :class="!vistaAgrupada && !vistaExcel && !vistaLista 
+              ? 'bg-green-500 text-white shadow-lg' 
+              : 'bg-white text-gray-600 border border-gray-200'"
+          >
+            <Squares2X2Icon class="w-5 h-5" />
+            <span>Tarjetas</span>
+          </button>
+          <button
+            @click="vistaAgrupada = true; vistaExcel = false; vistaLista = false"
+            class="py-3 px-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
+            :class="vistaAgrupada && !vistaExcel && !vistaLista 
+              ? 'bg-green-500 text-white shadow-lg' 
+              : 'bg-white text-gray-600 border border-gray-200'"
+          >
+            <UserGroupIcon class="w-5 h-5" />
+            <span>Por Socio</span>
+          </button>
+          <button
+            @click="vistaLista = true; vistaExcel = false; vistaAgrupada = false"
+            class="py-3 px-2 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-semibold text-sm"
+            :class="vistaLista && !vistaExcel && !vistaAgrupada 
+              ? 'bg-green-500 text-white shadow-lg' 
+              : 'bg-white text-gray-600 border border-gray-200'"
+          >
+            <ListBulletIcon class="w-5 h-5" />
+            <span>Lista</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Vista Agrupada por Socio -->
       <template v-if="vistaAgrupada && !vistaExcel && !vistaLista">
         <div class="space-y-4">
@@ -675,7 +940,7 @@
                       v-if="grupo.actividadesPendientes > 0"
                       class="text-sm font-semibold text-purple-600"
                     >
-                      Actividades: ${{ formatMoney(grupo.actividadesPendientes) }}
+                      {{ getTextoActividadesGrupo(grupo) }}: ${{ formatMoney(grupo.actividadesPendientes) }}
                     </span>
                     <span 
                       class="text-sm font-bold"
@@ -699,7 +964,7 @@
                   (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-green-100 via-emerald-100 via-teal-50 to-green-50 border-2 border-green-400/80 shadow-lg shadow-green-200/60 hover:shadow-xl hover:shadow-green-300/70 hover:border-green-500' : 
                   (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400 hover:shadow-md' : 
                   (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-50/50 border-gray-200/60 hover:border-gray-300 hover:shadow-md' : 
-                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 hover:shadow-md' :
+                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 hover:shadow-md' :
                   'bg-orange-50/50 border-orange-200/60 hover:border-orange-300 hover:shadow-md'
                 ]"
               >
@@ -716,7 +981,7 @@
                 
                 <!-- Indicador de pago parcial (considera cuota + sanción) -->
                 <div 
-                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
+                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))"
                   class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
                 >
                   ⚠️ PAGO PARCIAL
@@ -749,7 +1014,7 @@
                       </div>
                       <!-- Badge de quincena -->
                       <span 
-                        v-if="cuota.quincena"
+                        v-if="cuota.quincena === 1 || cuota.quincena === 2"
                         class="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-xs font-bold rounded-full shadow-md border border-purple-400"
                       >
                         <span>{{ cuota.quincena === 1 ? '1er' : '2da' }} Quincena</span>
@@ -760,7 +1025,7 @@
                           (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border border-green-400 shadow-sm' :
                           (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700 border border-red-200' :
                           (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' :
-                          (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
+                          (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                           'bg-orange-100 text-orange-700 border border-orange-200'
                         ]"
                       >
@@ -768,7 +1033,7 @@
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
                             (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
                             (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
-                            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'Pago Parcial' :
+                            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'Pago Parcial' :
                             'Pendiente' }}
                       </span>
                     </div>
@@ -776,68 +1041,98 @@
                   <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="text-right flex-1 sm:flex-none">
                       <!-- Mostrar información de pago parcial si aplica -->
-                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
                         <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                         <p class="font-bold text-base sm:text-lg text-orange-600">
                           ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                         </p>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                          Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                        <!-- Desglose: Primero Cuota, Segundo Sanción, Tercero Actividades -->
+                        <p class="text-xs font-semibold mt-0.5 text-gray-700">
+                          <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
                         </p>
                         <p 
-                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                          v-if="getSancionCuota(cuota) > 0" 
+                          class="text-xs font-semibold mt-0.5 text-red-600"
+                        >
+                          <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
+                        </p>
+                        <p 
+                          v-if="getActividadesPendientesSocio(cuota) > 0" 
                           class="text-xs font-semibold mt-0.5 text-purple-600"
                         >
-                          + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
+                          <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                         </p>
                         <p class="text-xs font-medium text-green-600 mt-0.5">
                           Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                         </p>
                       </template>
                       <template v-else>
-                        <p 
-                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
-                          class="text-xs text-gray-500 mb-0.5"
-                        >
-                          Total a Pagar
-                        </p>
-                        <p class="font-bold text-base sm:text-lg"
-                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 
-                                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 
-                                  getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? 'text-orange-600' : 'text-gray-800'"
-                        >
-                          ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
-                        </p>
-                        <p 
-                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
-                          class="text-xs text-gray-500 mt-0.5"
-                        >
-                          Cuota: ${{ formatMoney(cuota.valor_cuota) }}
-                        </p>
-                        <p 
-                          v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
-                          class="text-xs font-semibold mt-0.5 text-purple-600"
-                        >
-                          + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
-                        </p>
-                        <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
-                        <p 
-                          v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && cuota.valor_pagado > cuota.valor_cuota"
-                          class="text-xs text-amber-600 font-semibold mt-0.5"
-                        >
-                          + Multa: ${{ formatMoney(cuota.valor_pagado - cuota.valor_cuota) }}
-                        </p>
-                        <p 
-                          class="text-xs mt-1"
-                          :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600 font-medium' : 'text-gray-500'"
-                        >
-                          Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
-                        </p>
+                        <!-- Cuota pagada: mostrar total pagado y desglose (cuota + multa + actividades) -->
+                        <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
+                          <p class="text-xs text-gray-500 mb-0.5">Total pagado</p>
+                          <p class="font-bold text-base sm:text-lg text-green-600">
+                            ${{ formatMoney((cuota.valor_pagado || 0) + getActividadesInfoSocio(cuota).pagadas) }}
+                          </p>
+                          <p class="text-xs font-semibold mt-0.5 text-green-600">
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
+                          </p>
+                          <p 
+                            v-if="(cuota.valor_pagado_sancion || 0) > 0"
+                            class="text-xs font-semibold mt-0.5 text-green-600"
+                          >
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
+                          </p>
+                          <p 
+                            v-if="getActividadesInfoSocio(cuota).pagadas > 0"
+                            class="text-xs font-semibold mt-0.5 text-emerald-600"
+                          >
+                            <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
+                          </p>
+                        </template>
+                        <!-- Cuota pendiente o mora: total a pagar y desglose -->
+                        <template v-else>
+                          <p 
+                            v-if="getActividadesPendientesSocio(cuota) > 0"
+                            class="text-xs text-gray-500 mb-0.5"
+                          >
+                            Total a Pagar
+                          </p>
+                          <p class="font-bold text-base sm:text-lg"
+                            :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 
+                                    getActividadesPendientesSocio(cuota) > 0 ? 'text-orange-600' : 'text-gray-800'"
+                          >
+                            ${{ formatMoney(getActividadesPendientesSocio(cuota) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
+                          </p>
+                          <p 
+                            v-if="getSancionCuota(cuota) > 0 || getActividadesPendientesSocio(cuota) > 0"
+                            class="text-xs font-semibold mt-0.5 text-gray-700"
+                          >
+                            <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
+                          </p>
+                          <p 
+                            v-if="getSancionCuota(cuota) > 0" 
+                            class="text-xs font-semibold mt-0.5 text-red-600"
+                          >
+                            <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
+                          </p>
+                          <p 
+                            v-if="getActividadesPendientesSocio(cuota) > 0" 
+                            class="text-xs font-semibold mt-0.5 text-purple-600"
+                          >
+                            <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
+                          </p>
+                          <p 
+                            class="text-xs mt-1"
+                            :class="cuota.valor_pagado > 0 ? 'text-green-600 font-medium' : 'text-gray-500'"
+                          >
+                            Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                          </p>
+                        </template>
                       </template>
                     </div>
                     
                     <!-- Botones de acción desktop: diseño diferente para pago parcial -->
-                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
                       <!-- Diseño para pago parcial: 50% Pagar, 25% Editar, 25% Reenviar -->
                       <div class="hidden sm:flex items-stretch gap-2" @click.stop>
                         <!-- Botón Pagar: 50% -->
@@ -900,7 +1195,7 @@
                 </div>
                 
                 <!-- Botones móvil: diseño diferente para pago parcial -->
-                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
                   <!-- Diseño para pago parcial en móvil -->
                   <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
                     <!-- Botón Pagar: ancho completo -->
@@ -972,7 +1267,7 @@
             (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-br from-green-100 via-emerald-100 via-teal-50 to-green-50 border-2 border-green-400/80 shadow-xl shadow-green-200/70 hover:shadow-2xl hover:shadow-green-300/80 hover:border-green-500' : 
             (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-gradient-to-br from-red-100 via-red-50 to-rose-50 border-red-300/70 hover:border-red-400 shadow-md hover:shadow-lg' : 
             (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gradient-to-br from-white via-gray-50/40 to-slate-50/30 border-gray-200/60 hover:border-gray-300 shadow-md hover:shadow-lg' : 
-            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 shadow-md hover:shadow-lg' :
+            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-gradient-to-br from-white via-amber-50/50 to-orange-50/40 border-amber-300/70 hover:border-amber-400 border-2 shadow-md hover:shadow-lg' :
             'bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 border-orange-200/60 hover:border-orange-300 shadow-md hover:shadow-lg'
           ]"
         >
@@ -994,7 +1289,7 @@
               'absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 opacity-20 transition-opacity duration-300 group-hover:opacity-30',
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-300' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-300' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-300' :
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-300' :
               'bg-orange-300'
             ]"
           ></div>
@@ -1006,14 +1301,14 @@
               'absolute top-0 left-0 right-0 h-0.5',
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-400/60' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-400/60' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-400/60' :
+              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-400/60' :
               'bg-orange-400/60'
             ]"
           ></div>
           
           <!-- Indicador de pago parcial -->
           <div 
-            v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))"
+            v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))"
             class="absolute top-0 right-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-lg rounded-tr-xl shadow-md z-20"
           >
             ⚠️ PAGO PARCIAL
@@ -1044,7 +1339,7 @@
                     :class="[
                       cuota.estado === 'pagada' ? 'border-green-300' : 
                       cuota.estado === 'mora' ? 'border-red-300' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'border-amber-300' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'border-amber-300' :
                       cuota.estado === 'parcial' ? 'border-blue-300' : 
                       cuota.estado === 'programada' ? 'border-gray-300' : 'border-orange-300'
                     ]"
@@ -1055,7 +1350,7 @@
                       'absolute -bottom-1 -right-1 w-6 h-6 rounded-lg flex items-center justify-center shadow-md border-2 border-white',
                       cuota.estado === 'pagada' ? 'bg-green-500' : 
                       cuota.estado === 'mora' ? 'bg-red-500' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-500' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-500' :
                       cuota.estado === 'parcial' ? 'bg-blue-500' : 
                       cuota.estado === 'programada' ? 'bg-gray-400' : 'bg-orange-500'
                     ]"
@@ -1119,78 +1414,109 @@
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
                         ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                       </p>
-                      <p class="text-xs text-gray-500 mt-1">
-                        Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                      <!-- Desglose: Primero Cuota, Segundo Sanción, Tercero Actividades -->
+                      <p 
+                        v-if="getSancionCuota(cuota) > 0 || getActividadesPendientesSocio(cuota) > 0"
+                        class="text-xs font-semibold mt-0.5 text-gray-700"
+                      >
+                        <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
                       </p>
                       <p v-if="getSancionCuota(cuota) > 0" class="text-xs font-semibold mt-0.5 text-red-600">
-                        + Multa: ${{ formatMoney(getSancionCuota(cuota)) }}
+                        <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
                       </p>
                       <p 
-                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        v-if="getActividadesPendientesSocio(cuota) > 0" 
                         class="text-xs font-semibold mt-0.5 text-purple-600"
                       >
-                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
+                        <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                       </p>
                       <p v-if="cuota.valor_pagado > 0" class="text-xs font-medium mt-0.5 text-green-600">
                         Pagado: ${{ formatMoney(cuota.valor_pagado) }}
                       </p>
                     </template>
                     <!-- Estado parcial -->
-                    <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                    <template v-else-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
                       <p class="text-xs text-gray-500 mb-0.5">Pendiente</p>
                       <p class="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
                         ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                       </p>
-                      <p class="text-xs text-gray-500 mt-1">
-                        Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                      <!-- Desglose: Primero Cuota, Segundo Sanción, Tercero Actividades -->
+                      <p class="text-xs font-semibold mt-0.5 text-gray-700">
+                        <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
                       </p>
                       <p 
-                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        v-if="getSancionCuota(cuota) > 0" 
+                        class="text-xs font-semibold mt-0.5 text-red-600"
+                      >
+                        <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota) > 0" 
                         class="text-xs font-semibold mt-0.5 text-purple-600"
                       >
-                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
+                        <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                       </p>
                       <p class="text-xs font-medium mt-0.5 text-green-600">
                         Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                       </p>
                     </template>
-                    <!-- Estado normal -->
+                    <!-- Cuota pagada: total pagado y desglose (cuota + multa + actividades) -->
+                    <template v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
+                      <p class="text-xs text-gray-500 mb-0.5">Total pagado</p>
+                      <p class="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+                        ${{ formatMoney((cuota.valor_pagado || 0) + getActividadesInfoSocio(cuota).pagadas) }}
+                      </p>
+                      <p class="text-xs font-semibold mt-1 text-green-600">
+                        <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
+                      </p>
+                      <p 
+                        v-if="(cuota.valor_pagado_sancion || 0) > 0"
+                        class="text-xs font-semibold mt-0.5 text-green-600"
+                      >
+                        <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesInfoSocio(cuota).pagadas > 0"
+                        class="text-xs font-semibold mt-0.5 text-emerald-600"
+                      >
+                        <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
+                      </p>
+                    </template>
+                    <!-- Estado normal (pendiente) -->
                     <template v-else>
                       <p 
-                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
+                        v-if="getActividadesPendientesSocio(cuota) > 0"
                         class="text-xs text-gray-500 mb-0.5"
                       >
                         Total a Pagar
                       </p>
                       <p 
                         class="text-lg sm:text-xl lg:text-2xl font-bold"
-                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 
-                                getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? 'text-orange-600' : 'text-gray-900'"
+                        :class="getActividadesPendientesSocio(cuota) > 0 ? 'text-orange-600' : 'text-gray-900'"
                       >
-                        ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
+                        ${{ formatMoney(getActividadesPendientesSocio(cuota) > 0 ? getTotalAPagarConActividadesSocio(cuota) : cuota.valor_cuota) }}
                       </p>
                       <p 
-                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0"
-                        class="text-xs text-gray-500 mt-1"
+                        v-if="getSancionCuota(cuota) > 0 || getActividadesPendientesSocio(cuota) > 0"
+                        class="text-xs font-semibold mt-1 text-gray-700"
                       >
-                        Cuota: ${{ formatMoney(cuota.valor_cuota) }}
+                        <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
                       </p>
                       <p 
-                        v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" 
+                        v-if="getSancionCuota(cuota) > 0" 
+                        class="text-xs font-semibold mt-0.5 text-red-600"
+                      >
+                        <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
+                      </p>
+                      <p 
+                        v-if="getActividadesPendientesSocio(cuota) > 0" 
                         class="text-xs font-semibold mt-0.5 text-purple-600"
                       >
-                        + Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}
-                      </p>
-                      <!-- Mostrar multa si se pagó con multa (debajo del monto a pagar) -->
-                      <p 
-                        v-if="(cuota.estadoReal || cuota.estado) === 'pagada' && cuota.valor_pagado > cuota.valor_cuota"
-                        class="text-xs text-amber-600 font-semibold mt-0.5"
-                      >
-                        + Multa: ${{ formatMoney(cuota.valor_pagado - cuota.valor_cuota) }}
+                        <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                       </p>
                       <p 
                         class="text-xs font-medium mt-1"
-                        :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600 font-medium' : (cuota.valor_pagado > 0 ? 'text-green-600' : 'text-gray-400')"
+                        :class="cuota.valor_pagado > 0 ? 'text-green-600 font-medium' : 'text-gray-400'"
                       >
                         Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
                       </p>
@@ -1204,7 +1530,7 @@
                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white border border-green-400 shadow-sm' : 
                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800 border border-red-200' : 
                       (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700 border border-gray-200' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
+                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-100 text-amber-800 border-2 border-amber-300' :
                       'bg-orange-100 text-orange-800 border border-orange-200'
                     ]"
                   >
@@ -1212,13 +1538,13 @@
                     {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 
                        (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : 
                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 
-                       (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))) ? 'Pago Parcial' :
+                       (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'Pago Parcial' :
                        'Pendiente' }}
                   </span>
                 </div>
 
                 <!-- Botones de acción: diseño diferente para pago parcial -->
-                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))">
+                <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
                   <!-- Diseño para pago parcial: 50% Pagar, 25% Editar, 25% Reenviar -->
                   <div class="hidden sm:flex items-stretch gap-2 w-full" @click.stop>
                     <!-- Botón Pagar: 50% -->
@@ -1367,11 +1693,19 @@
             </div>
             
             <!-- Línea 2: Valor | Estado | Fecha | Botón Pagar -->
-            <div class="flex items-center gap-2 text-xs">
-              <!-- Valor Cuota -->
-              <span class="font-bold text-gray-800">
-                ${{ formatMoney(cuota.valor_cuota) }}
-              </span>
+            <div class="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2 text-xs">
+              <!-- Valor: si pagada mostrar total pagado y desglose; si no, valor cuota -->
+              <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <span 
+                  class="font-bold"
+                  :class="(cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-600' : 'text-gray-800'"
+                >
+                  ${{ formatMoney((cuota.estadoReal || cuota.estado) === 'pagada' ? ((cuota.valor_pagado || 0) + getActividadesInfoSocio(cuota).pagadas) : cuota.valor_cuota) }}
+                </span>
+                <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
+                  <span class="text-green-600 font-medium">(Cuota ${{ formatMoney(cuota.valor_cuota) }}<template v-if="(cuota.valor_pagado_sancion || 0) > 0"> + Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</template><template v-if="getActividadesInfoSocio(cuota).pagadas > 0"> + <span class="text-emerald-600 font-medium">{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</span></template>)</span>
+                </template>
+              </div>
               
               <!-- Separador -->
               <span class="text-gray-300">|</span>
@@ -1452,14 +1786,23 @@
                   Mensual
                 </span>
               </td>
-              <td class="px-4 py-3 text-sm font-semibold text-right" :class="cuota.estado === 'mora' ? 'text-red-600' : 'text-gray-800'">
+              <td class="px-4 py-3 text-sm font-semibold text-right" :class="cuota.estado === 'mora' ? 'text-red-600' : cuota.estado === 'pagada' ? 'text-green-600' : 'text-gray-800'">
+                <!-- Cuota pagada: desglose (cuota + multa + actividades) -->
+                <template v-if="cuota.estado === 'pagada'">
+                  <div class="space-y-0.5">
+                    <div class="font-bold">Total: ${{ formatMoney((cuota.valor_pagado || 0) + getActividadesInfoSocio(cuota).pagadas) }}</div>
+                    <div class="text-xs text-green-600 font-semibold">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
+                    <div v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-xs text-green-600 font-semibold">+ Multa: ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</div>
+                    <div v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-xs text-emerald-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</div>
+                  </div>
+                </template>
                 <!-- Estado mora con multa -->
-                <template v-if="cuota.estado === 'mora'">
+                <template v-else-if="cuota.estado === 'mora'">
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
                     <div v-if="getSancionCuota(cuota) > 0" class="text-xs text-red-500 font-semibold">+ Multa: ${{ formatMoney(getSancionCuota(cuota)) }}</div>
-                    <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado parcial -->
@@ -1467,15 +1810,15 @@
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
-                    <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
+                    <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado normal -->
                 <div v-else>
-                  <div v-if="getActividadesPendientesSocio(cuota.socio_natillera_id) > 0" class="space-y-0.5">
+                  <div v-if="getActividadesPendientesSocio(cuota) > 0" class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
-                    <div class="text-xs text-purple-600 font-semibold">+ Actividades: ${{ formatMoney(getActividadesPendientesSocio(cuota.socio_natillera_id)) }}</div>
+                    <div class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
                   </div>
                   <div v-else>
                     ${{ formatMoney(cuota.valor_cuota) }}
@@ -1505,7 +1848,7 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-2">
                   <button 
-                    v-if="!esVisor && (cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota))))"
+                    v-if="!esVisor && (cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))))"
                     @click="abrirModalEditar(cuota)"
                     class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                     title="Editar cuota"
@@ -1520,7 +1863,7 @@
                     Pagar
                   </button>
                   <button 
-                    v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionCuota(cuota)))"
+                    v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota)))"
                     @click="reenviarComprobante(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-1"
                     title="Reenviar comprobante"
@@ -1822,11 +2165,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-5 rounded-xl border border-purple-200 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
-                <span class="text-2xl">{{ cuotaDetalle.quincena ? '🗓️' : '📅' }}</span>
+                <span class="text-2xl">{{ (cuotaDetalle.quincena === 1 || cuotaDetalle.quincena === 2) ? '🗓️' : '📅' }}</span>
                 <p class="text-xs text-gray-500 font-medium">Periodicidad</p>
               </div>
               <p class="text-lg font-bold text-gray-800">
-                {{ cuotaDetalle.quincena ? `Quincenal - Q${cuotaDetalle.quincena}` : 'Mensual' }}
+                {{ (cuotaDetalle.quincena === 1 || cuotaDetalle.quincena === 2) ? `Quincenal - Q${cuotaDetalle.quincena}` : 'Mensual' }}
               </p>
             </div>
             <div class="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl border border-blue-200 shadow-sm">
@@ -2336,7 +2679,7 @@
 
     <!-- Modal Registrar Pago -->
     <div v-if="modalPago" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'"></div>
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; mostrandoAnimacionPago.value = false"></div>
       <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] flex flex-col">
         <!-- Header con gradiente (fijo) -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden flex-shrink-0">
@@ -2407,23 +2750,31 @@
               </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-200">
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
               <div>
                 <p class="text-xs text-gray-500 mb-0.5">Valor Cuota</p>
                 <p class="font-bold text-gray-800 text-base">
                   ${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}
                 </p>
-                <p v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado <= (cuotaSeleccionada?.valor_cuota || 0))" class="text-xs text-red-600 font-semibold">
-                  + Multa: ${{ formatMoney(getSancionCuotaDetalle(cuotaSeleccionada)) }}
+                <p v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado <= (cuotaSeleccionada?.valor_cuota || 0))" class="text-xs text-red-600 font-bold mt-1">
+                  • Sanciones: ${{ formatMoney(getSancionCuotaDetalle(cuotaSeleccionada)) }}
+                </p>
+                <div v-if="actividadesSeleccionadas.size > 0" class="mt-1 space-y-0.5">
+                  <div
+                    v-for="actividad in actividadesPendientes.filter(a => actividadesSeleccionadas.has(a.id))"
+                    :key="actividad.id"
+                    class="text-xs text-purple-600 font-bold flex items-center gap-1"
+                  >
+                    <span class="flex-shrink-0">•</span>
+                    <span class="flex-1 min-w-0 truncate">{{ limpiarDescripcionActividad(actividad.actividad?.descripcion) }}:</span>
+                    <span class="flex-shrink-0 whitespace-nowrap">${{ formatMoney(actividad.valor_pendiente || 0) }}</span>
+                  </div>
+                </div>
+                <p v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0" class="text-xs text-green-600 font-semibold mt-1">
+                  Ya Pagado: ${{ formatMoney(cuotaSeleccionada.valor_pagado) }}
                 </p>
               </div>
-              <div v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
-                <p class="text-xs text-gray-500 mb-0.5">Ya Pagado</p>
-                <p class="font-bold text-green-600 text-base">
-                  ${{ formatMoney(cuotaSeleccionada.valor_pagado) }}
-                </p>
-              </div>
-              <div>
+              <div class="text-right">
                 <template v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado >= (cuotaSeleccionada?.valor_cuota || 0)">
                   <p class="text-xs text-gray-500 mb-0.5">Sanción</p>
                   <p class="font-bold text-base text-red-600">
@@ -2433,7 +2784,7 @@
                 <template v-else>
                   <p class="text-xs text-gray-500 mb-0.5">{{ cuotaSeleccionada?.estado === 'mora' ? 'Total Pendiente' : 'Pendiente' }}</p>
                   <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                    ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
+                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada))) }}
                   </p>
                 </template>
               </div>
@@ -2540,18 +2891,31 @@
               <button
                 type="button"
                 @click="actividadesDesplegableAbierto = !actividadesDesplegableAbierto"
-                class="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 hover:from-purple-100 hover:via-indigo-100 hover:to-blue-100 transition-all duration-200"
+                :class="[
+                  'w-full flex items-center justify-between p-4 transition-all duration-200',
+                  actividadesSeleccionadas.size > 0
+                    ? 'bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 hover:from-purple-100 hover:via-indigo-100 hover:to-purple-100'
+                    : 'bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 hover:from-purple-100 hover:via-indigo-100 hover:to-blue-100'
+                ]"
               >
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-1">
                   <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                     <SparklesIcon class="w-5 h-5 text-white" />
                   </div>
-                  <div class="text-left">
-                    <p class="font-semibold text-gray-800">Actividades pendientes</p>
-                    <p class="text-xs text-gray-600 mt-0.5">
-                      <span v-if="cargandoActividades">Cargando...</span>
-                      <span v-else-if="actividadesPendientes.length === 0">No hay actividades pendientes</span>
-                      <span v-else>{{ actividadesPendientes.length }} actividad{{ actividadesPendientes.length !== 1 ? 'es' : '' }} pendiente{{ actividadesPendientes.length !== 1 ? 's' : '' }}</span>
+                  <div class="text-left flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                      <span>Actividades pendientes</span>
+                      <span 
+                        v-if="actividadesSeleccionadas.size > 0"
+                        class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white shadow-md shadow-emerald-500/30 whitespace-nowrap"
+                      >
+                        {{ actividadesSeleccionadas.size }} {{ actividadesSeleccionadas.size === 1 ? 'Seleccionado' : 'Seleccionados' }}
+                      </span>
+                      <span class="text-xs font-normal text-gray-600">
+                        <span v-if="cargandoActividades">• Cargando...</span>
+                        <span v-else-if="actividadesPendientes.length === 0">• No hay actividades pendientes</span>
+                        <span v-else>• {{ actividadesPendientes.length }} actividad{{ actividadesPendientes.length !== 1 ? 'es' : '' }} pendiente{{ actividadesPendientes.length !== 1 ? 's' : '' }}</span>
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -2606,7 +2970,7 @@
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2 mb-1">
                             <h4 class="font-semibold text-gray-800 truncate text-sm">
-                              {{ actividad.actividad?.descripcion || 'Actividad' }}
+                              {{ limpiarDescripcionActividad(actividad.actividad?.descripcion) }}
                             </h4>
                             <p class="text-xs font-bold text-orange-600 flex-shrink-0">
                               ${{ formatMoney(actividad.valor_pendiente || 0) }}
@@ -2656,23 +3020,6 @@
                   required
                 />
               </div>
-              <div class="space-y-1">
-                <p class="text-xs text-gray-500 flex items-center gap-1">
-                  <span>Total cuota:</span>
-                  <span :class="['font-semibold', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                    ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada))) }}
-                  </span>
-                  <span v-if="getSancionCuotaDetalle(cuotaSeleccionada) > 0 && (!cuotaSeleccionada?.valor_pagado || cuotaSeleccionada.valor_pagado < (cuotaSeleccionada?.valor_cuota || 0))" class="text-red-500 text-xs">(incluye multa)</span>
-                </p>
-                <p v-if="getTotalActividadesSeleccionadas() > 0" class="text-xs text-purple-600 flex items-center gap-1">
-                  <span>+ Actividades seleccionadas:</span>
-                  <span class="font-semibold">${{ formatMoney(getTotalActividadesSeleccionadas()) }}</span>
-                </p>
-                <p v-if="getTotalActividadesSeleccionadas() > 0" class="text-xs text-gray-700 font-semibold flex items-center gap-1">
-                  <span>Total a pagar:</span>
-                  <span class="text-natillera-600">${{ formatMoney(getTotalAPagarConActividades(cuotaSeleccionada)) }}</span>
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -2682,7 +3029,7 @@
           <div class="flex gap-3">
             <button 
               type="button"
-              @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'"
+              @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; mostrandoAnimacionPago.value = false"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
             >
               Cancelar
@@ -2699,6 +3046,112 @@
         </div>
       </div>
     </div>
+
+    <!-- Animación de registro de pago -->
+    <Transition
+      enter-active-class="transition duration-150 ease-out"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition duration-100 ease-in"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="mostrandoAnimacionPago" class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden" style="will-change: opacity, transform; touch-action: none; overscroll-behavior: none;">
+        <!-- Fondo con blur y gradiente animado que bloquea interacciones -->
+        <div 
+          class="absolute inset-0 bg-gradient-to-br from-natillera-500/90 via-emerald-500/90 to-teal-600/90 backdrop-blur-sm" 
+          @click.stop.prevent 
+          @mousedown.stop.prevent 
+          @touchstart.stop.prevent
+          @wheel.stop.prevent
+          @scroll.stop.prevent
+          style="touch-action: none; overscroll-behavior: none;"
+        ></div>
+        
+        <!-- Efectos decorativos de fondo animados -->
+        <div class="absolute inset-0 overflow-hidden">
+          <!-- Círculos grandes animados -->
+          <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse-fast" style="will-change: opacity;"></div>
+          <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse-fast" style="animation-delay: 0.5s; will-change: opacity;"></div>
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl animate-pulse-fast" style="animation-delay: 0.25s; will-change: opacity;"></div>
+        </div>
+
+        <!-- Contenido principal de la animación -->
+        <div class="relative z-10 flex flex-col items-center justify-center">
+          <!-- Contenedor del spinner principal -->
+          <div class="relative mb-8">
+            <!-- Anillo exterior con gradiente giratorio -->
+            <div class="relative w-40 h-40" style="will-change: transform;">
+              <!-- Anillo exterior grande -->
+              <div class="absolute inset-0 rounded-full border-4 border-transparent bg-gradient-to-r from-white/30 via-white/50 to-white/30 p-1 animate-spin-fast" style="will-change: transform;">
+                <div class="w-full h-full rounded-full bg-gradient-to-br from-natillera-500/90 via-emerald-500/90 to-teal-600/90"></div>
+              </div>
+              
+              <!-- Anillo medio giratorio -->
+              <div class="absolute inset-4 rounded-full border-4 border-transparent border-t-white border-r-white/80 animate-spin-fast-reverse" style="will-change: transform;"></div>
+              
+              <!-- Anillo interior giratorio (dirección opuesta) -->
+              <div class="absolute inset-8 rounded-full border-3 border-transparent border-b-white/60 border-l-white/40 animate-spin-fast" style="will-change: transform;"></div>
+              
+              <!-- Icono central con efecto de pulso -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="relative">
+                  <!-- Fondo del icono con pulso -->
+                  <div class="absolute inset-0 bg-white/30 rounded-full blur-2xl animate-pulse-fast" style="will-change: opacity;"></div>
+                  <!-- Icono de dinero -->
+                  <div class="relative bg-white rounded-full p-6 shadow-2xl animate-bounce-fast" style="will-change: transform;">
+                    <CurrencyDollarIcon class="w-12 h-12 text-natillera-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Partículas decorativas alrededor (reducidas para mejor rendimiento) -->
+            <div class="absolute -top-6 -left-6 w-4 h-4 bg-white rounded-full animate-ping-fast" style="animation-delay: 0s; will-change: transform, opacity;"></div>
+            <div class="absolute -top-4 -right-8 w-3 h-3 bg-emerald-200 rounded-full animate-ping-fast" style="animation-delay: 0.3s; will-change: transform, opacity;"></div>
+            <div class="absolute -bottom-6 -left-8 w-3.5 h-3.5 bg-teal-200 rounded-full animate-ping-fast" style="animation-delay: 0.6s; will-change: transform, opacity;"></div>
+            <div class="absolute -bottom-4 -right-6 w-4 h-4 bg-natillera-200 rounded-full animate-ping-fast" style="animation-delay: 0.9s; will-change: transform, opacity;"></div>
+          </div>
+
+          <!-- Texto principal -->
+          <div class="text-center space-y-4">
+            <h2 class="text-4xl sm:text-5xl font-display font-bold text-white drop-shadow-lg">
+              Registrando Pago
+            </h2>
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0s; will-change: transform;"></div>
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0.15s; will-change: transform;"></div>
+              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0.3s; will-change: transform;"></div>
+            </div>
+            <p class="text-white/90 text-lg sm:text-xl font-medium mt-4">
+              Por favor espera un momento...
+            </p>
+          </div>
+
+          <!-- Barra de progreso decorativa -->
+          <div class="mt-10 w-72 h-2 bg-white/20 rounded-full overflow-hidden shadow-inner">
+            <div class="h-full bg-gradient-to-r from-white via-white/80 to-white rounded-full progress-bar-animated-fast"></div>
+          </div>
+
+          <!-- Efectos de partículas flotantes -->
+          <div class="absolute inset-0 overflow-hidden pointer-events-none" style="pointer-events: none;">
+            <!-- Partículas de dinero flotantes -->
+            <div class="absolute top-1/4 left-1/4 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0s; will-change: transform, opacity;">
+              💰
+            </div>
+            <div class="absolute top-1/3 right-1/4 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.25s; will-change: transform, opacity;">
+              💵
+            </div>
+            <div class="absolute bottom-1/4 left-1/3 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.5s; will-change: transform, opacity;">
+              💴
+            </div>
+            <div class="absolute bottom-1/3 right-1/3 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.75s; will-change: transform, opacity;">
+              💶
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Modal Historial de Ajustes -->
     <div v-if="modalHistorialAjustes" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -2752,7 +3205,7 @@
                 </p>
                 <p class="text-xs text-gray-500">
                   {{ getMesLabel(cuotaSeleccionada?.mes) }} {{ cuotaSeleccionada?.anio }}
-                  <span v-if="cuotaSeleccionada?.quincena" class="text-purple-600">- Q{{ cuotaSeleccionada.quincena }}</span>
+                  <span v-if="cuotaSeleccionada?.quincena === 1 || cuotaSeleccionada?.quincena === 2" class="text-purple-600">- Q{{ cuotaSeleccionada.quincena }}</span>
                 </p>
               </div>
               <div class="text-right">
@@ -2851,11 +3304,11 @@
     </div>
 
     <!-- Modal Confirmación de Pago con Comprobante Visual -->
-    <div v-if="modalConfirmacion" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div v-if="modalConfirmacion" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarConfirmacion"></div>
-      <div class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
+      <div class="relative max-w-lg w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-emerald-500 via-natillera-500 to-teal-600 p-6 text-white relative overflow-hidden flex-shrink-0">
+        <div class="bg-gradient-to-br from-emerald-500 via-natillera-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2881,7 +3334,7 @@
         <div 
           ref="scrollComprobanteRef"
           @scroll="verificarScrollComprobante"
-          class="overflow-y-auto flex-1 p-6 relative"
+          class="overflow-y-auto flex-1 p-3 sm:p-6 relative"
         >
           <!-- Indicador de scroll animado -->
           <Transition
@@ -2910,222 +3363,164 @@
           <div 
             id="comprobante-pago"
             ref="comprobanteRef"
-            class="rounded-2xl overflow-hidden"
+            class="bg-white rounded-2xl overflow-hidden"
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
           >
-          <!-- Header con gradiente mejorado -->
-          <div style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #0d9488 100%); padding: 20px 18px; color: white;">
-            <!-- Header del comprobante -->
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 18px;">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); border-radius: 14px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.3);">
-                  <span style="font-size: 22px;">✓</span>
+          <!-- Contenido del comprobante con fondo verdoso claro -->
+          <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
+            <!-- TÍTULO Y CHULO VERDE -->
+            <div style="text-align: center; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                <!-- Chulo verde -->
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
+                  </svg>
                 </div>
-                <div>
-                  <p style="color: rgba(255,255,255,0.95); font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -0.5px;">
-                    {{ pagoRegistrado?.esParcial ? 'Comprobante de Pago Parcial' : 'Comprobante de Pago' }}
-                  </p>
-                </div>
+                <!-- Título -->
+                <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                  Comprobante de Pago
+                </h1>
               </div>
             </div>
-
-            <!-- Valor grande destacado -->
-            <div style="text-align: center; padding: 16px 0 14px 0; border-top: 1px solid rgba(255,255,255,0.15); border-bottom: 1px solid rgba(255,255,255,0.15);">
-              <p style="color: rgba(255,255,255,0.8); font-size: 10px; margin: 0 0 6px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-                {{ pagoRegistrado?.esParcial ? 'Valor Pagado' : 'Valor Pagado' }}
-              </p>
-              <p style="font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -3px; line-height: 1;">
-                ${{ formatMoney(pagoRegistrado?.valor) }}
-              </p>
-              
-              <!-- Desglose de cuota, sanción y actividades -->
-              <div v-if="(pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0) || pagoRegistrado?.tieneActividades" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15);">
-                <div :style="pagoRegistrado?.tieneActividades ? 'display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;' : 'display: grid; grid-template-columns: 1fr 1fr; gap: 8px;'" style="text-align: center;">
-                  <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px;">
-                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Cuota</p>
-                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
-                  </div>
-                  <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Sanción</p>
-                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; color: #fca5a5;">${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
-                  </div>
-                  <div v-if="pagoRegistrado?.tieneActividades" style="background: rgba(168, 85, 247, 0.2); border-radius: 8px; padding: 8px; border: 1px solid rgba(168, 85, 247, 0.3);">
-                    <p style="color: rgba(255,255,255,0.7); font-size: 8px; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;">Actividades</p>
-                    <p style="font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.5px; color: #c084fc;">${{ formatMoney(pagoRegistrado?.valorActividades || 0) }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Información de pago parcial anterior (si se completó un pago parcial) -->
-            <div v-if="pagoRegistrado?.teniaPagoParcial" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.2) 100%); border-radius: 14px; padding: 16px; margin-top: 18px; border: 2px solid rgba(59, 130, 246, 0.4); backdrop-filter: blur(10px);">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <div style="width: 28px; height: 28px; background: rgba(59, 130, 246, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                  <span style="font-size: 14px;">📋</span>
-                </div>
-                <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Pago Anterior</p>
-              </div>
-              
-              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Valor del Pago Anterior</p>
-                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorPagoAnterior || 0) }}</p>
-                <p v-if="pagoRegistrado?.fechaPagoAnterior" style="color: rgba(255,255,255,0.7); font-size: 9px; margin: 4px 0 0 0; font-weight: 500;">
-                  Fecha: {{ pagoRegistrado.fechaPagoAnterior }}
+            
+            <!-- SECCIÓN 1: INFORMACIÓN DEL PAGO (Parte Superior) -->
+            <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+              <!-- Valor pagado y estado -->
+              <div style="text-align: center; margin-bottom: 10px;">
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MONTO PAGADO</p>
+                <p style="font-size: 28px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -1px; color: #059669;">
+                  ${{ formatMoney(pagoRegistrado?.valor) }}
                 </p>
-              </div>
-              
-              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Pago Actual (Completado)</p>
-                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px; color: #10b981;">${{ formatMoney(pagoRegistrado?.valor || 0) }}</p>
-              </div>
-            </div>
-
-            <!-- Información de pago parcial (si aplica) -->
-            <div v-if="pagoRegistrado?.esParcial" style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(245, 158, 11, 0.2) 100%); border-radius: 14px; padding: 16px; margin-top: 18px; border: 2px solid rgba(251, 191, 36, 0.4); backdrop-filter: blur(10px);">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <div style="width: 28px; height: 28px; background: rgba(251, 191, 36, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                  <span style="font-size: 14px;">⚠️</span>
-                </div>
-                <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Pago Parcial</p>
-              </div>
-              
-              <!-- Desglose de cuota y sanción si hay sanción -->
-              <div v-if="pagoRegistrado?.tieneSancion" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
-                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Cuota</p>
-                  <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorCuota || 0) }}</p>
-                </div>
-                <div style="background: rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 10px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Sanción</p>
-                  <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px; color: #fca5a5;">${{ formatMoney(pagoRegistrado?.sancion || 0) }}</p>
-                </div>
-              </div>
-              
-              <!-- Valor Total (cuota + sanción) si hay sanción, o solo cuota si no -->
-              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; margin-bottom: 10px;">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">{{ pagoRegistrado?.tieneSancion ? 'Total a Pagar (Cuota + Sanción)' : 'Valor Total de la Cuota' }}</p>
-                <p style="font-weight: 700; font-size: 16px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney((pagoRegistrado?.valorCuota || 0) + (pagoRegistrado?.sancion || 0)) }}</p>
-              </div>
-              
-              <!-- Total Pagado y Pendiente lado a lado -->
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px;">
-                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Total Pagado</p>
-                  <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorPagadoTotal || 0) }}</p>
-                  <!-- Desglose del total pagado si hay sanción -->
-                  <div v-if="pagoRegistrado?.tieneSancion && pagoRegistrado?.valorSancionPagada > 0" style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <p style="color: rgba(255,255,255,0.6); font-size: 7px; margin: 2px 0; font-weight: 500;">Cuota: ${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
-                    <p style="color: rgba(239, 68, 68, 0.8); font-size: 7px; margin: 2px 0; font-weight: 500;">Sanción: ${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
-                  </div>
-                </div>
-                <div style="background: rgba(251, 191, 36, 0.2); border-radius: 8px; padding: 10px; border: 1px solid rgba(251, 191, 36, 0.3);">
-                  <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0 0 3px 0; font-weight: 600;">Pendiente</p>
-                  <p style="font-weight: 700; font-size: 14px; margin: 0; color: #fbbf24; letter-spacing: -0.5px;">${{ formatMoney(pagoRegistrado?.valorPendiente || 0) }}</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Detalles del socio y cuota -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
-              <div style="background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); border-radius: 10px; padding: 10px; border: 1px solid rgba(255,255,255,0.25);">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Socio</p>
-                <p style="font-weight: 700; font-size: 13px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -0.3px;">{{ pagoRegistrado?.socioNombre }}</p>
-              </div>
-              <div style="background: rgba(255,255,255,0.18); backdrop-filter: blur(10px); border-radius: 10px; padding: 10px; border: 1px solid rgba(255,255,255,0.25);">
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Cuota</p>
-                <p style="font-weight: 700; font-size: 13px; margin: 0; letter-spacing: -0.3px;">{{ pagoRegistrado?.descripcionCuota || 'Cuota mensual' }}</p>
-              </div>
-            </div>
-
-            <!-- Fecha, Tipo de Pago y Estado -->
-            <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div>
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Fecha de Pago</p>
-                <p style="font-weight: 700; font-size: 12px; margin: 0; letter-spacing: -0.2px;">{{ pagoRegistrado?.fecha }}</p>
-              </div>
-              <div>
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600;">Tipo de Pago</p>
-                <div :style="pagoRegistrado?.tipoPago === 'transferencia'
-                  ? 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 8px; border: 2px solid #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);'
-                  : 'display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.95); padding: 6px 12px; border-radius: 8px; border: 2px solid #22c55e; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);'">
-                  <span style="font-size: 14px;">{{ pagoRegistrado?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
-                  <p :style="'font-weight: 700; font-size: 13px; margin: 0; letter-spacing: -0.2px;' + (pagoRegistrado?.tipoPago === 'transferencia' ? ' color: #3b82f6;' : ' color: #22c55e;')">
-                    {{ pagoRegistrado?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-              <div>
-                <p style="color: rgba(255,255,255,0.75); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 4px 0; font-weight: 600; text-align: right;">Estado</p>
-                <div :style="pagoRegistrado?.esParcial 
-                  ? 'display: inline-flex; align-items: center; gap: 6px; background: rgba(251, 191, 36, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.3);'
-                  : 'display: inline-flex; align-items: center; gap: 6px; background: rgba(167, 243, 208, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(167, 243, 208, 0.3);'">
-                  <span style="font-size: 14px;">{{ pagoRegistrado?.esParcial ? '⚠️' : '✓' }}</span>
-                  <p :style="'font-weight: 700; font-size: 15px; margin: 0; letter-spacing: -0.2px;' + (pagoRegistrado?.esParcial ? ' color: #fbbf24;' : ' color: #a7f3d0;')">
-                    {{ pagoRegistrado?.esParcial ? 'Parcial' : 'Pagado' }}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Actividades Pagadas -->
-            <div v-if="pagoRegistrado?.tieneActividades && pagoRegistrado?.actividadesPagadas?.length > 0" style="margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.2);">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                <div style="width: 28px; height: 28px; background: rgba(168, 85, 247, 0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                  <span style="font-size: 14px;">✨</span>
-                </div>
-                <p style="color: rgba(255,255,255,0.95); font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700;">Actividades Pagadas</p>
-              </div>
-              
-              <div style="background: rgba(255,255,255,0.95); border-radius: 14px; padding: 14px; border: 2px solid #a855f7; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid rgba(168, 85, 247, 0.2);">
-                  <p style="color: #7c3aed; font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; font-weight: 700;">Total Actividades</p>
-                  <p style="font-weight: 700; font-size: 18px; margin: 0; letter-spacing: -0.5px; color: #7c3aed;">${{ formatMoney(pagoRegistrado?.valorActividades || 0) }}</p>
-                </div>
-                
-                <div style="space-y: 8px;">
-                  <div 
-                    v-for="(actividad, index) in pagoRegistrado.actividadesPagadas" 
-                    :key="actividad.id"
-                    style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(139, 92, 246, 0.05) 100%); border-radius: 10px; padding: 12px; margin-bottom: 8px; border: 1px solid rgba(168, 85, 247, 0.25);"
-                    :style="{ marginBottom: index < pagoRegistrado.actividadesPagadas.length - 1 ? '8px' : '0' }"
+                <div 
+                  :style="pagoRegistrado?.esParcial
+                    ? 'background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1.5px solid #fcd34d;'
+                    : 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border: 1.5px solid #10b981;'"
+                  style="border-radius: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;"
+                >
+                  <span 
+                    :style="pagoRegistrado?.esParcial
+                      ? 'width: 5px; height: 5px; background: #f59e0b;'
+                      : 'width: 5px; height: 5px; background: #10b981;'"
+                    style="border-radius: 50%; display: inline-block;"
+                  ></span>
+                  <p 
+                    :style="pagoRegistrado?.esParcial
+                      ? 'color: #f59e0b;'
+                      : 'color: #059669;'"
+                    style="font-size: 9px; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;"
                   >
-                    <div style="display: flex; align-items: start; justify-content: space-between; gap: 10px;">
-                      <div style="flex: 1; min-width: 0;">
-                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
-                          <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 4px rgba(168, 85, 247, 0.3);">
-                            <span style="font-size: 10px; font-weight: 700; color: white;">{{ index + 1 }}</span>
-                          </div>
-                          <p style="font-weight: 700; font-size: 12px; margin: 0; color: #1e293b; letter-spacing: -0.2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                            {{ actividad.descripcion }}
-                          </p>
-                        </div>
-                        <p style="color: #64748b; font-size: 9px; margin: 0; font-weight: 500; text-transform: capitalize; margin-left: 26px;">
-                          {{ actividad.tipo || 'Actividad' }}
-                        </p>
-                      </div>
-                      <div style="text-align: right; flex-shrink: 0;">
-                        <p style="color: #64748b; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Valor</p>
-                        <p style="font-weight: 700; font-size: 14px; margin: 0; letter-spacing: -0.3px; color: #7c3aed;">
-                          ${{ formatMoney(actividad.valor_pendiente || 0) }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                    {{ pagoRegistrado?.esParcial ? 'PAGO PARCIAL' : 'PAGO COMPLETO' }}
+                  </p>
                 </div>
-              </div>
-            </div>
-            
-            <!-- Código de comprobante -->
-            <div v-if="pagoRegistrado?.codigoComprobante" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2);">
-              <p style="color: rgba(255,255,255,0.7); font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px 0; font-weight: 600; text-align: center;">Código de Comprobante</p>
-              <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.2);">
-                <p style="color: rgba(255,255,255,0.95); font-weight: 700; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 2px; margin: 0;">
+                <!-- Código de comprobante sutil -->
+                <p v-if="pagoRegistrado?.codigoComprobante" style="color: #9ca3af; font-size: 11px; margin: 6px 0 0 0; font-weight: 500; letter-spacing: 0.3px; font-family: 'Courier New', monospace;">
                   {{ pagoRegistrado.codigoComprobante }}
                 </p>
               </div>
+              
+              <!-- Grid compacto: Nombre, Período, Fecha, Forma de pago -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ pagoRegistrado?.socioNombre }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Período</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ pagoRegistrado?.periodo || pagoRegistrado?.descripcionCuota || 'N/A' }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.4; white-space: pre-line;">{{ pagoRegistrado?.fecha || pagoRegistrado?.fechaCorta || 'N/A' }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Forma de Pago</p>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 12px;">{{ pagoRegistrado?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">
+                      {{ pagoRegistrado?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- SECCIÓN 2: CONCEPTOS PAGADOS -->
+            <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">CONCEPTOS PAGADOS</p>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- Cuota -->
+                <div v-if="pagoRegistrado?.valorCuotaPagada > 0" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">💵</span>
+                    <p style="color: #065f46; font-size: 11px; margin: 0; font-weight: 600;">Cuota</p>
+                  </div>
+                  <p style="font-size: 13px; font-weight: 700; margin: 0; color: #065f46;">${{ formatMoney(pagoRegistrado?.valorCuotaPagada || 0) }}</p>
+                </div>
+                <!-- Sanción -->
+                <div v-if="pagoRegistrado?.valorSancionPagada > 0" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);">
+                      <span style="color: white; font-size: 12px; font-weight: 900; line-height: 1;">!</span>
+                    </div>
+                    <p style="color: #991b1b; font-size: 11px; margin: 0; font-weight: 600;">Sanción</p>
+                  </div>
+                  <p style="font-size: 13px; font-weight: 700; margin: 0; color: #dc2626;">${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
+                </div>
+                <!-- Actividades -->
+                <template v-if="pagoRegistrado?.tieneActividades && pagoRegistrado?.actividadesPagadas && pagoRegistrado.actividadesPagadas.length > 0">
+                  <div 
+                    v-for="(actividad, index) in pagoRegistrado.actividadesPagadas.filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))" 
+                    :key="index"
+                    style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"
+                  >
+                    <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
+                      <span style="font-size: 14px; flex-shrink: 0;">📅</span>
+                      <p style="color: #6b21a8; font-size: 11px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ limpiarDescripcionActividad(actividad?.descripcion || actividad?.actividad?.descripcion || 'Actividad') }}
+                      </p>
+                    </div>
+                    <p style="font-size: 13px; font-weight: 700; margin: 0; color: #6b21a8; flex-shrink: 0; margin-left: 8px;">
+                      ${{ formatMoney((actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))) }}
+                    </p>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+
+            <!-- SECCIÓN 3: RESUMEN DE PAGO PARCIAL (solo si es pago parcial) -->
+            <div v-if="pagoRegistrado?.esParcial && pagoRegistrado?.valorPendiente > 0" style="margin-bottom: 10px; background: #fef3c7; border: 1.5px solid #fbbf24; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <p style="color: #92400e; font-size: 9px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">RESUMEN PARCIAL</p>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                <div>
+                  <p style="color: #92400e; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase;">Total a Pagar</p>
+                  <p style="color: #78350f; font-size: 13px; margin: 0; font-weight: 700;">${{ formatMoney((pagoRegistrado?.valorCuota || 0) + (pagoRegistrado?.sancion || 0) + (pagoRegistrado?.valorActividades || 0)) }}</p>
+                </div>
+                <div>
+                  <p style="color: #92400e; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase;">Total Pagado</p>
+                  <p style="color: #059669; font-size: 13px; margin: 0; font-weight: 700;">${{ formatMoney(pagoRegistrado?.valorPagadoTotal || 0) }}</p>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #fbbf24;">
+                <p style="color: #92400e; font-size: 9px; margin: 0; font-weight: 800; text-transform: uppercase;">Pendiente</p>
+                <p style="color: #f97316; font-size: 16px; margin: 0; font-weight: 900;">${{ formatMoney(pagoRegistrado?.valorPendiente || 0) }}</p>
+              </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);"></div>
+                <p style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 10px; margin: 0; font-weight: 700; letter-spacing: 0.5px;">
+                  Natillerapp
+                </p>
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; box-shadow: 0 0 4px rgba(16, 185, 129, 0.4);"></div>
+              </div>
+            </div>
+
           </div>
         </div>
         </div>
@@ -4141,6 +4536,191 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal Selector de Mes - Móvil -->
+  <Transition name="modal-fade">
+    <div v-if="modalSelectorMes" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSelectorMes = false"></div>
+      <Transition name="modal-scale" appear>
+        <div class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xl font-bold text-gray-800">Seleccionar Mes</h3>
+              <button 
+                @click="modalSelectorMes = false"
+                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <XMarkIcon class="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <button
+                v-for="mes in mesesNatillera"
+                :key="mes.value"
+                @click="mesSeleccionado = mes.value; modalSelectorMes = false"
+                class="p-4 rounded-xl border-2 transition-all text-center"
+                :class="mesSeleccionado === mes.value 
+                  ? 'bg-green-500 text-white border-green-600 shadow-lg' 
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-green-300 hover:bg-green-50'"
+              >
+                <p class="font-semibold">{{ mes.label }}</p>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </div>
+  </Transition>
+
+  <!-- Modal Desglose Recaudación -->
+  <div v-if="modalDesgloseRecaudacion" data-modal="desglose-recaudacion" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseRecaudacion = false"></div>
+    </Transition>
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+      enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100 translate-y-0 sm:scale-100"
+      leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+    >
+      <div class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-2xl font-display font-bold">
+                  Desglose de Recaudación
+                </h3>
+                <p class="text-white/90 text-sm">
+                  Por tipo de pago
+                </p>
+              </div>
+            </div>
+            <button 
+              @click="modalDesgloseRecaudacion = false"
+              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="overflow-y-auto flex-1 p-6 space-y-4">
+          <!-- Recaudado en Efectivo -->
+          <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
+                  <p class="text-gray-500 text-xs">Pagos realizados en efectivo</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
+              ${{ formatMoney(estadisticasRecaudacion.totalRecaudadoEfectivo || 0) }}
+            </p>
+          </div>
+          
+          <!-- Recaudado en Transferencia -->
+          <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
+                  <p class="text-gray-500 text-xs">Pagos realizados por transferencia</p>
+                </div>
+              </div>
+            </div>
+            <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
+              ${{ formatMoney(estadisticasRecaudacion.totalRecaudadoTransferencia || 0) }}
+            </p>
+          </div>
+          
+          <!-- Total Recaudado -->
+          <div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 rounded-xl p-5 border-2 border-purple-300 relative overflow-hidden">
+            <!-- Efectos decorativos -->
+            <div class="absolute top-0 right-0 w-24 h-24 bg-purple-200/30 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 w-20 h-20 bg-indigo-200/30 rounded-full -ml-10 -mb-10 blur-xl"></div>
+            
+            <div class="relative z-10">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-gray-700 text-sm font-semibold">TOTAL RECAUDADO</p>
+                    <p class="text-gray-500 text-xs">Suma de todos los pagos</p>
+                  </div>
+                </div>
+              </div>
+              <p class="text-purple-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                ${{ formatMoney((estadisticasRecaudacion.totalRecaudadoEfectivo || 0) + (estadisticasRecaudacion.totalRecaudadoTransferencia || 0)) }}
+              </p>
+              
+              <!-- Porcentajes -->
+              <div class="mt-4 pt-4 border-t border-purple-200 space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Efectivo:</span>
+                  <span class="font-semibold text-green-700">
+                    {{ estadisticasRecaudacion.totalAportado > 0 ? (((estadisticasRecaudacion.totalRecaudadoEfectivo || 0) / estadisticasRecaudacion.totalAportado) * 100).toFixed(1) : 0 }}%
+                  </span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Transferencia:</span>
+                  <span class="font-semibold text-blue-700">
+                    {{ estadisticasRecaudacion.totalAportado > 0 ? (((estadisticasRecaudacion.totalRecaudadoTransferencia || 0) / estadisticasRecaudacion.totalAportado) * 100).toFixed(1) : 0 }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+          <button 
+            @click="modalDesgloseRecaudacion = false"
+            class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <script setup>
@@ -4153,7 +4733,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
-// Ya no necesitamos html2canvas, dibujamos directamente en canvas
+import { toPng } from 'html-to-image'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -4188,7 +4768,8 @@ import {
   CalendarDaysIcon,
   SparklesIcon,
   XCircleIcon,
-  ListBulletIcon
+  ListBulletIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
 import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
@@ -4219,6 +4800,7 @@ const modalConfirmacion = ref(false)
 const modalConfirmarBorrar = ref(false)
 const modalExportar = ref(false)
 const modalEditarCuota = ref(false)
+const modalDesgloseRecaudacion = ref(false)
 const exportando = ref(false)
 const cuotaSeleccionada = ref(null)
 const cuotaEditando = ref(null)
@@ -4231,6 +4813,10 @@ const modalDetalleSocio = ref(false)
 const modalHistorialAjustes = ref(false)
 const modalEditarSocio = ref(false)
 const modalProgreso = ref(false)
+const modalSelectorMes = ref(false)
+
+// Ref para bloquear el fondo cuando se está registrando un pago (declarado antes de useBodyScrollLock)
+const bloqueandoRegistroPago = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalGenerarCuotas)
@@ -4239,11 +4825,16 @@ useBodyScrollLock(modalConfirmacion)
 useBodyScrollLock(modalConfirmarBorrar)
 useBodyScrollLock(modalExportar)
 useBodyScrollLock(modalEditarCuota)
+useBodyScrollLock(modalDesgloseRecaudacion)
 useBodyScrollLock(modalDetalleCuota)
 useBodyScrollLock(modalDetalleSocio)
 useBodyScrollLock(modalHistorialAjustes)
 useBodyScrollLock(modalEditarSocio)
 useBodyScrollLock(modalProgreso)
+useBodyScrollLock(modalSelectorMes)
+
+// Bloquear scroll cuando se está registrando un pago
+useBodyScrollLock(bloqueandoRegistroPago)
 
 const socioSeleccionado = ref(null)
 const socioEditando = ref(null)
@@ -4279,6 +4870,15 @@ const actividadesDesplegableAbierto = ref(false) // Estado del desplegable de ac
 const cargandoActividades = ref(false) // Estado de carga de actividades
 const actividadesSeleccionadas = ref(new Set()) // IDs de actividades seleccionadas
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
+const mostrandoAnimacionPago = ref(false) // Controla la animación de registro de pago
+
+// Computed para hacer reactivo el estado de loading del store
+const loadingPago = computed(() => cuotasStore.loading)
+
+// Watcher para actualizar el bloqueo cuando cambie el estado de carga
+watch([mostrandoAnimacionPago, loadingPago, modalPago], ([animacion, loading, modal]) => {
+  bloqueandoRegistroPago.value = animacion || (loading && modal)
+}, { immediate: true })
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -4357,7 +4957,7 @@ const exportarAExcel = async () => {
       }
       
       if (columnasSeleccionadas.value.includes('periodicidad')) {
-        fila['Periodicidad'] = cuota.quincena ? `Quincena ${cuota.quincena}` : 'Mensual'
+        fila['Periodicidad'] = (cuota.quincena === 1 || cuota.quincena === 2) ? `Quincena ${cuota.quincena}` : 'Mensual'
       }
       
       if (columnasSeleccionadas.value.includes('valor_cuota')) {
@@ -4392,7 +4992,7 @@ const exportarAExcel = async () => {
       }
       
       if (columnasSeleccionadas.value.includes('quincena')) {
-        fila['Quincena'] = cuota.quincena || 'N/A'
+        fila['Quincena'] = cuota.quincena === 0 || cuota.quincena === null || cuota.quincena === undefined ? 'N/A' : cuota.quincena
       }
       
       return fila
@@ -4847,27 +5447,28 @@ const cuotasAgrupadasPorSocio = computed(() => {
   })
   
   // Agregar actividades pendientes y calcular total a pagar
+  // Ahora las actividades están asociadas a cuotas específicas, no a socios
   Object.values(grupos).forEach(grupo => {
-    if (grupo.socioNatilleraId) {
-      grupo.actividadesPendientes = actividadesPendientesPorSocio.value[grupo.socioNatilleraId] || 0
-      grupo.totalAPagar = grupo.pendiente + grupo.actividadesPendientes
-    } else {
-      grupo.actividadesPendientes = 0
-      grupo.totalAPagar = grupo.pendiente
-    }
+    // Calcular actividades pendientes sumando las de todas las cuotas del grupo
+    grupo.actividadesPendientes = grupo.cuotas.reduce((sum, cuota) => {
+      return sum + (getActividadesPendientesSocio(cuota) || 0)
+    }, 0)
+    grupo.totalAPagar = grupo.pendiente + grupo.actividadesPendientes
   })
   
   // Ordenar las cuotas dentro de cada grupo: quincena 1 antes que quincena 2
   Object.values(grupos).forEach(grupo => {
     grupo.cuotas.sort((a, b) => {
-      // Si ambas tienen quincena, ordenar por quincena (1 antes que 2)
-      if (a.quincena && b.quincena) {
+      // Si ambas tienen quincena (1 o 2), ordenar por quincena (1 antes que 2)
+      const aTieneQuincena = a.quincena === 1 || a.quincena === 2
+      const bTieneQuincena = b.quincena === 1 || b.quincena === 2
+      if (aTieneQuincena && bTieneQuincena) {
         return a.quincena - b.quincena
       }
       // Si solo una tiene quincena, la que tiene quincena va primero
-      if (a.quincena && !b.quincena) return -1
-      if (!a.quincena && b.quincena) return 1
-      // Si ninguna tiene quincena, mantener el orden original
+      if (aTieneQuincena && !bTieneQuincena) return -1
+      if (!aTieneQuincena && bTieneQuincena) return 1
+      // Si ninguna tiene quincena (ambas son mensuales), mantener el orden original
       return 0
     })
   })
@@ -4939,6 +5540,39 @@ const resumenMesActual = computed(() => {
     total: cuotasConEstadoReal.length,
     porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado,
     totalRecaudado: totalRecaudado
+  }
+})
+
+// Computed para calcular estadísticas de recaudación por tipo de pago del mes actual
+const estadisticasRecaudacion = computed(() => {
+  let cuotas
+  if (mesSeleccionado.value) {
+    const anioCorrecto = calcularAnioMes(
+      mesSeleccionado.value,
+      mesInicio.value,
+      mesFin.value,
+      anioNatillera.value
+    )
+    cuotas = cuotasStore.getCuotasPorMes(mesSeleccionado.value, anioCorrecto)
+  } else {
+    cuotas = cuotasStore.cuotas
+  }
+  
+  // Calcular total recaudado por tipo de pago
+  const totalRecaudadoEfectivo = cuotas
+    .filter(c => (c.tipo_pago || 'efectivo') === 'efectivo')
+    .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  
+  const totalRecaudadoTransferencia = cuotas
+    .filter(c => c.tipo_pago === 'transferencia')
+    .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  
+  const totalAportado = cuotas.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
+  
+  return {
+    totalRecaudadoEfectivo,
+    totalRecaudadoTransferencia,
+    totalAportado
   }
 })
 
@@ -5164,6 +5798,14 @@ const esAdmin = computed(() => {
 })
 
 // Cuando cambia el mes seleccionado (por interacción del usuario, NO durante inicialización)
+// Watcher para desactivar la animación cuando se cierre el modal de pago
+watch(modalPago, (isOpen) => {
+  if (!isOpen) {
+    // Si el modal se cierra, desactivar la animación
+    mostrandoAnimacionPago.value = false
+  }
+})
+
 // Watch para cargar actividades pendientes cuando cambien las cuotas filtradas
 watch(cuotasFiltradas, async () => {
   // Cargar actividades pendientes tanto en vista agrupada como en tarjetas individuales
@@ -5311,8 +5953,8 @@ async function recalcularSancionesMes() {
   }
 }
 
-// Obtener la sanción dinámica de una cuota (calculada en tiempo real)
-function getSancionCuota(cuota) {
+// Obtener la sanción TOTAL de una cuota (sin restar pagos)
+function getSancionTotalCuota(cuota) {
   // Si las sanciones no están activadas, retornar 0
   if (!sancionesActivas.value) return 0
   if (!cuota) return 0
@@ -5327,24 +5969,96 @@ function getSancionCuota(cuota) {
     if (cuota.valor_multa && cuota.valor_multa > 0) {
       return cuota.valor_multa
     }
-    // Si está en mora pero no tiene sanción calculada ni guardada,
-    // podría ser que aún no se haya calculado. Retornar 0 por ahora
-    // (se calculará en el próximo recalcularSancionesMes)
-    return 0
   }
-  
-  // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente),
-  // seguir considerando la sanción hasta que se pague completamente
-  // Esto cubre el caso de cuotas que estaban en mora y se les hizo un pago parcial
-  if (cuota.valor_multa && cuota.valor_multa > 0) {
-    const totalConSancion = (cuota.valor_cuota || 0) + cuota.valor_multa
-    // Solo retornar la sanción si aún no se ha pagado el total
-    if ((cuota.valor_pagado || 0) < totalConSancion) {
-      return cuota.valor_multa
-    }
+  // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente)
+  else if (cuota.valor_multa && cuota.valor_multa > 0) {
+    return cuota.valor_multa
   }
   
   return 0
+}
+
+// Obtener la sanción dinámica de una cuota (calculada en tiempo real)
+// IMPORTANTE: Retorna la sanción PENDIENTE, no la sanción total
+// El orden de pago es: 1. Sanción, 2. Actividades, 3. Cuota
+// valor_pagado en la tabla cuotas solo refleja lo pagado de la cuota
+function getSancionCuota(cuota) {
+  // Si las sanciones no están activadas, retornar 0
+  if (!sancionesActivas.value) return 0
+  if (!cuota) return 0
+  
+  // Obtener la sanción total (sin restar pagos)
+  const sancionTotal = getSancionTotalCuota(cuota)
+  
+  // Si no hay sanción total, retornar 0
+  if (sancionTotal <= 0) return 0
+  
+  // Calcular cuánto se pagó de sanción según el orden de pago:
+  // Orden: 1. Sanción, 2. Actividades, 3. Cuota
+  // IMPORTANTE: valor_pagado solo refleja lo pagado de la cuota
+  const valorCuota = cuota.valor_cuota || 0
+  const valorPagado = cuota.valor_pagado || 0
+  
+  // Obtener actividades totales asignadas y cuánto se pagó de ellas
+  const actividadesInfo = getActividadesInfoSocio(cuota)
+  const actividadesTotal = actividadesInfo.total
+  const actividadesPagadas = actividadesInfo.pagadas
+  
+  // Calcular cuánto se pagó de sanción según el orden de pago:
+  // El orden es: sanción -> actividades -> cuota
+  // El pago total real = sancionPagada + actividadesPagadas + valorPagado (cuota)
+  
+  // Si hay actividades pagadas, entonces se pagó toda la sanción (porque se paga primero)
+  if (actividadesPagadas > 0) {
+    return 0
+  }
+  
+  // Si valor_pagado >= valor_cuota, significa que se pagó toda la cuota
+  // Esto implica que se pagó toda la sanción primero (porque se paga primero)
+  if (valorPagado >= valorCuota) {
+    return 0
+  }
+  
+  // Si valor_pagado < valor_cuota y no hay actividades pagadas,
+  // entonces el pago fue: primero sanción, luego cuota
+  // Calcular cuánto se pagó de sanción:
+  // Si valor_pagado > 0, significa que se pagó al menos parte de la cuota
+  // Esto implica que se pagó toda la sanción primero (porque se paga primero)
+  // Ejemplo: cuota=100, sanción=2, pago=100 -> se pagan 2 de sanción, 98 de cuota
+  // En este caso, valor_pagado = 98, y se pagó toda la sanción (2)
+  if (valorPagado > 0) {
+    // Se pagó al menos parte de la cuota, lo que significa que se pagó toda la sanción primero
+    return 0
+  }
+  
+  // Si valor_pagado = 0, el pago fue solo a la sanción (parcial o completa)
+  // Sin más información, no podemos saber cuánto se pagó exactamente
+  // Por ahora, asumimos que no se pagó nada de sanción
+  // (aunque podría haberse pagado parcialmente)
+  return sancionTotal
+}
+
+// Función auxiliar para obtener información de actividades (total y pagadas)
+function getActividadesInfoSocio(cuota) {
+  if (!cuota || !cuota.id) return { total: 0, pagadas: 0 }
+  
+  const datos = actividadesPendientesPorSocio.value[cuota.id]
+  if (typeof datos === 'number') {
+    // Estructura antigua: solo tenemos el total pendiente
+    // No podemos calcular cuánto se pagó sin consultar la BD
+    return { total: datos, pagadas: 0 }
+  }
+  
+  // Si es objeto con nueva estructura
+  if (!datos) {
+    return { total: 0, pagadas: 0 }
+  }
+  
+  // Obtener el total pendiente y cuánto se pagó
+  const totalPendiente = datos.total || 0
+  const totalPagado = datos.totalPagado || 0
+  
+  return { total: totalPendiente, pagadas: totalPagado }
 }
 
 // Función para obtener la sanción (pendiente o pagada) de una cuota
@@ -5390,17 +6104,74 @@ function getTotalAPagar(cuota) {
   return (cuota.valor_cuota || 0) + sancion - (cuota.valor_pagado || 0)
 }
 
-// Obtener el total de actividades pendientes de un socio
-function getActividadesPendientesSocio(socioNatilleraId) {
-  if (!socioNatilleraId) return 0
-  return actividadesPendientesPorSocio.value[socioNatilleraId] || 0
+// Función auxiliar para limpiar la descripción de actividades (quitar el mes)
+function limpiarDescripcionActividad(descripcion) {
+  if (!descripcion) return 'Actividad'
+  // Quitar todo desde el guion hacia adelante (incluyendo el guion)
+  const descripcionLimpia = descripcion.split(' - ')[0].trim()
+  return descripcionLimpia || 'Actividad'
+}
+
+// Obtener el total de actividades pendientes de una cuota específica
+function getActividadesPendientesSocio(cuota) {
+  if (!cuota || !cuota.id) return 0
+  // Ahora actividadesPendientesPorSocio usa cuotaId como clave
+  const datos = actividadesPendientesPorSocio.value[cuota.id]
+  // Compatibilidad: si es un número (estructura antigua), devolverlo
+  if (typeof datos === 'number') return datos
+  // Si es objeto con nueva estructura, devolver el total
+  return datos?.total || 0
+}
+
+// Obtener el texto a mostrar para las actividades (nombre si es una sola, "Actividades" si son varias)
+function getTextoActividadesSocio(cuota) {
+  if (!cuota || !cuota.id) return 'Actividades'
+  const datos = actividadesPendientesPorSocio.value[cuota.id]
+  // Si es estructura antigua (número), devolver "Actividades"
+  if (typeof datos === 'number') return 'Actividades'
+  // Si no hay actividades, devolver "Actividades"
+  if (!datos || !datos.actividades || datos.actividades.length === 0) return 'Actividades'
+  // Si hay solo una actividad, devolver su descripción sin el nombre del mes
+  if (datos.actividades.length === 1) {
+    return limpiarDescripcionActividad(datos.actividades[0].descripcion)
+  }
+  // Si hay más de una, devolver "Actividades"
+  return 'Actividades'
+}
+
+// Obtener el texto a mostrar para las actividades de un grupo (nombre si todas las cuotas tienen la misma actividad única, "Actividades" si hay múltiples)
+function getTextoActividadesGrupo(grupo) {
+  if (!grupo || !grupo.cuotas || grupo.cuotas.length === 0) return 'Actividades'
+  
+  // Recopilar todas las actividades de todas las cuotas del grupo
+  const todasActividades = []
+  grupo.cuotas.forEach(cuota => {
+    if (cuota && cuota.id) {
+      const datos = actividadesPendientesPorSocio.value[cuota.id]
+      if (datos && typeof datos !== 'number' && datos.actividades && datos.actividades.length > 0) {
+        datos.actividades.forEach(actividad => {
+          const descripcionLimpia = limpiarDescripcionActividad(actividad.descripcion)
+          if (!todasActividades.find(a => a === descripcionLimpia)) {
+            todasActividades.push(descripcionLimpia)
+          }
+        })
+      }
+    }
+  })
+  
+  // Si hay solo una actividad única en todo el grupo, devolver su descripción
+  if (todasActividades.length === 1) {
+    return todasActividades[0]
+  }
+  // Si hay más de una actividad diferente, devolver "Actividades"
+  return 'Actividades'
 }
 
 // Obtener el total a pagar incluyendo actividades pendientes
 function getTotalAPagarConActividadesSocio(cuota) {
   if (!cuota) return 0
   const totalCuota = getTotalAPagar(cuota)
-  const actividadesPendientes = getActividadesPendientesSocio(cuota.socio_natillera_id)
+  const actividadesPendientes = getActividadesPendientesSocio(cuota)
   return totalCuota + actividadesPendientes
 }
 
@@ -5604,6 +6375,120 @@ async function cargarHistorialPagosCuota(cuotaId) {
   }
 }
 
+// Función helper para normalizar quincena (0, null, undefined se consideran equivalentes para mensual)
+function normalizarQuincena(quincena) {
+  if (quincena === null || quincena === undefined || quincena === 0) {
+    return 0
+  }
+  return quincena
+}
+
+// Función helper para determinar si una actividad debe mostrarse para una cuota específica
+function actividadCorrespondeACuota(actividadSocio, cuota, actividad = null) {
+  // PRIORIDAD 1: Usar los campos mes_pago, anio_pago, quincena_pago que se guardan al crear la actividad
+  if (actividadSocio.mes_pago && actividadSocio.anio_pago) {
+    const mesActividad = actividadSocio.mes_pago
+    const anioActividad = actividadSocio.anio_pago
+    let quincenaActividad = actividadSocio.quincena_pago ?? null
+
+    // Verificar que el mes y año coincidan exactamente
+    if (mesActividad !== cuota.mes || anioActividad !== cuota.anio) {
+      return false
+    }
+
+    // Obtener la periodicidad del socio
+    // IMPORTANTE: Si no está disponible en socio_natillera, inferirla de la quincena de la cuota
+    let periodicidadSocio = cuota.socio_natillera?.periodicidad
+    if (!periodicidadSocio) {
+      // Fallback: inferir de la quincena de la cuota
+      periodicidadSocio = (cuota.quincena === 0 || cuota.quincena === null || cuota.quincena === undefined) ? 'mensual' : 'quincenal'
+    }
+    
+    // Normalizar quincena de la cuota según periodicidad
+    // Para mensuales: normalizar (0, null, undefined → 0)
+    // Para quincenales: mantener el valor exacto (1 o 2)
+    const quincenaCuota = periodicidadSocio === 'mensual' 
+      ? normalizarQuincena(cuota.quincena)
+      : (cuota.quincena === 1 || cuota.quincena === 2 ? cuota.quincena : null)
+
+    // Si el socio es mensual
+    if (periodicidadSocio === 'mensual') {
+      // Los socios mensuales solo tienen UNA cuota en el mes (quincena = 0)
+      // Normalizar quincena de la actividad: si es 2 o null, tratarla como 0 (mensual)
+      // También aceptar si la actividad tiene quincena_pago = 0 explícitamente
+      if (quincenaActividad === 2 || quincenaActividad === null || quincenaActividad === undefined || quincenaActividad === 0) {
+        quincenaActividad = 0
+      }
+      // La cuota mensual debe tener quincena 0 (normalizada) y la actividad también
+      return quincenaCuota === 0 && quincenaActividad === 0
+    }
+
+    // Si el socio es quincenal
+    if (periodicidadSocio === 'quincenal') {
+      // Para quincenales: la quincena debe ser EXACTAMENTE 1 o 2
+      // No normalizar null/undefined a 0, deben ser valores explícitos
+      if (quincenaActividad === null || quincenaActividad === undefined || quincenaActividad === 0) {
+        // Actividad sin quincena definida o mensual, no corresponde a cuota quincenal
+        return false
+      }
+      // Solo aceptar quincena 1 o 2
+      if (quincenaActividad !== 1 && quincenaActividad !== 2) {
+        return false
+      }
+      // La quincena de la cuota también debe ser 1 o 2 (no normalizar)
+      const quincenaCuotaExacta = cuota.quincena === 1 || cuota.quincena === 2 ? cuota.quincena : null
+      if (quincenaCuotaExacta === null) {
+        return false
+      }
+      // Comparar exactamente
+      return quincenaActividad === quincenaCuotaExacta
+    }
+
+    return false
+  }
+
+  // PRIORIDAD 2: Si no tiene mes_pago/anio_pago, intentar calcular desde fecha_limite_pago (compatibilidad con datos antiguos)
+  const fechaLimite = actividadSocio.fecha_limite_pago || actividad?.fecha_limite_pago
+  
+  if (!fechaLimite) {
+    return false // No se puede determinar el período
+  }
+
+  try {
+    // Parsear la fecha correctamente
+    let fecha
+    if (typeof fechaLimite === 'string') {
+      const [anio, mes, dia] = fechaLimite.split('-').map(Number)
+      fecha = new Date(anio, mes - 1, dia)
+    } else {
+      fecha = new Date(fechaLimite)
+    }
+    
+    const mesActividad = fecha.getMonth() + 1
+    const anioActividad = fecha.getFullYear()
+    
+    // Verificar que el mes y año coincidan
+    if (mesActividad !== cuota.mes || anioActividad !== cuota.anio) {
+      return false
+    }
+
+    // Determinar quincena basándose en el día del mes
+    const dia = fecha.getDate()
+    const periodicidadSocio = cuota.socio_natillera?.periodicidad || 'mensual'
+    
+    if (periodicidadSocio === 'quincenal') {
+      const quincenaActividad = dia <= 15 ? 1 : 2
+      return quincenaActividad === cuota.quincena
+    } else {
+      // Si es mensual, la cuota debe tener quincena 0 o null
+      return cuota.quincena === 0 || cuota.quincena === null
+    }
+  } catch (e) {
+    console.error('❌ Error parseando fecha_limite_pago:', e)
+    return false
+  }
+}
+
 // Función para cargar actividades pendientes de todos los socios
 async function cargarActividadesPendientesPorSocio() {
   try {
@@ -5619,16 +6504,58 @@ async function cargarActividadesPendientesPorSocio() {
       return
     }
 
-    // Obtener todas las actividades pendientes de estos socios
-    const { data: sociosActividadData, error: errorSociosActividad } = await supabase
-      .from('socios_actividad')
-      .select('*')
-      .in('socio_natillera_id', socioNatilleraIds)
-      .in('estado', ['pendiente', 'parcial', 'mora'])
+    // Obtener el mes y año actual que se está visualizando
+    const mesActual = mesSeleccionado.value
+    const anioActual = anioMesSeleccionado.value
 
-    if (errorSociosActividad) {
-      console.error('❌ Error cargando actividades pendientes por socio:', errorSociosActividad)
-      return
+    // Construir consultas para filtrar por periodo actual
+    // Hacemos dos consultas: una para actividades con mes_pago/anio_pago y otra para compatibilidad
+    let sociosActividadData = []
+    
+    if (mesActual && anioActual) {
+      // Consulta 1: Actividades con mes_pago y anio_pago que coinciden con el periodo actual (pendientes y pagadas)
+      const { data: actividadesConPeriodo, error: error1 } = await supabase
+        .from('socios_actividad')
+        .select('*')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
+        .eq('mes_pago', mesActual)
+        .eq('anio_pago', anioActual)
+
+      if (error1) {
+        console.error('❌ Error cargando actividades con periodo:', error1)
+      } else if (actividadesConPeriodo) {
+        sociosActividadData.push(...actividadesConPeriodo)
+      }
+
+      // Consulta 2: Actividades sin mes_pago/anio_pago (datos antiguos - compatibilidad)
+      const { data: actividadesSinPeriodo, error: error2 } = await supabase
+        .from('socios_actividad')
+        .select('*')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
+        .or('mes_pago.is.null,anio_pago.is.null')
+
+      if (error2) {
+        console.error('❌ Error cargando actividades sin periodo:', error2)
+      } else if (actividadesSinPeriodo) {
+        sociosActividadData.push(...actividadesSinPeriodo)
+      }
+    } else {
+      // Si no hay mes seleccionado, cargar todas las actividades (pendientes y pagadas)
+      const { data: todasActividades, error: errorSociosActividad } = await supabase
+        .from('socios_actividad')
+        .select('*')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
+
+      if (errorSociosActividad) {
+        console.error('❌ Error cargando actividades pendientes por socio:', errorSociosActividad)
+        actividadesPendientesPorSocio.value = {}
+        return
+      }
+      
+      sociosActividadData = todasActividades || []
     }
 
     if (!sociosActividadData || sociosActividadData.length === 0) {
@@ -5653,27 +6580,175 @@ async function cargarActividadesPendientesPorSocio() {
     // Crear un mapa de actividades por ID
     const actividadesMap = new Map((actividadesData || []).map(a => [a.id, a]))
 
-    // Calcular total por socio
-    const totalesPorSocio = {}
+    // Calcular total por CUOTA específica (no por socio)
+    // Estructura: { cuotaId: { total: number, actividades: [{ descripcion, valor_pendiente }] } }
+    const totalesPorCuota = {}
+    
+    console.log('🔍 Cargando actividades pendientes por cuota...')
+    console.log('📊 Actividades encontradas en socios_actividad:', sociosActividadData.length)
+    console.log('📊 Cuotas filtradas:', cuotasFiltradas.value.length)
+    console.log('📅 Periodo actual:', { mes: mesActual, anio: anioActual })
+    
+    // Inicializar todas las cuotas con estructura vacía (total = pendiente, totalPagado = actividades ya pagadas)
+    cuotasFiltradas.value.forEach(cuota => {
+      if (!cuota.socio_natillera_id || !cuota.id) return
+      totalesPorCuota[cuota.id] = { total: 0, totalPagado: 0, actividades: [] }
+    })
+    
+    // Iterar sobre las actividades y asignarlas a las cuotas según quincena_pago
+    let actividadesProcesadas = 0
+    let actividadesAsignadas = 0
     
     sociosActividadData.forEach(sa => {
       const actividad = actividadesMap.get(sa.actividad_id)
       
-      // Solo contar actividades en curso
-      if (actividad && actividad.estado === 'en_curso') {
-        const valorAsignado = parseFloat(sa.valor_asignado || 0)
-        const valorPagado = parseFloat(sa.valor_pagado || 0)
-        const valorPendiente = Math.max(0, valorAsignado - valorPagado)
+      // Verificar que la actividad exista
+      if (!actividad) {
+        console.log('⚠️ Actividad no encontrada para socios_actividad:', sa.id, 'actividad_id:', sa.actividad_id)
+        return
+      }
+      
+      // Solo procesar actividades en curso (o ya pagadas, para mostrar en desglose; BD usa 'pagado')
+      if (actividad.estado && actividad.estado !== 'en_curso' && sa.estado !== 'pagada' && sa.estado !== 'pagado') {
+        console.log('⚠️ Actividad no está en curso:', actividad.id, 'estado:', actividad.estado)
+        return
+      }
+      
+      actividadesProcesadas++
+      
+      // Verificar que tenga mes_pago y anio_pago (periodo actual)
+      if (!sa.mes_pago || !sa.anio_pago) {
+        console.log('⚠️ Actividad sin periodo:', sa.id, 'mes_pago:', sa.mes_pago, 'anio_pago:', sa.anio_pago)
+        return
+      }
+      
+      // Verificar que coincida con el periodo actual
+      if (mesActual && anioActual) {
+        // Si hay mes y año seleccionados, verificar que coincidan
+        if (sa.mes_pago !== mesActual || sa.anio_pago !== anioActual) {
+          console.log('⚠️ Actividad no coincide con periodo actual:', {
+            actividad: { mes: sa.mes_pago, anio: sa.anio_pago },
+            periodo: { mes: mesActual, anio: anioActual }
+          })
+          return
+        }
+      }
+      
+      // Calcular el valor pendiente y pagado de la actividad
+      const valorAsignado = parseFloat(sa.valor_asignado || 0)
+      const valorPagado = parseFloat(sa.valor_pagado || 0)
+      const valorPendiente = Math.max(0, valorAsignado - valorPagado)
+      
+      // Obtener la quincena_pago de la actividad (puede ser 0, 1, 2 o null)
+      // IMPORTANTE: Normalizar quincena_pago - si es 2 pero el socio es mensual, debería ser 0
+      let quincenaPago = sa.quincena_pago ?? null
+      
+      // Verificar si el socio es mensual y corregir quincena_pago si es necesario
+      // Si quincena_pago es 2 pero debería ser 0 para socios mensuales, corregirlo
+      if (quincenaPago === 2 || quincenaPago === 1) {
+        // Verificar si la cuota correspondiente es mensual (quincena 0 o null)
+        const cuotaMensual = cuotasFiltradas.value.find(cuota => 
+          cuota.socio_natillera_id === sa.socio_natillera_id &&
+          cuota.mes === sa.mes_pago &&
+          cuota.anio === sa.anio_pago &&
+          (cuota.quincena === null || cuota.quincena === 0)
+        )
         
-        if (!totalesPorSocio[sa.socio_natillera_id]) {
-          totalesPorSocio[sa.socio_natillera_id] = 0
+        // Si existe una cuota mensual, la actividad debería tener quincena_pago = 0
+        // Esto aplica tanto si la natillera es mensual como si es quincenal pero el socio es mensual
+        if (cuotaMensual) {
+          console.log('⚠️ Corrigiendo quincena_pago de', quincenaPago, 'a 0 para actividad de socio mensual:', sa.id)
+          quincenaPago = 0
+        }
+      }
+      
+      console.log('🔍 Buscando cuota para actividad:', {
+        socio_natillera_id: sa.socio_natillera_id,
+        mes_pago: sa.mes_pago,
+        anio_pago: sa.anio_pago,
+        quincena_pago_original: sa.quincena_pago,
+        quincena_pago_corregida: quincenaPago,
+        valor_pendiente: valorPendiente
+      })
+      
+      // Buscar la cuota correspondiente según quincena_pago
+      const cuotaCorrespondiente = cuotasFiltradas.value.find(cuota => {
+        // Debe ser del mismo socio
+        if (cuota.socio_natillera_id !== sa.socio_natillera_id) return false
+        
+        // Debe coincidir el mes y año
+        if (cuota.mes !== sa.mes_pago || cuota.anio !== sa.anio_pago) return false
+        
+        // Asignar según quincena_pago:
+        // - Si quincena_pago es 0 o null → asignar a cuota mensual (quincena 0 o null)
+        // - Si quincena_pago es 1 → asignar a cuota de quincena 1
+        // - Si quincena_pago es 2 → asignar a cuota de quincena 2
+        if (quincenaPago === null || quincenaPago === 0) {
+          // Actividad mensual → asignar a cuota mensual (quincena 0 o null)
+          return cuota.quincena === null || cuota.quincena === 0
+        } else if (quincenaPago === 1) {
+          // Actividad quincena 1 → asignar a cuota quincena 1
+          return cuota.quincena === 1
+        } else if (quincenaPago === 2) {
+          // Actividad quincena 2 → asignar a cuota quincena 2
+          return cuota.quincena === 2
         }
         
-        totalesPorSocio[sa.socio_natillera_id] += valorPendiente
+        return false
+      })
+      
+      // Si se encontró la cuota correspondiente, agregar pendiente/pagado y detalles
+      if (cuotaCorrespondiente && cuotaCorrespondiente.id) {
+        const cuotaId = cuotaCorrespondiente.id
+        if (!totalesPorCuota[cuotaId]) {
+          totalesPorCuota[cuotaId] = { total: 0, totalPagado: 0, actividades: [] }
+        }
+        totalesPorCuota[cuotaId].total += valorPendiente
+        totalesPorCuota[cuotaId].totalPagado += valorPagado
+        totalesPorCuota[cuotaId].actividades.push({
+          descripcion: actividad.descripcion || 'Actividad',
+          valor_pendiente: valorPendiente,
+          valor_pagado: valorPagado,
+          valor_asignado: valorAsignado
+        })
+        actividadesAsignadas++
+        if (valorPendiente > 0) {
+          console.log('✅ Actividad asignada a cuota:', {
+            actividad_id: sa.id,
+            cuota_id: cuotaId,
+            valor_pendiente: valorPendiente,
+            total_cuota: totalesPorCuota[cuotaId].total,
+            descripcion: actividad.descripcion
+          })
+        } else if (valorPagado > 0) {
+          console.log('✅ Actividad pagada asignada a cuota (desglose):', {
+            actividad_id: sa.id,
+            cuota_id: cuotaId,
+            valor_pagado: valorPagado,
+            descripcion: actividad.descripcion
+          })
+        }
+      } else {
+        console.log('❌ No se encontró cuota correspondiente para actividad:', {
+          socio_natillera_id: sa.socio_natillera_id,
+          mes_pago: sa.mes_pago,
+          anio_pago: sa.anio_pago,
+          quincena_pago: quincenaPago,
+          cuotas_disponibles: cuotasFiltradas.value
+            .filter(c => c.socio_natillera_id === sa.socio_natillera_id)
+            .map(c => ({ id: c.id, mes: c.mes, anio: c.anio, quincena: c.quincena }))
+        })
       }
     })
 
-    actividadesPendientesPorSocio.value = totalesPorSocio
+    console.log('📊 Resumen:', {
+      actividades_procesadas: actividadesProcesadas,
+      actividades_asignadas: actividadesAsignadas,
+      totales_por_cuota: totalesPorCuota
+    })
+
+    // Cambiar la estructura para usar cuotaId como clave
+    actividadesPendientesPorSocio.value = totalesPorCuota
   } catch (e) {
     console.error('❌ Error cargando actividades pendientes por socio:', e)
     actividadesPendientesPorSocio.value = {}
@@ -5684,19 +6759,19 @@ async function cargarActividadesPendientes(cuota) {
   if (!cuota || !cuota.socio_natillera_id) {
     console.log('❌ cargarActividadesPendientes: No hay cuota o socio_natillera_id')
     actividadesPendientes.value = []
-    return
+    return false
   }
 
-  console.log('🔍 cargarActividadesPendientes: socio_natillera_id =', cuota.socio_natillera_id)
+  console.log('🔍 cargarActividadesPendientes: socio_natillera_id =', cuota.socio_natillera_id, 'cuota:', { mes: cuota.mes, anio: cuota.anio, quincena: cuota.quincena })
   cargandoActividades.value = true
   try {
     // Obtener actividades pendientes del socio
-    // Filtrar por socio_natillera_id y estado = 'pendiente' en la tabla socios_actividad
+    // Filtrar por socio_natillera_id y estados pendientes (pendiente, parcial, mora)
     const { data: sociosActividadData, error: errorSociosActividad } = await supabase
       .from('socios_actividad')
       .select('*')
       .eq('socio_natillera_id', cuota.socio_natillera_id)
-      .eq('estado', 'pendiente')
+      .in('estado', ['pendiente', 'parcial', 'mora'])
       .order('created_at', { ascending: false })
 
     if (errorSociosActividad) {
@@ -5712,8 +6787,40 @@ async function cargarActividadesPendientes(cuota) {
       return
     }
 
+    // Obtener el periodo actual de la cuota (mes y año)
+    const mesActual = cuota.mes
+    const anioActual = cuota.anio
+
+    // Filtrar actividades donde mes_pago <= periodo actual
+    // Solo incluir actividades que tengan mes_pago y anio_pago definidos
+    const actividadesConPeriodo = sociosActividadData.filter(sa => {
+      if (!sa.mes_pago || !sa.anio_pago) {
+        // Si no tiene mes_pago/anio_pago, excluir (solo mostrar actividades con periodo definido)
+        return false
+      }
+      
+      // Comparar periodo: mes_pago <= periodo actual
+      // Si el año es menor, siempre incluir
+      if (sa.anio_pago < anioActual) {
+        return true
+      }
+      // Si el año es igual, verificar que el mes sea menor o igual
+      if (sa.anio_pago === anioActual) {
+        return sa.mes_pago <= mesActual
+      }
+      // Si el año es mayor, excluir
+      return false
+    })
+
+    console.log('📊 Actividades con periodo <= periodo actual:', actividadesConPeriodo.length)
+
+    if (actividadesConPeriodo.length === 0) {
+      actividadesPendientes.value = []
+      return
+    }
+
     // Obtener los IDs de las actividades
-    const actividadIds = [...new Set(sociosActividadData.map(sa => sa.actividad_id))]
+    const actividadIds = [...new Set(actividadesConPeriodo.map(sa => sa.actividad_id))]
 
     // Obtener las actividades correspondientes
     // Nota: La tabla actividades no tiene columna 'nombre', usa 'descripcion' y 'tipo'
@@ -5731,7 +6838,7 @@ async function cargarActividadesPendientes(cuota) {
     const actividadesMap = new Map((actividadesData || []).map(a => [a.id, a]))
 
     // Combinar datos y filtrar solo actividades en curso
-    const actividadesFiltradas = sociosActividadData
+    const actividadesFiltradas = actividadesConPeriodo
       .map(sa => {
         const actividad = actividadesMap.get(sa.actividad_id)
         return { ...sa, actividad }
@@ -5741,21 +6848,17 @@ async function cargarActividadesPendientes(cuota) {
           console.log('⚠️ Registro sin actividad relacionada:', sa.id)
           return false
         }
-        // Validar que la actividad esté en curso y que el estado en socios_actividad sea pendiente
+        // Validar que la actividad esté en curso
         const enCurso = sa.actividad.estado === 'en_curso'
-        const estadoPendiente = sa.estado === 'pendiente'
         
-      if (!enCurso) {
-        console.log(`⚠️ Actividad "${sa.actividad.descripcion || sa.actividad.tipo}" no está en curso (estado: ${sa.actividad.estado})`)
-      }
-        if (!estadoPendiente) {
-          console.log(`⚠️ Registro de socio_actividad no está pendiente (estado: ${sa.estado})`)
+        if (!enCurso) {
+          console.log(`⚠️ Actividad "${sa.actividad.descripcion || sa.actividad.tipo}" no está en curso (estado: ${sa.actividad.estado})`)
         }
         
-        return enCurso && estadoPendiente
+        return enCurso
       })
 
-    console.log('📊 Actividades filtradas (en curso y pendientes):', actividadesFiltradas.length)
+    console.log('📊 Actividades filtradas (en curso y con periodo <= periodo actual):', actividadesFiltradas.length)
 
     // Calcular el valor pendiente para cada actividad
     actividadesPendientes.value = actividadesFiltradas.map(sa => {
@@ -5776,28 +6879,190 @@ async function cargarActividadesPendientes(cuota) {
         tipo: a.actividad?.tipo,
         valor_asignado: a.valor_asignado,
         valor_pagado: a.valor_pagado,
-        valor_pendiente: a.valor_pendiente
+        valor_pendiente: a.valor_pendiente,
+        mes_pago: a.mes_pago,
+        anio_pago: a.anio_pago,
+        quincena_pago: a.quincena_pago,
+        estado: a.estado
       })))
+    }
+
+    // Obtener la periodicidad del socio para normalización
+    // IMPORTANTE: Si no está disponible en socio_natillera, inferirla de la quincena de la cuota
+    let periodicidadSocio = cuota.socio_natillera?.periodicidad
+    if (!periodicidadSocio) {
+      // Fallback: inferir de la quincena de la cuota
+      periodicidadSocio = (cuota.quincena === 0 || cuota.quincena === null || cuota.quincena === undefined) ? 'mensual' : 'quincenal'
+      console.log('⚠️ Periodicidad no encontrada en socio_natillera, inferida de quincena:', {
+        quincena: cuota.quincena,
+        periodicidadInferida: periodicidadSocio
+      })
+    }
+    
+    // Para mensuales: normalizar (0, null, undefined → 0)
+    // Para quincenales: mantener el valor exacto (1 o 2, no normalizar)
+    const quincenaCuota = periodicidadSocio === 'mensual' 
+      ? normalizarQuincena(cuota.quincena)
+      : (cuota.quincena === 1 || cuota.quincena === 2 ? cuota.quincena : null)
+    
+    // Buscar actividad que coincida exactamente con el mes, año y quincena de la cuota
+    // Optimizar la búsqueda filtrando primero por periodo exacto
+    let actividadCoincidente = null
+    
+    // Primero intentar encontrar actividades del periodo EXACTO (mes y año coinciden)
+    const actividadesPeriodoExacto = actividadesPendientes.value.filter(actividad => {
+      return actividad.mes_pago === cuota.mes && actividad.anio_pago === cuota.anio
+    })
+    
+    console.log('🔍 Buscando actividad coincidente:', {
+      cuota: { 
+        mes: cuota.mes, 
+        anio: cuota.anio, 
+        quincena: cuota.quincena, 
+        quincenaNormalizada: quincenaCuota 
+      },
+      periodicidadSocio,
+      periodicidadDesdeSocio: cuota.socio_natillera?.periodicidad,
+      socio_natillera_id: cuota.socio_natillera_id,
+      actividadesPeriodoExacto: actividadesPeriodoExacto.length,
+      totalActividades: actividadesPendientes.value.length,
+      actividadesPeriodoExactoDetalle: actividadesPeriodoExacto.map(a => ({
+        id: a.id,
+        quincena_pago: a.quincena_pago,
+        mes_pago: a.mes_pago,
+        anio_pago: a.anio_pago
+      }))
+    })
+    
+    // Buscar en las actividades del periodo exacto
+    for (const actividad of actividadesPeriodoExacto) {
+      let quincenaActividad = actividad.quincena_pago ?? null
+      
+      // Normalizar quincena según periodicidad del socio
+      if (periodicidadSocio === 'mensual') {
+        // Para socios mensuales: 0, null, undefined, 2 se consideran mensuales (quincena 0)
+        if (quincenaActividad === 2 || quincenaActividad === null || quincenaActividad === undefined || quincenaActividad === 0) {
+          quincenaActividad = 0
+        }
+        // Si la actividad tiene quincena 1, no corresponde a una cuota mensual
+        if (quincenaActividad === 1) {
+          continue
+        }
+      } else {
+        // Para socios quincenales: la quincena debe ser EXACTAMENTE 1 o 2
+        // No normalizar null/undefined a 0, deben ser valores explícitos
+        if (quincenaActividad === null || quincenaActividad === undefined || quincenaActividad === 0) {
+          // Actividad sin quincena definida o mensual, no corresponde a cuota quincenal
+          continue
+        }
+        // Solo aceptar quincena 1 o 2
+        if (quincenaActividad !== 1 && quincenaActividad !== 2) {
+          continue
+        }
+      }
+      
+      // Comparar quincenas
+      // Para mensuales: ambas deben ser 0 (normalizadas)
+      // Para quincenales: deben coincidir exactamente (1 === 1 o 2 === 2)
+      console.log('🔍 Comparando quincenas:', {
+        actividad_id: actividad.id,
+        quincena_actividad_original: actividad.quincena_pago,
+        quincena_actividad_normalizada: quincenaActividad,
+        quincena_cuota_original: cuota.quincena,
+        quincena_cuota_normalizada: quincenaCuota,
+        periodicidadSocio,
+        coincide: quincenaCuota === quincenaActividad
+      })
+      
+      if (quincenaCuota === quincenaActividad) {
+        actividadCoincidente = actividad
+        console.log('✅ Actividad encontrada por búsqueda optimizada:', {
+          actividad_id: actividad.id,
+          quincena_actividad: actividad.quincena_pago,
+          quincena_actividad_normalizada: quincenaActividad,
+          quincena_cuota: cuota.quincena,
+          quincena_cuota_normalizada: quincenaCuota,
+          periodicidadSocio
+        })
+        break
+      } else {
+        console.log('❌ Quincenas no coinciden:', {
+          quincena_cuota: quincenaCuota,
+          quincena_actividad: quincenaActividad
+        })
+      }
+    }
+    
+    // Si no se encontró con la búsqueda optimizada, usar la función helper como fallback
+    if (!actividadCoincidente) {
+      actividadCoincidente = actividadesPendientes.value.find(actividad => {
+        return actividadCorrespondeACuota(actividad, cuota, actividad.actividad)
+      })
+    }
+
+    // Si se encontró una actividad coincidente, marcarla automáticamente
+    if (actividadCoincidente) {
+      console.log('✅ Actividad coincidente encontrada y marcada automáticamente:', {
+        id: actividadCoincidente.id,
+        descripcion: actividadCoincidente.actividad?.descripcion,
+        mes_pago: actividadCoincidente.mes_pago,
+        anio_pago: actividadCoincidente.anio_pago,
+        quincena_pago: actividadCoincidente.quincena_pago,
+        quincena_pago_normalizada: normalizarQuincena(actividadCoincidente.quincena_pago),
+        cuota_quincena: quincenaCuota,
+        periodicidad_socio: periodicidadSocio
+      })
+      actividadesSeleccionadas.value.add(actividadCoincidente.id)
+      // Retornar true para indicar que se marcó una actividad
+      return true
+    } else {
+      console.log('ℹ️ No se encontró actividad coincidente para el periodo de la cuota:', {
+        cuota: { mes: cuota.mes, anio: cuota.anio, quincena: cuota.quincena },
+        actividades_disponibles: actividadesPendientes.value.map(a => ({
+          mes: a.mes_pago,
+          anio: a.anio_pago,
+          quincena: a.quincena_pago
+        }))
+      })
+      return false
     }
   } catch (e) {
     console.error('❌ Error cargando actividades pendientes:', e)
     actividadesPendientes.value = []
+    return false
   } finally {
     cargandoActividades.value = false
   }
 }
 
-function abrirModalPago(cuota) {
+async function abrirModalPago(cuota) {
   cuotaSeleccionada.value = cuota
   // Inicializar con el total a pagar completo (incluye cuota + sanciones)
   const totalAPagar = getTotalAPagar(cuota)
   formPago.valor = totalAPagar > 0 ? totalAPagar : 0
   formPago.tipo_pago = 'efectivo' // Reiniciar tipo de pago por defecto
-  modalPago.value = true
   actividadesDesplegableAbierto.value = false
   actividadesSeleccionadas.value.clear() // Limpiar selección al abrir modal
-  // Cargar actividades pendientes del socio
-  cargarActividadesPendientes(cuota)
+  
+  // Abrir el modal primero para mejor UX
+  modalPago.value = true
+  
+  // Cargar actividades pendientes del socio (esto marcará automáticamente la actividad coincidente)
+  // Usar await para asegurar que la selección automática se complete antes de continuar
+  try {
+    const actividadMarcada = await cargarActividadesPendientes(cuota)
+    
+    // Si hay una actividad marcada automáticamente, actualizar el valor del pago
+    // Usar nextTick para asegurar que Vue haya actualizado el DOM
+    if (actividadMarcada && actividadesSeleccionadas.value.size > 0) {
+      await nextTick()
+      actualizarValorPagoConActividades()
+      console.log('✅ Valor del pago actualizado con actividades seleccionadas automáticamente')
+    }
+  } catch (error) {
+    console.error('❌ Error al cargar actividades pendientes:', error)
+    // Continuar de todos modos, el modal ya está abierto
+  }
 }
 
 // Función para alternar selección de actividad
@@ -5874,18 +7139,53 @@ async function registrarPagosActividades(valorTotalActividades) {
       for (const actividad of actividadesParaPagar) {
         const nuevoValorPagado = actividad.valor_asignado
         
+        // Generar código de comprobante único para la actividad
+        let codigoComprobante = null
+        try {
+          let intentos = 0
+          let codigoUnico = false
+          while (!codigoUnico && intentos < 5) {
+            codigoComprobante = generarCodigoComprobante()
+            // Verificar que el código no exista en socios_actividad
+            const { data: codigoExistente, error: codigoError } = await supabase
+              .from('socios_actividad')
+              .select('id')
+              .eq('codigo_comprobante', codigoComprobante)
+              .limit(1)
+            
+            if (codigoError) {
+              console.warn('Error verificando código de comprobante:', codigoError)
+              codigoUnico = true // Continuar de todos modos
+            } else if (!codigoExistente || codigoExistente.length === 0) {
+              codigoUnico = true
+            } else {
+              codigoComprobante = null
+            }
+            intentos++
+          }
+        } catch (e) {
+          console.warn('No se pudo generar código de comprobante para actividad:', e.message)
+          codigoComprobante = null
+        }
+        
+        const datosActualizar = {
+          valor_pagado: nuevoValorPagado
+        }
+        
+        // Solo agregar código si se generó exitosamente
+        if (codigoComprobante) {
+          datosActualizar.codigo_comprobante = codigoComprobante
+        }
+        
         const { error } = await supabase
           .from('socios_actividad')
-          .update({
-            valor_pagado: nuevoValorPagado
-            // El estado se actualiza automáticamente por el trigger
-          })
+          .update(datosActualizar)
           .eq('id', actividad.id)
         
         if (error) {
           console.error(`Error actualizando actividad ${actividad.id}:`, error)
         } else {
-          console.log(`✅ Pago completo registrado para actividad ${actividad.id}`)
+          console.log(`✅ Pago completo registrado para actividad ${actividad.id}${codigoComprobante ? ` con código ${codigoComprobante}` : ''}`)
         }
       }
     } else {
@@ -5900,19 +7200,56 @@ async function registrarPagosActividades(valorTotalActividades) {
         // Calcular nuevo valor pagado
         const nuevoValorPagado = actividad.valor_pagado_actual + valorAPagar
         
+        // Solo generar código de comprobante si se paga completamente
+        let codigoComprobante = null
+        if (nuevoValorPagado >= actividad.valor_asignado) {
+          try {
+            let intentos = 0
+            let codigoUnico = false
+            while (!codigoUnico && intentos < 5) {
+              codigoComprobante = generarCodigoComprobante()
+              // Verificar que el código no exista en socios_actividad
+              const { data: codigoExistente, error: codigoError } = await supabase
+                .from('socios_actividad')
+                .select('id')
+                .eq('codigo_comprobante', codigoComprobante)
+                .limit(1)
+              
+              if (codigoError) {
+                console.warn('Error verificando código de comprobante:', codigoError)
+                codigoUnico = true // Continuar de todos modos
+              } else if (!codigoExistente || codigoExistente.length === 0) {
+                codigoUnico = true
+              } else {
+                codigoComprobante = null
+              }
+              intentos++
+            }
+          } catch (e) {
+            console.warn('No se pudo generar código de comprobante para actividad:', e.message)
+            codigoComprobante = null
+          }
+        }
+        
+        const datosActualizar = {
+          valor_pagado: nuevoValorPagado
+        }
+        
+        // Solo agregar código si se generó exitosamente y se pagó completamente
+        if (codigoComprobante) {
+          datosActualizar.codigo_comprobante = codigoComprobante
+        }
+        
         // Actualizar la actividad en la base de datos
         const { error } = await supabase
           .from('socios_actividad')
-          .update({
-            valor_pagado: nuevoValorPagado
-            // El estado se actualiza automáticamente por el trigger
-          })
+          .update(datosActualizar)
           .eq('id', actividad.id)
         
         if (error) {
           console.error(`Error actualizando actividad ${actividad.id}:`, error)
         } else {
-          console.log(`✅ Pago parcial registrado para actividad ${actividad.id}: $${valorAPagar}`)
+          console.log(`✅ Pago parcial registrado para actividad ${actividad.id}: $${valorAPagar}${codigoComprobante ? ` con código ${codigoComprobante}` : ''}`)
           valorRestante -= valorAPagar
         }
       }
@@ -6992,29 +8329,75 @@ function formatearFechaCorta(dateStr) {
 async function handleRegistrarPago() {
   if (!cuotaSeleccionada.value) return
 
+  // Activar la animación de registro de pago
+  mostrandoAnimacionPago.value = true
+
   const valorPagado = formPago.valor
   const totalActividades = getTotalActividadesSeleccionadas()
-  const valorCuota = getTotalAPagar(cuotaSeleccionada.value)
+  const sancion = getSancionCuota(cuotaSeleccionada.value)
+  const valorCuota = cuotaSeleccionada.value.valor_cuota || 0
+  const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
+  const valorCuotaPendiente = valorCuota - valorPagadoAnterior
   
-  // Si hay actividades seleccionadas, el valor pagado incluye cuota + actividades
-  // Necesitamos separar cuánto va a la cuota y cuánto a las actividades
-  const valorParaCuota = Math.min(valorPagado, valorCuota)
-  const valorParaActividades = valorPagado - valorParaCuota
+  // IMPORTANTE: Orden de pago según requerimientos:
+  // 1. Primero se paga la sanción
+  // 2. Segundo se pagan las actividades
+  // 3. Tercero se paga la cuota
+  
+  let valorRestante = valorPagado
+  let valorSancionPagada = 0
+  let valorActividadesPagado = 0
+  let valorCuotaPagado = 0
+  
+  // Paso 1: Pagar sanción primero
+  if (sancion > 0 && valorRestante > 0) {
+    if (valorRestante >= sancion) {
+      valorSancionPagada = sancion
+      valorRestante -= sancion
+    } else {
+      valorSancionPagada = valorRestante
+      valorRestante = 0
+    }
+  }
+  
+  // Paso 2: Pagar actividades segundo
+  if (totalActividades > 0 && valorRestante > 0) {
+    if (valorRestante >= totalActividades) {
+      valorActividadesPagado = totalActividades
+      valorRestante -= totalActividades
+    } else {
+      valorActividadesPagado = valorRestante
+      valorRestante = 0
+    }
+  }
+  
+  // Paso 3: Pagar cuota tercero (con lo que reste)
+  if (valorRestante > 0 && valorCuotaPendiente > 0) {
+    if (valorRestante >= valorCuotaPendiente) {
+      valorCuotaPagado = valorCuotaPendiente
+      valorRestante -= valorCuotaPendiente
+    } else {
+      valorCuotaPagado = valorRestante
+      valorRestante = 0
+    }
+  }
   
   const socioNombre = cuotaSeleccionada.value.socio_natillera?.socio?.nombre
   const socioTelefono = cuotaSeleccionada.value.socio_natillera?.socio?.telefono
   const descripcionCuota = cuotaSeleccionada.value.descripcion || formatDate(cuotaSeleccionada.value.fecha_limite)
 
-  // Registrar pago de la cuota
+  // Registrar pago de la cuota (incluye distribución automática de sanción, actividades y cuota)
+  // IMPORTANTE: pasar el total de actividades pendientes para que registrarPago calcule cuánto se pagará
   const result = await cuotasStore.registrarPago(
     cuotaSeleccionada.value.id,
-    valorParaCuota, // Solo el valor de la cuota
+    valorPagado, // Valor total pagado (se distribuirá internamente según orden: sanción, actividades, cuota)
     null, // comprobante
-    formPago.tipo_pago // tipo_pago
+    formPago.tipo_pago, // tipo_pago
+    totalActividades // total de actividades pendientes (se calculará cuánto se paga según orden)
   )
   
   // Obtener información de actividades pagadas antes de registrar
-  const actividadesPagadas = totalActividades > 0 
+  let actividadesPagadas = totalActividades > 0 
     ? actividadesPendientes.value
         .filter(a => actividadesSeleccionadas.value.has(a.id))
         .map(a => ({
@@ -7028,8 +8411,36 @@ async function handleRegistrarPago() {
     : []
   
   // Si hay actividades seleccionadas y el pago fue exitoso, registrar pagos de actividades
-  if (result.success && totalActividades > 0 && valorParaActividades > 0) {
-    await registrarPagosActividades(valorParaActividades)
+  // Usar el valor calculado en registrarPago para asegurar consistencia
+  const valorActividadesPagadoReal = result.valorActividadesPagado || valorActividadesPagado
+  if (result.success && totalActividades > 0 && valorActividadesPagadoReal > 0) {
+    await registrarPagosActividades(valorActividadesPagadoReal)
+    
+    // Recargar las actividades pagadas con sus códigos de comprobante actualizados
+    if (actividadesPagadas.length > 0) {
+      try {
+        const actividadIds = actividadesPagadas.map(a => a.id)
+        const { data: actividadesActualizadas, error: errorActividades } = await supabase
+          .from('socios_actividad')
+          .select('id, codigo_comprobante, valor_pagado')
+          .in('id', actividadIds)
+        
+        if (!errorActividades && actividadesActualizadas) {
+          // Crear un mapa de códigos por ID
+          const codigosMap = new Map(
+            actividadesActualizadas.map(a => [a.id, a.codigo_comprobante])
+          )
+          
+          // Actualizar actividades pagadas con los códigos de comprobante
+          actividadesPagadas = actividadesPagadas.map(a => ({
+            ...a,
+            codigo_comprobante: codigosMap.get(a.id) || null
+          }))
+        }
+      } catch (e) {
+        console.warn('Error recargando códigos de comprobante de actividades:', e)
+      }
+    }
   }
 
   if (result.success) {
@@ -7037,34 +8448,42 @@ async function handleRegistrarPago() {
     const cuotaActualizada = result.data
     const valorCuota = cuotaSeleccionada.value.valor_cuota
     const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
-    const valorPagadoTotal = cuotaActualizada?.valor_pagado || (valorPagadoAnterior + valorParaCuota)
     // Considerar la sanción al calcular el total a pagar
     const sancion = getSancionCuota(cuotaActualizada || cuotaSeleccionada.value)
-    const totalAPagar = valorCuota + sancion
-    const valorPendiente = totalAPagar - valorPagadoTotal
-    const esParcial = valorPendiente > 0 && valorPagadoTotal < totalAPagar
-    
-    // Detectar si había un pago parcial anterior y ahora se completa
-    const teniaPagoParcial = valorPagadoAnterior > 0 && valorPagadoAnterior < totalAPagar
-    const seCompletoPago = !esParcial && teniaPagoParcial
+    // El valorPagadoTotal y totalAPagar se calcularán después con la suma de los conceptos pagados
     
     // Obtener el código del comprobante
     const codigoComprobante = cuotaActualizada?.codigo_comprobante || null
     console.log('Código de comprobante obtenido:', codigoComprobante)
     console.log('Cuota actualizada completa:', cuotaActualizada)
     
-    // Calcular cuánto se pagó de cuota y cuánto de sanción
+    // Calcular cuánto se pagó de cada concepto según el orden de pago
     // Usar el valor_multa de la cuota actualizada si está disponible (es más preciso)
     const valorMultaEnBD = parseFloat(cuotaActualizada?.valor_multa) || 0
     const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
     
-    // Si el valor pagado total es mayor que la cuota, la diferencia es la sanción pagada
-    // Pero no puede ser mayor que la sanción total
-    const valorCuotaPagada = Math.min(valorPagadoTotal, valorCuota)
-    const valorSancionPagada = Math.min(Math.max(0, valorPagadoTotal - valorCuota), sancionTotal)
+    // Usar los valores calculados en registrarPago para asegurar consistencia
+    const valorCuotaPagada = result.valorCuotaPagado || valorCuotaPagado
+    const valorSancionPagadaCalculada = result.valorSancionPagada || valorSancionPagada
+    const valorActividadesPagadoFinal = result.valorActividadesPagado || valorActividadesPagado
+    
+    // Calcular el total pagado como suma de cuota + sanciones + actividades
+    const valorPagadoTotalCalculado = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0)
+    
+    // Calcular el total a pagar incluyendo actividades
+    const valorActividades = totalActividades || 0
+    const totalAPagar = valorCuota + sancionTotal + valorActividades
+    
+    // Calcular pendiente y si es parcial
+    const valorPendienteCalculado = totalAPagar - valorPagadoTotalCalculado
+    const esParcialCalculado = valorPendienteCalculado > 0 && valorPagadoTotalCalculado < totalAPagar
     
     // Si hay sanción pendiente, también calcularla
-    const sancionPendiente = Math.max(0, sancionTotal - valorSancionPagada)
+    const sancionPendiente = Math.max(0, sancionTotal - valorSancionPagadaCalculada)
+    
+    // Detectar si había un pago parcial anterior y ahora se completa (usar totalAPagar calculado)
+    const teniaPagoParcial = valorPagadoAnterior > 0 && valorPagadoAnterior < totalAPagar
+    const seCompletoPago = !esParcialCalculado && teniaPagoParcial
     
     // Guardar info del pago para el modal de confirmación
     pagoRegistrado.value = {
@@ -7073,14 +8492,15 @@ async function handleRegistrarPago() {
       socioTelefono,
       valor: valorPagado, // Valor total del pago (cuota + actividades)
       valorCuota,
-      valorPagadoTotal, // Total acumulado pagado en la cuota
-      valorPendiente,
-      esParcial,
+      valorPagadoTotal: valorPagadoTotalCalculado, // Total pagado = cuota + sanciones + actividades
+      valorPendiente: valorPendienteCalculado,
+      esParcial: esParcialCalculado,
       descripcionCuota,
       codigoComprobante, // Código único del comprobante
       sancion: sancionTotal, // Sanción total (pagada + pendiente)
-      valorSancionPagada, // Cuánto de sanción se pagó
-      valorCuotaPagada, // Cuánto de cuota se pagó
+      valorSancionPagada: valorSancionPagadaCalculada, // Cuánto de sanción se pagó
+      valorActividadesPagado: valorActividadesPagadoFinal, // Cuánto de actividades se pagó
+      valorCuotaPagada: valorCuotaPagada, // Cuánto de cuota se pagó
       tieneSancion: sancionTotal > 0, // Indica si hay sanción
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       fecha: new Date().toLocaleDateString('es-CO', {
@@ -7090,9 +8510,19 @@ async function handleRegistrarPago() {
         hour: '2-digit',
         minute: '2-digit'
       }),
+      fechaCorta: new Date().toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      hora: new Date().toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
       // Información del pago parcial anterior (si existía)
       teniaPagoParcial: seCompletoPago,
       valorPagoAnterior: seCompletoPago ? valorPagadoAnterior : null,
+      valorActividades: valorActividades, // Total de actividades a pagar
       fechaPagoAnterior: seCompletoPago && cuotaSeleccionada.value.fecha_pago 
         ? new Date(cuotaSeleccionada.value.fecha_pago).toLocaleDateString('es-CO', {
             year: 'numeric',
@@ -7109,7 +8539,9 @@ async function handleRegistrarPago() {
     
     console.log('pagoRegistrado.value completo:', pagoRegistrado.value)
     
+    // Cerrar modal de pago y desactivar animación
     modalPago.value = false
+    mostrandoAnimacionPago.value = false
     modalConfirmacion.value = true
     cuotaSeleccionada.value = null
     // Reiniciar formulario y limpiar selección de actividades
@@ -7128,6 +8560,8 @@ async function handleRegistrarPago() {
       await cargarActividadesPendientesPorSocio()
     }
   } else {
+    // Si hay error, desactivar la animación
+    mostrandoAnimacionPago.value = false
     alert('Error: ' + result.error)
   }
 }
@@ -7144,23 +8578,16 @@ function generarImagenComprobante() {
       const tieneSancion = pagoRegistrado.value?.tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0
       const tieneActividades = pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0
       const cantidadActividades = tieneActividades ? pagoRegistrado.value.actividadesPagadas.length : 0
+      // Contar actividades con códigos de comprobante para ajustar altura
+      const actividadesConCodigo = tieneActividades 
+        ? pagoRegistrado.value.actividadesPagadas.filter(a => a.codigo_comprobante).length 
+        : 0
       const width = 480
-      // Altura ajustada: más espacio si hay pago parcial, información de pago anterior, desglose de sanción/actividades, tipo de pago o actividades
-      let height = 680
-      // Agregar espacio para el desglose si hay sanción o actividades (el desglose siempre se muestra si hay alguno)
-      if (tieneSancion || tieneActividades) {
-        height += 60 // Espacio adicional para el desglose
-      }
-      // Agregar espacio para el tipo de pago (siempre se muestra)
-      height += 75
-      // Agregar espacio para el detalle de actividades (si hay)
-      if (tieneActividades) {
-        height += 80 + (cantidadActividades * 50) // Espacio base + espacio por cada actividad
-      }
+      // Altura compacta: base más pequeña, secciones más compactas + espacio para header con chulo
+      let height = 550 // Base más compacta + espacio para header
+      // Agregar espacio para pago parcial si aplica
       if (esParcial) {
-        height = 790 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0)
-      } else if (teniaPagoParcial) {
-        height = 750 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0) // Espacio para información de pago anterior
+        height += 80
       }
       const scale = 2
       
@@ -7192,13 +8619,52 @@ function generarImagenComprobante() {
       ctx.fillRect(0, 0, width, height)
       
       // === HEADER ===
-      // "Comprobante de Pago" a la izquierda (grande, bold, blanco)
+      // Chulo verde y título "Comprobante de Pago"
+      const headerY = 40
+      const chuloSize = 48
+      const chuloX = width / 2 - 100
+      const chuloY = headerY
+      
+      // Círculo verde con gradiente para el chulo
+      const chuloGradient = ctx.createRadialGradient(chuloX + chuloSize/2, chuloY + chuloSize/2, 0, chuloX + chuloSize/2, chuloY + chuloSize/2, chuloSize/2)
+      chuloGradient.addColorStop(0, '#10b981')
+      chuloGradient.addColorStop(1, '#059669')
+      ctx.fillStyle = chuloGradient
+      ctx.beginPath()
+      ctx.arc(chuloX + chuloSize/2, chuloY + chuloSize/2, chuloSize/2, 0, Math.PI * 2)
+      ctx.fill()
+      
+      // Sombra del chulo
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'
+      ctx.shadowBlur = 12
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 4
+      ctx.beginPath()
+      ctx.arc(chuloX + chuloSize/2, chuloY + chuloSize/2, chuloSize/2, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      // Checkmark blanco dentro del círculo
+      ctx.strokeStyle = 'white'
+      ctx.fillStyle = 'white'
+      ctx.lineWidth = 3.5
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.beginPath()
+      ctx.moveTo(chuloX + chuloSize/2 - 10, chuloY + chuloSize/2)
+      ctx.lineTo(chuloX + chuloSize/2 - 4, chuloY + chuloSize/2 + 6)
+      ctx.lineTo(chuloX + chuloSize/2 + 10, chuloY + chuloSize/2 - 8)
+      ctx.stroke()
+      
+      // Título "Comprobante de Pago"
       ctx.fillStyle = 'rgba(255,255,255,0.95)'
       ctx.font = 'bold 28px Arial'
       ctx.textAlign = 'left'
-      ctx.fillText('Comprobante de Pago', 32, 52)
+      ctx.fillText('Comprobante de Pago', chuloX + chuloSize + 16, chuloY + 32)
       
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.fillStyle = 'rgba(255,255,255,0.6)'
       ctx.font = '12px Arial'
       ctx.textAlign = 'right'
@@ -7214,29 +8680,14 @@ function generarImagenComprobante() {
       ctx.strokeStyle = lineGradient
       ctx.lineWidth = 2
       ctx.beginPath()
-      ctx.moveTo(32, 72)
-      ctx.lineTo(width - 32, 72)
+      ctx.moveTo(32, headerY + chuloSize + 15)
+      ctx.lineTo(width - 32, headerY + chuloSize + 15)
       ctx.stroke()
       
       // === TARJETA GLASSMORPHISM ===
-      const cardY = 95
-      // Ajustar altura de la tarjeta según el contenido
-      let cardHeight = 485
-      // Agregar espacio para el desglose si hay sanción o actividades
-      if (tieneSancion || tieneActividades) {
-        cardHeight += 60 // Espacio adicional para el desglose
-      }
-      // Agregar espacio para el tipo de pago (siempre se muestra)
-      cardHeight += 75
-      // Agregar espacio para el detalle de actividades (si hay)
-      if (tieneActividades) {
-        cardHeight += 80 + (cantidadActividades * 50) // Espacio base + espacio por cada actividad
-      }
-      if (esParcial) {
-        cardHeight = 600 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0)
-      } else if (teniaPagoParcial) {
-        cardHeight = 550 + ((tieneSancion || tieneActividades) ? 60 : 0) + 75 + (tieneActividades ? 80 + (cantidadActividades * 50) : 0) // Espacio para información de pago anterior
-      }
+      const cardY = headerY + chuloSize + 35
+      // Altura compacta de la tarjeta
+      let cardHeight = height - cardY - 20 // Altura dinámica basada en el contenido total
       const cardMargin = 24
       
       // Fondo de la tarjeta blanca con glassmorphism
@@ -7261,633 +8712,428 @@ function generarImagenComprobante() {
       const cardInnerX = cardMargin + 28
       const cardInnerWidth = width - cardMargin*2 - 56
       
-      // === VALOR PAGADO (HERO) - Centrado ===
-      ctx.fillStyle = '#64748b'
-      ctx.font = '13px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('VALOR PAGADO', width/2, cardY + 50)
+      // === SECCIÓN 1: INFORMACIÓN DEL PAGO ===
+      let currentY = cardY + 20
       
-      // Valor grande con gradiente verde
+      // Etiqueta "MONTO PAGADO"
+      ctx.fillStyle = '#6b7280'
+      ctx.font = 'bold 9px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('MONTO PAGADO', width/2, currentY + 12)
+      
+      // Valor pagado
       const valorText = '$' + formatMoney(pagoRegistrado.value?.valor)
-      ctx.font = 'bold 52px Arial'
-      const valorGradient = ctx.createLinearGradient(0, cardY + 55, 0, cardY + 110)
+      ctx.font = 'bold 40px Arial'
+      const valorGradient = ctx.createLinearGradient(0, currentY, 0, currentY + 50)
       valorGradient.addColorStop(0, '#059669')
       valorGradient.addColorStop(1, '#10b981')
       ctx.fillStyle = valorGradient
-      ctx.fillText(valorText, width/2, cardY + 105)
+      ctx.textAlign = 'center'
+      ctx.fillText(valorText, width/2, currentY + 50)
       
-      // Badge "Pago Verificado" centrado debajo del monto
-      const badgeY = cardY + 125
-      ctx.fillStyle = '#dcfce7'
+      // Estado del pago
+      currentY += 60
+      const estadoBadgeY = currentY
+      const esParcialEstado = pagoRegistrado.value?.esParcial || false
+      ctx.fillStyle = esParcialEstado ? '#fef3c7' : '#dcfce7'
       ctx.beginPath()
-      ctx.roundRect(width/2 - 60, badgeY, 120, 32, 16)
+      ctx.roundRect(width/2 - 55, estadoBadgeY, 110, 24, 12)
       ctx.fill()
       
-      ctx.fillStyle = '#059669'
-      ctx.font = 'bold 13px Arial'
+      ctx.fillStyle = esParcialEstado ? '#f59e0b' : '#059669'
+      ctx.font = 'bold 10px Arial'
       ctx.textAlign = 'center'
-      ctx.fillText('Pago Verificado', width/2, badgeY + 21)
+      ctx.fillText(esParcialEstado ? 'PAGO PARCIAL' : 'PAGO COMPLETO', width/2, estadoBadgeY + 16)
       
-      // === CÓDIGO DE COMPROBANTE (debajo de "Pago Verificado") ===
-      // Siempre reservar el mismo espacio para mantener consistencia
-      const codigoY = badgeY + 40
+      // Código de comprobante sutil debajo del estado
       if (codigoComprobante) {
-        // Código en negrita y visible, centrado
-        ctx.fillStyle = '#64748b'
-        ctx.font = 'bold 12px monospace'
+        ctx.fillStyle = '#9ca3af'
+        ctx.font = '11px monospace'
         ctx.textAlign = 'center'
-        ctx.fillText(codigoComprobante, width/2, codigoY)
-        console.log('Código dibujado en el comprobante:', codigoComprobante)
-      } else {
-        console.warn('No hay código de comprobante para dibujar')
-        // No dibujar nada, pero mantener el espacio reservado
+        ctx.fillText(codigoComprobante, width/2, estadoBadgeY + 38)
       }
       
-      // === DESGLOSE DE CUOTA, SANCIÓN Y ACTIVIDADES ===
-      let desgloseY = null
+      // Grid compacto: Socio, Período, Fecha, Forma de pago
+      currentY += 35
+      const gridY = currentY
+      const gridItemHeight = 35
+      const gridItemWidth = (cardInnerWidth - 20) / 2
       
-      // Mostrar desglose si hay sanción o actividades
-      if (tieneSancion || tieneActividades) {
-        desgloseY = codigoY + 20
-        const desgloseHeight = 50
-        const cantidadColumnas = (tieneSancion ? 1 : 0) + (tieneActividades ? 1 : 0) + 1 // Cuota siempre + sanción + actividades
-        
-        // Fondo para el desglose
-        ctx.fillStyle = 'rgba(248, 250, 252, 0.8)'
+      // Socio
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '8px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('SOCIO', cardInnerX + 10, gridY + 12)
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 12px Arial'
+      const socioNombre = pagoRegistrado.value?.socioNombre || 'Socio'
+      const maxSocioWidth = gridItemWidth - 20
+      let socioTexto = socioNombre
+      if (ctx.measureText(socioTexto).width > maxSocioWidth) {
+        while (ctx.measureText(socioTexto + '...').width > maxSocioWidth && socioTexto.length > 0) {
+          socioTexto = socioTexto.slice(0, -1)
+        }
+        socioTexto += '...'
+      }
+      ctx.fillText(socioTexto, cardInnerX + 10, gridY + 25)
+      
+      // Período
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '8px Arial'
+      ctx.fillText('PERÍODO', cardInnerX + 10 + gridItemWidth, gridY + 12)
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 12px Arial'
+      const periodoTexto = (pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A').substring(0, 20)
+      ctx.fillText(periodoTexto, cardInnerX + 10 + gridItemWidth, gridY + 25)
+      
+      // Fecha
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '8px Arial'
+      ctx.fillText('FECHA', cardInnerX + 10, gridY + gridItemHeight + 12)
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 12px Arial'
+      const fechaTexto = pagoRegistrado.value?.fecha || pagoRegistrado.value?.fechaCorta || 'N/A'
+      // Si la fecha contiene un salto de línea, dividirla en dos líneas
+      if (fechaTexto.includes('\n')) {
+        const [fechaParte, horaParte] = fechaTexto.split('\n')
+        ctx.fillText(fechaParte, cardInnerX + 10, gridY + gridItemHeight + 22)
+        ctx.font = 'bold 10px Arial'
+        ctx.fillText(horaParte, cardInnerX + 10, gridY + gridItemHeight + 32)
+      } else {
+        ctx.font = 'bold 12px Arial'
+        ctx.fillText(fechaTexto, cardInnerX + 10, gridY + gridItemHeight + 25)
+      }
+      
+      // Forma de pago
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '8px Arial'
+      ctx.fillText('FORMA DE PAGO', cardInnerX + 10 + gridItemWidth, gridY + gridItemHeight + 12)
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 12px Arial'
+      const tipoPagoTexto = pagoRegistrado.value?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo'
+      ctx.fillText(tipoPagoTexto, cardInnerX + 10 + gridItemWidth, gridY + gridItemHeight + 25)
+      
+      currentY = gridY + gridItemHeight * 2 + 15
+      
+      // === SECCIÓN 2: CONCEPTOS PAGADOS ===
+      const conceptosY = currentY
+      const conceptosHeight = 60
+      
+      // Fondo de la sección
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, conceptosY, cardInnerWidth, conceptosHeight, 12)
+      ctx.fill()
+      
+      ctx.strokeStyle = '#e5e7eb'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, conceptosY, cardInnerWidth, conceptosHeight, 12)
+      ctx.stroke()
+      
+      // Título
+      ctx.fillStyle = '#6b7280'
+      ctx.font = 'bold 9px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('CONCEPTOS PAGADOS', cardInnerX + 10, conceptosY + 15)
+      
+      // Conceptos en fila compacta
+      let conceptoX = cardInnerX + 10
+      const conceptoSpacing = 8
+      const conceptoItemHeight = 35
+      const conceptoY = conceptosY + 22
+      
+      // Cuota
+      if (pagoRegistrado.value?.valorCuotaPagada > 0) {
+        ctx.fillStyle = '#f0fdf4'
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, desgloseY, cardInnerWidth, desgloseHeight, 12)
+        ctx.roundRect(conceptoX, conceptoY, 100, conceptoItemHeight, 8)
         ctx.fill()
-        
-        ctx.strokeStyle = '#e2e8f0'
+        ctx.strokeStyle = '#bbf7d0'
         ctx.lineWidth = 1
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, desgloseY, cardInnerWidth, desgloseHeight, 12)
+        ctx.roundRect(conceptoX, conceptoY, 100, conceptoItemHeight, 8)
         ctx.stroke()
         
-        // Calcular ancho de cada columna
-        const anchoColumna = cardInnerWidth / cantidadColumnas
-        
-        // Cuota (siempre primera columna)
-        let columnaActual = 0
-        ctx.fillStyle = '#64748b'
-        ctx.font = '9px Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText('CUOTA', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
-        
-        ctx.fillStyle = '#1e293b'
-        ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
-        
-        // Líneas divisorias verticales
-        if (cantidadColumnas > 1) {
-          for (let i = 1; i < cantidadColumnas; i++) {
-            ctx.strokeStyle = '#e2e8f0'
-            ctx.lineWidth = 1
-            ctx.beginPath()
-            ctx.moveTo(cardInnerX + anchoColumna * i, desgloseY + 10)
-            ctx.lineTo(cardInnerX + anchoColumna * i, desgloseY + desgloseHeight - 10)
-            ctx.stroke()
-          }
-        }
-        
-        // Sanción (segunda columna si hay)
-        if (tieneSancion) {
-          columnaActual++
-          ctx.fillStyle = '#64748b'
-          ctx.font = '9px Arial'
-          ctx.textAlign = 'center'
-          ctx.fillText('SANCIÓN', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
-          
-          ctx.fillStyle = '#dc2626'
-          ctx.font = 'bold 16px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
-        }
-        
-        // Actividades (última columna si hay)
-        if (tieneActividades) {
-          columnaActual++
-          ctx.fillStyle = '#64748b'
-          ctx.font = '9px Arial'
-          ctx.textAlign = 'center'
-          ctx.fillText('ACTIVIDADES', cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 20)
-          
-          ctx.fillStyle = '#7c3aed'
-          ctx.font = 'bold 16px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorActividades || 0), cardInnerX + anchoColumna * columnaActual + anchoColumna/2, desgloseY + 38)
-        }
+        ctx.fillStyle = '#065f46'
+        ctx.font = 'bold 10px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('Cuota', conceptoX + 8, conceptoY + 14)
+        ctx.font = 'bold 12px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), conceptoX + 8, conceptoY + 28)
+        conceptoX += 108
       }
       
-      // === ACTIVIDADES PAGADAS (si hay) - Detalle de cada actividad ===
-      let actividadesY = null
-      if (tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
-        // Posicionar después del desglose si existe, o después del código
-        actividadesY = desgloseY ? (desgloseY + 60) : (codigoY + 20)
-        
-        // Fondo blanco con borde púrpura para mejor contraste
-        const actividadesHeight = 70 + (cantidadActividades * 48)
-        ctx.fillStyle = '#ffffff'
+      // Sanción
+      if (tieneSancion) {
+        ctx.fillStyle = '#fef2f2'
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
+        ctx.roundRect(conceptoX, conceptoY, 100, conceptoItemHeight, 8)
+        ctx.fill()
+        ctx.strokeStyle = '#fecaca'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(conceptoX, conceptoY, 100, conceptoItemHeight, 8)
+        ctx.stroke()
+        
+        // Icono de sanción: círculo rojo con signo de admiración
+        const iconX = conceptoX + 8
+        const iconY = conceptoY + 8
+        const iconSize = 14
+        
+        // Círculo de fondo rojo con gradiente
+        const iconGradient = ctx.createRadialGradient(iconX + iconSize/2, iconY + iconSize/2, 0, iconX + iconSize/2, iconY + iconSize/2, iconSize/2)
+        iconGradient.addColorStop(0, '#ef4444')
+        iconGradient.addColorStop(1, '#dc2626')
+        ctx.fillStyle = iconGradient
+        ctx.beginPath()
+        ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2, 0, Math.PI * 2)
         ctx.fill()
         
         // Sombra sutil
-        ctx.shadowColor = 'rgba(168, 85, 247, 0.2)'
-        ctx.shadowBlur = 8
+        ctx.shadowColor = 'rgba(220, 38, 38, 0.3)'
+        ctx.shadowBlur = 4
         ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 4
+        ctx.shadowOffsetY = 2
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
+        ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2, 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowColor = 'transparent'
         ctx.shadowBlur = 0
         ctx.shadowOffsetX = 0
         ctx.shadowOffsetY = 0
         
-        // Borde púrpura
-        ctx.strokeStyle = '#a855f7'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.roundRect(cardInnerX, actividadesY, cardInnerWidth, actividadesHeight, 14)
-        ctx.stroke()
-        
-        // Título "ACTIVIDADES PAGADAS"
-        ctx.fillStyle = '#7c3aed'
+        // Signo de admiración blanco
+        ctx.fillStyle = 'white'
         ctx.font = 'bold 11px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('!', iconX + iconSize/2, iconY + iconSize/2 + 4)
+        
+        // Texto "Sanción"
+        ctx.fillStyle = '#991b1b'
+        ctx.font = 'bold 10px Arial'
         ctx.textAlign = 'left'
-        ctx.fillText('✨ ACTIVIDADES PAGADAS', cardInnerX + 18, actividadesY + 22)
+        ctx.fillText('Sanción', iconX + iconSize + 6, conceptoY + 14)
+        ctx.font = 'bold 12px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), conceptoX + 8, conceptoY + 28)
+        conceptoX += 108
+      }
+      
+      // Actividades - Mostrar cada una en su propia tarjeta
+      if (tieneActividades && pagoRegistrado.value?.actividadesPagadas) {
+        const actividades = pagoRegistrado.value.actividadesPagadas.filter(a => 
+          a && ((a.valor_pendiente || 0) > 0 || ((a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))
+        )
         
-        // Total de actividades
-        const totalActividadesY = actividadesY + 40
-        ctx.fillStyle = '#64748b'
-        ctx.font = '9px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('TOTAL ACTIVIDADES', cardInnerX + 18, totalActividadesY)
+        // Si hay espacio horizontal, mostrar en fila, sino en columna
+        let actividadX = conceptoX
+        let actividadY = conceptoY
+        const actividadWidth = 100
+        const actividadHeight = conceptoItemHeight
+        const actividadSpacing = 8
         
-        // Valor total (ajustado para que no se salga)
-        const valorTotalTexto = '$' + formatMoney(pagoRegistrado.value?.valorActividades || 0)
-        ctx.fillStyle = '#7c3aed'
-        ctx.font = 'bold 18px Arial'
-        ctx.textAlign = 'right'
-        // Calcular el ancho del texto y asegurarse de que no se salga
-        const valorTotalWidth = ctx.measureText(valorTotalTexto).width
-        const maxX = cardInnerX + cardInnerWidth - 18
-        const valorX = Math.min(maxX, maxX - (valorTotalWidth > (cardInnerWidth - 36) ? valorTotalWidth - (cardInnerWidth - 36) : 0))
-        ctx.fillText(valorTotalTexto, valorX, totalActividadesY + 15)
-        
-        // Lista de actividades
-        let actividadItemY = totalActividadesY + 30
-        pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
-          // Fondo para cada actividad (gradiente púrpura suave)
-          const actividadGradient = ctx.createLinearGradient(cardInnerX + 12, actividadItemY, cardInnerX + 12, actividadItemY + 42)
-          actividadGradient.addColorStop(0, 'rgba(168, 85, 247, 0.08)')
-          actividadGradient.addColorStop(1, 'rgba(139, 92, 246, 0.05)')
-          ctx.fillStyle = actividadGradient
-          ctx.beginPath()
-          ctx.roundRect(cardInnerX + 12, actividadItemY, cardInnerWidth - 24, 42, 10)
-          ctx.fill()
+        actividades.forEach((actividad, index) => {
+          if (!actividad) return
           
-          // Borde sutil púrpura
-          ctx.strokeStyle = 'rgba(168, 85, 247, 0.25)'
+          // Si no cabe en la fila actual, pasar a la siguiente
+          if (actividadX + actividadWidth > cardInnerX + cardInnerWidth - 10) {
+            actividadX = cardInnerX + 10
+            actividadY += actividadHeight + actividadSpacing
+          }
+          
+          const descripcionCompleta = actividad?.descripcion || actividad?.actividad?.descripcion || 'Actividad'
+          let descripcionActividad = descripcionCompleta.split(' - ')[0].trim() || 'Actividad'
+          
+          // Truncar si es muy larga
+          const maxWidth = actividadWidth - 16
+          ctx.font = 'bold 10px Arial'
+          if (ctx.measureText(descripcionActividad).width > maxWidth) {
+            while (ctx.measureText(descripcionActividad + '...').width > maxWidth && descripcionActividad.length > 0) {
+              descripcionActividad = descripcionActividad.slice(0, -1)
+            }
+            descripcionActividad += '...'
+          }
+          
+          const valorActividad = (actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))
+          
+          // Fondo
+          ctx.fillStyle = '#faf5ff'
+          ctx.beginPath()
+          ctx.roundRect(actividadX, actividadY, actividadWidth, actividadHeight, 8)
+          ctx.fill()
+          ctx.strokeStyle = '#e9d5ff'
           ctx.lineWidth = 1
           ctx.beginPath()
-          ctx.roundRect(cardInnerX + 12, actividadItemY, cardInnerWidth - 24, 42, 10)
+          ctx.roundRect(actividadX, actividadY, actividadWidth, actividadHeight, 8)
           ctx.stroke()
           
-          // Número de actividad (con fondo púrpura)
-          ctx.fillStyle = '#a855f7'
-          ctx.beginPath()
-          ctx.roundRect(cardInnerX + 24, actividadItemY + 8, 18, 18, 6)
-          ctx.fill()
-          ctx.fillStyle = '#ffffff'
+          // Texto
+          ctx.fillStyle = '#6b21a8'
           ctx.font = 'bold 10px Arial'
-          ctx.textAlign = 'center'
-          ctx.fillText((index + 1).toString(), cardInnerX + 33, actividadItemY + 20)
-          
-          // Descripción de la actividad (truncada si es muy larga)
-          const descripcion = actividad.descripcion || 'Actividad'
-          const maxDescWidth = cardInnerWidth - 24 - 50 - 80 // Ancho disponible menos número, menos valor
-          ctx.font = 'bold 12px Arial'
-          const descripcionWidth = ctx.measureText(descripcion).width
-          const descripcionTruncada = descripcionWidth > maxDescWidth 
-            ? descripcion.substring(0, Math.floor((maxDescWidth / descripcionWidth) * descripcion.length) - 3) + '...' 
-            : descripcion
-          ctx.fillStyle = '#1e293b'
           ctx.textAlign = 'left'
-          ctx.fillText(descripcionTruncada, cardInnerX + 50, actividadItemY + 16)
+          ctx.fillText(descripcionActividad, actividadX + 8, actividadY + 14)
+          ctx.font = 'bold 12px Arial'
+          ctx.fillText('$' + formatMoney(valorActividad), actividadX + 8, actividadY + 28)
           
-          // Tipo de actividad
-          ctx.fillStyle = '#64748b'
-          ctx.font = '9px Arial'
-          const tipoTexto = (actividad.tipo || 'otro').charAt(0).toUpperCase() + (actividad.tipo || 'otro').slice(1)
-          ctx.fillText(tipoTexto, cardInnerX + 50, actividadItemY + 30)
-          
-          // Valor de la actividad (ajustado para que no se salga)
-          const valorTexto = '$' + formatMoney(actividad.valor_pendiente || 0)
-          ctx.fillStyle = '#7c3aed'
-          ctx.font = 'bold 14px Arial'
-          ctx.textAlign = 'right'
-          const valorWidth = ctx.measureText(valorTexto).width
-          const maxValorX = cardInnerX + cardInnerWidth - 30
-          const valorX = Math.min(maxValorX, maxValorX - (valorWidth > 70 ? valorWidth - 70 : 0))
-          ctx.fillText(valorTexto, valorX, actividadItemY + 26)
-          
-          actividadItemY += 48
+          actividadX += actividadWidth + actividadSpacing
         })
+        
+        // Ajustar altura de la sección si hay múltiples filas de actividades
+        if (actividadY > conceptoY) {
+          const alturaExtra = actividadY - conceptoY
+          // No necesitamos ajustar conceptosHeight aquí porque currentY se ajustará después
+        }
       }
       
-      // Si había un pago parcial anterior y se completó, mostrar información del pago anterior
-      let infoPagoAnteriorY = null
+      currentY = conceptosY + conceptosHeight + 10
       
-      if (teniaPagoParcial && !esParcial) {
-        // Ajustar posición si hay actividades o desglose
-        infoPagoAnteriorY = tieneActividades 
-          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
-          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
-        const infoPagoAnteriorHeight = 90
-        
-        // Card para información de pago anterior
-        ctx.fillStyle = '#dbeafe'
-        ctx.beginPath()
-        ctx.roundRect(cardInnerX, infoPagoAnteriorY, cardInnerWidth, infoPagoAnteriorHeight, 14)
-        ctx.fill()
-        
-        ctx.strokeStyle = '#3b82f6'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.roundRect(cardInnerX, infoPagoAnteriorY, cardInnerWidth, infoPagoAnteriorHeight, 14)
-        ctx.stroke()
-        
-        // Título "PAGO ANTERIOR"
-        ctx.fillStyle = '#1e40af'
-        ctx.font = 'bold 11px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('PAGO ANTERIOR', cardInnerX + 18, infoPagoAnteriorY + 22)
-        
-        // Valor del pago anterior
-        const valorPagoAnteriorY = infoPagoAnteriorY + 42
-        ctx.fillStyle = '#1e40af'
-        ctx.font = '10px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('Valor del Pago Anterior', cardInnerX + 18, valorPagoAnteriorY)
-        
-        ctx.fillStyle = '#1e3a8a'
-        ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPagoAnterior || 0), cardInnerX + 18, valorPagoAnteriorY + 20)
-        
-        // Pago actual (completado)
-        const pagoActualY = valorPagoAnteriorY + 35
-        ctx.fillStyle = '#1e40af'
-        ctx.font = '10px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('Pago Actual (Completado)', cardInnerX + 18, pagoActualY)
-        
-        ctx.fillStyle = '#10b981'
-        ctx.font = 'bold 16px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valor || 0), cardInnerX + 18, pagoActualY + 18)
-      }
-      
-      // Si es pago parcial, mostrar información adicional
+      // === SECCIÓN 3: RESUMEN DE PAGO PARCIAL ===
       if (esParcial) {
-        // Ajustar posición si hay actividades, desglose o información de pago anterior
-        const infoParcialY = infoPagoAnteriorY 
-          ? infoPagoAnteriorY + 100 
-          : (tieneActividades 
-            ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
-            : (desgloseY ? (desgloseY + 60) : (codigoY + 20)))
-        // Aumentar altura si hay sanción o actividades para mostrar el desglose
-        const infoParcialHeight = (tieneSancion || tieneActividades) ? 150 : 110
+        const infoParcialY = currentY
+        const infoParcialHeight = 70
         
-        // Card para información de pago parcial
+        // Fondo de la sección
         ctx.fillStyle = '#fef3c7'
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, infoParcialY, cardInnerWidth, infoParcialHeight, 14)
+        ctx.roundRect(cardInnerX, infoParcialY, cardInnerWidth, infoParcialHeight, 12)
         ctx.fill()
         
         ctx.strokeStyle = '#fbbf24'
-        ctx.lineWidth = 2
+        ctx.lineWidth = 1.5
         ctx.beginPath()
-        ctx.roundRect(cardInnerX, infoParcialY, cardInnerWidth, infoParcialHeight, 14)
+        ctx.roundRect(cardInnerX, infoParcialY, cardInnerWidth, infoParcialHeight, 12)
         ctx.stroke()
         
-        // Título "PAGO PARCIAL"
+        // Título
         ctx.fillStyle = '#92400e'
-        ctx.font = 'bold 11px Arial'
+        ctx.font = 'bold 9px Arial'
         ctx.textAlign = 'left'
-        ctx.fillText('PAGO PARCIAL', cardInnerX + 18, infoParcialY + 22)
+        ctx.fillText('RESUMEN PARCIAL', cardInnerX + 10, infoParcialY + 15)
         
-        // Desglose de cuota, sanción y actividades
-        let valorCuotaY = infoParcialY + 42
-        const cantidadColumnasParcial = (tieneSancion ? 1 : 0) + (tieneActividades ? 1 : 0) + 1 // Cuota siempre + sanción + actividades
-        const anchoColumnaParcial = (cardInnerWidth - 36) / cantidadColumnasParcial
+        // Calcular total a pagar
+        const totalAPagar = (pagoRegistrado.value?.valorCuota || 0) + 
+                           (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
+                           (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
         
-        if (tieneSancion || tieneActividades) {
-          // Desglose con columnas
-          let columnaParcial = 0
-          
-          // Cuota (siempre primera)
-          ctx.fillStyle = '#92400e'
-          ctx.font = '9px Arial'
-          ctx.textAlign = 'left'
-          ctx.fillText('CUOTA', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
-          
-          ctx.fillStyle = '#78350f'
-          ctx.font = 'bold 14px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
-          
-          // Sanción (si hay)
-          if (tieneSancion) {
-            columnaParcial++
-            ctx.fillStyle = '#92400e'
-            ctx.font = '9px Arial'
-            ctx.textAlign = 'left'
-            ctx.fillText('SANCIÓN', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
-            
-            ctx.fillStyle = '#dc2626'
-            ctx.font = 'bold 14px Arial'
-            ctx.fillText('$' + formatMoney(pagoRegistrado.value?.sancion || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
-          }
-          
-          // Actividades (si hay)
-          if (tieneActividades) {
-            columnaParcial++
-            ctx.fillStyle = '#92400e'
-            ctx.font = '9px Arial'
-            ctx.textAlign = 'left'
-            ctx.fillText('ACTIVIDADES', cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY)
-            
-            ctx.fillStyle = '#7c3aed'
-            ctx.font = 'bold 14px Arial'
-            ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorActividades || 0), cardInnerX + 18 + anchoColumnaParcial * columnaParcial, valorCuotaY + 18)
-          }
-          
-          // Línea divisoria
-          ctx.strokeStyle = '#fbbf24'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(cardInnerX + 18, valorCuotaY + 25)
-          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 25)
-          ctx.stroke()
-          
-          // Total a pagar (cuota + sanción + actividades)
-          valorCuotaY = valorCuotaY + 35
-          ctx.fillStyle = '#92400e'
-          ctx.font = '10px Arial'
-          ctx.textAlign = 'left'
-          let totalTexto = 'Total a Pagar'
-          if (tieneSancion && tieneActividades) {
-            totalTexto = 'Total (Cuota + Sanción + Actividades)'
-          } else if (tieneSancion) {
-            totalTexto = 'Total (Cuota + Sanción)'
-          } else if (tieneActividades) {
-            totalTexto = 'Total (Cuota + Actividades)'
-          }
-          ctx.fillText(totalTexto, cardInnerX + 18, valorCuotaY)
-          
-          const totalAPagar = (pagoRegistrado.value?.valorCuota || 0) + 
-                             (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
-                             (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
-          
-          ctx.fillStyle = '#78350f'
-          ctx.font = 'bold 16px Arial'
-          ctx.fillText('$' + formatMoney(totalAPagar), cardInnerX + 18, valorCuotaY + 20)
-          
-          // Línea divisoria
-          ctx.strokeStyle = '#fbbf24'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(cardInnerX + 18, valorCuotaY + 30)
-          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 30)
-          ctx.stroke()
-        } else {
-          // Valor Total de la Cuota primero (más destacado) - sin sanción
-          ctx.fillStyle = '#92400e'
-          ctx.font = '10px Arial'
-          ctx.textAlign = 'left'
-          ctx.fillText('Valor Total de la Cuota', cardInnerX + 18, valorCuotaY)
-          
-          ctx.fillStyle = '#78350f'
-          ctx.font = 'bold 16px Arial'
-          ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorCuota || 0), cardInnerX + 18, valorCuotaY + 20)
-          
-          // Línea divisoria
-          ctx.strokeStyle = '#fbbf24'
-          ctx.lineWidth = 1
-          ctx.beginPath()
-          ctx.moveTo(cardInnerX + 18, valorCuotaY + 30)
-          ctx.lineTo(cardInnerX + cardInnerWidth - 18, valorCuotaY + 30)
-          ctx.stroke()
-        }
+        // Grid: Total a Pagar y Total Pagado
+        const gridParcialY = infoParcialY + 22
+        const gridItemWidth = (cardInnerWidth - 30) / 2
         
-        // Total Pagado y Pendiente lado a lado
-        const totalPendienteY = valorCuotaY + 40
-        
-        // Total Pagado (izquierda)
+        // Total a Pagar
         ctx.fillStyle = '#92400e'
-        ctx.font = '9px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('Total Pagado', cardInnerX + 18, totalPendienteY)
-        
+        ctx.font = '8px Arial'
+        ctx.fillText('TOTAL A PAGAR', cardInnerX + 10, gridParcialY + 10)
         ctx.fillStyle = '#78350f'
-        ctx.font = 'bold 14px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPagadoTotal || 0), cardInnerX + 18, totalPendienteY + 18)
+        ctx.font = 'bold 13px Arial'
+        ctx.fillText('$' + formatMoney(totalAPagar), cardInnerX + 10, gridParcialY + 25)
         
-        // Desglose del total pagado si hay sanción
-        if (tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0) {
-          ctx.fillStyle = '#92400e'
-          ctx.font = '7px Arial'
-          ctx.textAlign = 'left'
-          ctx.fillText('Cuota: $' + formatMoney(pagoRegistrado.value?.valorCuotaPagada || 0), cardInnerX + 18, totalPendienteY + 35)
-          
-          ctx.fillStyle = '#dc2626'
-          ctx.font = '7px Arial'
-          ctx.fillText('Sanción: $' + formatMoney(pagoRegistrado.value?.valorSancionPagada || 0), cardInnerX + 18, totalPendienteY + 45)
-        }
-        
-        // Pendiente (derecha)
+        // Total Pagado
         ctx.fillStyle = '#92400e'
-        ctx.font = '9px Arial'
+        ctx.font = '8px Arial'
         ctx.textAlign = 'right'
-        ctx.fillText('Pendiente', cardInnerX + cardInnerWidth - 18, totalPendienteY)
+        ctx.fillText('TOTAL PAGADO', cardInnerX + cardInnerWidth - 10, gridParcialY + 10)
+        ctx.fillStyle = '#059669'
+        ctx.font = 'bold 13px Arial'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPagadoTotal || 0), cardInnerX + cardInnerWidth - 10, gridParcialY + 25)
         
-        ctx.fillStyle = '#d97706'
-        ctx.font = 'bold 14px Arial'
-        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPendiente || 0), cardInnerX + cardInnerWidth - 18, totalPendienteY + 18)
+        // Línea divisoria
+        ctx.strokeStyle = '#fbbf24'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(cardInnerX + 10, gridParcialY + 32)
+        ctx.lineTo(cardInnerX + cardInnerWidth - 10, gridParcialY + 32)
+        ctx.stroke()
+        
+        // Pendiente
+        ctx.fillStyle = '#92400e'
+        ctx.font = 'bold 9px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('PENDIENTE', cardInnerX + 10, gridParcialY + 45)
+        ctx.fillStyle = '#f97316'
+        ctx.font = 'bold 16px Arial'
+        ctx.textAlign = 'right'
+        ctx.fillText('$' + formatMoney(pagoRegistrado.value?.valorPendiente || 0), cardInnerX + cardInnerWidth - 10, gridParcialY + 45)
+        
+        currentY = infoParcialY + infoParcialHeight + 10
       }
       
-      // === DETALLES EN CARDS ===
-      // Ajustar posición de los detalles según el contenido
-      let detailsY
-      if (esParcial) {
-        // Si hay pago parcial, calcular según actividades, desglose o código
-        detailsY = tieneActividades 
-          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
-          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
-        // Ajustar para el bloque de pago parcial
-        const infoParcialY = infoPagoAnteriorY 
-          ? infoPagoAnteriorY + 100 
-          : detailsY
-        detailsY = infoParcialY + ((tieneSancion || tieneActividades) ? 150 : 110) + 20
-      } else if (teniaPagoParcial) {
-        // Si hay información de pago anterior, ajustar posición
-        detailsY = infoPagoAnteriorY ? infoPagoAnteriorY + 100 : (codigoY + 20)
-      } else {
-        // Sin pago parcial ni anterior: calcular según actividades, desglose o código
-        detailsY = tieneActividades 
-          ? (actividadesY + 70 + (cantidadActividades * 48) + 15)
-          : (desgloseY ? (desgloseY + 60) : (codigoY + 20))
-      }
-      
-      // Card: Socio con mejor estilo
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 62, 14)
-      ctx.fill()
-      
-      // Sombra sutil en las cards
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      
-      ctx.strokeStyle = '#e2e8f0'
+      // === FOOTER ===
+      const footerY = currentY + 8
+      ctx.strokeStyle = '#e5e7eb'
       ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 62, 14)
+      ctx.moveTo(cardInnerX, footerY)
+      ctx.lineTo(cardInnerX + cardInnerWidth, footerY)
       ctx.stroke()
       
-      // Resetear sombra
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
+      // Puntos decorativos
+      const puntoSize = 3
+      const puntoY = footerY + 14
+      const textoFooter = 'Natillerapp'
+      const textoWidth = ctx.measureText(textoFooter).width
+      const puntoSpacing = 8
       
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('SOCIO', cardInnerX + 18, detailsY + 24)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(pagoRegistrado.value?.socioNombre || 'Socio', cardInnerX + 18, detailsY + 46)
-      
-      // Card: Cuota con mejor estilo
-      const cuotaY = detailsY + 75
-      ctx.fillStyle = '#f8fafc'
+      // Punto izquierdo
+      const puntoGradient1 = ctx.createRadialGradient(width/2 - textoWidth/2 - puntoSpacing, puntoY, 0, width/2 - textoWidth/2 - puntoSpacing, puntoY, puntoSize/2)
+      puntoGradient1.addColorStop(0, '#10b981')
+      puntoGradient1.addColorStop(1, '#059669')
+      ctx.fillStyle = puntoGradient1
       ctx.beginPath()
-      ctx.roundRect(cardInnerX, cuotaY, cardInnerWidth, 62, 14)
+      ctx.arc(width/2 - textoWidth/2 - puntoSpacing, puntoY, puntoSize/2, 0, Math.PI * 2)
       ctx.fill()
       
-      // Sombra sutil en las cards
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      // Sombra del punto izquierdo
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'
       ctx.shadowBlur = 4
       ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
+      ctx.shadowOffsetY = 0
       ctx.beginPath()
-      ctx.roundRect(cardInnerX, cuotaY, cardInnerWidth, 62, 14)
-      ctx.stroke()
-      
-      // Resetear sombra
+      ctx.arc(width/2 - textoWidth/2 - puntoSpacing, puntoY, puntoSize/2, 0, Math.PI * 2)
+      ctx.fill()
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
       
-      ctx.fillStyle = '#10b981'
+      // Texto "Natillerapp" con gradiente
+      const textoGradient = ctx.createLinearGradient(width/2 - textoWidth/2, footerY + 10, width/2 + textoWidth/2, footerY + 20)
+      textoGradient.addColorStop(0, '#10b981')
+      textoGradient.addColorStop(1, '#059669')
+      ctx.fillStyle = textoGradient
       ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('CONCEPTO / CUOTA', cardInnerX + 18, cuotaY + 24)
+      ctx.textAlign = 'center'
+      ctx.fillText(textoFooter, width/2, footerY + 18)
       
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(pagoRegistrado.value?.descripcionCuota || 'Cuota mensual', cardInnerX + 18, cuotaY + 46)
-      
-      // Card: Fecha con mejor estilo
-      const fechaY = cuotaY + 75
-      ctx.fillStyle = '#f8fafc'
+      // Punto derecho
+      const puntoGradient2 = ctx.createRadialGradient(width/2 + textoWidth/2 + puntoSpacing, puntoY, 0, width/2 + textoWidth/2 + puntoSpacing, puntoY, puntoSize/2)
+      puntoGradient2.addColorStop(0, '#10b981')
+      puntoGradient2.addColorStop(1, '#059669')
+      ctx.fillStyle = puntoGradient2
       ctx.beginPath()
-      ctx.roundRect(cardInnerX, fechaY, cardInnerWidth, 62, 14)
+      ctx.arc(width/2 + textoWidth/2 + puntoSpacing, puntoY, puntoSize/2, 0, Math.PI * 2)
       ctx.fill()
       
-      // Sombra sutil en las cards
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      // Sombra del punto derecho
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'
       ctx.shadowBlur = 4
       ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, fechaY, cardInnerWidth, 62, 14)
-      ctx.stroke()
-      
-      // Resetear sombra
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
       ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('FECHA Y HORA DEL PAGO', cardInnerX + 18, fechaY + 24)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 15px Arial'
-      ctx.fillText(pagoRegistrado.value?.fecha || 'Fecha no disponible', cardInnerX + 18, fechaY + 46)
-      
-      // Card: Tipo de Pago con mejor estilo y fondo blanco para contraste
-      const tipoPagoY = fechaY + 75
-      // Fondo blanco sólido para mejor contraste
-      ctx.fillStyle = '#ffffff'
       ctx.beginPath()
-      ctx.roundRect(cardInnerX, tipoPagoY, cardInnerWidth, 62, 14)
+      ctx.arc(width/2 + textoWidth/2 + puntoSpacing, puntoY, puntoSize/2, 0, Math.PI * 2)
       ctx.fill()
-      
-      // Sombra sutil en las cards
-      ctx.shadowColor = 'rgba(0,0,0,0.08)'
-      ctx.shadowBlur = 6
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 3
-      
-      const tipoPago = pagoRegistrado.value?.tipoPago || 'efectivo'
-      const esTransferencia = tipoPago === 'transferencia'
-      
-      // Borde según el tipo de pago
-      ctx.strokeStyle = esTransferencia ? '#3b82f6' : '#22c55e'
-      ctx.lineWidth = 2.5
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, tipoPagoY, cardInnerWidth, 62, 14)
-      ctx.stroke()
-      
-      // Resetear sombra
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
       
-      // Label "FORMA DE PAGO"
-      ctx.fillStyle = esTransferencia ? '#3b82f6' : '#22c55e'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('FORMA DE PAGO', cardInnerX + 18, tipoPagoY + 24)
+      currentY = footerY + 24
       
-      // Icono y texto del tipo de pago con color según tipo
-      ctx.fillStyle = esTransferencia ? '#3b82f6' : '#22c55e'
-      ctx.font = 'bold 16px Arial'
-      const tipoPagoTexto = esTransferencia ? '💳 Transferencia' : '💵 Efectivo'
-      ctx.fillText(tipoPagoTexto, cardInnerX + 18, tipoPagoY + 46)
-      
-      // Ajustar altura de la tarjeta si es necesario
-      if (tipoPagoY + 75 > cardY + cardHeight) {
-        cardHeight = tipoPagoY + 75 - cardY
-      }
+      // Actualizar altura de la tarjeta
+      cardHeight = currentY - cardY + 10
       
       // === BOTÓN DE CONFIRMACIÓN ===
-      // El botón debe quedar fuera de la tarjeta blanca, al final, igual en ambos casos
-      const btnY = cardY + cardHeight + 20
+      // Actualizar altura total del canvas
+      height = currentY + 80
+      canvas.height = height * scale
+      
+      // El botón debe quedar fuera de la tarjeta blanca, al final
+      const btnY = currentY + 10
       
       // Sombra del botón para profundidad
       ctx.fillStyle = 'rgba(5, 150, 105, 0.3)'
@@ -7942,16 +9188,17 @@ async function descargarComprobante() {
   generandoImagen.value = true
   
   try {
-    const canvas = await generarImagenComprobante()
+    // Usar html-to-image para capturar el HTML directamente (mejor soporte para colores modernos)
+    console.log('Capturando comprobante HTML...')
     
-    if (!canvas) {
-      throw new Error('No se pudo generar el canvas')
-    }
+    const dataUrl = await toPng(comprobanteRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
     
-    console.log('Convirtiendo a imagen...')
-    
-    // Convertir a imagen y descargar
-    const dataUrl = canvas.toDataURL('image/png')
+    console.log('Imagen generada, iniciando descarga...')
     const link = document.createElement('a')
     link.download = `comprobante-${pagoRegistrado.value?.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
     link.href = dataUrl
@@ -8015,33 +9262,30 @@ async function descargarComprobante() {
 }
 
 async function compartirWhatsApp() {
-  if (!pagoRegistrado.value) return
+  if (!pagoRegistrado.value || !comprobanteRef.value) return
   
   generandoImagen.value = true
   
   try {
-    const canvas = await generarImagenComprobante()
-    if (!canvas) throw new Error('No se pudo generar la imagen')
+    // Usar html-to-image para capturar el HTML directamente (mejor soporte para colores modernos)
+    const dataUrl = await toPng(comprobanteRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
     
-    // Convertir canvas a blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+    // Convertir dataUrl a blob
+    const response = await fetch(dataUrl)
+    const blob = await response.blob()
     
     // Incluir el nombre del socio en el nombre del archivo para mejor identificación
     const nombreArchivo = `comprobante-${pagoRegistrado.value.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
     const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
     
-    // Crear mensaje con el nombre del socio y actividades si hay
-    let mensajeCompartir = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera "${natilleraNombre.value}".`
-    
-    if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
-      mensajeCompartir += `\n\n✨ *Actividades incluidas:*\n`
-      pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
-        mensajeCompartir += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
-      })
-      mensajeCompartir += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
-    }
-    
-    mensajeCompartir += `\n\n¡Gracias por estar al día! 🙌`
+    // Crear mensaje simple: Nombre del Socio - Período del pago
+    const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
+    const mensajeCompartir = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -8074,26 +9318,23 @@ async function compartirWhatsApp() {
       }
     } else {
       // Fallback: descargar y abrir WhatsApp con mensaje
+      const dataUrl = await toPng(comprobanteRef.value, {
+        backgroundColor: '#ecfdf5',
+        pixelRatio: 2,
+        quality: 1.0,
+        cacheBust: true
+      })
       const link = document.createElement('a')
       link.download = `comprobante-${pagoRegistrado.value?.socioNombre?.replace(/\s+/g, '-')}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = dataUrl
       link.click()
       
       // Esperar un poco y abrir WhatsApp
       setTimeout(() => {
         const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
         if (telefono) {
-          let mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago.`
-          
-          if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
-            mensaje += `\n\n✨ *Actividades incluidas:*\n`
-            pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
-              mensaje += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
-            })
-            mensaje += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
-          }
-          
-          mensaje += `\n\n¡Gracias por estar al día! 🙌`
+          const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
+          const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
           window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
           
           // Registrar auditoría de envío de comprobante (fallback)
@@ -8128,17 +9369,8 @@ async function compartirWhatsApp() {
       // Fallback: solo abrir WhatsApp con texto
       const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
       if (telefono) {
-        let mensaje = `Hola ${pagoRegistrado.value.socioNombre} 👋\n\nTe envío el comprobante de tu pago en la natillera.`
-        
-        if (pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0) {
-          mensaje += `\n\n✨ *Actividades incluidas:*\n`
-          pagoRegistrado.value.actividadesPagadas.forEach((actividad, index) => {
-            mensaje += `${index + 1}. ${actividad.descripcion}: $${formatMoney(actividad.valor_pendiente || 0)}\n`
-          })
-          mensaje += `\n*Total actividades:* $${formatMoney(pagoRegistrado.value.valorActividades || 0)}`
-        }
-        
-        mensaje += `\n\n¡Gracias por estar al día! 🙌`
+        const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
+        const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
         window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
         
         // Registrar auditoría de envío de comprobante (solo texto)
@@ -8206,24 +9438,18 @@ watch(modalConfirmacion, async (nuevoValor) => {
 })
 
 async function reenviarComprobante(cuota) {
-  // Calcular si es parcial considerando la sanción
-  const valorCuota = cuota.valor_cuota || 0
-  const valorPagadoTotal = cuota.valor_pagado || 0
+  // Usar el campo valor_pagado_sancion de la BD: ahí se guarda lo abonado a sanciones.
+  // valor_pagado en BD = solo lo abonado a la cuota; total = valor_pagado + valor_pagado_sancion.
+  const valorCuota = parseFloat(cuota.valor_cuota) || 0
+  const valorCuotaPagada = parseFloat(cuota.valor_pagado) || 0
+  const valorSancionPagada = parseFloat(cuota.valor_pagado_sancion) || 0
+  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada
   const sancion = getSancionCuotaDetalle(cuota)
-  const totalAPagar = valorCuota + sancion
-  const valorPendiente = totalAPagar - valorPagadoTotal
-  // Es parcial si hay un pago pero no cubre toda la cuota + sanción
-  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
-  
-  // Calcular cuánto se pagó de cuota y cuánto de sanción
-  // Usar el valor_multa de la cuota si está disponible (es más preciso)
   const valorMultaEnBD = parseFloat(cuota.valor_multa) || 0
   const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
-  
-  // Si el valor pagado total es mayor que la cuota, la diferencia es la sanción pagada
-  // Pero no puede ser mayor que la sanción total
-  const valorCuotaPagada = Math.min(valorPagadoTotal, valorCuota)
-  const valorSancionPagada = Math.min(Math.max(0, valorPagadoTotal - valorCuota), sancionTotal)
+  const totalAPagar = valorCuota + sancionTotal
+  const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
+  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
   
   // Buscar actividades pagadas relacionadas con esta cuota (mismo socio_natillera_id y fecha de pago similar)
   let actividadesPagadas = []
@@ -8296,15 +9522,28 @@ async function reenviarComprobante(cuota) {
     sancion: sancionTotal, // Sanción total (pagada + pendiente)
     valorSancionPagada, // Cuánto de sanción se pagó
     valorCuotaPagada, // Cuánto de cuota se pagó
-    tieneSancion: sancionTotal > 0, // Indica si hay sanción
+    tieneSancion: valorSancionPagada > 0, // Indica si se pagó sanción
     tipoPago: cuota.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
     fecha: cuota.fecha_pago 
+      ? (() => {
+          const d = new Date(cuota.fecha_pago)
+          const fechaStr = d.toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+          const horaStr = d.toLocaleTimeString('es-CO', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          return `${fechaStr}\n${horaStr}`
+        })()
+      : 'Fecha no registrada',
+    fechaCorta: cuota.fecha_pago 
       ? new Date(cuota.fecha_pago).toLocaleDateString('es-CO', {
           year: 'numeric',
           month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
+          day: 'numeric'
         })
       : 'Fecha no registrada',
     // Información de actividades pagadas
@@ -8452,7 +9691,7 @@ function verificarCuotasFaltantes(cuotasCargadas, mes, anio) {
       const tieneQ2 = cuotas.some(c => c.quincena === 2)
       if (!tieneQ1 || !tieneQ2) return true
     } else {
-      const tieneMensual = cuotas.some(c => c.quincena === null || c.quincena === undefined)
+      const tieneMensual = cuotas.some(c => c.quincena === 0 || c.quincena === null || c.quincena === undefined)
       if (!tieneMensual) return true
     }
   }
@@ -8513,7 +9752,7 @@ async function cargarFechasDelMes(mes) {
     }
     
     // Buscar fecha de la 2da quincena o mensual
-    const cuotaQuincena2 = cuotasDelMes.find(c => c.quincena === 2 || c.quincena === null)
+    const cuotaQuincena2 = cuotasDelMes.find(c => c.quincena === 2 || c.quincena === 0 || c.quincena === null)
     if (cuotaQuincena2 && cuotaQuincena2.fecha_limite) {
       // Convertir fecha a formato YYYY-MM-DD para el input date
       const fecha2 = new Date(cuotaQuincena2.fecha_limite)
@@ -8619,6 +9858,10 @@ async function seleccionarSocio(socioId) {
 }
 
 // Función para abrir el modal y cargar socios
+function abrirSelectorMes() {
+  modalSelectorMes.value = true
+}
+
 async function abrirModalGenerarCuotas() {
   modalGenerarCuotas.value = true
   await cargarSociosActivos()
@@ -8642,6 +9885,21 @@ function confirmarBorrarCuotasMes() {
   modalConfirmarBorrar.value = true
 }
 
+// Computed para contar filtros activos
+const cantidadFiltrosActivos = computed(() => {
+  let count = 0
+  if (filtroEstado.value !== 'todos') count++
+  if (filtroPeriodicidad.value !== 'todos') count++
+  if (filtroTipoPago.value !== 'todos') count++
+  if (busquedaCuotas.value.trim()) count++
+  return count
+})
+
+// Función para cerrar el desplegable de filtros
+function cerrarFiltros() {
+  mostrarFiltros.value = false
+}
+
 // Función para quitar todos los filtros
 function quitarFiltros() {
   filtroEstado.value = 'todos'
@@ -8650,6 +9908,16 @@ function quitarFiltros() {
   busquedaCuotas.value = ''
   mostrarFiltros.value = false
 }
+
+// Cerrar desplegable cuando se busca
+watch(busquedaCuotas, () => {
+  if (busquedaCuotas.value.trim()) {
+    // Pequeño delay para que el usuario vea que se aplicó el filtro
+    setTimeout(() => {
+      mostrarFiltros.value = false
+    }, 300)
+  }
+})
 
 // Cuotas pendientes del mes (excluyendo pagadas y parciales)
 const cuotasPendientesMes = computed(() => {
@@ -8908,6 +10176,209 @@ onUnmounted(() => {
   100% {
     opacity: 0;
     transform: scale(0.95);
+  }
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+    transform: translateX(0);
+  }
+  50% {
+    width: 70%;
+    transform: translateX(0);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(0);
+  }
+}
+
+.progress-bar {
+  animation: progress 2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Animación de barra de progreso para el registro de pago (más rápida) */
+@keyframes progress-animated-fast {
+  0% {
+    width: 0%;
+    transform: translateX(0);
+  }
+  50% {
+    width: 70%;
+    transform: translateX(0);
+  }
+  100% {
+    width: 100%;
+    transform: translateX(0);
+  }
+}
+
+.progress-bar-animated-fast {
+  animation: progress-animated-fast 1.2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  will-change: width, transform;
+}
+
+/* Animación de flotación para partículas (más rápida) */
+@keyframes float-fast {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translateY(-15px) rotate(3deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-30px) rotate(-3deg);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(-15px) rotate(3deg);
+    opacity: 0.6;
+  }
+}
+
+.animate-float-fast {
+  animation: float-fast 1.8s ease-in-out infinite;
+}
+
+/* Animaciones rápidas optimizadas */
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spin-fast-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes bounce-fast {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes ping-fast {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-fast {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-spin-fast {
+  animation: spin-fast 1.2s linear infinite;
+}
+
+.animate-spin-fast-reverse {
+  animation: spin-fast-reverse 0.9s linear infinite;
+}
+
+.animate-bounce-fast {
+  animation: bounce-fast 1s ease-in-out infinite;
+}
+
+.animate-ping-fast {
+  animation: ping-fast 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse-fast {
+  animation: pulse-fast 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Estilos responsivos para el comprobante en móvil */
+@media (min-width: 640px) {
+  .comprobante-content {
+    padding: 28px 32px !important;
+  }
+  
+  .comprobante-grid {
+    gap: 14px !important;
+  }
+  
+  .comprobante-card {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+  
+  .comprobante-section {
+    padding: 20px !important;
+    border-radius: 18px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .comprobante-amount {
+    padding: 20px !important;
+    border-radius: 18px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .comprobante-amount-text {
+    font-size: 42px !important;
+  }
+  
+  .comprobante-item {
+    padding: 12px 14px !important;
+    border-radius: 12px !important;
+  }
+  
+  .comprobante-header > div {
+    padding: 10px 16px !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+  }
+  
+  .comprobante-header > div > div {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .comprobante-header > div > div > span {
+    font-size: 18px !important;
+  }
+  
+  .comprobante-header > div > p {
+    font-size: 11px !important;
+    letter-spacing: 1px !important;
+  }
+  
+  .comprobante-status {
+    margin-bottom: 22px !important;
+  }
+  
+  .comprobante-status-badge {
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    gap: 6px !important;
   }
 }
 
