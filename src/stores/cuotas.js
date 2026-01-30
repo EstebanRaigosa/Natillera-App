@@ -751,13 +751,21 @@ export const useCuotasStore = defineStore('cuotas', () => {
             fecha_mora: fechaActualStr
           }
 
-          // Usar la multa calculada si existe, o mantener la existente si ya tenía
+          const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
+          const valorMultaExistente = parseFloat(cuotaActual?.valor_multa) || 0
           const valorMultaCalculada = multasCalculadas.get(cuotaInfo.id)
+
+          // Usar la multa calculada si existe, o mantener la existente si ya tenía
           if (valorMultaCalculada !== undefined && valorMultaCalculada > 0) {
-            datosActualizar.valor_multa = valorMultaCalculada
+            // Escalonada: no bajar valor_multa cuando la cuota ya tenía una multa mayor
+            // (ej: quedó 1 cuota en mora pero su multa era 2 porque era la "segunda" en la secuencia)
+            if (configSanciones?.tipo === 'escalonada' && valorMultaExistente > 0 && valorMultaCalculada < valorMultaExistente) {
+              datosActualizar.valor_multa = valorMultaExistente
+            } else {
+              datosActualizar.valor_multa = valorMultaCalculada
+            }
           } else if (cuotaInfo.yaTeníaMulta) {
             // Si ya tenía multa, mantenerla (no se recalcula)
-            const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
             if (cuotaActual?.valor_multa) {
               datosActualizar.valor_multa = cuotaActual.valor_multa
             }
@@ -1711,8 +1719,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
 
-      // Usar sancionDinamica si existe, sino usar valor_multa guardado
-      const sancionAPagar = sancionDinamica > 0 ? sancionDinamica : (parseFloat(cuotaActual.valor_multa) || 0)
+      // Para multa escalonada: si la cuota ya tiene valor_multa guardado, usarlo para no recalcular
+      // (al pagar la primera cuota en mora, la lista de mora se reduce y la segunda quedaría como "primera" = sanción 1; pero su valor_multa ya es 2)
+      const valorMultaGuardado = parseFloat(cuotaActual.valor_multa) || 0
+      const sancionAPagar = valorMultaGuardado > 0
+        ? valorMultaGuardado
+        : (sancionDinamica > 0 ? sancionDinamica : 0)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
       const valorActividadesPendientes = parseFloat(valorActividades) || 0
@@ -2304,10 +2316,16 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return calcularResumenCuotas(cuotasMes)
   }
 
-  // Función para obtener el último día de un mes
+  // Función para obtener el último día de un mes (28-31 según mes)
   function obtenerUltimoDiaDelMes(mes, anio) {
     // mes es 1-12, JavaScript usa 0-11
     return new Date(anio, mes, 0).getDate()
+  }
+
+  // Día límite para segunda quincena y fecha límite mensual: siempre 30, excepto febrero (28 o 29)
+  function obtenerDiaLimiteSegundaQuincena(mes, anio) {
+    if (mes === 2) return new Date(anio, 2, 0).getDate()
+    return 30
   }
 
   // Generación automática de cuotas para un mes específico
@@ -2391,18 +2409,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // Calcular fechas límite (sin días de gracia) y fechas de vencimiento (con días de gracia)
-      // La fecha límite es el día base (15 o último día del mes)
+      // La fecha límite es el día base (15 o día límite segunda quincena: 30, o 28/29 en febrero)
       // La fecha de vencimiento es la fecha límite + días de gracia
-      const ultimoDia = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)
+      const ultimoDia = obtenerDiaLimiteSegundaQuincena(mesAGenerar, anioAGenerar)
       
       // Función helper para formatear fecha sin problemas de zona horaria
       const formatearFecha = (anio, mes, dia) => {
         return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
       }
       
-      // Función helper para calcular fecha sumando días de gracia
+      // Función helper para calcular fecha sumando días de gracia (mes efectivo termina en día 30 o 28/29 feb)
       const calcularFechaConDiasGracia = (anio, mes, dia, diasGracia) => {
-        const diasEnMes = obtenerUltimoDiaDelMes(mes, anio)
+        const diasEnMes = obtenerDiaLimiteSegundaQuincena(mes, anio)
         const diaFinal = dia + diasGracia
         let anioFinal = anio
         let mesFinal = mes
@@ -2626,15 +2644,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       })
 
-      // Calcular fechas límite y fechas de vencimiento
-      const ultimoDia = obtenerUltimoDiaDelMes(mesAGenerar, anioAGenerar)
+      // Calcular fechas límite y fechas de vencimiento (día límite segunda quincena: 30, o 28/29 feb)
+      const ultimoDia = obtenerDiaLimiteSegundaQuincena(mesAGenerar, anioAGenerar)
       
       const formatearFecha = (anio, mes, dia) => {
         return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
       }
       
       const calcularFechaConDiasGracia = (anio, mes, dia, diasGracia) => {
-        const diasEnMes = obtenerUltimoDiaDelMes(mes, anio)
+        const diasEnMes = obtenerDiaLimiteSegundaQuincena(mes, anio)
         const diaFinal = dia + diasGracia
         let anioFinal = anio
         let mesFinal = mes
@@ -3300,19 +3318,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
         return { success: false, error: 'No hay meses válidos en el período de la natillera', cuotasGeneradas: 0 }
       }
       
-      // Helper para obtener último día del mes
-      const obtenerUltimoDia = (mes, anio) => {
-        return new Date(anio, mes, 0).getDate()
-      }
+      // Helper para día límite segunda quincena/mensual: 30, o 28/29 en febrero
+      const obtenerDiaLimite = (mes, anio) => (mes === 2 ? new Date(anio, 2, 0).getDate() : 30)
       
       // Helper para formatear fecha
       const formatearFecha = (anio, mes, dia) => {
         return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
       }
       
-      // Helper para calcular fecha con días de gracia
+      // Helper para calcular fecha con días de gracia (mes efectivo termina en día 30 o 28/29 feb)
       const calcularFechaConDiasGracia = (anio, mes, dia, dias) => {
-        const diasEnMes = obtenerUltimoDia(mes, anio)
+        const diasEnMes = obtenerDiaLimite(mes, anio)
         let diaResultado = dia + dias
         let mesFinal = mes
         let anioFinal = anio
@@ -3349,7 +3365,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const esQuincenal = periodicidad === 'quincenal'
       
       for (const { mes, anio } of mesesDelPeriodo) {
-        const ultimoDia = obtenerUltimoDia(mes, anio)
+        const ultimoDia = obtenerDiaLimite(mes, anio)
         
         if (esQuincenal) {
           // Primera quincena

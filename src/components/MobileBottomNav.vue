@@ -1,28 +1,31 @@
 <template>
-  <nav 
+  <nav
     v-if="natilleraId"
-    class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-t border-emerald-600/30 shadow-lg safe-area-inset-bottom"
+    class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-natillera-800 rounded-t-3xl pt-3 overflow-visible shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
   >
-    <div class="flex items-center justify-around px-1 py-2 max-w-screen-sm mx-auto">
+    <div class="flex items-end justify-around px-1 max-w-screen-sm mx-auto">
       <!-- Inicio / Detalle Natillera -->
       <router-link
         :to="`/natilleras/${natilleraId}`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <HomeIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}`) ? 'text-white' : 'text-emerald-100'"
+        <HomeIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <HomeIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}`) ? 'text-white' : 'text-natillera-200'"
         >Inicio</span>
       </router-link>
 
@@ -30,167 +33,189 @@
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/socios`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}/socios`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <UsersIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white' : 'text-emerald-100'"
+        <UsersIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}/socios`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <UsersIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'text-white' : 'text-natillera-200'"
         >Socios</span>
       </router-link>
       <button
         v-else
+        type="button"
         @click="navegarAPrimeraNatillera('socios')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 py-0.5 transition-all duration-200 text-natillera-200 hover:text-natillera-100"
       >
-        <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6" />
-        <span class="text-[9px] sm:text-[10px] font-semibold">Socios</span>
+        <UsersIcon class="w-6 h-6 sm:w-7 sm:h-7" />
+        <span class="text-[11px] sm:text-[12px] font-semibold">Socios</span>
       </button>
 
       <!-- Cuotas -->
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/cuotas`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}/cuotas`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <CurrencyDollarIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white' : 'text-emerald-100'"
+        <CurrencyDollarIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}/cuotas`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <CurrencyDollarIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'text-white' : 'text-natillera-200'"
         >Cuotas</span>
       </router-link>
       <button
         v-else
+        type="button"
         @click="navegarAPrimeraNatillera('cuotas')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 py-0.5 transition-all duration-200 text-natillera-200 hover:text-natillera-100"
       >
-        <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
-        <span class="text-[9px] sm:text-[10px] font-semibold">Cuotas</span>
+        <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7" />
+        <span class="text-[11px] sm:text-[12px] font-semibold">Cuotas</span>
       </button>
 
       <!-- Préstamos -->
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/prestamos`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}/prestamos`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <BanknotesIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : 'text-emerald-100'"
+        <BanknotesIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}/prestamos`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <BanknotesIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : 'text-natillera-200'"
         >Préstamos</span>
       </router-link>
       <button
         v-else
+        type="button"
         @click="navegarAPrimeraNatillera('prestamos')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 py-0.5 transition-all duration-200 text-natillera-200 hover:text-natillera-100"
       >
-        <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
-        <span class="text-[9px] sm:text-[10px] font-semibold">Préstamos</span>
+        <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7" />
+        <span class="text-[11px] sm:text-[12px] font-semibold">Préstamos</span>
       </button>
 
       <!-- Actividades -->
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/actividades`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}/actividades`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <CalendarIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white' : 'text-emerald-100'"
+        <CalendarIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}/actividades`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <CalendarIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'text-white' : 'text-natillera-200'"
         >Actividades</span>
       </router-link>
       <button
         v-else
+        type="button"
         @click="navegarAPrimeraNatillera('actividades')"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] text-emerald-100 hover:text-white"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 py-0.5 transition-all duration-200 text-natillera-200 hover:text-natillera-100"
       >
-        <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
-        <span class="text-[9px] sm:text-[10px] font-semibold">Actividades</span>
+        <CalendarIcon class="w-6 h-6 sm:w-7 sm:h-7" />
+        <span class="text-[11px] sm:text-[12px] font-semibold">Actividades</span>
       </button>
 
       <!-- Configuración -->
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/configuracion`"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <Cog6ToothIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : 'text-emerald-100'"
+        <Cog6ToothIconSolid
+          v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <Cog6ToothIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : 'text-natillera-200'"
         >Config</span>
       </router-link>
       <router-link
         v-else
         to="/configuracion"
-        class="flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 rounded-xl transition-all duration-200 min-w-[50px] relative"
-        :class="isActive('/configuracion') ? 'text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 shadow-lg shadow-white/20' : 'text-emerald-100'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-[44px] rounded-2xl px-3 transition-all duration-200 relative"
+        :class="isActive('/configuracion') ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
       >
-        <div 
+        <div
           v-if="isActive('/configuracion')"
-          class="absolute -top-1.5 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-lg shadow-white/50"
-        ></div>
-        <Cog6ToothIcon 
-          :class="[
-            'w-5 h-5 sm:w-6 sm:h-6 transition-all',
-            isActive('/configuracion') ? 'text-white' : 'text-emerald-100'
-          ]"
+          class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+          aria-hidden="true"
         />
-        <span 
-          class="text-[9px] sm:text-[10px] font-semibold transition-colors"
-          :class="isActive('/configuracion') ? 'text-white' : 'text-emerald-100'"
+        <Cog6ToothIconSolid
+          v-if="isActive('/configuracion')"
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-white"
+        />
+        <Cog6ToothIcon
+          v-else
+          class="w-6 h-6 sm:w-7 sm:h-7 transition-all text-natillera-200"
+        />
+        <span
+          class="text-[11px] sm:text-[12px] font-semibold transition-colors"
+          :class="isActive('/configuracion') ? 'text-white' : 'text-natillera-200'"
         >Ajustes</span>
       </router-link>
     </div>
@@ -209,6 +234,14 @@ import {
   CalendarIcon,
   Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
+import {
+  HomeIcon as HomeIconSolid,
+  UsersIcon as UsersIconSolid,
+  CurrencyDollarIcon as CurrencyDollarIconSolid,
+  BanknotesIcon as BanknotesIconSolid,
+  CalendarIcon as CalendarIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid
+} from '@heroicons/vue/24/solid'
 
 const route = useRoute()
 const router = useRouter()
@@ -259,6 +292,29 @@ function navegarAPrimeraNatillera(seccion) {
 </script>
 
 <style scoped>
+/* Estilo como en referencia: barra verde oscuro, ítem activo con pop-out (sobresale por encima), verde natillera */
+.mobile-bottom-nav {
+  isolation: isolate;
+  padding-bottom: max(0.3rem, env(safe-area-inset-bottom, 0px));
+}
+
+.nav-item--active {
+  background-color: var(--color-natillera-500);
+  color: white;
+  padding-top: 0.3rem;
+  padding-bottom: 0.25rem;
+  margin-top: -0.55rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.nav-item--active:hover {
+  color: white;
+}
+
+.nav-item--inactive {
+  background-color: transparent;
+}
+
 .router-link-active {
   color: white;
 }

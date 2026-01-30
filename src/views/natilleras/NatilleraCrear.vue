@@ -7,20 +7,20 @@
       <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-400/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 animate-pulse-slow" style="animation-delay: 0.5s;"></div>
     </div>
 
-    <!-- Header -->
+    <!-- Header unificado -->
     <div class="relative mb-8 animate-fade-in-up">
-      <BackButton />
-      <div class="pt-12 sm:pt-0 pl-14 sm:pl-0">
-        <Breadcrumbs />
-        <div class="relative">
-          <h1 class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
-            Crear Nueva Natillera
-          </h1>
-          <div class="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-natillera-400 via-emerald-400 to-natillera-400 rounded-full transform scale-x-0 animate-scale-x"></div>
+      <Breadcrumbs />
+      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+        <div class="flex items-center gap-3">
+          <BackButton :inline="true" />
+          <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <PlusIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Crear Nueva Natillera</h1>
+            <p class="text-gray-500 mt-0.5 text-sm">Configura tu grupo de ahorro comunitario</p>
+          </div>
         </div>
-        <p class="text-gray-500 mt-3 text-sm sm:text-base">
-          Configura tu grupo de ahorro comunitario
-        </p>
       </div>
     </div>
 

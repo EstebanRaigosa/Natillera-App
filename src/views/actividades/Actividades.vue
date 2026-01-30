@@ -6,58 +6,28 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Header estilizado -->
+    <!-- Header en tarjeta: título arriba; en móvil botón abajo dentro de la tarjeta, en desktop botón a la derecha -->
     <div class="relative">
       <Breadcrumbs />
-      
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl px-4 py-4 sm:px-8 sm:py-5 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-        <!-- Círculos decorativos -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <!-- Sección izquierda: Botón volver y título -->
-          <div class="flex items-center gap-3">
-            <BackButton :to="`/natilleras/${id}`" />
-            <div>
-              <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
-                Actividades
-              </h1>
-              <p class="text-gray-600 mt-0.5 text-sm sm:text-base font-medium">
-                Rifas, eventos y otras actividades del fondo
-              </p>
+      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
+            <BackButton :to="`/natilleras/${id}`" :inline="true" />
+            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-natillera-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+              <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 leading-tight">Actividades</h1>
+              <p class="text-gray-500 mt-0.5 text-xs sm:text-sm leading-snug">Rifas, eventos y otras actividades del fondo</p>
             </div>
           </div>
-          <!-- Sección derecha: Tabs y botón Nueva Actividad -->
-          <div class="flex items-center gap-2 sm:gap-3 justify-start sm:justify-end">
-            <!-- Toggle de vista -->
-            <div class="flex items-center gap-2 bg-white rounded-xl border border-gray-200 p-1 shadow-sm">
-              <button
-                @click="vistaAgrupada = false"
-                :class="[
-                  'px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                  !vistaAgrupada 
-                    ? 'bg-natillera-500 text-white shadow-md' 
-                    : 'text-gray-600 hover:text-gray-800'
-                ]"
-              >
-                Normal
-              </button>
-              <button
-                @click="vistaAgrupada = true"
-                :class="[
-                  'px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                  vistaAgrupada 
-                    ? 'bg-natillera-500 text-white shadow-md' 
-                    : 'text-gray-600 hover:text-gray-800'
-                ]"
-              >
-                Agrupada
-              </button>
-            </div>
-            <button @click="modalNuevaActividad = true" class="btn-accent inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all whitespace-nowrap">
-              <PlusIcon class="w-5 h-5" />
-              Nueva Actividad
+          <div class="w-full sm:w-auto flex-shrink-0">
+            <button
+              @click="modalNuevaActividad = true"
+              class="w-full sm:w-auto btn-accent inline-flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all rounded-xl py-3 sm:py-2.5 sm:px-5 text-sm sm:text-base font-semibold leading-tight"
+            >
+              <PlusIcon class="w-5 h-5 flex-shrink-0" />
+              <span>Nueva Actividad</span>
             </button>
           </div>
         </div>
@@ -302,183 +272,191 @@
       </div>
     </div>
 
-    <!-- Resumen -->
-    <div class="grid grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 border border-green-200/50 shadow-lg hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-1">
-        <!-- Efecto decorativo -->
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="relative z-10 text-center">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-green-500/30 mx-auto">
-            <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
-            <span class="sm:hidden">${{ formatMoneyCompact(totalIngresos) }}</span>
-            <span class="hidden sm:inline">${{ formatMoney(totalIngresos) }}</span>
-          </p>
-          <p class="text-xs sm:text-sm font-semibold text-gray-600">Ingresos</p>
+    <!-- Tarjetas de resumen financiero (blanco, icono en círculo, valor, etiqueta mayúsculas) -->
+    <div class="grid grid-cols-3 gap-2 sm:gap-4">
+      <div class="card rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center min-w-0">
+        <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-natillera-100 flex items-center justify-center mb-2 sm:mb-3 flex-shrink-0">
+          <CurrencyDollarIcon class="w-5 h-5 sm:w-7 sm:h-7 text-natillera-600" />
         </div>
+        <p class="text-base sm:text-xl md:text-2xl font-bold text-gray-800 mb-0.5 leading-tight break-all">
+          <span class="sm:hidden">${{ formatMoneyCompact(totalIngresos) }}</span>
+          <span class="hidden sm:inline">${{ formatMoney(totalIngresos) }}</span>
+        </p>
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">Ingresos</p>
       </div>
-      
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-red-50/30 to-rose-50/20 border border-red-200/50 shadow-lg hover:shadow-xl hover:shadow-red-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-2">
-        <!-- Efecto decorativo -->
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-red-400/15 to-rose-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="relative z-10 text-center">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-400 to-red-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-red-500/30 mx-auto">
-            <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
-            <span class="sm:hidden">${{ formatMoneyCompact(totalGastos) }}</span>
-            <span class="hidden sm:inline">${{ formatMoney(totalGastos) }}</span>
-          </p>
-          <p class="text-xs sm:text-sm font-semibold text-gray-600">Gastos</p>
+      <div class="card rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center min-w-0">
+        <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-red-100 flex items-center justify-center mb-2 sm:mb-3 flex-shrink-0">
+          <CurrencyDollarIcon class="w-5 h-5 sm:w-7 sm:h-7 text-red-600" />
         </div>
+        <p class="text-base sm:text-xl md:text-2xl font-bold text-gray-800 mb-0.5 leading-tight break-all">
+          <span class="sm:hidden">${{ formatMoneyCompact(totalGastos) }}</span>
+          <span class="hidden sm:inline">${{ formatMoney(totalGastos) }}</span>
+        </p>
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">Gastos</p>
       </div>
-      
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 border border-purple-200/50 shadow-lg hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-3">
-        <!-- Efecto decorativo -->
-        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400/15 to-indigo-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="relative z-10 text-center">
-          <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30 mx-auto">
-            <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-          </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">
-            <span class="sm:hidden">${{ formatMoneyCompact(utilidadTotal) }}</span>
-            <span class="hidden sm:inline">${{ formatMoney(utilidadTotal) }}</span>
-          </p>
-          <p class="text-xs sm:text-sm font-semibold text-gray-600">Utilidad</p>
+      <div class="card rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center min-w-0">
+        <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-purple-100 flex items-center justify-center mb-2 sm:mb-3 flex-shrink-0">
+          <BanknotesIcon class="w-5 h-5 sm:w-7 sm:h-7 text-purple-600" />
         </div>
+        <p class="text-base sm:text-xl md:text-2xl font-bold text-gray-800 mb-0.5 leading-tight break-all">
+          <span class="sm:hidden">${{ formatMoneyCompact(utilidadTotal) }}</span>
+          <span class="hidden sm:inline">${{ formatMoney(utilidadTotal) }}</span>
+        </p>
+        <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">Utilidad</p>
       </div>
     </div>
 
-    <!-- Lista -->
-    <div v-if="actividades.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-      <!-- Círculos decorativos -->
+    <!-- Selector de vista Normal / Agrupada (solo si hay actividades) -->
+    <div class="flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm overflow-hidden">
+      <button
+        @click="vistaAgrupada = false"
+        :class="[
+          'flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-[13px] sm:text-sm font-medium transition-all leading-tight min-h-[44px]',
+          !vistaAgrupada
+            ? 'bg-natillera-500 text-white shadow-sm'
+            : 'text-gray-600 hover:bg-gray-50'
+        ]"
+      >
+        Normal
+      </button>
+      <button
+        @click="vistaAgrupada = true"
+        :class="[
+          'flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-[13px] sm:text-sm font-medium transition-all leading-tight min-h-[44px]',
+          vistaAgrupada
+            ? 'bg-natillera-500 text-white shadow-sm'
+            : 'text-gray-600 hover:bg-gray-50'
+        ]"
+      >
+        Agrupada
+      </button>
+    </div>
+
+    <!-- Lista vacía -->
+    <div v-if="actividades.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-6 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
       <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
       <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-      
       <div class="relative z-10">
-        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-accent-500 to-accent-600 rounded-3xl flex items-center justify-center shadow-lg shadow-accent-500/30">
-          <CalendarIcon class="w-10 h-10 text-white" />
+        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-gradient-to-br from-accent-500 to-accent-600 rounded-2xl sm:rounded-3xl flex items-center justify-center shadow-lg shadow-accent-500/30">
+          <CalendarIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
+        <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl md:text-2xl mb-2 leading-tight px-2">
           No hay actividades registradas
         </h3>
-        <p class="text-gray-600 mb-8 text-sm sm:text-base">
+        <p class="text-gray-600 mb-6 sm:mb-8 text-xs sm:text-sm md:text-base leading-snug px-2">
           Las actividades generan fondos adicionales para la natillera
         </p>
-        <button @click="modalNuevaActividad = true" class="btn-accent inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
-          <PlusIcon class="w-5 h-5" />
-          Crear Actividad
+        <button @click="modalNuevaActividad = true" class="btn-accent inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all text-sm sm:text-base font-semibold py-3 px-5 touch-manipulation">
+          <PlusIcon class="w-5 h-5 flex-shrink-0" />
+          <span>Crear Actividad</span>
         </button>
       </div>
     </div>
 
     <div v-else class="space-y-6">
-      <!-- Vista Normal: Todas las actividades sin agrupar -->
-      <div v-if="!vistaAgrupada" class="grid gap-4 sm:gap-5 lg:grid-cols-2">
+      <!-- Vista Normal: Todas las actividades sin agrupar (estilo referencia) -->
+      <div v-if="!vistaAgrupada" class="space-y-4">
         <div 
           v-for="actividad in actividades" 
           :key="actividad.id"
-          @click="actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null"
+          @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
           :class="[
-            'group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6',
-            actividad.estado === 'en_curso' ? 'cursor-pointer' : ''
+            'card rounded-2xl p-3 sm:p-5 transition-all duration-300',
+            (actividad.estado === 'en_curso' || (actividad.tipo === 'rifa' && actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl' : ''
           ]"
         >
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-          
-          <div class="relative z-10">
-            <div class="flex items-start justify-between mb-4">
-              <div class="flex items-center gap-4">
-                <div class="w-14 h-14 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg shadow-accent-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <component :is="getIconoActividad(actividad.tipo, actividad.tipo_rifa)" class="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h3 class="font-display font-semibold text-gray-800 text-lg">
-                    {{ actividad.descripcion }}
-                  </h3>
-                  <p class="text-sm text-gray-500 font-medium">
-                    {{ formatDate(actividad.created_at) }}
-                  </p>
-                </div>
+          <div class="flex items-start justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
+                <component :is="getIconoActividad(actividad.tipo, actividad.tipo_rifa)" class="w-5 h-5 sm:w-7 sm:h-7 text-accent-600" />
               </div>
-              <div class="flex flex-col gap-1 items-end">
-                <div class="flex items-center gap-2">
-                  <button
-                    @click.stop="confirmarEliminarActividad(actividad)"
-                    class="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600 hover:text-red-700"
-                    title="Eliminar actividad"
-                  >
-                    <TrashIcon class="w-5 h-5" />
-                  </button>
-                </div>
-                <span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200">
-                  {{ actividad.tipo || 'Otro' }}
-                </span>
-                <span 
-                  v-if="actividad.estado === 'en_curso'"
-                  class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200"
-                >
-                  En curso
-                </span>
+              <div class="min-w-0 flex-1">
+                <h3 class="font-display font-bold text-gray-800 text-base sm:text-lg leading-snug line-clamp-2">
+                  {{ actividad.descripcion }}
+                </h3>
+                <p class="text-xs sm:text-sm text-gray-500 mt-0.5 leading-tight">
+                  {{ formatDate(actividad.created_at) }}
+                </p>
               </div>
             </div>
-
-            <!-- Vista para actividades liquidadas -->
-            <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
-              <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Ingresos</p>
-                  <p class="font-bold text-green-600 text-sm sm:text-base">
-                    <span class="sm:hidden">${{ formatMoneyCompact(actividad.ingresos) }}</span>
-                    <span class="hidden sm:inline">${{ formatMoney(actividad.ingresos) }}</span>
-                  </p>
-                </div>
-                <div class="relative bg-gradient-to-br from-red-50 via-rose-50 to-red-50/50 rounded-xl p-3 sm:p-4 border border-red-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Gastos</p>
-                  <p class="font-bold text-red-600 text-sm sm:text-base">
-                    <span class="sm:hidden">${{ formatMoneyCompact(actividad.gastos) }}</span>
-                    <span class="hidden sm:inline">${{ formatMoney(actividad.gastos) }}</span>
-                  </p>
-                </div>
-                <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 rounded-xl p-3 sm:p-4 border border-purple-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Utilidad</p>
-                  <p class="font-bold text-purple-600 text-sm sm:text-base">
-                    <span class="sm:hidden">${{ formatMoneyCompact(actividad.utilidad) }}</span>
-                    <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
-                  </p>
-                </div>
-              </div>
-            </template>
-
-            <!-- Vista para actividades en curso -->
-            <template v-else>
-              <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                <div class="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50/50 rounded-xl p-3 sm:p-4 border border-amber-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Fecha límite</p>
-                  <p class="font-bold text-amber-700 text-sm sm:text-base">
-                    {{ actividad.fecha_limite_pago ? formatDate(actividad.fecha_limite_pago) : 'No definida' }}
-                  </p>
-                </div>
-                <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-3 sm:p-4 border border-blue-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Total asignado</p>
-                  <p class="font-bold text-blue-600 text-sm sm:text-base">
-                    <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_asignado || 0) }}</span>
-                    <span class="hidden sm:inline">${{ formatMoney(actividad.total_asignado || 0) }}</span>
-                  </p>
-                </div>
-                <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                  <p class="text-xs text-gray-500 font-medium mb-1">Total recaudado</p>
-                  <p class="font-bold text-green-600 text-sm sm:text-base">
-                    <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_pagado || 0) }}</span>
-                    <span class="hidden sm:inline">${{ formatMoney(actividad.total_pagado || 0) }}</span>
-                  </p>
-                </div>
-              </div>
-            </template>
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-50 text-blue-700 leading-tight">
+                {{ (actividad.tipo || 'otro').toLowerCase() }}
+              </span>
+              <span 
+                v-if="actividad.estado === 'en_curso'"
+                class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-700 leading-tight whitespace-nowrap"
+              >
+                En curso
+              </span>
+              <span 
+                v-if="actividad.estado === 'liquidada'"
+                class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-700 leading-tight whitespace-nowrap"
+              >
+                Finalizada
+              </span>
+              <button
+                @click.stop="confirmarEliminarActividad(actividad)"
+                class="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                title="Eliminar actividad"
+              >
+                <TrashIcon class="w-5 h-5" />
+              </button>
+            </div>
           </div>
+
+          <!-- Vista para actividades liquidadas -->
+          <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+              <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Ingresos</p>
+                <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.ingresos) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.ingresos) }}</span>
+                </p>
+              </div>
+              <div class="rounded-xl p-2 sm:p-3 bg-red-50 border border-red-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Gastos</p>
+                <p class="font-bold text-red-600 text-xs sm:text-sm leading-tight break-all">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.gastos) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.gastos) }}</span>
+                </p>
+              </div>
+              <div class="rounded-xl p-2 sm:p-3 bg-purple-50 border border-purple-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Utilidad</p>
+                <p class="font-bold text-purple-600 text-xs sm:text-sm leading-tight break-all">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.utilidad) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
+                </p>
+              </div>
+            </div>
+          </template>
+
+          <!-- Vista para actividades en curso: Fecha límite, Total asignado, Total recaudado -->
+          <template v-else>
+            <div class="grid grid-cols-3 gap-2 sm:gap-3">
+              <div class="rounded-xl p-2 sm:p-3 bg-amber-50 border border-amber-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Fecha límite</p>
+                <p class="font-bold text-amber-700 text-xs sm:text-sm leading-tight">
+                  {{ actividad.fecha_limite_pago ? formatDate(actividad.fecha_limite_pago) : '—' }}
+                </p>
+              </div>
+              <div class="rounded-xl p-2 sm:p-3 bg-blue-50 border border-blue-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total asignado</p>
+                <p class="font-bold text-blue-600 text-xs sm:text-sm leading-tight break-all">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_asignado || 0) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.total_asignado || 0) }}</span>
+                </p>
+              </div>
+              <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
+                <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total recaudado</p>
+                <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                  <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_pagado || 0) }}</span>
+                  <span class="hidden sm:inline">${{ formatMoney(actividad.total_pagado || 0) }}</span>
+                </p>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
@@ -486,275 +464,303 @@
       <div v-else class="space-y-6">
         <!-- Grupos de actividades y actividades individuales -->
         <template v-for="(item, index) in actividadesAgrupadas" :key="item.tipo === 'grupo' ? item.serieId : (item.actividad?.id || `individual-${index}`)">
-          <!-- Grupo de actividades (serie) - Colapsable -->
+          <!-- Grupo de actividades (serie) - Tarjeta + contenedor integrados en un solo bloque -->
           <template v-if="item.tipo === 'grupo'">
-            <div class="space-y-4">
-              <!-- Encabezado del grupo (clickeable para expandir/colapsar) -->
+            <div class="rounded-2xl overflow-hidden shadow-md shadow-indigo-900/5 border border-indigo-200/60 border-l-4 border-l-indigo-400">
+              <!-- Encabezado del grupo: en móvil dos filas (título+chevron / subtítulo+acciones) para que no se vea apretado -->
               <div 
                 @click="toggleGrupo(item.serieId)"
-                class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 via-purple-50/50 to-pink-50/30 border-2 border-indigo-200/50 shadow-lg p-4 sm:p-5 cursor-pointer hover:shadow-xl transition-all duration-300"
+                :class="[
+                  'p-3 sm:p-5 cursor-pointer transition-all duration-300 min-h-[72px]',
+                  'bg-gradient-to-r from-indigo-50 via-violet-50/90 to-purple-50/80',
+                  'hover:from-indigo-100 hover:via-violet-100/90 hover:to-purple-100/80 hover:shadow-lg hover:shadow-indigo-200/30',
+                  isGrupoExpandido(item.serieId) ? 'rounded-b-none' : 'rounded-2xl'
+                ]"
               >
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                <div class="relative z-10 flex items-center gap-3 sm:gap-4">
-                  <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                    <component 
-                      :is="getIconoActividad(item.tipoActividad || 'otro', item.tipoRifa)" 
-                      class="w-6 h-6 sm:w-7 sm:h-7 text-white" 
-                    />
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <!-- Fila 1 móvil / bloque izquierdo desktop: icono + título + (subtítulo solo sm) + badge + chevron -->
+                  <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                    <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-indigo-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <CubeIcon class="w-5 h-5 sm:w-7 sm:h-7 text-white" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h3 class="font-display font-bold text-gray-800 text-base sm:text-xl mb-0.5 leading-snug line-clamp-2">
+                        {{ item.descripcionBase }}
+                      </h3>
+                      <p class="hidden sm:block text-xs sm:text-sm text-indigo-700/90 font-medium leading-tight">
+                        <span v-if="!isGrupoExpandido(item.serieId)">
+                          Toca para ver {{ item.actividades.length }} {{ item.actividades.length === 1 ? 'actividad' : 'actividades' }}
+                        </span>
+                        <span v-else class="text-indigo-600">
+                          {{ item.actividades.length }} {{ item.actividades.length === 1 ? 'actividad' : 'actividades' }} — toca de nuevo para cerrar
+                        </span>
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <span class="hidden sm:inline-flex px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold bg-indigo-200/80 text-indigo-800 leading-tight whitespace-nowrap">
+                        Grupo
+                      </span>
+                      <div 
+                        class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center rounded-full transition-all duration-300 touch-manipulation"
+                        :class="isGrupoExpandido(item.serieId) ? 'bg-indigo-500 text-white shadow-md' : 'bg-indigo-200/70 text-indigo-700'"
+                      >
+                        <ChevronDownIcon class="w-5 h-5 transition-transform duration-300" :class="{ 'rotate-180': isGrupoExpandido(item.serieId) }" />
+                      </div>
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1">
-                      {{ item.descripcionBase }}
-                    </h3>
-                    <p class="text-sm text-gray-600 font-medium">
-                      Actividad recurrente - {{ item.actividades.length }} {{ item.actividades.length === 1 ? 'mes' : 'meses' }}
+                  <!-- Fila 2 móvil / bloque derecho desktop: subtítulo (solo móvil) + botones -->
+                  <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                    <p class="sm:hidden w-full text-xs text-indigo-700/90 font-medium leading-tight">
+                      <span v-if="!isGrupoExpandido(item.serieId)">
+                        Toca para ver {{ item.actividades.length }} {{ item.actividades.length === 1 ? 'actividad' : 'actividades' }}
+                      </span>
+                      <span v-else class="text-indigo-600">
+                        {{ item.actividades.length }} {{ item.actividades.length === 1 ? 'actividad' : 'actividades' }} — toca para cerrar
+                      </span>
                     </p>
-                  </div>
-                  <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <button
+                      @click.stop="confirmarEliminarGrupo(item)"
+                      class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-100 rounded-xl transition-colors text-red-600 touch-manipulation"
+                      title="Eliminar grupo completo"
+                    >
+                      <TrashIcon class="w-5 h-5" />
+                    </button>
                     <button
                       @click.stop="exportarGrupoAExcel(item)"
-                      class="p-2 hover:bg-indigo-100 rounded-lg transition-colors text-indigo-600 hover:text-indigo-700"
+                      class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-indigo-100 rounded-xl transition-colors text-indigo-600 touch-manipulation"
                       title="Exportar grupo a Excel"
                     >
                       <ArrowDownTrayIcon class="w-5 h-5" />
                     </button>
                     <button
-                      @click.stop="confirmarEliminarGrupo(item)"
-                      class="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600 hover:text-red-700"
-                      title="Eliminar grupo completo"
+                      v-if="item.tipoActividad === 'rifa'"
+                      @click.stop="abrirModalGanadoresGrupo(item)"
+                      class="flex items-center gap-1.5 px-2.5 py-2.5 min-h-[44px] sm:px-3 hover:bg-amber-100 rounded-xl transition-colors text-amber-600 touch-manipulation"
+                      title="Ver ganadores"
                     >
-                      <TrashIcon class="w-5 h-5" />
+                      <TrophyIcon class="w-5 h-5 flex-shrink-0" />
+                      <span class="hidden sm:inline text-sm font-semibold">Ver ganadores</span>
                     </button>
-                    <span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border border-indigo-200">
-                      Grupo
-                    </span>
-                    <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 transition-transform duration-300"
-                         :class="{ 'rotate-180': isGrupoExpandido(item.serieId) }">
-                      <ChevronDownIcon class="w-5 h-5" />
-                    </div>
+                  </div>
                   </div>
                 </div>
               </div>
               
-              <!-- Actividades del grupo (colapsable) -->
+              <!-- Contenedor de actividades expandido: animación y buen espaciado en móvil -->
               <div 
                 v-show="isGrupoExpandido(item.serieId)"
-                class="grid gap-4 sm:gap-5 lg:grid-cols-2 animate-fade-in"
+                class="rounded-b-2xl bg-indigo-50/70 sm:bg-indigo-50/50 border-t border-indigo-200/80 pt-4 pb-4 px-3 sm:px-5 overflow-hidden animate-fade-in-up"
               >
-                <div 
-              v-for="actividad in item.actividades" 
-              :key="actividad.id"
-              @click="actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null"
-              :class="[
-                'group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6',
-                actividad.estado === 'en_curso' ? 'cursor-pointer' : ''
-              ]"
-            >
-              <!-- Efectos decorativos -->
-              <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-              <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-              
-              <div class="relative z-10">
-                <div class="flex items-start justify-between mb-4">
-                  <div class="flex items-center gap-4">
-                    <div class="w-14 h-14 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg shadow-accent-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                      <component :is="getIconoActividad(actividad.tipo, actividad.tipo_rifa)" class="w-7 h-7 text-white" />
+                <p class="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3 px-0.5">
+                  Actividades del grupo ({{ item.actividades.length }})
+                </p>
+                <div class="space-y-3 sm:space-y-4">
+                  <div 
+                    v-for="actividad in item.actividades" 
+                    :key="actividad.id"
+                    @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
+                    :class="[
+                      'card rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 min-w-0 overflow-hidden',
+                      (actividad.estado === 'en_curso' || (actividad.tipo === 'rifa' && actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl active:scale-[0.99]' : ''
+                    ]"
+                  >
+                    <div class="flex items-start justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 min-w-0">
+                      <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                        <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
+                          <component :is="getIconoActividad(actividad.tipo, actividad.tipo_rifa)" class="w-5 h-5 sm:w-7 sm:h-7 text-accent-600" />
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <h3 class="font-display font-bold text-gray-800 text-sm sm:text-lg leading-snug line-clamp-2">
+                            {{ actividad.descripcion }}
+                          </h3>
+                          <p class="text-xs sm:text-sm text-gray-500 mt-0.5 leading-tight">
+                            {{ formatDate(actividad.created_at) }}
+                          </p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 flex-wrap justify-end">
+                        <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-50 text-blue-700 leading-tight">
+                          {{ (actividad.tipo || 'otro').toLowerCase() }}
+                        </span>
+                        <span 
+                          v-if="actividad.estado === 'en_curso'"
+                          class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-700 leading-tight whitespace-nowrap"
+                        >
+                          En curso
+                        </span>
+                        <span 
+                          v-if="actividad.estado === 'liquidada'"
+                          class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-700 leading-tight whitespace-nowrap"
+                        >
+                          Finalizada
+                        </span>
+                        <button
+                          @click.stop="confirmarEliminarActividad(actividad)"
+                          class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-red-50 rounded-xl transition-colors text-red-600 touch-manipulation"
+                          title="Eliminar actividad"
+                        >
+                          <TrashIcon class="w-5 h-5" />
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <h3 class="font-display font-semibold text-gray-800 text-lg">
-                        {{ actividad.descripcion }}
-                      </h3>
-                      <p class="text-sm text-gray-500 font-medium">
-                        {{ formatDate(actividad.created_at) }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="flex flex-col gap-1 items-end">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click.stop="confirmarEliminarActividad(actividad)"
-                        class="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600 hover:text-red-700"
-                        title="Eliminar actividad"
-                      >
-                        <TrashIcon class="w-5 h-5" />
-                      </button>
-                    </div>
-                    <span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200">
-                      {{ actividad.tipo || 'Otro' }}
-                    </span>
-                    <span 
-                      v-if="actividad.estado === 'en_curso'"
-                      class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200"
-                    >
-                      En curso
-                    </span>
+
+                  <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
+                      <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0 overflow-hidden">
+                        <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Ingresos</p>
+                        <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                          <span class="sm:hidden">${{ formatMoneyCompact(actividad.ingresos) }}</span>
+                          <span class="hidden sm:inline">${{ formatMoney(actividad.ingresos) }}</span>
+                        </p>
+                      </div>
+                        <div class="rounded-xl p-2 sm:p-3 bg-red-50 border border-red-200/50 min-w-0">
+                          <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Gastos</p>
+                          <p class="font-bold text-red-600 text-xs sm:text-sm leading-tight break-all">
+                            <span class="sm:hidden">${{ formatMoneyCompact(actividad.gastos) }}</span>
+                            <span class="hidden sm:inline">${{ formatMoney(actividad.gastos) }}</span>
+                          </p>
+                        </div>
+                        <div class="rounded-xl p-2 sm:p-3 bg-purple-50 border border-purple-200/50 min-w-0">
+                          <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Utilidad</p>
+                          <p class="font-bold text-purple-600 text-xs sm:text-sm leading-tight break-all">
+                            <span class="sm:hidden">${{ formatMoneyCompact(actividad.utilidad) }}</span>
+                            <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else>
+                      <div class="grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
+                        <div class="rounded-xl p-2 sm:p-3 bg-amber-50 border border-amber-200/50 min-w-0 overflow-hidden">
+                          <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Fecha límite</p>
+                          <p class="font-bold text-amber-700 text-xs sm:text-sm leading-tight">
+                            {{ actividad.fecha_limite_pago ? formatDate(actividad.fecha_limite_pago) : '—' }}
+                          </p>
+                        </div>
+                        <div class="rounded-xl p-2 sm:p-3 bg-blue-50 border border-blue-200/50 min-w-0">
+                          <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total asignado</p>
+                          <p class="font-bold text-blue-600 text-xs sm:text-sm leading-tight break-all">
+                            <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_asignado || 0) }}</span>
+                            <span class="hidden sm:inline">${{ formatMoney(actividad.total_asignado || 0) }}</span>
+                          </p>
+                        </div>
+                        <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
+                          <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total recaudado</p>
+                          <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                            <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_pagado || 0) }}</span>
+                            <span class="hidden sm:inline">${{ formatMoney(actividad.total_pagado || 0) }}</span>
+                          </p>
+                        </div>
+                      </div>
+                    </template>
                   </div>
                 </div>
-
-                <!-- Vista para actividades liquidadas -->
-                <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
-                  <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Ingresos</p>
-                      <p class="font-bold text-green-600 text-sm sm:text-base">
-                        <span class="sm:hidden">${{ formatMoneyCompact(actividad.ingresos) }}</span>
-                        <span class="hidden sm:inline">${{ formatMoney(actividad.ingresos) }}</span>
-                      </p>
-                    </div>
-                    <div class="relative bg-gradient-to-br from-red-50 via-rose-50 to-red-50/50 rounded-xl p-3 sm:p-4 border border-red-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Gastos</p>
-                      <p class="font-bold text-red-600 text-sm sm:text-base">
-                        <span class="sm:hidden">${{ formatMoneyCompact(actividad.gastos) }}</span>
-                        <span class="hidden sm:inline">${{ formatMoney(actividad.gastos) }}</span>
-                      </p>
-                    </div>
-                    <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 rounded-xl p-3 sm:p-4 border border-purple-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Utilidad</p>
-                      <p class="font-bold text-purple-600 text-sm sm:text-base">
-                        <span class="sm:hidden">${{ formatMoneyCompact(actividad.utilidad) }}</span>
-                        <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
-                      </p>
-                    </div>
-                  </div>
-                </template>
-
-                <!-- Vista para actividades en curso -->
-                <template v-else>
-                  <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                    <div class="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50/50 rounded-xl p-3 sm:p-4 border border-amber-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Fecha límite</p>
-                      <p class="font-bold text-amber-700 text-sm sm:text-base">
-                        {{ actividad.fecha_limite_pago ? formatDate(actividad.fecha_limite_pago) : 'No definida' }}
-                      </p>
-                    </div>
-                    <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-3 sm:p-4 border border-blue-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Total asignado</p>
-                      <p class="font-bold text-blue-600 text-sm sm:text-base">
-                        <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_asignado || 0) }}</span>
-                        <span class="hidden sm:inline">${{ formatMoney(actividad.total_asignado || 0) }}</span>
-                      </p>
-                    </div>
-                    <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Total recaudado</p>
-                      <p class="font-bold text-green-600 text-sm sm:text-base">
-                        <span class="sm:hidden">${{ formatMoneyCompact(actividad.total_pagado || 0) }}</span>
-                        <span class="hidden sm:inline">${{ formatMoney(actividad.total_pagado || 0) }}</span>
-                      </p>
-                    </div>
-                  </div>
-                </template>
               </div>
             </div>
-          </div>
-          </div>
-        </template>
+          </template>
         
-        <!-- Actividad individual (sin serie) -->
+        <!-- Actividad individual (sin serie) - estilo referencia -->
         <template v-else-if="item.tipo === 'individual' && item.actividad && item.actividad.id">
-          <div class="grid gap-4 sm:gap-5 lg:grid-cols-2">
           <div 
             :key="item.actividad.id"
-            @click="item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null"
+            @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
             :class="[
-              'group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 border border-natillera-200/50 shadow-lg hover:shadow-2xl hover:shadow-natillera-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6',
-              item.actividad.estado === 'en_curso' ? 'cursor-pointer' : ''
+              'card rounded-2xl p-3 sm:p-5 transition-all duration-300',
+              (item.actividad.estado === 'en_curso' || (item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl' : ''
             ]"
           >
-            <!-- Efectos decorativos -->
-            <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/15 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-            <div class="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-teal-400/15 to-natillera-400/10 rounded-full blur-lg translate-y-1/2 -translate-x-1/2"></div>
-            
-            <div class="relative z-10">
-              <div class="flex items-start justify-between mb-4">
-                <div class="flex items-center gap-4">
-                  <div class="w-14 h-14 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center shadow-lg shadow-accent-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                    <component :is="getIconoActividad(item.actividad.tipo, item.actividad.tipo_rifa)" class="w-7 h-7 text-white" />
-                  </div>
-                  <div>
-                    <h3 class="font-display font-semibold text-gray-800 text-lg">
-                      {{ item.actividad.descripcion }}
-                    </h3>
-                    <p class="text-sm text-gray-500 font-medium">
-                      {{ formatDate(item.actividad.created_at) }}
-                    </p>
-                  </div>
+            <div class="flex items-start justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-accent-100 flex items-center justify-center flex-shrink-0">
+                  <component :is="getIconoActividad(item.actividad.tipo, item.actividad.tipo_rifa)" class="w-5 h-5 sm:w-7 sm:h-7 text-accent-600" />
                 </div>
-                <div class="flex flex-col gap-1 items-end">
-                  <div class="flex items-center gap-2">
-                    <button
-                      @click.stop="confirmarEliminarActividad(item.actividad)"
-                      class="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600 hover:text-red-700"
-                      title="Eliminar actividad"
-                    >
-                      <TrashIcon class="w-5 h-5" />
-                    </button>
-                  </div>
-                  <span class="px-3 py-1.5 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-700 border border-blue-200">
-                    {{ item.actividad.tipo || 'Otro' }}
-                  </span>
-                  <span 
-                    v-if="item.actividad.estado === 'en_curso'"
-                    class="px-3 py-1 rounded-full text-xs font-bold shadow-sm bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border border-amber-200"
-                  >
-                    En curso
-                  </span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-display font-bold text-gray-800 text-base sm:text-lg leading-snug line-clamp-2">
+                    {{ item.actividad.descripcion }}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-gray-500 mt-0.5 leading-tight">
+                    {{ formatDate(item.actividad.created_at) }}
+                  </p>
                 </div>
               </div>
-
-              <!-- Vista para actividades liquidadas -->
-              <template v-if="item.actividad.estado === 'liquidada' || !item.actividad.estado">
-                <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                  <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Ingresos</p>
-                    <p class="font-bold text-green-600 text-sm sm:text-base">
-                      <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.ingresos) }}</span>
-                      <span class="hidden sm:inline">${{ formatMoney(item.actividad.ingresos) }}</span>
-                    </p>
-                  </div>
-                  <div class="relative bg-gradient-to-br from-red-50 via-rose-50 to-red-50/50 rounded-xl p-3 sm:p-4 border border-red-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Gastos</p>
-                    <p class="font-bold text-red-600 text-sm sm:text-base">
-                      <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.gastos) }}</span>
-                      <span class="hidden sm:inline">${{ formatMoney(item.actividad.gastos) }}</span>
-                    </p>
-                  </div>
-                  <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 rounded-xl p-3 sm:p-4 border border-purple-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Utilidad</p>
-                    <p class="font-bold text-purple-600 text-sm sm:text-base">
-                      <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.utilidad) }}</span>
-                      <span class="hidden sm:inline">${{ formatMoney(item.actividad.utilidad) }}</span>
-                    </p>
-                  </div>
-                </div>
-              </template>
-
-              <!-- Vista para actividades en curso -->
-              <template v-else>
-                <div class="grid grid-cols-3 gap-3 sm:gap-4">
-                  <div class="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50/50 rounded-xl p-3 sm:p-4 border border-amber-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Fecha límite</p>
-                    <p class="font-bold text-amber-700 text-sm sm:text-base">
-                      {{ item.actividad.fecha_limite_pago ? formatDate(item.actividad.fecha_limite_pago) : 'No definida' }}
-                    </p>
-                  </div>
-                  <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-3 sm:p-4 border border-blue-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Total asignado</p>
-                    <p class="font-bold text-blue-600 text-sm sm:text-base">
-                      <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.total_asignado || 0) }}</span>
-                      <span class="hidden sm:inline">${{ formatMoney(item.actividad.total_asignado || 0) }}</span>
-                    </p>
-                  </div>
-                  <div class="relative bg-gradient-to-br from-green-50 via-emerald-50 to-green-50/50 rounded-xl p-3 sm:p-4 border border-green-200/50 backdrop-blur-sm">
-                    <p class="text-xs text-gray-500 font-medium mb-1">Total recaudado</p>
-                    <p class="font-bold text-green-600 text-sm sm:text-base">
-                      <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.total_pagado || 0) }}</span>
-                      <span class="hidden sm:inline">${{ formatMoney(item.actividad.total_pagado || 0) }}</span>
-                    </p>
-                  </div>
-                </div>
-              </template>
+              <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                <span class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-blue-50 text-blue-700 leading-tight">
+                  {{ (item.actividad.tipo || 'otro').toLowerCase() }}
+                </span>
+                <span 
+                  v-if="item.actividad.estado === 'en_curso'"
+                  class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-700 leading-tight whitespace-nowrap"
+                >
+                  En curso
+                </span>
+                <span 
+                  v-if="item.actividad.estado === 'liquidada'"
+                  class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-700 leading-tight whitespace-nowrap"
+                >
+                  Finalizada
+                </span>
+                <button
+                  @click.stop="confirmarEliminarActividad(item.actividad)"
+                  class="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600 touch-manipulation"
+                  title="Eliminar actividad"
+                >
+                  <TrashIcon class="w-5 h-5" />
+                </button>
+              </div>
             </div>
-          </div>
+
+            <template v-if="item.actividad.estado === 'liquidada' || !item.actividad.estado">
+              <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Ingresos</p>
+                  <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                    <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.ingresos) }}</span>
+                    <span class="hidden sm:inline">${{ formatMoney(item.actividad.ingresos) }}</span>
+                  </p>
+                </div>
+                <div class="rounded-xl p-2 sm:p-3 bg-red-50 border border-red-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Gastos</p>
+                  <p class="font-bold text-red-600 text-xs sm:text-sm leading-tight break-all">
+                    <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.gastos) }}</span>
+                    <span class="hidden sm:inline">${{ formatMoney(item.actividad.gastos) }}</span>
+                  </p>
+                </div>
+                <div class="rounded-xl p-2 sm:p-3 bg-purple-50 border border-purple-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Utilidad</p>
+                  <p class="font-bold text-purple-600 text-xs sm:text-sm leading-tight break-all">
+                    <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.utilidad) }}</span>
+                    <span class="hidden sm:inline">${{ formatMoney(item.actividad.utilidad) }}</span>
+                  </p>
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                <div class="rounded-xl p-2 sm:p-3 bg-amber-50 border border-amber-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Fecha límite</p>
+                  <p class="font-bold text-amber-700 text-xs sm:text-sm leading-tight">
+                    {{ item.actividad.fecha_limite_pago ? formatDate(item.actividad.fecha_limite_pago) : '—' }}
+                  </p>
+                </div>
+                <div class="rounded-xl p-2 sm:p-3 bg-blue-50 border border-blue-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total asignado</p>
+                  <p class="font-bold text-blue-600 text-xs sm:text-sm leading-tight break-all">
+                    <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.total_asignado || 0) }}</span>
+                    <span class="hidden sm:inline">${{ formatMoney(item.actividad.total_asignado || 0) }}</span>
+                  </p>
+                </div>
+                <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
+                  <p class="text-[11px] sm:text-xs text-gray-500 font-medium mb-0.5 leading-tight">Total recaudado</p>
+                  <p class="font-bold text-green-600 text-xs sm:text-sm leading-tight break-all">
+                    <span class="sm:hidden">${{ formatMoneyCompact(item.actividad.total_pagado || 0) }}</span>
+                    <span class="hidden sm:inline">${{ formatMoney(item.actividad.total_pagado || 0) }}</span>
+                  </p>
+                </div>
+              </div>
+            </template>
           </div>
         </template>
       </template>
@@ -763,716 +769,522 @@
 
     <!-- Modal Nueva Actividad -->
     <div v-if="modalNuevaActividad" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalNuevaActividad = false"></div>
-      <div class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-accent-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <CalendarIcon class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Nueva Actividad
-                </h3>
-                <p class="text-white/90 text-xs">Registra una nueva actividad del fondo</p>
-              </div>
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px]" @click="modalNuevaActividad = false"></div>
+      <div class="relative max-w-lg w-full max-h-[90vh] rounded-2xl overflow-hidden flex flex-col border border-natillera-200/60 shadow-2xl shadow-natillera-900/10 bg-gradient-to-b from-white to-natillera-50/30">
+        <!-- Header con color -->
+        <div class="bg-gradient-to-r from-natillera-500 via-natillera-600 to-emerald-600 px-5 py-4 flex-shrink-0 text-white">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+              <CalendarIcon class="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 class="text-lg font-display font-bold text-white">Nueva Actividad</h3>
+              <p class="text-white/85 text-sm">Registra una nueva actividad del fondo</p>
             </div>
           </div>
         </div>
 
         <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto">
-          <form @submit.prevent="handleCrearActividad" class="p-4 sm:p-6 space-y-4">
-            <!-- Selector de tipo de proceso -->
-            <div>
-              <label class="label mb-3 block">Tipo de proceso *</label>
-              <div class="grid grid-cols-2 gap-2 sm:gap-3">
-                <!-- Opción: Liquidar Actividad -->
-                <div data-tooltip-container class="relative">
-                  <button
-                    type="button"
-                    @click="formActividad.tipoProceso = 'liquidar'; resetearFormularioPorTipo()"
-                    :class="[
-                      'relative w-full py-3 sm:py-5 px-2 sm:px-4 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.tipoProceso === 'liquidar'
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-1.5 sm:gap-3">
-                      <div :class="[
-                        'w-7 h-7 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoProceso === 'liquidar'
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <CurrencyDollarIcon class="w-4 h-4 sm:w-6 sm:h-6" />
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">💰 Liquidar</h4>
-                      </div>
-                      <div v-if="formActividad.tipoProceso === 'liquidar'" class="flex-shrink-0">
-                        <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-natillera-500 flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
-                <!-- Opción: Actividad en curso -->
-                <div data-tooltip-container class="relative">
-                  <button
-                    type="button"
-                    @click="formActividad.tipoProceso = 'en_curso'; resetearFormularioPorTipo(); fetchNatillera()"
-                    :class="[
-                      'relative w-full py-3 sm:py-5 px-2 sm:px-4 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.tipoProceso === 'en_curso'
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-1.5 sm:gap-3">
-                      <div :class="[
-                        'w-7 h-7 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoProceso === 'en_curso'
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <CalendarIcon class="w-4 h-4 sm:w-6 sm:h-6" />
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">🔄 En curso</h4>
-                      </div>
-                      <div v-if="formActividad.tipoProceso === 'en_curso'" class="flex-shrink-0">
-                        <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-natillera-500 flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
+        <div class="flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-natillera-50/20 to-slate-50/80">
+          <form @submit.prevent="handleCrearActividad" class="p-4 sm:p-4 space-y-4">
+            <!-- Bloque: Tipo de proceso -->
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Tipo de proceso</label>
+              <div class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
+                <button
+                  type="button"
+                  @click="formActividad.tipoProceso = 'liquidar'; resetearFormularioPorTipo()"
+                  :class="[
+                    'flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-lg text-sm font-semibold transition-all min-h-[3rem]',
+                    formActividad.tipoProceso === 'liquidar'
+                      ? 'bg-white text-natillera-600 shadow-md border-2 border-natillera-200 ring-1 ring-natillera-500/20'
+                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/80'
+                  ]"
+                >
+                  <CurrencyDollarIcon class="w-5 h-5 flex-shrink-0" />
+                  Liquidar
+                </button>
+                <button
+                  type="button"
+                  @click="formActividad.tipoProceso = 'en_curso'; resetearFormularioPorTipo(); fetchNatillera()"
+                  :class="[
+                    'flex-1 flex items-center justify-center gap-2.5 py-3.5 rounded-lg text-sm font-semibold transition-all min-h-[3rem]',
+                    formActividad.tipoProceso === 'en_curso'
+                      ? 'bg-white text-natillera-600 shadow-md border-2 border-natillera-200 ring-1 ring-natillera-500/20'
+                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50/80'
+                  ]"
+                >
+                  <ArrowPathIcon class="w-5 h-5 flex-shrink-0" />
+                  En curso
+                </button>
               </div>
-              
-              <!-- Descripción de la opción seleccionada -->
-              <div v-if="formActividad.tipoProceso" class="mt-3 p-3 bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl border border-natillera-200">
-                <p class="text-sm text-gray-700 leading-relaxed">
-                  <span v-if="formActividad.tipoProceso === 'liquidar'" class="font-semibold text-natillera-700">
-                    💰 Liquidar Actividad:
-                  </span>
-                  <span v-else class="font-semibold text-natillera-700">
-                    🔄 Actividad en curso:
-                  </span>
-                  <span v-if="formActividad.tipoProceso === 'liquidar'">
-                    Para ingresar valores directamente de la actividad (Ingresos, gastos y utilidad). Ideal cuando ya tienes los resultados finales.
-                  </span>
-                  <span v-else>
-                    Para crear una actividad en la que apenas se va a recoger el dinero. Podrás asignar valores a los socios y hacer seguimiento de los pagos.
-                  </span>
+              <div v-if="formActividad.tipoProceso" class="mt-3 p-3 rounded-lg bg-natillera-50/80 border border-natillera-200/80">
+                <p class="text-xs text-natillera-800 leading-relaxed flex items-start gap-2">
+                  <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5 text-natillera-600" />
+                  <span v-if="formActividad.tipoProceso === 'liquidar'">Ingresa valores finales: ingresos, gastos y utilidad.</span>
+                  <span v-else>Asigna valores iniciales y haz seguimiento de pagos pendientes.</span>
                 </p>
               </div>
             </div>
 
-            <div>
-              <label class="label mb-3 block">Tipo de actividad</label>
-              <div class="relative">
-                <select 
-                  v-model="formActividad.tipo" 
-                  class="w-full px-4 py-3 pr-10 rounded-xl border-2 border-gray-200 bg-white text-gray-800 font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 hover:border-gray-300 appearance-none cursor-pointer"
-                >
-                  <option value="rifa">🎟️ Rifa</option>
-                  <option value="bingo">🎱 Bingo</option>
-                  <option value="venta">🛒 Venta</option>
-                  <option value="evento">🎉 Evento</option>
-                  <option value="otro">📋 Otro</option>
-                </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
+            <!-- Bloque: Actividad + Modo rifa (Modo rifa solo cuando tipo de proceso es "en curso") -->
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
+              <div class="grid gap-4" :class="formActividad.tipoProceso === 'en_curso' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
+                <!-- Columna: Tipo de actividad (dropdown personalizado con ítems estilizados) -->
+                <div class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': formActividad.tipoProceso !== 'en_curso' }">
+                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tipo de actividad</label>
+                  <div class="relative flex-1" ref="dropdownTipoActividadRef">
+                    <button
+                      type="button"
+                      @click.stop="dropdownTipoActividad = !dropdownTipoActividad"
+                      class="w-full flex items-center gap-3 pl-4 pr-12 py-3 rounded-xl border-2 min-h-[3rem] sm:min-h-[3.25rem] transition-all text-left"
+                      :class="[
+                        dropdownTipoActividad ? 'border-natillera-400 ring-2 ring-natillera-500/20' : 'hover:border-slate-300',
+                        formActividad.tipo === 'rifa' && 'border-l-4 border-l-natillera-500 bg-natillera-50/50',
+                        formActividad.tipo === 'bingo' && 'border-l-4 border-l-amber-500 bg-amber-50/50',
+                        formActividad.tipo === 'venta' && 'border-l-4 border-l-blue-500 bg-blue-50/50',
+                        formActividad.tipo === 'evento' && 'border-l-4 border-l-purple-500 bg-purple-50/50',
+                        formActividad.tipo === 'otro' && 'border-l-4 border-l-slate-400 bg-slate-50/80',
+                        !['rifa','bingo','venta','evento','otro'].includes(formActividad.tipo) && 'border-slate-200 bg-slate-50/80'
+                      ]"
+                    >
+                      <div class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-white shadow-sm"
+                        :class="{
+                          'bg-natillera-500': formActividad.tipo === 'rifa',
+                          'bg-amber-500': formActividad.tipo === 'bingo',
+                          'bg-blue-500': formActividad.tipo === 'venta',
+                          'bg-purple-500': formActividad.tipo === 'evento',
+                          'bg-slate-500': formActividad.tipo === 'otro'
+                        }">
+                        <TicketIcon v-if="formActividad.tipo === 'rifa'" class="w-5 h-5" />
+                        <SparklesIcon v-else-if="formActividad.tipo === 'bingo'" class="w-5 h-5" />
+                        <ShoppingBagIcon v-else-if="formActividad.tipo === 'venta'" class="w-5 h-5" />
+                        <CalendarIcon v-else-if="formActividad.tipo === 'evento'" class="w-5 h-5" />
+                        <ClipboardDocumentListIcon v-else class="w-5 h-5" />
+                      </div>
+                      <span class="flex-1 font-semibold text-slate-800">{{ opcionesTipoActividad.find(o => o.value === formActividad.tipo)?.label || 'Seleccionar' }}</span>
+                      <ChevronDownIcon class="absolute right-3 w-5 h-5 text-slate-500 transition-transform" :class="{ 'rotate-180': dropdownTipoActividad }" />
+                    </button>
+                    <!-- Lista desplegable: Teleport para que quede por encima de todo el modal -->
+                    <Teleport to="body">
+                      <Transition
+                        enter-active-class="transition duration-150 ease-out"
+                        enter-from-class="opacity-0 scale-95"
+                        enter-to-class="opacity-100 scale-100"
+                        leave-active-class="transition duration-100 ease-in"
+                        leave-from-class="opacity-100 scale-100"
+                        leave-to-class="opacity-0 scale-95"
+                      >
+                        <div
+                          v-if="dropdownTipoActividad && dropdownTipoActividadRef"
+                          ref="dropdownTipoActividadPanelRef"
+                          data-dropdown-tipo-actividad-panel
+                          class="fixed py-2 rounded-xl bg-white border-2 border-natillera-200/80 shadow-xl shadow-natillera-900/20 max-h-[16rem] overflow-y-auto overflow-x-hidden min-w-[12rem] z-[9999]"
+                          :style="dropdownTipoActividadStyle"
+                        >
+                          <button
+                            v-for="opcion in opcionesTipoActividad"
+                            :key="opcion.value"
+                            type="button"
+                            @click="formActividad.tipo = opcion.value; dropdownTipoActividad = false"
+                            class="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 first:pt-3 last:pb-3"
+                            :class="formActividad.tipo === opcion.value ? 'bg-natillera-50/80' : ''"
+                          >
+                            <div class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-sm"
+                              :class="opcion.bgIcon">
+                              <component :is="opcion.icon" class="w-5 h-5" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                              <p class="font-semibold text-slate-800" :class="opcion.textColor">{{ opcion.label }}</p>
+                              <p class="text-xs text-slate-500 mt-0.5">{{ opcion.desc }}</p>
+                            </div>
+                            <div v-if="formActividad.tipo === opcion.value" class="flex-shrink-0 w-5 h-5 rounded-full bg-natillera-500 flex items-center justify-center">
+                              <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                            </div>
+                          </button>
+                        </div>
+                      </Transition>
+                    </Teleport>
+                  </div>
+                </div>
+                <!-- Columna: Modo rifa (solo visible cuando tipo de proceso es "en curso") -->
+                <div v-if="formActividad.tipoProceso === 'en_curso'" class="flex flex-col sm:min-h-[7.5rem]">
+                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Modo rifa</label>
+                  <template v-if="formActividad.tipo === 'rifa'">
+                    <div class="flex-1 flex flex-col gap-2">
+                      <div class="flex rounded-xl bg-slate-100 p-1 w-full min-h-[2.75rem]">
+                        <button
+                          type="button"
+                          @click="formActividad.tipoRifa = 'manual'"
+                          :class="[
+                            'flex-1 py-2.5 rounded-lg text-sm font-medium transition-all',
+                            formActividad.tipoRifa === 'manual'
+                              ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
+                              : 'text-slate-500 hover:text-slate-700'
+                          ]"
+                        >
+                          Manual
+                        </button>
+                        <button
+                          type="button"
+                          @click="formActividad.tipoRifa = 'aleatoria'"
+                          :class="[
+                            'flex-1 py-2.5 rounded-lg text-sm font-medium transition-all',
+                            formActividad.tipoRifa === 'aleatoria'
+                              ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
+                              : 'text-slate-500 hover:text-slate-700'
+                          ]"
+                        >
+                          Auto
+                        </button>
+                      </div>
+                      <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 leading-snug">Asignas tú cada número (comprador, vendedor, valor).</p>
+                      <p v-else-if="formActividad.tipoRifa === 'aleatoria'" class="text-xs text-slate-500 leading-snug">Números repartidos automáticamente entre socios.</p>
+                    </div>
+                  </template>
+                  <div v-else class="flex-1 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/30 flex items-center justify-center min-h-[2.75rem] py-4 sm:py-0">
+                    <span class="text-xs text-slate-400 text-center px-2">Selecciona Rifa para ver opciones</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div>
-              <label class="label">Descripción *</label>
-              <input 
+            <!-- Bloque: Descripción + Repetir -->
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
+              <textarea 
                 v-model="formActividad.descripcion"
-                type="text" 
-                class="input-field"
+                rows="2"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white resize-none transition-colors"
                 placeholder="Ej: Rifa de Navidad 2025"
                 required
               />
+              <label v-if="formActividad.tipoProceso === 'en_curso'" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
+                :class="formActividad.esMultiplesMeses ? 'bg-natillera-50 border-natillera-300 shadow-sm' : 'bg-slate-50/90 border-natillera-200/60 hover:border-natillera-300 hover:bg-natillera-50/50 hover:shadow-sm'">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div
+                    class="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all border-2 cursor-pointer ring-2 ring-transparent hover:ring-natillera-500/30 focus-within:ring-natillera-500/50 focus-within:ring-offset-2"
+                    :class="formActividad.esMultiplesMeses
+                      ? 'bg-natillera-500 border-natillera-500 text-white shadow-sm'
+                      : 'bg-white border-slate-300 text-transparent hover:border-natillera-400 hover:bg-natillera-50/50'"
+                  >
+                    <input type="checkbox" v-model="formActividad.esMultiplesMeses" class="sr-only" />
+                    <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <div class="min-w-0">
+                    <span class="text-sm font-semibold text-slate-800">Repetir actividad</span>
+                    <p class="text-xs text-slate-500 mt-0.5">Aplicar a varios meses</p>
+                  </div>
+                </div>
+                <ArrowPathIcon class="w-5 h-5 text-slate-400 flex-shrink-0 pointer-events-none" />
+              </label>
             </div>
 
-            <!-- Opciones de tipo de rifa -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'">
-              <label class="label mb-3 block">Tipo de rifa</label>
-              <div class="grid grid-cols-2 gap-2 sm:gap-3">
-                <!-- Opción 1: Rifa Manual -->
-                <div 
-                  @click="formActividad.tipoRifa = 'manual'"
-                  :class="[
-                    'relative py-3 sm:py-5 px-2 sm:px-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                    formActividad.tipoRifa === 'manual' 
-                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20' 
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                  ]"
-                >
-                  <div class="flex items-center gap-1.5 sm:gap-3">
-                    <div 
-                      :class="[
-                        'w-7 h-7 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoRifa === 'manual' 
-                          ? 'bg-natillera-500 text-white' 
-                          : 'bg-gray-100 text-gray-400'
-                      ]"
-                    >
-                      <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+            <!-- Período / Mes (solo en curso) - arriba -->
+            <template v-if="formActividad.tipoProceso === 'en_curso'">
+              <template v-if="!formActividad.esMultiplesMeses">
+                <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+                  <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Período y fecha</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                      <label class="text-xs text-slate-500 mb-2 block">Período *</label>
+                      <select 
+                        v-model="periodoSeleccionadoValue" 
+                        class="w-full h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white appearance-none cursor-pointer"
+                      >
+                        <option :value="null">Seleccione período</option>
+                        <option v-for="opcion in opcionesPeriodo" :key="opcion.value" :value="opcion.value">{{ opcion.label }}</option>
+                      </select>
+                      <p v-if="opcionesPeriodo.length === 0" class="text-xs text-slate-500 mt-1.5">No hay períodos disponibles</p>
                     </div>
-                    <div class="flex-1 min-w-0">
-                      <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">✏️ Manual</h4>
+                    <div class="flex flex-col">
+                      <label class="text-xs text-slate-500 mb-2 block">Fecha límite *</label>
+                      <DateInput 
+                        v-model="formActividad.fechaLimitePago"
+                        placeholder="Se calcula automático"
+                        required
+                        :disabled="false"
+                        input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-natillera-400"
+                      />
                     </div>
-                    <div v-if="formActividad.tipoRifa === 'manual'" class="flex-shrink-0">
-                      <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-natillera-500 flex items-center justify-center">
-                        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
-                      </div>
+                  </div>
+
+                  <!-- Quincena de pago -->
+                  <div v-if="natillera && natillera.periodicidad === 'quincenal'" class="mt-4">
+                    <p class="text-xs text-slate-500 mb-2">Quincena de pago *</p>
+                    <div class="grid grid-cols-2 gap-2 sm:gap-2">
+                      <button
+                        type="button"
+                        @click="formActividad.quincenaPago = 1; calcularFechaLimitePago()"
+                        :class="[
+                          'relative p-3 rounded-xl border text-left transition-all',
+                          formActividad.quincenaPago === 1
+                            ? 'border-natillera-400 bg-natillera-50 shadow-sm'
+                            : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-2">
+                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">1</div>
+                          <div>
+                            <p class="font-semibold text-sm text-slate-800">1ra Quincena</p>
+                            <p class="text-xs text-slate-500">Día 15</p>
+                          </div>
+                        </div>
+                        <div v-if="formActividad.quincenaPago === 1" class="absolute top-2 right-2 w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
+                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        @click="formActividad.quincenaPago = 2; calcularFechaLimitePago()"
+                        :class="[
+                          'relative p-3 rounded-xl border text-left transition-all',
+                          formActividad.quincenaPago === 2
+                            ? 'border-natillera-400 bg-natillera-50 shadow-sm'
+                            : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-2">
+                          <div :class="['w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">2</div>
+                          <div>
+                            <p class="font-semibold text-sm text-slate-800">2da Quincena</p>
+                            <p class="text-xs text-slate-500">Fin de mes</p>
+                          </div>
+                        </div>
+                        <div v-if="formActividad.quincenaPago === 2" class="absolute top-2 right-2 w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
+                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                      </button>
                     </div>
                   </div>
                 </div>
+              </template>
 
-                <!-- Opción 2: Rifa Automática -->
-                <div 
-                  @click="formActividad.tipoRifa = 'aleatoria'"
-                  :class="[
-                    'relative py-3 sm:py-5 px-2 sm:px-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                    formActividad.tipoRifa === 'aleatoria' 
-                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20' 
-                      : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                  ]"
-                >
-                  <div class="flex items-center gap-1.5 sm:gap-3">
-                    <div 
-                      :class="[
-                        'w-7 h-7 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoRifa === 'aleatoria' 
-                          ? 'bg-natillera-500 text-white' 
-                          : 'bg-gray-100 text-gray-400'
-                      ]"
+              <!-- Panel para múltiples meses -->
+              <template v-else>
+                <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 space-y-4">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Selecciona los meses *</label>
+                    <div v-if="mesesDelPeriodo.length > 0" class="flex gap-2 flex-shrink-0">
+                      <button type="button" @click="marcarTodosMeses" class="px-2.5 py-1.5 text-xs font-medium text-natillera-600 bg-natillera-50 hover:bg-natillera-100 rounded-lg border border-natillera-200">Todos</button>
+                      <button type="button" @click="desmarcarTodosMeses" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200">Ninguno</button>
+                    </div>
+                  </div>
+                  <div v-if="mesesDelPeriodo.length === 0" class="text-sm text-slate-500 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    No hay meses disponibles en el período de la natillera
+                  </div>
+                  <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
+                    <button
+                      v-for="mesPeriodo in mesesDelPeriodo"
+                      :key="`${mesPeriodo.mes}-${mesPeriodo.anio}`"
+                      type="button"
+                      @click="toggleMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)"
+                      class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all text-left w-full"
+                      :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'"
                     >
-                      <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h4 class="text-base sm:text-lg font-bold text-gray-800 leading-tight">
-                        <span class="sm:hidden">🎲 Auto</span>
-                        <span class="hidden sm:inline">🎲 Automática</span>
-                      </h4>
-                    </div>
-                    <div v-if="formActividad.tipoRifa === 'aleatoria'" class="flex-shrink-0">
-                      <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-natillera-500 flex items-center justify-center">
-                        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                        </svg>
+                      <div class="flex-shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-colors"
+                        :class="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio) ? 'border-natillera-500 bg-natillera-500' : 'border-slate-300 bg-white'">
+                        <svg v-if="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                       </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-xs text-slate-800">{{ meses.find(m => m.value === mesPeriodo.mes)?.label || `Mes ${mesPeriodo.mes}` }}</p>
+                        <p class="text-xs text-slate-500">{{ mesPeriodo.anio }}</p>
+                      </div>
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-500">Seleccionados: {{ formActividad.mesesSeleccionados.length }} mes(es)</p>
+                  <div v-if="natillera && natillera.periodicidad === 'quincenal'">
+                    <p class="text-xs text-slate-500 mb-2">Quincena de pago *</p>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button type="button" @click="formActividad.quincenaPago = 1; actualizarQuincenaMeses()"
+                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 1 ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300']">
+                        <div class="flex items-center gap-2">
+                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 1 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">1</div>
+                          <div><p class="font-semibold text-xs text-slate-800">1ra</p><p class="text-xs text-slate-500">Día 15</p></div>
+                        </div>
+                      </button>
+                      <button type="button" @click="formActividad.quincenaPago = 2; actualizarQuincenaMeses()"
+                        :class="['p-2.5 rounded-xl border text-left transition-all', formActividad.quincenaPago === 2 ? 'border-natillera-400 bg-natillera-50' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300']">
+                        <div class="flex items-center gap-2">
+                          <div :class="['w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold', formActividad.quincenaPago === 2 ? 'bg-natillera-500 text-white' : 'bg-slate-200 text-slate-500']">2</div>
+                          <div><p class="font-semibold text-xs text-slate-800">2da</p><p class="text-xs text-slate-500">Fin de mes</p></div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </template>
+
+            <!-- Fecha de juego de la rifa (solo rifas en curso) -->
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Fecha de juego de la rifa *</label>
+              <p class="text-xs text-slate-500 mb-3">Indica cuándo se jugará el sorteo. Si necesitas una fecha concreta, elige "Fecha específica" y asigna la fecha por mes.</p>
+              <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    v-for="opcion in opcionesCuandoJuegoRifa"
+                    :key="opcion.value"
+                    type="button"
+                    @click="formActividad.cuandoJuegoRifa = opcion.value"
+                    :class="[
+                      'p-3 rounded-xl border text-left transition-all',
+                      formActividad.cuandoJuegoRifa === opcion.value
+                        ? 'border-natillera-400 bg-natillera-50 shadow-sm'
+                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-50'
+                    ]"
+                  >
+                    <p class="font-semibold text-sm text-slate-800">{{ opcion.label }}</p>
+                  </button>
+                </div>
+                <!-- Fecha específica: un solo mes -->
+                <div v-if="formActividad.cuandoJuegoRifa === 'fecha_especifica' && !formActividad.esMultiplesMeses" class="mt-3">
+                  <label class="text-xs text-slate-500 mb-2 block">Fecha de juego</label>
+                  <DateInput
+                    v-model="formActividad.fechaJuegoRifa"
+                    placeholder="Seleccione fecha"
+                    :disabled="false"
+                    input-class="!h-11 !pl-10 !py-2.5 text-sm rounded-xl border-2 border-slate-200 bg-slate-50/50 focus:bg-white focus:border-natillera-400"
+                  />
+                </div>
+                <!-- Fecha específica: varios meses → lista por mes -->
+                <div v-if="formActividad.cuandoJuegoRifa === 'fecha_especifica' && formActividad.esMultiplesMeses && formActividad.mesesSeleccionados.length > 0" class="mt-3 space-y-3">
+                  <p class="text-xs text-slate-500">Asigna la fecha de juego para cada mes:</p>
+                  <div class="space-y-2 max-h-48 overflow-y-auto p-1">
+                    <div v-for="mesInfo in formActividad.mesesSeleccionados" :key="`${mesInfo.mes}-${mesInfo.anio}`" class="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/30">
+                      <span class="font-semibold text-sm text-slate-800 sm:w-28 flex-shrink-0">{{ meses.find(m => m.value === mesInfo.mes)?.label || `Mes ${mesInfo.mes}` }} {{ mesInfo.anio }}</span>
+                      <DateInput
+                        :model-value="formActividad.fechasJuegoPorMes[`${mesInfo.mes}-${mesInfo.anio}`] || ''"
+                        @update:model-value="formActividad.fechasJuegoPorMes[`${mesInfo.mes}-${mesInfo.anio}`] = $event"
+                        placeholder="Fecha de juego"
+                        :disabled="false"
+                        input-class="!h-10 !pl-10 !py-2 text-sm rounded-lg border-2 border-slate-200 bg-white focus:border-natillera-400 flex-1"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
-              
-              <!-- Descripción de la opción seleccionada -->
-              <div v-if="formActividad.tipoRifa" class="mt-3 p-3 bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl border border-natillera-200">
-                <p class="text-sm text-gray-700 leading-relaxed">
-                  <span v-if="formActividad.tipoRifa === 'manual'" class="font-semibold text-natillera-700">
-                    ✏️ Rifa Manual:
-                  </span>
-                  <span v-else class="font-semibold text-natillera-700">
-                    🎲 Rifa Automática:
-                  </span>
-                  <span v-if="formActividad.tipoRifa === 'manual'">
-                    Selecciona manualmente el número, la persona a la que se le vendió y el socio que la vendió. Ideal para rifas donde necesitas control total sobre cada número.
-                  </span>
-                  <span v-else>
-                    Los números se asignan aleatoriamente a los socios de la natillera. Cada socio recibirá números automáticamente sin intervención manual.
-                  </span>
-                </p>
-              </div>
-              
-              <!-- Campo cantidad de números por socio (solo para rifa automática) -->
-              <div v-if="formActividad.tipoRifa === 'aleatoria'" class="mt-4">
-                <label class="label mb-2 block">Cantidad de números por socio *</label>
-                <input 
-                  v-model.number="formActividad.cantidadNumerosPorSocio"
-                  type="number" 
-                  inputmode="numeric"
-                  class="input-field"
-                  placeholder="Ej: 5"
-                  min="1"
-                  step="1"
-                  required
-                />
-              </div>
             </div>
 
-            <!-- Formulario para Liquidar Actividad -->
+            <!-- Números por socio (rifa en curso: obligatorio en modo Auto) -->
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span v-if="formActividad.tipoRifa === 'aleatoria'" class="text-red-500">*</span></label>
+              <input 
+                v-model.number="formActividad.cantidadNumerosPorSocio"
+                type="number" 
+                inputmode="numeric"
+                :disabled="formActividad.tipoRifa !== 'aleatoria'"
+                class="w-full sm:max-w-[140px] h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 transition-colors"
+                :class="formActividad.tipoRifa === 'aleatoria' ? 'bg-slate-50/50 text-slate-800' : 'bg-slate-100/80 text-slate-400 cursor-not-allowed'"
+                placeholder="Ej: 5"
+                min="1"
+                step="1"
+                :required="formActividad.tipoRifa === 'aleatoria'"
+              />
+              <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 mt-1.5">Solo aplica en modo Auto (asignación automática de números).</p>
+            </div>
+
+            <!-- Bloque: Liquidar -->
             <template v-if="formActividad.tipoProceso === 'liquidar'">
-              <div class="grid grid-cols-2 gap-4">
-                <div>
-                  <label class="label">Ingresos *</label>
-                  <div class="relative">
-                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
-                      $
+              <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Valores de la actividad</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col">
+                    <label class="text-xs text-slate-500 mb-2 block">Ingresos *</label>
+                    <div class="relative flex-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <input 
+                        :value="formatMilesInput(formActividad.ingresos)"
+                        type="text"
+                        inputmode="decimal"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        placeholder="150.000"
+                        @input="formActividad.ingresos = parseMilesInput($event.target.value)"
+                      />
                     </div>
-                    <input 
-                      v-model.number="formActividad.ingresos"
-                      type="number" 
-                      class="input-field pl-10 text-lg font-semibold"
-                      placeholder="150000"
-                      min="0"
-                      step="0.01"
-                    />
+                  </div>
+                  <div class="flex flex-col">
+                    <label class="text-xs text-slate-500 mb-2 block">Gastos</label>
+                    <div class="relative flex-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <input 
+                        :value="formatMilesInput(formActividad.gastos)"
+                        type="text"
+                        inputmode="decimal"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        placeholder="20.000"
+                        @input="formActividad.gastos = parseMilesInput($event.target.value)"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label class="label">Gastos</label>
-                  <div class="relative">
-                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
-                      $
-                    </div>
-                    <input 
-                      v-model.number="formActividad.gastos"
-                      type="number" 
-                      class="input-field pl-10 text-lg font-semibold"
-                      placeholder="20000"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
-                <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 to-indigo-200/20 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-                <div class="relative z-10">
-                  <p class="text-sm text-gray-600 font-medium mb-1">Utilidad estimada:</p>
-                  <p class="font-bold text-2xl text-purple-600">
-                    ${{ formatMoney((formActividad.ingresos || 0) - (formActividad.gastos || 0)) }}
-                  </p>
+                <div class="mt-3 p-3 rounded-xl bg-natillera-50/80 border border-natillera-200/80">
+                  <p class="text-xs text-natillera-800">Utilidad estimada: <span class="font-bold text-natillera-600">${{ formatMoney((formActividad.ingresos || 0) - (formActividad.gastos || 0)) }}</span></p>
                 </div>
               </div>
             </template>
 
             <!-- Formulario para Actividad en curso -->
             <template v-else>
-              <!-- Selector de período para múltiples meses -->
-              <div class="relative bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 border-2 border-gray-200 rounded-xl p-4 sm:p-5">
-                <label class="text-sm sm:text-base font-semibold text-gray-800 mb-3 block">
-                  Período de la actividad
-                </label>
-                <label class="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    v-model="formActividad.esMultiplesMeses"
-                    class="sr-only peer"
-                  />
-                  <!-- Checkbox personalizado -->
-                  <div class="relative flex-shrink-0 mt-0.5">
-                    <div 
-                      :class="[
-                        'w-7 h-7 rounded-lg border-2 transition-all duration-300 flex items-center justify-center',
-                        formActividad.esMultiplesMeses
-                          ? 'bg-gradient-to-br from-natillera-500 via-natillera-600 to-emerald-600 border-natillera-600 shadow-lg shadow-natillera-500/50 scale-105'
-                          : 'border-gray-300 bg-white shadow-sm group-hover:shadow-md'
-                      ]"
-                    >
-                      <!-- Icono de check -->
-                      <svg v-if="formActividad.esMultiplesMeses" class="w-5 h-5 text-white drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                    </div>
-                    <!-- Efecto de resplandor cuando está marcado -->
-                    <div v-if="formActividad.esMultiplesMeses" class="absolute -inset-1 rounded-lg bg-gradient-to-br from-natillera-400/40 to-emerald-400/40 blur-sm -z-10 animate-pulse"></div>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <span 
-                      :class="[
-                        'text-sm sm:text-base font-semibold block transition-colors',
-                        formActividad.esMultiplesMeses 
-                          ? 'text-natillera-700' 
-                          : 'text-gray-800 group-hover:text-gray-900'
-                      ]"
-                    >
-                      Repetir en varios meses
-                    </span>
-                    <p 
-                      :class="[
-                        'text-xs sm:text-sm mt-1 transition-colors',
-                        formActividad.esMultiplesMeses 
-                          ? 'text-natillera-600 font-medium' 
-                          : 'text-gray-600'
-                      ]"
-                    >
-                      {{ formActividad.esMultiplesMeses ? 'La actividad se repetirá en los meses que selecciones' : 'La actividad será solo para un mes específico' }}
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              <!-- Panel para un solo mes -->
-              <template v-if="!formActividad.esMultiplesMeses">
-                <!-- Selector de período de pago -->
-                <div>
-                  <label class="label">Período de pago *</label>
-                  <select 
-                    v-model="periodoSeleccionadoValue" 
-                    class="input-field"
-                  >
-                    <option :value="null">Seleccione un período</option>
-                    <option 
-                      v-for="opcion in opcionesPeriodo" 
-                      :key="opcion.value" 
-                      :value="opcion.value"
-                    >
-                      {{ opcion.label }}
-                    </option>
-                  </select>
-                  <p v-if="opcionesPeriodo.length === 0" class="text-xs text-gray-500 mt-2">
-                    No hay períodos disponibles para esta natillera
-                  </p>
-                </div>
-
-              <!-- Selector de quincena (solo si la natillera es quincenal) -->
-              <div v-if="natillera && natillera.periodicidad === 'quincenal'">
-                <label class="label">Quincena de pago *</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    @click="formActividad.quincenaPago = 1; calcularFechaLimitePago()"
-                    :class="[
-                      'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.quincenaPago === 1
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div :class="[
-                        'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.quincenaPago === 1
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <span class="text-sm font-bold">1</span>
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-bold text-sm text-gray-800">Primera Quincena</h4>
-                        <p class="text-xs text-gray-600">Día 15 del mes</p>
-                      </div>
-                    </div>
+              <!-- Bloque: Asignación y valores -->
+              <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+                <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Asignación de valores</label>
+                <div class="flex rounded-xl bg-slate-100 p-1 mb-4 w-full">
+                  <button type="button" @click="formActividad.tipoValores = 'iguales'; aplicarValorIgual()"
+                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'iguales' ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80' : 'text-slate-600 hover:text-slate-800']">
+                    Iguales
                   </button>
-
-                  <button
-                    type="button"
-                    @click="formActividad.quincenaPago = 2; calcularFechaLimitePago()"
-                    :class="[
-                      'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.quincenaPago === 2
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div :class="[
-                        'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.quincenaPago === 2
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <span class="text-sm font-bold">2</span>
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-bold text-sm text-gray-800">Segunda Quincena</h4>
-                        <p class="text-xs text-gray-600">Último día del mes</p>
-                      </div>
-                    </div>
+                  <button type="button" @click="formActividad.tipoValores = 'diferentes'; limpiarValorIgual(); fetchSocios()"
+                    :class="['flex-1 min-h-[2.75rem] px-4 py-2.5 rounded-lg text-sm font-medium transition-all', formActividad.tipoValores === 'diferentes' ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80' : 'text-slate-600 hover:text-slate-800']">
+                    Diferentes
                   </button>
                 </div>
-              </div>
 
-              <!-- Fecha límite calculada automáticamente -->
-              <div>
-                <label class="label">Fecha límite para pago *</label>
-                <DateInput 
-                  v-model="formActividad.fechaLimitePago"
-                  placeholder="Se calculará automáticamente"
-                  required
-                  :disabled="false"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                  Esta fecha se calcula automáticamente según el período y quincena seleccionados, pero puedes modificarla manualmente si es necesario
-                </p>
-              </div>
-              </template>
-
-              <!-- Panel para múltiples meses -->
-              <template v-else>
-                <div class="space-y-4">
-                  <!-- Selector de meses del período -->
-                  <div>
-                    <div class="flex items-center justify-between mb-3">
-                      <label class="label block mb-0">Selecciona los meses *</label>
-                      <div v-if="mesesDelPeriodo.length > 0" class="flex gap-2">
-                        <button
-                          type="button"
-                          @click="marcarTodosMeses"
-                          class="px-3 py-1.5 text-xs sm:text-sm font-medium text-natillera-700 bg-natillera-50 hover:bg-natillera-100 border border-natillera-300 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-natillera-500 focus:ring-offset-1"
-                        >
-                          Marcar todos
-                        </button>
-                        <button
-                          type="button"
-                          @click="desmarcarTodosMeses"
-                          class="px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1"
-                        >
-                          Desmarcar todos
-                        </button>
-                      </div>
+                <!-- Valor por socio + Total (cuando se elige Iguales) -->
+                <div v-if="formActividad.tipoValores === 'iguales'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="flex flex-col">
+                    <label class="text-xs text-slate-500 mb-2 block">Valor por socio</label>
+                    <div class="relative flex-1">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
+                      <input 
+                        :value="formatNumberWithSeparator(formActividad.valorIgual)"
+                        @input="handleValorIgualInput($event)"
+                        type="text" 
+                        inputmode="decimal"
+                        class="w-full h-11 pl-8 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white"
+                        placeholder="0"
+                        pattern="[0-9.]*"
+                        @blur="aplicarValorIgual()"
+                      />
                     </div>
-                    <div v-if="mesesDelPeriodo.length === 0" class="text-sm text-gray-500 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                      No hay meses disponibles en el período de la natillera
-                    </div>
-                    <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-xl">
-                      <label
-                        v-for="mesPeriodo in mesesDelPeriodo"
-                        :key="`${mesPeriodo.mes}-${mesPeriodo.anio}`"
-                        class="flex items-center gap-2 p-3 bg-white rounded-lg border-2 transition-all cursor-pointer hover:border-natillera-300 hover:shadow-md"
-                        :class="{
-                          'border-natillera-500 bg-natillera-50': estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio),
-                          'border-gray-200': !estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)
-                        }"
-                      >
-                        <input
-                          type="checkbox"
-                          :checked="estaMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)"
-                          @change="toggleMesSeleccionado(mesPeriodo.mes, mesPeriodo.anio)"
-                          class="w-5 h-5 text-natillera-500 border-gray-300 rounded focus:ring-natillera-500"
-                        />
-                        <div class="flex-1">
-                          <p class="font-semibold text-sm text-gray-800">
-                            {{ meses.find(m => m.value === mesPeriodo.mes)?.label || `Mes ${mesPeriodo.mes}` }}
-                          </p>
-                          <p class="text-xs text-gray-500">{{ mesPeriodo.anio }}</p>
-                        </div>
-                      </label>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2">
-                      Seleccionados: {{ formActividad.mesesSeleccionados.length }} mes(es)
-                    </p>
+                    <p v-if="formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 mt-1.5">Por defecto por número vendido</p>
                   </div>
-
-                  <!-- Selector de quincena (solo si la natillera es quincenal) -->
-                  <div v-if="natillera && natillera.periodicidad === 'quincenal'">
-                    <label class="label mb-3 block">Quincena de pago para todos los meses *</label>
-                    <div class="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        @click="formActividad.quincenaPago = 1; actualizarQuincenaMeses()"
-                        :class="[
-                          'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                          formActividad.quincenaPago === 1
-                            ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                        ]"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div :class="[
-                            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                            formActividad.quincenaPago === 1
-                              ? 'bg-natillera-500 text-white'
-                              : 'bg-gray-100 text-gray-400'
-                          ]">
-                            <span class="text-sm font-bold">1</span>
-                          </div>
-                          <div class="flex-1">
-                            <h4 class="font-bold text-sm text-gray-800">Primera Quincena</h4>
-                            <p class="text-xs text-gray-600">Día 15 del mes</p>
-                          </div>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
-                        @click="formActividad.quincenaPago = 2; actualizarQuincenaMeses()"
-                        :class="[
-                          'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                          formActividad.quincenaPago === 2
-                            ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                        ]"
-                      >
-                        <div class="flex items-center gap-2">
-                          <div :class="[
-                            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                            formActividad.quincenaPago === 2
-                              ? 'bg-natillera-500 text-white'
-                              : 'bg-gray-100 text-gray-400'
-                          ]">
-                            <span class="text-sm font-bold">2</span>
-                          </div>
-                          <div class="flex-1">
-                            <h4 class="font-bold text-sm text-gray-800">Segunda Quincena</h4>
-                            <p class="text-xs text-gray-600">Último día del mes</p>
-                          </div>
-                        </div>
-                      </button>
+                  <div class="flex flex-col">
+                    <label class="text-xs text-slate-500 mb-2 block">Total ({{ socios.length }} socios)</label>
+                    <div class="flex items-center h-11 rounded-xl border-2 border-slate-100 bg-natillera-50/50 px-3 border-natillera-200/50">
+                      <p class="text-lg font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</p>
                     </div>
                   </div>
                 </div>
-              </template>
 
-              <!-- Selector de tipo de valores (oculto para rifa manual) -->
-              <div v-if="!(formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual')">
-                <label class="label mb-3 block">Asignación de valores</label>
-                <div class="grid grid-cols-2 gap-3">
-                  <!-- Opción: Valores iguales -->
-                  <button
-                    type="button"
-                    @click="formActividad.tipoValores = 'iguales'; aplicarValorIgual()"
-                    :class="[
-                      'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.tipoValores === 'iguales'
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div :class="[
-                        'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoValores === 'iguales'
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-bold text-sm text-gray-800">Valores iguales</h4>
-                        <p class="text-xs text-gray-600">Mismo valor para todos</p>
-                      </div>
-                      <div v-if="formActividad.tipoValores === 'iguales'" class="flex-shrink-0">
-                        <div class="w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-
-                  <!-- Opción: Valores diferentes -->
-                  <button
-                    type="button"
-                    @click="formActividad.tipoValores = 'diferentes'; limpiarValorIgual(); fetchSocios()"
-                    :class="[
-                      'relative p-3 rounded-xl border-2 transition-all duration-200 text-left',
-                      formActividad.tipoValores === 'diferentes'
-                        ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
-                    ]"
-                  >
-                    <div class="flex items-center gap-2">
-                      <div :class="[
-                        'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all',
-                        formActividad.tipoValores === 'diferentes'
-                          ? 'bg-natillera-500 text-white'
-                          : 'bg-gray-100 text-gray-400'
-                      ]">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-bold text-sm text-gray-800">Valores diferentes</h4>
-                        <p class="text-xs text-gray-600">Valor individual por socio</p>
-                      </div>
-                      <div v-if="formActividad.tipoValores === 'diferentes'" class="flex-shrink-0">
-                        <div class="w-4 h-4 rounded-full bg-natillera-500 flex items-center justify-center">
-                          <svg class="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Campo único para valores iguales (también visible para rifa manual) -->
-              <div v-if="formActividad.tipoValores === 'iguales' || (formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual')">
-                <label class="label">Valor a pagar por socio *</label>
-                <div class="relative">
-                  <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
-                    $
+                <!-- Lista de socios (cuando se elige Diferentes) -->
+                <div v-else>
+                  <p class="text-xs text-slate-500 mb-2">Valor por socio</p>
+                  <div v-if="socios.length === 0" class="text-sm text-slate-500 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    No hay socios activos en esta natillera
                   </div>
-                  <input 
-                    :value="formatNumberWithSeparator(formActividad.valorIgual)"
-                    @input="handleValorIgualInput($event)"
-                    type="text" 
-                    inputmode="decimal"
-                    class="input-field pl-10 text-lg font-semibold"
-                    placeholder="50.000"
-                    pattern="[0-9.]*"
-                    @blur="aplicarValorIgual()"
-                  />
-                </div>
-                <p v-if="!(formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual')" class="text-xs text-gray-500 mt-2">
-                  Total a recaudar: <span class="font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</span>
-                  <span class="text-gray-400"> ({{ socios.length }} socios)</span>
-                </p>
-                <p v-else class="text-xs text-gray-500 mt-2">
-                  Este valor se asignará por defecto a cada número de rifa vendido
-                </p>
-              </div>
-
-              <!-- Lista de socios para valores diferentes (oculto para rifa manual) -->
-              <div v-else-if="!(formActividad.tipo === 'rifa' && formActividad.tipoRifa === 'manual')">
-                <label class="label mb-2 block">Valor a pagar por socio</label>
-                <div v-if="socios.length === 0" class="text-sm text-gray-500 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                  No hay socios activos en esta natillera
-                </div>
-                <div v-else class="space-y-3 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-xl">
-                  <div 
-                    v-for="socio in socios" 
-                    :key="socio.id"
-                    class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:border-natillera-300 transition-colors"
-                  >
-                    <div class="flex-1">
-                      <p class="font-semibold text-gray-800">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
-                      <p class="text-xs text-gray-500">{{ socio.socio?.telefono || '' }}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                      <div class="relative">
-                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold z-10">
-                          $
-                        </div>
+                  <div v-else class="space-y-2 max-h-48 overflow-y-auto p-1">
+                    <div v-for="socio in socios" :key="socio.id" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl border border-slate-200 bg-slate-50/30 hover:border-slate-300 hover:bg-slate-50/50 transition-colors">
+                      <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-sm text-slate-800">{{ socio.socio?.nombre || 'Sin nombre' }}</p>
+                        <p class="text-xs text-slate-500 truncate">{{ socio.socio?.telefono || '' }}</p>
+                      </div>
+                      <div class="relative w-full sm:w-28 flex-shrink-0">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium text-sm">$</span>
                         <input 
                           v-model.number="formActividad.valoresPorSocio[socio.id]"
                           type="number" 
-                          class="input-field pl-8 w-32 text-sm font-semibold"
+                          class="w-full pl-7 pr-3 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-natillera-500/30 min-h-[2.75rem] sm:w-28"
                           placeholder="0"
                           min="0"
                           step="0.01"
@@ -1480,31 +1292,20 @@
                       </div>
                     </div>
                   </div>
+                  <p class="text-xs text-slate-500 mt-2">Total: <span class="font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</span></p>
                 </div>
-                <p class="text-xs text-gray-500 mt-2">
-                  Total a recaudar: <span class="font-bold text-natillera-600">${{ formatMoney(totalARecaudar) }}</span>
-                </p>
               </div>
             </template>
           </form>
         </div>
 
-        <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <div class="flex gap-3">
-            <button 
-              type="button"
-              @click="modalNuevaActividad = false"
-              class="btn-secondary flex-1"
-            >
+        <!-- Footer -->
+        <div class="border-t border-natillera-200/80 bg-gradient-to-r from-white to-natillera-50/40 px-4 sm:px-5 py-4 flex-shrink-0">
+          <div class="flex flex-col-reverse sm:flex-row gap-3">
+            <button type="button" @click="modalNuevaActividad = false" class="w-full sm:flex-1 px-4 py-3.5 sm:py-2.5 rounded-xl border-2 border-natillera-200 bg-white text-slate-700 font-medium hover:bg-natillera-50/80 hover:border-natillera-300 transition-colors min-h-[2.75rem] active:scale-[0.98]">
               Cancelar
             </button>
-            <button 
-              type="button"
-              @click="handleCrearActividad" 
-              class="btn-accent flex-1"
-              :disabled="loading"
-            >
+            <button type="button" @click="handleCrearActividad" :disabled="loading" class="w-full sm:flex-1 px-4 py-3.5 sm:py-2.5 rounded-xl bg-gradient-to-r from-natillera-500 to-natillera-600 text-white font-semibold hover:from-natillera-600 hover:to-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-natillera-500/25 min-h-[2.75rem] active:scale-[0.98]">
               {{ loading ? 'Guardando...' : 'Guardar' }}
             </button>
           </div>
@@ -1548,11 +1349,17 @@
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
           <!-- Información general -->
-          <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="grid grid-cols-3 gap-4 mb-6" :class="{ 'sm:grid-cols-4': actividadSeleccionada.tipo === 'rifa' }">
             <div class="relative bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50/50 rounded-xl p-4 border border-amber-200/50">
               <p class="text-xs text-gray-500 font-medium mb-1">Fecha límite</p>
               <p class="font-bold text-amber-700 text-base">
                 {{ actividadSeleccionada.fecha_limite_pago ? formatDate(actividadSeleccionada.fecha_limite_pago) : 'No definida' }}
+              </p>
+            </div>
+            <div v-if="actividadSeleccionada.tipo === 'rifa'" class="relative bg-gradient-to-br from-natillera-50 via-emerald-50/50 to-teal-50/30 rounded-xl p-4 border border-natillera-200/50">
+              <p class="text-xs text-gray-500 font-medium mb-1">Fecha de juego</p>
+              <p class="font-bold text-natillera-700 text-base">
+                {{ actividadSeleccionada.fecha_juego_rifa ? formatDate(actividadSeleccionada.fecha_juego_rifa) : (actividadSeleccionada.cuando_juego_rifa ? etiquetaCuandoJuegoRifa(actividadSeleccionada.cuando_juego_rifa) : '—') }}
               </p>
             </div>
             <div class="relative bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50/50 rounded-xl p-4 border border-blue-200/50">
@@ -1715,13 +1522,13 @@
                 :key="socioAct.id"
                 class="p-4 bg-white rounded-xl border-2 transition-all"
                 :class="{
-                  'border-green-200 bg-green-50/30': socioAct.estado === 'pagado',
-                  'border-amber-200 bg-amber-50/30': socioAct.estado === 'parcial',
-                  'border-red-200 bg-red-50/30': socioAct.estado === 'mora',
-                  'border-gray-200 bg-gray-50/30': socioAct.estado === 'pendiente'
+                  'border-green-200 bg-green-50/30': getEstadoDisplaySocio(socioAct) === 'pagado',
+                  'border-amber-200 bg-amber-50/30': getEstadoDisplaySocio(socioAct) === 'parcial',
+                  'border-red-200 bg-red-50/30': getEstadoDisplaySocio(socioAct) === 'mora',
+                  'border-gray-200 bg-gray-50/30': getEstadoDisplaySocio(socioAct) === 'pendiente'
                 }"
               >
-                <!-- Header: Nombre y Badge (móvil y desktop) -->
+                <!-- Header: Nombre y Badge (móvil y desktop). En rifa aleatoria el estado se deriva de los números para coincidir con Valor pagado/Saldo -->
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-gray-800 truncate">{{ socioAct.socio_natillera?.socio?.nombre || 'Sin nombre' }}</p>
@@ -1731,13 +1538,13 @@
                     <span 
                       class="inline-block px-3 py-1.5 rounded-full text-xs font-bold shadow-sm whitespace-nowrap"
                       :class="{
-                        'bg-green-100 text-green-700 border border-green-200': socioAct.estado === 'pagado',
-                        'bg-amber-100 text-amber-700 border border-amber-200': socioAct.estado === 'parcial',
-                        'bg-red-100 text-red-700 border border-red-200': socioAct.estado === 'mora',
-                        'bg-gray-100 text-gray-700 border border-gray-200': socioAct.estado === 'pendiente'
+                        'bg-green-100 text-green-700 border border-green-200': getEstadoDisplaySocio(socioAct) === 'pagado',
+                        'bg-amber-100 text-amber-700 border border-amber-200': getEstadoDisplaySocio(socioAct) === 'parcial',
+                        'bg-red-100 text-red-700 border border-red-200': getEstadoDisplaySocio(socioAct) === 'mora',
+                        'bg-gray-100 text-gray-700 border border-gray-200': getEstadoDisplaySocio(socioAct) === 'pendiente'
                       }"
                     >
-                      {{ getEstadoLabel(socioAct.estado) }}
+                      {{ getEstadoLabel(getEstadoDisplaySocio(socioAct)) }}
                     </span>
                   </div>
                 </div>
@@ -1974,6 +1781,21 @@
             </div>
           </div>
 
+          <!-- Número ganador (para mostrar ganador al abrir la rifa liquidada) -->
+          <div>
+            <label class="label mb-2 block">Número ganador *</label>
+            <input 
+              v-model="formLiquidar.numeroGanador"
+              type="text" 
+              inputmode="numeric"
+              maxlength="2"
+              class="input-field text-center text-xl font-bold tracking-[0.3em]"
+              placeholder="00"
+              @input="formLiquidar.numeroGanador = formLiquidar.numeroGanador.replace(/\D/g, '').slice(0, 2)"
+            />
+            <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99)</p>
+          </div>
+
           <!-- Utilidad calculada -->
           <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
             <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 to-indigo-200/20 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
@@ -1996,7 +1818,7 @@
           </button>
           <button 
             @click="guardarLiquidacion"
-            :disabled="loading || !formLiquidar.premioEntregado || formLiquidar.premioEntregado <= 0"
+            :disabled="loading || !formLiquidar.premioEntregado || formLiquidar.premioEntregado <= 0 || !numeroGanadorValido"
             class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ loading ? 'Liquidando...' : 'Liquidar' }}
@@ -2090,6 +1912,187 @@
             class="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ loading ? 'Liquidando...' : 'Liquidar de todas formas' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ganador Rifa (rifa liquidada) -->
+    <div v-if="modalGanadorRifa && actividadSeleccionada" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-modal="ganador-rifa">
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalGanadorRifa = false"></div>
+      <div class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 sm:animate-none">
+        <!-- Header con gradiente dorado/celebration -->
+        <div class="relative bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-6 sm:p-8 text-white overflow-hidden">
+          <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-0 left-1/4 w-32 h-32 bg-white rounded-full blur-2xl"></div>
+            <div class="absolute bottom-0 right-1/4 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+          </div>
+          <div class="relative z-10 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/25 backdrop-blur-sm rounded-2xl border-2 border-white/40 mb-4 shadow-lg">
+              <span class="text-3xl sm:text-4xl">🏆</span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-display font-bold tracking-tight drop-shadow-sm">
+              ¡Rifa liquidada!
+            </h2>
+            <p class="text-white/95 text-sm sm:text-base mt-1 font-medium truncate px-2">
+              {{ actividadSeleccionada.descripcion }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Contenido: número ganador + ganador -->
+        <div class="p-6 sm:p-8 space-y-6">
+          <!-- Número ganador grande -->
+          <div v-if="actividadSeleccionada.numero_ganador != null && actividadSeleccionada.numero_ganador !== ''" class="text-center">
+            <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Número ganador</p>
+            <div class="inline-flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-200 border-2 border-amber-300 shadow-lg shadow-amber-200/50">
+              <span class="text-4xl sm:text-5xl font-black text-amber-800 tracking-widest">
+                {{ String(actividadSeleccionada.numero_ganador).padStart(2, '0') }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Caso: número ganador lo tenía un Faltante → gana la natillera -->
+          <div v-if="actividadSeleccionada.ganador_es_faltante" class="text-center">
+            <div class="inline-flex flex-col items-center gap-4 p-6 rounded-2xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-lg">
+              <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center shadow-xl ring-4 ring-natillera-200">
+                <span class="text-4xl sm:text-5xl">🏦</span>
+              </div>
+              <div class="space-y-2">
+                <p class="font-display font-bold text-xl sm:text-2xl text-natillera-800">
+                  ¡Gana la natillera!
+                </p>
+                <p class="text-sm sm:text-base text-gray-600 max-w-xs leading-relaxed">
+                  Este número no estaba asignado a un socio todavía. El premio y la utilidad se suman al fondo de la natillera.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ganador: socio con avatar -->
+          <div v-else-if="actividadSeleccionada.ganador_nombre && !actividadSeleccionada.ganador_es_faltante" class="text-center">
+            <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Ganador / Ganadora</p>
+            <div class="flex flex-col items-center gap-3">
+              <div class="relative">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-amber-200 shadow-xl overflow-hidden bg-gray-100">
+                  <img 
+                    :src="getAvatarUrl(actividadSeleccionada.ganador_nombre, null, 'adventurer')" 
+                    :alt="actividadSeleccionada.ganador_nombre"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow">
+                  <span class="text-white text-sm">✓</span>
+                </div>
+              </div>
+              <p class="font-display font-bold text-lg sm:text-xl text-gray-800">
+                {{ actividadSeleccionada.ganador_nombre }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Sin datos de ganador (rifas liquidadas antes de esta función) -->
+          <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-4">
+            <p class="text-sm text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 bg-gray-50 p-4 sm:p-5">
+          <button 
+            @click="modalGanadorRifa = false"
+            class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Ver ganadores (grupo de rifas) -->
+    <div v-if="grupoGanadoresSeleccionado" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-modal="ver-ganadores-grupo">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="grupoGanadoresSeleccionado = null"></div>
+      <div class="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:animate-none max-h-[90vh] flex flex-col">
+        <!-- Header -->
+        <div class="relative bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 px-4 py-3 text-white flex-shrink-0 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center flex-shrink-0"><span class="text-xl">🏆</span></div>
+          <div class="min-w-0 flex-1">
+            <h2 class="text-base font-bold">Ganadores del grupo</h2>
+            <p class="text-white/95 text-sm line-clamp-2">{{ grupoGanadoresSeleccionado?.descripcionBase }}</p>
+          </div>
+          <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 flex-shrink-0">{{ (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length }} rifa{{ (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <!-- Lista -->
+        <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 min-h-0">
+          <div v-if="!(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length" class="text-center py-8 text-gray-500 text-sm">No hay rifas en este grupo.</div>
+          <template v-else v-for="actividad in (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa')" :key="actividad.id">
+            <div class="rounded-xl border border-amber-200/70 bg-amber-50/60 overflow-hidden">
+              <div class="px-3 py-2 border-b border-amber-100/80">
+                <p class="text-sm font-semibold text-gray-800 line-clamp-2">{{ actividad.descripcion }}</p>
+              </div>
+              <div class="px-3 py-2 flex flex-wrap items-stretch gap-3">
+                <!-- Info ganador / estado (izq) -->
+                <div class="min-w-0 flex-1 flex items-center gap-2">
+                  <template v-if="actividad.estado !== 'liquidada'">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0"></span>
+                    <span class="text-sm text-slate-500">Pendiente de liquidar</span>
+                  </template>
+                  <template v-else-if="actividad.numero_ganador == null || actividad.numero_ganador === ''">
+                    <span class="text-sm text-slate-500 italic">Datos del ganador no registrados</span>
+                  </template>
+                  <template v-else>
+                    <div v-if="actividad.ganador_es_faltante" class="w-9 h-9 rounded-lg bg-natillera-200 flex items-center justify-center text-base flex-shrink-0">🏦</div>
+                    <img v-else :src="getAvatarUrl(actividad.ganador_nombre || '', null, 'adventurer')" :alt="actividad.ganador_nombre" class="w-9 h-9 rounded-full ring-2 ring-amber-200 object-cover flex-shrink-0" />
+                    <div class="min-w-0">
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-900 font-bold">Nº {{ String(actividad.numero_ganador).padStart(2, '0') }}</span>
+                      <p class="text-sm font-semibold text-gray-800 truncate mt-0.5">{{ actividad.ganador_es_faltante ? '¡Gana la natillera!' : (actividad.ganador_nombre || 'Desconocido') }}</p>
+                    </div>
+                  </template>
+                </div>
+                <!-- Resultados R/E/N (derecha, al frente) -->
+                <div v-if="actividad.estado === 'liquidada' && ((actividad.ingresos ?? 0) || (actividad.gastos ?? 0) || (actividad.utilidad ?? 0))" class="grid grid-cols-3 gap-2 text-center shrink-0">
+                  <div class="rounded-lg bg-emerald-50 border border-emerald-200/70 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-emerald-600 uppercase">Recogido</p>
+                    <p class="text-xs font-bold text-gray-800">${{ formatMoney(actividad.ingresos || 0) }}</p>
+                  </div>
+                  <div class="rounded-lg bg-amber-50 border border-amber-200/70 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-amber-600 uppercase">Entregado</p>
+                    <p class="text-xs font-bold text-gray-800">${{ formatMoney(actividad.gastos || 0) }}</p>
+                  </div>
+                  <div class="rounded-lg bg-natillera-50 border border-natillera-200/70 py-1.5 px-2">
+                    <p class="text-[10px] font-semibold text-natillera-600 uppercase">Natillera</p>
+                    <p class="text-xs font-bold text-natillera-700">${{ formatMoney(actividad.utilidad || 0) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Totalizador -->
+        <div v-if="(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada').length" class="flex-shrink-0 border-t border-amber-200/60 bg-amber-50/80 px-3 py-3">
+          <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">Totales (rifas liquidadas)</p>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="rounded-xl bg-emerald-50 border border-emerald-200/70 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-emerald-600 uppercase">Recogido</p>
+              <p class="text-sm font-bold text-gray-900">${{ formatMoney(totalesGanadoresGrupo.recogido) }}</p>
+            </div>
+            <div class="rounded-xl bg-amber-50 border border-amber-200/70 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-amber-600 uppercase">Entregado</p>
+              <p class="text-sm font-bold text-gray-900">${{ formatMoney(totalesGanadoresGrupo.entregado) }}</p>
+            </div>
+            <div class="rounded-xl bg-natillera-50 border border-natillera-200/70 px-2 py-2 text-center">
+              <p class="text-[10px] font-bold text-natillera-600 uppercase">Natillera</p>
+              <p class="text-sm font-bold text-natillera-700">${{ formatMoney(totalesGanadoresGrupo.natillera) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-200 p-3 flex-shrink-0">
+          <button @click="grupoGanadoresSeleccionado = null" class="w-full py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-natillera-500 to-emerald-600 text-white hover:from-natillera-600 hover:to-emerald-700 transition-colors">
+            Cerrar
           </button>
         </div>
       </div>
@@ -2667,7 +2670,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
@@ -2688,6 +2691,7 @@ import {
   SparklesIcon,
   ClipboardDocumentListIcon,
   CurrencyDollarIcon,
+  BanknotesIcon,
   TrashIcon,
   InformationCircleIcon,
   PencilSquareIcon,
@@ -2695,7 +2699,11 @@ import {
   UserPlusIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  ArrowDownTrayIcon
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  TrophyIcon,
+  GiftIcon,
+  BuildingLibraryIcon
 } from '@heroicons/vue/24/outline'
 import * as XLSX from 'xlsx-js-style'
 
@@ -2711,6 +2719,9 @@ const id = props.id || route.params.id
 const actividades = ref([])
 const loading = ref(false)
 const modalNuevaActividad = ref(false)
+const dropdownTipoActividad = ref(false)
+const dropdownTipoActividadRef = ref(null)
+const dropdownTipoActividadStyle = ref({})
 const modalDetalleActividad = ref(false)
 const actividadSeleccionada = ref(null)
 const sociosActividad = ref([])
@@ -2733,6 +2744,8 @@ const modalLiquidarActividad = ref(false)
 const vistaAgrupada = ref(true) // true = vista agrupada, false = vista normal
 const gruposExpandidos = ref({}) // Objeto { serieId: true/false } para rastrear grupos expandidos
 const modalConfirmarLiquidacionNegativa = ref(false)
+const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganador + ganador
+const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
 const modalAsignarFaltante = ref(false)
 const faltanteSeleccionado = ref(null)
 const socioSeleccionadoParaFaltante = ref('')
@@ -2749,7 +2762,8 @@ const formVentaRifa = reactive({
   yaPago: false
 })
 const formLiquidar = reactive({
-  premioEntregado: 0
+  premioEntregado: 0,
+  numeroGanador: '' // Número ganador de la rifa (00-99) para mostrar en modal ganador
 })
 const formPagarRifa = reactive({
   numero: '',
@@ -2766,7 +2780,27 @@ useBodyScrollLock(modalVentaRifa)
 useBodyScrollLock(modalPagarRifa)
 useBodyScrollLock(modalLiquidarActividad)
 useBodyScrollLock(modalConfirmarLiquidacionNegativa)
+useBodyScrollLock(modalGanadorRifa)
+useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
 useBodyScrollLock(modalAsignarFaltante)
+
+// Opciones para el dropdown de tipo de actividad (ítems estilizados)
+const opcionesTipoActividad = [
+  { value: 'rifa', label: 'Rifa', icon: TicketIcon, bgIcon: 'bg-natillera-500', textColor: 'text-natillera-700', desc: 'Números y sorteos' },
+  { value: 'bingo', label: 'Bingo', icon: SparklesIcon, bgIcon: 'bg-amber-500', textColor: 'text-amber-700', desc: 'Juego de azar' },
+  { value: 'venta', label: 'Venta', icon: ShoppingBagIcon, bgIcon: 'bg-blue-500', textColor: 'text-blue-700', desc: 'Venta de productos' },
+  { value: 'evento', label: 'Evento', icon: CalendarIcon, bgIcon: 'bg-purple-500', textColor: 'text-purple-700', desc: 'Eventos y celebraciones' },
+  { value: 'otro', label: 'Otro', icon: ClipboardDocumentListIcon, bgIcon: 'bg-slate-500', textColor: 'text-slate-700', desc: 'Otra actividad' }
+]
+
+// Opciones para cuándo se juega la rifa (solo actividades tipo rifa en curso)
+const opcionesCuandoJuegoRifa = [
+  { value: 'primera_quincena', label: 'Primera quincena' },
+  { value: 'segunda_quincena', label: 'Segunda quincena' },
+  { value: 'viernes_despues_primera', label: 'Viernes después de la 1ª quincena' },
+  { value: 'viernes_despues_segunda', label: 'Viernes después de la 2ª quincena' },
+  { value: 'fecha_especifica', label: 'Fecha específica' }
+]
 
 // Configuración de meses
 const meses = [
@@ -2810,13 +2844,18 @@ const formActividad = reactive({
   // Campos legacy para compatibilidad (se mantienen pero se derivan de periodoSeleccionado)
   mesPago: new Date().getMonth() + 1, // Mes actual (1-12) - se actualiza desde periodoSeleccionado
   anioPago: new Date().getFullYear(), // Se actualiza desde periodoSeleccionado
-  // Campo para múltiples meses
-  actividadMultiplesMeses: false, // false = un solo mes (por defecto), true = varios meses
+  // Campo para múltiples meses (esMultiplesMeses usado en template; actividadMultiplesMeses legacy)
+  esMultiplesMeses: false,
+  actividadMultiplesMeses: false,
   mesesSeleccionados: [], // Array de objetos { mes, anio } para múltiples meses
   // Campo para tipo de rifa
   tipoRifa: null, // 'manual' o 'aleatoria', solo aplica cuando tipo === 'rifa'
   // Campo para cantidad de números por socio (solo para rifa automática)
-  cantidadNumerosPorSocio: null
+  cantidadNumerosPorSocio: null,
+  // Fecha de juego de la rifa (solo tipo rifa, en curso)
+  cuandoJuegoRifa: null, // 'primera_quincena' | 'segunda_quincena' | 'viernes_despues_primera' | 'viernes_despues_segunda' | 'fecha_especifica'
+  fechaJuegoRifa: '', // fecha YYYY-MM-DD cuando un solo mes y fecha_especifica
+  fechasJuegoPorMes: {} // { 'mes-anio': 'YYYY-MM-DD' } cuando múltiples meses y fecha_especifica
 })
 
 const totalIngresos = computed(() => 
@@ -2832,15 +2871,27 @@ const totalGastos = computed(() =>
   actividades.value.reduce((sum, a) => sum + (a.gastos || 0), 0)
 )
 
+// Solo las rifas dependen de "liquidar" para sumar a utilidad; el resto al pagarse suma.
+// Las rifas en curso: lo recaudado se ve en el acumulado de la actividad, no en utilidades.
 const utilidadTotal = computed(() => 
   actividades.value.reduce((sum, a) => {
-    if (a.estado === 'en_curso') {
-      // Para actividades en curso, la utilidad es lo recaudado menos gastos (si los hay)
-      return sum + ((a.total_pagado || 0) - (a.gastos || 0))
-    }
+    if (a.estado === 'liquidada') return sum + (a.utilidad || 0)
+    if (a.estado === 'en_curso' && a.tipo === 'rifa') return sum
+    if (a.estado === 'en_curso') return sum + ((a.total_pagado || 0) - (a.gastos || 0))
     return sum + (a.utilidad || 0)
   }, 0)
 )
+
+const totalesGanadoresGrupo = computed(() => {
+  const g = grupoGanadoresSeleccionado.value
+  if (!g?.actividades) return { recogido: 0, entregado: 0, natillera: 0 }
+  const rifas = (g.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada')
+  return {
+    recogido: rifas.reduce((s, a) => s + (parseFloat(a.ingresos) || 0), 0),
+    entregado: rifas.reduce((s, a) => s + (parseFloat(a.gastos) || 0), 0),
+    natillera: rifas.reduce((s, a) => s + (parseFloat(a.utilidad) || 0), 0)
+  }
+})
 
 const totalARecaudar = computed(() => {
   if (formActividad.tipoProceso === 'en_curso' && formActividad.tipoValores === 'iguales') {
@@ -3018,13 +3069,22 @@ function getNumerosAsignadosSocio(socioId) {
   return numerosAsignadosPorSocio.value[socioId] || []
 }
 
-// Función para calcular valores de un socio en rifa automática
+// Función para calcular valores de un socio en rifa automática.
+// Valor pagado considera ambos: lo registrado por número (numeros_rifa.estado) y lo registrado por socio (socios_actividad.valor_pagado),
+// así si el socio pagó a nivel de socio, se muestra correctamente.
 function getValoresSocioRifaAutomatica(socioAct) {
   const numeros = getNumerosAsignadosSocio(socioAct.socio_natillera_id)
   const valorAPagar = numeros.reduce((sum, n) => sum + (n.valor || 0), 0)
-  const valorPagado = numeros
+  const valorPagadoPorNumeros = numeros
     .filter(n => n.estado === 'pagado')
     .reduce((sum, n) => sum + (n.valor || 0), 0)
+  const valorPagadoSocio = Number(socioAct.valor_pagado) || 0
+  // Si el socio está marcado como pagado pero no hay valor en números ni en valor_pagado, considerar pago completo
+  const pagadoPorEstado = socioAct.estado === 'pagado' && valorAPagar > 0 ? valorAPagar : 0
+  const valorPagado = Math.min(
+    valorAPagar,
+    Math.max(valorPagadoPorNumeros, valorPagadoSocio, pagadoPorEstado)
+  )
   const saldo = valorAPagar - valorPagado
   
   return {
@@ -3033,6 +3093,18 @@ function getValoresSocioRifaAutomatica(socioAct) {
     valorPagado,
     saldo
   }
+}
+
+// Para rifa aleatoria: estado mostrado según números (valor pagado vs valor a pagar), así el badge coincide con Valor pagado/Saldo
+function getEstadoDisplaySocio(socioAct) {
+  if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'aleatoria') {
+    const { valorAPagar, valorPagado, saldo } = getValoresSocioRifaAutomatica(socioAct)
+    if (valorAPagar <= 0) return socioAct.estado || 'pendiente'
+    if (saldo <= 0) return 'pagado'
+    if (valorPagado > 0) return 'parcial'
+    return 'pendiente'
+  }
+  return socioAct.estado || 'pendiente'
 }
 
 // Función para verificar si un socio tiene el número buscado
@@ -3133,6 +3205,14 @@ const utilidadLiquidar = computed(() => {
   return recaudado - premio
 })
 
+// Número ganador válido (1 o 2 dígitos, 0-99) para liquidar rifa
+const numeroGanadorValido = computed(() => {
+  const n = String(formLiquidar.numeroGanador || '').replace(/\D/g, '')
+  if (n.length === 0) return false
+  const num = parseInt(n, 10)
+  return num >= 0 && num <= 99
+})
+
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
@@ -3150,6 +3230,26 @@ function parseNumberWithSeparator(value) {
   const numStr = String(value).replace(/\./g, '')
   const num = parseFloat(numStr) || 0
   return num
+}
+
+// Formatear valor para input: miles con punto, decimales con coma (es-CO)
+function formatMilesInput(value) {
+  if (value === null || value === undefined || value === '') return ''
+  const num = Number(value)
+  if (isNaN(num)) return ''
+  const [intPart, decPart] = num.toFixed(2).split('.')
+  const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  const decTrimmed = decPart.replace(/0+$/, '')
+  if (!decTrimmed) return formattedInt
+  return formattedInt + ',' + decTrimmed
+}
+
+// Parsear valor de input con punto como miles y coma como decimal
+function parseMilesInput(str) {
+  if (!str || typeof str !== 'string') return 0
+  const cleaned = str.trim().replace(/\./g, '').replace(',', '.')
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? 0 : num
 }
 
 function formatMoneyCompact(value) {
@@ -3492,27 +3592,48 @@ async function exportarGrupoAExcel(grupo) {
       const mesesPresentes = new Set()
       const sociosUnicos = new Map() // Map<socio_id, {nombre, numerosPorMes}>
       
-      // Obtener todos los datos de una vez
+      // Obtener todos los datos de una vez (con paginación para evitar límite de 1000 filas de Supabase)
       const actividadesIds = grupo.actividades.map(a => a.id)
-      
-      // Obtener todos los socios_actividad
-      const { data: todosSociosActividad } = await supabase
-        .from('socios_actividad')
-        .select(`
+      const PAGE_SIZE = 1000
+
+      // Helper: traer todas las filas paginando (Supabase limita 1000 filas por defecto)
+      async function fetchAllRows (table, selectQuery) {
+        const all = []
+        let from = 0
+        let hasMore = true
+        while (hasMore) {
+          const to = from + PAGE_SIZE - 1
+          const query = supabase
+            .from(table)
+            .select(selectQuery)
+            .in('actividad_id', actividadesIds)
+            .order('id', { ascending: true })
+            .range(from, to)
+          const { data, error } = await query
+          if (error) throw error
+          if (!data || data.length === 0) break
+          all.push(...data)
+          hasMore = data.length === PAGE_SIZE
+          from += PAGE_SIZE
+        }
+        return all
+      }
+
+      // Obtener todos los socios_actividad (todas las páginas)
+      const todosSociosActividad = await fetchAllRows(
+        'socios_actividad',
+        `
           *,
           actividad:actividades(id, mes_pago),
           socio_natillera:socios_natillera(
             *,
             socio:socios(*)
           )
-        `)
-        .in('actividad_id', actividadesIds)
-      
-      // Obtener todos los números de rifa
-      const { data: todosNumerosRifa } = await supabase
-        .from('numeros_rifa')
-        .select('*')
-        .in('actividad_id', actividadesIds)
+        `
+      )
+
+      // Obtener todos los números de rifa (todas las páginas)
+      const todosNumerosRifa = await fetchAllRows('numeros_rifa', '*')
       
       // Procesar datos
       if (todosSociosActividad && todosSociosActividad.length > 0) {
@@ -3981,7 +4102,17 @@ function abrirModalLiquidar() {
     return
   }
   formLiquidar.premioEntregado = 0
+  formLiquidar.numeroGanador = ''
   modalLiquidarActividad.value = true
+}
+
+function abrirModalGanadorRifa(actividad) {
+  actividadSeleccionada.value = actividad
+  modalGanadorRifa.value = true
+}
+
+function abrirModalGanadoresGrupo(grupo) {
+  grupoGanadoresSeleccionado.value = grupo
 }
 
 async function guardarLiquidacion() {
@@ -4012,16 +4143,50 @@ async function confirmarLiquidacion() {
   try {
     const totalRecaudado = totalRecaudadoLiquidar.value
     const premioEntregado = formLiquidar.premioEntregado
-    const utilidad = utilidadLiquidar.value
+    const utilidadNormal = utilidadLiquidar.value
+    const numeroGanador = String(formLiquidar.numeroGanador || '').replace(/\D/g, '').padStart(2, '0')
 
-    // 1. Actualizar la actividad a estado "liquidada" y guardar ingresos, gastos y utilidad
+    // Obtener ganador desde numeros_rifa (socio o Faltante)
+    let ganadorNombre = 'Desconocido'
+    let ganadorSocioNatilleraId = null
+    let ganadorEsFaltante = false
+    let utilidadFinal = utilidadNormal
+    let gastosFinal = premioEntregado
+
+    const { data: numeroGanadorData } = await supabase
+      .from('numeros_rifa')
+      .select('id, nombre_comprador, socio_vendedor_id, socio_vendedor:socios_natillera(socio:socios(nombre))')
+      .eq('actividad_id', actividadSeleccionada.value.id)
+      .eq('numero', numeroGanador)
+      .maybeSingle()
+
+    if (numeroGanadorData) {
+      const esFaltante = numeroGanadorData.nombre_comprador && String(numeroGanadorData.nombre_comprador).trim().toLowerCase().startsWith('faltante')
+      if (esFaltante) {
+        ganadorEsFaltante = true
+        ganadorNombre = 'Natillera'
+        ganadorSocioNatilleraId = null
+        // Premio + utilidad pasan a la natillera: utilidad = total recaudado, gastos = 0
+        utilidadFinal = totalRecaudado
+        gastosFinal = 0
+      } else {
+        ganadorNombre = numeroGanadorData.nombre_comprador || numeroGanadorData.socio_vendedor?.socio?.nombre || 'Desconocido'
+        ganadorSocioNatilleraId = numeroGanadorData.socio_vendedor_id || null
+      }
+    }
+
+    // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad y ganador
     const { error: errorActividad } = await supabase
       .from('actividades')
       .update({
         estado: 'liquidada',
         ingresos: totalRecaudado,
-        gastos: premioEntregado,
-        utilidad: utilidad
+        gastos: gastosFinal,
+        utilidad: utilidadFinal,
+        numero_ganador: numeroGanador,
+        ganador_nombre: ganadorNombre,
+        ganador_socio_natillera_id: ganadorSocioNatilleraId,
+        ganador_es_faltante: ganadorEsFaltante
       })
       .eq('id', actividadSeleccionada.value.id)
 
@@ -4040,16 +4205,17 @@ async function confirmarLiquidacion() {
     if (errorBuscar) throw errorBuscar
 
     if (utilidadExistente) {
-      // Actualizar el registro existente
+      // Actualizar el registro existente (utilidadFinal = totalRecaudado cuando ganó Faltante)
       const { error: errorUpdate } = await supabase
         .from('utilidades_clasificadas')
         .update({
-          monto: utilidad,
+          monto: utilidadFinal,
           descripcion: `Utilidad de rifa: ${actividadSeleccionada.value.descripcion}`,
           detalles: {
             actividad_id: actividadSeleccionada.value.id,
             total_recaudado: totalRecaudado,
-            premio_entregado: premioEntregado,
+            premio_entregado: gastosFinal,
+            ganador_es_faltante: ganadorEsFaltante,
             fecha_liquidacion: new Date().toISOString()
           },
           updated_at: new Date().toISOString()
@@ -4065,13 +4231,14 @@ async function confirmarLiquidacion() {
           natillera_id: actividadSeleccionada.value.natillera_id,
           tipo: 'rifas',
           id_actividad: actividadSeleccionada.value.id,
-          monto: utilidad,
+          monto: utilidadFinal,
           fecha_cierre: null,
           descripcion: `Utilidad de rifa: ${actividadSeleccionada.value.descripcion}`,
           detalles: {
             actividad_id: actividadSeleccionada.value.id,
             total_recaudado: totalRecaudado,
-            premio_entregado: premioEntregado,
+            premio_entregado: gastosFinal,
+            ganador_es_faltante: ganadorEsFaltante,
             fecha_liquidacion: new Date().toISOString()
           }
         })
@@ -4363,6 +4530,9 @@ function resetearFormularioPorTipo() {
     formActividad.quincenaPago = null
     formActividad.esMultiplesMeses = false
     formActividad.mesesSeleccionados = []
+    formActividad.cuandoJuegoRifa = null
+    formActividad.fechaJuegoRifa = ''
+    formActividad.fechasJuegoPorMes = {}
   } else {
     formActividad.ingresos = 0
     formActividad.gastos = 0
@@ -4374,6 +4544,10 @@ function resetearFormularioPorTipo() {
     formActividad.quincenaPago = null
     formActividad.esMultiplesMeses = false
     formActividad.mesesSeleccionados = []
+    formActividad.cuandoJuegoRifa = null
+    formActividad.fechaJuegoRifa = ''
+    formActividad.fechasJuegoPorMes = {}
+    if (formActividad.tipo === 'rifa') formActividad.tipoRifa = 'manual'
     // Cargar socios siempre para asegurar que estén actualizados
     fetchSocios().then(() => {
       // Calcular fecha límite después de cargar socios
@@ -4409,14 +4583,14 @@ function limpiarValorIgual() {
   })
 }
 
-// Función para obtener la natillera
+// Función para obtener la natillera (maybeSingle evita 406 cuando no hay fila)
 async function fetchNatillera() {
   try {
     const { data, error } = await supabase
       .from('natilleras')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
     natillera.value = data
@@ -4556,7 +4730,7 @@ function toggleMesSeleccionado(mes, anio) {
   }
 }
 
-// Función para marcar todos los meses
+// Función para marcar todos los meses (asignar nuevo array para forzar reactividad)
 function marcarTodosMeses() {
   if (!natillera.value || mesesDelPeriodo.value.length === 0) return
   
@@ -4572,23 +4746,14 @@ function marcarTodosMeses() {
     ? (haySociosMensuales ? 2 : (quincena || 1))
     : null
   
-  // Agregar todos los meses que no estén ya seleccionados
-  mesesDelPeriodo.value.forEach(mesPeriodo => {
-    const yaEstaSeleccionado = formActividad.mesesSeleccionados.some(
-      m => m.mes === mesPeriodo.mes && m.anio === mesPeriodo.anio
-    )
-    
-    if (!yaEstaSeleccionado) {
-      formActividad.mesesSeleccionados.push({
-        mes: mesPeriodo.mes,
-        anio: mesPeriodo.anio,
-        quincena: quincenaFinal
-      })
-    }
-  })
+  formActividad.mesesSeleccionados = mesesDelPeriodo.value.map(mesPeriodo => ({
+    mes: mesPeriodo.mes,
+    anio: mesPeriodo.anio,
+    quincena: quincenaFinal
+  }))
 }
 
-// Función para desmarcar todos los meses
+// Función para desmarcar todos los meses (asignar nuevo array para forzar reactividad)
 function desmarcarTodosMeses() {
   formActividad.mesesSeleccionados = []
 }
@@ -4628,17 +4793,15 @@ function calcularFechaLimitePago() {
     return
   }
 
-  // Obtener último día del mes
-  const obtenerUltimoDia = (mes, anio) => {
-    return new Date(anio, mes, 0).getDate()
-  }
+  // Día límite segunda quincena/mensual: siempre 30, excepto febrero (28 o 29)
+  const diaLimiteSegundaQuincena = (mes, anio) => (mes === 2 ? new Date(anio, 2, 0).getDate() : 30)
 
   // Formatear fecha
   const formatearFecha = (anio, mes, dia) => {
     return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
   }
 
-  let diaPago = obtenerUltimoDia(mes, anio)
+  let diaPago = diaLimiteSegundaQuincena(mes, anio)
 
   // Si la natillera es quincenal
   if (natillera.value && natillera.value.periodicidad === 'quincenal') {
@@ -4646,7 +4809,7 @@ function calcularFechaLimitePago() {
     if (formActividad.quincenaPago === 1) {
       diaPago = 15
     } else if (formActividad.quincenaPago === 2) {
-      diaPago = obtenerUltimoDia(mes, anio)
+      diaPago = diaLimiteSegundaQuincena(mes, anio)
     } else {
       // Si no hay quincena seleccionada, verificar si hay socios mensuales
       // Verificar si hay socios con periodicidad mensual
@@ -4655,8 +4818,8 @@ function calcularFechaLimitePago() {
       )
       
       if (haySociosMensuales) {
-        // Para socios mensuales, usar segunda quincena (último día del mes)
-        diaPago = obtenerUltimoDia(mes, anio)
+        // Para socios mensuales, usar segunda quincena (día límite 30 o 28/29 feb)
+        diaPago = diaLimiteSegundaQuincena(mes, anio)
         formActividad.quincenaPago = 2
       } else {
         // Si no hay socios mensuales o no hay socios, usar primera quincena por defecto
@@ -4665,12 +4828,49 @@ function calcularFechaLimitePago() {
       }
     }
   } else {
-    // Si la natillera es mensual, usar último día del mes
+    // Si la natillera es mensual, usar día límite (30 o 28/29 feb)
     formActividad.quincenaPago = null
-    diaPago = obtenerUltimoDia(mes, anio)
+    diaPago = diaLimiteSegundaQuincena(mes, anio)
   }
 
   formActividad.fechaLimitePago = formatearFecha(anio, mes, diaPago)
+}
+
+/** Calcula la fecha de juego de la rifa según el preset y mes/año. Devuelve YYYY-MM-DD o null si preset es fecha_especifica. */
+function calcularFechaJuegoRifa(cuandoJuegoRifa, mes, anio) {
+  if (!cuandoJuegoRifa || cuandoJuegoRifa === 'fecha_especifica') return null
+  const formatear = (a, m, d) => `${a}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+  // Día límite segunda quincena: 30, o 28/29 en febrero
+  const diaLimite = (m, a) => (m === 2 ? new Date(a, 2, 0).getDate() : 30)
+  const diaSemana = (a, m, d) => new Date(a, m - 1, d).getDay() // 0=dom, 5=viernes
+
+  if (cuandoJuegoRifa === 'primera_quincena') {
+    return formatear(anio, mes, 15)
+  }
+  if (cuandoJuegoRifa === 'segunda_quincena') {
+    return formatear(anio, mes, diaLimite(mes, anio))
+  }
+  if (cuandoJuegoRifa === 'viernes_despues_primera') {
+    for (let d = 15; d <= diaLimite(mes, anio); d++) {
+      if (diaSemana(anio, mes, d) === 5) return formatear(anio, mes, d)
+    }
+    return null
+  }
+  if (cuandoJuegoRifa === 'viernes_despues_segunda') {
+    const mesSiguiente = mes === 12 ? 1 : mes + 1
+    const anioSiguiente = mes === 12 ? anio + 1 : anio
+    for (let d = 1; d <= 7; d++) {
+      if (diaSemana(anioSiguiente, mesSiguiente, d) === 5) return formatear(anioSiguiente, mesSiguiente, d)
+    }
+    return null
+  }
+  return null
+}
+
+/** Etiqueta legible del preset de fecha de juego (para mostrar en detalle). */
+function etiquetaCuandoJuegoRifa(cuandoJuegoRifa) {
+  const o = opcionesCuandoJuegoRifa.find(x => x.value === cuandoJuegoRifa)
+  return o ? o.label : (cuandoJuegoRifa || '—')
 }
 
 async function handleCrearActividad() {
@@ -4735,8 +4935,15 @@ async function handleCrearActividad() {
         }
       }
       
-      // Si es rifa manual, no se requieren valores por socio
-      if (!esRifaManual) {
+      // Validar valor: no permitir actividades con valor 0
+      if (esRifaManual) {
+        // Rifa manual: el valor por número debe ser mayor a cero
+        if (!formActividad.valorIgual || Number(formActividad.valorIgual) <= 0) {
+          loading.value = false
+          notificationStore.error('El valor por número debe ser mayor a cero', 'Error')
+          return
+        }
+      } else {
         // Verificar que haya socios activos
         if (socios.value.length === 0) {
           loading.value = false
@@ -4745,21 +4952,27 @@ async function handleCrearActividad() {
         }
         
         if (formActividad.tipoValores === 'iguales') {
-          if (!formActividad.valorIgual || formActividad.valorIgual <= 0) {
+          if (!formActividad.valorIgual || Number(formActividad.valorIgual) <= 0) {
             loading.value = false
-            notificationStore.error('Debe ingresar un valor mayor a cero para cada socio', 'Error')
+            notificationStore.error('El valor por socio debe ser mayor a cero', 'Error')
             return
           }
           // Aplicar el valor igual a todos los socios
           aplicarValorIgual()
         } else {
-          // Validar valores diferentes
+          // Validar valores diferentes: al menos un valor > 0 y total > 0
           const valoresConValor = Object.entries(formActividad.valoresPorSocio)
             .filter(([_, valor]) => valor && Number(valor) > 0)
           
           if (valoresConValor.length === 0) {
             loading.value = false
-            notificationStore.error('Debe asignar al menos un valor a pagar para algún socio', 'Error')
+            notificationStore.error('Debe asignar al menos un valor mayor a cero a algún socio', 'Error')
+            return
+          }
+          const total = totalARecaudar.value
+          if (!total || total <= 0) {
+            loading.value = false
+            notificationStore.error('El total a recaudar debe ser mayor a cero', 'Error')
             return
           }
         }
@@ -4771,16 +4984,43 @@ async function handleCrearActividad() {
         notificationStore.error('Debe seleccionar un tipo de rifa', 'Error')
         return
       }
+
+      // Validar fecha de juego para rifas en curso
+      if (formActividad.tipo === 'rifa') {
+        if (!formActividad.cuandoJuegoRifa) {
+          loading.value = false
+          notificationStore.error('Debe indicar cuándo se jugará la rifa (fecha de juego)', 'Error')
+          return
+        }
+        if (formActividad.cuandoJuegoRifa === 'fecha_especifica') {
+          if (formActividad.esMultiplesMeses) {
+            const mesesSinFecha = formActividad.mesesSeleccionados.filter(
+              m => !formActividad.fechasJuegoPorMes[`${m.mes}-${m.anio}`]
+            )
+            if (mesesSinFecha.length > 0) {
+              loading.value = false
+              notificationStore.error('Debe asignar una fecha de juego para cada mes seleccionado', 'Error')
+              return
+            }
+          } else {
+            if (!formActividad.fechaJuegoRifa || formActividad.fechaJuegoRifa.trim() === '') {
+              loading.value = false
+              notificationStore.error('Debe indicar la fecha de juego de la rifa', 'Error')
+              return
+            }
+          }
+        }
+      }
     }
 
-    // Helper para calcular fecha límite por mes
+    // Helper para calcular fecha límite por mes (día límite segunda quincena: 30, o 28/29 feb)
     const calcularFechaLimiteParaMes = (mes, anio, quincena) => {
-      const obtenerUltimoDia = (mes, anio) => new Date(anio, mes, 0).getDate()
+      const diaLimiteSegundaQuincena = (m, a) => (m === 2 ? new Date(a, 2, 0).getDate() : 30)
       const formatearFecha = (anio, mes, dia) => `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
       
-      let diaPago = obtenerUltimoDia(mes, anio)
+      let diaPago = diaLimiteSegundaQuincena(mes, anio)
       if (natillera.value && natillera.value.periodicidad === 'quincenal' && quincena) {
-        diaPago = quincena === 1 ? 15 : obtenerUltimoDia(mes, anio)
+        diaPago = quincena === 1 ? 15 : diaLimiteSegundaQuincena(mes, anio)
       }
       return formatearFecha(anio, mes, diaPago)
     }
@@ -4851,6 +5091,18 @@ async function handleCrearActividad() {
         tipo_rifa: formActividad.tipo === 'rifa' ? formActividad.tipoRifa : null,
         actividad_serie_id: actividadSerieId // ID que agrupa actividades de la misma serie
       }
+
+      // Fecha de juego de la rifa (solo rifas en curso)
+      if (formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.cuandoJuegoRifa) {
+        actividadData.cuando_juego_rifa = formActividad.cuandoJuegoRifa
+        if (formActividad.cuandoJuegoRifa === 'fecha_especifica') {
+          actividadData.fecha_juego_rifa = formActividad.esMultiplesMeses
+            ? (formActividad.fechasJuegoPorMes[`${mesInfo.mes}-${mesInfo.anio}`] || null)
+            : (formActividad.fechaJuegoRifa || null) || null
+        } else {
+          actividadData.fecha_juego_rifa = calcularFechaJuegoRifa(formActividad.cuandoJuegoRifa, mesInfo.mes, mesInfo.anio)
+        }
+      }
       
       // Si es rifa manual, guardar el valor por defecto
       if (esRifaManual && formActividad.valorIgual) {
@@ -4877,20 +5129,24 @@ async function handleCrearActividad() {
 
       if (errorActividad) {
         console.error('❌ Error al crear actividad:', errorActividad)
-        // Si el error es por campo inexistente, intentar sin actividad_serie_id
-        if (errorActividad.message && errorActividad.message.includes('actividad_serie_id')) {
-          console.warn('⚠️ Campo actividad_serie_id no existe en la BD. Creando sin agrupación...')
-          const actividadDataSinSerie = { ...actividadData }
-          delete actividadDataSinSerie.actividad_serie_id
-          
-          const { data: actividadSinSerie, error: errorSinSerie } = await supabase
+        // Si el error es por campo inexistente, intentar sin esos campos
+        const msg = errorActividad.message || ''
+        const sinSerie = msg.includes('actividad_serie_id')
+        const sinFechaJuego = msg.includes('cuando_juego_rifa') || msg.includes('fecha_juego_rifa')
+        if (sinSerie || sinFechaJuego) {
+          const actividadDataFallback = { ...actividadData }
+          if (sinSerie) delete actividadDataFallback.actividad_serie_id
+          if (sinFechaJuego) {
+            delete actividadDataFallback.cuando_juego_rifa
+            delete actividadDataFallback.fecha_juego_rifa
+          }
+          const { data: actFallback, error: errFallback } = await supabase
             .from('actividades')
-            .insert(actividadDataSinSerie)
+            .insert(actividadDataFallback)
             .select()
             .single()
-          
-          if (errorSinSerie) throw errorSinSerie
-          actividadesCreadas.push(actividadSinSerie)
+          if (errFallback) throw errFallback
+          actividadesCreadas.push(actFallback)
         } else {
           throw errorActividad
         }
@@ -5298,11 +5554,45 @@ watch(modalNuevaActividad, (isOpen) => {
       })
     }
   } else {
-    // Limpiar valores cuando se cierra el modal
+    dropdownTipoActividad.value = false
     formActividad.valoresPorSocio = {}
     formActividad.valorIgual = 0
     tooltipVisible.value = null // Cerrar tooltip al cerrar modal
   }
+})
+
+// Cerrar dropdown tipo actividad al hacer clic fuera y posicionar panel por encima de todo
+let dropdownTipoActividadCloseHandler = null
+watch(dropdownTipoActividad, (isOpen) => {
+  if (dropdownTipoActividadCloseHandler) {
+    document.removeEventListener('click', dropdownTipoActividadCloseHandler)
+    dropdownTipoActividadCloseHandler = null
+  }
+  if (!isOpen) {
+    dropdownTipoActividadStyle.value = {}
+    return
+  }
+  nextTick(() => {
+    const el = dropdownTipoActividadRef.value
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      dropdownTipoActividadStyle.value = {
+        left: `${rect.left}px`,
+        top: `${rect.bottom + 6}px`,
+        minWidth: `${rect.width}px`
+      }
+    }
+    dropdownTipoActividadCloseHandler = (e) => {
+      const panel = document.querySelector('[data-dropdown-tipo-actividad-panel]')
+      if (dropdownTipoActividadRef.value && !dropdownTipoActividadRef.value.contains(e.target) && panel && !panel.contains(e.target)) {
+        dropdownTipoActividad.value = false
+      }
+    }
+    // Retrasar el listener para que el clic que abrió el dropdown no lo cierre al burbujear
+    setTimeout(() => {
+      document.addEventListener('click', dropdownTipoActividadCloseHandler)
+    }, 0)
+  })
 })
 
 // Cerrar tooltip al hacer clic fuera

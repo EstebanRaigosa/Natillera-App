@@ -1,32 +1,74 @@
 import { watch, onUnmounted } from 'vue'
 
+// Contador global: solo desbloquear cuando ninguna modal esté abierta (evita race al pasar de modal pago a modal comprobante)
+let lockCount = 0
+let savedScrollY = 0
+let savedScrollYMain = 0
+
+function applyLock() {
+  const html = document.documentElement
+  savedScrollY = window.scrollY || html.scrollTop
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${savedScrollY}px`
+  document.body.style.width = '100%'
+  document.body.style.overflow = 'hidden'
+  html.style.overflow = 'hidden'
+
+  const main = document.querySelector('main')
+  if (main) {
+    savedScrollYMain = main.scrollTop
+    main.style.position = 'fixed'
+    main.style.top = `-${savedScrollYMain}px`
+    main.style.left = '0'
+    main.style.right = '0'
+    main.style.width = '100%'
+    main.style.overflow = 'hidden'
+    main.style.touchAction = 'none'
+  }
+}
+
+function applyUnlock() {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  document.documentElement.style.overflow = ''
+  window.scrollTo(0, savedScrollY)
+
+  const main = document.querySelector('main')
+  if (main) {
+    main.style.position = ''
+    main.style.top = ''
+    main.style.left = ''
+    main.style.right = ''
+    main.style.width = ''
+    main.style.overflow = ''
+    main.style.touchAction = ''
+    main.scrollTop = savedScrollYMain
+  }
+}
+
 /**
- * Composable para bloquear el scroll del body cuando una modal está abierta
+ * Composable para bloquear el scroll del body y del main (contenedor del layout)
+ * cuando una modal está abierta.
  * @param {Ref<boolean>} isOpen - Ref reactivo que indica si la modal está abierta
  */
 export function useBodyScrollLock(isOpen) {
-  let scrollY = 0
+  let thisInstanceLocked = false
 
   const lockBodyScroll = () => {
-    // Guardar la posición actual del scroll
-    scrollY = window.scrollY || document.documentElement.scrollTop
-    
-    // Bloquear el scroll
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.width = '100%'
-    document.body.style.overflow = 'hidden'
+    lockCount++
+    thisInstanceLocked = true
+    applyLock()
   }
 
   const unlockBodyScroll = () => {
-    // Restaurar el scroll
-    document.body.style.position = ''
-    document.body.style.top = ''
-    document.body.style.width = ''
-    document.body.style.overflow = ''
-    
-    // Restaurar la posición del scroll
-    window.scrollTo(0, scrollY)
+    if (!thisInstanceLocked) return
+    thisInstanceLocked = false
+    lockCount = Math.max(0, lockCount - 1)
+    if (lockCount === 0) {
+      applyUnlock()
+    }
   }
 
   // Observar cambios en el estado de la modal

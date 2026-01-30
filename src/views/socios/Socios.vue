@@ -6,41 +6,30 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Header estilizado -->
+    <!-- Header unificado -->
     <div class="relative">
       <Breadcrumbs />
-      
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-3xl px-6 py-4 sm:px-8 sm:py-5 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden">
-        <BackButton :to="`/natilleras/${id}`" />
-        <!-- Círculos decorativos -->
-        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <div class="relative z-10 pt-4 sm:pt-0">
-          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pl-14 sm:pl-0">
-            <div class="flex items-center gap-3 flex-1 min-w-0">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-natillera-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg shadow-natillera-500/30 flex-shrink-0">
-                <UsersIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent">
-                  Socios
-                </h1>
-                <p class="text-gray-600 mt-0.5 text-sm sm:text-base font-medium">
-                  Gestiona los participantes y sus cuotas personalizadas
-                </p>
-              </div>
+      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3 flex-1 min-w-0">
+            <BackButton :to="`/natilleras/${id}`" :inline="true" />
+            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button v-if="!esVisor" @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
-                <ArrowUpTrayIcon class="w-5 h-5" />
-                <span>Importar CSV</span>
-              </button>
-              <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
-                <PlusIcon class="w-5 h-5" />
-                <span>Agregar Socio</span>
-              </button>
+            <div class="min-w-0">
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Socios</h1>
+              <p class="text-gray-500 mt-0.5 text-sm">Gestiona los participantes y sus cuotas personalizadas</p>
             </div>
+          </div>
+          <div class="flex flex-wrap gap-2 justify-center sm:justify-end">
+            <button v-if="!esVisor" @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
+              <ArrowUpTrayIcon class="w-5 h-5" />
+              <span>Importar CSV</span>
+            </button>
+            <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
+              <PlusIcon class="w-5 h-5" />
+              <span>Agregar Socio</span>
+            </button>
           </div>
         </div>
       </div>

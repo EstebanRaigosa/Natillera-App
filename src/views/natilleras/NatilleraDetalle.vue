@@ -79,129 +79,102 @@
         <Breadcrumbs />
       </div>
 
-      <!-- Header principal -->
-      <div class="relative bg-gradient-to-br from-white via-natillera-50/50 to-emerald-50/30 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-natillera-200/50 shadow-xl backdrop-blur-sm overflow-hidden mb-4 sm:mb-6">
-        <!-- Círculos decorativos -->
-        <div class="absolute top-0 right-0 w-48 sm:w-64 h-48 sm:h-64 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-36 sm:w-48 h-36 sm:h-48 bg-gradient-to-tr from-teal-400/20 to-natillera-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
-        
-        <!-- Botón volver atrás en esquina superior izquierda (solo móvil) -->
-        <BackButton />
-        
-        <!-- Badge de estado en esquina superior derecha (móvil) -->
-        <div class="absolute top-3 right-3 sm:hidden z-20">
-          <div class="flex items-center gap-1.5">
-            <div 
-              :class="[
-                'w-2 h-2 rounded-full',
-                natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500'
-              ]"
-            ></div>
-            <span 
-              :class="[
-                'px-2 py-1 rounded-full text-xs font-bold',
-                natillera.estado === 'activa' 
-                  ? 'bg-green-100 text-green-700 border border-green-300' 
-                  : 'bg-amber-100 text-amber-700 border border-amber-300'
-              ]"
-            >
-              {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
-            </span>
-          </div>
-        </div>
-        
-        <div class="relative z-10 pt-12 sm:pt-0">
-          <!-- Información superior -->
-          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
-            <div class="flex-1 min-w-0">
-              <h1 class="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-display font-bold bg-gradient-to-r from-gray-800 via-natillera-700 to-emerald-700 bg-clip-text text-transparent mb-2 break-words">
+      <!-- Tarjeta superior - encabezado unificado -->
+      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm mb-4 sm:mb-6">
+        <div>
+          <!-- Fila: botón volver + icono + título + estado -->
+          <div class="flex flex-wrap items-center gap-3 mb-1">
+            <BackButton inline />
+            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div class="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 flex-wrap">
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-800 break-words">
                 {{ nombreNatilleraPascalCase }}
               </h1>
-              
-              <p class="text-gray-600 text-sm sm:text-base mb-1">
-                Período: {{ rangoMesesTexto }}
-              </p>
-              
-              <p class="text-gray-600 text-xs sm:text-sm">
-                Desde {{ formatDate(natillera.fecha_inicio) }}
-              </p>
-            </div>
-            
-            <!-- Estado actual (solo desktop) -->
-            <div class="hidden sm:flex items-center gap-2 sm:gap-3">
-              <span class="text-gray-600 text-xs sm:text-sm font-medium">ESTADO ACTUAL</span>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-shrink-0">
                 <div 
                   :class="[
-                    'w-3 h-3 rounded-full',
+                    'w-2 h-2 rounded-full',
                     natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500'
                   ]"
                 ></div>
                 <span 
                   :class="[
-                    'px-3 py-1 rounded-full text-xs sm:text-sm font-bold',
-                    natillera.estado === 'activa' 
-                      ? 'bg-green-100 text-green-700 border border-green-300' 
-                      : 'bg-amber-100 text-amber-700 border border-amber-300'
+                    'text-xs sm:text-sm font-bold uppercase tracking-wide',
+                    natillera.estado === 'activa' ? 'text-green-600' : 'text-amber-600'
                   ]"
                 >
-                  {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
+                  {{ natillera.estado === 'activa' ? 'ACTIVA' : 'CERRADA' }}
                 </span>
               </div>
             </div>
           </div>
+          <p class="text-gray-500 text-sm mb-4 sm:mb-5 mt-1">
+            {{ rangoMesesCorto }}
+            <span class="text-gray-400 mx-1">·</span>
+            {{ fechaInicioCorta }}
+          </p>
           
-          <!-- Indicadores financieros -->
-          <div class="space-y-4 sm:space-y-0">
-            <!-- Fila superior en móvil: SOCIOS, RECAUDADO, PENDIENTE, UTILIDADES -->
-            <!-- Fila única en desktop: todos los 5 indicadores -->
-            <div class="grid grid-cols-4 sm:grid-cols-5 gap-3 sm:gap-4">
-              <div class="flex flex-col">
-                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">SOCIOS</p>
-                <p class="text-gray-800 text-xl sm:text-2xl lg:text-3xl font-extrabold">{{ estadisticas.totalSocios }}</p>
+          <!-- Métricas con iconos: Socios, Recaudado, Pendiente, Utilidad -->
+          <div class="grid grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5">
+            <!-- Socios -->
+            <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center mb-1.5 text-gray-600">
+                <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <button 
-                @click="modalDesgloseRecaudacion = true"
-                class="flex flex-col group relative cursor-pointer hover:bg-green-50/50 active:bg-green-100/50 rounded-lg p-2 -m-2 transition-all duration-200"
-              >
-                <!-- Punto indicador sutil en la esquina superior derecha -->
-                <div class="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full opacity-70 group-hover:opacity-100 group-hover:scale-125 transition-all duration-200 animate-pulse"></div>
-                
-                <div class="flex items-center gap-1 mb-1">
-                  <p class="text-gray-600 text-xs sm:text-sm font-medium underline decoration-dotted decoration-green-400/50 underline-offset-2 group-hover:decoration-green-500/70 transition-colors">
-                    RECAUDADO
-                  </p>
-                </div>
-                <p class="text-green-600 text-xl sm:text-2xl lg:text-3xl font-extrabold group-hover:text-green-700 transition-colors sm:text-left">
-                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
-                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
-                </p>
-              </button>
-              <div class="flex flex-col">
-                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">PENDIENTE</p>
-                <p class="text-amber-700 text-xl sm:text-2xl lg:text-3xl font-extrabold">
-                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalPendiente) }}</span>
-                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalPendiente) }}</span>
-                </p>
-              </div>
-              <div class="flex flex-col">
-                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">UTILIDADES</p>
-                <p class="text-gray-800 text-xl sm:text-2xl lg:text-3xl font-extrabold">
-                  <span class="sm:hidden">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</span>
-                  <span class="hidden sm:inline">${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}</span>
-                </p>
-              </div>
-              <div class="hidden sm:flex flex-col">
-                <p class="text-gray-600 text-xs sm:text-sm mb-1 font-medium">FONDO TOTAL</p>
-                <p class="text-indigo-700 text-xl sm:text-2xl lg:text-3xl font-extrabold">${{ formatMoney(estadisticas.fondoTotal) }}</p>
-              </div>
+              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Socios</p>
+              <p class="text-gray-800 text-lg sm:text-xl font-bold">{{ estadisticas.totalSocios }}</p>
             </div>
             
-            <!-- Fila inferior en móvil: FONDO TOTAL -->
-            <div class="flex items-center justify-between pt-4 border-t-2 border-indigo-300 sm:hidden">
-              <p class="text-gray-600 text-xs sm:text-sm font-medium">FONDO TOTAL</p>
-              <p class="text-indigo-700 text-2xl sm:text-3xl lg:text-4xl font-extrabold">${{ formatMoney(estadisticas.fondoTotal) }}</p>
+            <!-- Recaudado (clickeable) -->
+            <button 
+              @click="modalDesgloseRecaudacion = true"
+              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity"
+            >
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center mb-1.5 text-green-600 group-hover:bg-green-200/80 transition-colors">
+                <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Recaudado</p>
+              <p class="text-green-600 text-lg sm:text-xl font-bold">
+                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
+              </p>
+            </button>
+            
+            <!-- Pendiente -->
+            <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-1.5 text-amber-600">
+                <ClipboardDocumentListIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Pendiente</p>
+              <p class="text-amber-600 text-lg sm:text-xl font-bold">
+                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalPendiente) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalPendiente) }}</span>
+              </p>
             </div>
+            
+            <!-- Utilidad (clickeable: desglose) -->
+            <button
+              type="button"
+              @click="modalUtilidadesDesglose = true"
+              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-violet-100 flex items-center justify-center mb-1.5 text-violet-600 group-hover:bg-violet-200/80 transition-colors">
+                <ChartBarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Utilidad</p>
+              <p class="text-violet-600 text-lg sm:text-xl font-bold">
+                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}</span>
+              </p>
+            </button>
+          </div>
+          
+          <!-- Fondo total (línea divisoria y valor destacado) -->
+          <div class="pt-4 sm:pt-5 mt-4 sm:mt-5 border-t-2 border-gray-300 flex items-center justify-between">
+            <p class="text-gray-500 text-xs sm:text-sm font-semibold uppercase tracking-wide">Fondo total</p>
+            <p class="text-violet-600 text-2xl sm:text-3xl lg:text-4xl font-extrabold tabular-nums tracking-tight">${{ formatMoney(estadisticas.fondoTotal) }}</p>
           </div>
         </div>
       </div>
@@ -221,15 +194,6 @@
             </span>
           </button>
           
-          <router-link 
-            v-if="puedeConfigurar"
-            :to="`/natilleras/${id}/configuracion`"
-            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-          >
-            <Cog6ToothIcon class="w-5 h-5 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-            <span class="text-xs sm:text-sm">Configurar</span>
-          </router-link>
-          
           <button 
             v-if="puedeInvitarColaboradores"
             @click="abrirFormularioInvitarColaborador"
@@ -241,6 +205,15 @@
               <span class="hidden sm:inline">Invitar Colaboradores</span>
             </span>
           </button>
+          
+          <router-link 
+            v-if="puedeConfigurar"
+            :to="`/natilleras/${id}/configuracion`"
+            class="flex flex-col items-center justify-center gap-1 sm:gap-1 flex-1 sm:flex-none min-w-0 px-1 sm:px-2 py-2 sm:py-1.5 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            <Cog6ToothIcon class="w-5 h-5 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+            <span class="text-xs sm:text-sm">Configurar</span>
+          </router-link>
           
           <button 
             v-if="puedeNotificar"
@@ -682,13 +655,16 @@
           <!-- Campo de búsqueda -->
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Código del Comprobante</label>
-            <div class="relative">
+            <div class="flex items-center gap-0 border border-gray-300 rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-natillera-500 focus-within:border-natillera-500">
+              <span class="pl-3 flex items-center shrink-0 pointer-events-none text-gray-400">
+                <MagnifyingGlassIcon class="w-5 h-5" />
+              </span>
               <input 
                 ref="inputBusquedaRef"
                 v-model="codigoBusqueda"
                 type="text"
                 placeholder="Ej: ABC12345"
-                class="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 uppercase font-mono text-sm transition-all"
+                class="flex-1 min-w-0 py-3 px-3 border-0 focus:ring-0 focus:outline-none uppercase font-mono text-sm bg-transparent"
                 @keydown.enter.prevent="buscarComprobante"
                 maxlength="20"
                 :disabled="buscandoComprobante"
@@ -696,7 +672,7 @@
               <button
                 @click="buscarComprobante"
                 :disabled="!codigoBusqueda.trim() || buscandoComprobante"
-                class="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-natillera-600 text-white rounded-lg hover:bg-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+                class="shrink-0 m-1.5 p-2.5 bg-natillera-600 text-white rounded-lg hover:bg-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
               >
                 <MagnifyingGlassIcon v-if="!buscandoComprobante" class="w-5 h-5" />
                 <svg v-else class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -2440,6 +2416,97 @@
       </Transition>
     </div>
 
+    <!-- Modal Desglose Utilidades -->
+    <div v-if="modalUtilidadesDesglose" data-modal="desglose-utilidades" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false"></div>
+      </Transition>
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0 sm:scale-100"
+        leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
+      >
+        <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+          <!-- Header flat -->
+          <div class="bg-violet-600 px-6 py-5 text-white">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center">
+                  <ChartBarIcon class="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 class="text-xl font-bold tracking-tight">Desglose de utilidades</h3>
+                  <p class="text-violet-200 text-sm mt-0.5">Clasificación por origen</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                @click="modalUtilidadesDesglose = false"
+                class="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
+              >
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Lista flat y moderna -->
+          <div class="overflow-y-auto flex-1 p-5 space-y-3">
+            <template v-if="(estadisticas.utilidadesDesglose || []).length">
+              <div
+                v-for="item in (estadisticas.utilidadesDesglose || [])"
+                :key="item.id"
+                class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+              >
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-800">{{ item.label }}</p>
+                  <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
+                </div>
+                <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
+                  ${{ formatMoney(item.value) }}
+                </p>
+              </div>
+            </template>
+            <div v-else class="text-center py-8 text-gray-500">
+              <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+              <p class="font-medium">Sin utilidades registradas</p>
+              <p class="text-sm mt-1">Las utilidades aparecerán al recaudar multas, intereses o actividades.</p>
+            </div>
+
+            <!-- Total -->
+            <div class="mt-4 pt-4 border-t-2 border-violet-200 rounded-xl bg-violet-50/80 p-4">
+              <div class="flex items-center justify-between">
+                <p class="font-bold text-gray-800">Total utilidades</p>
+                <p class="text-violet-600 text-xl font-extrabold tabular-nums">
+                  ${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+            <button
+              type="button"
+              @click="modalUtilidadesDesglose = false"
+              class="w-full py-3 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </div>
+
     <!-- Modal Sin Socios -->
     <div v-if="modalSinSocios" data-modal="sin-socios" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSinSocios = false"></div>
@@ -2569,7 +2636,8 @@ import {
   Bars3Icon,
   ChartBarIcon,
   Squares2X2Icon,
-  DocumentCheckIcon
+  DocumentCheckIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -2605,6 +2673,7 @@ const modalCuotasSocio = ref(false)
 const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalSociosEnMora = ref(false)
 const modalDesgloseRecaudacion = ref(false)
+const modalUtilidadesDesglose = ref(false)
 const loadingCuotasSocio = ref(false)
 const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
@@ -2768,6 +2837,9 @@ async function guardarConfigMeses() {
   }
 }
 
+// Etiquetas cortas de meses (Nov, Oct, etc.)
+const mesesCorto = { 1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic' }
+
 // Computed para mostrar el rango de meses
 const rangoMesesTexto = computed(() => {
   if (!natillera.value) return ''
@@ -2775,6 +2847,25 @@ const rangoMesesTexto = computed(() => {
   const fin = meses.find(m => m.value === (natillera.value.mes_fin || 11))?.label || 'Noviembre'
   const anio = natillera.value.anio || new Date().getFullYear()
   return `${inicio} - ${fin} ${anio}`
+})
+
+// Rango de meses abreviado para la tarjeta (ej: Nov 2025 - Oct 2026)
+const rangoMesesCorto = computed(() => {
+  if (!natillera.value) return ''
+  const mesInicio = natillera.value.mes_inicio || 1
+  const mesFin = natillera.value.mes_fin || 11
+  const anio = natillera.value.anio || new Date().getFullYear()
+  return `${mesesCorto[mesInicio]} ${anio} - ${mesesCorto[mesFin]} ${anio}`
+})
+
+// Fecha de inicio completa con año (ej: Desde 01/11/2025)
+const fechaInicioCorta = computed(() => {
+  if (!natillera.value?.fecha_inicio) return ''
+  const d = new Date(natillera.value.fecha_inicio)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `Desde ${day}/${month}/${year}`
 })
 
 // Socios filtrados por búsqueda en el modal de WhatsApp
@@ -3549,6 +3640,7 @@ const estadisticas = ref({
   totalPendiente: 0,
   utilidadActividades: 0,
   utilidadesRecogidas: 0,
+  utilidadesDesglose: [],
   fondoTotal: 0,
   totalRecaudadoEfectivo: 0,
   totalRecaudadoTransferencia: 0
@@ -3564,6 +3656,7 @@ async function calcularEstadisticasAsync() {
       totalPendiente: 0,
       utilidadActividades: 0,
       utilidadesRecogidas: 0,
+      utilidadesDesglose: [],
       fondoTotal: 0,
       totalRecaudadoEfectivo: 0,
       totalRecaudadoTransferencia: 0
@@ -3579,6 +3672,7 @@ async function calcularEstadisticasAsync() {
     totalPendiente: 0,
     utilidadActividades: 0,
     utilidadesRecogidas: 0,
+    utilidadesDesglose: [],
     fondoTotal: 0,
     totalRecaudadoEfectivo: 0,
     totalRecaudadoTransferencia: 0
@@ -3712,8 +3806,13 @@ async function calcularDatosCierre() {
       prestamosPorSocio[p.socio_natillera_id].push(p)
     })
     
-    // Calcular utilidades totales
-    const utilidadActividades = actividades.reduce((sum, a) => sum + (a.utilidad || 0), 0)
+    // Calcular utilidades totales: solo rifas dependen de "liquidar"; el resto al pagarse suma
+    const utilidadActividades = actividades.reduce((sum, a) => {
+      if (a.estado === 'liquidada') return sum + (a.utilidad || 0)
+      if (a.estado === 'en_curso' && a.tipo === 'rifa') return sum
+      if (a.estado === 'en_curso') return sum + ((a.total_pagado || 0) - (a.gastos || 0))
+      return sum + (a.utilidad || 0)
+    }, 0)
     
     // Obtener sanciones pagadas desde utilidades_clasificadas
     let sancionesPagadas = 0

@@ -350,9 +350,11 @@
       <!-- Header móvil -->
       <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between">
-          <button 
+          <button
+            type="button"
             @click="sidebarOpen = true"
-            class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+            class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Abrir menú"
           >
             <Bars3Icon class="w-6 h-6" />
           </button>

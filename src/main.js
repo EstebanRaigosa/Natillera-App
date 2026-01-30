@@ -108,9 +108,8 @@ if (typeof window !== 'undefined' && !isDevelopment) {
   }, { passive: true })
 }
 
-// Optimizaciones específicas para iOS/iPhone
+// Optimizaciones específicas para iOS/iPhone (no afectan Android)
 if (typeof window !== 'undefined') {
-  // Detectar iOS
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   

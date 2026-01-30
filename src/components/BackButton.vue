@@ -1,7 +1,13 @@
 <template>
-  <button 
+  <button
+    type="button"
     @click="volverAtras"
-    class="sm:hidden absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg transition-all text-gray-700 hover:text-gray-900"
+    :class="[
+      'w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0 transition-all text-gray-700 hover:text-gray-900',
+      inline
+        ? 'sm:hidden bg-gray-100 border border-gray-200 shadow-sm hover:bg-gray-200 hover:border-gray-300'
+        : 'sm:hidden absolute top-3 left-3 z-20 bg-white/90 backdrop-blur-sm shadow-md hover:bg-white hover:shadow-lg'
+    ]"
     aria-label="Volver atrás"
   >
     <ArrowLeftIcon class="w-5 h-5" />
@@ -16,6 +22,11 @@ const props = defineProps({
   to: {
     type: String,
     default: null
+  },
+  /** Si es true, el botón va dentro del flujo (flex) para alinearse con el contenido; si es false, usa posición absoluta */
+  inline: {
+    type: Boolean,
+    default: false
   }
 })
 

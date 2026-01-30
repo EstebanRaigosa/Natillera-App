@@ -22,15 +22,20 @@
 
   <!-- Contenido principal -->
   <div v-else class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto p-4 sm:p-6">
-    <!-- Header -->
+    <!-- Header unificado -->
     <div class="relative mb-6">
-      <BackButton />
-      <div class="pt-12 sm:pt-0 pl-14 sm:pl-0">
-        <Breadcrumbs />
-        <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-2">
-          Administración de Datos
-        </h1>
-        <p class="text-gray-600">Consulta completa de toda la información en la base de datos</p>
+      <Breadcrumbs />
+      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
+        <div class="flex items-center gap-3">
+          <BackButton :inline="true" />
+          <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <CircleStackIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Administración de Datos</h1>
+            <p class="text-gray-500 mt-0.5 text-sm">Consulta completa de toda la información en la base de datos</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -688,7 +693,8 @@ import {
   BanknotesIcon,
   UsersIcon,
   CurrencyDollarIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CircleStackIcon
 } from '@heroicons/vue/24/outline'
 
 const ALLOWED_EMAIL = 'raigo.16@gmail.com'

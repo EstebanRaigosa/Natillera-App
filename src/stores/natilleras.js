@@ -200,18 +200,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       loading.value = true
       error.value = null
 
-      console.log('Buscando natillera con ID:', id)
-
-      // Primero obtener la natillera básica
+      // Usar maybeSingle() para no fallar con 406/PGRST116 cuando no hay fila (ID inexistente o RLS)
       const { data, error: fetchError } = await supabase
         .from('natilleras')
         .select('*')
         .eq('id', id)
-        .single()
-
-      console.log('Resultado:', { data, error: fetchError })
+        .maybeSingle()
 
       if (fetchError) throw fetchError
+      if (!data) {
+        natilleraActual.value = null
+        return null
+      }
 
       // Obtener socios de la natillera
       const { data: sociosData } = await supabase
@@ -228,6 +228,31 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         .select('*')
         .eq('natillera_id', id)
 
+      // Para actividades en curso, cargar total_pagado desde socios_actividad (para indicador de utilidades)
+      let actividadesConTotales = actividadesData || []
+      const actividadesEnCurso = (actividadesData || []).filter(a => a.estado === 'en_curso')
+      if (actividadesEnCurso.length > 0) {
+        const idsEnCurso = actividadesEnCurso.map(a => a.id)
+        const { data: sociosActividad } = await supabase
+          .from('socios_actividad')
+          .select('actividad_id, valor_pagado')
+          .in('actividad_id', idsEnCurso)
+        const totalPagadoPorActividad = {}
+        if (sociosActividad) {
+          sociosActividad.forEach(sa => {
+            const aid = sa.actividad_id
+            if (!totalPagadoPorActividad[aid]) totalPagadoPorActividad[aid] = 0
+            totalPagadoPorActividad[aid] += Number(sa.valor_pagado) || 0
+          })
+        }
+        actividadesConTotales = (actividadesData || []).map(a => {
+          if (a.estado === 'en_curso' && totalPagadoPorActividad[a.id] !== undefined) {
+            return { ...a, total_pagado: totalPagadoPorActividad[a.id] }
+          }
+          return a
+        })
+      }
+
       // Obtener cuotas de la natillera (a través de socios_natillera)
       let cuotasData = []
       if (sociosData && sociosData.length > 0) {
@@ -243,14 +268,14 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       natilleraActual.value = {
         ...data,
         socios_natillera: sociosData || [],
-        actividades: actividadesData || [],
+        actividades: actividadesConTotales,
         cuotas: cuotasData
       }
       
       console.log('=== NATILLERA CARGADA ===')
       console.log('Socios:', sociosData?.length || 0)
       console.log('Cuotas:', cuotasData?.length || 0, cuotasData)
-      console.log('Actividades:', actividadesData?.length || 0)
+      console.log('Actividades:', actividadesConTotales?.length || 0)
       console.log('=========================')
       
       return natilleraActual.value
@@ -953,8 +978,13 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       return sum + deudaCuota + sancionPendiente
     }, 0)
 
-    const utilidadActividades = actividades
-      .reduce((sum, a) => sum + (a.utilidad || 0), 0)
+    // Solo las rifas dependen de "liquidar" para sumar a utilidad; el resto al pagarse suma
+    const utilidadActividades = actividades.reduce((sum, a) => {
+      if (a.estado === 'liquidada') return sum + (a.utilidad || 0)
+      if (a.estado === 'en_curso' && a.tipo === 'rifa') return sum
+      if (a.estado === 'en_curso') return sum + ((a.total_pagado || 0) - (a.gastos || 0))
+      return sum + (a.utilidad || 0)
+    }, 0)
 
     // Calcular utilidades recogidas:
     // 1. Sanciones de cuotas pagadas - Obtener desde utilidades_clasificadas
@@ -1027,6 +1057,45 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     // 3. Utilidad de actividades (ya calculada arriba)
     const utilidadesRecogidas = sancionesPagadas + interesesPrestamos + utilidadActividades
 
+    // Desglose de utilidades para el modal (clasificación por origen)
+    const utilidadPorTipoActividad = { rifas: 0, bingo: 0, venta: 0, evento: 0, otro: 0 }
+    let utilidadActividadesEnCurso = 0
+    actividades.forEach(a => {
+      if (a.estado === 'liquidada') {
+        const tipo = (a.tipo || 'otro').toLowerCase()
+        if (utilidadPorTipoActividad[tipo] !== undefined) {
+          utilidadPorTipoActividad[tipo] += parseFloat(a.utilidad || 0)
+        } else {
+          utilidadPorTipoActividad.otro += parseFloat(a.utilidad || 0)
+        }
+      } else if (a.estado === 'en_curso' && a.tipo !== 'rifa') {
+        utilidadActividadesEnCurso += (parseFloat(a.total_pagado || 0) - parseFloat(a.gastos || 0))
+      }
+    })
+    const etiquetasTipoActividad = { rifas: 'Rifas', bingo: 'Bingo', venta: 'Venta', evento: 'Evento', otro: 'Otro' }
+    const utilidadesDesglose = [
+      { id: 'sanciones', label: 'Multas por mora', desc: 'Sanciones pagadas por cuotas en mora', value: sancionesPagadas },
+      { id: 'prestamos', label: 'Intereses de préstamos', desc: 'Intereses generados por préstamos', value: interesesPrestamos }
+    ]
+    Object.keys(utilidadPorTipoActividad).forEach(tipo => {
+      if (utilidadPorTipoActividad[tipo] > 0) {
+        utilidadesDesglose.push({
+          id: `actividad_${tipo}`,
+          label: etiquetasTipoActividad[tipo] || tipo,
+          desc: `Utilidad de actividades tipo ${etiquetasTipoActividad[tipo] || tipo}`,
+          value: utilidadPorTipoActividad[tipo]
+        })
+      }
+    })
+    if (utilidadActividadesEnCurso > 0) {
+      utilidadesDesglose.push({
+        id: 'actividades_en_curso',
+        label: 'Actividades en curso',
+        desc: 'Recaudado en actividades en curso (sin rifas)',
+        value: utilidadActividadesEnCurso
+      })
+    }
+
     // Calcular sanciones pendientes totales para el log
     const sancionesPendientesTotal = cuotasPendientes.reduce((sum, c) => {
       let sancionPendiente = 0
@@ -1057,6 +1126,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalPendiente,
       utilidadActividades,
       utilidadesRecogidas,
+      utilidadesDesglose,
       fondoTotal: totalAportado + utilidadesRecogidas,
       totalRecaudadoEfectivo,
       totalRecaudadoTransferencia
