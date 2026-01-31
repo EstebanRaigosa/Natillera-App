@@ -365,10 +365,10 @@
         </div>
       </header>
 
-      <!-- Contenido de la página -->
+      <!-- Contenido de la página: reservar espacio hasta donde empieza la barra inferior en móvil -->
       <div 
         class="flex-1 p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
-        :class="route.params.id ? 'pb-20 lg:pb-3' : 'pb-3'"
+        :class="route.params.id ? 'content-above-bottom-nav lg:pb-3' : 'pb-3'"
       >
         <router-view />
       </div>
@@ -659,6 +659,11 @@ onUnmounted(() => {
 
 <style scoped>
 @reference "../style.css";
+
+/* Reservar espacio en la parte inferior para que el contenido termine donde empieza la barra móvil */
+.content-above-bottom-nav {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
 
 .nav-link {
   @apply flex items-center gap-3 px-4 py-3 text-emerald-100 rounded-xl hover:bg-white/15 hover:text-white transition-all duration-200;

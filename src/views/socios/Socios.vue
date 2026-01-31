@@ -10,18 +10,18 @@
     <div class="relative">
       <Breadcrumbs />
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-          <div class="flex items-center gap-3 flex-1 min-w-0">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
             <BackButton :to="`/natilleras/${id}`" :inline="true" />
             <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div class="min-w-0">
               <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Socios</h1>
-              <p class="text-gray-500 mt-0.5 text-sm">Gestiona los participantes y sus cuotas personalizadas</p>
+              <p class="hidden sm:block text-gray-500 mt-0.5 text-sm">Gestiona los participantes y sus cuotas personalizadas</p>
             </div>
           </div>
-          <div class="flex flex-wrap gap-2 justify-center sm:justify-end">
+          <div class="flex flex-wrap gap-2 justify-end sm:justify-end w-full sm:w-auto shrink-0">
             <button v-if="!esVisor" @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
               <ArrowUpTrayIcon class="w-5 h-5" />
               <span>Importar CSV</span>

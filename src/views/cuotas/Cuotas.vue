@@ -2513,26 +2513,90 @@
       </div>
     </div>
 
-    <!-- Modal Registrar Pago -->
-    <div v-if="modalPago" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; mostrandoAnimacionPago.value = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] flex flex-col">
-        <!-- Header con gradiente (fijo) -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden flex-shrink-0">
+    <!-- Pantalla de carga al abrir registro de pago (prepara datos antes de mostrar el modal) -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div v-if="preparandoModalPago" class="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-hidden">
+          <!-- Fondo con blur y gradiente suave -->
+          <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-natillera-900/30 to-teal-900/40 backdrop-blur-md"></div>
+          <!-- Orbes decorativos animados -->
+          <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-natillera-400/20 rounded-full blur-3xl animate-pulse"></div>
+          <div class="absolute bottom-1/4 right-1/4 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s"></div>
+          <div class="absolute top-1/2 left-1/2 w-32 h-32 bg-teal-400/10 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s"></div>
+
+          <!-- Tarjeta con entrada animada -->
+          <Transition
+            enter-active-class="transition duration-400 ease-out"
+            enter-from-class="opacity-0 scale-90 translate-y-4"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+          >
+            <div v-if="preparandoModalPago" class="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 min-w-[280px] max-w-[90vw] overflow-hidden">
+              <!-- Borde superior con gradiente animado (shimmer) -->
+              <div class="h-1 bg-gradient-to-r from-natillera-400 via-emerald-400 to-teal-400 preparando-shimmer"></div>
+              <div class="p-8 flex flex-col items-center gap-6">
+                <!-- Contenedor del spinner con anillos -->
+                <div class="relative flex items-center justify-center">
+                  <div class="absolute w-16 h-16 rounded-full border-2 border-natillera-100 animate-spin" style="animation-duration: 1.8s"></div>
+                  <div class="absolute w-12 h-12 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.2s"></div>
+                  <div class="absolute w-8 h-8 rounded-full border-2 border-transparent border-b-teal-500 animate-spin" style="animation-duration: 0.8s"></div>
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-natillera-500 to-teal-500 flex items-center justify-center shadow-lg shadow-natillera-500/30">
+                    <CurrencyDollarIcon class="w-5 h-5 text-white animate-pulse" />
+                  </div>
+                </div>
+                <!-- Textos con aparición escalonada -->
+                <div class="text-center space-y-2">
+                  <p class="text-lg font-bold text-gray-800 dark:text-white preparando-fade-in-up-1">Preparando registro de pago</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 preparando-fade-in-up-2">
+                    <span>Cargando información</span>
+                    <span class="inline-flex gap-0.5">
+                      <span class="w-1 h-1 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0s"></span>
+                      <span class="w-1 h-1 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 0.15s"></span>
+                      <span class="w-1 h-1 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 0.3s"></span>
+                    </span>
+                  </p>
+                </div>
+                <!-- Barra de progreso indeterminada -->
+                <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div class="h-full w-1/3 rounded-full bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 preparando-progress-slide"></div>
+                </div>
+              </div>
+            </div>
+          </Transition>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Modal Registrar Pago (Teleport para quedar por encima de la barra inferior móvil z-40) -->
+    <Teleport to="body">
+      <div v-if="modalPago" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; mostrandoAnimacionPago.value = false"></div>
+        <div class="relative max-w-md w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-200 border-b-0 sm:border-b max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 my-0 sm:my-4">
+        <!-- Header con gradiente (fijo) - tamaño reducido ~20% -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -ml-10 -mb-10 blur-xl"></div>
           
           <div class="relative z-10">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <CurrencyDollarIcon class="w-6 h-6 text-white" />
+            <div class="flex items-center gap-2 mb-1">
+              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30">
+                <CurrencyDollarIcon class="w-5 h-5 text-white" />
               </div>
-              <h3 class="text-2xl font-display font-bold">
+              <h3 class="text-xl font-display font-bold">
                 Registrar Pago
               </h3>
             </div>
-            <p class="text-white/90 text-sm">
+            <p class="text-white/90 text-xs">
               <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
                 Agrega el saldo pendiente al pago parcial
               </span>
@@ -2543,8 +2607,8 @@
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+        <!-- Contenido con scroll (min-h-0 permite que flex reduzca y active overflow-y-auto) -->
+        <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain">
           <!-- Card de información del socio -->
           <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
             <!-- Alerta de ajustes si existe -->
@@ -2791,6 +2855,24 @@
 
             <!-- Desplegable de Actividades Pendientes -->
             <div class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+              <!-- Pantalla de carga: skeleton hasta que las actividades estén cargadas -->
+              <div
+                v-if="cargandoActividades"
+                class="w-full p-4 bg-gradient-to-r from-purple-50/80 via-indigo-50/80 to-blue-50/80 border-b-0 flex items-center gap-3"
+              >
+                <div class="w-10 h-10 rounded-lg bg-gray-200 animate-pulse flex-shrink-0"></div>
+                <div class="flex-1 min-w-0 space-y-2">
+                  <div class="h-3.5 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  <div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div v-if="cargandoActividades" class="p-6 flex flex-col items-center justify-center gap-3 border-t border-gray-100 bg-white">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-500"></div>
+                <p class="text-sm font-medium text-gray-600">Cargando actividades pendientes...</p>
+                <p class="text-xs text-gray-400">Obteniendo valores y estados</p>
+              </div>
+
+              <template v-else>
               <button
                 type="button"
                 @click="actividadesDesplegableAbierto = !actividadesDesplegableAbierto"
@@ -2815,8 +2897,7 @@
                         {{ actividadesSeleccionadas.size }} {{ actividadesSeleccionadas.size === 1 ? 'Seleccionado' : 'Seleccionados' }}
                       </span>
                       <span class="text-xs font-normal text-gray-600">
-                        <span v-if="cargandoActividades">• Cargando...</span>
-                        <span v-else-if="actividadesPendientes.length === 0">• No hay actividades pendientes</span>
+                        <span v-if="actividadesPendientes.length === 0">• No hay actividades pendientes</span>
                         <span v-else>• {{ actividadesPendientes.length }} actividad{{ actividadesPendientes.length !== 1 ? 'es' : '' }} pendiente{{ actividadesPendientes.length !== 1 ? 's' : '' }}</span>
                       </span>
                     </p>
@@ -2836,11 +2917,7 @@
                 leave-to-class="opacity-0 max-h-0"
               >
                 <div v-show="actividadesDesplegableAbierto" class="border-t border-gray-200 bg-white">
-                  <div v-if="cargandoActividades" class="p-6 text-center">
-                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-purple-500"></div>
-                    <p class="text-sm text-gray-500 mt-2">Cargando actividades...</p>
-                  </div>
-                  <div v-else-if="actividadesPendientes.length === 0" class="p-6 text-center">
+                  <div v-if="actividadesPendientes.length === 0" class="p-6 text-center">
                     <p class="text-sm text-gray-500">No hay actividades pendientes</p>
                   </div>
                   <div v-else class="p-2 space-y-2 max-h-64 overflow-y-auto">
@@ -2893,6 +2970,7 @@
                   </div>
                 </div>
               </Transition>
+              </template>
             </div>
 
             <!-- Campo de valor del pago -->
@@ -2927,8 +3005,8 @@
           </div>
         </div>
 
-        <!-- Footer con botones (fijo) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4">
+        <!-- Footer con botones (fijo, pegados al fondo del modal) -->
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
           <div class="flex gap-3">
             <button 
               type="button"
@@ -2949,6 +3027,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- Animación de registro de pago -->
     <Transition
@@ -3056,10 +3135,11 @@
       </div>
     </Transition>
 
-    <!-- Modal Historial de Ajustes -->
-    <div v-if="modalHistorialAjustes" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalHistorialAjustes = false"></div>
-      <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
+    <!-- Modal Historial de Ajustes (z-[70] para quedar por encima del modal de pago z-[60]) -->
+    <Teleport to="body">
+      <div v-if="modalHistorialAjustes" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalHistorialAjustes = false"></div>
+        <div class="relative max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col">
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-6 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
@@ -3205,6 +3285,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
 
     <!-- Modal Confirmación de Pago con Comprobante Visual -->
     <div v-if="modalConfirmacion" class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -4717,6 +4798,7 @@ const esUsuarioAdmin = computed(() => {
 
 const modalGenerarCuotas = ref(false)
 const modalPago = ref(false)
+const preparandoModalPago = ref(false) // Pantalla de carga mientras se prepara el modal de registro de pago
 const modalConfirmacion = ref(false)
 const modalConfirmarBorrar = ref(false)
 const modalExportar = ref(false)
@@ -4743,6 +4825,7 @@ const bloqueandoRegistroPago = ref(false)
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalGenerarCuotas)
 useBodyScrollLock(modalPago)
+useBodyScrollLock(preparandoModalPago)
 useBodyScrollLock(modalConfirmacion)
 useBodyScrollLock(modalConfirmarBorrar)
 useBodyScrollLock(modalExportar)
@@ -6989,25 +7072,18 @@ async function cargarActividadesPendientes(cuota) {
 }
 
 async function abrirModalPago(cuota) {
+  preparandoModalPago.value = true
+  
   cuotaSeleccionada.value = cuota
-  desplegableYaAbonadoOpen.value = false // Desplegable "Ya abonado" cerrado al abrir
-  // Inicializar con el total a pagar completo (incluye cuota + sanciones)
+  desplegableYaAbonadoOpen.value = false
   const totalAPagar = getTotalAPagar(cuota)
   formPago.valor = totalAPagar > 0 ? totalAPagar : 0
-  formPago.tipo_pago = 'efectivo' // Reiniciar tipo de pago por defecto
+  formPago.tipo_pago = 'efectivo'
   actividadesDesplegableAbierto.value = false
-  actividadesSeleccionadas.value.clear() // Limpiar selección al abrir modal
+  actividadesSeleccionadas.value.clear()
   
-  // Abrir el modal primero para mejor UX
-  modalPago.value = true
-  
-  // Cargar actividades pendientes del socio (esto marcará automáticamente la actividad coincidente)
-  // Usar await para asegurar que la selección automática se complete antes de continuar
   try {
     const actividadMarcada = await cargarActividadesPendientes(cuota)
-    
-    // Si hay una actividad marcada automáticamente, actualizar el valor del pago
-    // Usar nextTick para asegurar que Vue haya actualizado el DOM
     if (actividadMarcada && actividadesSeleccionadas.value.size > 0) {
       await nextTick()
       actualizarValorPagoConActividades()
@@ -7015,7 +7091,9 @@ async function abrirModalPago(cuota) {
     }
   } catch (error) {
     console.error('❌ Error al cargar actividades pendientes:', error)
-    // Continuar de todos modos, el modal ya está abierto
+  } finally {
+    preparandoModalPago.value = false
+    modalPago.value = true
   }
 }
 
@@ -10192,6 +10270,33 @@ onUnmounted(() => {
   animation: progress-animated-fast 1.2s ease-in-out infinite;
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
   will-change: width, transform;
+}
+
+/* Pantalla de carga "Preparando registro de pago" */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes progressSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.preparando-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+.preparando-fade-in-up-1 {
+  animation: fadeInUp 0.4s ease-out 0.2s both;
+}
+.preparando-fade-in-up-2 {
+  animation: fadeInUp 0.4s ease-out 0.35s both;
+}
+.preparando-progress-slide {
+  animation: progressSlide 1.5s ease-in-out infinite;
 }
 
 /* Animación de flotación para partículas (más rápida) */
