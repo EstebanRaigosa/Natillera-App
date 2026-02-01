@@ -1,0 +1,6 @@
+# Natillerapp - robots.txt para motores de búsqueda
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://natillerapp.com/sitemap.xml

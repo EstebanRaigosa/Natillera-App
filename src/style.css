@@ -121,6 +121,12 @@
   .stat-label {
     @apply text-sm sm:text-base lg:text-lg text-gray-700 font-semibold mt-2 sm:mt-2.5 leading-tight;
   }
+
+  /* Efecto hundido para tarjetas de natilleras de otro propietario */
+  .card-sunken {
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(0, 0, 0, 0.04);
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  }
   
   .bg-gradient-radial {
     background-image: radial-gradient(circle, var(--tw-gradient-stops));

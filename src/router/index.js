@@ -25,6 +25,7 @@ import Auditoria from '../views/auditoria/Auditoria.vue'
 import ChatAdmin from '../views/admin/ChatAdmin.vue'
 import DataAdmin from '../views/admin/DataAdmin.vue'
 import AceptarInvitacion from '../views/invitaciones/AceptarInvitacion.vue'
+import QueEsNatillerapp from '../views/auth/QueEsNatillerapp.vue'
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -62,6 +63,12 @@ const routes = [
         name: 'ResetPassword',
         component: ResetPassword,
         meta: { title: 'Restablecer Contraseña' }
+      },
+      {
+        path: 'que-es-natillerapp',
+        name: 'QueEsNatillerapp',
+        component: QueEsNatillerapp,
+        meta: { title: 'Qué es Natillerapp' }
       }
     ]
   },

@@ -1281,6 +1281,65 @@
                   </div>
                 </div>
 
+                <!-- Intereses adicionales por días (Simple: debajo de valor multa) -->
+                <div v-if="configSanciones.tipo === 'simple'" class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
+                     :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
+                     @click.stop>
+                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                         @click.stop.prevent="toggleInteresesAdicionales">
+                    <div class="relative flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        :checked="configSanciones.interesesAdicionales.activo" 
+                        @click.stop.prevent="toggleInteresesAdicionales" 
+                        class="sr-only peer" 
+                      />
+                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                    </div>
+                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
+                      Intereses adicionales por días
+                    </span>
+                  </label>
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-2"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition duration-150 ease-out"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-2"
+                  >
+                    <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
+                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
+                        <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
+                        <input 
+                          v-model.number="configSanciones.interesesAdicionales.dias" 
+                          type="number" 
+                          min="1" 
+                          max="30" 
+                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                        />
+                        <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
+                        <div class="relative flex-1 sm:flex-initial">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+                          <input 
+                            :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
+                            @input="(e) => {
+                              const rawValue = removeNumberFormat(e.target.value)
+                              configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                            }"
+                            @focus="(e) => e.target.select()"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9.,]*"
+                            class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+
                 <!-- Escalonada -->
                 <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
                   <!-- Tabla niveles -->
@@ -1316,7 +1375,7 @@
                     </button>
                   </div>
 
-                  <!-- Intereses adicionales -->
+                  <!-- Intereses adicionales por días (Escalonada: debajo de Intereses por cuotas vencidas) -->
                   <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
                        :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
                        @click.stop>
@@ -1339,7 +1398,7 @@
                       enter-active-class="transition duration-200 ease-out"
                       enter-from-class="opacity-0 -translate-y-2"
                       enter-to-class="opacity-100 translate-y-0"
-                      leave-active-class="transition duration-150 ease-in"
+                      leave-active-class="transition duration-150 ease-out"
                       leave-from-class="opacity-100 translate-y-0"
                       leave-to-class="opacity-0 -translate-y-2"
                     >
@@ -1451,6 +1510,12 @@
                   <div v-else class="text-sm text-gray-700 space-y-1">
                     <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
                       {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
+                    </p>
+                  </div>
+                  <div v-if="configSanciones.interesesAdicionales?.activo" class="mt-3 pt-3 border-t border-red-200 text-sm text-gray-700">
+                    <p class="font-medium text-red-800 mb-1">Intereses adicionales por días</p>
+                    <p>
+                      Cada <strong>{{ configSanciones.interesesAdicionales.dias }}</strong> {{ configSanciones.interesesAdicionales.dias === 1 ? 'día' : 'días' }} en mora después del vencimiento se suma <strong>${{ formatMoney(configSanciones.interesesAdicionales.valor) }}</strong> a la sanción de la cuota.
                     </p>
                   </div>
                 </div>
@@ -1685,6 +1750,7 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useUsersStore } from '../../stores/users'
 import { useColaboradoresStore } from '../../stores/colaboradores'
+import { useCuotasStore } from '../../stores/cuotas'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
@@ -1720,6 +1786,7 @@ const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const usersStore = useUsersStore()
 const colaboradoresStore = useColaboradoresStore()
+const cuotasStore = useCuotasStore()
 const guardandoBasica = ref(false)
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
@@ -2176,6 +2243,13 @@ async function guardarConfigSanciones() {
     mensaje.value = {
       tipo: 'exito',
       texto: 'Configuración de sanciones guardada correctamente'
+    }
+    // Si se desactivaron las sanciones, poner a 0 valor_multa en todas las cuotas (mora/pendiente/parcial)
+    if (!configSanciones.value.activa) {
+      const limpieza = await cuotasStore.limpiarSancionesNatillera(id.value)
+      if (limpieza.actualizadas > 0) {
+        mensaje.value.texto = `Configuración guardada. Se quitaron las sanciones a ${limpieza.actualizadas} cuota(s).`
+      }
     }
     // Recargar la natillera para ver los cambios
     await natillerasStore.fetchNatillera(id.value)

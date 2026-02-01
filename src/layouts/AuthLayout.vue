@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex items-center sm:items-center justify-start sm:justify-center p-0 relative overflow-hidden">
+  <div class="h-screen flex flex-col items-stretch justify-start p-0 relative overflow-hidden">
     <!-- Fondo con degradado bonito para desktop usando colores de identidad -->
     <div class="absolute inset-0 bg-gradient-to-br from-natillera-900 via-emerald-800 to-teal-900 lg:bg-gradient-to-r lg:from-teal-700 lg:via-emerald-600 lg:to-natillera-700">
       <!-- Capas de degradado adicionales para profundidad sin animación -->
@@ -14,10 +14,10 @@
       <div class="absolute top-1/2 left-1/3 w-96 h-96 bg-natillera-400/20 rounded-full blur-3xl lg:bg-natillera-300/35 lg:w-[500px] lg:h-[500px] transform -translate-x-1/2 -translate-y-1/2"></div>
     </div>
 
-    <!-- Formulario centrado sobre el fondo -->
-    <div class="relative z-10 w-full flex flex-col justify-start sm:justify-center min-h-screen py-4 sm:py-0 p-2 sm:p-4 lg:p-7 overflow-y-auto">
+    <!-- Contenedor con scroll: contenido empieza arriba para que siempre se vea la parte superior -->
+    <div class="relative z-10 w-full flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden py-4 p-2 sm:p-4 lg:p-7">
       <!-- Contenido del formulario -->
-      <div class="w-full max-w-md mx-auto">
+      <div class="w-full max-w-md mx-auto flex-shrink-0 px-1">
         <!-- Logo y título -->
         <div class="mb-3 sm:mb-3 lg:mb-3 animate-fade-in-up text-center">
           <div class="flex items-center justify-center gap-2.5 sm:gap-3 mb-1.5">
@@ -30,7 +30,7 @@
               <AppBrand class="text-white" />
             </h1>
           </div>
-          <p class="text-white/90 text-xs sm:text-sm drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] font-medium">Ahorro comunitario digital</p>
+          <p class="text-white/90 text-xs sm:text-sm drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] font-medium">Plataforma y aplicación para gestionar tu natillera</p>
         </div>
 
         <!-- Formulario -->
@@ -40,7 +40,9 @@
 
         <!-- Footer -->
         <p class="text-center text-xs text-white/80 mt-3 sm:mt-3 animate-fade-in-up stagger-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-          Gestión transparente para tu comunidad 🌱
+          App para tu natillera desde el celular o la computadora. Gestión transparente para tu comunidad 🌱
+          <br />
+          <RouterLink to="/auth/que-es-natillerapp" class="inline-block mt-1.5 text-white/90 hover:text-white underline underline-offset-2 transition-colors">¿Qué es Natillerapp?</RouterLink>
         </p>
       </div>
     </div>

@@ -827,6 +827,11 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         .single()
       
       configSanciones = natilleraData?.reglas_multas?.sanciones || null
+      const diasGracia = natilleraData?.reglas_multas?.dias_gracia ?? 3
+      const interesesConfigNat = configSanciones?.interesesAdicionales ?? configSanciones?.intereses_adicionales ?? {}
+      const interesesActivoNat = interesesConfigNat.activo === true || interesesConfigNat.activo === 'true' || interesesConfigNat.activo === 1
+      const interesesDiasNat = Number(interesesConfigNat.dias) || 2
+      const interesesValorNat = Number(interesesConfigNat.valor) || 0
       
         // Calcular sanciones dinámicas para cuotas en mora si las sanciones están activas
         if (configSanciones?.activa) {
@@ -854,7 +859,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             return 0
           }
 
-          // Agrupar cuotas en mora por socio y ordenarlas por fecha de vencimiento
+          // Agrupar cuotas en mora por socio y ordenarlas por fecha_limite (más antigua primero)
           const cuotasPorSocio = {}
           cuotasMora.forEach(c => {
             if (!cuotasPorSocio[c.socio_natillera_id]) {
@@ -862,8 +867,6 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             }
             cuotasPorSocio[c.socio_natillera_id].push(c)
           })
-
-          // Ordenar cuotas de cada socio por fecha_limite (más antigua primero)
           Object.keys(cuotasPorSocio).forEach(socioId => {
             cuotasPorSocio[socioId].sort((a, b) => {
               const fechaA = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
@@ -872,12 +875,12 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             })
           })
 
-          // Calcular sanciones acumulativamente para cada cuota (por socio)
+          // Calcular sanciones por cuota: intereses adicionales repartidos por tramo (solo días entre esta cuota y la siguiente)
           Object.keys(cuotasPorSocio).forEach(socioId => {
             const cuotasSocio = cuotasPorSocio[socioId]
-            let posicionAcumulativa = 1 // Cada socio empieza desde la posición 1
+            let posicionAcumulativa = 1
 
-            cuotasSocio.forEach(cuota => {
+            cuotasSocio.forEach((cuota, indexEnSocio) => {
               const periodicidadSocio = cuota.socio_natillera?.periodicidad || (cuota.quincena === 0 || cuota.quincena === null ? 'mensual' : 'quincenal')
               const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
 
@@ -887,7 +890,6 @@ export const useNatillerasStore = defineStore('natilleras', () => {
                 multaBase = configSanciones.valorFijo || 0
               } else if (configSanciones.tipo === 'escalonada') {
                 if (esMensualEnQuincenal) {
-                  // Si es mensual en natillera quincenal, sumar sanciones de 2 posiciones
                   const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
                   const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa + 1)
                   multaBase = sancionPos1 + sancionPos2
@@ -898,22 +900,44 @@ export const useNatillerasStore = defineStore('natilleras', () => {
                 }
               }
               
-              // Calcular intereses adicionales por días de mora
               let interesesAdicionales = 0
-              if (cuota.fecha_limite && configSanciones.interesesAdicionales?.activo) {
-                const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
-                const fechaLimite = new Date(anio, mes - 1, dia)
-                fechaLimite.setHours(0, 0, 0, 0)
-                const hoy = new Date()
-                hoy.setHours(0, 0, 0, 0)
-                const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
-                
-                if (diasEnMora > 0) {
-                  const diasParaInteres = configSanciones.interesesAdicionales.dias || 2
-                  const valorInteres = configSanciones.interesesAdicionales.valor || 0
-                  if (diasParaInteres > 0 && valorInteres > 0) {
-                    const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
-                    interesesAdicionales = periodosInteres * valorInteres
+              const fechaLimiteRawNat = cuota.fecha_limite
+              const fechaLimiteStrNat = fechaLimiteRawNat ? String(fechaLimiteRawNat).substring(0, 10) : ''
+              if (fechaLimiteStrNat && interesesActivoNat && interesesDiasNat > 0 && interesesValorNat > 0) {
+                const partesNat = fechaLimiteStrNat.split('-')
+                const anioNat = parseInt(partesNat[0], 10)
+                const mesNat = parseInt(partesNat[1], 10) - 1
+                const diaNat = parseInt(partesNat[2], 10)
+                if (!Number.isNaN(anioNat) && !Number.isNaN(mesNat) && !Number.isNaN(diaNat)) {
+                  const fechaLimiteCuota = new Date(anioNat, mesNat, diaNat)
+                  fechaLimiteCuota.setHours(0, 0, 0, 0)
+                  const hoy = new Date()
+                  hoy.setHours(0, 0, 0, 0)
+                  const primeraDiaMora = new Date(fechaLimiteCuota)
+                  primeraDiaMora.setDate(primeraDiaMora.getDate() + diasGracia + 1)
+                  let finTramo = hoy
+                  if (indexEnSocio + 1 < cuotasSocio.length) {
+                    const sigRawNat = cuotasSocio[indexEnSocio + 1].fecha_limite
+                    const sigNat = sigRawNat ? String(sigRawNat).substring(0, 10) : ''
+                    if (sigNat) {
+                      const [a, m, d] = sigNat.split('-').map(x => parseInt(x, 10))
+                      if (!Number.isNaN(a) && !Number.isNaN(m) && !Number.isNaN(d)) {
+                        const fechaVencimientoSiguiente = new Date(a, m - 1, d)
+                        fechaVencimientoSiguiente.setDate(fechaVencimientoSiguiente.getDate() + diasGracia)
+                        finTramo = new Date(fechaVencimientoSiguiente)
+                        finTramo.setDate(finTramo.getDate() - 1)
+                        finTramo.setHours(0, 0, 0, 0)
+                      }
+                    }
+                  }
+                  if (finTramo.getTime() < primeraDiaMora.getTime()) {
+                    finTramo = new Date(hoy)
+                    finTramo.setHours(0, 0, 0, 0)
+                  }
+                  const diffMs = finTramo.getTime() - primeraDiaMora.getTime()
+                  const diasEnMoraTramo = diffMs < 0 ? 0 : Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1
+                  if (diasEnMoraTramo > 0) {
+                    interesesAdicionales = Math.round((diasEnMoraTramo / interesesDiasNat) * interesesValorNat)
                   }
                 }
               }
@@ -1096,6 +1120,55 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       })
     }
 
+    // Desglose de utilidades por forma de pago: la forma de pago con la que se pagó la cuota/actividad/préstamo
+    // - Sanciones: tipo_pago de la cuota donde se pagó la multa
+    // - Actividades pagadas con la cuota: tipo_pago de la cuota (valor_pagado_actividades)
+    // - Intereses de préstamos y actividades no pagadas por cuota: sin forma de pago en BD → Otro
+    const sancionesEfectivo = cuotasPagadas
+      .filter(c => (c.tipo_pago || 'efectivo') === 'efectivo' && (c.valor_multa || 0) > 0)
+      .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+    const sancionesTransferencia = cuotasPagadas
+      .filter(c => c.tipo_pago === 'transferencia' && (c.valor_multa || 0) > 0)
+      .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
+    const actividadesEfectivo = cuotasPagadas
+      .filter(c => (c.tipo_pago || 'efectivo') === 'efectivo' && (c.valor_pagado_actividades || 0) > 0)
+      .reduce((sum, c) => sum + (c.valor_pagado_actividades || 0), 0)
+    const actividadesTransferencia = cuotasPagadas
+      .filter(c => c.tipo_pago === 'transferencia' && (c.valor_pagado_actividades || 0) > 0)
+      .reduce((sum, c) => sum + (c.valor_pagado_actividades || 0), 0)
+    const utilidadesEfectivo = sancionesEfectivo + actividadesEfectivo
+    const utilidadesTransferencia = sancionesTransferencia + actividadesTransferencia
+    const utilidadesOtroFormaPago = utilidadesRecogidas - utilidadesEfectivo - utilidadesTransferencia
+    const utilidadesPorFormaPago = [
+      { id: 'efectivo', label: 'Efectivo', desc: 'Multas y actividades pagadas en efectivo (con la cuota)', value: utilidadesEfectivo },
+      { id: 'transferencia', label: 'Transferencia', desc: 'Multas y actividades pagadas por transferencia (con la cuota)', value: utilidadesTransferencia }
+    ]
+    if (utilidadesOtroFormaPago > 0) {
+      utilidadesPorFormaPago.push({
+        id: 'otro',
+        label: 'Otro',
+        desc: 'Intereses de préstamos y actividades sin forma de pago registrada en el pago',
+        value: utilidadesOtroFormaPago
+      })
+    }
+
+    // Log desglose por forma de pago (para depurar por qué todo sale en "Otro")
+    console.log('=== DESGLOSE UTILIDADES POR FORMA DE PAGO ===')
+    console.log('Cuotas pagadas (total):', cuotasPagadas.length)
+    const muestraCuotas = cuotasPagadas.slice(0, 5).map(c => ({
+      id: c.id,
+      tipo_pago: c.tipo_pago,
+      valor_multa: c.valor_multa,
+      valor_pagado_actividades: c.valor_pagado_actividades
+    }))
+    console.log('Muestra de cuotas pagadas (tipo_pago, valor_multa, valor_pagado_actividades):', muestraCuotas)
+    console.log('Sanciones efectivo:', sancionesEfectivo, '| Sanciones transferencia:', sancionesTransferencia)
+    console.log('Actividades efectivo:', actividadesEfectivo, '| Actividades transferencia:', actividadesTransferencia)
+    console.log('Utilidades efectivo:', utilidadesEfectivo, '| Utilidades transferencia:', utilidadesTransferencia, '| Otro:', utilidadesOtroFormaPago)
+    console.log('Total utilidades recogidas:', utilidadesRecogidas)
+    console.log('utilidadesPorFormaPago (lo que se muestra en el modal):', utilidadesPorFormaPago)
+    console.log('=== FIN DESGLOSE FORMA DE PAGO ===')
+
     // Calcular sanciones pendientes totales para el log
     const sancionesPendientesTotal = cuotasPendientes.reduce((sum, c) => {
       let sancionPendiente = 0
@@ -1127,6 +1200,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       utilidadActividades,
       utilidadesRecogidas,
       utilidadesDesglose,
+      utilidadesPorFormaPago,
       fondoTotal: totalAportado + utilidadesRecogidas,
       totalRecaudadoEfectivo,
       totalRecaudadoTransferencia

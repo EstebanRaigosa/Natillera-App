@@ -482,7 +482,21 @@
             v-for="natillera in todasLasNatillerasFiltradas" 
             :key="natillera.id"
             class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+            :class="{ 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken': mostrarBordeTealNatillera(natillera) }"
           >
+            <!-- Cinta diagonal: De otro usuario (solo para raigo, cuando el propietario no es raigo) -->
+            <div
+              v-if="mostrarBordeTealNatillera(natillera)"
+              class="absolute top-0 right-0 w-28 h-28 overflow-hidden pointer-events-none z-10"
+              aria-hidden="true"
+            >
+              <span
+                class="absolute top-7 -right-9 w-36 py-1 bg-teal-500 text-white text-xs font-bold text-center shadow-md"
+                style="transform: rotate(45deg);"
+              >
+                De otro usuario
+              </span>
+            </div>
             <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
             <router-link 
               :to="`/natilleras/${natillera.id}`"
@@ -790,7 +804,21 @@
             v-for="natillera in natillerasCompartidasFiltradas" 
             :key="natillera.id"
             class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+            :class="{ 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken': mostrarBordeTealNatillera(natillera) }"
           >
+            <!-- Cinta diagonal: De otro usuario (solo para raigo, cuando el propietario no es raigo) -->
+            <div
+              v-if="mostrarBordeTealNatillera(natillera)"
+              class="absolute top-0 right-0 w-28 h-28 overflow-hidden pointer-events-none z-10"
+              aria-hidden="true"
+            >
+              <span
+                class="absolute top-7 -right-9 w-36 py-1 bg-teal-500 text-white text-xs font-bold text-center shadow-md"
+                style="transform: rotate(45deg);"
+              >
+                De otro usuario
+              </span>
+            </div>
             <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
             <router-link 
               :to="`/natilleras/${natillera.id}`"
@@ -1193,6 +1221,26 @@ const verificandoModal = ref(true) // Estado para la animación de carga
 const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
 const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
 
+// Solo para raigo.16@gmail.com: resaltar con contorno teal las natilleras cuyo propietario NO es raigo.16@gmail.com
+const esUsuarioRaigo = computed(() => (authStore.userEmail || '').toLowerCase().trim() === 'raigo.16@gmail.com')
+const emailPorAdminId = ref({}) // admin_id -> email del propietario (para saber si es raigo)
+
+function propietarioEsRaigo(natillera) {
+  if (!natillera?.admin_id) return false
+  const email = (emailPorAdminId.value[natillera.admin_id] || '').toLowerCase().trim()
+  return email === 'raigo.16@gmail.com'
+}
+
+// Mostrar borde teal cuando el usuario es raigo, el propietario NO es raigo, y es natillera propia (no compartida)
+function mostrarBordeTealNatillera(natillera) {
+  if (!esUsuarioRaigo.value) return false
+  if (natillera?.es_propia !== true) return false // Solo en propias, nunca en compartidas
+  if (!natillera?.admin_id) return false
+  const email = (emailPorAdminId.value[natillera.admin_id] ?? '').toString().toLowerCase().trim()
+  if (email === '') return false // Aún no hemos cargado el email del propietario
+  return email !== 'raigo.16@gmail.com'
+}
+
 // Mensajes de carga que rotarán
 const mensajesCarga = [
   'Calienta toda la suplencia...',
@@ -1228,10 +1276,16 @@ const totalSocios = computed(() => {
 })
 
 const natillerasFiltradas = computed(() => {
-  if (filtro.value === 'todas') {
-    return natillerasStore.natilleras
+  let list = filtro.value === 'todas'
+    ? natillerasStore.natilleras
+    : natillerasStore.natilleras.filter(n => n.estado === filtro.value)
+  // En "Mías" solo mostrar natilleras donde el usuario es el propietario (admin).
+  // Importante para superusuario raigo: excluye natilleras de otros que ve en el listado general.
+  const userId = usuarioAutenticado.value?.id
+  if (userId) {
+    list = list.filter(n => n.admin_id === userId)
   }
-  return natillerasStore.natilleras.filter(n => n.estado === filtro.value)
+  return list
 })
 
 const natillerasCompartidasFiltradas = computed(() => {
@@ -1509,6 +1563,31 @@ watch(verificandoModal, (mostrando) => {
   }
 }, { immediate: true }) // immediate: true para que se ejecute al montar el componente
 
+// Cargar emails de propietarios (admin_id -> email) para resaltar natilleras de otros cuando el usuario es raigo
+async function cargarEmailsPropietarios() {
+  if (!esUsuarioRaigo.value) return
+  const propias = natillerasStore.natilleras || []
+  const compartidas = natillerasStore.natillerasCompartidas || []
+  const adminIds = [...new Set([
+    ...propias.map(n => n?.admin_id).filter(Boolean),
+    ...compartidas.map(n => n?.admin_id).filter(Boolean)
+  ])]
+  if (adminIds.length === 0) {
+    emailPorAdminId.value = {}
+    return
+  }
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id, email')
+      .in('id', adminIds)
+    if (error) return
+    emailPorAdminId.value = Object.fromEntries((data || []).map(p => [p.id, p.email || '']))
+  } catch (e) {
+    console.warn('Error cargando emails de propietarios:', e)
+  }
+}
+
 // Watch para cuando termine de cargar las natilleras - este es el momento principal
 watch(() => natillerasStore.loading, async (loading, oldLoading) => {
   // Si las natilleras empiezan a cargar y no está la animación visible, mostrarla
@@ -1520,12 +1599,20 @@ watch(() => natillerasStore.loading, async (loading, oldLoading) => {
   if (oldLoading && !loading && usuarioAutenticado.value && verificandoModal.value) {
     await finalizarVerificacionYMostrarModal()
   }
+
+  // Cuando terminan de cargar, si el usuario es raigo, cargar emails de propietarios para el borde teal
+  if (oldLoading && !loading && esUsuarioRaigo.value) {
+    await cargarEmailsPropietarios()
+  }
 })
 
 // Watch de respaldo: si el usuario se autentica después de que terminó la carga
 watch(() => usuarioAutenticado.value, async (usuario) => {
   if (usuario && !natillerasStore.loading && verificandoModal.value) {
     await finalizarVerificacionYMostrarModal()
+  }
+  if (usuario && esUsuarioRaigo.value && !natillerasStore.loading) {
+    await cargarEmailsPropietarios()
   }
 })
 

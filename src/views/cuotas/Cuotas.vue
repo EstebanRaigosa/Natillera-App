@@ -885,7 +885,7 @@
 
       <!-- Vista Agrupada por Socio -->
       <template v-if="vistaAgrupada && !vistaExcel && !vistaLista">
-        <div class="space-y-4">
+        <div class="space-y-4 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:space-y-0">
           <div 
             v-for="grupo in cuotasAgrupadasPorSocio" 
             :key="grupo.socioId"
@@ -1212,7 +1212,7 @@
 
       <!-- Vista Tarjetas - Diseño flat según estado -->
       <template v-else-if="!vistaExcel && !vistaAgrupada && !vistaLista">
-        <div class="space-y-4">
+        <div class="space-y-4 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:space-y-0">
           <div 
             v-for="cuota in cuotasFiltradas" 
             :key="cuota.id"
@@ -1387,31 +1387,32 @@
                 </ul>
               </div>
 
-                <!-- Botones de acción flat: pago parcial = Pagar ancho completo, Editar/Reenviar mitad cada uno -->
-                <div class="flex flex-wrap gap-2 mt-3" @click.stop>
+                <!-- Botones de acción flat: Pagar centrado 70% de la tarjeta -->
+                <div class="flex flex-wrap justify-center gap-2 mt-3 w-full" @click.stop>
                   <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
-                    <div class="flex flex-col gap-2 w-full">
+                    <!-- Desktop: una fila Pagar restante 50% + Editar 25% + Reenviar 25%. Móvil: Pagar 70% arriba, luego fila Editar + Reenviar -->
+                    <div class="flex flex-col gap-2 w-full items-center md:flex-row md:gap-2 md:w-full">
                       <button 
                         v-if="!esVisor"
                         @click="abrirModalPago(cuota)"
-                        class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                        class="w-full md:w-[50%] min-w-0 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       >
                         <CurrencyDollarIcon class="w-5 h-5" />
-                        <span>$ Pagar</span>
+                        <span>Pagar restante</span>
                       </button>
-                      <div class="flex gap-2 w-full">
+                      <div class="flex gap-2 w-full md:contents min-w-0">
                         <button 
                           v-if="!esVisor"
                           @click="abrirModalEditar(cuota)"
-                          class="flex-1 min-w-0 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                          class="flex-1 min-w-0 md:w-[25%] md:flex-none px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                           title="Editar pago"
                         >
-                          <CheckIcon class="w-4 h-4" />
+                          <PencilIcon class="w-4 h-4" />
                           <span>Editar</span>
                         </button>
                         <button 
                           @click="reenviarComprobante(cuota)"
-                          class="flex-1 min-w-0 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                          class="flex-1 min-w-0 md:w-[25%] md:flex-none px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                           title="Reenviar comprobante"
                         >
                           <ArrowPathIcon class="w-4 h-4" />
@@ -1424,7 +1425,7 @@
                     <button 
                       v-if="!esVisor"
                       @click="abrirModalPago(cuota)"
-                      class="w-full sm:w-auto px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                      class="w-full md:w-[70%] min-w-0 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                     >
                       <CurrencyDollarIcon class="w-5 h-5" />
                       <span>$ Pagar</span>
@@ -1433,7 +1434,7 @@
                   <template v-else>
                     <button 
                       @click="reenviarComprobante(cuota)"
-                      class="w-full sm:w-auto px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                      class="w-[70%] min-w-0 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       title="Reenviar comprobante"
                     >
                       <ArrowPathIcon class="w-4 h-4" />
@@ -1725,17 +1726,27 @@
       </div>
     </div>
 
-    <!-- Botón Volver arriba al final del contenido -->
-    <div class="flex justify-center pt-6 pb-4">
-      <button
-        @click="scrollToTop"
-        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-700 hover:bg-gray-800 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-colors"
-        title="Volver arriba"
+    <!-- Botón flotante "Volver arriba" - solo móvil, encima de todo -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0 translate-y-2"
+        enter-to-class="opacity-100 translate-y-0"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100 translate-y-0"
+        leave-to-class="opacity-0 translate-y-2"
       >
-        <ArrowUpIcon class="w-5 h-5" />
-        <span>Volver arriba</span>
-      </button>
-    </div>
+        <button
+          v-if="mostrarBotonArriba"
+          @click="scrollToTop"
+          class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[9999] w-12 h-12 bg-gradient-to-br from-natillera-600 to-emerald-600 hover:from-natillera-700 hover:to-emerald-700 rounded-full shadow-xl shadow-natillera-900/30 flex items-center justify-center text-white touch-manipulation transition-all ring-2 ring-white/80"
+          title="Volver arriba"
+          aria-label="Volver arriba"
+        >
+          <ArrowUpIcon class="w-6 h-6" />
+        </button>
+      </Transition>
+    </Teleport>
 
     <!-- Modal Confirmar Borrar Cuotas -->
     <div v-if="modalConfirmarBorrar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -3421,7 +3432,7 @@
                 </div>
                 <div>
                   <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Período</p>
-                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ pagoRegistrado?.periodo || pagoRegistrado?.descripcionCuota || 'N/A' }}</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ pagoRegistrado?.periodo || 'N/A' }}</p>
                 </div>
                 <div>
                   <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha</p>
@@ -4783,7 +4794,8 @@ import * as XLSX from 'xlsx-js-style'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const props = defineProps({
-  id: String
+  id: String,
+  mes: String // Parámetro de ruta natilleras/:id/cuotas/:mes
 })
 
 const route = useRoute()
@@ -4904,6 +4916,7 @@ const inputValorPagoRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
 const vistaAgrupada = ref(false) // true = vista agrupada por socio
 const vistaLista = ref(false) // true = vista lista simple
+const mostrarBotonArriba = ref(false) // Botón flotante "Volver arriba"
 const miRol = ref(null)
 const usuarioAutenticado = ref(null)
 
@@ -5248,13 +5261,28 @@ handleModalBack(modalDetalleCuota, 'detalleCuota')
 onMounted(() => {
   checkMobileView()
   window.addEventListener('resize', checkMobileView)
+  scrollContainerMain = document.querySelector('main')
+  if (scrollContainerMain) {
+    scrollContainerMain.addEventListener('scroll', handleScrollArriba, { passive: true })
+  }
+  window.addEventListener('scroll', handleScrollArriba, { passive: true })
+  nextTick(() => {
+    handleScrollArriba()
+    // Revisar de nuevo tras pintar (por si el scroll está en main y aún no ha habido evento)
+    setTimeout(handleScrollArriba, 100)
+  })
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobileView)
+  if (scrollContainerMain) {
+    scrollContainerMain.removeEventListener('scroll', handleScrollArriba)
+  }
+  window.removeEventListener('scroll', handleScrollArriba)
   document.removeEventListener('click', handleClickOutside)
+  scrollContainerMain = null
   // Remover listener para el botón atrás
   window.removeEventListener('popstate', handlePopState)
 })
@@ -5446,10 +5474,11 @@ const cuotasAgrupadasPorSocio = computed(() => {
     
     // Calcular pendiente: solo incluir cuotas que NO estén en estado programada
     // Incluir cuotas pendientes, en mora o con pago parcial
+    // Usar getTotalAPagar para incluir sanciones en el cálculo
     const estadoReal = cuota.estadoReal || cuota.estado
     if (estadoReal !== 'programada') {
-      const pendiente = (cuota.valor_cuota || 0) - (cuota.valor_pagado || 0)
-      grupos[socioId].pendiente += pendiente > 0 ? pendiente : 0
+      const pendiente = Math.max(0, getTotalAPagar(cuota))
+      grupos[socioId].pendiente += pendiente
     }
   })
   
@@ -5616,7 +5645,35 @@ function getMesEmoji(mes) {
 
 // Nombre del mes
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  const main = document.querySelector('main')
+  if (main && main.scrollTop > 0) {
+    main.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+}
+
+// Mostrar botón flotante "Volver arriba" cuando el usuario ha hecho scroll hacia abajo
+let scrollContainerMain = null
+const UMBRAL_SCROLL_PX = 120
+
+function handleScrollArriba() {
+  if (!scrollContainerMain) scrollContainerMain = document.querySelector('main')
+  let scrollTop = 0
+  let scrollHeight = 0
+  let clientHeight = 0
+  if (scrollContainerMain) {
+    scrollTop = scrollContainerMain.scrollTop
+    scrollHeight = scrollContainerMain.scrollHeight
+    clientHeight = scrollContainerMain.clientHeight
+  } else {
+    scrollTop = window.scrollY || document.documentElement.scrollTop
+    scrollHeight = document.documentElement.scrollHeight
+    clientHeight = window.innerHeight
+  }
+  const hayScroll = scrollHeight > clientHeight + 50
+  const haBajado = scrollTop > UMBRAL_SCROLL_PX
+  mostrarBotonArriba.value = hayScroll && haBajado
 }
 
 function getMesLabel(mes) {
@@ -5635,6 +5692,24 @@ function getMesLabel(mes) {
     12: 'Diciembre'
   }
   return meses[mes] || 'Mes'
+}
+
+/**
+ * Obtiene el período limpio para el comprobante (sin texto de ajustes).
+ * Mensual: "Enero 2025"
+ * Quincenal: "Enero 2025 - 1ra Quincena" o "Enero 2025 - 2da Quincena"
+ */
+function obtenerPeriodoComprobante(cuota) {
+  if (!cuota) return 'N/A'
+  const mes = cuota.mes
+  const anio = cuota.anio
+  const quincena = cuota.quincena
+  const mesLabel = getMesLabel(mes)
+  if (!mes || !anio) return 'N/A'
+  if (quincena === 1 || quincena === 2) {
+    return `${mesLabel} ${anio} - ${quincena === 1 ? '1ra' : '2da'} Quincena`
+  }
+  return `${mesLabel} ${anio}`
 }
 
 const formCuotas = reactive({
@@ -5817,6 +5892,16 @@ watch(modalPago, (isOpen) => {
   }
 })
 
+// Cuando termina la carga inicial, recalcular si debe mostrarse el botón "Volver arriba"
+watch(inicializando, (val) => {
+  if (!val) {
+    nextTick(() => {
+      handleScrollArriba()
+      setTimeout(handleScrollArriba, 200)
+    })
+  }
+})
+
 // Watch para cargar actividades pendientes cuando cambien las cuotas filtradas
 watch(cuotasFiltradas, async () => {
   // Cargar actividades pendientes tanto en vista agrupada como en tarjetas individuales
@@ -5955,12 +6040,10 @@ async function recalcularSancionesMes() {
   
   // Recalcular sanciones dinámicas para todas las cuotas (en mora + mes seleccionado)
   const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasACalcular)
-  if (resultSanciones.success) {
-    // Actualizar todas las sanciones calculadas
-    Object.keys(resultSanciones.sanciones || {}).forEach(cuotaId => {
-      sancionesDinamicas.value[cuotaId] = resultSanciones.sanciones[cuotaId]
-    })
-    console.log('💰 Sanciones recalculadas:', Object.keys(resultSanciones.sanciones || {}).length, 'cuotas (en mora + mes seleccionado)')
+  if (resultSanciones.success && resultSanciones.sanciones && Object.keys(resultSanciones.sanciones).length > 0) {
+    // Reemplazar el objeto para que Vue detecte el cambio y se muestren base + intereses por día
+    sancionesDinamicas.value = { ...sancionesDinamicas.value, ...resultSanciones.sanciones }
+    console.log('💰 Sanciones recalculadas:', Object.keys(resultSanciones.sanciones).length, 'cuotas (base + intereses por día)')
   }
 }
 
@@ -8529,6 +8612,7 @@ async function handleRegistrarPago() {
       valorPagadoTotal: valorPagadoTotalCalculado, // Total pagado = cuota + sanciones + actividades
       valorPendiente: valorPendienteCalculado,
       esParcial: esParcialCalculado,
+      periodo: obtenerPeriodoComprobante(cuotaSeleccionada.value), // Período limpio (sin texto de ajustes)
       descripcionCuota,
       codigoComprobante, // Código único del comprobante
       sancion: sancionTotal, // Sanción total (pagada + pendiente)
@@ -8817,7 +8901,7 @@ function generarImagenComprobante() {
       ctx.fillText('PERÍODO', cardInnerX + 10 + gridItemWidth, gridY + 12)
       ctx.fillStyle = '#1e293b'
       ctx.font = 'bold 12px Arial'
-      const periodoTexto = (pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A').substring(0, 20)
+      const periodoTexto = (pagoRegistrado.value?.periodo || 'N/A').substring(0, 25)
       ctx.fillText(periodoTexto, cardInnerX + 10 + gridItemWidth, gridY + 25)
       
       // Fecha
@@ -9571,6 +9655,7 @@ async function reenviarComprobante(cuota) {
     valorPagadoTotal,
     valorPendiente,
     esParcial,
+    periodo: obtenerPeriodoComprobante(cuota), // Período limpio (sin texto de ajustes)
     codigoComprobante: cuota.codigo_comprobante || null, // Incluir código del comprobante
     descripcionCuota: cuota.descripcion || formatDate(cuota.fecha_limite),
     sancion: sancionTotal, // Sanción total (pagada + pendiente)

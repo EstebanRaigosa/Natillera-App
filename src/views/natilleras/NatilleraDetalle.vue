@@ -2426,7 +2426,7 @@
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false"></div>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"></div>
       </Transition>
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -2446,12 +2446,12 @@
                 </div>
                 <div>
                   <h3 class="text-xl font-bold tracking-tight">Desglose de utilidades</h3>
-                  <p class="text-violet-200 text-sm mt-0.5">Clasificación por origen</p>
+                  <p class="text-violet-200 text-sm mt-0.5">{{ vistaUtilidadesModal === 'origen' ? 'Clasificación por origen' : 'Clasificación por forma de pago' }}</p>
                 </div>
               </div>
               <button
                 type="button"
-                @click="modalUtilidadesDesglose = false"
+                @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"
                 class="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
               >
                 <XMarkIcon class="w-5 h-5" />
@@ -2459,28 +2459,80 @@
             </div>
           </div>
 
+          <!-- Selector de vista: por origen / por forma de pago -->
+          <div class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
+            <button
+              type="button"
+              @click="vistaUtilidadesModal = 'origen'"
+              :class="[
+                'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
+                vistaUtilidadesModal === 'origen'
+                  ? 'bg-white text-violet-600 border border-b-0 border-gray-200 -mb-px shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Por origen
+            </button>
+            <button
+              type="button"
+              @click="vistaUtilidadesModal = 'formaPago'"
+              :class="[
+                'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
+                vistaUtilidadesModal === 'formaPago'
+                  ? 'bg-white text-violet-600 border border-b-0 border-gray-200 -mb-px shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Por forma de pago
+            </button>
+          </div>
+
           <!-- Lista flat y moderna -->
           <div class="overflow-y-auto flex-1 p-5 space-y-3">
-            <template v-if="(estadisticas.utilidadesDesglose || []).length">
-              <div
-                v-for="item in (estadisticas.utilidadesDesglose || [])"
-                :key="item.id"
-                class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
-              >
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-gray-800">{{ item.label }}</p>
-                  <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
+            <template v-if="vistaUtilidadesModal === 'origen'">
+              <template v-if="(estadisticas.utilidadesDesglose || []).length">
+                <div
+                  v-for="item in (estadisticas.utilidadesDesglose || [])"
+                  :key="item.id"
+                  class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800">{{ item.label }}</p>
+                    <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
+                  </div>
+                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
+                    ${{ formatMoney(item.value) }}
+                  </p>
                 </div>
-                <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
-                  ${{ formatMoney(item.value) }}
-                </p>
+              </template>
+              <div v-else class="text-center py-8 text-gray-500">
+                <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <p class="font-medium">Sin utilidades registradas</p>
+                <p class="text-sm mt-1">Las utilidades aparecerán al recaudar multas, intereses o actividades.</p>
               </div>
             </template>
-            <div v-else class="text-center py-8 text-gray-500">
-              <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
-              <p class="font-medium">Sin utilidades registradas</p>
-              <p class="text-sm mt-1">Las utilidades aparecerán al recaudar multas, intereses o actividades.</p>
-            </div>
+            <template v-else>
+              <template v-if="(estadisticas.utilidadesPorFormaPago || []).length">
+                <div
+                  v-for="item in (estadisticas.utilidadesPorFormaPago || [])"
+                  :key="item.id"
+                  class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                >
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800">{{ item.label }}</p>
+                    <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
+                  </div>
+                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
+                    ${{ formatMoney(item.value) }}
+                  </p>
+                </div>
+              </template>
+              <div v-else class="text-center py-8 text-gray-500">
+                <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                <p class="font-medium">Sin utilidades por forma de pago</p>
+                <p class="text-sm mt-1">Las multas pagadas en efectivo o transferencia aparecerán aquí.</p>
+              </div>
+            </template>
 
             <!-- Total -->
             <div class="mt-4 pt-4 border-t-2 border-violet-200 rounded-xl bg-violet-50/80 p-4">
@@ -2497,7 +2549,7 @@
           <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
             <button
               type="button"
-              @click="modalUtilidadesDesglose = false"
+              @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"
               class="w-full py-3 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors"
             >
               Cerrar
@@ -2674,6 +2726,7 @@ const animacionesCuotasMora = ref(true) // Controla si se muestran las animacion
 const modalSociosEnMora = ref(false)
 const modalDesgloseRecaudacion = ref(false)
 const modalUtilidadesDesglose = ref(false)
+const vistaUtilidadesModal = ref('origen') // 'origen' | 'formaPago'
 const loadingCuotasSocio = ref(false)
 const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
@@ -3641,6 +3694,7 @@ const estadisticas = ref({
   utilidadActividades: 0,
   utilidadesRecogidas: 0,
   utilidadesDesglose: [],
+  utilidadesPorFormaPago: [],
   fondoTotal: 0,
   totalRecaudadoEfectivo: 0,
   totalRecaudadoTransferencia: 0
@@ -3657,6 +3711,7 @@ async function calcularEstadisticasAsync() {
       utilidadActividades: 0,
       utilidadesRecogidas: 0,
       utilidadesDesglose: [],
+      utilidadesPorFormaPago: [],
       fondoTotal: 0,
       totalRecaudadoEfectivo: 0,
       totalRecaudadoTransferencia: 0
@@ -3673,6 +3728,7 @@ async function calcularEstadisticasAsync() {
     utilidadActividades: 0,
     utilidadesRecogidas: 0,
     utilidadesDesglose: [],
+    utilidadesPorFormaPago: [],
     fondoTotal: 0,
     totalRecaudadoEfectivo: 0,
     totalRecaudadoTransferencia: 0
