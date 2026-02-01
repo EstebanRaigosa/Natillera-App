@@ -1976,7 +1976,7 @@
               <div class="relative">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-amber-200 shadow-xl overflow-hidden bg-gray-100">
                   <img 
-                    :src="getAvatarUrl(actividadSeleccionada.ganador_nombre, null, 'adventurer')" 
+                    :src="getAvatarUrl(actividadSeleccionada.ganador_nombre, actividadSeleccionada.ganador_socio_natillera?.socio?.avatar_seed, actividadSeleccionada.ganador_socio_natillera?.socio?.avatar_style || 'adventurer')" 
                     :alt="actividadSeleccionada.ganador_nombre"
                     class="w-full h-full object-cover"
                   />
@@ -2043,7 +2043,7 @@
                   </template>
                   <template v-else>
                     <div v-if="actividad.ganador_es_faltante" class="w-9 h-9 rounded-lg bg-natillera-200 flex items-center justify-center text-base flex-shrink-0">🏦</div>
-                    <img v-else :src="getAvatarUrl(actividad.ganador_nombre || '', null, 'adventurer')" :alt="actividad.ganador_nombre" class="w-9 h-9 rounded-full ring-2 ring-amber-200 object-cover flex-shrink-0" />
+                    <img v-else :src="getAvatarUrl(actividad.ganador_nombre || '', actividad.ganador_socio_natillera?.socio?.avatar_seed, actividad.ganador_socio_natillera?.socio?.avatar_style || 'adventurer')" :alt="actividad.ganador_nombre" class="w-9 h-9 rounded-full ring-2 ring-amber-200 object-cover flex-shrink-0" />
                     <div class="min-w-0">
                       <span class="text-xs px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-900 font-bold">Nº {{ String(actividad.numero_ganador).padStart(2, '0') }}</span>
                       <p class="text-sm font-semibold text-gray-800 truncate mt-0.5">{{ actividad.ganador_es_faltante ? '¡Gana la natillera!' : (actividad.ganador_nombre || 'Desconocido') }}</p>
@@ -4399,7 +4399,12 @@ async function fetchActividades() {
   try {
     const { data, error } = await supabase
       .from('actividades')
-      .select('*')
+      .select(`
+        *,
+        ganador_socio_natillera:socios_natillera!ganador_socio_natillera_id(
+          socio:socios(nombre, avatar_seed, avatar_style)
+        )
+      `)
       .eq('natillera_id', id)
       .order('created_at', { ascending: false })
 

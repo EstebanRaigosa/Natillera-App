@@ -1,9 +1,17 @@
-import { watch, onUnmounted } from 'vue'
+import { watch, onUnmounted, ref, readonly } from 'vue'
 
 // Contador global: solo desbloquear cuando ninguna modal esté abierta (evita race al pasar de modal pago a modal comprobante)
 let lockCount = 0
 let savedScrollY = 0
 let savedScrollYMain = 0
+
+const _isBodyScrollLocked = ref(false)
+/** Ref global: true cuando hay al menos una modal abierta (para que el layout suba z-index y la barra quede debajo) */
+export const isBodyScrollLocked = readonly(_isBodyScrollLocked)
+
+function updateLockedRef() {
+  _isBodyScrollLocked.value = lockCount > 0
+}
 
 function applyLock() {
   const html = document.documentElement
@@ -23,7 +31,7 @@ function applyLock() {
     main.style.right = '0'
     main.style.width = '100%'
     main.style.overflow = 'hidden'
-    main.style.touchAction = 'none'
+    // No aplicar touch-action: none para permitir scroll dentro de las modales
   }
 }
 
@@ -43,7 +51,6 @@ function applyUnlock() {
     main.style.right = ''
     main.style.width = ''
     main.style.overflow = ''
-    main.style.touchAction = ''
     main.scrollTop = savedScrollYMain
   }
 }
@@ -59,6 +66,7 @@ export function useBodyScrollLock(isOpen) {
   const lockBodyScroll = () => {
     lockCount++
     thisInstanceLocked = true
+    updateLockedRef()
     applyLock()
   }
 
@@ -66,6 +74,7 @@ export function useBodyScrollLock(isOpen) {
     if (!thisInstanceLocked) return
     thisInstanceLocked = false
     lockCount = Math.max(0, lockCount - 1)
+    updateLockedRef()
     if (lockCount === 0) {
       applyUnlock()
     }

@@ -3029,16 +3029,17 @@
     </div>
     </Teleport>
 
-    <!-- Animación de registro de pago -->
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div v-if="mostrandoAnimacionPago" class="fixed inset-0 z-[60] flex items-center justify-center overflow-hidden" style="will-change: opacity, transform; touch-action: none; overscroll-behavior: none;">
+    <!-- Animación de registro de pago (Teleport + z-[70] para quedar por encima del modal de pago z-[60]) -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div v-if="mostrandoAnimacionPago" class="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden" style="will-change: opacity, transform; touch-action: none; overscroll-behavior: none;">
         <!-- Fondo con blur y gradiente animado que bloquea interacciones -->
         <div 
           class="absolute inset-0 bg-gradient-to-br from-natillera-500/90 via-emerald-500/90 to-teal-600/90 backdrop-blur-sm" 
@@ -3134,6 +3135,7 @@
         </div>
       </div>
     </Transition>
+    </Teleport>
 
     <!-- Modal Historial de Ajustes (z-[70] para quedar por encima del modal de pago z-[60]) -->
     <Teleport to="body">

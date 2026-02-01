@@ -345,34 +345,40 @@
       class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
     ></div>
 
-    <!-- Contenido principal -->
-    <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden overflow-y-auto">
-      <!-- Header móvil -->
-      <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
-        <div class="flex items-center justify-between">
-          <button
-            type="button"
-            @click="sidebarOpen = true"
-            class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Abrir menú"
-          >
-            <Bars3Icon class="w-6 h-6" />
-          </button>
-          <h1 class="font-display font-bold text-lg">
-            <AppBrand />
-          </h1>
-          <div class="w-10"></div>
-        </div>
-      </header>
+    <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
+    <div 
+      class="flex-1 flex flex-col min-w-0 min-h-screen relative"
+      :class="{ 'z-50': isBodyScrollLocked }"
+    >
+      <!-- Contenido principal -->
+      <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden overflow-y-auto">
+        <!-- Header móvil -->
+        <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
+          <div class="flex items-center justify-between">
+            <button
+              type="button"
+              @click="sidebarOpen = true"
+              class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="Abrir menú"
+            >
+              <Bars3Icon class="w-6 h-6" />
+            </button>
+            <h1 class="font-display font-bold text-lg">
+              <AppBrand />
+            </h1>
+            <div class="w-10"></div>
+          </div>
+        </header>
 
-      <!-- Contenido de la página: reservar espacio hasta donde empieza la barra inferior en móvil -->
-      <div 
-        class="flex-1 p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
-        :class="route.params.id ? 'content-above-bottom-nav lg:pb-3' : 'pb-3'"
-      >
-        <router-view />
-      </div>
-    </main>
+        <!-- Contenido de la página: reservar espacio hasta donde empieza la barra inferior en móvil -->
+        <div 
+          class="flex-1 p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
+          :class="route.params.id ? 'content-above-bottom-nav lg:pb-3' : 'pb-3'"
+        >
+          <router-view />
+        </div>
+      </main>
+    </div>
 
     <!-- Navegación inferior móvil -->
     <MobileBottomNav />
@@ -422,6 +428,7 @@ import {
   UserGroupIcon,
   ShareIcon
 } from '@heroicons/vue/24/outline'
+import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import AppBrand from '../components/AppBrand.vue'
