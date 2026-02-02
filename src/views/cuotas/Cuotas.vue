@@ -583,37 +583,13 @@
             </button>
           </div>
         </div>
-
-        <!-- Barra de búsqueda -->
-        <div class="relative w-full">
-          <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
-            <MagnifyingGlassIcon class="w-5 h-5 text-gray-400" />
-          </div>
-          <input 
-            ref="inputBusquedaRef"
-            v-model="busquedaCuotas"
-            type="text"
-            placeholder="Buscar por nombre del socio, descripción de la cuota..."
-            @keydown.esc="busquedaCuotas = ''"
-            class="w-full pl-12 pr-12 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 focus:bg-white transition-all shadow-sm"
-          />
-          <div v-if="busquedaCuotas.trim()" class="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
-            <button
-              @click="busquedaCuotas = ''"
-              class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Limpiar búsqueda"
-            >
-              <XMarkIcon class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
             </div>
           </div>
         </div>
     </Transition>
 
-    <!-- Botón para mostrar/ocultar filtros - Móvil -->
-    <div class="md:hidden mt-4">
+    <!-- Botón para mostrar/ocultar filtros - Móvil (arriba para que la búsqueda quede debajo) -->
+    <div class="md:hidden mt-4 mb-4">
       <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
         <div class="flex items-center gap-2 p-2">
           <button
@@ -647,6 +623,32 @@
           >
             <XMarkIcon class="w-4 h-4" />
             <span class="hidden sm:inline">Quitar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de búsqueda (debajo de la sección de filtros) -->
+    <div class="mb-4">
+      <div class="relative w-full md:max-w-md">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+          <MagnifyingGlassIcon class="w-5 h-5 text-gray-400" />
+        </div>
+        <input 
+          ref="inputBusquedaRef"
+          v-model="busquedaCuotas"
+          type="text"
+          placeholder="Buscar por nombre del socio, descripción de la cuota..."
+          @keydown.esc="busquedaCuotas = ''"
+          class="w-full pl-12 pr-12 py-3 bg-white/90 backdrop-blur-sm border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 focus:bg-white transition-all shadow-sm"
+        />
+        <div v-if="busquedaCuotas.trim()" class="absolute inset-y-0 right-0 flex items-center pr-3 z-10">
+          <button
+            @click="busquedaCuotas = ''"
+            class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Limpiar búsqueda"
+          >
+            <XMarkIcon class="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -1581,6 +1583,7 @@
               <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 uppercase tracking-wider">Valor Cuota</th>
               <th class="px-4 py-3 text-right text-xs font-bold text-natillera-700 uppercase tracking-wider">Valor Pagado</th>
               <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Fecha Límite</th>
+              <th class="px-4 py-3 text-left text-xs font-bold text-natillera-700 uppercase tracking-wider">Forma de pago</th>
               <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 uppercase tracking-wider">Estado</th>
               <th class="px-4 py-3 text-center text-xs font-bold text-natillera-700 uppercase tracking-wider">Acciones</th>
             </tr>
@@ -1656,6 +1659,12 @@
               <td class="px-4 py-3 text-sm text-gray-600">
                 {{ formatDate(cuota.fecha_limite) }}
               </td>
+              <td class="px-4 py-3 text-sm text-gray-600">
+                <template v-if="cuota.estado === 'pagada'">
+                  {{ (cuota.tipo_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                </template>
+                <span v-else class="text-gray-400">—</span>
+              </td>
               <td class="px-4 py-3 text-center">
                 <span 
                   :class="[
@@ -1714,6 +1723,7 @@
               <td class="px-4 py-4 text-sm text-green-700 text-right font-bold">
                 ${{ formatMoney(totalesExcel.totalValorPagado) }}
               </td>
+              <td class="px-4 py-4 text-sm text-gray-600">—</td>
               <td class="px-4 py-4 text-sm text-gray-600" colspan="2">
                 —
               </td>
@@ -4930,6 +4940,7 @@ const columnasDisponibles = [
   { key: 'valor_pendiente', label: 'Valor Pendiente', description: 'Monto restante por pagar' },
   { key: 'fecha_limite', label: 'Fecha Límite', description: 'Fecha límite de pago' },
   { key: 'fecha_vencimiento', label: 'Fecha Vencimiento', description: 'Fecha de vencimiento (sin días de gracia)' },
+  { key: 'forma_pago', label: 'Forma de pago', description: 'Efectivo o transferencia (si la cuota está pagada)' },
   { key: 'estado', label: 'Estado', description: 'Estado de la cuota' },
   { key: 'quincena', label: 'Quincena', description: 'Número de quincena (si aplica)' }
 ]
@@ -5001,6 +5012,11 @@ const exportarAExcel = async () => {
         fila['Fecha Vencimiento'] = cuota.fecha_vencimiento ? formatDate(cuota.fecha_vencimiento) : 'N/A'
       }
       
+      if (columnasSeleccionadas.value.includes('forma_pago')) {
+        const fp = (cuota.tipo_pago || '').toLowerCase()
+        fila['Forma de pago'] = fp === 'transferencia' ? 'Transferencia' : fp === 'efectivo' ? 'Efectivo' : cuota.estado === 'pagada' ? 'Efectivo' : '—'
+      }
+      
       if (columnasSeleccionadas.value.includes('estado')) {
         let estadoTexto = cuota.estado
         if (estadoTexto === 'programada') estadoTexto = 'Programada'
@@ -5035,6 +5051,7 @@ const exportarAExcel = async () => {
       'valor_pendiente': 'Valor Pendiente',
       'fecha_limite': 'Fecha Límite',
       'fecha_vencimiento': 'Fecha Vencimiento',
+      'forma_pago': 'Forma de pago',
       'estado': 'Estado',
       'quincena': 'Quincena'
     }

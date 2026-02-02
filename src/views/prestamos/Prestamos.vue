@@ -326,8 +326,8 @@
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div ref="modalNuevoPrestamoScrollRef" class="flex-1 overflow-y-auto">
+        <!-- Contenido con scroll (min-h-0 evita que el flex se desmaquete al cambiar opciones) -->
+        <div ref="modalNuevoPrestamoScrollRef" class="flex-1 min-h-0 overflow-y-auto">
           <form @submit.prevent="handleCrearPrestamo" class="p-4 sm:p-6 space-y-4">
           <!-- Selector de Socio -->
           <div class="relative selector-socio-container">
@@ -738,6 +738,30 @@
               </svg>
               <span>Esta será la fecha de la primera cuota. Las siguientes cuotas se generarán {{ formPrestamo.periodicidad === 'quincenal' ? 'cada 15 días' : 'cada mes' }}</span>
             </p>
+          </div>
+
+          <!-- Medio de entrega del préstamo (botones en lugar de radio para evitar scroll/focus raro) -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Medio de entrega del préstamo</label>
+            <div class="flex gap-3">
+              <button
+                type="button"
+                @click="formPrestamo.medio_entrega = 'efectivo'"
+                class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors select-none"
+                :class="formPrestamo.medio_entrega === 'efectivo' ? 'border-natillera-500 bg-natillera-50 text-natillera-800' : 'border-gray-200 bg-white hover:border-gray-300'"
+              >
+                <span class="font-medium">Efectivo</span>
+              </button>
+              <button
+                type="button"
+                @click="formPrestamo.medio_entrega = 'transferencia'"
+                class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors select-none"
+                :class="formPrestamo.medio_entrega === 'transferencia' ? 'border-natillera-500 bg-natillera-50 text-natillera-800' : 'border-gray-200 bg-white hover:border-gray-300'"
+              >
+                <span class="font-medium">Transferencia</span>
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1.5">Indica cómo se entregará el valor al socio al crear el préstamo.</p>
           </div>
 
           <!-- Resumen de intereses -->
@@ -2742,6 +2766,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
+import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { 
   ArrowLeftIcon,
@@ -2766,6 +2791,7 @@ import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const notificationStore = useNotificationStore()
+const natillerasStore = useNatillerasStore()
 const auditoria = useAuditoria()
 
 const props = defineProps({
@@ -2823,7 +2849,8 @@ const formPrestamo = reactive({
   numero_cuotas: 1,
   tipo_interes: 'simple', // 'simple' o 'compuesto'
   periodicidad: 'mensual', // 'mensual' o 'quincenal'
-  fecha_pago: getCurrentDateISO() // Fecha de pago de la primera cuota
+  fecha_pago: getCurrentDateISO(), // Fecha de pago de la primera cuota
+  medio_entrega: 'efectivo' // efectivo | transferencia (cómo se entrega el préstamo al socio)
 })
 
 const montoFormateado = ref('100.000')
@@ -3274,32 +3301,7 @@ const cuotaMensual = computed(() => {
   return montoTotal.value / formPrestamo.numero_cuotas
 })
 
-// Watchers para hacer scroll automático cuando se selecciona tipo de interés o fecha de pago
-watch(mostrarInteresAnticipado, () => {
-  if (modalNuevoPrestamo.value && modalNuevoPrestamoScrollRef.value) {
-    nextTick(() => {
-      if (modalNuevoPrestamoScrollRef.value) {
-        modalNuevoPrestamoScrollRef.value.scrollTo({
-          top: modalNuevoPrestamoScrollRef.value.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    })
-  }
-})
-
-watch(() => formPrestamo.fecha_pago, () => {
-  if (modalNuevoPrestamo.value && modalNuevoPrestamoScrollRef.value && formPrestamo.fecha_pago) {
-    nextTick(() => {
-      if (modalNuevoPrestamoScrollRef.value) {
-        modalNuevoPrestamoScrollRef.value.scrollTo({
-          top: modalNuevoPrestamoScrollRef.value.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    })
-  }
-})
+// Sin scroll automático al cambiar tipo de interés o fecha: evitaba el salto y desmaquetado del modal
 
 // Calcular cuota mensual para el detalle del préstamo
 function calcularCuotaMensualDetalle(prestamo) {
@@ -5562,6 +5564,37 @@ async function handleCrearPrestamo() {
       return
     }
   }
+
+  // Validar que haya recaudado suficiente según la forma de pago seleccionada
+  const natilleraId = id
+  if (natilleraId) {
+    try {
+      const natillera = await natillerasStore.fetchNatillera(natilleraId)
+      if (natillera) {
+        const stats = await natillerasStore.calcularEstadisticas(natillera)
+        const medio = (formPrestamo.medio_entrega || 'efectivo').toLowerCase()
+        const disponibleEfectivo = Math.max(0, (stats.totalRecaudadoEfectivo || 0) - (stats.totalDesembolsadoEfectivo || 0))
+        const disponibleTransferencia = Math.max(0, (stats.totalRecaudadoTransferencia || 0) - (stats.totalDesembolsadoTransferencia || 0))
+        if (medio === 'efectivo' && capital > disponibleEfectivo) {
+          notificationStore.warning(
+            `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor a entregar: $${formatMoney(capital)}.`,
+            'Fondo insuficiente (efectivo)'
+          )
+          return
+        }
+        if (medio === 'transferencia' && capital > disponibleTransferencia) {
+          notificationStore.warning(
+            `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor a entregar: $${formatMoney(capital)}.`,
+            'Fondo insuficiente (transferencia)'
+          )
+          return
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo validar fondo por forma de pago:', e)
+      // No bloquear la creación si falla la consulta de estadísticas
+    }
+  }
   
   loading.value = true
   try {
@@ -5587,7 +5620,8 @@ async function handleCrearPrestamo() {
         interes_anticipado: mostrarInteresAnticipado.value,
         interes_total: interesTotalCalculado,
         numero_cuotas: formPrestamo.numero_cuotas,
-        periodicidad: formPrestamo.periodicidad
+        periodicidad: formPrestamo.periodicidad,
+        medio_entrega: formPrestamo.medio_entrega || 'efectivo'
       })
       .select(`
         *,
@@ -5675,6 +5709,7 @@ async function handleCrearPrestamo() {
     formPrestamo.tipo_interes = 'simple'
     formPrestamo.periodicidad = 'mensual'
     formPrestamo.fecha_pago = getCurrentDateISO()
+    formPrestamo.medio_entrega = 'efectivo'
     montoFormateado.value = '100.000'
     mostrarSelectorSocio.value = false
     busquedaSocio.value = ''

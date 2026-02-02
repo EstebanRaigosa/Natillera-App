@@ -137,8 +137,8 @@
               </div>
               <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Recaudado</p>
               <p class="text-green-600 text-lg sm:text-xl font-bold">
-                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalAportado) }}</span>
-                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalAportado) }}</span>
+                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) }}</span>
+                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) }}</span>
               </p>
             </button>
             
@@ -2320,7 +2320,12 @@
 
           <!-- Contenido -->
           <div class="overflow-y-auto flex-1 p-6 space-y-4">
-            <!-- Recaudado en Efectivo -->
+            <!-- Nota: forma de pago y préstamos -->
+            <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+              Los montos por forma de pago incluyen lo recaudado en cuotas menos los préstamos entregados en ese mismo medio, para facilitar las cuentas de caja.
+            </p>
+
+            <!-- Recaudado en Efectivo (neto: cuotas − préstamos entregados en efectivo) -->
             <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3">
@@ -2331,16 +2336,20 @@
                   </div>
                   <div>
                     <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
-                    <p class="text-gray-500 text-xs">Pagos realizados en efectivo</p>
+                    <p class="text-gray-500 text-xs">Cuotas en efectivo − préstamos entregados en efectivo</p>
                   </div>
                 </div>
               </div>
               <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}
+                ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
               </p>
+              <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
+                <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
+                <p>− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
+              </div>
             </div>
             
-            <!-- Recaudado en Transferencia -->
+            <!-- Recaudado en Transferencia (neto: cuotas − préstamos entregados en transferencia) -->
             <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
               <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-3">
@@ -2351,55 +2360,24 @@
                   </div>
                   <div>
                     <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
-                    <p class="text-gray-500 text-xs">Pagos realizados por transferencia</p>
+                    <p class="text-gray-500 text-xs">Cuotas por transferencia − préstamos entregados por transferencia</p>
                   </div>
                 </div>
               </div>
               <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}
+                ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
               </p>
-            </div>
-            
-            <!-- Total Recaudado -->
-            <div class="bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100 rounded-xl p-5 border-2 border-purple-300 relative overflow-hidden">
-              <!-- Efectos decorativos -->
-              <div class="absolute top-0 right-0 w-24 h-24 bg-purple-200/30 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-              <div class="absolute bottom-0 left-0 w-20 h-20 bg-indigo-200/30 rounded-full -ml-10 -mb-10 blur-xl"></div>
-              
-              <div class="relative z-10">
-                <div class="flex items-center justify-between mb-2">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="text-gray-700 text-sm font-semibold">TOTAL RECAUDADO</p>
-                      <p class="text-gray-500 text-xs">Suma de todos los pagos</p>
-                    </div>
-                  </div>
-                </div>
-                <p class="text-purple-700 text-3xl sm:text-4xl font-extrabold mt-3">
-                  ${{ formatMoney(estadisticas.totalAportado) }}
-                </p>
-                
-                <!-- Porcentajes -->
-                <div class="mt-4 pt-4 border-t border-purple-200 space-y-2">
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">Efectivo:</span>
-                    <span class="font-semibold text-green-700">
-                      {{ estadisticas.totalAportado > 0 ? ((estadisticas.totalRecaudadoEfectivo || 0) / estadisticas.totalAportado * 100).toFixed(1) : 0 }}%
-                    </span>
-                  </div>
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">Transferencia:</span>
-                    <span class="font-semibold text-blue-700">
-                      {{ estadisticas.totalAportado > 0 ? ((estadisticas.totalRecaudadoTransferencia || 0) / estadisticas.totalAportado * 100).toFixed(1) : 0 }}%
-                    </span>
-                  </div>
-                </div>
+              <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
+                <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
+                <p>− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
               </div>
+            </div>
+
+            <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) para que cuadre con el desglose -->
+            <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
+              <p class="text-violet-800 text-sm font-semibold">Fondo disponible</p>
+              <p class="text-violet-700 text-2xl font-extrabold mt-1">${{ formatMoney((Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) + (Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)))) }}</p>
+              <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades)</p>
             </div>
           </div>
 
@@ -3696,6 +3674,10 @@ const estadisticas = ref({
   utilidadesDesglose: [],
   utilidadesPorFormaPago: [],
   fondoTotal: 0,
+  totalRecaudadoNeto: 0,
+  totalDesembolsadoPrestamos: 0,
+  totalDesembolsadoEfectivo: 0,
+  totalDesembolsadoTransferencia: 0,
   totalRecaudadoEfectivo: 0,
   totalRecaudadoTransferencia: 0
 })
@@ -3713,6 +3695,10 @@ async function calcularEstadisticasAsync() {
       utilidadesDesglose: [],
       utilidadesPorFormaPago: [],
       fondoTotal: 0,
+      totalRecaudadoNeto: 0,
+      totalDesembolsadoPrestamos: 0,
+      totalDesembolsadoEfectivo: 0,
+      totalDesembolsadoTransferencia: 0,
       totalRecaudadoEfectivo: 0,
       totalRecaudadoTransferencia: 0
     }
@@ -3730,6 +3716,10 @@ async function calcularEstadisticasAsync() {
     utilidadesDesglose: [],
     utilidadesPorFormaPago: [],
     fondoTotal: 0,
+    totalRecaudadoNeto: 0,
+    totalDesembolsadoPrestamos: 0,
+    totalDesembolsadoEfectivo: 0,
+    totalDesembolsadoTransferencia: 0,
     totalRecaudadoEfectivo: 0,
     totalRecaudadoTransferencia: 0
   }
@@ -3870,9 +3860,29 @@ async function calcularDatosCierre() {
       return sum + (a.utilidad || 0)
     }, 0)
     
-    // Obtener sanciones pagadas desde utilidades_clasificadas
+    // Obtener sanciones pagadas: RPC primero; fallback a tabla si RPC falla
     let sancionesPagadas = 0
     try {
+      const { data: montoRpc, error: errorRpc } = await supabase
+        .rpc('obtener_sanciones_pagadas', { p_natillera_id: natilleraId })
+      if (!errorRpc && montoRpc != null) {
+        const valor = Array.isArray(montoRpc) ? montoRpc[0] : montoRpc
+        sancionesPagadas = parseFloat(valor) || 0
+      }
+      if (sancionesPagadas === 0 && (errorRpc || montoRpc == null)) {
+        const { data: utilidadSanciones } = await supabase
+          .from('utilidades_clasificadas')
+          .select('monto')
+          .eq('natillera_id', natilleraId)
+          .eq('tipo', 'sanciones')
+          .is('fecha_cierre', null)
+          .maybeSingle()
+        if (utilidadSanciones?.monto != null) {
+          sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
+        }
+      }
+    } catch (e) {
+      console.error('Error obteniendo sanciones:', e)
       const { data: utilidadSanciones } = await supabase
         .from('utilidades_clasificadas')
         .select('monto')
@@ -3880,16 +3890,9 @@ async function calcularDatosCierre() {
         .eq('tipo', 'sanciones')
         .is('fecha_cierre', null)
         .maybeSingle()
-
-      if (utilidadSanciones) {
-        sancionesPagadas = parseFloat(utilidadSanciones.monto || 0)
+      if (utilidadSanciones?.monto != null) {
+        sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
       }
-    } catch (e) {
-      console.error('Error obteniendo sanciones desde utilidades_clasificadas:', e)
-      // Fallback: calcular desde cuotas si hay error
-      sancionesPagadas = cuotas
-        .filter(c => c.estado === 'pagada' && c.valor_multa)
-        .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
     }
     
     // Obtener intereses de préstamos

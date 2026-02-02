@@ -2103,6 +2103,16 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Safe area para notch y home indicator en iPhone */
     padding-left: env(safe-area-inset-left, 0);
     padding-right: env(safe-area-inset-right, 0);
+    /* Corregir bug de 100vh en iOS Safari (barra de direcciones) */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Contenedores con h-screen: usar altura real en iOS */
+  .h-screen,
+  [class~="h-screen"] {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
   
   /* NO usar * { max-width: 100% } - rompe flex/grid y botones en iOS y Android */
@@ -2118,5 +2128,50 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   .fixed.inset-0 {
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  
+  /* Overlay del sidebar móvil: que el tap cierre el menú en iOS */
+  .sidebar-overlay,
+  .fixed.inset-0.bg-black\/20,
+  .fixed.inset-0[class*="bg-black"] {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+  }
+  
+  /* Barra inferior móvil: área táctil mínima 44pt en iOS */
+  .mobile-bottom-nav .nav-item,
+  .mobile-bottom-nav a,
+  .mobile-bottom-nav button {
+    min-height: 44px;
+    min-block-size: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
+  }
+  
+  /* Fondo deslizante del selector Email/Teléfono en login: no capturar taps en iOS */
+  .login-form-container .relative.flex > div.absolute[class*="bg-gradient"] {
+    pointer-events: none;
+  }
+  
+  /* Botón cerrar de notificaciones: área táctil 44pt en iOS */
+  [aria-label="Cerrar notificación"] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Inputs en modales/overlays: 16px para evitar zoom al enfocar en iOS */
+  .fixed.inset-0 input,
+  .fixed.inset-0 textarea,
+  .fixed.inset-0 select {
+    font-size: 16px !important;
   }
 }

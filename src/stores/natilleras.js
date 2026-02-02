@@ -961,16 +961,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         return sum + valorCuota
       }, 0)
 
-    // Calcular recaudado por tipo de pago
+    // Calcular recaudado por tipo de pago (null/vacío se considera efectivo, como en Cuotas.vue)
+    const tipoEfectivo = (t) => String(t ?? 'efectivo').toLowerCase().trim() === 'efectivo'
+    const tipoTransferencia = (t) => String(t ?? '').toLowerCase().trim() === 'transferencia'
     const totalRecaudadoEfectivo = cuotas
-      .filter(c => c.estado === 'pagada' && c.tipo_pago === 'efectivo')
+      .filter(c => c.estado === 'pagada' && tipoEfectivo(c.tipo_pago))
       .reduce((sum, c) => {
         const valorCuota = c.valor_cuota || 0
         return sum + valorCuota
       }, 0)
 
     const totalRecaudadoTransferencia = cuotas
-      .filter(c => c.estado === 'pagada' && c.tipo_pago === 'transferencia')
+      .filter(c => c.estado === 'pagada' && tipoTransferencia(c.tipo_pago))
       .reduce((sum, c) => {
         const valorCuota = c.valor_cuota || 0
         return sum + valorCuota
@@ -1011,10 +1013,31 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }, 0)
 
     // Calcular utilidades recogidas:
-    // 1. Sanciones de cuotas pagadas - Obtener desde utilidades_clasificadas
+    // 1. Sanciones de cuotas pagadas - RPC primero (admins); fallback a tabla (superusuario si RPC falla)
     let sancionesPagadas = 0
     if (natillera.id) {
       try {
+        const { data: montoRpc, error: errorRpc } = await supabase
+          .rpc('obtener_sanciones_pagadas', { p_natillera_id: natillera.id })
+
+        if (!errorRpc && montoRpc != null) {
+          const valor = Array.isArray(montoRpc) ? montoRpc[0] : montoRpc
+          sancionesPagadas = parseFloat(valor) || 0
+        }
+        if (sancionesPagadas === 0 && (errorRpc || montoRpc == null)) {
+          const { data: utilidadSanciones } = await supabase
+            .from('utilidades_clasificadas')
+            .select('monto')
+            .eq('natillera_id', natillera.id)
+            .eq('tipo', 'sanciones')
+            .is('fecha_cierre', null)
+            .maybeSingle()
+          if (utilidadSanciones?.monto != null) {
+            sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
+          }
+        }
+      } catch (e) {
+        console.error('Error obteniendo sanciones:', e)
         const { data: utilidadSanciones } = await supabase
           .from('utilidades_clasificadas')
           .select('monto')
@@ -1022,21 +1045,17 @@ export const useNatillerasStore = defineStore('natilleras', () => {
           .eq('tipo', 'sanciones')
           .is('fecha_cierre', null)
           .maybeSingle()
-
-        if (utilidadSanciones) {
-          sancionesPagadas = parseFloat(utilidadSanciones.monto || 0)
+        if (utilidadSanciones?.monto != null) {
+          sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
         }
-      } catch (e) {
-        console.error('Error obteniendo sanciones desde utilidades_clasificadas:', e)
-        // Fallback: calcular desde cuotas si hay error
-        sancionesPagadas = cuotas
-          .filter(c => c.estado === 'pagada' && c.valor_multa)
-          .reduce((sum, c) => sum + (c.valor_multa || 0), 0)
       }
     }
 
-    // 2. Intereses de préstamos (pagados y activos con pagos realizados)
+    // 2. Intereses de préstamos y total desembolsado en préstamos (valor a entregar al socio)
     let interesesPrestamos = 0
+    let totalDesembolsadoPrestamos = 0
+    let totalDesembolsadoEfectivo = 0
+    let totalDesembolsadoTransferencia = 0
     if (natillera.id) {
       try {
         // Obtener los IDs de socios_natillera de esta natillera
@@ -1048,14 +1067,23 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         if (sociosNatillera && sociosNatillera.length > 0) {
           const socioNatilleraIds = sociosNatillera.map(s => s.id)
           
-          // Obtener TODOS los préstamos (pagados y activos)
+          // Obtener TODOS los préstamos (pagados y activos), incluyendo medio_entrega para desglose
           const { data: prestamos } = await supabase
             .from('prestamos')
-            .select('id, monto, saldo_actual, interes, interes_anticipado, interes_total')
+            .select('id, monto, saldo_actual, interes, interes_anticipado, interes_total, medio_entrega')
             .in('socio_natillera_id', socioNatilleraIds)
             .in('estado', ['pagado', 'activo'])
 
           if (prestamos && prestamos.length > 0) {
+            // Valor total entregado a socios (capital de préstamos): se descuenta del fondo
+            totalDesembolsadoPrestamos = prestamos.reduce((sum, p) => sum + parseFloat(p.monto || 0), 0)
+            // Desglose por forma de entrega del préstamo (para cuentas de caja: efectivo vs transferencia)
+            totalDesembolsadoEfectivo = prestamos
+              .filter(p => (p.medio_entrega || '').toLowerCase() === 'efectivo')
+              .reduce((sum, p) => sum + parseFloat(p.monto || 0), 0)
+            totalDesembolsadoTransferencia = prestamos
+              .filter(p => (p.medio_entrega || '').toLowerCase() === 'transferencia')
+              .reduce((sum, p) => sum + parseFloat(p.monto || 0), 0)
             // Usar el mismo cálculo que en Prestamos.vue (totalIntereses computed):
             // Si es interés anticipado, usar el interés_total guardado (ya se cobró al inicio)
             // Si es interés mes vencido, calcular basado en lo pagado
@@ -1192,16 +1220,25 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     console.log('Utilidades recogidas total:', utilidadesRecogidas)
     console.log('=== FIN DEBUG ===')
 
+    // Recaudado neto: aportes (cuotas) menos lo desembolsado en préstamos (valor a entregar al socio)
+    const totalRecaudadoNeto = Math.max(0, totalAportado - totalDesembolsadoPrestamos)
+    // Fondo disponible: recaudado neto + utilidades
+    const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas
+
     return {
       totalSocios: socios.length,
       sociosActivos: socios.filter(s => s.estado === 'activo').length,
       totalAportado,
+      totalRecaudadoNeto,
       totalPendiente,
       utilidadActividades,
       utilidadesRecogidas,
       utilidadesDesglose,
       utilidadesPorFormaPago,
-      fondoTotal: totalAportado + utilidadesRecogidas,
+      fondoTotal,
+      totalDesembolsadoPrestamos,
+      totalDesembolsadoEfectivo,
+      totalDesembolsadoTransferencia,
       totalRecaudadoEfectivo,
       totalRecaudadoTransferencia
     }

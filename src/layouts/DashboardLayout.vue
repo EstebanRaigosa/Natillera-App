@@ -338,11 +338,14 @@
       </div>
     </div>
 
-    <!-- Overlay móvil -->
+    <!-- Overlay móvil (clase sidebar-overlay para iOS: asegurar que el tap cierre el menú) -->
     <div 
       v-if="sidebarOpen && !isLgScreen"
       @click="sidebarOpen = false"
-      class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+      class="sidebar-overlay fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+      role="button"
+      tabindex="-1"
+      aria-label="Cerrar menú"
     ></div>
 
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->

@@ -35,9 +35,10 @@
           <!-- Efecto de fondo animado para el botón activo -->
           <div 
           :class="[
-            'absolute top-1 sm:top-1.5 lg:top-[3px] xl:top-1.5 bottom-1 sm:bottom-1.5 lg:bottom-[3px] xl:bottom-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 shadow-lg transition-all duration-300 ease-out',
+            'absolute top-1 sm:top-1.5 lg:top-[3px] xl:top-1.5 bottom-1 sm:bottom-1.5 lg:bottom-[3px] xl:bottom-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 shadow-lg transition-all duration-300 ease-out pointer-events-none',
             loginMethod === 'email' ? 'left-1 sm:left-1.5 lg:left-[3px] xl:left-1.5 right-1/2' : 'left-1/2 right-1 sm:right-1.5 lg:right-[3px] xl:right-1.5'
           ]"
+          aria-hidden="true"
           ></div>
           
           <button

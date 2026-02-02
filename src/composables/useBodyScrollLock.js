@@ -18,6 +18,8 @@ function applyLock() {
   savedScrollY = window.scrollY || html.scrollTop
   document.body.style.position = 'fixed'
   document.body.style.top = `-${savedScrollY}px`
+  document.body.style.left = '0'
+  document.body.style.right = '0'
   document.body.style.width = '100%'
   document.body.style.overflow = 'hidden'
   html.style.overflow = 'hidden'
@@ -38,6 +40,8 @@ function applyLock() {
 function applyUnlock() {
   document.body.style.position = ''
   document.body.style.top = ''
+  document.body.style.left = ''
+  document.body.style.right = ''
   document.body.style.width = ''
   document.body.style.overflow = ''
   document.documentElement.style.overflow = ''
