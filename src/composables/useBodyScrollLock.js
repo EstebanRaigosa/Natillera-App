@@ -59,6 +59,21 @@ function applyLock() {
     // Forzar repaint en iOS para asegurar renderizado correcto
     requestAnimationFrame(() => {
       document.body.style.display = 'block'
+      // Forzar renderizado de modales después de bloquear scroll
+      // Esto asegura que las modales se muestren correctamente en iPhone
+      const modals = document.querySelectorAll('[class*="fixed"].inset-0, .fixed.inset-0')
+      modals.forEach(modal => {
+        if (modal && modal.style) {
+          // Forzar repaint de la modal
+          modal.style.display = modal.style.display || 'flex'
+          // Asegurar que esté visible
+          modal.style.opacity = '1'
+          modal.style.visibility = 'visible'
+          // Forzar nueva capa de composición
+          modal.style.transform = 'translate3d(0, 0, 0)'
+          modal.style.webkitTransform = 'translate3d(0, 0, 0)'
+        }
+      })
     })
   } else {
     // Para Android y otros: usar el método original con position fixed

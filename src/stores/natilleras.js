@@ -964,6 +964,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     // Calcular recaudado por tipo de pago (null/vacío se considera efectivo, como en Cuotas.vue)
     const tipoEfectivo = (t) => String(t ?? 'efectivo').toLowerCase().trim() === 'efectivo'
     const tipoTransferencia = (t) => String(t ?? '').toLowerCase().trim() === 'transferencia'
+    
+    // Recaudado neto: solo valor_cuota (sin sanciones ni actividades) - para la vista "Recaudado Neto"
     const totalRecaudadoEfectivo = cuotas
       .filter(c => c.estado === 'pagada' && tipoEfectivo(c.tipo_pago))
       .reduce((sum, c) => {
@@ -976,6 +978,23 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       .reduce((sum, c) => {
         const valorCuota = c.valor_cuota || 0
         return sum + valorCuota
+      }, 0)
+
+    // Recaudado completo: valor_pagado total (incluye cuota + sanciones + actividades) - para la vista "Recaudado Completo"
+    const recaudadoCompletoEfectivoBruto = cuotas
+      .filter(c => c.estado === 'pagada' && tipoEfectivo(c.tipo_pago))
+      .reduce((sum, c) => {
+        // valor_pagado incluye: valor_cuota + valor_multa + valor_pagado_actividades
+        const valorPagado = c.valor_pagado || 0
+        return sum + valorPagado
+      }, 0)
+
+    const recaudadoCompletoTransferenciaBruto = cuotas
+      .filter(c => c.estado === 'pagada' && tipoTransferencia(c.tipo_pago))
+      .reduce((sum, c) => {
+        // valor_pagado incluye: valor_cuota + valor_multa + valor_pagado_actividades
+        const valorPagado = c.valor_pagado || 0
+        return sum + valorPagado
       }, 0)
 
     // Calcular totalPendiente: incluir valor de cuota pendiente + sanciones pendientes
@@ -1225,6 +1244,16 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     // Fondo disponible: recaudado neto + utilidades
     const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas
 
+    // Recaudado completo: ya calculado arriba usando valor_pagado (incluye todo)
+    // Desglose para mostrar en la vista:
+    // - Cuotas: totalRecaudadoEfectivo / totalRecaudadoTransferencia
+    // - Sanciones: sancionesEfectivo / sancionesTransferencia  
+    // - Actividades: actividadesEfectivo / actividadesTransferencia
+    // - Total: recaudadoCompletoEfectivoBruto / recaudadoCompletoTransferenciaBruto
+    const recaudadoCompletoEfectivo = recaudadoCompletoEfectivoBruto
+    const recaudadoCompletoTransferencia = recaudadoCompletoTransferenciaBruto
+    const recaudadoCompletoTotal = recaudadoCompletoEfectivo + recaudadoCompletoTransferencia
+
     return {
       totalSocios: socios.length,
       sociosActivos: socios.filter(s => s.estado === 'activo').length,
@@ -1240,7 +1269,15 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalDesembolsadoEfectivo,
       totalDesembolsadoTransferencia,
       totalRecaudadoEfectivo,
-      totalRecaudadoTransferencia
+      totalRecaudadoTransferencia,
+      // Valores desglosados para el desglose completo
+      sancionesEfectivo,
+      sancionesTransferencia,
+      actividadesEfectivo,
+      actividadesTransferencia,
+      recaudadoCompletoEfectivo,
+      recaudadoCompletoTransferencia,
+      recaudadoCompletoTotal
     }
   }
 

@@ -948,13 +948,13 @@
                   (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/95 border-2 border-green-300/85 shadow-md shadow-green-200/35' : 
                   (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-rose-50/95 border-2 border-red-300/75 shadow-md shadow-red-200/30' : 
                   (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 border-2 border-slate-200/90 shadow-md shadow-slate-200/25' : 
-                  (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-50/95 border-2 border-amber-300/80 shadow-md shadow-amber-200/30' :
+                  tienePagoParcialCuota(cuota) ? 'bg-amber-50/95 border-2 border-amber-300/80 shadow-md shadow-amber-200/30' :
                   'bg-amber-50/90 border-2 border-amber-200/85 shadow-md shadow-amber-200/25'
                 ]"
               >
-                <!-- Etiqueta PAGO PARCIAL -->
+                <!-- Etiqueta PAGO PARCIAL (solo cuando hay abono pero no está totalmente pagado) -->
                 <div 
-                  v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))"
+                  v-if="tienePagoParcialCuota(cuota)"
                   class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-2xl z-20"
                 >
                   ▲ PAGO PARCIAL
@@ -998,45 +998,54 @@
                           (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700' :
                           (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700' :
                           (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' :
-                          (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-100 text-amber-800' :
+                          tienePagoParcialCuota(cuota) ? 'bg-amber-100 text-amber-800' :
                           'bg-orange-100 text-orange-700'
                         ]"
                       >
                         {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
                             (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
                             (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
-                            (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'Pago Parcial' :
+                            tienePagoParcialCuota(cuota) ? 'Pago Parcial' :
                             'Pendiente' }}
                       </span>
                     </div>
                   </div>
                   <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="text-right flex-1 sm:flex-none">
-                      <!-- Información de pago parcial -->
-                      <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
+                      <!-- Información de pago parcial (total pagado > 0 pero < total a pagar) -->
+                      <template v-if="tienePagoParcialCuota(cuota)">
                         <p class="text-xs text-gray-500 mb-0.5">Valor Pendiente</p>
                         <p class="font-bold text-base sm:text-lg text-orange-600">
                           ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                         </p>
-                        <!-- Desglose: Primero Cuota, Segundo Sanción, Tercero Actividades -->
+                        <!-- Cuota: valor de la cuota -->
                         <p class="text-xs font-semibold mt-0.5 text-gray-700">
-                          <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}
+                          <span class="inline-block w-2 h-2 bg-gray-600 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota || 0) }}
                         </p>
-                        <p 
-                          v-if="getSancionCuota(cuota) > 0" 
-                          class="text-xs font-semibold mt-0.5 text-red-600"
-                        >
-                          <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
-                        </p>
-                        <p 
-                          v-if="getActividadesPendientesSocio(cuota) > 0" 
-                          class="text-xs font-semibold mt-0.5 text-purple-600"
-                        >
-                          <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
-                        </p>
-                        <p class="text-xs font-medium text-green-600 mt-0.5">
+                        <p class="text-xs font-medium text-green-600 mt-1">
                           Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                         </p>
+                        <!-- Desglose de lo pagado -->
+                        <div class="mt-1 pt-1 border-t border-green-200/50">
+                          <p 
+                            v-if="(cuota.valor_pagado || 0) > 0"
+                            class="text-xs font-semibold text-green-600"
+                          >
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_pagado || 0) }}
+                          </p>
+                          <p 
+                            v-if="(cuota.valor_pagado_sancion || 0) > 0"
+                            class="text-xs font-semibold text-green-600 mt-0.5"
+                          >
+                            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
+                          </p>
+                          <p 
+                            v-if="getActividadesInfoSocio(cuota).pagadas > 0"
+                            class="text-xs font-semibold text-emerald-600 mt-0.5"
+                          >
+                            <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
+                          </p>
+                        </div>
                       </template>
                       <template v-else>
                         <!-- Cuota pagada: mostrar total pagado y desglose (cuota + multa + actividades) -->
@@ -1104,7 +1113,7 @@
                     </div>
                     
                     <!-- Botones desktop pago parcial: Pagar ancho completo, Editar y Reenviar mitad cada uno -->
-                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
+                    <template v-if="tienePagoParcialCuota(cuota)">
                       <div class="hidden sm:flex flex-col gap-2 w-full min-w-0" @click.stop>
                         <button 
                           v-if="!esVisor"
@@ -1148,7 +1157,7 @@
                           <span>$ Pagar</span>
                         </button>
                         <button 
-                          v-if="cuota.estado === 'pagada'"
+                          v-if="(cuota.estadoReal || cuota.estado) === 'pagada'"
                           @click="reenviarComprobante(cuota)"
                           class="hidden sm:flex px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm items-center gap-2"
                           title="Reenviar comprobante"
@@ -1163,7 +1172,7 @@
                 
                 <!-- Botones móvil flat -->
                 <div class="sm:hidden flex flex-col gap-2 mt-3" @click.stop>
-                  <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
+                  <template v-if="tienePagoParcialCuota(cuota)">
                     <button 
                       v-if="!esVisor"
                       @click="abrirModalPago(cuota)"
@@ -1224,13 +1233,13 @@
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/95 border-2 border-green-300/85 shadow-md shadow-green-200/35' : 
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-rose-50/95 border-2 border-red-300/75 shadow-md shadow-red-200/30' : 
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-50 border-2 border-slate-200/90 shadow-md shadow-slate-200/25' : 
-              (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-50/95 border-2 border-amber-300/80 shadow-md shadow-amber-200/30' :
+              tienePagoParcialCuota(cuota) ? 'bg-amber-50/95 border-2 border-amber-300/80 shadow-md shadow-amber-200/30' :
               'bg-amber-50/90 border-2 border-amber-200/85 shadow-md shadow-amber-200/25'
             ]"
           >
-            <!-- Etiqueta PAGO PARCIAL (esquina superior derecha) -->
+            <!-- Etiqueta PAGO PARCIAL (esquina superior derecha, solo cuando hay abono pero no está totalmente pagado) -->
             <div 
-              v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))"
+              v-if="tienePagoParcialCuota(cuota)"
               class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-bl-lg rounded-tr-2xl z-20"
             >
               ▲ PAGO PARCIAL
@@ -1312,7 +1321,7 @@
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0">
                     <!-- Pago parcial primero: si tiene abono pero no está pagado del todo → Valor Pendiente + naranja -->
-                    <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
+                    <template v-if="tienePagoParcialCuota(cuota)">
                       <p class="text-xs text-gray-500">Valor Pendiente</p>
                       <p class="text-xl sm:text-2xl font-bold text-orange-600">
                         ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
@@ -1347,37 +1356,52 @@
                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-700' : 
                       (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-700' : 
                       (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' : 
-                      (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'bg-amber-100 text-amber-800' :
+                      tienePagoParcialCuota(cuota) ? 'bg-amber-100 text-amber-800' :
                       'bg-orange-100 text-orange-700'
                     ]"
                   >
                     {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : 
                        (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : 
                        (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 
-                       (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))) ? 'Pago Parcial' : 'Pendiente' }}
+                       tienePagoParcialCuota(cuota) ? 'Pago Parcial' : 'Pendiente' }}
                   </span>
                 </div>
                 <!-- Desglose con viñetas ● -->
                 <ul class="text-xs space-y-0.5 mt-1">
                   <!-- Mora o pendiente: cuota, sanción, rifa/actividades -->
                   <template v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'">
-                    <li class="text-gray-700"><span class="text-gray-500 mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_cuota) }}</li>
-                    <li v-if="getSancionCuota(cuota) > 0" class="text-red-600 font-medium"><span class="mr-1">●</span> Sanción ${{ formatMoney(getSancionCuota(cuota)) }}</li>
-                    <li 
-                      v-if="(cuota.valor_rifa || 0) > 0" 
-                      class="text-violet-600"
-                    >
-                      <span class="mr-1">●</span> Rifa {{ getMesLabel(cuota.mes) }} ${{ formatMoney(cuota.valor_rifa || 0) }}
-                    </li>
-                    <li 
-                      v-if="getActividadesPendientesSocio(cuota) > 0" 
-                      class="text-purple-600 font-medium"
-                    >
-                      <span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
-                    </li>
-                    <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
-                      Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
-                    </li>
+                    <!-- Si hay pago parcial, mostrar Total a Pagar; si no, mostrar desglose normal -->
+                    <template v-if="tienePagoParcialCuota(cuota)">
+                      <li class="text-gray-700"><span class="text-gray-500 mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_cuota || 0) }}</li>
+                      <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
+                        Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
+                      </li>
+                      <!-- Desglose de lo pagado en pago parcial -->
+                      <template v-if="getTotalPagadoConActividadesSocio(cuota) > 0">
+                        <li v-if="(cuota.valor_pagado || 0) > 0" class="text-green-600 mt-1"><span class="mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_pagado || 0) }}</li>
+                        <li v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-green-600"><span class="mr-1">●</span> Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</li>
+                        <li v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-green-600"><span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</li>
+                      </template>
+                    </template>
+                    <template v-else>
+                      <li class="text-gray-700"><span class="text-gray-500 mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_cuota) }}</li>
+                      <li v-if="getSancionCuota(cuota) > 0" class="text-red-600 font-medium"><span class="mr-1">●</span> Sanción ${{ formatMoney(getSancionCuota(cuota)) }}</li>
+                      <li 
+                        v-if="(cuota.valor_rifa || 0) > 0" 
+                        class="text-violet-600"
+                      >
+                        <span class="mr-1">●</span> Rifa {{ getMesLabel(cuota.mes) }} ${{ formatMoney(cuota.valor_rifa || 0) }}
+                      </li>
+                      <li 
+                        v-if="getActividadesPendientesSocio(cuota) > 0" 
+                        class="text-purple-600 font-medium"
+                      >
+                        <span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
+                      </li>
+                      <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
+                        Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
+                      </li>
+                    </template>
                   </template>
                   <!-- Pagada: desglose en verde -->
                   <template v-else>
@@ -1391,7 +1415,7 @@
 
                 <!-- Botones de acción flat: Pagar centrado 70% de la tarjeta -->
                 <div class="flex flex-wrap justify-center gap-2 mt-3 w-full" @click.stop>
-                  <template v-if="cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))">
+                  <template v-if="tienePagoParcialCuota(cuota)">
                     <!-- Desktop: una fila Pagar restante 50% + Editar 25% + Reenviar 25%. Móvil: Pagar 70% arriba, luego fila Editar + Reenviar -->
                     <div class="flex flex-col gap-2 w-full items-center md:flex-row md:gap-2 md:w-full">
                       <button 
@@ -1634,7 +1658,7 @@
                   </div>
                 </template>
                 <!-- Estado parcial -->
-                <template v-else-if="cuota.estado === 'parcial'">
+                <template v-else-if="(cuota.estadoReal || cuota.estado) === 'parcial'">
                   <div class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
@@ -1669,20 +1693,20 @@
                 <span 
                   :class="[
                     'badge',
-                    cuota.estado === 'pagada' ? 'badge-success' : 
-                    cuota.estado === 'mora' ? 'badge-danger' : 
-                    cuota.estado === 'parcial' ? 'bg-blue-100 text-blue-800' : 
-                    cuota.estado === 'programada' ? 'bg-gray-100 text-gray-700' : 
+                    (cuota.estadoReal || cuota.estado) === 'pagada' ? 'badge-success' : 
+                    (cuota.estadoReal || cuota.estado) === 'mora' ? 'badge-danger' : 
+                    (cuota.estadoReal || cuota.estado) === 'parcial' ? 'bg-blue-100 text-blue-800' : 
+                    (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-gray-100 text-gray-700' : 
                     'bg-orange-100 text-orange-800'
                   ]"
                 >
-                  {{ cuota.estado === 'programada' ? 'Programada' : cuota.estado }}
+                  {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'parcial' ? 'Pago Parcial' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' : (cuota.estadoReal || cuota.estado) }}
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-2">
                   <button 
-                    v-if="!esVisor && (cuota.estado === 'parcial' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota))))"
+                    v-if="!esVisor && ((cuota.estadoReal || cuota.estado) === 'parcial' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota)))"
                     @click="abrirModalEditar(cuota)"
                     class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
                     title="Editar cuota"
@@ -1690,14 +1714,14 @@
                     <PencilIcon class="w-3 h-3" />
                   </button>
                   <button 
-                    v-if="!esVisor && cuota.estado !== 'pagada'"
+                    v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
                     @click="abrirModalPago(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
                   >
                     Pagar
                   </button>
                   <button 
-                    v-else-if="cuota.estado === 'pagada' || (cuota.valor_pagado > 0 && cuota.valor_pagado < (cuota.valor_cuota + getSancionTotalCuota(cuota)))"
+                    v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota))"
                     @click="reenviarComprobante(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-1"
                     title="Reenviar comprobante"
@@ -1846,14 +1870,14 @@
 
         <!-- Contenido -->
         <div class="p-6 space-y-5" v-if="cuotaDetalle">
-          <!-- Estado de la cuota -->
+          <!-- Estado de la cuota (usar estadoReal para reflejar estado calculado cuando cuota pagada completamente tras pago parcial) -->
           <div 
             :class="[
               'relative p-5 rounded-xl border-2 shadow-sm',
-              cuotaDetalle.estado === 'pagada' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 
-              cuotaDetalle.estado === 'mora' ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 
-              cuotaDetalle.estado === 'parcial' ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200' : 
-              cuotaDetalle.estado === 'programada' ? 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-200' : 
+              (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200' : 
               'bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200'
             ]"
           >
@@ -1861,17 +1885,17 @@
               <div 
                 :class="[
                   'w-12 h-12 rounded-xl flex items-center justify-center shadow-md',
-                  cuotaDetalle.estado === 'pagada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
-                  cuotaDetalle.estado === 'mora' ? 'bg-gradient-to-br from-red-500 to-rose-600' : 
-                  cuotaDetalle.estado === 'parcial' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' : 
-                  cuotaDetalle.estado === 'programada' ? 'bg-gradient-to-br from-gray-400 to-slate-500' : 
+                  (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 
+                  (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'bg-gradient-to-br from-red-500 to-rose-600' : 
+                  (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'bg-gradient-to-br from-blue-500 to-cyan-600' : 
+                  (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'bg-gradient-to-br from-gray-400 to-slate-500' : 
                   'bg-gradient-to-br from-orange-500 to-amber-600'
                 ]"
               >
                 <component 
-                  :is="cuotaDetalle.estado === 'pagada' ? CheckCircleIcon : 
-                       cuotaDetalle.estado === 'mora' ? ExclamationCircleIcon : 
-                       cuotaDetalle.estado === 'programada' ? CalendarIcon : ClockIcon"
+                  :is="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? CheckCircleIcon : 
+                       (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? ExclamationCircleIcon : 
+                       (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? CalendarIcon : ClockIcon"
                   class="w-6 h-6 text-white"
                 />
               </div>
@@ -1880,13 +1904,13 @@
                 <p 
                   :class="[
                     'text-lg font-bold',
-                    cuotaDetalle.estado === 'pagada' ? 'text-green-700' : 
-                    cuotaDetalle.estado === 'mora' ? 'text-red-700' : 
-                    cuotaDetalle.estado === 'parcial' ? 'text-blue-700' : 
-                    cuotaDetalle.estado === 'programada' ? 'text-gray-700' : 'text-orange-700'
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'text-green-700' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'text-blue-700' : 
+                    (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'text-gray-700' : 'text-orange-700'
                   ]"
                 >
-                  {{ cuotaDetalle.estado === 'programada' ? 'Programada' : cuotaDetalle.estado === 'parcial' ? 'Pago Parcial' : cuotaDetalle.estado === 'pagada' ? 'Pagada' : cuotaDetalle.estado === 'mora' ? 'En Mora' : 'Pendiente' }}
+                  {{ (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'programada' ? 'Programada' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'parcial' ? 'Pago Parcial' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'Pagada' : (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'En Mora' : 'Pendiente' }}
                 </p>
               </div>
             </div>
@@ -1899,12 +1923,12 @@
               <p class="text-2xl font-bold text-natillera-700">${{ formatMoney(cuotaDetalle.valor_cuota) }}</p>
             </div>
             <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm">
-              <p class="text-xs text-gray-500 font-medium mb-2">{{ cuotaDetalle.estado === 'pagada' ? 'Total pagado' : 'Valor Pagado' }}</p>
+              <p class="text-xs text-gray-500 font-medium mb-2">{{ (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' ? 'Total pagado' : 'Valor Pagado' }}</p>
               <p class="text-2xl font-bold text-green-700">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</p>
             </div>
             <div :class="[
               'p-5 rounded-xl border shadow-sm',
-              (cuotaDetalle.estado === 'mora' || (getSancionCuotaDetalle(cuotaDetalle) > 0 && cuotaDetalle?.valor_pagado && cuotaDetalle.valor_pagado >= (cuotaDetalle?.valor_cuota || 0)))
+              ((cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' || (getSancionCuotaDetalle(cuotaDetalle) > 0 && cuotaDetalle?.valor_pagado && cuotaDetalle.valor_pagado >= (cuotaDetalle?.valor_cuota || 0)))
                 ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200' 
                 : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
             ]">
@@ -1918,11 +1942,11 @@
               </template>
               <template v-else>
                 <p class="text-xs text-gray-500 font-medium mb-2">
-                  {{ cuotaDetalle.estado === 'mora' ? 'Total a Pagar' : 'Valor Pendiente' }}
+                  {{ (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'Total a Pagar' : 'Valor Pendiente' }}
                 </p>
                 <p :class="[
                   'text-2xl font-bold',
-                  cuotaDetalle.estado === 'mora' ? 'text-red-700' : 'text-amber-700'
+                  (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' ? 'text-red-700' : 'text-amber-700'
                 ]">
                   ${{ formatMoney(Math.max(0, getTotalAPagarConActividadesSocio(cuotaDetalle))) }}
                 </p>
@@ -1937,7 +1961,7 @@
           </div>
           
           <!-- Detalle de multa si está en mora -->
-          <div v-if="cuotaDetalle.estado === 'mora' && getSancionCuota(cuotaDetalle) > 0" class="bg-gradient-to-br from-red-50 to-rose-50 p-5 rounded-xl border border-red-200 shadow-sm">
+          <div v-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' && getSancionCuota(cuotaDetalle) > 0" class="bg-gradient-to-br from-red-50 to-rose-50 p-5 rounded-xl border border-red-200 shadow-sm">
             <div class="flex items-center gap-3 mb-3">
               <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                 <ExclamationCircleIcon class="w-5 h-5 text-red-600" />
@@ -1966,7 +1990,7 @@
           <!-- Información de fechas -->
           <div :class="[
             'grid gap-4',
-            cuotaDetalle.estado === 'pagada' && cuotaDetalle.fecha_pago ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+            (cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' && cuotaDetalle.fecha_pago ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
           ]">
             <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
               <div class="flex items-center gap-3 mb-2">
@@ -1986,7 +2010,7 @@
             </div>
             <!-- Fecha de Pago (solo si está pagada) -->
             <div 
-              v-if="cuotaDetalle.estado === 'pagada' && cuotaDetalle.fecha_pago"
+              v-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'pagada' && cuotaDetalle.fecha_pago"
               class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm"
             >
               <div class="flex items-center gap-3 mb-2">
@@ -2204,14 +2228,14 @@
             Cerrar
           </button>
           <button 
-            v-if="cuotaDetalle?.estado !== 'pagada'"
+            v-if="(cuotaDetalle?.estadoReal || cuotaDetalle?.estado) !== 'pagada'"
             @click="modalDetalleCuota = false; abrirModalPago(cuotaDetalle)"
             class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl"
           >
             Registrar Pago
           </button>
           <button 
-            v-if="cuotaDetalle?.estado === 'pagada' || (cuotaDetalle?.valor_pagado > 0 && cuotaDetalle?.valor_pagado < cuotaDetalle?.valor_cuota)"
+            v-if="(cuotaDetalle?.estadoReal || cuotaDetalle?.estado) === 'pagada' || (cuotaDetalle?.valor_pagado > 0 && cuotaDetalle?.valor_pagado < (cuotaDetalle?.valor_cuota || 0))"
             @click="reenviarComprobante(cuotaDetalle)"
             class="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/25 hover:shadow-xl"
           >
@@ -2676,7 +2700,7 @@
 
             <!-- Cuota, Sanción y Actividades (solo cuando NO hay pago parcial) -->
             <div
-              v-if="!(cuotaSeleccionada?.valor_pagado > 0 && cuotaSeleccionada.valor_pagado < (cuotaSeleccionada.valor_cuota + getSancionTotalCuota(cuotaSeleccionada)))"
+              v-if="!tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5"
             >
               <div class="flex items-center justify-between text-sm">
@@ -2705,7 +2729,7 @@
 
             <!-- Total a pagar, Abonado, Total pendiente y Ya abonado desplegable (solo cuando hay pago parcial) -->
             <div 
-              v-if="cuotaSeleccionada?.valor_pagado > 0 && cuotaSeleccionada.valor_pagado < (cuotaSeleccionada.valor_cuota + getSancionTotalCuota(cuotaSeleccionada))"
+              v-if="tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 space-y-2"
             >
               <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
@@ -3486,28 +3510,63 @@
                   <p style="font-size: 13px; font-weight: 700; margin: 0; color: #dc2626;">${{ formatMoney(pagoRegistrado?.valorSancionPagada || 0) }}</p>
                 </div>
                 <!-- Actividades -->
-                <template v-if="pagoRegistrado?.tieneActividades && pagoRegistrado?.actividadesPagadas && pagoRegistrado.actividadesPagadas.length > 0">
-                  <div 
-                    v-for="(actividad, index) in pagoRegistrado.actividadesPagadas.filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))" 
-                    :key="index"
-                    style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"
-                  >
-                    <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
-                      <span style="font-size: 14px; flex-shrink: 0;">📅</span>
-                      <p style="color: #6b21a8; font-size: 11px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        {{ limpiarDescripcionActividad(actividad?.descripcion || actividad?.actividad?.descripcion || 'Actividad') }}
+                <template v-if="pagoRegistrado?.tieneActividades && (pagoRegistrado?.valorActividadesPagado || 0) > 0">
+                  <template v-if="(pagoRegistrado.actividadesPagadas || []).filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0))).length > 0">
+                    <div 
+                      v-for="(actividad, index) in (pagoRegistrado.actividadesPagadas || []).filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))" 
+                      :key="index"
+                      style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"
+                    >
+                      <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
+                        <span style="font-size: 14px; flex-shrink: 0;">📅</span>
+                        <p style="color: #6b21a8; font-size: 11px; margin: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                          {{ limpiarDescripcionActividad(actividad?.descripcion || actividad?.actividad?.descripcion || 'Actividad') }}
+                        </p>
+                      </div>
+                      <p style="font-size: 13px; font-weight: 700; margin: 0; color: #6b21a8; flex-shrink: 0; margin-left: 8px;">
+                        ${{ formatMoney((actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))) }}
                       </p>
                     </div>
-                    <p style="font-size: 13px; font-weight: 700; margin: 0; color: #6b21a8; flex-shrink: 0; margin-left: 8px;">
-                      ${{ formatMoney((actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))) }}
-                    </p>
+                  </template>
+                  <div v-else style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 14px;">📅</span>
+                      <p style="color: #6b21a8; font-size: 11px; margin: 0; font-weight: 600;">Actividades</p>
+                    </div>
+                    <p style="font-size: 13px; font-weight: 700; margin: 0; color: #6b21a8;">${{ formatMoney(pagoRegistrado?.valorActividadesPagado || 0) }}</p>
                   </div>
                 </template>
               </div>
             </div>
 
+            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (solo cuando se completó un pago parcial) -->
+            <div v-if="pagoRegistrado?.historialPagos?.length > 0" style="margin-bottom: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);">
+              <p style="color: #64748b; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">HISTORIAL DE PAGOS</p>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div 
+                  v-for="(item, idx) in pagoRegistrado.historialPagos" 
+                  :key="idx"
+                  style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;"
+                >
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 10px; font-weight: 700; color: #475569;">{{ item.pago }}° Pago</span>
+                    <span style="font-size: 10px; color: #94a3b8;">{{ item.fecha }}</span>
+                  </div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 4px;">
+                    <span 
+                      v-for="(c, i) in item.conceptos" 
+                      :key="i"
+                      style="font-size: 11px; color: #64748b;"
+                    >
+                      {{ c.nombre }}: <strong style="color: #334155;">${{ formatMoney(c.valor) }}</strong>
+                    </span>
+                  </div>
+                  <div style="font-size: 11px; font-weight: 700; color: #059669;">Total: ${{ formatMoney(item.total) }}</div>
+                </div>
+              </div>
+            </div>
 
-            <!-- SECCIÓN 3: RESUMEN DE PAGO PARCIAL (solo si es pago parcial) -->
+            <!-- SECCIÓN 3: RESUMEN DE PAGO PARCIAL (solo si es pago parcial, queda pendiente) -->
             <div v-if="pagoRegistrado?.esParcial && pagoRegistrado?.valorPendiente > 0" style="margin-bottom: 10px; background: #fef3c7; border: 1.5px solid #fbbf24; border-radius: 12px; padding: 10px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <p style="color: #92400e; font-size: 9px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">RESUMEN PARCIAL</p>
@@ -5876,12 +5935,13 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
   return cuota.estado || 'programada'
 }
 
-// Función auxiliar para verificar si una cuota tiene pago parcial (para mostrar badge adicional)
+// Función auxiliar para verificar si una cuota tiene pago parcial
+// Pago parcial = ha pagado algo (totalPagado > 0) Y aún hay pendiente por pagar (pendiente > 0)
+// getTotalAPagarConActividadesSocio retorna el PENDIENTE (lo que falta), no la obligación total
 function tienePagoParcialCuota(cuota) {
-  const sancion = getSancionCuota(cuota)
-  const totalAPagar = (cuota.valor_cuota || 0) + sancion
-  const valorPagado = cuota.valor_pagado || 0
-  return valorPagado > 0 && valorPagado < totalAPagar
+  const totalPagado = getTotalPagadoConActividadesSocio(cuota)
+  const pendiente = getTotalAPagarConActividadesSocio(cuota)
+  return totalPagado > 0 && pendiente > 0
 }
 
 const mesParam = computed(() => {
@@ -6189,7 +6249,17 @@ function getActividadesInfoSocio(cuota) {
   const totalPendiente = datos.total || 0
   const totalPagado = datos.totalPagado || 0
   
-  return { total: totalPendiente, pagadas: totalPagado }
+  // Calcular el total original sumando todos los valor_asignado de las actividades
+  let totalOriginal = 0
+  if (datos.actividades && Array.isArray(datos.actividades)) {
+    totalOriginal = datos.actividades.reduce((sum, act) => sum + (parseFloat(act.valor_asignado) || 0), 0)
+  }
+  // Si no hay actividades pero hay total pagado o pendiente, usar la suma como fallback
+  if (totalOriginal === 0 && (totalPendiente > 0 || totalPagado > 0)) {
+    totalOriginal = totalPendiente + totalPagado
+  }
+  
+  return { total: totalPendiente, pagadas: totalPagado, totalOriginal: totalOriginal }
 }
 
 // Función para obtener la sanción (pendiente o pagada) de una cuota
@@ -6421,7 +6491,9 @@ async function reenviarComprobantePorCodigo(codigoComprobante, valorPagado) {
 }
 
 async function abrirModalDetalleCuota(cuota) {
-  cuotaDetalle.value = cuota
+  // Asegurar estadoReal para mostrar correctamente cuando cuota pagada tras pago parcial
+  const estadoReal = cuota?.estadoReal ?? calcularEstadoRealCuota(cuota, diasGracia.value)
+  cuotaDetalle.value = { ...cuota, estadoReal }
   modalDetalleCuota.value = true
   // Cargar historial de pagos si la cuota tiene pagos
   if (cuota && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)) {
@@ -8616,41 +8688,151 @@ async function handleRegistrarPago() {
     const valorSancionPagadaCalculada = result.valorSancionPagada || valorSancionPagada
     const valorActividadesPagadoFinal = result.valorActividadesPagado || valorActividadesPagado
     
-    // Calcular el total pagado como suma de cuota + sanciones + actividades
-    const valorPagadoTotalCalculado = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0)
+    // Total pagado en ESTA transacción (para mostrar en comprobante)
+    const valorPagadoEstaTransaccion = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0)
     
-    // Calcular el total a pagar incluyendo actividades
+    // Total pagado ACUMULADO (cuota actualizada + actividades pagadas antes, ya que están en socios_actividad)
+    const actividadesPagadasAcumulado = (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0) + (valorActividadesPagadoFinal || 0)
+    const valorPagadoAcumulado = (parseFloat(cuotaActualizada?.valor_pagado) || 0) +
+      (parseFloat(cuotaActualizada?.valor_pagado_sancion) || 0) +
+      actividadesPagadasAcumulado
+    
+    // Calcular el total a pagar incluyendo actividades (pendientes + ya pagadas, para obligación completa)
+    const actividadesInfoPrev = getActividadesInfoSocio(cuotaSeleccionada.value)
+    const valorActividadesObligacion = (actividadesInfoPrev.total || 0) + (actividadesInfoPrev.pagadas || 0) || totalActividades || 0
     const valorActividades = totalActividades || 0
-    const totalAPagar = valorCuota + sancionTotal + valorActividades
+    const totalAPagar = valorCuota + sancionTotal + (valorActividadesObligacion || valorActividades)
     
-    // Calcular pendiente y si es parcial
-    const valorPendienteCalculado = totalAPagar - valorPagadoTotalCalculado
-    const esParcialCalculado = valorPendienteCalculado > 0 && valorPagadoTotalCalculado < totalAPagar
+    // Calcular pendiente y si es parcial usando el total ACUMULADO (no solo esta transacción)
+    const valorPendienteCalculado = Math.max(0, totalAPagar - valorPagadoAcumulado)
+    const esParcialCalculado = valorPendienteCalculado > 0
     
     // Si hay sanción pendiente, también calcularla
     const sancionPendiente = Math.max(0, sancionTotal - valorSancionPagadaCalculada)
     
     // Detectar si había un pago parcial anterior y ahora se completa (usar totalAPagar calculado)
-    const teniaPagoParcial = valorPagadoAnterior > 0 && valorPagadoAnterior < totalAPagar
+    const totalPagadoAntes = (valorPagadoAnterior || 0) + (parseFloat(cuotaSeleccionada.value?.valor_pagado_sancion) || 0) + (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0)
+    const teniaPagoParcial = totalPagadoAntes > 0 && totalPagadoAntes < totalAPagar
     const seCompletoPago = !esParcialCalculado && teniaPagoParcial
+    
+    // Cuando se completa un pago parcial: mostrar comprobante como pago normal (total + desglose completo)
+    const actividadesPagadasAntesComprobante = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
+    const valorParaComprobante = seCompletoPago ? valorPagadoAcumulado : valorPagadoEstaTransaccion
+    const valorCuotaParaComprobante = seCompletoPago ? valorCuota : valorCuotaPagada
+    const valorSancionParaComprobante = seCompletoPago ? sancionTotal : valorSancionPagadaCalculada
+    // Al completar parcial: incluir actividades del 1er pago + las pagadas en este (para que aparezcan en conceptos)
+    const valorActividadesParaComprobante = seCompletoPago 
+      ? (actividadesPagadasAntesComprobante + (valorActividadesPagadoFinal || 0)) 
+      : valorActividadesPagadoFinal
+    
+    // Para comprobante al completar: incluir actividades de actividadesPendientesPorSocio (tienen descripcion, valor)
+    let actividadesParaConceptos = actividadesPagadas
+    if (seCompletoPago && valorActividadesParaComprobante > 0 && actividadesPagadas.length === 0) {
+      const datosAct = actividadesPendientesPorSocio.value[cuotaSeleccionada.value.id]
+      if (datosAct?.actividades?.length > 0) {
+        // Incluir actividades pagadas (valor_pagado>0) o pendientes (valor_pendiente>0) para mostrar en conceptos
+        actividadesParaConceptos = datosAct.actividades
+          .filter(a => (a.valor_pagado || 0) > 0 || (a.valor_pendiente || 0) > 0)
+          .map(a => ({
+            descripcion: a.descripcion,
+            valor_pendiente: (a.valor_pendiente || 0) > 0 ? (a.valor_pendiente || 0) : (a.valor_pagado || 0),
+            valor_pagado_anterior: a.valor_pagado || 0,
+            valor_asignado: a.valor_asignado || 0
+          }))
+      }
+    }
+    
+    // Historial de pagos (solo cuando se completa un pago parcial)
+    const historialPagos = []
+    if (seCompletoPago) {
+      const sancionPagadaAnterior = parseFloat(cuotaSeleccionada.value?.valor_pagado_sancion) || 0
+      const actividadesPagadasAntes = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
+      
+      // Pago 1 (anterior)
+      const conceptosPago1 = []
+      if (valorPagadoAnterior > 0) conceptosPago1.push({ nombre: 'Cuota', valor: valorPagadoAnterior })
+      if (sancionPagadaAnterior > 0) conceptosPago1.push({ nombre: 'Sanción', valor: sancionPagadaAnterior })
+      if (actividadesPagadasAntes > 0) {
+        // Obtener las actividades pagadas del primer pago para desglosarlas por nombre
+        const datosActividadesPrimerPago = actividadesPendientesPorSocio.value[cuotaSeleccionada.value.id]
+        if (datosActividadesPrimerPago && typeof datosActividadesPrimerPago !== 'number' && datosActividadesPrimerPago.actividades) {
+          // Filtrar actividades que tienen valor_pagado > 0 (actividades pagadas en el primer pago)
+          const actividadesPagadasPrimerPago = datosActividadesPrimerPago.actividades.filter(a => (a.valor_pagado || 0) > 0)
+          if (actividadesPagadasPrimerPago.length > 0) {
+            // Desglosar cada actividad pagada por nombre
+            actividadesPagadasPrimerPago.forEach(a => {
+              conceptosPago1.push({ 
+                nombre: limpiarDescripcionActividad(a.descripcion || 'Actividad'), 
+                valor: a.valor_pagado || 0 
+              })
+            })
+          } else {
+            // Si no se pueden obtener los detalles, mostrar como concepto genérico
+            conceptosPago1.push({ nombre: 'Actividades', valor: actividadesPagadasAntes })
+          }
+        } else {
+          // Si no hay datos detallados disponibles, mostrar como concepto genérico
+          conceptosPago1.push({ nombre: 'Actividades', valor: actividadesPagadasAntes })
+        }
+      }
+      
+      if (conceptosPago1.length > 0) {
+        historialPagos.push({
+          pago: 1,
+          fecha: cuotaSeleccionada.value?.fecha_pago 
+            ? new Date(cuotaSeleccionada.value.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'Anterior',
+          conceptos: conceptosPago1,
+          total: valorPagadoAnterior + sancionPagadaAnterior + actividadesPagadasAntes
+        })
+      }
+      
+      // Pago 2 (este)
+      const conceptosPago2 = []
+      if (valorCuotaPagada > 0) conceptosPago2.push({ nombre: 'Cuota', valor: valorCuotaPagada })
+      if (valorSancionPagadaCalculada > 0) conceptosPago2.push({ nombre: 'Sanción', valor: valorSancionPagadaCalculada })
+      if (valorActividadesPagadoFinal > 0) {
+        const actividadesConValor = actividadesPagadas.filter(a => {
+          const valorA = (a.valor_pendiente || 0) || ((a.valor_asignado || 0) - (a.valor_pagado_anterior || 0))
+          return valorA > 0
+        })
+        if (actividadesConValor.length > 0) {
+          actividadesConValor.forEach(a => {
+            const valorA = (a.valor_pendiente || 0) || ((a.valor_asignado || 0) - (a.valor_pagado_anterior || 0))
+            conceptosPago2.push({ nombre: limpiarDescripcionActividad(a.descripcion || a.actividad?.descripcion), valor: valorA })
+          })
+        } else {
+          conceptosPago2.push({ nombre: 'Actividades', valor: valorActividadesPagadoFinal })
+        }
+      }
+      
+      if (conceptosPago2.length > 0) {
+        historialPagos.push({
+          pago: 2,
+          fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
+          conceptos: conceptosPago2,
+          total: valorPagadoEstaTransaccion
+        })
+      }
+    }
     
     // Guardar info del pago para el modal de confirmación
     pagoRegistrado.value = {
       cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
       socioNombre,
       socioTelefono,
-      valor: valorPagadoTotalCalculado, // Total pagado (cuota + sanciones + actividades)
+      valor: valorParaComprobante, // Total (si completó parcial) o esta transacción
       valorCuota,
-      valorPagadoTotal: valorPagadoTotalCalculado, // Total pagado = cuota + sanciones + actividades
+      valorPagadoTotal: valorPagadoAcumulado, // Total pagado acumulado (para resumen parcial)
       valorPendiente: valorPendienteCalculado,
       esParcial: esParcialCalculado,
       periodo: obtenerPeriodoComprobante(cuotaSeleccionada.value), // Período limpio (sin texto de ajustes)
       descripcionCuota,
       codigoComprobante, // Código único del comprobante
       sancion: sancionTotal, // Sanción total (pagada + pendiente)
-      valorSancionPagada: valorSancionPagadaCalculada, // Cuánto de sanción se pagó
-      valorActividadesPagado: valorActividadesPagadoFinal, // Cuánto de actividades se pagó
-      valorCuotaPagada: valorCuotaPagada, // Cuánto de cuota se pagó
+      valorSancionPagada: valorSancionParaComprobante, // Para comprobante: total si completó, o de esta transacción
+      valorActividadesPagado: valorActividadesParaComprobante, // Para comprobante: total si completó, o de esta transacción
+      valorCuotaPagada: valorCuotaParaComprobante, // Para comprobante: total si completó, o de esta transacción
       tieneSancion: sancionTotal > 0, // Indica si hay sanción
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       fecha: new Date().toLocaleDateString('es-CO', {
@@ -8681,10 +8863,12 @@ async function handleRegistrarPago() {
           })
         : null,
       // Información de actividades pagadas
-      tieneActividades: totalActividades > 0,
+      tieneActividades: totalActividades > 0 || valorActividadesParaComprobante > 0,
       valorActividades: totalActividades,
       cantidadActividades: actividadesSeleccionadas.value.size,
-      actividadesPagadas: actividadesPagadas
+      actividadesPagadas: actividadesParaConceptos.length > 0 ? actividadesParaConceptos : actividadesPagadas,
+      // Historial de pagos cuando se completa un parcial (para sección en comprobante)
+      historialPagos
     }
     
     console.log('pagoRegistrado.value completo:', pagoRegistrado.value)
@@ -8724,6 +8908,7 @@ function generarImagenComprobante() {
       
       const esParcial = pagoRegistrado.value?.esParcial || false
       const teniaPagoParcial = pagoRegistrado.value?.teniaPagoParcial || false
+      const historialPagos = pagoRegistrado.value?.historialPagos || []
       const codigoComprobante = pagoRegistrado.value?.codigoComprobante
       const tieneSancion = pagoRegistrado.value?.tieneSancion && pagoRegistrado.value?.valorSancionPagada > 0
       const tieneActividades = pagoRegistrado.value?.tieneActividades && pagoRegistrado.value?.actividadesPagadas?.length > 0
@@ -8738,6 +8923,10 @@ function generarImagenComprobante() {
       // Agregar espacio para pago parcial si aplica
       if (esParcial) {
         height += 80
+      }
+      // Agregar espacio para historial de pagos (cuando se completó un parcial)
+      if (historialPagos.length > 0) {
+        height += 35 + historialPagos.length * 42
       }
       const scale = 2
       
@@ -9069,9 +9258,11 @@ function generarImagenComprobante() {
         conceptoX += 108
       }
       
-      // Actividades - Mostrar cada una en su propia tarjeta
-      if (tieneActividades && pagoRegistrado.value?.actividadesPagadas) {
-        const actividades = pagoRegistrado.value.actividadesPagadas.filter(a => 
+      // Actividades - Mostrar cada una en su propia tarjeta o total si no hay detalle
+      const tieneActividadesParaMostrar = tieneActividades || (pagoRegistrado.value?.valorActividadesPagado || 0) > 0
+      const valorActividadesTotal = pagoRegistrado.value?.valorActividadesPagado || 0
+      if (tieneActividadesParaMostrar) {
+        const actividades = (pagoRegistrado.value?.actividadesPagadas || []).filter(a => 
           a && ((a.valor_pendiente || 0) > 0 || ((a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))
         )
         
@@ -9082,7 +9273,7 @@ function generarImagenComprobante() {
         const actividadHeight = conceptoItemHeight
         const actividadSpacing = 8
         
-        actividades.forEach((actividad, index) => {
+        (actividades.length > 0 ? actividades : [{ descripcion: 'Actividades', valor_pendiente: valorActividadesTotal, valor_asignado: valorActividadesTotal, valor_pagado_anterior: 0 }]).forEach((actividad, index) => {
           if (!actividad) return
           
           // Si no cabe en la fila actual, pasar a la siguiente
@@ -9137,6 +9328,51 @@ function generarImagenComprobante() {
       
       currentY = conceptosY + conceptosHeight + 10
       
+      // === SECCIÓN 2B: HISTORIAL DE PAGOS (cuando se completó un parcial) ===
+      if (historialPagos.length > 0) {
+        const historialY = currentY
+        const historialItemHeight = 40
+        const historialHeight = 25 + historialPagos.length * historialItemHeight
+        
+        ctx.fillStyle = '#f8fafc'
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, historialY, cardInnerWidth, historialHeight, 12)
+        ctx.fill()
+        ctx.strokeStyle = '#e2e8f0'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, historialY, cardInnerWidth, historialHeight, 12)
+        ctx.stroke()
+        
+        ctx.fillStyle = '#64748b'
+        ctx.font = 'bold 9px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('HISTORIAL DE PAGOS', cardInnerX + 10, historialY + 15)
+        
+        historialPagos.forEach((item, idx) => {
+          const itemY = historialY + 22 + idx * historialItemHeight
+          ctx.fillStyle = '#475569'
+          ctx.font = 'bold 9px Arial'
+          ctx.fillText(item.pago + '° Pago', cardInnerX + 10, itemY + 8)
+          ctx.font = '8px Arial'
+          ctx.fillStyle = '#94a3b8'
+          ctx.textAlign = 'right'
+          ctx.fillText(item.fecha || '', cardInnerX + cardInnerWidth - 10, itemY + 8)
+          ctx.textAlign = 'left'
+          const conceptosTexto = item.conceptos.map(c => c.nombre + ' $' + formatMoney(c.valor)).join('  ·  ')
+          ctx.fillStyle = '#64748b'
+          ctx.font = '9px Arial'
+          ctx.fillText(conceptosTexto.length > 45 ? conceptosTexto.substring(0, 42) + '...' : conceptosTexto, cardInnerX + 10, itemY + 20)
+          ctx.fillStyle = '#059669'
+          ctx.font = 'bold 10px Arial'
+          ctx.textAlign = 'right'
+          ctx.fillText('Total: $' + formatMoney(item.total), cardInnerX + cardInnerWidth - 10, itemY + 20)
+          ctx.textAlign = 'left'
+        })
+        
+        currentY = historialY + historialHeight + 10
+      }
+      
       // === SECCIÓN 3: RESUMEN DE PAGO PARCIAL ===
       if (esParcial) {
         const infoParcialY = currentY
@@ -9160,22 +9396,22 @@ function generarImagenComprobante() {
         ctx.textAlign = 'left'
         ctx.fillText('RESUMEN PARCIAL', cardInnerX + 10, infoParcialY + 15)
         
-        // Calcular total a pagar
-        const totalAPagar = (pagoRegistrado.value?.valorCuota || 0) + 
-                           (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
-                           (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
+        // Total a pagar = obligación completa (cuota + sanción + actividades)
+        const totalObligacion = (pagoRegistrado.value?.valorCuota || 0) + 
+          (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
+          (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
         
         // Grid: Total a Pagar y Total Pagado
         const gridParcialY = infoParcialY + 22
         const gridItemWidth = (cardInnerWidth - 30) / 2
         
-        // Total a Pagar
+        // Total a Pagar (obligación completa)
         ctx.fillStyle = '#92400e'
         ctx.font = '8px Arial'
         ctx.fillText('TOTAL A PAGAR', cardInnerX + 10, gridParcialY + 10)
         ctx.fillStyle = '#78350f'
         ctx.font = 'bold 13px Arial'
-        ctx.fillText('$' + formatMoney(totalAPagar), cardInnerX + 10, gridParcialY + 25)
+        ctx.fillText('$' + formatMoney(totalObligacion), cardInnerX + 10, gridParcialY + 25)
         
         // Total Pagado
         ctx.fillStyle = '#92400e'

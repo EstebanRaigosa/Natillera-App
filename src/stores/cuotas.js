@@ -1562,10 +1562,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Para multa escalonada: si la cuota ya tiene valor_multa guardado, usarlo para no recalcular
       // (al pagar la primera cuota en mora, la lista de mora se reduce y la segunda quedaría como "primera" = sanción 1; pero su valor_multa ya es 2)
+      // IMPORTANTE: sancionAPagar debe ser la sanción PENDIENTE (total - ya pagado), no el total
       const valorMultaGuardado = parseFloat(cuotaActual.valor_multa) || 0
-      const sancionAPagar = valorMultaGuardado > 0
-        ? valorMultaGuardado
-        : (sancionDinamica > 0 ? sancionDinamica : 0)
+      const sancionPagadaAnterior = parseFloat(cuotaActual.valor_pagado_sancion) || 0
+      const sancionTotal = valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0)
+      const sancionAPagar = Math.max(0, sancionTotal - sancionPagadaAnterior)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
       const valorActividadesPendientes = parseFloat(valorActividades) || 0
@@ -1776,7 +1777,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
       
       // Guardar cuánto se abonó a sanción (campo valor_pagado_sancion)
-      const sancionPagadaAnterior = parseFloat(cuotaActual.valor_pagado_sancion) || 0
       updateData.valor_pagado_sancion = sancionPagadaAnterior + valorSancionPagada
       
       // Solo agregar codigo_comprobante si existe un código generado

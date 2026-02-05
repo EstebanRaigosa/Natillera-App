@@ -1,37 +1,81 @@
 <template>
-  <div class="max-w-2xl mx-auto relative">
-    <!-- Decoraciones de fondo animadas -->
-    <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div class="absolute top-20 left-0 w-72 h-72 bg-natillera-400/10 rounded-full blur-3xl animate-pulse-slow"></div>
-      <div class="absolute bottom-20 right-0 w-96 h-96 bg-accent-400/10 rounded-full blur-3xl animate-pulse-slow" style="animation-delay: 1s;"></div>
-      <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-purple-400/5 rounded-full blur-2xl -translate-x-1/2 -translate-y-1/2 animate-pulse-slow" style="animation-delay: 0.5s;"></div>
-    </div>
-
-    <!-- Header unificado -->
-    <div class="relative mb-8 animate-fade-in-up">
-      <Breadcrumbs />
-      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
-        <div class="flex items-center gap-3">
+  <div class="crear-natillera-wizard min-h-screen pb-12">
+    <div class="max-w-xl mx-auto px-4 sm:px-6 relative">
+      <!-- Header compacto y moderno -->
+      <div class="pt-4 sm:pt-6 mb-6 sm:mb-8">
+        <Breadcrumbs />
+        <div class="mt-4 flex items-center gap-4">
           <BackButton :inline="true" />
-          <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-            <PlusIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div class="min-w-0">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Crear Nueva Natillera</h1>
-            <p class="text-gray-500 mt-0.5 text-sm">Configura tu grupo de ahorro comunitario</p>
+          <div class="flex items-center gap-4 flex-1 min-w-0">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
+              <PlusIcon class="w-6 h-6 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Crear Natillera</h1>
+              <p class="text-gray-500 text-sm mt-0.5">Paso {{ currentStep }} de {{ steps.length }}</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Formulario -->
-    <form @submit.prevent="handleSubmit" class="card space-y-6 animate-fade-in-up stagger-1">
-      <!-- Información básica -->
-      <div class="space-y-6 animate-fade-in-up stagger-2">
+      <!-- Stepper moderno con barra de progreso -->
+      <div class="mb-8">
+        <div class="relative flex items-center justify-between">
+          <!-- Barra de fondo -->
+          <div class="absolute top-5 left-0 right-0 h-0.5 bg-gray-200 rounded-full -translate-y-1/2" aria-hidden="true" />
+          <!-- Barra de progreso -->
+          <div
+            class="absolute top-5 left-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full -translate-y-1/2 transition-all duration-500 ease-out"
+            :style="{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }"
+          />
+          <template v-for="(step, index) in steps" :key="step.id">
+            <button
+              type="button"
+              @click="goToStep(index + 1)"
+              class="relative z-10 flex flex-col items-center gap-2 group"
+            >
+              <span
+                :class="[
+                  'w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-sm font-semibold transition-all duration-300',
+                  currentStep > index + 1
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30'
+                    : currentStep === index + 1
+                      ? 'bg-gray-900 text-white shadow-lg ring-4 ring-gray-900/10 scale-110'
+                      : 'bg-white text-gray-400 border-2 border-gray-200 group-hover:border-gray-300'
+                ]"
+              >
+                <CheckIcon v-if="currentStep > index + 1" class="w-5 h-5" />
+                <span v-else>{{ index + 1 }}</span>
+              </span>
+              <span
+                :class="[
+                  'text-xs font-medium hidden sm:block max-w-[72px] text-center leading-tight transition-colors',
+                  currentStep >= index + 1 ? 'text-gray-700' : 'text-gray-400'
+                ]"
+              >{{ step.label }}</span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- Formulario en card limpia -->
+      <form @submit.prevent="handleSubmit" class="wizard-form-card">
+      <!-- Paso 1: Información básica -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 translate-x-4"
+        enter-to-class="opacity-100 translate-x-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-x-0"
+        leave-to-class="opacity-0 -translate-x-4"
+        mode="out-in"
+      >
+        <div v-show="currentStep === 1" key="step1" class="wizard-step-content">
+          <p class="text-sm font-medium text-emerald-600 mb-6">{{ steps[0].label }}</p>
+          <div class="space-y-5">
         <div class="relative">
-          <label class="label flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full bg-natillera-500 animate-pulse"></span>
-            Nombre de la natillera *
+          <label class="label flex items-center gap-2 text-gray-700">
+            Nombre de la natillera <span class="text-red-500">*</span>
           </label>
           <div class="relative">
             <input 
@@ -47,10 +91,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div class="relative group">
-            <label class="label flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-natillera-500 animate-pulse"></span>
-              Fecha de inicio *
-            </label>
+            <label class="label text-gray-700">Fecha de inicio <span class="text-red-500">*</span></label>
             <div class="relative">
               <input 
                 v-model="form.fecha_inicio"
@@ -64,10 +105,7 @@
           </div>
 
           <div class="relative group">
-            <label class="label flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-natillera-500 animate-pulse"></span>
-              Periodicidad *
-            </label>
+            <label class="label text-gray-700">Periodicidad <span class="text-red-500">*</span></label>
             <div class="relative">
               <select v-model="form.periodicidad" class="input-field peer appearance-none cursor-pointer" required>
                 <option value="">Selecciona...</option>
@@ -85,7 +123,7 @@
         </div>
 
         <div class="relative">
-          <label class="label">Descripción (opcional)</label>
+          <label class="label text-gray-700">Descripción <span class="text-gray-400 font-normal">(opcional)</span></label>
           <textarea 
             v-model="form.descripcion"
             class="input-field peer resize-none"
@@ -93,10 +131,23 @@
             placeholder="Describe brevemente el propósito de esta natillera..."
           ></textarea>
           <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-500/0 via-natillera-500/0 to-natillera-500/0 peer-focus:via-natillera-500/10 pointer-events-none transition-all duration-300"></div>
-      </div>
-      </div>
+        </div>
+          </div>
+        </div>
+      </Transition>
 
-      <!-- Configuración del Período -->
+      <!-- Paso 2: Configuración del Período -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 translate-x-4"
+        enter-to-class="opacity-100 translate-x-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-x-0"
+        leave-to-class="opacity-0 -translate-x-4"
+        mode="out-in"
+      >
+        <div v-show="currentStep === 2" key="step2" class="wizard-step-content space-y-6">
+          <p class="text-sm font-medium text-blue-600 mb-2">{{ steps[1].label }}</p>
       <div class="relative p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50 rounded-xl sm:rounded-2xl border-2 border-blue-100/50 shadow-lg shadow-blue-100/50 hover:shadow-xl hover:shadow-blue-200/50 transition-all duration-300 animate-fade-in-up stagger-4 overflow-hidden">
         <!-- Decoración de fondo -->
         <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -239,8 +290,21 @@
           </div>
         </div>
       </div>
+        </div>
+      </Transition>
 
-      <!-- Reglas de multas -->
+      <!-- Paso 3: Reglas de multas -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 translate-x-4"
+        enter-to-class="opacity-100 translate-x-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-x-0"
+        leave-to-class="opacity-0 -translate-x-4"
+        mode="out-in"
+      >
+        <div v-show="currentStep === 3" key="step3" class="wizard-step-content space-y-6">
+          <p class="text-sm font-medium text-amber-600 mb-2">{{ steps[2].label }}</p>
       <div class="relative p-5 sm:p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl border-2 border-amber-100/50 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
         <!-- Decoración de fondo -->
         <div class="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-amber-200/20 to-orange-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -447,6 +511,8 @@
           </div>
         </div>
       </div>
+        </div>
+      </Transition>
 
       <!-- Generación automática de cuotas (oculta en creación; configurable en Configuración de la natillera) -->
       <div v-if="false" class="relative p-4 sm:p-6 bg-gradient-to-br from-emerald-50 via-green-50 to-emerald-50 rounded-xl sm:rounded-2xl border-2 border-emerald-100/50 shadow-lg shadow-emerald-100/50 hover:shadow-xl hover:shadow-emerald-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
@@ -514,7 +580,19 @@
         </div>
       </div>
 
-      <!-- Reglas de intereses -->
+      <!-- Paso 4: Reglas de Préstamos -->
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0 translate-x-4"
+        enter-to-class="opacity-100 translate-x-0"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100 translate-x-0"
+        leave-to-class="opacity-0 -translate-x-4"
+        mode="out-in"
+      >
+        <div v-show="currentStep === 4" key="step4" class="wizard-step-content space-y-6">
+          <p class="text-sm font-medium text-cyan-600 mb-2">{{ steps[3].label }}</p>
+      <!-- Reglas de intereses (préstamos) -->
       <div class="relative p-5 sm:p-6 bg-gradient-to-br from-cyan-50 via-sky-50 to-cyan-50 rounded-2xl border-2 border-cyan-100/50 shadow-lg shadow-cyan-100/50 hover:shadow-xl hover:shadow-cyan-200/50 transition-all duration-300 animate-fade-in-up stagger-7 overflow-hidden">
         <!-- Decoración de fondo -->
         <div class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-cyan-200/20 to-sky-200/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2"></div>
@@ -600,6 +678,8 @@
           </div>
         </div>
       </div>
+        </div>
+      </Transition>
 
       <Transition
         enter-active-class="transition-all duration-300 ease-out"
@@ -609,7 +689,7 @@
         leave-from-class="opacity-100 translate-y-0"
         leave-to-class="opacity-0 -translate-y-2"
       >
-        <div v-if="error" class="p-4 bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-xl text-red-700 text-sm shadow-md flex items-center gap-3 animate-fade-in-up">
+        <div v-if="error" class="p-4 bg-red-50/90 border border-red-100 rounded-xl text-red-700 text-sm flex items-center gap-3">
           <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
@@ -617,27 +697,46 @@
         </div>
       </Transition>
 
-      <div class="flex flex-col sm:flex-row gap-3 pt-6 animate-fade-in-up stagger-7">
-        <router-link to="/natilleras" class="btn-secondary flex-1 text-center group relative overflow-hidden">
-          <span class="relative z-10">Cancelar</span>
-          <div class="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div class="flex flex-col-reverse sm:flex-row gap-3 pt-8 mt-8 border-t border-gray-100">
+        <router-link
+          v-if="currentStep === 1"
+          to="/natilleras"
+          class="btn-secondary flex-1 text-center py-3.5 rounded-xl"
+        >
+          Cancelar
         </router-link>
-        <button 
-          type="submit" 
-          class="btn-primary flex-1 relative overflow-hidden group"
+        <button
+          v-if="currentStep > 1"
+          type="button"
+          @click="currentStep--"
+          class="btn-secondary flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl"
+        >
+          <ChevronLeftIcon class="w-5 h-5" />
+          Anterior
+        </button>
+        <button
+          v-if="currentStep < 4"
+          type="button"
+          @click="goNext"
+          class="btn-primary flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl"
+        >
+          Siguiente
+          <ChevronRightIcon class="w-5 h-5" />
+        </button>
+        <button
+          v-if="currentStep === 4"
+          type="submit"
+          class="btn-primary flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl"
           :disabled="natillerasStore.loading"
         >
-          <span class="relative z-10 flex items-center justify-center gap-2">
-            <svg v-if="natillerasStore.loading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            <span>{{ natillerasStore.loading ? 'Creando...' : 'Crear Natillera' }}</span>
-          </span>
-          <div class="absolute inset-0 bg-gradient-to-r from-natillera-600 to-natillera-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <div v-if="!natillerasStore.loading" class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <svg v-if="natillerasStore.loading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          <span>{{ natillerasStore.loading ? 'Creando...' : 'Crear Natillera' }}</span>
         </button>
       </div>
     </form>
+    </div>
   </div>
 </template>
 
@@ -657,7 +756,10 @@ import {
   PlusIcon,
   XMarkIcon,
   InformationCircleIcon,
-  SparklesIcon
+  SparklesIcon,
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/vue/24/outline'
 import { parseDateLocal, formatDateToLocalISO, getCurrentDateISO } from '../../utils/formatDate'
 
@@ -665,6 +767,53 @@ const router = useRouter()
 const natillerasStore = useNatillerasStore()
 
 const error = ref('')
+const currentStep = ref(1)
+
+const steps = [
+  { id: 'basica', label: 'Datos básicos' },
+  { id: 'periodo', label: 'Período' },
+  { id: 'multas', label: 'Multas' },
+  { id: 'prestamos', label: 'Préstamos' }
+]
+
+function goToStep(stepNumber) {
+  if (stepNumber >= 1 && stepNumber <= 4) {
+    currentStep.value = stepNumber
+    error.value = ''
+  }
+}
+
+function validateStep(step) {
+  if (step === 1) {
+    if (!form.nombre?.trim()) {
+      error.value = 'El nombre de la natillera es obligatorio.'
+      return false
+    }
+    if (!form.fecha_inicio) {
+      error.value = 'La fecha de inicio es obligatoria.'
+      return false
+    }
+    if (!form.periodicidad) {
+      error.value = 'Selecciona la periodicidad.'
+      return false
+    }
+  }
+  if (step === 2) {
+    if (!form.mes_inicio || !form.anio_inicio || !form.mes_fin || !form.anio) {
+      error.value = 'Completa mes y año de inicio y fin del período.'
+      return false
+    }
+  }
+  error.value = ''
+  return true
+}
+
+function goNext() {
+  if (!validateStep(currentStep.value)) return
+  if (currentStep.value < 4) {
+    currentStep.value++
+  }
+}
 
 // Configuración de meses
 const meses = [
@@ -901,6 +1050,40 @@ async function handleSubmit() {
 </script>
 
 <style scoped>
+/* Wizard: contenedor y card del formulario */
+.crear-natillera-wizard {
+  background: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, rgba(240,253,244,0.4) 100%);
+}
+
+.wizard-form-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 1.25rem;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 640px) {
+  .wizard-form-card {
+    padding: 2rem 2.25rem;
+  }
+}
+
+.wizard-step-content {
+  animation: wizard-fade-in 0.35s ease-out;
+}
+
+@keyframes wizard-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Animación de pulso lento para decoraciones */
 @keyframes pulse-slow {
   0%, 100% {

@@ -2276,7 +2276,7 @@
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseRecaudacion = false"></div>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseRecaudacion = false; vistaRecaudacionModal = 'neto'"></div>
       </Transition>
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -2305,12 +2305,12 @@
                     Desglose de Recaudación
                   </h3>
                   <p class="text-white/90 text-sm">
-                    Por tipo de pago
+                    {{ vistaRecaudacionModal === 'neto' ? 'Recaudado neto (cuotas - préstamos)' : 'Recaudado completo (cuotas + sanciones + actividades - préstamos)' }}
                   </p>
                 </div>
               </div>
               <button 
-                @click="modalDesgloseRecaudacion = false"
+                @click="modalDesgloseRecaudacion = false; vistaRecaudacionModal = 'neto'"
                 class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
               >
                 <XMarkIcon class="w-5 h-5" />
@@ -2318,73 +2318,180 @@
             </div>
           </div>
 
+          <!-- Selector de vista: neto / completo -->
+          <div class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
+            <button
+              type="button"
+              @click="vistaRecaudacionModal = 'neto'"
+              :class="[
+                'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
+                vistaRecaudacionModal === 'neto'
+                  ? 'bg-white text-green-600 border border-b-0 border-gray-200 -mb-px shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Recaudado Neto
+            </button>
+            <button
+              type="button"
+              @click="vistaRecaudacionModal = 'completo'"
+              :class="[
+                'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
+                vistaRecaudacionModal === 'completo'
+                  ? 'bg-white text-green-600 border border-b-0 border-gray-200 -mb-px shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              ]"
+            >
+              Recaudado Completo
+            </button>
+          </div>
+
           <!-- Contenido -->
           <div class="overflow-y-auto flex-1 p-6 space-y-4">
-            <!-- Nota: forma de pago y préstamos -->
-            <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
-              Los montos por forma de pago incluyen lo recaudado en cuotas menos los préstamos entregados en ese mismo medio, para facilitar las cuentas de caja.
-            </p>
+            <!-- Vista: Recaudado Neto -->
+            <template v-if="vistaRecaudacionModal === 'neto'">
+              <!-- Nota: forma de pago y préstamos -->
+              <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                Los montos por forma de pago incluyen lo recaudado en cuotas menos los préstamos entregados en ese mismo medio, para facilitar las cuentas de caja.
+              </p>
 
-            <!-- Recaudado en Efectivo (neto: cuotas − préstamos entregados en efectivo) -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
-                    <p class="text-gray-500 text-xs">Cuotas en efectivo − préstamos entregados en efectivo</p>
+              <!-- Recaudado en Efectivo (neto: cuotas − préstamos entregados en efectivo) -->
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
+                      <p class="text-gray-500 text-xs">Cuotas en efectivo − préstamos entregados en efectivo</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
-              </p>
-              <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
-                <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
-                <p>− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
-              </div>
-            </div>
-            
-            <!-- Recaudado en Transferencia (neto: cuotas − préstamos entregados en transferencia) -->
-            <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
-                    <p class="text-gray-500 text-xs">Cuotas por transferencia − préstamos entregados por transferencia</p>
-                  </div>
+                <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
+                </p>
+                <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
+                  <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
+                  <p>− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
                 </div>
               </div>
-              <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
-              </p>
-              <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
-                <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
-                <p>− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
+              
+              <!-- Recaudado en Transferencia (neto: cuotas − préstamos entregados en transferencia) -->
+              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
+                      <p class="text-gray-500 text-xs">Cuotas por transferencia − préstamos entregados por transferencia</p>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                </p>
+                <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
+                  <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
+                  <p>− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
+                </div>
               </div>
-            </div>
 
-            <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) para que cuadre con el desglose -->
-            <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
-              <p class="text-violet-800 text-sm font-semibold">Fondo disponible</p>
-              <p class="text-violet-700 text-2xl font-extrabold mt-1">${{ formatMoney((Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) + (Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)))) }}</p>
-              <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades)</p>
-            </div>
+              <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) para que cuadre con el desglose -->
+              <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
+                <p class="text-violet-800 text-sm font-semibold">Fondo disponible</p>
+                <p class="text-violet-700 text-2xl font-extrabold mt-1">${{ formatMoney((Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) + (Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)))) }}</p>
+                <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades)</p>
+              </div>
+            </template>
+
+            <!-- Vista: Recaudado Completo -->
+            <template v-if="vistaRecaudacionModal === 'completo'">
+              <!-- Nota: desglose completo -->
+              <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                Desglose completo del recaudado incluyendo cuotas, sanciones y actividades, menos los préstamos entregados según su forma de pago.
+              </p>
+
+              <!-- Recaudado Completo en Efectivo -->
+              <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-gray-700 text-sm font-semibold">EFECTIVO</p>
+                      <p class="text-gray-500 text-xs">Total recaudado en efectivo − préstamos entregados en efectivo</p>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
+                </p>
+                <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-1">
+                  <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
+                  <p>• Cuotas: ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
+                  <p v-if="(estadisticas.sancionesEfectivo || 0) > 0">• Sanciones: ${{ formatMoney(estadisticas.sancionesEfectivo || 0) }}</p>
+                  <p v-if="(estadisticas.actividadesEfectivo || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesEfectivo || 0) }}</p>
+                  <p class="pt-1 border-t border-green-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoEfectivo || 0) }}</p>
+                  <p class="pt-1 border-t border-green-200/40">− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
+                </div>
+              </div>
+              
+              <!-- Recaudado Completo en Transferencia -->
+              <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border-2 border-blue-200 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-gray-700 text-sm font-semibold">TRANSFERENCIA</p>
+                      <p class="text-gray-500 text-xs">Total recaudado por transferencia − préstamos entregados por transferencia</p>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
+                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                </p>
+                <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-1">
+                  <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
+                  <p>• Cuotas: ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
+                  <p v-if="(estadisticas.sancionesTransferencia || 0) > 0">• Sanciones: ${{ formatMoney(estadisticas.sancionesTransferencia || 0) }}</p>
+                  <p v-if="(estadisticas.actividadesTransferencia || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesTransferencia || 0) }}</p>
+                  <p class="pt-1 border-t border-blue-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoTransferencia || 0) }}</p>
+                  <p class="pt-1 border-t border-blue-200/40">− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
+                </div>
+              </div>
+
+              <!-- Total General -->
+              <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
+                <p class="text-violet-800 text-sm font-semibold">Total Recaudado Completo</p>
+                <p class="text-violet-700 text-2xl font-extrabold mt-1">
+                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                </p>
+                <div class="mt-2 pt-2 border-t border-violet-200/60 text-xs text-gray-600 space-y-0.5">
+                  <p>Efectivo neto: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}</p>
+                  <p>Transferencia neta: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}</p>
+                </div>
+              </div>
+            </template>
           </div>
 
           <!-- Footer -->
           <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
             <button 
-              @click="modalDesgloseRecaudacion = false"
+              @click="modalDesgloseRecaudacion = false; vistaRecaudacionModal = 'neto'"
               class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
             >
               Cerrar
@@ -2703,6 +2810,7 @@ const modalCuotasSocio = ref(false)
 const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalSociosEnMora = ref(false)
 const modalDesgloseRecaudacion = ref(false)
+const vistaRecaudacionModal = ref('neto') // 'neto' | 'completo'
 const modalUtilidadesDesglose = ref(false)
 const vistaUtilidadesModal = ref('origen') // 'origen' | 'formaPago'
 const loadingCuotasSocio = ref(false)
@@ -3679,7 +3787,14 @@ const estadisticas = ref({
   totalDesembolsadoEfectivo: 0,
   totalDesembolsadoTransferencia: 0,
   totalRecaudadoEfectivo: 0,
-  totalRecaudadoTransferencia: 0
+  totalRecaudadoTransferencia: 0,
+  sancionesEfectivo: 0,
+  sancionesTransferencia: 0,
+  actividadesEfectivo: 0,
+  actividadesTransferencia: 0,
+  recaudadoCompletoEfectivo: 0,
+  recaudadoCompletoTransferencia: 0,
+  recaudadoCompletoTotal: 0
 })
 
 // Función para calcular estadísticas de forma asíncrona
@@ -3700,7 +3815,14 @@ async function calcularEstadisticasAsync() {
       totalDesembolsadoEfectivo: 0,
       totalDesembolsadoTransferencia: 0,
       totalRecaudadoEfectivo: 0,
-      totalRecaudadoTransferencia: 0
+      totalRecaudadoTransferencia: 0,
+      sancionesEfectivo: 0,
+      sancionesTransferencia: 0,
+      actividadesEfectivo: 0,
+      actividadesTransferencia: 0,
+      recaudadoCompletoEfectivo: 0,
+      recaudadoCompletoTransferencia: 0,
+      recaudadoCompletoTotal: 0
     }
     return
   }
@@ -3721,7 +3843,14 @@ async function calcularEstadisticasAsync() {
     totalDesembolsadoEfectivo: 0,
     totalDesembolsadoTransferencia: 0,
     totalRecaudadoEfectivo: 0,
-    totalRecaudadoTransferencia: 0
+    totalRecaudadoTransferencia: 0,
+    sancionesEfectivo: 0,
+    sancionesTransferencia: 0,
+    actividadesEfectivo: 0,
+    actividadesTransferencia: 0,
+    recaudadoCompletoEfectivo: 0,
+    recaudadoCompletoTransferencia: 0,
+    recaudadoCompletoTotal: 0
   }
 }
 

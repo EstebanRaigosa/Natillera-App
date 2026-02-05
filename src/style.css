@@ -2141,6 +2141,10 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Asegurar que el contenido sea visible */
     opacity: 1 !important;
     visibility: visible !important;
+    /* Asegurar que la modal esté por encima de todo en iPhone */
+    position: fixed !important;
+    /* Forzar renderizado en nueva capa de composición */
+    isolation: isolate;
   }
   
   /* Contenedores de modales en iOS: asegurar renderizado correcto */
@@ -2150,15 +2154,48 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     transform: translateZ(0);
     position: relative;
     z-index: 1;
+    /* Forzar renderizado del contenido */
+    opacity: 1 !important;
+    visibility: visible !important;
+    /* Asegurar que el contenido sea clickeable */
+    pointer-events: auto !important;
   }
   
   /* Overlays de fondo en modales iOS: asegurar que sean clickeables */
-  [class*="fixed"].inset-0 > [class*="absolute"].inset-0[class*="bg-black"] {
+  [class*="fixed"].inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
+  [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"] {
     /* Asegurar que el overlay esté por debajo del contenido */
     z-index: 0;
     /* Forzar renderizado */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+    /* Asegurar que el overlay sea visible y clickeable */
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+  
+  /* Contenido de la modal (card, div con contenido): asegurar que se muestre en iPhone */
+  [class*="fixed"].inset-0 > .card,
+  [class*="fixed"].inset-0 > .relative,
+  [class*="fixed"].inset-0 > [class*="max-w"],
+  [class*="fixed"].inset-0 > div:not([class*="absolute"]) {
+    /* Forzar renderizado del contenido de la modal */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    /* Asegurar que esté por encima del overlay */
+    position: relative;
+    z-index: 10 !important;
+    /* Asegurar visibilidad */
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    /* Asegurar que sea clickeable */
+    pointer-events: auto !important;
+    /* Forzar nueva capa de composición */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
   }
   
   /* Overlay del sidebar móvil: que el tap cierre el menú en iOS */
@@ -2202,5 +2239,84 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   .fixed.inset-0 textarea,
   .fixed.inset-0 select {
     font-size: 16px !important;
+  }
+  
+  /* FIX ESPECÍFICO PARA IPHONE: Asegurar que las modales se muestren correctamente */
+  /* Cuando el body tiene position: fixed (por useBodyScrollLock), las modales pueden no renderizarse */
+  /* Esta regla fuerza el renderizado correcto solo en iPhone */
+  @media screen and (max-width: 768px) {
+    /* Contenedor principal de la modal */
+    [class*="fixed"].inset-0[class*="z-"],
+    .fixed.inset-0[class*="z-"] {
+      /* Crear nuevo contexto de apilamiento */
+      transform: translate3d(0, 0, 0) !important;
+      -webkit-transform: translate3d(0, 0, 0) !important;
+      /* Asegurar que esté por encima de todo */
+      z-index: 9999 !important;
+      /* Forzar renderizado */
+      display: flex !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      /* Asegurar que el contenido sea interactivo */
+      pointer-events: auto !important;
+    }
+    
+    /* Overlay de fondo: debe estar visible pero por debajo del contenido */
+    [class*="fixed"].inset-0 > [class*="absolute"].inset-0,
+    [class*="fixed"].inset-0 > .absolute.inset-0 {
+      /* Asegurar renderizado del overlay */
+      transform: translate3d(0, 0, 0) !important;
+      -webkit-transform: translate3d(0, 0, 0) !important;
+      /* Estar por debajo del contenido */
+      z-index: 0 !important;
+      /* Asegurar visibilidad */
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+      /* Asegurar que sea clickeable */
+      pointer-events: auto !important;
+    }
+    
+    /* Contenido de la modal: debe estar visible y por encima del overlay */
+    [class*="fixed"].inset-0 > .card,
+    [class*="fixed"].inset-0 > .relative:not([class*="absolute"]),
+    [class*="fixed"].inset-0 > [class*="max-w"]:not([class*="absolute"]),
+    [class*="fixed"].inset-0 > div.relative,
+    [class*="fixed"].inset-0 > div[class*="bg-white"]:not([class*="absolute"]) {
+      /* Forzar renderizado del contenido */
+      transform: translate3d(0, 0, 0) !important;
+      -webkit-transform: translate3d(0, 0, 0) !important;
+      /* Estar por encima del overlay */
+      position: relative !important;
+      z-index: 10 !important;
+      /* Asegurar visibilidad */
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+      /* Asegurar que sea clickeable */
+      pointer-events: auto !important;
+      /* Forzar nueva capa de composición */
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+      will-change: transform !important;
+    }
+    
+    /* Botones dentro de modales: asegurar que sean clickeables */
+    [class*="fixed"].inset-0 button,
+    [class*="fixed"].inset-0 a,
+    [class*="fixed"].inset-0 [role="button"] {
+      pointer-events: auto !important;
+      z-index: 20 !important;
+      position: relative;
+    }
+    
+    /* Inputs y formularios dentro de modales */
+    [class*="fixed"].inset-0 input,
+    [class*="fixed"].inset-0 textarea,
+    [class*="fixed"].inset-0 select {
+      pointer-events: auto !important;
+      z-index: 20 !important;
+      position: relative;
+    }
   }
 }
