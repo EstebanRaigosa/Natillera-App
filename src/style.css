@@ -2123,13 +2123,42 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     transform: translate3d(0, 0, 0);
   }
   
-  /* Optimizar modales y overlays en iOS: asegurar que reciban tap */
+  /* Optimizar modales y overlays en iOS: asegurar que reciban tap y se rendericen correctamente */
   [class*="fixed"].inset-0,
   .fixed.inset-0 {
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     touch-action: manipulation;
+    /* Forzar renderizado correcto en iOS */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    /* Asegurar que las modales se rendericen por encima de todo */
+    will-change: transform;
+    /* Forzar nueva capa de composición en iOS */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Asegurar que el contenido sea visible */
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  /* Contenedores de modales en iOS: asegurar renderizado correcto */
+  [class*="fixed"].inset-0 > * {
+    /* Asegurar que el contenido de la modal se renderice */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Overlays de fondo en modales iOS: asegurar que sean clickeables */
+  [class*="fixed"].inset-0 > [class*="absolute"].inset-0[class*="bg-black"] {
+    /* Asegurar que el overlay esté por debajo del contenido */
+    z-index: 0;
+    /* Forzar renderizado */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
   
   /* Overlay del sidebar móvil: que el tap cierre el menú en iOS */

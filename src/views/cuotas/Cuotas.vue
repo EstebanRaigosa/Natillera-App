@@ -1035,7 +1035,7 @@
                           <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                         </p>
                         <p class="text-xs font-medium text-green-600 mt-0.5">
-                          Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                          Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                         </p>
                       </template>
                       <template v-else>
@@ -1095,9 +1095,9 @@
                           </p>
                           <p 
                             class="text-xs mt-1"
-                            :class="cuota.valor_pagado > 0 ? 'text-green-600 font-medium' : 'text-gray-500'"
+                            :class="getTotalPagadoConActividadesSocio(cuota) > 0 ? 'text-green-600 font-medium' : 'text-gray-500'"
                           >
-                            Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                            Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                           </p>
                         </template>
                       </template>
@@ -1375,8 +1375,8 @@
                     >
                       <span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                     </li>
-                    <li v-if="cuota.valor_pagado > 0" class="text-green-600 font-medium mt-1">
-                      Pagado: ${{ formatMoney(cuota.valor_pagado || 0) }}
+                    <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
+                      Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                     </li>
                   </template>
                   <!-- Pagada: desglose en verde -->
@@ -1436,7 +1436,7 @@
                   <template v-else>
                     <button 
                       @click="reenviarComprobante(cuota)"
-                      class="w-[70%] min-w-0 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                      class="w-full md:w-[70%] min-w-0 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       title="Reenviar comprobante"
                     >
                       <ArrowPathIcon class="w-4 h-4" />
@@ -1900,7 +1900,7 @@
             </div>
             <div class="bg-gradient-to-br from-green-50 to-emerald-50 p-5 rounded-xl border border-green-200 shadow-sm">
               <p class="text-xs text-gray-500 font-medium mb-2">{{ cuotaDetalle.estado === 'pagada' ? 'Total pagado' : 'Valor Pagado' }}</p>
-              <p class="text-2xl font-bold text-green-700">${{ formatMoney(cuotaDetalle.estado === 'pagada' ? (cuotaDetalle.valor_pagado || 0) + (cuotaDetalle.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaDetalle).pagadas : (cuotaDetalle.valor_pagado || 0)) }}</p>
+              <p class="text-2xl font-bold text-green-700">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</p>
             </div>
             <div :class="[
               'p-5 rounded-xl border shadow-sm',
@@ -1924,10 +1924,13 @@
                   'text-2xl font-bold',
                   cuotaDetalle.estado === 'mora' ? 'text-red-700' : 'text-amber-700'
                 ]">
-                  ${{ formatMoney(Math.max(0, getTotalAPagar(cuotaDetalle))) }}
+                  ${{ formatMoney(Math.max(0, getTotalAPagarConActividadesSocio(cuotaDetalle))) }}
                 </p>
                 <p v-if="getSancionCuotaDetalle(cuotaDetalle) > 0" class="text-xs text-red-600 font-semibold mt-1">
                   Incluye multa de ${{ formatMoney(getSancionCuotaDetalle(cuotaDetalle)) }}
+                </p>
+                <p v-if="getActividadesPendientesSocio(cuotaDetalle) > 0" class="text-xs text-purple-600 font-semibold mt-1">
+                  Incluye actividades de ${{ formatMoney(getActividadesPendientesSocio(cuotaDetalle)) }}
                 </p>
               </template>
             </div>
@@ -6069,6 +6072,13 @@ function getAbonadoACuota(cuota) {
   return cuota ? (cuota.valor_pagado || 0) : 0
 }
 
+// Total pagado incluyendo sanciones y actividades
+function getTotalPagadoConActividadesSocio(cuota) {
+  if (!cuota) return 0
+  const actividadesInfo = getActividadesInfoSocio(cuota)
+  return (cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + (actividadesInfo.pagadas || 0)
+}
+
 // Obtener la sanción TOTAL de una cuota (sin restar pagos)
 function getSancionTotalCuota(cuota) {
   // Si las sanciones no están activadas, retornar 0
@@ -6108,6 +6118,12 @@ function getSancionCuota(cuota) {
   
   // Si no hay sanción total, retornar 0
   if (sancionTotal <= 0) return 0
+
+  // Si hay pagos registrados de sanción, calcular pendiente con base en eso
+  const sancionPagada = parseFloat(cuota.valor_pagado_sancion) || 0
+  if (sancionPagada > 0) {
+    return Math.max(0, sancionTotal - sancionPagada)
+  }
   
   // Calcular cuánto se pagó de sanción según el orden de pago:
   // Orden: 1. Sanción, 2. Actividades, 3. Cuota
@@ -6117,7 +6133,6 @@ function getSancionCuota(cuota) {
   
   // Obtener actividades totales asignadas y cuánto se pagó de ellas
   const actividadesInfo = getActividadesInfoSocio(cuota)
-  const actividadesTotal = actividadesInfo.total
   const actividadesPagadas = actividadesInfo.pagadas
   
   // Calcular cuánto se pagó de sanción según el orden de pago:
@@ -8624,7 +8639,7 @@ async function handleRegistrarPago() {
       cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
       socioNombre,
       socioTelefono,
-      valor: valorPagado, // Valor total del pago (cuota + actividades)
+      valor: valorPagadoTotalCalculado, // Total pagado (cuota + sanciones + actividades)
       valorCuota,
       valorPagadoTotal: valorPagadoTotalCalculado, // Total pagado = cuota + sanciones + actividades
       valorPendiente: valorPendienteCalculado,
@@ -9578,13 +9593,9 @@ async function reenviarComprobante(cuota) {
   const valorCuota = parseFloat(cuota.valor_cuota) || 0
   const valorCuotaPagada = parseFloat(cuota.valor_pagado) || 0
   const valorSancionPagada = parseFloat(cuota.valor_pagado_sancion) || 0
-  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada
   const sancion = getSancionCuotaDetalle(cuota)
   const valorMultaEnBD = parseFloat(cuota.valor_multa) || 0
   const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
-  const totalAPagar = valorCuota + sancionTotal
-  const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
-  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
   
   // Buscar actividades pagadas que corresponden al mismo periodo y quincena que esta cuota
   // (no por fecha de pago: así la 2ª quincena no muestra actividades de la 1ª)
@@ -9662,12 +9673,18 @@ async function reenviarComprobante(cuota) {
     }
   }
   
+  // Calcular totales considerando sanciones y actividades pagadas
+  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades
+  const totalAPagar = valorCuota + sancionTotal + totalActividades
+  const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
+  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
+  
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
     cuotaId: cuota.id, // ID de la cuota para auditoría
     socioNombre: cuota.socio_natillera?.socio?.nombre,
     socioTelefono: cuota.socio_natillera?.socio?.telefono,
-    valor: valorPagadoTotal + totalActividades, // Total pagado (cuota + actividades)
+    valor: valorPagadoTotal, // Total pagado (cuota + sanciones + actividades)
     valorCuota,
     valorPagadoTotal,
     valorPendiente,
