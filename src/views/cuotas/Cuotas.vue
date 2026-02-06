@@ -3511,9 +3511,9 @@
                 </div>
                 <!-- Actividades -->
                 <template v-if="pagoRegistrado?.tieneActividades && (pagoRegistrado?.valorActividadesPagado || 0) > 0">
-                  <template v-if="(pagoRegistrado.actividadesPagadas || []).filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0))).length > 0">
+                  <template v-if="(pagoRegistrado.actividadesPagadas || []).length > 0">
                     <div 
-                      v-for="(actividad, index) in (pagoRegistrado.actividadesPagadas || []).filter(a => a && ((a.valor_pendiente || 0) > 0 || (a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))" 
+                      v-for="(actividad, index) in pagoRegistrado.actividadesPagadas" 
                       :key="index"
                       style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"
                     >
@@ -3524,7 +3524,7 @@
                         </p>
                       </div>
                       <p style="font-size: 13px; font-weight: 700; margin: 0; color: #6b21a8; flex-shrink: 0; margin-left: 8px;">
-                        ${{ formatMoney((actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))) }}
+                        ${{ formatMoney((actividad?.valor_pendiente || 0) || (actividad?.valor_asignado || 0)) }}
                       </p>
                     </div>
                   </template>
@@ -9262,9 +9262,8 @@ function generarImagenComprobante() {
       const tieneActividadesParaMostrar = tieneActividades || (pagoRegistrado.value?.valorActividadesPagado || 0) > 0
       const valorActividadesTotal = pagoRegistrado.value?.valorActividadesPagado || 0
       if (tieneActividadesParaMostrar) {
-        const actividades = (pagoRegistrado.value?.actividadesPagadas || []).filter(a => 
-          a && ((a.valor_pendiente || 0) > 0 || ((a.valor_pagado_anterior || 0) < (a.valor_asignado || 0)))
-        )
+        // Mostrar todas las actividades pagadas (ya están filtradas en reenviarComprobante)
+        const actividades = (pagoRegistrado.value?.actividadesPagadas || []).filter(a => a)
         
         // Si hay espacio horizontal, mostrar en fila, sino en columna
         let actividadX = conceptoX
@@ -9295,7 +9294,7 @@ function generarImagenComprobante() {
             descripcionActividad += '...'
           }
           
-          const valorActividad = (actividad?.valor_pendiente || 0) || ((actividad?.valor_asignado || 0) - (actividad?.valor_pagado_anterior || 0))
+          const valorActividad = (actividad?.valor_pendiente || 0) || (actividad?.valor_asignado || 0)
           
           // Fondo
           ctx.fillStyle = '#faf5ff'
@@ -9958,6 +9957,7 @@ async function reenviarComprobante(cuota) {
     // Información de actividades pagadas
     tieneActividades: totalActividades > 0,
     valorActividades: totalActividades,
+    valorActividadesPagado: totalActividades, // Valor pagado de actividades para mostrar en conceptos
     cantidadActividades: actividadesPagadas.length,
     actividadesPagadas: actividadesPagadas
   }
