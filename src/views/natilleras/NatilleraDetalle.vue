@@ -6,8 +6,13 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Pantalla de carga completa -->
-    <template v-if="cargandoNatillera">
+    <!-- Pantalla de carga: en iPhone/Safari se usa LoadingScreenIos (desde cero); en Android la original -->
+    <LoadingScreenIos
+      v-if="cargandoNatillera && isIos"
+      :show="true"
+      :message="mensajeCargaActual"
+    />
+    <Teleport to="body" v-else-if="cargandoNatillera">
       <Transition
         enter-active-class="transition duration-300 ease-out"
         enter-from-class="opacity-0"
@@ -19,19 +24,19 @@
         <div 
           key="loading-screen"
           class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
+          style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; height: -webkit-fill-available !important; min-height: 100vh !important; min-height: 100dvh !important; min-height: -webkit-fill-available !important; margin: 0 !important; padding: 0 !important; touch-action: none; overscroll-behavior: none; -webkit-overflow-scrolling: touch;"
           @click.stop.prevent
           @wheel.stop.prevent
           @touchmove.stop.prevent
           @scroll.stop.prevent
-          style="touch-action: none; overscroll-behavior: none;"
         >
           <!-- Efectos decorativos de fondo -->
-          <div class="absolute inset-0 overflow-hidden pointer-events-none">
+          <div class="absolute inset-0 overflow-hidden pointer-events-none" style="position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important;">
             <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
             <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
           </div>
           
-          <div class="relative z-10 flex flex-col items-center">
+          <div class="relative z-10 flex flex-col items-center justify-center" style="position: relative !important; width: 100% !important; max-width: 100% !important; margin: 0 auto !important;">
             <!-- Spinner moderno con gradientes y múltiples capas -->
             <div class="relative w-24 h-24 mb-6">
               <!-- Anillo exterior grande animado -->
@@ -71,7 +76,7 @@
           </div>
         </div>
       </Transition>
-    </template>
+    </Teleport>
 
     <template v-else-if="natillera">
       <!-- Breadcrumbs (solo desktop) -->
@@ -158,10 +163,10 @@
             <button
               type="button"
               @click="modalUtilidadesDesglose = true"
-              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity cursor-pointer"
+              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity"
             >
               <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-violet-100 flex items-center justify-center mb-1.5 text-violet-600 group-hover:bg-violet-200/80 transition-colors">
-                <ChartBarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                <SparklesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Utilidad</p>
               <p class="text-violet-600 text-lg sm:text-xl font-bold">
@@ -412,6 +417,28 @@
                 </p>
               </div>
             </router-link>
+
+            <router-link 
+              v-if="puedeVerCuotas"
+              :to="`/natilleras/${id}/cuadre-caja`"
+              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
+            >
+              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/50 to-cyan-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-teal-200/60 group-hover:to-cyan-200/40 transition-all duration-300"></div>
+              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-100/30 to-teal-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
+              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
+                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <CalculatorIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
+              </div>
+              <div class="relative z-10 text-center sm:text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-teal-700 transition-colors">
+                  Totales generales
+                </h3>
+                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
+                  Cuenta el dinero y contrasta con lo que debería haber.
+                </p>
+              </div>
+            </router-link>
           </div>
         </div>
       </div>
@@ -424,10 +451,15 @@
       </router-link>
     </div>
 
-    <!-- Modal WhatsApp -->
-    <div v-if="modalWhatsApp" data-modal="whatsapp" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50" @click="cerrarModalWhatsApp"></div>
-      <div class="card relative w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col">
+    <!-- Modal WhatsApp: en iOS ModalWrapper; en Android estructura actual -->
+    <ModalWrapper
+      :show="!!modalWhatsApp"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="card relative w-full sm:max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col bg-white shadow-2xl border border-gray-200 p-6"
+      @close="cerrarModalWhatsApp"
+    >
         <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-2 sm:mb-3">
           Enviar Recordatorio por WhatsApp
         </h3>
@@ -491,13 +523,16 @@
         >
           Cerrar
         </button>
-      </div>
-    </div>
+    </ModalWrapper>
 
-    <!-- Modal Detalle Socio -->
-    <div v-if="modalDetalle" data-modal="detalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalle = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200">
+    <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
+    <ModalWrapper
+      :show="!!modalDetalle"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
+      @close="modalDetalle = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
@@ -614,13 +649,17 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
-    <!-- Modal Buscar Comprobante -->
-    <div v-if="modalBuscarComprobante" data-modal="buscar-comprobante" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalBuscarComprobante"></div>
-      <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <!-- Modal Buscar Comprobante: en iOS ModalWrapper; en Android estructura actual -->
+    <ModalWrapper
+      :show="!!modalBuscarComprobante"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      @close="cerrarModalBuscarComprobante"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
@@ -922,13 +961,18 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
-    <!-- Modal Cuotas del Socio por Mes -->
-    <div v-if="modalCuotasSocio" data-modal="cuotas-socio" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalCuotasSocio"></div>
-      <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <!-- Modal Cuotas del Socio por Mes: en iOS ModalWrapper; en Android estructura actual -->
+    <ModalWrapper
+      :show="!!modalCuotasSocio"
+      :z-index="60"
+      align="bottom"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="42rem"
+      @close="cerrarModalCuotasSocio"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0 z-10">
           <!-- Efectos decorativos -->
@@ -1544,8 +1588,7 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Configurar Período de Meses -->
     <div v-if="modalConfigMeses" data-modal="config-meses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -2371,11 +2414,12 @@
                   </div>
                 </div>
                 <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
+                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + (estadisticas.movimientosEfectivoNeto || 0)) }}
                 </p>
                 <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
                   <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
                   <p>− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
+                  <p v-if="(estadisticas.movimientosEfectivoNeto || 0) !== 0">{{ (estadisticas.movimientosEfectivoNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosEfectivoNeto || 0) }}</p>
                 </div>
               </div>
               
@@ -2395,19 +2439,20 @@
                   </div>
                 </div>
                 <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                  ${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)) + (estadisticas.movimientosTransferenciaNeto || 0)) }}
                 </p>
                 <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
                   <p>Recaudado (cuotas): ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
                   <p>− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
+                  <p v-if="(estadisticas.movimientosTransferenciaNeto || 0) !== 0">{{ (estadisticas.movimientosTransferenciaNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosTransferenciaNeto || 0) }}</p>
                 </div>
               </div>
 
-              <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) para que cuadre con el desglose -->
+              <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) + movimientos para que cuadre con el desglose -->
               <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
                 <p class="text-violet-800 text-sm font-semibold">Fondo disponible</p>
-                <p class="text-violet-700 text-2xl font-extrabold mt-1">${{ formatMoney((Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) + (Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)))) }}</p>
-                <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades)</p>
+                <p class="text-violet-700 text-2xl font-extrabold mt-1">${{ formatMoney((Math.max(0, (estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + (estadisticas.movimientosEfectivoNeto || 0)) + (Math.max(0, (estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)) + (estadisticas.movimientosTransferenciaNeto || 0))) }}</p>
+                <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades). Incluye movimientos de fondo.</p>
               </div>
             </template>
 
@@ -2434,7 +2479,7 @@
                   </div>
                 </div>
                 <p class="text-green-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}
+                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + (estadisticas.movimientosEfectivoNeto || 0)) }}
                 </p>
                 <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-1">
                   <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
@@ -2443,6 +2488,7 @@
                   <p v-if="(estadisticas.actividadesEfectivo || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesEfectivo || 0) }}</p>
                   <p class="pt-1 border-t border-green-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoEfectivo || 0) }}</p>
                   <p class="pt-1 border-t border-green-200/40">− Préstamos entregados en efectivo: ${{ formatMoney(estadisticas.totalDesembolsadoEfectivo || 0) }}</p>
+                  <p v-if="(estadisticas.movimientosEfectivoNeto || 0) !== 0" class="pt-1 border-t border-green-200/40">{{ (estadisticas.movimientosEfectivoNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosEfectivoNeto || 0) }}</p>
                 </div>
               </div>
               
@@ -2462,7 +2508,7 @@
                   </div>
                 </div>
                 <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold mt-3">
-                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)) + (estadisticas.movimientosTransferenciaNeto || 0)) }}
                 </p>
                 <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-1">
                   <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
@@ -2471,18 +2517,20 @@
                   <p v-if="(estadisticas.actividadesTransferencia || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesTransferencia || 0) }}</p>
                   <p class="pt-1 border-t border-blue-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoTransferencia || 0) }}</p>
                   <p class="pt-1 border-t border-blue-200/40">− Préstamos entregados por transferencia: ${{ formatMoney(estadisticas.totalDesembolsadoTransferencia || 0) }}</p>
+                  <p v-if="(estadisticas.movimientosTransferenciaNeto || 0) !== 0" class="pt-1 border-t border-blue-200/40">{{ (estadisticas.movimientosTransferenciaNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosTransferenciaNeto || 0) }}</p>
                 </div>
               </div>
 
-              <!-- Total General -->
+              <!-- Total General (incluye movimientos; cuadra con fondo total del detalle) -->
               <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
                 <p class="text-violet-800 text-sm font-semibold">Total Recaudado Completo</p>
                 <p class="text-violet-700 text-2xl font-extrabold mt-1">
-                  ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}
+                  ${{ formatMoney(estadisticas.fondoTotal) }}
                 </p>
                 <div class="mt-2 pt-2 border-t border-violet-200/60 text-xs text-gray-600 space-y-0.5">
-                  <p>Efectivo neto: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0))) }}</p>
-                  <p>Transferencia neta: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0))) }}</p>
+                  <p>Efectivo neto: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoEfectivo || 0) - (estadisticas.totalDesembolsadoEfectivo || 0)) + (estadisticas.movimientosEfectivoNeto || 0)) }}</p>
+                  <p>Transferencia neta: ${{ formatMoney(Math.max(0, (estadisticas.recaudadoCompletoTransferencia || 0) - (estadisticas.totalDesembolsadoTransferencia || 0)) + (estadisticas.movimientosTransferenciaNeto || 0)) }}</p>
+                  <p>+ Utilidades recogidas (incluidas en el total)</p>
                 </div>
               </div>
             </template>
@@ -2511,7 +2559,7 @@
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
       >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"></div>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"></div>
       </Transition>
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -2536,7 +2584,7 @@
               </div>
               <button
                 type="button"
-                @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"
+                @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"
                 class="p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/20 transition-colors"
               >
                 <XMarkIcon class="w-5 h-5" />
@@ -2544,11 +2592,11 @@
             </div>
           </div>
 
-          <!-- Selector de vista: por origen / por forma de pago -->
-          <div class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
+          <!-- Selector de vista: por origen / por forma de pago (solo si no estamos en detalle) -->
+          <div v-if="!conceptoDetalleSeleccionado" class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
             <button
               type="button"
-              @click="vistaUtilidadesModal = 'origen'"
+              @click="vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"
               :class="[
                 'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
                 vistaUtilidadesModal === 'origen'
@@ -2560,7 +2608,7 @@
             </button>
             <button
               type="button"
-              @click="vistaUtilidadesModal = 'formaPago'"
+              @click="vistaUtilidadesModal = 'formaPago'; cerrarDetalleUtilidad()"
               :class="[
                 'flex-1 py-3 text-sm font-semibold rounded-t-lg transition-colors',
                 vistaUtilidadesModal === 'formaPago'
@@ -2572,23 +2620,81 @@
             </button>
           </div>
 
+          <!-- Botón volver cuando estamos en detalle -->
+          <div v-if="conceptoDetalleSeleccionado" class="border-b border-gray-200 bg-gray-50/80 px-4 py-2 flex items-center gap-2">
+            <button
+              type="button"
+              @click="cerrarDetalleUtilidad()"
+              class="p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-200 transition-colors"
+            >
+              <ChevronLeftIcon class="w-5 h-5" />
+            </button>
+            <span class="text-sm font-semibold text-gray-700">Detalle: {{ conceptoDetalleSeleccionado.label }}</span>
+          </div>
+
           <!-- Lista flat y moderna -->
           <div class="overflow-y-auto flex-1 p-5 space-y-3">
-            <template v-if="vistaUtilidadesModal === 'origen'">
+            <!-- Vista detalle: filas que suman al concepto -->
+            <template v-if="conceptoDetalleSeleccionado">
+              <div v-if="loadingDetalleUtilidad" class="text-center py-8 text-gray-500">
+                <div class="inline-block w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="mt-2 text-sm">Cargando detalle...</p>
+              </div>
+              <template v-else-if="detalleUtilidadConcepto.length">
+                <!-- Grid: 2 columnas (Persona/Concepto | Valor) o 3 columnas (Persona | Actividad | Valor) -->
+                <div class="rounded-xl border border-gray-200 overflow-hidden">
+                  <div
+                    :class="[
+                      'gap-0 bg-gray-100 border-b border-gray-200',
+                      detalleUtilidadConcepto[0]?.actividad != null ? 'grid grid-cols-[1fr_1fr_auto]' : 'grid grid-cols-[1fr_auto]'
+                    ]"
+                  >
+                    <div class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      {{ detalleUtilidadConcepto[0]?.actividad != null ? 'Persona' : ((conceptoDetalleSeleccionado?.tipo === 'sanciones' || conceptoDetalleSeleccionado?.tipo === 'prestamos') ? 'Persona' : 'Concepto') }}
+                    </div>
+                    <div v-if="detalleUtilidadConcepto[0]?.actividad != null" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Actividad</div>
+                    <div class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide w-28">Valor</div>
+                  </div>
+                  <div
+                    v-for="(fila, idx) in detalleUtilidadConcepto"
+                    :key="idx"
+                    :class="[
+                      'gap-0 border-b border-gray-100 last:border-b-0 bg-white hover:bg-gray-50/80',
+                      fila.actividad != null ? 'grid grid-cols-[1fr_1fr_auto]' : 'grid grid-cols-[1fr_auto]'
+                    ]"
+                  >
+                    <div class="px-4 py-3 text-gray-800 font-medium truncate" :title="fila.concepto">{{ fila.concepto }}</div>
+                    <div v-if="fila.actividad != null" class="px-4 py-3 text-gray-700 text-sm truncate" :title="fila.actividad">{{ fila.actividad }}</div>
+                    <div class="px-4 py-3 text-right w-28 text-violet-600 font-bold tabular-nums">${{ formatMoney(fila.monto) }}</div>
+                  </div>
+                </div>
+                <div class="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                  <p class="font-semibold text-gray-700">Subtotal ({{ detalleUtilidadConcepto.length }} {{ detalleUtilidadConcepto.length === 1 ? 'registro' : 'registros' }})</p>
+                  <p class="text-violet-600 font-bold tabular-nums">${{ formatMoney(detalleUtilidadConcepto.reduce((s, f) => s + (parseFloat(f.monto) || 0), 0)) }}</p>
+                </div>
+              </template>
+              <div v-else class="text-center py-8 text-gray-500">
+                <p class="font-medium">No hay registros para este concepto</p>
+              </div>
+            </template>
+
+            <!-- Vista lista por origen (conceptos clicables) -->
+            <template v-else-if="vistaUtilidadesModal === 'origen'">
               <template v-if="(estadisticas.utilidadesDesglose || []).length">
-                <div
+                <button
                   v-for="item in (estadisticas.utilidadesDesglose || [])"
                   :key="item.id"
-                  class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  type="button"
+                  @click="abrirDetalleUtilidadConcepto({ tipo: item.id, label: item.label })"
+                  class="w-full flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-100 hover:border-violet-200 transition-colors text-left"
                 >
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-gray-800">{{ item.label }}</p>
                     <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
                   </div>
-                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
-                    ${{ formatMoney(item.value) }}
-                  </p>
-                </div>
+                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">${{ formatMoney(item.value) }}</p>
+                  <ChevronRightIcon class="w-5 h-5 text-gray-400 shrink-0" />
+                </button>
               </template>
               <div v-else class="text-center py-8 text-gray-500">
                 <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
@@ -2596,21 +2702,24 @@
                 <p class="text-sm mt-1">Las utilidades aparecerán al recaudar multas, intereses o actividades.</p>
               </div>
             </template>
+
+            <!-- Vista lista por forma de pago (conceptos clicables) -->
             <template v-else>
               <template v-if="(estadisticas.utilidadesPorFormaPago || []).length">
-                <div
+                <button
                   v-for="item in (estadisticas.utilidadesPorFormaPago || [])"
                   :key="item.id"
-                  class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                  type="button"
+                  @click="abrirDetalleUtilidadConcepto({ formaPago: item.id, label: item.label })"
+                  class="w-full flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-gray-100 hover:border-violet-200 transition-colors text-left"
                 >
                   <div class="flex-1 min-w-0">
                     <p class="font-semibold text-gray-800">{{ item.label }}</p>
                     <p v-if="item.desc" class="text-gray-500 text-sm mt-0.5">{{ item.desc }}</p>
                   </div>
-                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">
-                    ${{ formatMoney(item.value) }}
-                  </p>
-                </div>
+                  <p class="text-violet-600 font-bold text-lg tabular-nums shrink-0">${{ formatMoney(item.value) }}</p>
+                  <ChevronRightIcon class="w-5 h-5 text-gray-400 shrink-0" />
+                </button>
               </template>
               <div v-else class="text-center py-8 text-gray-500">
                 <ChartBarIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
@@ -2619,8 +2728,8 @@
               </div>
             </template>
 
-            <!-- Total -->
-            <div class="mt-4 pt-4 border-t-2 border-violet-200 rounded-xl bg-violet-50/80 p-4">
+            <!-- Total (solo en lista, no en detalle) -->
+            <div v-if="!conceptoDetalleSeleccionado" class="mt-4 pt-4 border-t-2 border-violet-200 rounded-xl bg-violet-50/80 p-4">
               <div class="flex items-center justify-between">
                 <p class="font-bold text-gray-800">Total utilidades</p>
                 <p class="text-violet-600 text-xl font-extrabold tabular-nums">
@@ -2634,7 +2743,7 @@
           <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
             <button
               type="button"
-              @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'"
+              @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"
               class="w-full py-3 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-700 transition-colors"
             >
               Cerrar
@@ -2760,6 +2869,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   UserIcon,
   PhoneIcon,
@@ -2772,6 +2882,8 @@ import {
   ArrowPathIcon,
   Bars3Icon,
   ChartBarIcon,
+  SparklesIcon,
+  CalculatorIcon,
   Squares2X2Icon,
   DocumentCheckIcon,
   ClipboardDocumentListIcon
@@ -2786,7 +2898,10 @@ import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
+import LoadingScreenIos from '../../components/LoadingScreenIos.vue'
+import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useIsIos } from '../../composables/useIsIos'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
 
 const props = defineProps({
@@ -2813,6 +2928,10 @@ const modalDesgloseRecaudacion = ref(false)
 const vistaRecaudacionModal = ref('neto') // 'neto' | 'completo'
 const modalUtilidadesDesglose = ref(false)
 const vistaUtilidadesModal = ref('origen') // 'origen' | 'formaPago'
+// Detalle al hacer clic en un concepto: lista de filas de utilidades_clasificadas
+const conceptoDetalleSeleccionado = ref(null) // { tipo?, formaPago?, label }
+const detalleUtilidadConcepto = ref([])
+const loadingDetalleUtilidad = ref(false)
 const loadingCuotasSocio = ref(false)
 const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
@@ -2861,6 +2980,7 @@ let intervaloMensajeCarga = null
 let indiceMensajeAnterior = -1
 
 // Bloquear scroll del body cuando las modales están abiertas
+const isIos = useIsIos()
 useBodyScrollLock(modalWhatsApp)
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalConfigMeses)
@@ -3794,7 +3914,9 @@ const estadisticas = ref({
   actividadesTransferencia: 0,
   recaudadoCompletoEfectivo: 0,
   recaudadoCompletoTransferencia: 0,
-  recaudadoCompletoTotal: 0
+  recaudadoCompletoTotal: 0,
+  movimientosEfectivoNeto: 0,
+  movimientosTransferenciaNeto: 0
 })
 
 // Función para calcular estadísticas de forma asíncrona
@@ -3822,7 +3944,9 @@ async function calcularEstadisticasAsync() {
       actividadesTransferencia: 0,
       recaudadoCompletoEfectivo: 0,
       recaudadoCompletoTransferencia: 0,
-      recaudadoCompletoTotal: 0
+      recaudadoCompletoTotal: 0,
+      movimientosEfectivoNeto: 0,
+      movimientosTransferenciaNeto: 0
     }
     return
   }
@@ -3850,13 +3974,154 @@ async function calcularEstadisticasAsync() {
     actividadesTransferencia: 0,
     recaudadoCompletoEfectivo: 0,
     recaudadoCompletoTransferencia: 0,
-    recaudadoCompletoTotal: 0
+    recaudadoCompletoTotal: 0,
+    movimientosEfectivoNeto: 0,
+    movimientosTransferenciaNeto: 0
   }
 }
 
 function volverAtras() {
   // Navegar siempre al dashboard
   router.push('/dashboard')
+}
+
+async function abrirDetalleUtilidadConcepto(payload) {
+  if (!natillera.value?.id) return
+  conceptoDetalleSeleccionado.value = payload
+  detalleUtilidadConcepto.value = []
+  loadingDetalleUtilidad.value = true
+  const natilleraId = natillera.value.id
+  try {
+    // Por forma de pago: listar filas de utilidades_clasificadas (sin desglose por persona)
+    if (payload.formaPago != null) {
+      let query = supabase
+        .from('utilidades_clasificadas')
+        .select('id, tipo, monto, forma_pago, descripcion, created_at')
+        .eq('natillera_id', natilleraId)
+        .is('fecha_cierre', null)
+      if (payload.formaPago === 'otro') {
+        query = query.is('forma_pago', null)
+      } else {
+        query = query.eq('forma_pago', payload.formaPago)
+      }
+      const { data, error } = await query.order('created_at', { ascending: true })
+      if (error) throw error
+      detalleUtilidadConcepto.value = (data || []).map((r) => ({
+        tipoDetalle: 'fila',
+        concepto: r.descripcion || r.tipo,
+        monto: parseFloat(r.monto) || 0
+      }))
+      return
+    }
+
+    const tipo = payload.tipo
+    if (!tipo) return
+
+    // Sanciones: cuotas con valor_pagado_sancion > 0 → grid Persona | Valor
+    if (tipo === 'sanciones') {
+      const { data: sociosNat } = await supabase.from('socios_natillera').select('id').eq('natillera_id', natilleraId)
+      const socioNatilleraIds = (sociosNat || []).map((s) => s.id)
+      if (socioNatilleraIds.length === 0) return
+      const { data: cuotasData, error: errCuotas } = await supabase
+        .from('cuotas')
+        .select('valor_pagado_sancion, socio_natillera:socios_natillera(socio:socios(nombre))')
+        .in('socio_natillera_id', socioNatilleraIds)
+        .eq('estado', 'pagada')
+        .gt('valor_pagado_sancion', 0)
+      if (errCuotas) throw errCuotas
+      const byPerson = {}
+      ;(cuotasData || []).forEach((c) => {
+        const nombre = c.socio_natillera?.socio?.nombre || 'Socio'
+        if (!byPerson[nombre]) byPerson[nombre] = 0
+        byPerson[nombre] += parseFloat(c.valor_pagado_sancion) || 0
+      })
+      detalleUtilidadConcepto.value = Object.entries(byPerson).map(([persona, monto]) => ({
+        tipoDetalle: 'persona',
+        concepto: persona,
+        monto
+      }))
+      return
+    }
+
+    // Intereses préstamos: utilidades_clasificadas (tipo prestamos) + nombre del socio por id_actividad (prestamo_id)
+    if (tipo === 'prestamos') {
+      const { data: filas, error: errFilas } = await supabase
+        .from('utilidades_clasificadas')
+        .select('id_actividad, monto')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', 'prestamos')
+        .is('fecha_cierre', null)
+      if (errFilas) throw errFilas
+      const prestamoIds = (filas || []).map((f) => f.id_actividad).filter(Boolean)
+      if (prestamoIds.length === 0) {
+        detalleUtilidadConcepto.value = []
+        return
+      }
+      const { data: prestamosData, error: errPrestamos } = await supabase
+        .from('prestamos')
+        .select('id, socio_natillera:socios_natillera(socio:socios(nombre))')
+        .in('id', prestamoIds)
+      if (errPrestamos) throw errPrestamos
+      const nombreByPrestamoId = {}
+      ;(prestamosData || []).forEach((p) => {
+        nombreByPrestamoId[p.id] = p.socio_natillera?.socio?.nombre || 'Socio'
+      })
+      detalleUtilidadConcepto.value = (filas || [])
+        .filter((f) => f.id_actividad && (parseFloat(f.monto) || 0) > 0)
+        .map((f) => ({
+          tipoDetalle: 'persona',
+          concepto: nombreByPrestamoId[f.id_actividad] || 'Socio',
+          monto: parseFloat(f.monto) || 0
+        }))
+      return
+    }
+
+    // Actividades: socios_actividad (quién pagó qué actividad y cuánto)
+    const tipoActividad = tipo === 'rifas' ? 'rifa' : tipo
+    let actividadIds = []
+    if (tipo === 'actividades_en_curso') {
+      const { data: actsCurso } = await supabase
+        .from('actividades')
+        .select('id')
+        .eq('natillera_id', natilleraId)
+        .eq('estado', 'en_curso')
+        .neq('tipo', 'rifa')
+      actividadIds = (actsCurso || []).map((a) => a.id)
+    } else {
+      const { data: acts } = await supabase
+        .from('actividades')
+        .select('id')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', tipoActividad)
+      actividadIds = (acts || []).map((a) => a.id)
+    }
+    if (actividadIds.length === 0) {
+      detalleUtilidadConcepto.value = []
+      return
+    }
+    const { data: sociosAct, error: errSociosAct } = await supabase
+      .from('socios_actividad')
+      .select('valor_pagado, actividad_id, actividad:actividades(descripcion), socio_natillera:socios_natillera(socio:socios(nombre))')
+      .in('actividad_id', actividadIds)
+      .gt('valor_pagado', 0)
+    if (errSociosAct) throw errSociosAct
+    detalleUtilidadConcepto.value = (sociosAct || []).map((sa) => ({
+      tipoDetalle: 'actividad',
+      concepto: sa.socio_natillera?.socio?.nombre || 'Socio',
+      actividad: sa.actividad?.descripcion || 'Actividad',
+      monto: parseFloat(sa.valor_pagado) || 0
+    }))
+  } catch (e) {
+    console.error('Error cargando detalle utilidades:', e)
+    detalleUtilidadConcepto.value = []
+  } finally {
+    loadingDetalleUtilidad.value = false
+  }
+}
+
+function cerrarDetalleUtilidad() {
+  conceptoDetalleSeleccionado.value = null
+  detalleUtilidadConcepto.value = []
 }
 
 function formatMoney(value) {
@@ -3998,29 +4263,28 @@ async function calcularDatosCierre() {
         const valor = Array.isArray(montoRpc) ? montoRpc[0] : montoRpc
         sancionesPagadas = parseFloat(valor) || 0
       }
+      // Fallback: sumar todos los registros de sanciones (puede haber uno por forma_pago)
       if (sancionesPagadas === 0 && (errorRpc || montoRpc == null)) {
-        const { data: utilidadSanciones } = await supabase
+        const { data: filasSanciones } = await supabase
           .from('utilidades_clasificadas')
           .select('monto')
           .eq('natillera_id', natilleraId)
           .eq('tipo', 'sanciones')
           .is('fecha_cierre', null)
-          .maybeSingle()
-        if (utilidadSanciones?.monto != null) {
-          sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
+        if (filasSanciones?.length) {
+          sancionesPagadas = filasSanciones.reduce((sum, r) => sum + (parseFloat(r.monto) || 0), 0)
         }
       }
     } catch (e) {
       console.error('Error obteniendo sanciones:', e)
-      const { data: utilidadSanciones } = await supabase
+      const { data: filasSanciones } = await supabase
         .from('utilidades_clasificadas')
         .select('monto')
         .eq('natillera_id', natilleraId)
         .eq('tipo', 'sanciones')
         .is('fecha_cierre', null)
-        .maybeSingle()
-      if (utilidadSanciones?.monto != null) {
-        sancionesPagadas = parseFloat(utilidadSanciones.monto) || 0
+      if (filasSanciones?.length) {
+        sancionesPagadas = filasSanciones.reduce((sum, r) => sum + (parseFloat(r.monto) || 0), 0)
       }
     }
     

@@ -2107,6 +2107,54 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: 100vh;
     min-height: -webkit-fill-available;
   }
+
+  /* Pantallas de carga y modales full-screen: altura real en iOS (evita que se corten) */
+  .fixed.inset-0,
+  [class*="fixed"][class*="inset-0"],
+  .fixed.inset-0[class*="z-"],
+  [class*="fixed"].inset-0[class*="z-"] {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    min-height: -webkit-fill-available !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    height: -webkit-fill-available !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Pantallas de carga específicamente: asegurar centrado perfecto en iOS */
+  .fixed.inset-0.flex.items-center.justify-center,
+  [class*="fixed"].inset-0.flex.items-center.justify-center,
+  .fixed.inset-0[class*="flex"][class*="items-center"][class*="justify-center"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+  }
+
+  /* Contenido dentro de pantallas de carga: centrado y visible */
+  .fixed.inset-0 .relative.z-10,
+  .fixed.inset-0 > .relative,
+  [class*="fixed"].inset-0 .relative.z-10,
+  [class*="fixed"].inset-0 > .relative {
+    position: relative !important;
+    z-index: 10 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 1rem !important;
+  }
   
   /* Contenedores con h-screen: usar altura real en iOS */
   .h-screen,
@@ -2163,9 +2211,15 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   
   /* Overlays de fondo en modales iOS: asegurar que sean clickeables */
   [class*="fixed"].inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
-  [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"] {
+  [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"],
+  .fixed.inset-0 > .absolute.inset-0[class*="bg-black"],
+  .fixed.inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
+  /* Regla general para cualquier overlay de fondo dentro de un contenedor fixed */
+  .fixed.inset-0 > .absolute.inset-0,
+  [class*="fixed"].inset-0 > .absolute.inset-0,
+  .fixed.inset-0 > [class*="absolute"].inset-0 {
     /* Asegurar que el overlay esté por debajo del contenido */
-    z-index: 0;
+    z-index: 0 !important;
     /* Forzar renderizado */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
@@ -2173,6 +2227,33 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    touch-action: manipulation !important;
+    cursor: pointer !important;
+    -webkit-tap-highlight-color: transparent !important;
+    /* Asegurar que cubra toda la pantalla */
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Overlays de fondo en pantallas de carga: asegurar cobertura completa */
+  .fixed.inset-0 > .absolute.inset-0,
+  [class*="fixed"].inset-0 > .absolute.inset-0,
+  .fixed.inset-0 > [class*="absolute"].inset-0 {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   /* Contenido de la modal (card, div con contenido): asegurar que se muestre en iPhone */
@@ -2197,15 +2278,69 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     backface-visibility: hidden;
     will-change: transform;
   }
-  
+
+  /* Modales en Safari: que se vean completas en pantalla y el scroll funcione */
+  .fixed.inset-0:has(> div[class*="max-w"]),
+  [class*="fixed"].inset-0:has(> div[class*="max-w"]) {
+    padding-top: env(safe-area-inset-top, 0) !important;
+    padding-right: env(safe-area-inset-right, 0) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    padding-left: env(safe-area-inset-left, 0) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    box-sizing: border-box;
+  }
+
+  /* Card de la modal: altura máxima que quepa en pantalla (safe area + margen) */
+  .fixed.inset-0 > div[class*="max-w"][class*="max-h"],
+  .fixed.inset-0 > div[class*="max-w"].relative {
+    max-height: min(90vh, 90dvh, calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem)) !important;
+    flex-shrink: 0;
+  }
+
+  /* Scroll interno en modales: habilitar scroll táctil en Safari */
+  .fixed.inset-0 [class*="overflow-y-auto"] {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y;
+    overflow-x: hidden;
+  }
+
   /* Overlay del sidebar móvil: que el tap cierre el menú en iOS */
   .sidebar-overlay,
   .fixed.inset-0.bg-black\/20,
   .fixed.inset-0[class*="bg-black"] {
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    pointer-events: auto;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: auto !important;
+  }
+
+  /* Botones de cerrar en modales: asegurar que sean fácilmente clickeables en iOS */
+  .fixed.inset-0 button[class*="btn"],
+  .fixed.inset-0 button[type="button"],
+  [class*="fixed"].inset-0 button[class*="btn"],
+  [class*="fixed"].inset-0 button[type="button"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25) !important;
+    min-height: 44px !important;
+    min-width: 44px !important;
+    z-index: 20 !important;
+    position: relative !important;
+  }
+
+  /* Botones X de cerrar en modales */
+  .fixed.inset-0 button[class*="w-10"][class*="h-10"],
+  [class*="fixed"].inset-0 button[class*="w-10"][class*="h-10"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3) !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    z-index: 20 !important;
+    position: relative !important;
   }
   
   /* Barra inferior móvil: área táctil mínima 44pt en iOS */

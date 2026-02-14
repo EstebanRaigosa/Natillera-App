@@ -26,7 +26,7 @@
               <ArrowUpTrayIcon class="w-5 h-5" />
               <span>Importar CSV</span>
             </button>
-            <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
+            <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
               <PlusIcon class="w-5 h-5" />
               <span>Agregar Socio</span>
             </button>

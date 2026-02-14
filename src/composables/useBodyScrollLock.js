@@ -23,53 +23,36 @@ function applyLock() {
   const html = document.documentElement
   savedScrollY = window.scrollY || html.scrollTop
   
-  // En iOS, usar un método diferente que no cause problemas de renderizado
+  // En iOS/Safari, usar un método que NO toque <main> para que las modales (fixed)
+  // sigan usando el viewport como containing block. Si main tiene overflow:hidden,
+  // Safari recorta o no muestra los fixed que están dentro de main.
   if (isIOS()) {
-    // Para iOS: usar height y overflow sin position fixed
-    // Esto evita problemas de renderizado con modales
-    // Guardar altura original
     const bodyHeight = document.body.style.height || ''
     document.body.setAttribute('data-original-height', bodyHeight)
-    
-    // Bloquear scroll sin usar position fixed
-    document.body.style.height = '100%'
+    document.body.setAttribute('data-scroll-y', savedScrollY.toString())
+
     document.body.style.overflow = 'hidden'
     document.body.style.position = 'relative'
+    document.body.style.height = '100%'
+    document.body.style.touchAction = 'none' // Evitar scroll mientras la modal está abierta
     html.style.overflow = 'hidden'
     html.style.height = '100%'
-    
-    // Guardar la posición del scroll
-    document.body.setAttribute('data-scroll-y', savedScrollY.toString())
-    
-    // Prevenir scroll en iOS usando touch-action solo en el body
-    // No aplicar touch-action: none globalmente para permitir scroll en modales
-    document.body.style.touchAction = 'pan-y pinch-zoom'
-    
+
+    // NO modificar main en iOS: evita que las modales (fixed dentro de la página) dejen de verse
     const main = document.querySelector('main')
     if (main) {
       savedScrollYMain = main.scrollTop
       main.setAttribute('data-scroll-y', savedScrollYMain.toString())
-      const mainHeight = main.style.height || ''
-      main.setAttribute('data-original-height', mainHeight)
-      main.style.height = '100%'
-      main.style.overflow = 'hidden'
-      main.style.touchAction = 'pan-y pinch-zoom'
+      // No aplicar height/overflow a main en iOS
     }
-    
-    // Forzar repaint en iOS para asegurar renderizado correcto
+
     requestAnimationFrame(() => {
-      document.body.style.display = 'block'
-      // Forzar renderizado de modales después de bloquear scroll
-      // Esto asegura que las modales se muestren correctamente en iPhone
-      const modals = document.querySelectorAll('[class*="fixed"].inset-0, .fixed.inset-0')
+      const modals = document.querySelectorAll('.fixed.inset-0, [class*="fixed"][class*="inset-0"]')
       modals.forEach(modal => {
         if (modal && modal.style) {
-          // Forzar repaint de la modal
           modal.style.display = modal.style.display || 'flex'
-          // Asegurar que esté visible
           modal.style.opacity = '1'
           modal.style.visibility = 'visible'
-          // Forzar nueva capa de composición
           modal.style.transform = 'translate3d(0, 0, 0)'
           modal.style.webkitTransform = 'translate3d(0, 0, 0)'
         }
@@ -102,22 +85,18 @@ function applyUnlock() {
   const html = document.documentElement
   
   if (isIOS()) {
-    // Para iOS: restaurar estilos sin position fixed
     const originalHeight = document.body.getAttribute('data-original-height') || ''
     document.body.style.height = originalHeight
     document.body.style.overflow = ''
     document.body.style.position = ''
     document.body.style.touchAction = ''
-    document.body.style.display = ''
     html.style.overflow = ''
     html.style.height = ''
     document.body.removeAttribute('data-original-height')
-    
-    // Restaurar posición del scroll desde el atributo data
+
     const savedY = parseInt(document.body.getAttribute('data-scroll-y') || '0', 10)
     document.body.removeAttribute('data-scroll-y')
-    
-    // Usar requestAnimationFrame para asegurar que el DOM esté listo
+
     requestAnimationFrame(() => {
       if (savedY > 0) {
         window.scrollTo(0, savedY)
@@ -126,19 +105,13 @@ function applyUnlock() {
 
     const main = document.querySelector('main')
     if (main) {
-      const originalMainHeight = main.getAttribute('data-original-height') || ''
-      main.style.height = originalMainHeight
-      main.style.overflow = ''
-      main.style.touchAction = ''
       const savedMainY = parseInt(main.getAttribute('data-scroll-y') || '0', 10)
       main.removeAttribute('data-scroll-y')
-      main.removeAttribute('data-original-height')
-      
-      requestAnimationFrame(() => {
-        if (savedMainY > 0) {
+      if (savedMainY > 0) {
+        requestAnimationFrame(() => {
           main.scrollTop = savedMainY
-        }
-      })
+        })
+      }
     }
   } else {
     // Para Android y otros: usar el método original

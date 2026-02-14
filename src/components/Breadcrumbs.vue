@@ -116,6 +116,13 @@ const breadcrumbs = computed(() => {
         to: null
       })
     }
+    // Totales generales (cuadre de caja)
+    else if (path.includes('/cuadre-caja')) {
+      crumbs.push({
+        label: 'Totales generales',
+        to: null
+      })
+    }
     // Configuración
     else if (path.includes('/configuracion')) {
       crumbs.push({

@@ -202,6 +202,55 @@ const fecha = new Date().toISOString()
 
 ---
 
+### 5. Modales nuevas: usar ModalWrapper para iOS/Safari
+**PRIORIDAD: ALTA**
+
+Cuando se agregue una **nueva modal** (diálogo full-screen o tipo bottom sheet) en cualquier vista, **DEBES** usar el componente `ModalWrapper` para que en iPhone/Safari se vea completa en pantalla, respete la safe area (notch, home indicator) y el scroll funcione correctamente, sin afectar el comportamiento en Android.
+
+**Regla aplicable:**
+- ✅ **SIEMPRE** envolver el contenido de la modal con `<ModalWrapper>` (el componente elige automáticamente la versión iOS o Android según el dispositivo).
+- ✅ Pasar `overlay-class` y `card-class` con las mismas clases que usarías en el overlay y la card para **Android** (así no se cambia nada en escritorio/Android).
+- ✅ En modales tipo bottom sheet (que salen desde abajo en móvil), usar `align="bottom"`.
+- ✅ Emitir `@close` para cerrar (y opcionalmente `@touchstart` en el backdrop lo maneja el componente).
+- ❌ **NUNCA** agregar una modal nueva como `<div class="fixed inset-0">` + backdrop + card sin usar `ModalWrapper`.
+
+**Componente:** `src/components/ModalWrapper.vue`  
+**Composable de detección:** `useIsIos()` en `src/composables/useIsIos.js` (ya usado dentro de ModalWrapper).
+
+**Ejemplo de uso:**
+```vue
+<ModalWrapper
+  :show="!!modalNueva"
+  :z-index="50"
+  align="center"
+  overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+  card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto"
+  card-max-width="28rem"
+  @close="modalNueva = false"
+>
+  <!-- Contenido de la modal (header, body, footer) -->
+</ModalWrapper>
+```
+
+**Props útiles:**
+- `show`: boolean (ej. `!!modalNueva`)
+- `z-index`: número (50, 60, 70 según capas)
+- `align`: `'center'` (por defecto) o `'bottom'` para estilo bottom sheet en móvil
+- `overlay-class`: clases del overlay para Android
+- `card-class`: clases de la card para Android
+- `card-max-width`: opcional, para iOS (ej. `'28rem'`, `'42rem'`)
+- `@close`: evento al cerrar (backdrop o botón)
+
+**Pasos a seguir:**
+1. Importar: `import ModalWrapper from '../../components/ModalWrapper.vue'` (ajustar ruta según la vista).
+2. Sustituir la estructura antigua (div fixed + backdrop + div card) por `<ModalWrapper>` con las props anteriores.
+3. Poner **solo el contenido de la card** dentro del ModalWrapper (mismo header/body/footer que antes).
+4. Cerrar con `</ModalWrapper>` (una sola etiqueta de cierre).
+
+**NO OLVIDES:** Esta regla aplica a toda modal nueva que sea full-screen o tipo bottom sheet. Las pantallas de carga pueden seguir usando `LoadingScreenIos` cuando corresponda (solo iOS).
+
+---
+
 ## 🔄 Proceso de Desarrollo
 
 Antes de comenzar cualquier tarea:
@@ -222,7 +271,7 @@ Antes de comenzar cualquier tarea:
 
 ---
 
-**Última actualización:** 2024-12-19 (Agregada regla de zona horaria UTC-5:00)
+**Última actualización:** 2025-02-07 (Agregada regla #5: modales nuevas con ModalWrapper para iOS/Safari)
 
 ---
 

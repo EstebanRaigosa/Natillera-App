@@ -20,7 +20,7 @@
     <!-- Opciones de configuración con contenido expandible -->
     <div class="space-y-4">
       
-      <!-- === INFORMACIÓN BÁSICA === -->
+      <!-- === CONFIGURACIÓN GENERAL === -->
       <div class="space-y-3">
       <button
         @click="seccionActiva = seccionActiva === 'basica' ? null : 'basica'"
@@ -37,10 +37,10 @@
           </div>
             <div class="flex-1 text-left">
               <h3 :class="['text-lg font-display font-bold', seccionActiva === 'basica' ? 'text-white' : 'text-gray-800']">
-            Información Básica
+            Configuración General
           </h3>
               <p :class="['text-sm', seccionActiva === 'basica' ? 'text-white/80' : 'text-gray-500']">
-                Nombre, periodicidad y configuraciones iniciales
+                Período, cierre, sanciones y datos básicos
           </p>
           </div>
             <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-natillera-100']">
@@ -61,97 +61,505 @@
           <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-natillera-500/10 border-2 border-natillera-200/50 ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-natillera-500 to-emerald-500"></div>
             <div class="relative p-5 sm:p-6 space-y-4">
-              <!-- Nombre -->
-              <div>
-                <label class="label font-semibold text-gray-700">Nombre de la Natillera *</label>
-                <input 
-                  v-model="configBasica.nombre"
-                  type="text"
-                  class="input-field"
-                  placeholder="Ej: Natillera Familiar 2024"
-                  required
-                />
-              </div>
+              <!-- Pantalla de carga al guardar -->
+              <Teleport to="body">
+                <Transition
+                  enter-active-class="transition duration-300 ease-out"
+                  enter-from-class="opacity-0"
+                  enter-to-class="opacity-100"
+                  leave-active-class="transition duration-200 ease-in"
+                  leave-from-class="opacity-100"
+                  leave-to-class="opacity-0"
+                >
+                  <div
+                    v-if="guardandoBasica"
+                    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                  >
+                    <div class="flex flex-col items-center gap-6 p-8 rounded-3xl bg-white/95 shadow-2xl border border-white/20 max-w-sm mx-4">
+                      <div class="relative">
+                        <div class="w-20 h-20 rounded-full border-4 border-natillera-200 border-t-natillera-500 animate-spin"></div>
+                        <div class="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
+                        <div class="absolute inset-2 w-16 h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-500 opacity-20 animate-pulse"></div>
+                      </div>
+                      <div class="text-center">
+                        <p class="text-lg font-bold text-gray-800">Guardando configuración</p>
+                        <p class="text-sm text-gray-500 mt-1">Un momento por favor...</p>
+                      </div>
+                      <div class="flex gap-1">
+                        <span class="w-2 h-2 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0ms"></span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 150ms"></span>
+                        <span class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 300ms"></span>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+              </Teleport>
 
-              <!-- Descripción -->
-              <div>
-                <label class="label font-semibold text-gray-700">Descripción</label>
-                <textarea 
-                  v-model="configBasica.descripcion"
-                  class="input-field min-h-[100px]"
-                  placeholder="Descripción opcional de la natillera..."
-                ></textarea>
-              </div>
-
-              <!-- Periodicidad -->
-              <div>
-                <label class="label font-semibold text-gray-700">Periodicidad *</label>
-                <select v-model="configBasica.periodicidad" class="input-field">
-                  <option value="quincenal">Quincenal</option>
-                  <option value="mensual">Mensual</option>
-                </select>
-                <p class="text-xs text-gray-500 mt-2">
-                  Frecuencia con la que se generan las cuotas.
-                </p>
-              </div>
-
-              <!-- Fecha de Inicio -->
-              <div>
-                <label class="label font-semibold text-gray-700">Fecha de Inicio *</label>
-                <input 
-                  v-model="configBasica.fecha_inicio"
-                  type="date"
-                  class="input-field"
-                  required
-                />
-                <p class="text-xs text-gray-500 mt-2">
-                  Fecha en que inició o iniciará la natillera.
-                </p>
-              </div>
-
-              <!-- Generación automática de cuotas -->
-              <div class="p-4 bg-gradient-to-br from-emerald-50/80 to-green-50/80 rounded-xl border border-emerald-200/50">
-                <div class="flex items-start gap-3 sm:gap-4">
-                  <!-- Switch mejorado para móvil -->
-                  <button 
+              <!-- Tabs Configuración General: estilo pestañas que envuelven el contenido -->
+              <div class="rounded-xl border-2 border-gray-200 bg-white shadow-md overflow-hidden mt-2">
+                <!-- Barra de pestañas -->
+                <div class="flex gap-0.5 pt-2 px-2 pb-0 bg-gray-100 border-b border-gray-200 overflow-x-auto min-h-[48px]">
+                  <button
                     type="button"
-                    @click="configCuotasAuto.activo = !configCuotasAuto.activo"
+                    @click="tabGeneralActiva = 'basica'"
                     :class="[
-                      'relative flex-shrink-0 w-12 h-7 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2',
-                      configCuotasAuto.activo 
-                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-lg shadow-emerald-500/30' 
-                        : 'bg-gray-300'
+                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      tabGeneralActiva === 'basica'
+                        ? 'bg-white text-natillera-700 border-natillera-300 border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
                     ]"
                   >
-                    <span 
-                      :class="[
-                        'absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 flex items-center justify-center',
-                        configCuotasAuto.activo ? 'left-[22px]' : 'left-0.5'
-                      ]"
-                    >
-                      <svg v-if="configCuotasAuto.activo" class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      <svg v-else class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                      </svg>
-                    </span>
+                    <CurrencyDollarIcon class="w-4 h-4 flex-shrink-0" />
+                    <span class="whitespace-nowrap">Información básica</span>
                   </button>
-                  
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 mb-1">
-                      <SparklesIcon class="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                      <span class="font-semibold text-gray-800 text-sm sm:text-base">Generación automática de cuotas</span>
+                  <button
+                    type="button"
+                    @click="tabGeneralActiva = 'periodo'"
+                    :class="[
+                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      tabGeneralActiva === 'periodo'
+                        ? 'bg-white text-blue-700 border-blue-300 border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                    ]"
+                  >
+                    <CalendarDaysIcon class="w-4 h-4 flex-shrink-0" />
+                    <span class="whitespace-nowrap">Período</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="tabGeneralActiva = 'sanciones'"
+                    :class="[
+                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      tabGeneralActiva === 'sanciones'
+                        ? 'bg-white text-red-700 border-red-300 border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                    ]"
+                  >
+                    <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" />
+                    <span class="whitespace-nowrap">Sanciones por mora</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="tabGeneralActiva = 'cierre'"
+                    :class="[
+                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      tabGeneralActiva === 'cierre'
+                        ? 'bg-white text-purple-700 border-purple-300 border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                    ]"
+                  >
+                    <CurrencyDollarIcon class="w-4 h-4 flex-shrink-0" />
+                    <span class="whitespace-nowrap">Cierre de Natillera</span>
+                  </button>
+                </div>
+
+                <!-- Contenido de las pestañas (envuelto por el mismo panel) -->
+                <div class="min-h-[200px] bg-white border-t border-gray-100">
+              <!-- Tab Información básica -->
+              <div v-if="tabGeneralActiva === 'basica'" class="p-5 sm:p-6 space-y-4">
+                <div>
+                  <label class="label font-semibold text-gray-700">Nombre de la Natillera *</label>
+                  <input 
+                    v-model="configBasica.nombre"
+                    type="text"
+                    class="input-field"
+                    placeholder="Ej: Natillera Familiar 2024"
+                    required
+                  />
+                </div>
+                <div>
+                  <label class="label font-semibold text-gray-700">Descripción</label>
+                  <textarea 
+                    v-model="configBasica.descripcion"
+                    class="input-field min-h-[100px]"
+                    placeholder="Descripción opcional de la natillera..."
+                  ></textarea>
+                </div>
+                <div>
+                  <label class="label font-semibold text-gray-700">Periodicidad *</label>
+                  <select v-model="configBasica.periodicidad" class="input-field">
+                    <option value="quincenal">Quincenal</option>
+                    <option value="mensual">Mensual</option>
+                  </select>
+                  <p class="text-xs text-gray-500 mt-2">
+                    Frecuencia con la que se generan las cuotas.
+                  </p>
+                </div>
+                <div>
+                  <label class="label font-semibold text-gray-700">Fecha de Inicio *</label>
+                  <input 
+                    v-model="configBasica.fecha_inicio"
+                    type="date"
+                    class="input-field"
+                    required
+                  />
+                  <p class="text-xs text-gray-500 mt-2">
+                    Fecha en que inició o iniciará la natillera.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Tab Período -->
+              <div v-if="tabGeneralActiva === 'periodo'" class="p-5 sm:p-6 space-y-6">
+                <!-- Bloque 1: Rango del período -->
+                <section class="rounded-xl border border-blue-200/60 bg-blue-50/30 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-blue-200/60 bg-blue-100/50">
+                    <h3 class="text-sm font-bold text-blue-800 flex items-center gap-2">
+                      <CalendarDaysIcon class="w-4 h-4" />
+                      Rango del período
+                    </h3>
+                    <p class="text-xs text-blue-600/90 mt-0.5">Define desde qué mes/año hasta qué mes/año se generan las cuotas.</p>
+                  </div>
+                  <div class="p-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div class="space-y-2">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Desde</label>
+                        <div class="flex gap-2">
+                          <select v-model.number="configPeriodo.mes_inicio" class="input-field flex-1 text-sm">
+                            <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
+                          </select>
+                          <select v-model.number="configPeriodo.anio_inicio" class="input-field flex-1 text-sm min-w-0">
+                            <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="space-y-2">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Hasta</label>
+                        <div class="flex gap-2">
+                          <select v-model.number="configPeriodo.mes_fin" class="input-field flex-1 text-sm">
+                            <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
+                          </select>
+                          <select v-model.number="configPeriodo.anio" class="input-field flex-1 text-sm min-w-0">
+                            <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
-                    <p class="text-xs text-gray-600 leading-relaxed">
-                      Al activar esta opción, cuando agregues un nuevo socio se generarán automáticamente todas las cuotas del período de la natillera.
+                    <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                      <span class="font-semibold text-blue-800">{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }} {{ configPeriodo.anio_inicio }}</span>
+                      <span class="text-gray-400">→</span>
+                      <span class="font-semibold text-indigo-800">{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }} {{ configPeriodo.anio }}</span>
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ cantidadMesesPeriodo }} {{ cantidadMesesPeriodo === 1 ? 'mes' : 'meses' }}
+                      </span>
+                      <span v-if="configPeriodo.anio_inicio !== configPeriodo.anio" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Cruza años
+                      </span>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Bloque 2: Días de gracia -->
+                <section class="rounded-xl border border-amber-200/60 bg-amber-50/30 overflow-hidden">
+                  <div class="px-4 py-3 border-b border-amber-200/60 bg-amber-100/50">
+                    <h3 class="text-sm font-bold text-amber-800 flex items-center gap-2">
+                      <ClockIcon class="w-4 h-4" />
+                      Días de gracia
+                    </h3>
+                    <p class="text-xs text-amber-700/90 mt-0.5">Días extra después del vencimiento antes de que una cuota se considere en mora.</p>
+                  </div>
+                  <div class="p-4 space-y-3">
+                    <div class="flex items-center gap-3">
+                      <label class="text-sm font-semibold text-gray-700">Días</label>
+                      <input
+                        v-model.number="configDiasGracia.dias_gracia"
+                        type="number"
+                        class="input-field w-16 text-center text-base font-semibold py-1.5"
+                        min="0"
+                        max="30"
+                      />
+                    </div>
+                    <p class="text-sm text-gray-600">
+                      Las cuotas tendrán <strong>{{ configDiasGracia.dias_gracia }}</strong> {{ configDiasGracia.dias_gracia === 1 ? 'día' : 'días' }} de gracia.
+                    </p>
+                  </div>
+                </section>
+              </div>
+
+              <!-- Tab Sanciones por mora -->
+              <div v-if="tabGeneralActiva === 'sanciones'" class="p-5 sm:p-6">
+                <div class="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 rounded-2xl shadow-xl shadow-red-500/10 border-2 border-red-200/50 p-5 sm:p-6">
+                  <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-rose-500"></div>
+                  <div class="relative pl-2">
+              <!-- Activar/Desactivar -->
+              <div class="mb-5">
+                <label class="flex items-center gap-3 cursor-pointer">
+                  <div class="relative">
+                    <input type="checkbox" v-model="configSanciones.activa" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                  </div>
+                  <span class="font-semibold text-gray-700">Activar sanciones por mora</span>
+                </label>
+              </div>
+
+              <div v-if="configSanciones.activa" class="space-y-5">
+                <!-- Tipo de sanción -->
+                <div>
+                  <label class="label font-semibold text-gray-700 mb-3 block">Tipo de Sanción</label>
+                  <div class="grid grid-cols-3 gap-3">
+                    <button 
+                      type="button"
+                      @click="configSanciones.tipo = 'simple'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'simple' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                    >
+                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'simple' ? 'text-red-500' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Simple</p>
+                      <p class="text-xs text-gray-500">Valor fijo</p>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="configSanciones.tipo = 'escalonada'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'escalonada' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                    >
+                      <ChartBarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'escalonada' ? 'text-red-500' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
+                      <p class="text-xs text-gray-500">Progresiva</p>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="configSanciones.tipo = 'diaria'"
+                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'diaria' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                    >
+                      <ClockIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'diaria' ? 'text-red-500' : 'text-gray-400'" />
+                      <p class="font-semibold text-sm text-gray-800">Por día</p>
+                      <p class="text-xs text-gray-500">Por día de mora</p>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Simple -->
+                <div v-if="configSanciones.tipo === 'simple'" class="p-4 bg-white rounded-xl border border-gray-200">
+                  <label class="label font-semibold text-gray-700">Valor de multa por mora</label>
+                  <div class="relative mt-2">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                    <input 
+                      :value="formatNumberWithSeparators(configSanciones.valorFijo)"
+                      @input="(e) => {
+                        const rawValue = removeNumberFormat(e.target.value)
+                        configSanciones.valorFijo = rawValue ? parseInt(rawValue) || 0 : 0
+                      }"
+                      @focus="(e) => e.target.select()"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9.,]*"
+                      class="input-field pl-8 w-full sm:w-48 font-semibold" 
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                <!-- Por día -->
+                <div v-if="configSanciones.tipo === 'diaria'" class="p-4 bg-white rounded-xl border border-gray-200">
+                  <label class="label font-semibold text-gray-700">Valor por día de mora</label>
+                  <p class="text-xs text-gray-500 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
+                  <div class="relative mt-2">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                    <input 
+                      :value="formatNumberWithSeparators(configSanciones.valorPorDia)"
+                      @input="(e) => {
+                        const rawValue = removeNumberFormat(e.target.value)
+                        configSanciones.valorPorDia = rawValue ? parseInt(rawValue) || 0 : 0
+                      }"
+                      @focus="(e) => e.target.select()"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9.,]*"
+                      class="input-field pl-8 w-full sm:w-48 font-semibold" 
+                      placeholder="500"
+                    />
+                  </div>
+                </div>
+
+                <!-- Intereses adicionales por días (visible para todos los tipos) -->
+                <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
+                     :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
+                     @click.stop>
+                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                         @click.stop.prevent="toggleInteresesAdicionales">
+                    <div class="relative flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        :checked="configSanciones.interesesAdicionales.activo" 
+                        @click.stop.prevent="toggleInteresesAdicionales" 
+                        class="sr-only peer" 
+                      />
+                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                    </div>
+                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
+                      Intereses adicionales por días
+                    </span>
+                  </label>
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-2"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition duration-150 ease-out"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-2"
+                  >
+                    <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
+                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
+                        <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
+                        <input 
+                          v-model.number="configSanciones.interesesAdicionales.dias" 
+                          type="number" 
+                          min="1" 
+                          max="30" 
+                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                        />
+                        <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
+                        <div class="relative flex-1 sm:flex-initial">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+                          <input 
+                            :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
+                            @input="(e) => {
+                              const rawValue = removeNumberFormat(e.target.value)
+                              configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                            }"
+                            @focus="(e) => e.target.select()"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9.,]*"
+                            class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </Transition>
+                </div>
+
+                <!-- Escalonada -->
+                <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
+                  <div class="p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="label font-semibold text-gray-700 mb-3 block">Intereses por cuotas vencidas</label>
+                    <div class="space-y-2">
+                      <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-3">
+                        <span class="text-sm text-gray-600 w-20 font-medium">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                        <div class="relative flex-1 max-w-[140px]">
+                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+                          <input 
+                            :value="formatNumberWithSeparators(nivel.valor)"
+                            @input="(e) => {
+                              const rawValue = removeNumberFormat(e.target.value)
+                              nivel.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                            }"
+                            @focus="(e) => e.target.select()"
+                            type="text"
+                            inputmode="numeric"
+                            pattern="[0-9.,]*"
+                            min="0"
+                            class="input-field pl-7 py-1.5 text-sm font-semibold" 
+                            placeholder="0"
+                          />
+                        </div>
+                        <button v-if="configSanciones.niveles.length > 1" @click="eliminarNivel(index)" class="text-red-500 hover:text-red-700 p-1 transition-colors">
+                          <XMarkIcon class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <button v-if="configSanciones.niveles.length < 10" @click="agregarNivel" class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 transition-colors">
+                      <PlusIcon class="w-4 h-4" /> Agregar nivel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Devolución por mora excesiva (visible para todos los tipos) -->
+                <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
+                     :class="configSanciones.devolucion.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
+                     @click.stop>
+                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                         @click.stop.prevent="toggleDevolucion">
+                    <div class="relative flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        :checked="configSanciones.devolucion.activo" 
+                        @click.stop.prevent="toggleDevolucion" 
+                        class="sr-only peer" 
+                      />
+                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                    </div>
+                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
+                      Devolución por mora excesiva
+                    </span>
+                  </label>
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-2"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-2"
+                  >
+                    <div v-if="configSanciones.devolucion.activo" class="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base flex-wrap">
+                        <span class="text-gray-600 font-medium whitespace-nowrap">Después de</span>
+                        <input 
+                          v-model.number="configSanciones.devolucion.cuotasLimite" 
+                          type="number" 
+                          min="1" 
+                          max="12" 
+                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                        />
+                        <span class="text-gray-600 font-medium whitespace-nowrap">cuotas, multa del</span>
+                        <input 
+                          v-model.number="configSanciones.devolucion.porcentajeMulta" 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                        />
+                        <span class="text-gray-600 font-medium">%</span>
+                      </div>
+                      <label class="flex items-center gap-3 sm:gap-4 cursor-pointer py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                             @click.stop.prevent="toggleSinUtilidades">
+                        <div class="relative flex-shrink-0">
+                          <input 
+                            type="checkbox" 
+                            :checked="configSanciones.devolucion.sinUtilidades" 
+                            @click.stop.prevent="toggleSinUtilidades" 
+                            class="sr-only peer" 
+                          />
+                          <div class="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                        </div>
+                        <span class="text-sm sm:text-base text-gray-700 font-medium select-none">
+                          Devolución sin utilidades
+                        </span>
+                      </label>
+                    </div>
+                  </Transition>
+                </div>
+
+                <!-- Resumen -->
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p class="text-xs font-semibold text-red-700 mb-2">📋 Resumen</p>
+                  <div v-if="configSanciones.tipo === 'simple'" class="text-sm text-gray-700">
+                    Multa fija: <strong>${{ formatMoney(configSanciones.valorFijo) }}</strong>
+                  </div>
+                  <div v-else-if="configSanciones.tipo === 'diaria'" class="text-sm text-gray-700">
+                    Por día de mora: <strong>${{ formatMoney(configSanciones.valorPorDia) }}</strong> por cada día después del vencimiento (y días de gracia).
+                  </div>
+                  <div v-else class="text-sm text-gray-700 space-y-1">
+                    <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
+                      {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
+                    </p>
+                  </div>
+                  <div v-if="configSanciones.interesesAdicionales?.activo" class="mt-3 pt-3 border-t border-red-200 text-sm text-gray-700">
+                    <p class="font-medium text-red-800 mb-1">Intereses adicionales por días</p>
+                    <p>
+                      Cada <strong>{{ configSanciones.interesesAdicionales.dias }}</strong> {{ configSanciones.interesesAdicionales.dias === 1 ? 'día' : 'días' }} en mora después del vencimiento se suma <strong>${{ formatMoney(configSanciones.interesesAdicionales.valor) }}</strong> a la sanción de la cuota.
                     </p>
                   </div>
                 </div>
               </div>
+                  </div>
+                </div>
+              </div>
 
-              <!-- Sección de Cierre de Natillera -->
-              <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50/80 to-purple-50/60 rounded-2xl border-2 border-purple-200/50 shadow-lg p-5 sm:p-6 mt-6">
+              <!-- Tab Cierre de Natillera -->
+              <div v-if="tabGeneralActiva === 'cierre'" class="p-5 sm:p-6">
+              <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50/80 to-purple-50/60 rounded-2xl border-2 border-purple-200/50 shadow-lg p-5 sm:p-6">
                 <!-- Efectos decorativos -->
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-300/20 to-indigo-300/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
                 <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/15 to-purple-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
@@ -566,16 +974,20 @@
                       </button>
                     </div>
                   </div>
+                  </div>
+                </div>
+              </div>
+
                 </div>
               </div>
 
               <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
           <button 
             @click="guardarConfigBasica"
-                  :disabled="guardandoBasica || esVisor"
-                  class="btn-primary text-sm bg-gradient-to-r from-natillera-500 to-emerald-600"
+            :disabled="guardandoBasica || esVisor"
+            class="btn-primary text-sm bg-gradient-to-r from-natillera-500 to-emerald-600"
           >
-                  {{ guardandoBasica ? 'Guardando...' : 'Guardar Información' }}
+            {{ guardandoBasica ? 'Guardando...' : 'Guardar toda la configuración' }}
           </button>
         </div>
       </div>
@@ -964,576 +1376,6 @@
     </Transition>
       </div>
 
-      <!-- === PERÍODO === -->
-      <div class="space-y-3">
-      <button
-        @click="seccionActiva = seccionActiva === 'periodo' ? null : 'periodo'"
-        :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
-          seccionActiva === 'periodo'
-              ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 border-blue-400 shadow-blue-500/30'
-              : 'bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 border-blue-100/50 shadow-blue-500/10 hover:border-blue-300 hover:shadow-xl'
-          ]"
-        >
-          <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'periodo' ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-indigo-500']">
-              <CalendarDaysIcon class="w-6 h-6 text-white" />
-          </div>
-            <div class="flex-1 text-left">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'periodo' ? 'text-white' : 'text-gray-800']">
-            Período
-          </h3>
-              <p :class="['text-sm', seccionActiva === 'periodo' ? 'text-white/80' : 'text-gray-500']">
-                Define el período de cuotas
-            </p>
-          </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'periodo' ? 'bg-white/20' : 'bg-blue-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'periodo' ? 'text-white rotate-180' : 'text-blue-600']" />
-          </div>
-        </div>
-      </button>
-
-        <!-- Contenido Período -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 -translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-2"
-        >
-          <div v-if="seccionActiva === 'periodo'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
-            <div class="relative p-5 sm:p-6">
-        <!-- Información sobre el período -->
-        <div class="mb-4 p-4 bg-blue-50/80 border border-blue-200/50 rounded-xl">
-          <p class="text-sm text-blue-700 flex items-start gap-2">
-            <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span>Puedes configurar un período que cruce de un año a otro. Por ejemplo: <strong>Diciembre 2025</strong> a <strong>Noviembre 2026</strong>.</span>
-          </p>
-        </div>
-
-        <!-- Mes y Año de Inicio -->
-        <div class="mb-4">
-          <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-            Inicio del Período
-          </h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="label font-semibold text-gray-700">Mes de Inicio *</label>
-              <select v-model.number="configPeriodo.mes_inicio" class="input-field">
-                <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="label font-semibold text-gray-700">Año de Inicio *</label>
-              <select v-model.number="configPeriodo.anio_inicio" class="input-field">
-                <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mes y Año de Fin -->
-        <div class="mb-4">
-          <h4 class="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-            Fin del Período
-          </h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="label font-semibold text-gray-700">Mes de Fin *</label>
-              <select v-model.number="configPeriodo.mes_fin" class="input-field">
-                <option v-for="mes in meses" :key="mes.value" :value="mes.value">{{ mes.label }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="label font-semibold text-gray-700">Año de Fin *</label>
-              <select v-model.number="configPeriodo.anio" class="input-field">
-                <option v-for="anio in aniosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Resumen del período -->
-        <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
-          <p class="text-sm text-gray-700 flex items-center gap-2">
-            <span class="text-xl">📅</span>
-            <span>
-              <strong class="text-blue-800">{{ meses.find(m => m.value === configPeriodo.mes_inicio)?.label }} {{ configPeriodo.anio_inicio }}</strong>
-              <span class="text-gray-500 mx-2">→</span>
-              <strong class="text-indigo-800">{{ meses.find(m => m.value === configPeriodo.mes_fin)?.label }} {{ configPeriodo.anio }}</strong>
-              <span class="text-xs text-gray-500 ml-2 bg-white/60 px-2 py-0.5 rounded-full">
-                {{ cantidadMesesPeriodo }} {{ cantidadMesesPeriodo === 1 ? 'mes' : 'meses' }}
-              </span>
-            </span>
-          </p>
-        </div>
-
-        <!-- Nota sobre período que cruza años -->
-        <Transition
-          enter-active-class="transition-all duration-300 ease-out"
-          enter-from-class="opacity-0 max-h-0 -translate-y-2"
-          enter-to-class="opacity-100 max-h-20 translate-y-0"
-          leave-active-class="transition-all duration-200 ease-in"
-          leave-from-class="opacity-100 max-h-20 translate-y-0"
-          leave-to-class="opacity-0 max-h-0 -translate-y-2"
-        >
-          <div v-if="configPeriodo.anio_inicio !== configPeriodo.anio" class="mt-3 p-3 bg-amber-50/80 border border-amber-200/50 rounded-xl">
-            <p class="text-xs text-amber-700 flex items-center gap-2">
-              <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-              </svg>
-              <span>Este período cruza de un año a otro. Ideal para natilleras que inician en diciembre y terminan el año siguiente.</span>
-            </p>
-          </div>
-        </Transition>
-
-              <div class="flex justify-end pt-4 border-t border-blue-200 mt-4">
-          <button 
-            @click="guardarConfigPeriodo"
-                  :disabled="guardandoPeriodo || esVisor"
-                  class="btn-primary text-sm bg-gradient-to-r from-blue-500 to-indigo-600"
-          >
-                  {{ guardandoPeriodo ? 'Guardando...' : 'Guardar Período' }}
-          </button>
-        </div>
-      </div>
-      </div>
-    </Transition>
-      </div>
-
-      <!-- === DÍAS DE GRACIA === -->
-      <div class="space-y-3">
-      <button
-        @click="seccionActiva = seccionActiva === 'diasGracia' ? null : 'diasGracia'"
-        :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
-          seccionActiva === 'diasGracia'
-              ? 'bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 border-amber-400 shadow-amber-500/30'
-              : 'bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 border-amber-100/50 shadow-amber-500/10 hover:border-amber-300 hover:shadow-xl'
-          ]"
-        >
-          <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'diasGracia' ? 'bg-white/20' : 'bg-gradient-to-br from-amber-500 to-orange-500']">
-              <ClockIcon class="w-6 h-6 text-white" />
-          </div>
-            <div class="flex-1 text-left">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'diasGracia' ? 'text-white' : 'text-gray-800']">
-              Días de Gracia
-          </h3>
-              <p :class="['text-sm', seccionActiva === 'diasGracia' ? 'text-white/80' : 'text-gray-500']">
-                Tiempo extra antes de mora
-            </p>
-          </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'diasGracia' ? 'bg-white/20' : 'bg-amber-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'diasGracia' ? 'text-white rotate-180' : 'text-amber-600']" />
-          </div>
-        </div>
-      </button>
-
-        <!-- Contenido Días de Gracia -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 -translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-2"
-        >
-          <div v-if="seccionActiva === 'diasGracia'" class="relative overflow-hidden bg-gradient-to-br from-white via-amber-50/30 to-orange-50/40 rounded-2xl shadow-xl shadow-amber-500/10 border-2 border-amber-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-amber-500 to-orange-500"></div>
-            <div class="relative p-5 sm:p-6">
-        <div>
-          <label class="label font-semibold text-gray-700">Días de Gracia *</label>
-          <input 
-            v-model.number="configDiasGracia.dias_gracia" 
-            type="number" 
-                  class="input-field w-32"
-            min="0"
-            max="30"
-          />
-          <p class="text-xs text-gray-500 mt-2">
-                  Días después de la fecha límite antes de considerar una cuota en mora.
-          </p>
-        </div>
-
-              <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                <p class="text-sm text-gray-700">
-                  ⏰ Las cuotas tendrán <strong>{{ configDiasGracia.dias_gracia }}</strong> día(s) de gracia.
-          </p>
-        </div>
-
-              <div class="flex justify-end pt-4 border-t border-amber-200 mt-4">
-                <button 
-                  @click="guardarConfigDiasGracia"
-                  :disabled="guardandoDiasGracia || esVisor"
-                  class="btn-primary text-sm bg-gradient-to-r from-amber-500 to-orange-600"
-                >
-                  {{ guardandoDiasGracia ? 'Guardando...' : 'Guardar Días de Gracia' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </Transition>
-      </div>
-
-      <!-- === SANCIONES === -->
-      <div class="space-y-3">
-        <button 
-          @click="seccionActiva = seccionActiva === 'sanciones' ? null : 'sanciones'"
-          :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
-            seccionActiva === 'sanciones'
-              ? 'bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 border-red-400 shadow-red-500/30'
-              : 'bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 border-red-100/50 shadow-red-500/10 hover:border-red-300 hover:shadow-xl'
-          ]"
-        >
-          <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'sanciones' ? 'bg-white/20' : 'bg-gradient-to-br from-red-500 to-rose-500']">
-              <ExclamationTriangleIcon class="w-6 h-6 text-white" />
-            </div>
-            <div class="flex-1 text-left">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'sanciones' ? 'text-white' : 'text-gray-800']">
-                Sanciones por Mora
-              </h3>
-              <p :class="['text-sm', seccionActiva === 'sanciones' ? 'text-white/80' : 'text-gray-500']">
-                Multas e intereses por mora
-              </p>
-            </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'sanciones' ? 'bg-white/20' : 'bg-red-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'sanciones' ? 'text-white rotate-180' : 'text-red-600']" />
-            </div>
-          </div>
-        </button>
-
-        <!-- Contenido Sanciones -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 -translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-2"
-        >
-          <div v-if="seccionActiva === 'sanciones'" class="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 rounded-2xl shadow-xl shadow-red-500/10 border-2 border-red-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-rose-500"></div>
-            <div class="relative p-5 sm:p-6">
-              <!-- Activar/Desactivar -->
-              <div class="mb-5">
-                <label class="flex items-center gap-3 cursor-pointer">
-                  <div class="relative">
-                    <input type="checkbox" v-model="configSanciones.activa" class="sr-only peer" />
-                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                  </div>
-                  <span class="font-semibold text-gray-700">Activar sanciones por mora</span>
-                </label>
-              </div>
-
-              <div v-if="configSanciones.activa" class="space-y-5">
-                <!-- Tipo de sanción -->
-                <div>
-                  <label class="label font-semibold text-gray-700 mb-3 block">Tipo de Sanción</label>
-                  <div class="grid grid-cols-2 gap-3">
-                    <button 
-                      type="button"
-                      @click="configSanciones.tipo = 'simple'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'simple' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
-                    >
-                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'simple' ? 'text-red-500' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Simple</p>
-                      <p class="text-xs text-gray-500">Valor fijo</p>
-                    </button>
-                    <button 
-                      type="button"
-                      @click="configSanciones.tipo = 'escalonada'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'escalonada' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
-                    >
-                      <ChartBarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'escalonada' ? 'text-red-500' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
-                      <p class="text-xs text-gray-500">Progresiva</p>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Simple -->
-                <div v-if="configSanciones.tipo === 'simple'" class="p-4 bg-white rounded-xl border border-gray-200">
-                  <label class="label font-semibold text-gray-700">Valor de multa por mora</label>
-                  <div class="relative mt-2">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
-                    <input 
-                      :value="formatNumberWithSeparators(configSanciones.valorFijo)"
-                      @input="(e) => {
-                        const rawValue = removeNumberFormat(e.target.value)
-                        configSanciones.valorFijo = rawValue ? parseInt(rawValue) || 0 : 0
-                      }"
-                      @focus="(e) => e.target.select()"
-                      type="text"
-                      inputmode="numeric"
-                      pattern="[0-9.,]*"
-                      class="input-field pl-8 w-full sm:w-48 font-semibold" 
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <!-- Intereses adicionales por días (Simple: debajo de valor multa) -->
-                <div v-if="configSanciones.tipo === 'simple'" class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
-                     :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
-                     @click.stop>
-                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                         @click.stop.prevent="toggleInteresesAdicionales">
-                    <div class="relative flex-shrink-0">
-                      <input 
-                        type="checkbox" 
-                        :checked="configSanciones.interesesAdicionales.activo" 
-                        @click.stop.prevent="toggleInteresesAdicionales" 
-                        class="sr-only peer" 
-                      />
-                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                    </div>
-                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
-                      Intereses adicionales por días
-                    </span>
-                  </label>
-                  <Transition
-                    enter-active-class="transition duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-2"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition duration-150 ease-out"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-2"
-                  >
-                    <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
-                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
-                        <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
-                        <input 
-                          v-model.number="configSanciones.interesesAdicionales.dias" 
-                          type="number" 
-                          min="1" 
-                          max="30" 
-                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                        />
-                        <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
-                        <div class="relative flex-1 sm:flex-initial">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
-                          <input 
-                            :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
-                            @input="(e) => {
-                              const rawValue = removeNumberFormat(e.target.value)
-                              configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                            }"
-                            @focus="(e) => e.target.select()"
-                            type="text"
-                            inputmode="numeric"
-                            pattern="[0-9.,]*"
-                            class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </Transition>
-                </div>
-
-                <!-- Escalonada -->
-                <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
-                  <!-- Tabla niveles -->
-                  <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <label class="label font-semibold text-gray-700 mb-3 block">Intereses por cuotas vencidas</label>
-                    <div class="space-y-2">
-                      <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600 w-20 font-medium">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
-                        <div class="relative flex-1 max-w-[140px]">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
-                          <input 
-                            :value="formatNumberWithSeparators(nivel.valor)"
-                            @input="(e) => {
-                              const rawValue = removeNumberFormat(e.target.value)
-                              nivel.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                            }"
-                            @focus="(e) => e.target.select()"
-                            type="text"
-                            inputmode="numeric"
-                            pattern="[0-9.,]*"
-                            min="0"
-                            class="input-field pl-7 py-1.5 text-sm font-semibold" 
-                            placeholder="0"
-                          />
-                        </div>
-                        <button v-if="configSanciones.niveles.length > 1" @click="eliminarNivel(index)" class="text-red-500 hover:text-red-700 p-1 transition-colors">
-                          <XMarkIcon class="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <button v-if="configSanciones.niveles.length < 10" @click="agregarNivel" class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 transition-colors">
-                      <PlusIcon class="w-4 h-4" /> Agregar nivel
-                    </button>
-                  </div>
-
-                  <!-- Intereses adicionales por días (Escalonada: debajo de Intereses por cuotas vencidas) -->
-                  <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
-                       :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
-                       @click.stop>
-                    <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                           @click.stop.prevent="toggleInteresesAdicionales">
-                      <div class="relative flex-shrink-0">
-                        <input 
-                          type="checkbox" 
-                          :checked="configSanciones.interesesAdicionales.activo" 
-                          @click.stop.prevent="toggleInteresesAdicionales" 
-                          class="sr-only peer" 
-                        />
-                        <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                      </div>
-                      <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
-                        Intereses adicionales por días
-                      </span>
-                    </label>
-                    <Transition
-                      enter-active-class="transition duration-200 ease-out"
-                      enter-from-class="opacity-0 -translate-y-2"
-                      enter-to-class="opacity-100 translate-y-0"
-                      leave-active-class="transition duration-150 ease-out"
-                      leave-from-class="opacity-100 translate-y-0"
-                      leave-to-class="opacity-0 -translate-y-2"
-                    >
-                      <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
-                          <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
-                          <input 
-                            v-model.number="configSanciones.interesesAdicionales.dias" 
-                            type="number" 
-                            min="1" 
-                            max="30" 
-                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                          />
-                          <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
-                          <div class="relative flex-1 sm:flex-initial">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
-                            <input 
-                              :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
-                              @input="(e) => {
-                                const rawValue = removeNumberFormat(e.target.value)
-                                configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                              }"
-                              @focus="(e) => e.target.select()"
-                              type="text"
-                              inputmode="numeric"
-                              pattern="[0-9.,]*"
-                              class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                              placeholder="0"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </Transition>
-                  </div>
-
-                  <!-- Devolución -->
-                  <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
-                       :class="configSanciones.devolucion.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
-                       @click.stop>
-                    <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                           @click.stop.prevent="toggleDevolucion">
-                      <div class="relative flex-shrink-0">
-                        <input 
-                          type="checkbox" 
-                          :checked="configSanciones.devolucion.activo" 
-                          @click.stop.prevent="toggleDevolucion" 
-                          class="sr-only peer" 
-                        />
-                        <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                      </div>
-                      <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
-                        Devolución por mora excesiva
-                      </span>
-                    </label>
-                    <Transition
-                      enter-active-class="transition duration-200 ease-out"
-                      enter-from-class="opacity-0 -translate-y-2"
-                      enter-to-class="opacity-100 translate-y-0"
-                      leave-active-class="transition duration-150 ease-in"
-                      leave-from-class="opacity-100 translate-y-0"
-                      leave-to-class="opacity-0 -translate-y-2"
-                    >
-                      <div v-if="configSanciones.devolucion.activo" class="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base flex-wrap">
-                          <span class="text-gray-600 font-medium whitespace-nowrap">Después de</span>
-                          <input 
-                            v-model.number="configSanciones.devolucion.cuotasLimite" 
-                            type="number" 
-                            min="1" 
-                            max="12" 
-                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                          />
-                          <span class="text-gray-600 font-medium whitespace-nowrap">cuotas, multa del</span>
-                          <input 
-                            v-model.number="configSanciones.devolucion.porcentajeMulta" 
-                            type="number" 
-                            min="0" 
-                            max="100" 
-                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                          />
-                          <span class="text-gray-600 font-medium">%</span>
-                        </div>
-                        <label class="flex items-center gap-3 sm:gap-4 cursor-pointer py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                               @click.stop.prevent="toggleSinUtilidades">
-                          <div class="relative flex-shrink-0">
-                            <input 
-                              type="checkbox" 
-                              :checked="configSanciones.devolucion.sinUtilidades" 
-                              @click.stop.prevent="toggleSinUtilidades" 
-                              class="sr-only peer" 
-                            />
-                            <div class="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                          </div>
-                          <span class="text-sm sm:text-base text-gray-700 font-medium select-none">
-                            Devolución sin utilidades
-                          </span>
-                        </label>
-                      </div>
-                    </Transition>
-                  </div>
-                </div>
-
-                <!-- Resumen -->
-                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p class="text-xs font-semibold text-red-700 mb-2">📋 Resumen</p>
-                  <div v-if="configSanciones.tipo === 'simple'" class="text-sm text-gray-700">
-                    Multa fija: <strong>${{ formatMoney(configSanciones.valorFijo) }}</strong>
-                  </div>
-                  <div v-else class="text-sm text-gray-700 space-y-1">
-                    <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
-                      {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
-                    </p>
-                  </div>
-                  <div v-if="configSanciones.interesesAdicionales?.activo" class="mt-3 pt-3 border-t border-red-200 text-sm text-gray-700">
-                    <p class="font-medium text-red-800 mb-1">Intereses adicionales por días</p>
-                    <p>
-                      Cada <strong>{{ configSanciones.interesesAdicionales.dias }}</strong> {{ configSanciones.interesesAdicionales.dias === 1 ? 'día' : 'días' }} en mora después del vencimiento se suma <strong>${{ formatMoney(configSanciones.interesesAdicionales.valor) }}</strong> a la sanción de la cuota.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-end pt-4 border-t border-red-200 mt-4">
-                <button 
-                  @click="guardarConfigSanciones"
-                  :disabled="guardandoSanciones || esVisor"
-                  class="btn-primary text-sm bg-gradient-to-r from-red-500 to-rose-600"
-                >
-                  {{ guardandoSanciones ? 'Guardando...' : 'Guardar Sanciones' }}
-        </button>
-      </div>
-      </div>
-      </div>
-    </Transition>
-      </div>
 
       <!-- === REASIGNAR NATILLERA (Solo Superusuario) === -->
       <div v-if="esSuperUsuario" class="space-y-3">
@@ -1777,7 +1619,6 @@ import {
   XMarkIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  SparklesIcon,
   BanknotesIcon
 } from '@heroicons/vue/24/outline'
 
@@ -1795,7 +1636,8 @@ const guardandoSanciones = ref(false)
 const guardandoReasignacion = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
-const seccionActiva = ref(null) // 'basica', 'mensajes', 'periodo', 'diasGracia', 'sanciones', 'reasignar' o null
+const seccionActiva = ref('basica') // 'basica' por defecto (Configuración General desplegada), 'mensajes', 'reasignar', 'colaboradores' o null
+const tabGeneralActiva = ref('basica') // 'basica' | 'periodo' | 'cierre' | 'sanciones' (tabs dentro de Configuración General)
 const tipoMensajeActivo = ref('individual') // 'individual', 'general', 'mora', 'pendiente'
 const esVisor = ref(false)
 
@@ -1949,8 +1791,9 @@ const configCuotasAuto = ref({
 // Configuración de sanciones por mora
 const configSanciones = ref({
   activa: false,
-  tipo: 'simple', // 'simple' o 'escalonada'
+  tipo: 'simple', // 'simple', 'escalonada' o 'diaria'
   valorFijo: 5000, // Para tipo simple
+  valorPorDia: 500, // Para tipo diaria
   niveles: [ // Para tipo escalonada
     { cuotas: 1, valor: 4000 },
     { cuotas: 2, valor: 4500 },
@@ -2050,8 +1893,9 @@ async function guardarConfigBasica() {
     setTimeout(() => { mensaje.value = null }, 5000)
     return
   }
-  
-  const result = await natillerasStore.actualizarNatillera(id.value, {
+
+  const reglasMultasActuales = natillera.value?.reglas_multas || {}
+  const payload = {
     nombre: configBasica.value.nombre.trim(),
     descripcion: configBasica.value.descripcion?.trim() || null,
     periodicidad: configBasica.value.periodicidad,
@@ -2061,68 +1905,40 @@ async function guardarConfigBasica() {
       modoActividades: configCierre.value.modoActividades,
       actividades: configCierre.value.actividades,
       prestamos: configCierre.value.prestamos
+    },
+    mes_inicio: configPeriodo.value.mes_inicio,
+    anio_inicio: configPeriodo.value.anio_inicio,
+    mes_fin: configPeriodo.value.mes_fin,
+    anio: configPeriodo.value.anio,
+    reglas_multas: {
+      ...reglasMultasActuales,
+      dias_gracia: configDiasGracia.value.dias_gracia,
+      sanciones: {
+        activa: configSanciones.value.activa,
+        tipo: configSanciones.value.tipo,
+        valorFijo: configSanciones.value.valorFijo,
+        valorPorDia: configSanciones.value.tipo === 'diaria' ? configSanciones.value.valorPorDia : undefined,
+        niveles: configSanciones.value.niveles,
+        interesesAdicionales: configSanciones.value.interesesAdicionales,
+        devolucion: configSanciones.value.devolucion
+      }
     }
-  })
+  }
+  
+  const result = await natillerasStore.actualizarNatillera(id.value, payload)
   
   if (result.success) {
     mensaje.value = {
       tipo: 'exito',
-      texto: 'Información básica guardada correctamente'
+      texto: 'Configuración general guardada correctamente'
     }
-    // Recargar la natillera para ver los cambios
     await natillerasStore.fetchNatillera(id.value)
-    // Actualizar los valores locales con los datos recargados
-    if (natillera.value) {
-      configBasica.value = {
-        nombre: natillera.value.nombre || '',
-        descripcion: natillera.value.descripcion || '',
-        periodicidad: natillera.value.periodicidad || 'mensual',
-        fecha_inicio: natillera.value.fecha_inicio || new Date().toISOString().split('T')[0]
-      }
-      configCuotasAuto.value = {
-        activo: natillera.value.cuotas_automaticas !== false
-      }
-      // Cargar configuración de cierre
-      const configCierreActual = natillera.value.config_cierre || {}
-      const actividadesConfig = configCierreActual.actividades || {}
-      const modoActividades = configCierreActual.modoActividades || 'general'
-      
-      // Si viene en formato antiguo (sin modoActividades), determinar el modo
-      let modo = modoActividades
-      if (!configCierreActual.modoActividades && actividadesConfig.general) {
-        modo = 'general'
-      } else if (!configCierreActual.modoActividades && (actividadesConfig.rifa || actividadesConfig.bingo)) {
-        modo = 'individual'
-      }
-      
-      configCierre.value = {
-        modoActividades: modo,
-        actividades: modo === 'general' 
-          ? {
-              general: actividadesConfig.general || 'equitativa',
-              rifa: actividadesConfig.rifa || 'equitativa',
-              bingo: actividadesConfig.bingo || 'equitativa',
-              venta: actividadesConfig.venta || 'equitativa',
-              evento: actividadesConfig.evento || 'equitativa',
-              otro: actividadesConfig.otro || 'equitativa'
-            }
-          : {
-              general: actividadesConfig.general || 'equitativa',
-              rifa: actividadesConfig.rifa || 'equitativa',
-              bingo: actividadesConfig.bingo || 'equitativa',
-              venta: actividadesConfig.venta || 'equitativa',
-              evento: actividadesConfig.evento || 'equitativa',
-              otro: actividadesConfig.otro || 'equitativa'
-            },
-        prestamos: configCierreActual.prestamos || 'equitativa'
-      }
-    }
-    // Cerrar la sección después de guardar
+    actualizarValoresDesdeNatillera()
     seccionActiva.value = null
   } else {
     mensaje.value = {
       tipo: 'error',
-      texto: result.error || 'Error al guardar la información básica'
+      texto: result.error || 'Error al guardar la configuración'
     }
   }
   
@@ -2159,8 +1975,6 @@ async function guardarConfigPeriodo() {
         anio: natillera.value.anio || new Date().getFullYear()
       }
     }
-    // Cerrar la sección después de guardar
-    seccionActiva.value = null
   } else {
     mensaje.value = {
       tipo: 'error',
@@ -2202,8 +2016,6 @@ async function guardarConfigDiasGracia() {
         dias_gracia: reglasMultas.dias_gracia || 3
       }
     }
-    // Cerrar la sección después de guardar
-    seccionActiva.value = null
   } else {
     mensaje.value = {
       tipo: 'error',
@@ -2253,8 +2065,6 @@ async function guardarConfigSanciones() {
     }
     // Recargar la natillera para ver los cambios
     await natillerasStore.fetchNatillera(id.value)
-    // Cerrar la sección después de guardar
-    seccionActiva.value = null
   } else {
     mensaje.value = {
       tipo: 'error',
@@ -2471,6 +2281,7 @@ function actualizarValoresDesdeNatillera() {
         activa: sanciones.activa || false,
         tipo: sanciones.tipo || 'simple',
         valorFijo: sanciones.valorFijo || 5000,
+        valorPorDia: sanciones.valorPorDia ?? 500,
         niveles: sanciones.niveles || [
           { cuotas: 1, valor: 4000 },
           { cuotas: 2, valor: 4500 },

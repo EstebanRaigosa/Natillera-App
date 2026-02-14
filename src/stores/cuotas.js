@@ -145,7 +145,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Si la posición es mayor que todos los niveles, usar el último nivel
       return nivelesOrdenados[nivelesOrdenados.length - 1]?.valor || 0
     }
-
+    // tipo 'diaria' se calcula por días en calcularMultaDinamica / calcularSancionesTotales
     return 0
   }
 
@@ -160,15 +160,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
       return 0
     }
 
-    // Calcular multa base según el tipo de sanción
-    let multaBase = calcularMulta(configSanciones, cantidadCuotasMoraSocio)
-
-    // Calcular días en mora (desde fecha_limite, no desde fecha_mora)
-    // La fecha_limite es cuando debió pagar, después de eso está en mora
+    // Calcular días en mora (desde fecha_limite o fecha_inicio_mora)
     const fechaLimiteStr = cuota.fecha_limite
     if (!fechaLimiteStr) {
       console.warn('Cuota sin fecha_limite:', cuota.id)
-      return multaBase
+      if (configSanciones.tipo === 'diaria') return 0
+      return calcularMulta(configSanciones, cantidadCuotasMoraSocio)
     }
 
     // Parsear fecha correctamente (YYYY-MM-DD)
@@ -178,6 +175,30 @@ export const useCuotasStore = defineStore('cuotas', () => {
     
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
+
+    // Sanción diaria: valorPorDia * días desde primer día en mora + intereses adicionales (si están configurados)
+    if (configSanciones.tipo === 'diaria') {
+      const valorPorDia = configSanciones.valorPorDia || 0
+      const fechaInicioMoraStr = cuota.fecha_inicio_mora ? String(cuota.fecha_inicio_mora).substring(0, 10) : null
+      let inicioMora = fechaInicioMoraStr
+        ? (() => { const [a, m, d] = fechaInicioMoraStr.split('-').map(Number); const d2 = new Date(a, m - 1, d); d2.setHours(0, 0, 0, 0); return d2; })()
+        : (() => { const d2 = new Date(fechaLimite); d2.setDate(d2.getDate() + 1); return d2; })()
+      const diasEnMora = Math.max(0, Math.floor((hoy - inicioMora) / (1000 * 60 * 60 * 24)) + 1)
+      let multaBaseDiaria = valorPorDia * diasEnMora
+      let interesesDiaria = 0
+      const interesesConfigDiaria = configSanciones.interesesAdicionales || configSanciones.intereses_adicionales
+      if (interesesConfigDiaria && (interesesConfigDiaria.activo === true || interesesConfigDiaria.activo === 'true' || interesesConfigDiaria.activo === 1)) {
+        const diasParaInteres = interesesConfigDiaria.dias || 2
+        const valorInteres = Number(interesesConfigDiaria.valor) || 0
+        if (diasEnMora > 0 && diasParaInteres > 0 && valorInteres > 0) {
+          interesesDiaria = Math.floor(diasEnMora / diasParaInteres) * valorInteres
+        }
+      }
+      return multaBaseDiaria + interesesDiaria
+    }
+
+    // Calcular multa base según el tipo de sanción (simple / escalonada)
+    let multaBase = calcularMulta(configSanciones, cantidadCuotasMoraSocio)
 
     const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
 
@@ -281,10 +302,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const lista = cuotasLista || cuotas.value
       const cuotasMora = lista.filter(c => c.estado === 'mora')
-      
+      // Excluir cuotas marcadas con no_calcular_multa (no aplicar sanciones a esa cuota)
+      const cuotasMoraConMulta = cuotasMora.filter(c => !c.no_calcular_multa)
+      const cuotasMoraSinMulta = cuotasMora.filter(c => c.no_calcular_multa)
+
+      // Poner a 0 las sanciones de las cuotas en mora con no_calcular_multa (por si ya tenían multa calculada)
+      if (cuotasMoraSinMulta.length > 0) {
+        const updatesCero = cuotasMoraSinMulta.map(c => supabase
+          .from('cuotas')
+          .update({
+            valor_multa: 0,
+            valor_multa_base: 0,
+            valor_multa_intereses: 0
+          })
+          .eq('id', c.id))
+        const resultsCero = await Promise.all(updatesCero)
+        const erroresCero = resultsCero.filter(r => r.error)
+        if (erroresCero.length > 0) {
+          console.warn('📋 [Sanciones] Algunas cuotas no_calcular_multa no se pudieron poner a 0:', erroresCero)
+        }
+        cuotasMoraSinMulta.forEach(c => {
+          c.valor_multa = 0
+          c.valor_multa_base = 0
+          c.valor_multa_intereses = 0
+        })
+      }
+
       // Agrupar cuotas en mora por socio y ordenarlas por fecha de vencimiento
       const cuotasPorSocio = {}
-      cuotasMora.forEach(c => {
+      cuotasMoraConMulta.forEach(c => {
         if (!cuotasPorSocio[c.socio_natillera_id]) {
           cuotasPorSocio[c.socio_natillera_id] = []
         }
@@ -344,12 +390,38 @@ export const useCuotasStore = defineStore('cuotas', () => {
             cuota.valor_multa_base !== '' &&
             Number(cuota.valor_multa_base) > 0
 
-          // BASE (snapshot): si ya tiene mora_orden/valor_multa_base, usarlos y NUNCA recalcular.
+          // BASE (snapshot): si ya tiene mora_orden/valor_multa_base, usarlos y NUNCA recalcular. Diaria: siempre por días.
           let multaBase = 0
           let moraOrdenCuota = tieneMoraOrden ? Number(cuota.mora_orden) : null
           let fechaInicioMoraCuota = cuota.fecha_inicio_mora ? String(cuota.fecha_inicio_mora).substring(0, 10) : null
 
-          if (tieneBasePersistida && tieneMoraOrden) {
+          if (configSanciones.tipo === 'diaria') {
+            // Sanción diaria por TRAMO: cada cuota solo acumula días desde su primer día en mora hasta el día anterior al primer día en mora de la siguiente (o hasta hoy si es la última).
+            fechaInicioMoraCuota = fechaInicioMoraCuota || obtenerFechaInicioMora(cuota, diasGracia)
+            if (!cuota.fecha_inicio_mora && fechaInicioMoraCuota) nuevasFechasInicioMora[cuota.id] = fechaInicioMoraCuota
+            if (fechaInicioMoraCuota) {
+              const [a, m, d] = fechaInicioMoraCuota.split('-').map(Number)
+              const inicioTramo = new Date(a, m - 1, d)
+              inicioTramo.setHours(0, 0, 0, 0)
+              const hoy = new Date()
+              hoy.setHours(0, 0, 0, 0)
+              let finTramo = hoy
+              const siguienteCuota = cuotasSocio[indexEnSocio + 1]
+              if (siguienteCuota) {
+                const sigInicioMora = obtenerFechaInicioMora(siguienteCuota, diasGracia)
+                if (sigInicioMora) {
+                  const [aS, mS, dS] = sigInicioMora.split('-').map(Number)
+                  finTramo = new Date(aS, mS - 1, dS)
+                  finTramo.setDate(finTramo.getDate() - 1) // día anterior al primer día en mora de la siguiente
+                  finTramo.setHours(0, 0, 0, 0)
+                }
+              }
+              if (finTramo.getTime() < inicioTramo.getTime()) finTramo = new Date(inicioTramo)
+              const diasEnTramo = Math.max(0, Math.floor((finTramo.getTime() - inicioTramo.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+              multaBase = (configSanciones.valorPorDia || 0) * diasEnTramo
+              if (multaBase > 0) sancionesBases[cuota.id] = multaBase
+            }
+          } else if (tieneBasePersistida && tieneMoraOrden) {
             multaBase = Number(cuota.valor_multa_base)
           } else {
             // Cuota nueva en mora: asignar mora_orden por racha. Procesamos por fecha_limite (más antigua primero).
@@ -374,6 +446,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           }
 
           // Sanción por días POR TRAMOS: cada cuota solo acumula días desde su inicio de mora hasta el día anterior al vencimiento de la siguiente.
+          // Aplica a simple, escalonada Y diaria (intereses adicionales por día se suman también cuando el tipo es diaria).
           // Cuota 1: desde vencimiento cuota 1 hasta (día antes vencimiento cuota 2). Última cuota: hasta hoy.
           let interesesAdicionales = 0
           const fechaInicioMoraParaDias = fechaInicioMoraCuota || obtenerFechaInicioMora(cuota, diasGracia)
@@ -761,22 +834,59 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
             console.log(`🔍 Socio ${socioId}: ${cuotasMoraSocio.length} cuotas en mora, ${cuotasNuevasPasandoAMora.length} nuevas pasando a mora, maxOrden=${maxOrden}`)
 
+            // Para diaria por tramo: lista ordenada por fecha_limite (todas en mora + nuevas)
+            const todasEnMoraOrdenadas = [...cuotasMoraSocio, ...cuotasNuevasPasandoAMora.map(n => n.cuotaCompleta)].filter(Boolean)
+            todasEnMoraOrdenadas.sort((a, b) => {
+              const fa = new Date(a.fecha_limite || a.fecha_vencimiento || 0)
+              const fb = new Date(b.fecha_limite || b.fecha_vencimiento || 0)
+              return fa - fb
+            })
+
             cuotasNuevasPasandoAMora.forEach((cuotaInfo) => {
               const cuotaActual = cuotaInfo.cuotaCompleta
               if (!cuotaActual) return
+              // No calcular multa para esta cuota si está marcada con no_calcular_multa
+              if (cuotaActual.no_calcular_multa) {
+                multasCalculadas.set(cuotaInfo.id, 0)
+                return
+              }
 
               const moraOrden = maxOrden + 1
               maxOrden = moraOrden
               const ordenParaValor = Math.min(moraOrden, 4) // Escalón máximo 4 (no expulsión)
 
               let valorMulta = 0
+              const fechaInicioMora = obtenerFechaInicioMoraMora(cuotaActual, diasGraciaMora)
               if (configSanciones.tipo === 'simple') {
                 valorMulta = configSanciones.valorFijo || 0
               } else if (configSanciones.tipo === 'escalonada') {
                 valorMulta = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor)
+              } else if (configSanciones.tipo === 'diaria') {
+                const valorPorDia = configSanciones.valorPorDia || 0
+                let diasEnTramo = 1
+                if (fechaInicioMora) {
+                  const [a, m, d] = fechaInicioMora.split('-').map(Number)
+                  const inicioTramo = new Date(a, m - 1, d)
+                  inicioTramo.setHours(0, 0, 0, 0)
+                  const hoy = new Date()
+                  hoy.setHours(0, 0, 0, 0)
+                  let finTramo = hoy
+                  const idx = todasEnMoraOrdenadas.findIndex(c => c.id === cuotaActual.id)
+                  if (idx !== -1 && idx + 1 < todasEnMoraOrdenadas.length) {
+                    const sigCuota = todasEnMoraOrdenadas[idx + 1]
+                    const sigInicio = obtenerFechaInicioMoraMora(sigCuota, diasGraciaMora)
+                    if (sigInicio) {
+                      const [aS, mS, dS] = sigInicio.split('-').map(Number)
+                      finTramo = new Date(aS, mS - 1, dS)
+                      finTramo.setDate(finTramo.getDate() - 1)
+                      finTramo.setHours(0, 0, 0, 0)
+                    }
+                  }
+                  if (finTramo.getTime() < inicioTramo.getTime()) finTramo = new Date(inicioTramo)
+                  diasEnTramo = Math.max(1, Math.floor((finTramo.getTime() - inicioTramo.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+                }
+                valorMulta = valorPorDia * diasEnTramo
               }
-
-              const fechaInicioMora = obtenerFechaInicioMoraMora(cuotaActual, diasGraciaMora)
 
               multasCalculadas.set(cuotaInfo.id, valorMulta)
               moraOrdenCalculado.set(cuotaInfo.id, moraOrden)
@@ -806,7 +916,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
             } else {
               datosActualizar.valor_multa = valorMultaCalculada
               if (!tieneBasePersistida) {
-                datosActualizar.valor_multa_base = valorMultaCalculada
+                // Diaria: no persistir valor_multa_base (se recalcula por días cada vez)
+                if (configSanciones?.tipo !== 'diaria') {
+                  datosActualizar.valor_multa_base = valorMultaCalculada
+                }
                 datosActualizar.valor_multa_intereses = 0
                 if (moraOrdenNuevo != null) datosActualizar.mora_orden = Number(moraOrdenNuevo)
                 if (fechaInicioMoraNueva) datosActualizar.fecha_inicio_mora = fechaInicioMoraNueva
@@ -816,6 +929,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (cuotaActual?.valor_multa) {
               datosActualizar.valor_multa = cuotaActual.valor_multa
             }
+          } else if (cuotaActual?.no_calcular_multa) {
+            datosActualizar.valor_multa = 0
+            datosActualizar.valor_multa_base = 0
+            datosActualizar.valor_multa_intereses = 0
           }
 
           const { data: actualizadaMora, error: errorMora } = await supabase
@@ -1494,12 +1611,58 @@ export const useCuotasStore = defineStore('cuotas', () => {
             }
           }
           
-          // BASE: usar valor_multa_base persistido si existe; NUNCA recalcular si ya está guardada
+          // BASE: usar valor_multa_base persistido si existe; NUNCA recalcular si ya está guardada. Diaria: siempre por días.
           const tieneBasePersistidaPago = cuotaActual.valor_multa_base != null &&
             cuotaActual.valor_multa_base !== '' &&
             Number(cuotaActual.valor_multa_base) > 0
           let multaBase = 0
-          if (tieneBasePersistidaPago) {
+          if (configSanciones.tipo === 'diaria') {
+            // Sanción diaria por TRAMO: días desde primer día en mora hasta el día anterior al primer día en mora de la siguiente (o hasta hoy).
+            const fechaInicioMoraPago = cuotaActual.fecha_inicio_mora ? String(cuotaActual.fecha_inicio_mora).substring(0, 10) : null
+            const fechaInicio = fechaInicioMoraPago || (() => {
+              const fl = cuotaActual.fecha_limite
+              if (!fl) return null
+              const str = String(fl).substring(0, 10)
+              const [anio, mes, dia] = str.split('-').map(Number)
+              if (Number.isNaN(anio) || Number.isNaN(mes) || Number.isNaN(dia)) return null
+              const fechaVenc = new Date(anio, mes - 1, dia)
+              fechaVenc.setDate(fechaVenc.getDate() + (diasGracia || 0) + 1)
+              fechaVenc.setHours(0, 0, 0, 0)
+              return fechaVenc.toISOString().split('T')[0]
+            })()
+            if (fechaInicio) {
+              const [a, m, d] = fechaInicio.split('-').map(Number)
+              const inicioTramo = new Date(a, m - 1, d)
+              inicioTramo.setHours(0, 0, 0, 0)
+              const hoy = new Date()
+              hoy.setHours(0, 0, 0, 0)
+              let finTramo = hoy
+              if (indiceCuota !== -1 && cuotasMoraSocio && indiceCuota + 1 < cuotasMoraSocio.length) {
+                const sigCuota = cuotasMoraSocio[indiceCuota + 1]
+                const sigInicio = sigCuota.fecha_inicio_mora ? String(sigCuota.fecha_inicio_mora).substring(0, 10) : null
+                const sigInicioComputed = sigInicio || (() => {
+                  const fl = sigCuota.fecha_limite
+                  if (!fl) return null
+                  const str = String(fl).substring(0, 10)
+                  const [anioS, mesS, diaS] = str.split('-').map(Number)
+                  if (Number.isNaN(anioS) || Number.isNaN(mesS) || Number.isNaN(diaS)) return null
+                  const f = new Date(anioS, mesS - 1, diaS)
+                  f.setDate(f.getDate() + (diasGracia || 0) + 1)
+                  f.setHours(0, 0, 0, 0)
+                  return f.toISOString().split('T')[0]
+                })()
+                if (sigInicioComputed) {
+                  const [aS, mS, dS] = sigInicioComputed.split('-').map(Number)
+                  finTramo = new Date(aS, mS - 1, dS)
+                  finTramo.setDate(finTramo.getDate() - 1)
+                  finTramo.setHours(0, 0, 0, 0)
+                }
+              }
+              if (finTramo.getTime() < inicioTramo.getTime()) finTramo = new Date(inicioTramo)
+              const diasEnTramo = Math.max(0, Math.floor((finTramo.getTime() - inicioTramo.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+              multaBase = (configSanciones.valorPorDia || 0) * diasEnTramo
+            }
+          } else if (tieneBasePersistidaPago) {
             multaBase = Number(cuotaActual.valor_multa_base)
           } else if (configSanciones.tipo === 'simple') {
             multaBase = configSanciones.valorFijo || 0
@@ -1513,7 +1676,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             }
           }
           
-          // Intereses adicionales por tramo
+          // Intereses adicionales por tramo (aplica a simple, escalonada y diaria)
           let interesesAdicionales = 0
           const fechaLimiteRaw = cuotaActual.fecha_limite
           const fechaLimiteStr = fechaLimiteRaw ? String(fechaLimiteRaw).substring(0, 10) : ''
@@ -1779,6 +1942,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Guardar cuánto se abonó a sanción (campo valor_pagado_sancion)
       updateData.valor_pagado_sancion = sancionPagadaAnterior + valorSancionPagada
       
+      // Guardar cuánto se abonó a actividades en esta cuota (campo valor_pagado_actividades)
+      const valorPagadoActividadesAnterior = parseFloat(cuotaActual.valor_pagado_actividades) || 0
+      updateData.valor_pagado_actividades = valorPagadoActividadesAnterior + valorActividadesPagado
+      
       // Solo agregar codigo_comprobante si existe un código generado
       // Esto evita errores si la columna no existe en la BD (migración no ejecutada)
       if (codigoComprobante) {
@@ -1850,6 +2017,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
         updateError = retryMulta.error
       }
 
+      // Si falla por columna valor_pagado_actividades (no existe en BD), reintentar sin ella
+      if (updateError && updateError.message && (
+        updateError.message.includes('valor_pagado_actividades') ||
+        (updateError.message.includes('column') && updateData.valor_pagado_actividades !== undefined)
+      )) {
+        delete updateData.valor_pagado_actividades
+        const retryActividades = await supabase
+          .from('cuotas')
+          .update(updateData)
+          .eq('id', cuotaId)
+          .select('*')
+          .maybeSingle()
+        data = retryActividades.data
+        updateError = retryActividades.error
+      }
+
       if (updateError) throw updateError
       
       if (!data) {
@@ -1893,6 +2076,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (debeRegistrarUtilidad) {
         console.log('✅ [UTILIDADES] Condición cumplida, procediendo a registrar...')
         try {
+          // Forma de pago con la que se pagó la cuota (clasificación por tipo y por forma_pago)
+          const formaPago = (tipoPago && ['efectivo', 'transferencia', 'mixto'].includes((tipoPago || '').toLowerCase()))
+            ? (tipoPago || '').toLowerCase()
+            : null
+
           // Obtener todos los socios_natillera de esta natillera
           const { data: sociosNatillera, error: errorSocios } = await supabase
             .from('socios_natillera')
@@ -1914,16 +2102,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
           // NOTA: Como ahora quitamos la sanción (valor_multa = 0) cuando se paga,
           // no podemos buscar cuotas con valor_multa > 0 para calcular el total.
           // En su lugar, usamos el registro existente en utilidades_clasificadas
-          // y le sumamos el valor de la sanción pagada en esta transacción.
-          
-          // Obtener el registro existente primero para saber el monto actual
-          const { data: utilidadExistenteTemp, error: errorUtilidadTemp } = await supabase
-            .from('utilidades_clasificadas')
-            .select('monto')
-            .eq('natillera_id', natilleraId)
-            .eq('tipo', 'sanciones')
-            .is('fecha_cierre', null)
-            .maybeSingle()
+          // (por esta forma de pago) y le sumamos el valor de la sanción pagada en esta transacción.
+          const querySanciones = (q) => {
+            let chain = q.eq('natillera_id', natilleraId).eq('tipo', 'sanciones').is('fecha_cierre', null)
+            if (formaPago != null) chain = chain.eq('forma_pago', formaPago)
+            else chain = chain.is('forma_pago', null)
+            return chain
+          }
+
+          // Obtener el registro existente primero para saber el monto actual (por forma_pago)
+          const { data: utilidadExistenteTemp, error: errorUtilidadTemp } = await querySanciones(
+            supabase.from('utilidades_clasificadas').select('monto')
+          ).maybeSingle()
 
           if (errorUtilidadTemp) {
             console.error('Error obteniendo utilidad existente temporal:', errorUtilidadTemp)
@@ -1937,7 +2127,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
           console.log('💰 [UTILIDADES] Total sanciones pagadas calculado:', {
             montoAnterior,
             valorMultaPagada,
-            montoFinal
+            montoFinal,
+            forma_pago: formaPago
           })
           
           if (montoFinal <= 0) {
@@ -1945,14 +2136,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
             return { success: true, data }
           }
 
-          // Obtener el registro existente de utilidades_clasificadas para sanciones
-          const { data: utilidadExistente, error: errorUtilidadExistente } = await supabase
-            .from('utilidades_clasificadas')
-            .select('id, monto')
-            .eq('natillera_id', natilleraId)
-            .eq('tipo', 'sanciones')
-            .is('fecha_cierre', null)
-            .maybeSingle()
+          // Obtener el registro existente de utilidades_clasificadas para sanciones (misma forma_pago)
+          const { data: utilidadExistente, error: errorUtilidadExistente } = await querySanciones(
+            supabase.from('utilidades_clasificadas').select('id, monto, detalles')
+          ).maybeSingle()
 
           if (errorUtilidadExistente) {
             console.error('Error obteniendo utilidad existente:', errorUtilidadExistente)
@@ -1964,7 +2151,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
             console.log('📝 [UTILIDADES] Actualizando registro existente:', {
               id: utilidadExistente.id,
               montoAnterior: utilidadExistente.monto,
-              montoNuevo: montoFinal
+              montoNuevo: montoFinal,
+              forma_pago: formaPago
             })
 
             const { data: updatedData, error: updateUtilidadError } = await supabase
@@ -1985,23 +2173,27 @@ export const useCuotasStore = defineStore('cuotas', () => {
               console.log('✅ [UTILIDADES] Utilidad de sanciones actualizada correctamente:', updatedData)
             }
           } else {
-            // Crear nuevo registro
+            // Crear nuevo registro (con forma_pago para clasificación por tipo y por forma de pago)
             console.log('📝 [UTILIDADES] Creando nuevo registro:', {
               natilleraId,
               tipo: 'sanciones',
-              monto: montoFinal
+              monto: montoFinal,
+              forma_pago: formaPago
             })
+
+            const insertPayload = {
+              natillera_id: natilleraId,
+              tipo: 'sanciones',
+              monto: montoFinal,
+              fecha_cierre: null,
+              descripcion: 'Multas pagadas por cuotas en mora',
+              detalles: {}
+            }
+            if (formaPago != null) insertPayload.forma_pago = formaPago
 
             const { data: insertedData, error: insertUtilidadError } = await supabase
               .from('utilidades_clasificadas')
-              .insert({
-                natillera_id: natilleraId,
-                tipo: 'sanciones',
-                monto: montoFinal,
-                fecha_cierre: null,
-                descripcion: 'Multas pagadas por cuotas en mora',
-                detalles: {}
-              })
+              .insert(insertPayload)
               .select()
 
             if (insertUtilidadError) {
@@ -2023,6 +2215,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valorSancionPagada
         })
       }
+
+      // NOTA: El registro de utilidades de actividades ahora se hace en registrarPagosActividades
+      // en Cuotas.vue, donde tenemos acceso a la información completa de las actividades
+      // (estado, tipo, etc.) para registrar correctamente según si están liquidadas o en curso.
 
       // Registrar auditoría
       const auditoria = useAuditoria()

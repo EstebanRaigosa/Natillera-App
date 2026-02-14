@@ -19,6 +19,7 @@ import Cuotas from '../views/cuotas/Cuotas.vue'
 import CuotasMeses from '../views/cuotas/CuotasMeses.vue'
 import Prestamos from '../views/prestamos/Prestamos.vue'
 import Actividades from '../views/actividades/Actividades.vue'
+import CuadreCaja from '../views/cuadre/CuadreCaja.vue'
 import NatilleraConfiguracion from '../views/natilleras/NatilleraConfiguracion.vue'
 import Configuracion from '../views/configuracion/Configuracion.vue'
 import Auditoria from '../views/auditoria/Auditoria.vue'
@@ -135,6 +136,13 @@ const routes = [
         component: Actividades,
         props: true,
         meta: { title: 'Actividades' }
+      },
+      {
+        path: 'natilleras/:id/cuadre-caja',
+        name: 'CuadreCaja',
+        component: CuadreCaja,
+        props: true,
+        meta: { title: 'Totales generales' }
       },
       {
         path: 'natilleras/:id/configuracion',

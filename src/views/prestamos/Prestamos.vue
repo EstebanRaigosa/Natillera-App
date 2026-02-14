@@ -2912,8 +2912,8 @@ async function obtenerTotalInteresesPrestamos(natilleraId) {
   return total
 }
 
-async function actualizarInteresPrestamo(natilleraId, prestamoId, interes, tipo = 'anticipado', esNuevo = true, esRefinanciacion = false) {
-  // Buscar si ya existe un registro para este préstamo
+async function actualizarInteresPrestamo(natilleraId, prestamoId, interes, tipo = 'anticipado', esNuevo = true, esRefinanciacion = false, formaPago = null) {
+  // Buscar si ya existe un registro para este préstamo (uno por préstamo; forma_pago se usa al crear)
   const { data: utilidadExistente, error: errorBusqueda } = await supabase
     .from('utilidades_clasificadas')
     .select('*')
@@ -2939,6 +2939,11 @@ async function actualizarInteresPrestamo(natilleraId, prestamoId, interes, tipo 
     }
   }
 
+  // Normalizar forma_pago (efectivo, transferencia, mixto) para clasificación
+  const formaPagoNorm = (formaPago && ['efectivo', 'transferencia', 'mixto'].includes((formaPago || '').toLowerCase()))
+    ? (formaPago || '').toLowerCase()
+    : null
+
   let data, error
 
   if (utilidadExistente) {
@@ -2963,23 +2968,26 @@ async function actualizarInteresPrestamo(natilleraId, prestamoId, interes, tipo 
     data = updatedData
     error = updateError
   } else {
-    // Si no existe, crear un nuevo registro
+    // Si no existe, crear un nuevo registro (con forma_pago cuando aplica, ej. medio_entrega del préstamo)
+    const insertPayload = {
+      natillera_id: natilleraId,
+      tipo: 'prestamos',
+      id_actividad: prestamoId,
+      monto: montoNuevo,
+      fecha_cierre: null,
+      descripcion: `Intereses generados por préstamo ${prestamoId}`,
+      detalles: {
+        prestamo_id: prestamoId,
+        tipo_interes: tipo,
+        fecha_registro: new Date().toISOString()
+      },
+      updated_at: new Date().toISOString()
+    }
+    if (formaPagoNorm != null) insertPayload.forma_pago = formaPagoNorm
+
     const { data: insertedData, error: insertError } = await supabase
       .from('utilidades_clasificadas')
-      .insert({
-        natillera_id: natilleraId,
-        tipo: 'prestamos',
-        id_actividad: prestamoId,
-        monto: montoNuevo,
-        fecha_cierre: null,
-        descripcion: `Intereses generados por préstamo ${prestamoId}`,
-        detalles: {
-          prestamo_id: prestamoId,
-          tipo_interes: tipo,
-          fecha_registro: new Date().toISOString()
-        },
-        updated_at: new Date().toISOString()
-      })
+      .insert(insertPayload)
       .select()
       .single()
 
@@ -5464,7 +5472,8 @@ async function handleRefinanciar() {
         interesTotalNuevo, // Usar el nuevo interés total completo
         'anticipado',
         false, // No es nuevo, es actualización por refinanciación
-        true // Es refinanciación, reemplazar el interés en lugar de sumarlo
+        true, // Es refinanciación, reemplazar el interés en lugar de sumarlo
+        prestamo.medio_entrega || null // forma_pago (se mantiene el medio del préstamo)
       )
       console.log('✅ Utilidades_clasificadas actualizadas con nuevo interés total')
     }
@@ -5670,7 +5679,9 @@ async function handleCrearPrestamo() {
         data.id,
         interesTotalCalculado,
         'anticipado',
-        true // esNuevo
+        true, // esNuevo
+        false,
+        formPrestamo.medio_entrega || null // forma_pago para clasificación (medio de entrega del préstamo)
       )
       console.log('✅ Interés anticipado registrado en utilidades_clasificadas:', {
         prestamoId: data.id,

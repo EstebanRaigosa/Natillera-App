@@ -304,12 +304,6 @@
         mode="out-in"
       >
         <div v-show="currentStep === 3" key="step3" class="wizard-step-content space-y-6">
-          <p class="text-sm font-medium text-amber-600 mb-2">{{ steps[2].label }}</p>
-      <div class="relative p-5 sm:p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl border-2 border-amber-100/50 shadow-lg shadow-amber-100/50 hover:shadow-xl hover:shadow-amber-200/50 transition-all duration-300 animate-fade-in-up stagger-5 overflow-hidden">
-        <!-- Decoración de fondo -->
-        <div class="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-amber-200/20 to-orange-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-        
-        <div class="relative">
           <h3 class="font-semibold text-amber-800 flex items-center gap-2.5 mb-5 text-lg">
             <div class="p-1.5 bg-gradient-to-br from-amber-400 to-orange-400 rounded-lg shadow-md">
               <ExclamationTriangleIcon class="w-5 h-5 text-white" />
@@ -373,26 +367,35 @@
                 </div>
 
                 <!-- Tipo de sanción -->
-                <div>
+                <div class="p-4 bg-white/70 rounded-xl border border-amber-200">
                   <label class="label font-semibold text-amber-800 mb-3 block">Tipo de Sanción</label>
-                  <div class="grid grid-cols-2 gap-3">
+                  <div class="grid grid-cols-3 gap-1.5 sm:gap-3">
                     <button 
                       type="button"
                       @click="form.tipo_sancion = 'simple'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', form.tipo_sancion === 'simple' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', form.tipo_sancion === 'simple' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
                     >
-                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="form.tipo_sancion === 'simple' ? 'text-amber-600' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Simple</p>
-                      <p class="text-xs text-gray-500">Valor fijo</p>
+                      <CurrencyDollarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="form.tipo_sancion === 'simple' ? 'text-amber-600' : 'text-gray-400'" />
+                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Simple</p>
+                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Valor fijo</p>
                     </button>
                     <button 
                       type="button"
                       @click="form.tipo_sancion = 'escalonada'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', form.tipo_sancion === 'escalonada' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', form.tipo_sancion === 'escalonada' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
                     >
-                      <ChartBarIcon class="w-5 h-5 mb-1" :class="form.tipo_sancion === 'escalonada' ? 'text-amber-600' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
-                      <p class="text-xs text-gray-500">Progresiva</p>
+                      <ChartBarIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="form.tipo_sancion === 'escalonada' ? 'text-amber-600' : 'text-gray-400'" />
+                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Escalonada</p>
+                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Progresiva</p>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="form.tipo_sancion = 'diaria'"
+                      :class="['py-3 px-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-left transition-all min-w-0 min-h-[72px] sm:min-h-0', form.tipo_sancion === 'diaria' ? 'border-amber-500 bg-amber-50' : 'border-amber-200 bg-white hover:border-amber-300']"
+                    >
+                      <ClockIcon class="w-4 h-4 sm:w-5 sm:h-5 mb-0.5 sm:mb-1 flex-shrink-0" :class="form.tipo_sancion === 'diaria' ? 'text-amber-600' : 'text-gray-400'" />
+                      <p class="font-semibold text-xs sm:text-sm text-gray-800 truncate">Diaria</p>
+                      <p class="text-[10px] sm:text-xs text-gray-500 hidden sm:block">Por día de mora</p>
                     </button>
                   </div>
                 </div>
@@ -438,21 +441,61 @@
                   </div>
                 </div>
 
+                <!-- Diaria -->
+                <div v-if="form.tipo_sancion === 'diaria'" class="space-y-4">
+                  <div class="p-4 bg-white/70 rounded-xl border border-amber-200">
+                    <label class="label font-semibold text-amber-800">Valor por día de mora</label>
+                    <p class="text-xs text-gray-500 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
+                    <div class="relative mt-2">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input 
+                        :value="formatearValorMulta(form.valor_multa_diaria)"
+                        @input="handleValorMultaDiariaInput"
+                        type="text" 
+                        inputmode="numeric"
+                        class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30 pl-8 w-full max-w-[200px]" 
+                        placeholder="500"
+                      />
+                    </div>
+                  </div>
+                  <!-- Resumen Diaria -->
+                  <div class="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                    <div class="flex items-start gap-2">
+                      <ClockIcon class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div class="flex-1">
+                        <p class="text-xs font-semibold text-amber-800 mb-1">Resumen: Sanción Diaria</p>
+                        <p class="text-xs text-amber-700">
+                          Se sumará <strong>${{ formatMoney(form.valor_multa_diaria) }}</strong> por cada día de mora después del vencimiento (y días de gracia).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Info adicional -->
+                  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-start gap-2">
+                      <InformationCircleIcon class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p class="text-xs text-blue-700">
+                        💡 Puedes configurar <strong>devolución por mora excesiva</strong> en la sección de Configuración → Sanciones por mora.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Escalonada -->
                 <div v-if="form.tipo_sancion === 'escalonada'" class="space-y-4">
                   <!-- Tabla niveles -->
                   <div class="p-4 bg-white/70 rounded-xl border border-amber-200">
                     <label class="label font-semibold text-amber-800 mb-3 block">Intereses por cuotas vencidas</label>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                       <div v-for="(nivel, index) in form.niveles_sancion" :key="index" class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600 w-20">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
-                        <div class="relative flex-1 max-w-[120px]">
+                        <span class="text-sm text-gray-600 w-20 flex-shrink-0">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                        <div class="relative flex-1 min-w-0">
                           <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
                           <input 
                             v-model.number="nivel.valor" 
                             type="number" 
                             min="0" 
-                            class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30 pl-7 py-1.5 text-sm" 
+                            class="input-field bg-white/90 border-amber-200 focus:border-amber-400 focus:ring-amber-400/30 pl-7 py-2.5 sm:py-1.5 text-base sm:text-sm w-full" 
                           />
                         </div>
                         <button 
@@ -509,8 +552,6 @@
               </div>
             </Transition>
           </div>
-        </div>
-      </div>
         </div>
       </Transition>
 
@@ -753,6 +794,7 @@ import {
   CurrencyDollarIcon,
   CalendarDaysIcon,
   ChartBarIcon,
+  ClockIcon,
   PlusIcon,
   XMarkIcon,
   InformationCircleIcon,
@@ -855,8 +897,9 @@ const form = reactive({
   cuotas_automaticas: true,
   // Multas
   multa_activa: true,
-  tipo_sancion: 'simple', // 'simple' o 'escalonada'
+  tipo_sancion: 'simple', // 'simple', 'escalonada' o 'diaria'
   valor_multa: 5000,
+  valor_multa_diaria: 500,
   dias_gracia: 3,
   niveles_sancion: [
     { cuotas: 1, valor: 4000 },
@@ -918,6 +961,19 @@ function handleValorMultaInput(event) {
   }
 }
 
+// Manejar input del valor de multa diaria
+function handleValorMultaDiariaInput(event) {
+  const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
+  if (valor === '') {
+    form.valor_multa_diaria = 0
+  } else {
+    const numero = parseInt(valor, 10)
+    if (!isNaN(numero) && numero >= 0) {
+      form.valor_multa_diaria = numero
+    }
+  }
+}
+
 // Funciones para manejar niveles de sanción escalonada
 function agregarNivel() {
   const ultimoNivel = form.niveles_sancion[form.niveles_sancion.length - 1]
@@ -963,8 +1019,9 @@ async function handleSubmit() {
     dias_gracia: form.dias_gracia,
     sanciones: {
       activa: true, // Esto activa las multas en la configuración
-      tipo: form.tipo_sancion, // Usar el tipo seleccionado
+      tipo: form.tipo_sancion, // 'simple', 'escalonada' o 'diaria'
       valorFijo: form.tipo_sancion === 'simple' ? form.valor_multa : (form.niveles_sancion[0]?.valor || 0),
+      valorPorDia: form.tipo_sancion === 'diaria' ? form.valor_multa_diaria : undefined,
       niveles: form.tipo_sancion === 'escalonada' ? form.niveles_sancion : [
         { cuotas: 1, valor: form.valor_multa },
         { cuotas: 2, valor: form.valor_multa },

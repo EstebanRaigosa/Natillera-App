@@ -927,10 +927,14 @@
       </template>
     </div>
 
-    <!-- Modal de confirmación para eliminar natillera -->
-    <div v-if="natilleraAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalEliminacion"></div>
-      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden">
+    <!-- Modal de confirmación para eliminar natillera: en iOS ModalWrapper; en Android estructura actual -->
+    <ModalWrapper
+      :show="!!natilleraAEliminar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
+      @close="cerrarModalEliminacion"
+    >
         <!-- Animación de fondo sutil durante la eliminación -->
         <div v-if="natillerasStore.loading" class="absolute inset-0 bg-gradient-to-br from-red-50/30 via-red-100/20 to-red-50/30"></div>
         
@@ -1004,11 +1008,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
-    <!-- Animación de carga mientras se verifica el modal -->
+    <!-- Pantalla de carga: en iPhone/Safari LoadingScreenIos; en Android la original -->
+    <LoadingScreenIos
+      v-if="verificandoModal && !eliminandoNatillera && isIos"
+      :show="true"
+      :message="mensajeCargaActual"
+      title="Cargando panel"
+    />
     <Transition
+      v-else-if="verificandoModal && !eliminandoNatillera"
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="opacity-0"
       enter-to-class="opacity-100"
@@ -1017,7 +1027,6 @@
       leave-to-class="opacity-0"
     >
       <div 
-        v-if="verificandoModal && !eliminandoNatillera" 
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
         @click.stop.prevent
         @wheel.stop.prevent
@@ -1177,6 +1186,9 @@ import { useColaboradoresStore } from '../stores/colaboradores'
 import { supabase } from '../lib/supabase'
 import { getNatilleraAvatarUrl, getAvatarUrl } from '../utils/avatars'
 import { formatDate } from '../utils/formatDate'
+import LoadingScreenIos from '../components/LoadingScreenIos.vue'
+import ModalWrapper from '../components/ModalWrapper.vue'
+import { useIsIos } from '../composables/useIsIos'
 import { 
   BanknotesIcon, 
   UsersIcon, 
@@ -1205,6 +1217,7 @@ const natillerasStore = useNatillerasStore()
 const usersStore = useUsersStore()
 const notificationStore = useNotificationStore()
 const colaboradoresStore = useColaboradoresStore()
+const isIos = useIsIos()
 
 const totalRecaudado = ref(0)
 const filtro = ref('todas')

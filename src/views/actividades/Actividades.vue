@@ -1781,6 +1781,39 @@
             </div>
           </div>
 
+          <!-- Forma de pago del premio (solo rifas) -->
+          <div>
+            <label class="label mb-2 block">Forma de pago del premio</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                @click="formLiquidar.forma_pago = 'efectivo'"
+                :class="[
+                  'relative p-3 rounded-xl border-2 transition-all duration-200',
+                  formLiquidar.forma_pago === 'efectivo'
+                    ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-green-50 shadow-md'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                ]"
+              >
+                <span class="text-2xl">💵</span>
+                <span :class="formLiquidar.forma_pago === 'efectivo' ? 'font-semibold text-emerald-700' : 'text-gray-600'">Efectivo</span>
+              </button>
+              <button
+                type="button"
+                @click="formLiquidar.forma_pago = 'transferencia'"
+                :class="[
+                  'relative p-3 rounded-xl border-2 transition-all duration-200',
+                  formLiquidar.forma_pago === 'transferencia'
+                    ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                ]"
+              >
+                <span class="text-2xl">💳</span>
+                <span :class="formLiquidar.forma_pago === 'transferencia' ? 'font-semibold text-blue-700' : 'text-gray-600'">Transferencia</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Número ganador (para mostrar ganador al abrir la rifa liquidada) -->
           <div>
             <label class="label mb-2 block">Número ganador *</label>
@@ -2658,11 +2691,37 @@
           Cancelar
         </button>
         <button
-          @click="confirmarAsignarFaltante"
+          @click="alHacerClicAsignarFaltante"
           :disabled="!socioSeleccionadoParaFaltante || asignandoFaltante"
           class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {{ asignandoFaltante ? 'Asignando...' : 'Asignar números' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación: asignar faltante en todos los meses de la actividad -->
+  <div v-if="modalConfirmarAsignarFaltanteTodosMeses" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalConfirmarAsignarFaltanteTodosMeses = false"></div>
+    <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+      <h3 class="text-lg font-bold text-gray-800 mb-3">Asignar desde este mes en adelante</h3>
+      <p class="text-gray-600 text-sm mb-6">
+        Se asignará el faltante <strong>{{ faltanteSeleccionado?.nombre }}</strong> al socio seleccionado desde <strong>este mes en adelante</strong> ({{ actividadesDelGrupoDesdeActualEnAdelante.length }} rifa(s)). Los meses anteriores quedarán sin asignar. ¿Desea continuar?
+      </p>
+      <div class="flex gap-3">
+        <button
+          @click="modalConfirmarAsignarFaltanteTodosMeses = false"
+          class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-xl transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          @click="confirmarAsignarFaltanteTodosMeses"
+          :disabled="asignandoFaltante"
+          class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Aceptar
         </button>
       </div>
     </div>
@@ -2747,6 +2806,7 @@ const modalConfirmarLiquidacionNegativa = ref(false)
 const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganador + ganador
 const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
 const modalAsignarFaltante = ref(false)
+const modalConfirmarAsignarFaltanteTodosMeses = ref(false)
 const faltanteSeleccionado = ref(null)
 const socioSeleccionadoParaFaltante = ref('')
 const asignandoFaltante = ref(false)
@@ -2763,7 +2823,8 @@ const formVentaRifa = reactive({
 })
 const formLiquidar = reactive({
   premioEntregado: 0,
-  numeroGanador: '' // Número ganador de la rifa (00-99) para mostrar en modal ganador
+  numeroGanador: '', // Número ganador de la rifa (00-99) para mostrar en modal ganador
+  forma_pago: 'efectivo' // Forma de pago con la que se entrega el premio (efectivo | transferencia)
 })
 const formPagarRifa = reactive({
   numero: '',
@@ -2783,6 +2844,7 @@ useBodyScrollLock(modalConfirmarLiquidacionNegativa)
 useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
 useBodyScrollLock(modalAsignarFaltante)
+useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
 
 // Opciones para el dropdown de tipo de actividad (ítems estilizados)
 const opcionesTipoActividad = [
@@ -3138,51 +3200,62 @@ const faltantesFiltrados = computed(() => {
   return faltantes.value.filter(faltante => faltanteTieneNumero(faltante))
 })
 
-// Computed para obtener socios sin números asignados
+// Actividades del mismo grupo que la actividad seleccionada (todas las rifas del grupo)
+const actividadesDeLaSerieActual = computed(() => {
+  const a = actividadSeleccionada.value
+  if (!a?.id) return []
+  const idActual = String(a.id)
+  const agrupadas = actividadesAgrupadas.value
+  for (const item of agrupadas) {
+    if (item.tipo === 'grupo' && Array.isArray(item.actividades) && item.actividades.length > 0) {
+      const estaEnEsteGrupo = item.actividades.some(act => act && String(act.id) === idActual)
+      if (estaEnEsteGrupo) return [...item.actividades]
+    }
+    if (item.tipo === 'individual' && item.actividad && String(item.actividad.id) === idActual) return [a]
+  }
+  return [a]
+})
+
+// Actividades del grupo desde la actual en adelante (por fecha: anio_pago, mes_pago). Hacia atrás no se asignan.
+const actividadesDelGrupoDesdeActualEnAdelante = computed(() => {
+  const lista = actividadesDeLaSerieActual.value
+  if (lista.length <= 1) return lista
+  const a = actividadSeleccionada.value
+  if (!a?.id) return [a].filter(Boolean)
+  const ordenadas = [...lista].sort((x, y) => {
+    const anioX = Number(x.anio_pago) || 0
+    const anioY = Number(y.anio_pago) || 0
+    if (anioX !== anioY) return anioX - anioY
+    return (Number(x.mes_pago) || 0) - (Number(y.mes_pago) || 0)
+  })
+  const idx = ordenadas.findIndex(act => String(act.id) === String(a.id))
+  if (idx < 0) return [a]
+  return ordenadas.slice(idx)
+})
+
+// Computed para obtener socios sin números asignados (en esta actividad)
+// Incluye tanto socios sin registro en la actividad como socios con registro pero 0 números
 const sociosSinNumeros = computed(() => {
   if (!actividadSeleccionada.value || actividadSeleccionada.value.tipo !== 'rifa' || actividadSeleccionada.value.tipo_rifa !== 'aleatoria') {
     return []
   }
   
-  // Obtener IDs de socios que ya tienen números asignados
-  // Convertir todas las claves a strings para comparación consistente
+  // Obtener IDs de socios que ya tienen números asignados en esta actividad
   const sociosConNumeros = new Set(
     Object.keys(numerosAsignadosPorSocio.value).map(id => String(id))
   )
   
-  // Obtener IDs de socios que ya tienen registro en socios_actividad para esta actividad
-  const sociosConRegistroEnActividad = new Set(
-    sociosActividad.value.map(sa => String(sa.socio_natillera_id))
-  )
-  
-  // Obtener todos los socios de la natillera (de socios_natillera)
+  // Obtener todos los socios de la natillera (socios_natillera activos)
   const todosLosSocios = socios.value || []
   
-  // Filtrar socios que:
-  // 1. Están en la natillera (socios_natillera)
-  // 2. NO tienen registro en socios_actividad para esta actividad específica
-  // 3. NO tienen números asignados
+  // Elegibles: socios de la natillera que NO tienen números asignados en esta actividad.
+  // No excluimos por tener registro en socios_actividad: un socio puede tener registro y 0 números.
   const sociosElegibles = todosLosSocios.filter(socio => {
     const socioId = String(socio.id)
-    
-    // Excluir si ya tiene registro en socios_actividad para esta actividad
-    if (sociosConRegistroEnActividad.has(socioId)) {
-      return false
-    }
-    
-    // Excluir si ya tiene números asignados
-    const tieneNumerosEnMapa = sociosConNumeros.has(socioId)
-    if (tieneNumerosEnMapa) {
-      return false
-    }
-    
-    // Verificar directamente si tiene números asignados
+    if (sociosConNumeros.has(socioId)) return false
     const numerosDelSocio = getNumerosAsignadosSocio(socio.id)
-    if (numerosDelSocio.length > 0) {
-      return false
-    }
-    
-    return true // Este socio es elegible
+    if (numerosDelSocio.length > 0) return false
+    return true
   })
   
   // Convertir a formato socios_actividad para mantener consistencia en el template
@@ -4103,6 +4176,7 @@ function abrirModalLiquidar() {
   }
   formLiquidar.premioEntregado = 0
   formLiquidar.numeroGanador = ''
+  formLiquidar.forma_pago = 'efectivo'
   modalLiquidarActividad.value = true
 }
 
@@ -4192,40 +4266,73 @@ async function confirmarLiquidacion() {
 
     if (errorActividad) throw errorActividad
 
-    // 2. Guardar o actualizar en utilidades_clasificadas como tipo "rifas"
-    // Primero verificar si ya existe un registro para esta actividad
-    const { data: utilidadExistente, error: errorBuscar } = await supabase
+    // 2. Utilidad de la rifa repartida por forma de pago (según cómo se recaudó)
+    // Obtener recaudo por forma_pago desde socios_actividad de esta actividad
+    const { data: sociosActividadRifa } = await supabase
+      .from('socios_actividad')
+      .select('valor_pagado, forma_pago')
+      .eq('actividad_id', actividadSeleccionada.value.id)
+      .gt('valor_pagado', 0)
+
+    let recaudoEfectivo = 0
+    let recaudoTransferencia = 0
+    let recaudoOtro = 0
+    ;(sociosActividadRifa || []).forEach((sa) => {
+      const v = parseFloat(sa.valor_pagado) || 0
+      const fp = (sa.forma_pago || '').toLowerCase().trim()
+      if (fp === 'transferencia') recaudoTransferencia += v
+      else if (fp === 'efectivo') recaudoEfectivo += v
+      else recaudoOtro += v
+    })
+    const totalRecaudoFormaPago = recaudoEfectivo + recaudoTransferencia + recaudoOtro
+
+    // Eliminar registros previos de utilidad de esta rifa (pueden ser uno o varios por forma_pago)
+    const { error: errorDelete } = await supabase
       .from('utilidades_clasificadas')
-      .select('id, monto')
+      .delete()
       .eq('natillera_id', actividadSeleccionada.value.natillera_id)
       .eq('tipo', 'rifas')
       .eq('id_actividad', actividadSeleccionada.value.id)
-      .maybeSingle()
+    if (errorDelete) throw errorDelete
 
-    if (errorBuscar) throw errorBuscar
+    const detallesComunes = {
+      actividad_id: actividadSeleccionada.value.id,
+      total_recaudado: totalRecaudado,
+      premio_entregado: gastosFinal,
+      ganador_es_faltante: ganadorEsFaltante,
+      fecha_liquidacion: new Date().toISOString()
+    }
 
-    if (utilidadExistente) {
-      // Actualizar el registro existente (utilidadFinal = totalRecaudado cuando ganó Faltante)
-      const { error: errorUpdate } = await supabase
-        .from('utilidades_clasificadas')
-        .update({
-          monto: utilidadFinal,
+    // Repartir utilidad por forma de pago (proporcional al recaudo) o un solo registro si no hay desglose
+    if (totalRecaudoFormaPago > 0 && utilidadFinal > 0) {
+      let uE = totalRecaudoFormaPago ? (utilidadFinal * recaudoEfectivo) / totalRecaudoFormaPago : 0
+      let uT = totalRecaudoFormaPago ? (utilidadFinal * recaudoTransferencia) / totalRecaudoFormaPago : 0
+      let uO = utilidadFinal - uE - uT
+      uE = Math.round(uE * 100) / 100
+      uT = Math.round(uT * 100) / 100
+      uO = Math.round(utilidadFinal * 100) / 100 - uE - uT // Ajuste para que sumen exactamente utilidadFinal
+      const filas = []
+      if (uE > 0) filas.push({ forma_pago: 'efectivo', monto: uE })
+      if (uT > 0) filas.push({ forma_pago: 'transferencia', monto: uT })
+      if (uO > 0) filas.push({ forma_pago: null, monto: uO })
+      if (filas.length === 0) filas.push({ forma_pago: null, monto: utilidadFinal })
+      for (const f of filas) {
+        const payload = {
+          natillera_id: actividadSeleccionada.value.natillera_id,
+          tipo: 'rifas',
+          id_actividad: actividadSeleccionada.value.id,
+          monto: f.monto,
+          fecha_cierre: null,
           descripcion: `Utilidad de rifa: ${actividadSeleccionada.value.descripcion}`,
-          detalles: {
-            actividad_id: actividadSeleccionada.value.id,
-            total_recaudado: totalRecaudado,
-            premio_entregado: gastosFinal,
-            ganador_es_faltante: ganadorEsFaltante,
-            fecha_liquidacion: new Date().toISOString()
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', utilidadExistente.id)
-
-      if (errorUpdate) throw errorUpdate
-    } else {
-      // Crear nuevo registro
-      const { error: errorInsert } = await supabase
+          detalles: detallesComunes
+        }
+        if (f.forma_pago != null) payload.forma_pago = f.forma_pago
+        const { error: errIns } = await supabase.from('utilidades_clasificadas').insert(payload)
+        if (errIns) throw errIns
+      }
+    } else if (utilidadFinal !== 0) {
+      // Sin desglose por forma de pago (ej. rifa manual sin socios_actividad o utilidad negativa)
+      const { error: errIns } = await supabase
         .from('utilidades_clasificadas')
         .insert({
           natillera_id: actividadSeleccionada.value.natillera_id,
@@ -4234,19 +4341,28 @@ async function confirmarLiquidacion() {
           monto: utilidadFinal,
           fecha_cierre: null,
           descripcion: `Utilidad de rifa: ${actividadSeleccionada.value.descripcion}`,
-          detalles: {
-            actividad_id: actividadSeleccionada.value.id,
-            total_recaudado: totalRecaudado,
-            premio_entregado: gastosFinal,
-            ganador_es_faltante: ganadorEsFaltante,
-            fecha_liquidacion: new Date().toISOString()
-          }
+          detalles: detallesComunes
         })
-
-      if (errorInsert) throw errorInsert
+      if (errIns) throw errIns
     }
 
-    // 3. Cerrar modales y recargar actividades
+    // 3. Registrar salida del fondo por el premio entregado (forma de pago seleccionada en el modal)
+    if (gastosFinal > 0) {
+      const formaPagoPremio = (formLiquidar.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo'
+      const { error: errorMov } = await supabase
+        .from('movimientos_fondo')
+        .insert({
+          natillera_id: actividadSeleccionada.value.natillera_id,
+          tipo: 'salida',
+          monto: gastosFinal,
+          forma_pago: formaPagoPremio,
+          descripcion: `Premio rifa liquidada: ${actividadSeleccionada.value.descripcion || 'Rifa'}`,
+          fecha: new Date().toISOString().slice(0, 10)
+        })
+      if (errorMov) throw errorMov
+    }
+
+    // 4. Cerrar modales y recargar actividades
     modalLiquidarActividad.value = false
     modalConfirmarLiquidacionNegativa.value = false
     modalDetalleActividad.value = false
@@ -5152,12 +5268,43 @@ async function handleCrearActividad() {
             .single()
           if (errFallback) throw errFallback
           actividadesCreadas.push(actFallback)
+          if (formActividad.tipoProceso === 'liquidar' && formActividad.tipo !== 'rifa' && (actFallback.utilidad || 0) !== 0) {
+            try {
+              await supabase.from('utilidades_clasificadas').insert({
+                natillera_id: id,
+                tipo: formActividad.tipo,
+                id_actividad: actFallback.id,
+                monto: actFallback.utilidad,
+                fecha_cierre: null,
+                descripcion: `Utilidad de ${formActividad.tipo}: ${descripcionActividad}`,
+                detalles: { actividad_id: actFallback.id }
+              })
+            } catch (eUtil) {
+              console.warn('Error registrando utilidad de actividad en utilidades_clasificadas:', eUtil)
+            }
+          }
         } else {
           throw errorActividad
         }
       } else {
         console.log('✅ Actividad creada:', actividad.id, 'Serie ID:', actividad.actividad_serie_id)
         actividadesCreadas.push(actividad)
+        // Si se creó liquidada y no es rifa, registrar utilidad en utilidades_clasificadas (indicador lee solo de esta tabla)
+        if (formActividad.tipoProceso === 'liquidar' && formActividad.tipo !== 'rifa' && (actividad.utilidad || 0) !== 0) {
+          try {
+            await supabase.from('utilidades_clasificadas').insert({
+              natillera_id: id,
+              tipo: formActividad.tipo,
+              id_actividad: actividad.id,
+              monto: actividad.utilidad,
+              fecha_cierre: null,
+              descripcion: `Utilidad de ${formActividad.tipo}: ${descripcionActividad}`,
+              detalles: { actividad_id: actividad.id }
+            })
+          } catch (eUtil) {
+            console.warn('Error registrando utilidad de actividad en utilidades_clasificadas:', eUtil)
+          }
+        }
       }
 
       // Si es actividad en curso y NO es rifa manual, crear los registros en socios_actividad
@@ -5634,8 +5781,23 @@ async function abrirModalAsignarFaltante(faltante) {
   modalAsignarFaltante.value = true
 }
 
-// Función para confirmar asignación de faltante a socio
-async function confirmarAsignarFaltante() {
+// Al hacer clic en "Asignar números": si hay varios meses, mostrar confirmación; si no, asignar solo en este mes
+function alHacerClicAsignarFaltante() {
+  if (actividadesDeLaSerieActual.value.length > 1) {
+    modalConfirmarAsignarFaltanteTodosMeses.value = true
+  } else {
+    confirmarAsignarFaltante(false)
+  }
+}
+
+// Cerrar modal de confirmación y ejecutar asignación en todos los meses
+function confirmarAsignarFaltanteTodosMeses() {
+  modalConfirmarAsignarFaltanteTodosMeses.value = false
+  confirmarAsignarFaltante(true)
+}
+
+// Función para confirmar asignación de faltante a socio (asignarEnTodosLosMeses: true = en todas las actividades del grupo)
+async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
   if (!socioSeleccionadoParaFaltante.value || !faltanteSeleccionado.value) {
     notificationStore.error('Debe seleccionar un socio', 'Error')
     return
@@ -5645,15 +5807,21 @@ async function confirmarAsignarFaltante() {
   try {
     const socioId = socioSeleccionadoParaFaltante.value
     const numerosFaltante = faltanteSeleccionado.value.numeros
+    const nombreFaltante = faltanteSeleccionado.value.nombre
 
-    // Obtener los IDs de los números de rifa desde la base de datos
+    // Si hay grupo: asignar solo desde la actividad actual en adelante (febrero en adelante, no hacia atrás)
+    const actividadesAAsignar = asignarEnTodosLosMeses && actividadesDeLaSerieActual.value.length > 1
+      ? actividadesDelGrupoDesdeActualEnAdelante.value
+      : [actividadSeleccionada.value]
+    const actividadesIds = actividadesAAsignar.map(a => a.id)
+
+    // Todos los números de rifa que son este faltante (por nombre) en las actividades del grupo, sin socio asignado
     const { data: numerosRifaData, error: errorFetch } = await supabase
       .from('numeros_rifa')
-      .select('id, numero')
-      .eq('actividad_id', actividadSeleccionada.value.id)
-      .in('numero', numerosFaltante.map(n => n.numero))
+      .select('id, numero, actividad_id')
+      .in('actividad_id', actividadesIds)
       .is('socio_vendedor_id', null)
-      .eq('nombre_comprador', faltanteSeleccionado.value.nombre)
+      .eq('nombre_comprador', nombreFaltante)
 
     if (errorFetch) throw errorFetch
 
@@ -5674,31 +5842,42 @@ async function confirmarAsignarFaltante() {
 
     if (errorUpdate) throw errorUpdate
 
-    // Verificar si el socio tiene un registro en socios_actividad
-    const socioActividad = sociosActividad.value.find(sa => sa.socio_natillera_id === socioId)
-    
-    if (!socioActividad) {
-      // Si no existe, crear el registro
-      const valorTotal = numerosFaltante.reduce((sum, n) => sum + (n.valor || 0), 0)
-      
-      const { error: errorInsert } = await supabase
+    // Asegurar registro en socios_actividad por cada actividad donde se asignaron números
+    const actividadesActualizadas = [...new Set(numerosRifaData.map(n => n.actividad_id))]
+    const valorTotalFaltante = numerosFaltante.reduce((sum, n) => sum + (n.valor || 0), 0)
+    const valorPagadoFaltanteActual = numerosFaltante.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0)
+    for (const actividadId of actividadesActualizadas) {
+      const actividad = actividadesAAsignar.find(a => a.id === actividadId)
+      if (!actividad) continue
+      const { data: sociosActividadData } = await supabase
+        .from('socios_actividad')
+        .select('id')
+        .eq('actividad_id', actividadId)
+        .eq('socio_natillera_id', socioId)
+        .maybeSingle()
+      if (sociosActividadData) continue // ya tiene registro
+      const esActividadActual = actividadId === actividadSeleccionada.value.id
+      const valorPagado = esActividadActual ? valorPagadoFaltanteActual : 0
+      await supabase
         .from('socios_actividad')
         .insert({
-          actividad_id: actividadSeleccionada.value.id,
+          actividad_id: actividadId,
           socio_natillera_id: socioId,
-          valor_asignado: valorTotal,
-          valor_pagado: numerosFaltante.filter(n => n.estado === 'pagado').reduce((sum, n) => sum + (n.valor || 0), 0),
+          valor_asignado: valorTotalFaltante,
+          valor_pagado: valorPagado,
           estado: 'pendiente',
-          fecha_limite_pago: actividadSeleccionada.value.fecha_limite_pago
+          fecha_limite_pago: actividad.fecha_limite_pago
         })
-
-      if (errorInsert) throw errorInsert
     }
 
-    notificationStore.success(`Números asignados correctamente al socio`, 'Éxito')
+    const mensaje = asignarEnTodosLosMeses && actividadesAAsignar.length > 1
+      ? `Números asignados al socio en los ${actividadesAAsignar.length} meses`
+      : 'Números asignados correctamente al socio'
+    notificationStore.success(mensaje, 'Éxito')
 
-    // Cerrar modal y recargar datos
+    // Cerrar modales y recargar datos
     modalAsignarFaltante.value = false
+    modalConfirmarAsignarFaltanteTodosMeses.value = false
     faltanteSeleccionado.value = null
     socioSeleccionadoParaFaltante.value = ''
 
@@ -5718,6 +5897,7 @@ watch(modalDetalleActividad, (isOpen) => {
     numerosRifa.value = {}
     numeroSeleccionado.value = null
     modalAsignarFaltante.value = false
+    modalConfirmarAsignarFaltanteTodosMeses.value = false
     faltanteSeleccionado.value = null
     socioSeleccionadoParaFaltante.value = ''
   }
