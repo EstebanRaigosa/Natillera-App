@@ -894,15 +894,169 @@
                 </template>
                 
                 <template v-else>
-                  <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
-                    <div class="bg-gray-50 rounded-lg p-3">
-                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Cuota</p>
-                      <p class="font-bold text-gray-800 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota) }}</p>
+                  <!-- Badge de estado de pago destacado -->
+                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="pt-3 border-t border-gray-200 mb-3">
+                    <div 
+                      :class="[
+                        'inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg',
+                        (comprobanteEncontrado.valor_pagado_completo || 0) < (comprobanteEncontrado.total_a_pagar_completo || 0)
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                      ]"
+                    >
+                      <CheckCircleIcon class="w-4 h-4" />
+                      <span>{{ (comprobanteEncontrado.valor_pagado_completo || 0) < (comprobanteEncontrado.total_a_pagar_completo || 0) ? 'Pago Parcial' : 'Pago Completo' }}</span>
                     </div>
-                    <div class="bg-green-50 rounded-lg p-3">
-                      <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Valor Pagado</p>
-                      <p class="font-bold text-green-600 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                  </div>
+                  
+                  <!-- Formato tipo resta matemática - Diseño moderno y compacto -->
+                  <div v-if="comprobanteEncontrado.total_a_pagar_completo && comprobanteEncontrado.valor_pagado_completo" class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 border border-slate-200 shadow-lg">
+                    <!-- Línea decorativa superior -->
+                    <div 
+                      :class="[
+                        'absolute top-0 left-0 right-0 h-1',
+                        (comprobanteEncontrado.valor_pagado_completo || 0) < (comprobanteEncontrado.total_a_pagar_completo || 0)
+                          ? 'bg-gradient-to-r from-orange-400 to-amber-400'
+                          : 'bg-gradient-to-r from-green-400 to-emerald-400'
+                      ]"
+                    ></div>
+                    
+                    <div class="p-4 space-y-3">
+                      <!-- Total a Pagar -->
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Total a Pagar</span>
+                        <span class="text-2xl font-bold text-slate-900">${{ formatMoney(comprobanteEncontrado.total_a_pagar_completo || comprobanteEncontrado.valor_cuota || 0) }}</span>
+                      </div>
+                      
+                      <!-- Línea divisoria con signo menos -->
+                      <div class="relative flex items-center py-1">
+                        <div class="flex-1 border-t-2 border-dashed border-slate-300"></div>
+                        <span class="px-3 text-xl font-light text-slate-400">−</span>
+                        <div class="flex-1 border-t-2 border-dashed border-slate-300"></div>
+                      </div>
+                      
+                      <!-- Valor Pagado -->
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Valor Pagado</span>
+                        <span class="text-2xl font-bold text-green-600">${{ formatMoney(comprobanteEncontrado.valor_pagado_completo || comprobanteEncontrado.valor_pagado || 0) }}</span>
+                      </div>
+                      
+                      <!-- Línea divisoria final -->
+                      <div class="border-t-2 border-slate-300"></div>
+                      
+                      <!-- Valor Restante -->
+                      <div class="flex items-center justify-between pt-1">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Valor Restante</span>
+                        <span 
+                          :class="[
+                            'text-2xl font-extrabold',
+                            (comprobanteEncontrado.valor_pagado_completo || 0) < (comprobanteEncontrado.total_a_pagar_completo || 0)
+                              ? 'text-orange-600'
+                              : 'text-green-600'
+                          ]"
+                        >
+                          ${{ formatMoney(Math.max(0, (comprobanteEncontrado.total_a_pagar_completo || 0) - (comprobanteEncontrado.valor_pagado_completo || 0))) }}
+                        </span>
+                      </div>
                     </div>
+                  </div>
+                  
+                  <!-- Fallback si no hay total_a_pagar_completo calculado -->
+                  <div v-else class="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200 shadow-sm">
+                      <p class="text-xs text-slate-600 mb-1.5 uppercase tracking-wide font-semibold">Total a Pagar</p>
+                      <p class="font-bold text-slate-900 text-lg">${{ formatMoney(comprobanteEncontrado.valor_cuota || 0) }}</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 shadow-sm">
+                      <p class="text-xs text-green-700 mb-1.5 uppercase tracking-wide font-semibold">Total Pagado</p>
+                      <p class="font-bold text-green-700 text-lg">${{ formatMoney(comprobanteEncontrado.valor_pagado || 0) }}</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Desglose del total a pagar (desplegable) -->
+                  <div v-if="comprobanteEncontrado.desglose_a_pagar && (comprobanteEncontrado.desglose_a_pagar.actividades > 0 || comprobanteEncontrado.desglose_a_pagar.sancion > 0 || comprobanteEncontrado.desglose_a_pagar.prestamos > 0)" class="pt-3 border-t border-gray-200">
+                    <button
+                      @click="desgloseAPagarAbierto = !desgloseAPagarAbierto"
+                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-slate-50 transition-all duration-200 border border-transparent hover:border-slate-200"
+                    >
+                      <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Desglose del Total a Pagar</span>
+                      <ChevronDownIcon 
+                        :class="[
+                          'w-4 h-4 text-slate-400 transition-transform duration-200',
+                          desgloseAPagarAbierto ? 'transform rotate-180' : ''
+                        ]"
+                      />
+                    </button>
+                    <Transition
+                      enter-active-class="transition duration-200 ease-out"
+                      enter-from-class="opacity-0 transform -translate-y-2"
+                      enter-to-class="opacity-100 transform translate-y-0"
+                      leave-active-class="transition duration-150 ease-in"
+                      leave-from-class="opacity-100 transform translate-y-0"
+                      leave-to-class="opacity-0 transform -translate-y-2"
+                    >
+                      <div v-if="desgloseAPagarAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-slate-200">
+                        <div v-if="comprobanteEncontrado.desglose_a_pagar.cuota > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Cuota</span>
+                          <span class="font-bold text-slate-800">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.cuota) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_a_pagar.sancion > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Sanciones</span>
+                          <span class="font-bold text-red-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.sancion) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_a_pagar.actividades > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Actividades</span>
+                          <span class="font-bold text-blue-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.actividades) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_a_pagar.prestamos > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Préstamos</span>
+                          <span class="font-bold text-amber-600">${{ formatMoney(comprobanteEncontrado.desglose_a_pagar.prestamos) }}</span>
+                        </div>
+                      </div>
+                    </Transition>
+                  </div>
+                  
+                  <!-- Desglose del total pagado (desplegable) -->
+                  <div v-if="comprobanteEncontrado.desglose_pagado && (comprobanteEncontrado.desglose_pagado.actividades > 0 || comprobanteEncontrado.desglose_pagado.sancion > 0 || comprobanteEncontrado.desglose_pagado.prestamos > 0)" class="pt-3 border-t border-gray-200">
+                    <button
+                      @click="desglosePagadoAbierto = !desglosePagadoAbierto"
+                      class="w-full flex items-center justify-between text-left focus:outline-none rounded-xl p-3 hover:bg-green-50 transition-all duration-200 border border-transparent hover:border-green-200"
+                    >
+                      <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Desglose del Pago</span>
+                      <ChevronDownIcon 
+                        :class="[
+                          'w-4 h-4 text-slate-400 transition-transform duration-200',
+                          desglosePagadoAbierto ? 'transform rotate-180' : ''
+                        ]"
+                      />
+                    </button>
+                    <Transition
+                      enter-active-class="transition duration-200 ease-out"
+                      enter-from-class="opacity-0 transform -translate-y-2"
+                      enter-to-class="opacity-100 transform translate-y-0"
+                      leave-active-class="transition duration-150 ease-in"
+                      leave-from-class="opacity-100 transform translate-y-0"
+                      leave-to-class="opacity-0 transform -translate-y-2"
+                    >
+                      <div v-if="desglosePagadoAbierto" class="mt-2 ml-2 space-y-2 pl-4 border-l-2 border-green-200">
+                        <div v-if="comprobanteEncontrado.desglose_pagado.cuota > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Cuota</span>
+                          <span class="font-bold text-slate-800">${{ formatMoney(comprobanteEncontrado.desglose_pagado.cuota) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_pagado.sancion > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Sanciones</span>
+                          <span class="font-bold text-red-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.sancion) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_pagado.actividades > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Actividades</span>
+                          <span class="font-bold text-blue-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.actividades) }}</span>
+                        </div>
+                        <div v-if="comprobanteEncontrado.desglose_pagado.prestamos > 0" class="flex items-center justify-between text-sm py-1">
+                          <span class="text-slate-600 font-medium">Préstamos</span>
+                          <span class="font-bold text-amber-600">${{ formatMoney(comprobanteEncontrado.desglose_pagado.prestamos) }}</span>
+                        </div>
+                      </div>
+                    </Transition>
                   </div>
                   
                   <div class="pt-3 border-t border-gray-200">
@@ -2869,6 +3023,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   ChevronDownIcon,
+  ChevronUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   UserIcon,
@@ -2945,6 +3100,8 @@ const codigoBusqueda = ref('')
 const comprobanteEncontrado = ref(null)
 const infoComprobanteAntiguo = ref(null)
 const comprobanteNuevo = ref(null) // Guardar el comprobante nuevo cuando se encuentra uno antiguo
+const desgloseAPagarAbierto = ref(false)
+const desglosePagadoAbierto = ref(false)
 const errorBusqueda = ref('')
 const buscandoComprobante = ref(false)
 const inputBusquedaRef = ref(null)
@@ -3289,6 +3446,285 @@ async function cargarAdminActual() {
 }
 
 // Función para buscar comprobante
+// Función auxiliar para calcular el total a pagar de una cuota incluyendo todos los conceptos
+async function calcularTotalAPagarCompleto(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) {
+    return {
+      totalAPagar: 0,
+      desglose: {
+        cuota: 0,
+        sancion: 0,
+        actividades: 0,
+        prestamos: 0
+      }
+    }
+  }
+
+  // Valor de la cuota base
+  const valorCuota = parseFloat(cuota.valor_cuota || 0)
+  
+  // Sanciones: usar valor_multa si existe, o calcular según estado
+  let valorSancion = 0
+  if (cuota.valor_multa) {
+    valorSancion = parseFloat(cuota.valor_multa || 0)
+  } else if (cuota.estado === 'mora' || cuota.estadoReal === 'mora') {
+    // Si está en mora pero no tiene valor_multa, intentar calcular
+    // Por ahora, usar 0 si no hay valor_multa persistido
+    valorSancion = 0
+  }
+  
+  // Obtener mes y año de la cuota
+  let mesCuota = cuota.mes
+  let anioCuota = cuota.anio
+  let quincenaCuota = cuota.quincena || 0
+  if ((mesCuota == null || anioCuota == null) && cuota.fecha_limite) {
+    const partes = String(cuota.fecha_limite).split('-')
+    if (partes.length >= 2) {
+      anioCuota = parseInt(partes[0], 10)
+      mesCuota = parseInt(partes[1], 10)
+    }
+  }
+
+  let valorActividades = 0
+  let valorPrestamos = 0
+
+  // Calcular actividades pendientes del mismo periodo
+  if (mesCuota != null && anioCuota != null) {
+    try {
+      const { data: sociosActividadData } = await supabase
+        .from('socios_actividad')
+        .select('valor_asignado, valor_pagado, quincena_pago')
+        .eq('socio_natillera_id', cuota.socio_natillera_id)
+        .eq('mes_pago', mesCuota)
+        .eq('anio_pago', anioCuota)
+        .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
+
+      if (sociosActividadData && sociosActividadData.length > 0) {
+        // Filtrar actividades que corresponden a esta cuota (misma quincena)
+        const actividadesDelPeriodo = sociosActividadData.filter(sa => {
+          // Si la cuota es mensual (quincena 0 o null), la actividad debe tener quincena_pago 0 o null
+          // Si la cuota es quincenal, la actividad debe tener la misma quincena
+          const quincenaActividad = sa.quincena_pago ?? 0
+          if (quincenaCuota === 0 || quincenaCuota === null) {
+            return quincenaActividad === 0 || quincenaActividad === null
+          }
+          return quincenaActividad === quincenaCuota
+        })
+
+        // Calcular el valor total de actividades (valor_asignado, no pendiente)
+        valorActividades = actividadesDelPeriodo.reduce((sum, sa) => {
+          const valorAsignado = parseFloat(sa.valor_asignado || 0)
+          return sum + valorAsignado
+        }, 0)
+      }
+    } catch (error) {
+      console.error('Error calculando actividades a pagar:', error)
+    }
+
+    // Calcular cuotas de préstamos pendientes del mismo periodo
+    try {
+      // Obtener préstamos del socio
+      const { data: prestamosSocio } = await supabase
+        .from('prestamos')
+        .select('id, periodicidad')
+        .eq('socio_natillera_id', cuota.socio_natillera_id)
+        .in('estado', ['activo', 'pagado'])
+
+      if (prestamosSocio && prestamosSocio.length > 0) {
+        const prestamoIds = prestamosSocio.map(p => p.id)
+        // Crear un mapa de préstamo_id -> periodicidad para acceso rápido
+        const periodicidadPorPrestamo = new Map(prestamosSocio.map(p => [p.id, p.periodicidad || 'mensual']))
+        
+        // Buscar cuotas de préstamos pendientes que corresponden al periodo de la cuota
+        const fechaInicioPeriodo = new Date(anioCuota, mesCuota - 1, 1)
+        const fechaFinPeriodo = new Date(anioCuota, mesCuota, 0, 23, 59, 59)
+        
+        // Obtener todas las cuotas pendientes de los préstamos
+        const { data: planPagosData } = await supabase
+          .from('plan_pagos_prestamo')
+          .select('valor_cuota, fecha_proyectada, prestamo_id')
+          .in('prestamo_id', prestamoIds)
+          .eq('pagada', false)
+          .gte('fecha_proyectada', fechaInicioPeriodo.toISOString())
+          .lte('fecha_proyectada', fechaFinPeriodo.toISOString())
+
+        if (planPagosData && planPagosData.length > 0) {
+          // Filtrar cuotas que corresponden al periodo según la periodicidad del préstamo
+          const cuotasDelPeriodo = planPagosData.filter(cuotaPrestamo => {
+            const fechaProyectada = new Date(cuotaPrestamo.fecha_proyectada)
+            const mesProyectado = fechaProyectada.getMonth() + 1
+            const anioProyectado = fechaProyectada.getFullYear()
+            
+            // Verificar si corresponde al mismo mes y año
+            if (mesProyectado === mesCuota && anioProyectado === anioCuota) {
+              const periodicidad = periodicidadPorPrestamo.get(cuotaPrestamo.prestamo_id) || 'mensual'
+              
+              // Si el préstamo es mensual, incluir todas las cuotas del mes
+              if (periodicidad === 'mensual') {
+                return true
+              }
+              
+              // Si el préstamo es quincenal, verificar la quincena
+              if (periodicidad === 'quincenal') {
+                const dia = fechaProyectada.getDate()
+                const quincenaProyectada = dia <= 15 ? 1 : 2
+                return quincenaProyectada === quincenaCuota
+              }
+              
+              return true
+            }
+            return false
+          })
+
+          valorPrestamos = cuotasDelPeriodo.reduce((sum, cp) => {
+            return sum + (parseFloat(cp.valor_cuota) || 0)
+          }, 0)
+        }
+      }
+    } catch (error) {
+      console.error('Error calculando préstamos a pagar:', error)
+    }
+  }
+
+  const totalAPagar = valorCuota + valorSancion + valorActividades + valorPrestamos
+
+  return {
+    totalAPagar,
+    desglose: {
+      cuota: valorCuota,
+      sancion: valorSancion,
+      actividades: valorActividades,
+      prestamos: valorPrestamos
+    }
+  }
+}
+
+// Función auxiliar para calcular el total pagado de una cuota incluyendo todos los conceptos
+async function calcularTotalPagadoCompleto(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) {
+    return {
+      totalPagado: 0,
+      desglose: {
+        cuota: 0,
+        sancion: 0,
+        actividades: 0,
+        prestamos: 0
+      }
+    }
+  }
+
+  // Valor pagado de la cuota base
+  const valorPagadoCuota = parseFloat(cuota.valor_pagado || 0)
+  
+  // Valor pagado de sanciones
+  const valorPagadoSancion = parseFloat(cuota.valor_pagado_sancion || 0)
+  
+  // Obtener mes y año de la cuota
+  let mesCuota = cuota.mes
+  let anioCuota = cuota.anio
+  if ((mesCuota == null || anioCuota == null) && cuota.fecha_limite) {
+    const partes = String(cuota.fecha_limite).split('-')
+    if (partes.length >= 2) {
+      anioCuota = parseInt(partes[0], 10)
+      mesCuota = parseInt(partes[1], 10)
+    }
+  }
+
+  let valorPagadoActividades = 0
+  let valorPagadoPrestamos = 0
+
+  // Calcular actividades pagadas del mismo periodo
+  if (mesCuota != null && anioCuota != null) {
+    try {
+      const { data: sociosActividadData } = await supabase
+        .from('socios_actividad')
+        .select('valor_pagado')
+        .eq('socio_natillera_id', cuota.socio_natillera_id)
+        .eq('mes_pago', mesCuota)
+        .eq('anio_pago', anioCuota)
+        .in('estado', ['pagada', 'pagado'])
+        .gt('valor_pagado', 0)
+
+      if (sociosActividadData && sociosActividadData.length > 0) {
+        valorPagadoActividades = sociosActividadData.reduce((sum, sa) => {
+          return sum + (parseFloat(sa.valor_pagado) || 0)
+        }, 0)
+      }
+    } catch (error) {
+      console.error('Error calculando actividades pagadas:', error)
+    }
+
+    // Calcular cuotas de préstamos pagadas del mismo periodo
+    try {
+      // Obtener préstamos del socio
+      const { data: prestamosSocio } = await supabase
+        .from('prestamos')
+        .select('id')
+        .eq('socio_natillera_id', cuota.socio_natillera_id)
+        .in('estado', ['activo', 'pagado'])
+
+      if (prestamosSocio && prestamosSocio.length > 0) {
+        const prestamoIds = prestamosSocio.map(p => p.id)
+        
+        // Buscar cuotas de préstamos pagadas en el mismo periodo
+        const fechaInicioPeriodo = new Date(anioCuota, mesCuota - 1, 1)
+        const fechaFinPeriodo = new Date(anioCuota, mesCuota, 0, 23, 59, 59)
+        
+        // Si la cuota tiene fecha_pago, buscar cuotas pagadas en la misma fecha o muy cercana
+        let cuotasPrestamosData = null
+        
+        if (cuota.fecha_pago) {
+          const fechaPagoCuota = new Date(cuota.fecha_pago)
+          fechaPagoCuota.setHours(0, 0, 0, 0)
+          const fechaFinDia = new Date(fechaPagoCuota)
+          fechaFinDia.setHours(23, 59, 59, 999)
+          
+          const { data } = await supabase
+            .from('plan_pagos_prestamo')
+            .select('valor_pagado')
+            .in('prestamo_id', prestamoIds)
+            .eq('pagada', true)
+            .gte('fecha_pago', fechaPagoCuota.toISOString())
+            .lte('fecha_pago', fechaFinDia.toISOString())
+          
+          cuotasPrestamosData = data
+        } else {
+          // Si no hay fecha_pago, buscar en el mismo periodo
+          const { data } = await supabase
+            .from('plan_pagos_prestamo')
+            .select('valor_pagado')
+            .in('prestamo_id', prestamoIds)
+            .eq('pagada', true)
+            .gte('fecha_pago', fechaInicioPeriodo.toISOString())
+            .lte('fecha_pago', fechaFinPeriodo.toISOString())
+          
+          cuotasPrestamosData = data
+        }
+        
+        if (cuotasPrestamosData && cuotasPrestamosData.length > 0) {
+          valorPagadoPrestamos = cuotasPrestamosData.reduce((sum, cp) => {
+            return sum + (parseFloat(cp.valor_pagado) || 0)
+          }, 0)
+        }
+      }
+    } catch (error) {
+      console.error('Error calculando préstamos pagados:', error)
+    }
+  }
+
+  const totalPagado = valorPagadoCuota + valorPagadoSancion + valorPagadoActividades + valorPagadoPrestamos
+
+  return {
+    totalPagado,
+    desglose: {
+      cuota: valorPagadoCuota,
+      sancion: valorPagadoSancion,
+      actividades: valorPagadoActividades,
+      prestamos: valorPagadoPrestamos
+    }
+  }
+}
+
 async function buscarComprobante() {
   if (!codigoBusqueda.value.trim()) return
   
@@ -3303,6 +3739,10 @@ async function buscarComprobante() {
     const result = await cuotasStore.buscarCuotaPorCodigo(id.value, codigoBusqueda.value.trim())
     
     if (result.success) {
+      // Calcular el total pagado completo y el total a pagar completo incluyendo todos los conceptos
+      const totalPagadoCompleto = await calcularTotalPagadoCompleto(result.data)
+      const totalAPagarCompleto = await calcularTotalAPagarCompleto(result.data)
+      
       // Si es un comprobante antiguo, mostrar información del código anterior
       if (result.esAntiguo && result.historial) {
         infoComprobanteAntiguo.value = result.historial
@@ -3313,14 +3753,22 @@ async function buscarComprobante() {
         comprobanteEncontrado.value = {
           ...result.data, // Mantener toda la información de la cuota (socio, descripción, etc.)
           codigo_comprobante: result.historial.codigoAnterior, // Código anterior
-          valor_pagado: result.historial.valorPagadoAnterior, // Valor pagado anterior
+          valor_pagado: result.historial.valorPagadoAnterior, // Valor pagado anterior (solo cuota)
+          valor_pagado_completo: totalPagadoCompleto.totalPagado, // Total pagado completo
+          desglose_pagado: totalPagadoCompleto.desglose, // Desglose del total pagado
+          total_a_pagar_completo: totalAPagarCompleto.totalAPagar, // Total a pagar completo
+          desglose_a_pagar: totalAPagarCompleto.desglose, // Desglose del total a pagar
           fecha_pago: null, // No hay fecha de pago para el código anterior ya que fue actualizado
           tipo: 'cuota' // Indicar que es una cuota
         }
       } else {
-        // Si no es antiguo, mostrar normalmente
+        // Si no es antiguo, mostrar normalmente con el total pagado completo y total a pagar completo
         comprobanteEncontrado.value = {
           ...result.data,
+          valor_pagado_completo: totalPagadoCompleto.totalPagado, // Total pagado completo
+          desglose_pagado: totalPagadoCompleto.desglose, // Desglose del total pagado
+          total_a_pagar_completo: totalAPagarCompleto.totalAPagar, // Total a pagar completo
+          desglose_a_pagar: totalAPagarCompleto.desglose, // Desglose del total a pagar
           tipo: 'cuota' // Indicar que es una cuota
         }
       }
@@ -3490,8 +3938,18 @@ async function buscarComprobante() {
 async function buscarPorCodigoNuevo() {
   if (!comprobanteNuevo.value) return
   
-  // Mostrar el comprobante nuevo que ya tenemos guardado
-  comprobanteEncontrado.value = comprobanteNuevo.value
+  // Calcular el total pagado completo y el total a pagar completo para el comprobante nuevo
+  const totalPagadoCompleto = await calcularTotalPagadoCompleto(comprobanteNuevo.value)
+  const totalAPagarCompleto = await calcularTotalAPagarCompleto(comprobanteNuevo.value)
+  
+  // Mostrar el comprobante nuevo que ya tenemos guardado con el total pagado completo y total a pagar completo
+  comprobanteEncontrado.value = {
+    ...comprobanteNuevo.value,
+    valor_pagado_completo: totalPagadoCompleto.totalPagado,
+    desglose_pagado: totalPagadoCompleto.desglose,
+    total_a_pagar_completo: totalAPagarCompleto.totalAPagar,
+    desglose_a_pagar: totalAPagarCompleto.desglose
+  }
   infoComprobanteAntiguo.value = null // Ocultar la alerta de comprobante antiguo
   codigoBusqueda.value = comprobanteNuevo.value.codigo_comprobante // Actualizar el campo de búsqueda
 }
@@ -3503,6 +3961,8 @@ function cerrarModalBuscarComprobante() {
   infoComprobanteAntiguo.value = null
   comprobanteNuevo.value = null
   errorBusqueda.value = ''
+  desgloseAPagarAbierto.value = false
+  desglosePagadoAbierto.value = false
 }
 
 // Función para obtener préstamos con cuotas vencidas - OPTIMIZADA

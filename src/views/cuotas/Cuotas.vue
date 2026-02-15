@@ -1189,8 +1189,17 @@
                           <CurrencyDollarIcon class="w-4 h-4" />
                           <span>$ Pagar</span>
                         </button>
+                        <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
                         <button 
-                          v-if="(cuota.estadoReal || cuota.estado) === 'pagada'"
+                            v-if="!esVisor"
+                            @click="abrirModalEditar(cuota)"
+                            class="hidden sm:flex px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm items-center gap-2"
+                            title="Editar pago"
+                          >
+                            <PencilIcon class="w-4 h-4" />
+                            <span>Editar</span>
+                          </button>
+                          <button 
                           @click="reenviarComprobante(cuota)"
                           class="hidden sm:flex px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm items-center gap-2"
                           title="Reenviar comprobante"
@@ -1198,6 +1207,7 @@
                           <ArrowPathIcon class="w-4 h-4" />
                           <span>Reenviar</span>
                         </button>
+                        </template>
                       </div>
                     </template>
                   </div>
@@ -1239,14 +1249,23 @@
                     <CurrencyDollarIcon class="w-5 h-5" />
                     <span>$ Pagar</span>
                   </button>
+                  <template v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
                   <button 
-                    v-else-if="cuota.estado === 'pagada'"
+                      v-if="!esVisor"
+                      @click="abrirModalEditar(cuota)"
+                      class="w-full px-6 py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                    >
+                      <PencilIcon class="w-5 h-5" />
+                      <span>Editar</span>
+                    </button>
+                    <button 
                     @click="reenviarComprobante(cuota)"
                     class="w-full px-6 py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                   >
                     <ArrowPathIcon class="w-5 h-5" />
                     <span>Reenviar Comprobante</span>
                   </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -1471,21 +1490,21 @@
                 <!-- Botones de acción flat: Pagar centrado 70% de la tarjeta -->
                 <div class="flex flex-wrap justify-center gap-2 mt-3 w-full" @click.stop>
                   <template v-if="tienePagoParcialCuota(cuota)">
-                    <!-- Desktop: una fila Pagar restante 50% + Editar 25% + Reenviar 25%. Móvil: Pagar 70% arriba, luego fila Editar + Reenviar -->
-                    <div class="flex flex-col gap-2 w-full items-center md:flex-row md:gap-2 md:w-full">
+                    <!-- Primera fila: Pagar ocupando 100% del ancho. Segunda fila: Editar y Reenviar ocupando 50% cada uno -->
+                    <div class="flex flex-col gap-2 w-full">
                       <button 
                         v-if="!esVisor"
                         @click="abrirModalPago(cuota)"
-                        class="w-full md:w-[50%] min-w-0 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                        class="w-full min-w-0 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       >
                         <CurrencyDollarIcon class="w-5 h-5" />
                         <span>Pagar restante</span>
                       </button>
-                      <div class="flex gap-2 w-full md:contents min-w-0">
+                      <div class="flex gap-2 w-full min-w-0">
                         <button 
                           v-if="!esVisor"
                           @click="abrirModalEditar(cuota)"
-                          class="flex-1 min-w-0 md:w-[25%] md:flex-none px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                          class="flex-1 min-w-0 px-4 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                           title="Editar pago"
                         >
                           <PencilIcon class="w-4 h-4" />
@@ -1493,7 +1512,7 @@
                         </button>
                         <button 
                           @click="reenviarComprobante(cuota)"
-                          class="flex-1 min-w-0 md:w-[25%] md:flex-none px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                          class="flex-1 min-w-0 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                           title="Reenviar comprobante"
                         >
                           <ArrowPathIcon class="w-4 h-4" />
@@ -1506,21 +1525,34 @@
                     <button 
                       v-if="!esVisor"
                       @click="abrirModalPago(cuota)"
-                      class="w-full md:w-[70%] min-w-0 px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                      class="w-full px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                     >
                       <CurrencyDollarIcon class="w-5 h-5" />
                       <span>$ Pagar</span>
                     </button>
                   </template>
                   <template v-else>
+                    <!-- Desktop: Editar y Reenviar lado a lado, cada uno 50% -->
+                    <!-- Móvil: Editar arriba, Reenviar abajo -->
+                    <div class="flex flex-col gap-2 w-full md:flex-row md:gap-2">
+                      <button 
+                        v-if="!esVisor"
+                        @click="abrirModalEditar(cuota)"
+                        class="w-full md:w-[50%] min-w-0 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                        title="Editar pago"
+                      >
+                        <PencilIcon class="w-4 h-4" />
+                        <span>Editar</span>
+                      </button>
                     <button 
                       @click="reenviarComprobante(cuota)"
-                      class="w-full md:w-[70%] min-w-0 px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                        class="w-full md:w-[50%] min-w-0 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       title="Reenviar comprobante"
                     >
                       <ArrowPathIcon class="w-4 h-4" />
-                      <span>Reenviar Comprobante</span>
+                        <span>Reenviar</span>
                     </button>
+                    </div>
                   </template>
                 </div>
               </div>
@@ -1593,8 +1625,16 @@
                 >
                   <CurrencyDollarIcon class="w-5 h-5" />
                 </button>
+                <template v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)">
                 <button
-                  v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)"
+                    @click.stop="abrirModalEditar(cuota)"
+                    class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg shadow-sm hover:shadow-md"
+                    title="Editar pago"
+                    aria-label="Editar pago"
+                  >
+                    <PencilIcon class="w-5 h-5" />
+                  </button>
+                  <button
                   @click.stop="reenviarComprobante(cuota)"
                   class="w-10 h-10 flex items-center justify-center bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white rounded-lg shadow-sm hover:shadow-md"
                   title="Reenviar comprobante"
@@ -1602,6 +1642,7 @@
                 >
                   <ArrowPathIcon class="w-5 h-5" />
                 </button>
+                </template>
               </div>
             </div>
           </div>
@@ -1643,9 +1684,14 @@
               <button v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'" @click.stop="abrirModalPago(cuota)" class="ml-auto px-2.5 py-1 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-md flex items-center gap-1">
                 <CurrencyDollarIcon class="w-3 h-3" /><span>Pagar</span>
               </button>
-              <button v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)" @click.stop="reenviarComprobante(cuota)" class="ml-auto px-2.5 py-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-md flex items-center gap-1" title="Reenviar comprobante">
+              <template v-else-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada' && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)">
+                <button @click.stop="abrirModalEditar(cuota)" class="ml-auto px-2.5 py-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-md flex items-center gap-1" title="Editar pago">
+                  <PencilIcon class="w-3 h-3" /><span>Editar</span>
+                </button>
+                <button @click.stop="reenviarComprobante(cuota)" class="ml-auto px-2.5 py-1 bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-md flex items-center gap-1" title="Reenviar comprobante">
                 <ArrowPathIcon class="w-3 h-3" /><span>Reenviar</span>
               </button>
+              </template>
             </div>
           </div>
         </div>
@@ -1773,6 +1819,14 @@
                     <PencilIcon class="w-3 h-3" />
                   </button>
                   <button 
+                    v-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada'"
+                    @click="abrirModalEditar(cuota)"
+                    class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                    title="Editar pago"
+                  >
+                    <PencilIcon class="w-3 h-3" />
+                  </button>
+                  <button 
                     v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
                     @click="abrirModalPago(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
@@ -1780,7 +1834,7 @@
                     Pagar
                   </button>
                   <button 
-                    v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota))"
+                    v-if="(cuota.estadoReal || cuota.estado) === 'pagada' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota))"
                     @click="reenviarComprobante(cuota)"
                     class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center gap-1"
                     title="Reenviar comprobante"
@@ -4106,6 +4160,259 @@
         </div>
     </ModalWrapper>
 
+    <!-- Modal Comprobante de Modificación -->
+    <ModalWrapper
+      :show="!!modalModificacion"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+      card-class="relative max-w-lg w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col"
+      card-max-width="32rem"
+      @close="modalModificacion = false"
+    >
+        <!-- Header con gradiente -->
+        <div class="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
+          <!-- Efectos decorativos -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          
+          <div class="relative z-10 w-full flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3 mb-2 min-w-0">
+              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </div>
+              <div class="min-w-0">
+                <h3 class="text-2xl font-display font-bold">
+                  Modificación Registrada
+                </h3>
+                <p class="text-white/90 text-sm mt-0.5">
+                  Comprobante de actualización generado
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              @click="modalModificacion = false"
+              class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors"
+              aria-label="Cerrar"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido con scroll -->
+        <div class="overflow-y-auto flex-1 p-3 sm:p-6 relative">
+          <!-- Comprobante Visual -->
+          <div 
+            id="comprobante-modificacion"
+            ref="comprobanteModificacionRef"
+            class="bg-white rounded-2xl overflow-hidden"
+            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);"
+          >
+          <!-- Contenido del comprobante con fondo azulado claro -->
+          <div class="comprobante-content" style="background: #eff6ff; padding: 14px 12px; color: #1f2937;">
+            <!-- TÍTULO Y ICONO -->
+            <div style="text-align: center; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                <!-- Icono de modificación -->
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <!-- Título -->
+                <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                  Comprobante de Modificación
+                </h1>
+              </div>
+            </div>
+            
+            <!-- SECCIÓN 1: INFORMACIÓN DE LA MODIFICACIÓN -->
+            <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+              <!-- Motivo -->
+              <div style="text-align: center; margin-bottom: 10px;">
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MOTIVO</p>
+                <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 1.5px solid #3b82f6; border-radius: 12px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="width: 5px; height: 5px; background: #3b82f6; border-radius: 50%; display: inline-block;"></span>
+                  <p style="color: #1e40af; font-size: 10px; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                    {{ modificacionRegistrada?.motivo || 'Actualización de pago' }}
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Grid: Nombre, Período, Fecha -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ modificacionRegistrada?.socioNombre || 'N/A' }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Período</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ modificacionRegistrada?.periodo || 'N/A' }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.4; white-space: pre-line;">{{ modificacionRegistrada?.fecha || modificacionRegistrada?.fechaCorta || 'N/A' }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Forma de Pago</p>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 12px;">{{ modificacionRegistrada?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">
+                      {{ modificacionRegistrada?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 2: CÓDIGO DE COMPROBANTE -->
+            <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">CÓDIGO DE COMPROBANTE</p>
+              <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 8px 10px;">
+                <p style="color: #065f46; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Código</p>
+                <p style="color: #059669; font-size: 13px; font-weight: 700; margin: 0; font-family: 'Courier New', monospace; letter-spacing: 0.5px;">
+                  {{ modificacionRegistrada?.codigoNuevo || 'N/A' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 3: CAMBIOS EN VALORES (solo si hay diferencia) -->
+            <div v-if="Math.abs(modificacionRegistrada?.diferencia || 0) > 0" style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">CAMBIOS EN VALORES</p>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Valor anterior -->
+                <div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px;">
+                  <p style="color: #6b7280; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Valor Pagado Anterior</p>
+                  <p style="color: #374151; font-size: 16px; font-weight: 700; margin: 0;">
+                    ${{ formatMoney(modificacionRegistrada?.valorAnterior || 0) }}
+                  </p>
+                </div>
+                <!-- Flecha -->
+                <div style="text-align: center; margin: -4px 0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #3b82f6;">
+                    <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <!-- Valor nuevo -->
+                <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 8px 10px;">
+                  <p style="color: #1e40af; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Valor Pagado Nuevo</p>
+                  <p style="color: #2563eb; font-size: 16px; font-weight: 700; margin: 0;">
+                    ${{ formatMoney(modificacionRegistrada?.valorNuevo || 0) }}
+                  </p>
+                </div>
+                <!-- Diferencia -->
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1.5px solid #fbbf24; border-radius: 8px; padding: 8px 10px; margin-top: 4px;">
+                  <p style="color: #92400e; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Diferencia</p>
+                  <p style="color: #d97706; font-size: 18px; font-weight: 900; margin: 0;">
+                    {{ modificacionRegistrada?.diferencia >= 0 ? '+' : '' }}${{ formatMoney(Math.abs(modificacionRegistrada?.diferencia || 0)) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECCIÓN 4: CAMBIO DE FORMA DE PAGO (solo si cambió) -->
+            <div v-if="modificacionRegistrada?.tipoPagoCambio" style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">CAMBIO DE FORMA DE PAGO</p>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Forma de pago anterior -->
+                <div style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px;">
+                  <p style="color: #6b7280; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Forma de Pago Anterior</p>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">{{ modificacionRegistrada?.tipoPagoAnterior === 'transferencia' ? '💳' : '💵' }}</span>
+                    <p style="color: #374151; font-size: 14px; font-weight: 700; margin: 0;">
+                      {{ modificacionRegistrada?.tipoPagoAnterior === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                  </div>
+                </div>
+                <!-- Flecha -->
+                <div style="text-align: center; margin: -4px 0;">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #3b82f6;">
+                    <path d="M12 5v14m0 0l-7-7m7 7l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <!-- Forma de pago nueva -->
+                <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 8px 10px;">
+                  <p style="color: #1e40af; font-size: 8px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Forma de Pago Nueva</p>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">{{ modificacionRegistrada?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
+                    <p style="color: #2563eb; font-size: 14px; font-weight: 700; margin: 0;">
+                      {{ modificacionRegistrada?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border-radius: 50%; box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);"></div>
+                <p style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 10px; margin: 0; font-weight: 700; letter-spacing: 0.5px;">
+                  Natillerapp
+                </p>
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border-radius: 50%; box-shadow: 0 0 4px rgba(59, 130, 246, 0.4);"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        </div>
+
+        <!-- Footer fijo con botones de acción -->
+        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
+          <!-- Móvil: dos botones píldora lado a lado -->
+          <div class="flex sm:hidden flex-col items-center gap-4">
+            <div class="flex items-center justify-center gap-3 w-full">
+              <button 
+                @click="descargarComprobanteModificacion"
+                :disabled="generandoImagenModificacion"
+                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+                {{ generandoImagenModificacion ? '...' : 'Descargar' }}
+              </button>
+              <button 
+                @click="compartirWhatsAppModificacion"
+                :disabled="generandoImagenModificacion || !modificacionRegistrada?.socioTelefono"
+                :class="[
+                  'flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all',
+                  (generandoImagenModificacion || !modificacionRegistrada?.socioTelefono)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : ''
+                ]"
+                :style="(generandoImagenModificacion || !modificacionRegistrada?.socioTelefono) ? {} : { background: '#16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.35)' }"
+                :title="!modificacionRegistrada?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
+              >
+                <ShareIcon class="w-5 h-5 flex-shrink-0" />
+                <span v-if="generandoImagenModificacion">...</span>
+                <span v-else-if="!modificacionRegistrada?.socioTelefono">Compartir</span>
+                <span v-else>Compartir</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Desktop: botones en columna -->
+          <div class="hidden sm:block space-y-3">
+            <button 
+              @click="descargarComprobanteModificacion"
+              :disabled="generandoImagenModificacion"
+              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowDownTrayIcon class="w-5 h-5" />
+              {{ generandoImagenModificacion ? 'Generando...' : 'Descargar Imagen' }}
+            </button>
+
+            <p class="text-xs text-gray-400 text-center">
+              💡 En celular podrás enviar la imagen directamente a WhatsApp
+            </p>
+          </div>
+        </div>
+    </ModalWrapper>
+
     <!-- Modal Exportar a Excel: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalExportar"
@@ -4208,86 +4515,256 @@
         </div>
     </ModalWrapper>
 
-    <!-- Modal Editar Cuota: en iOS ModalWrapper; en Android estructura actual -->
+    <!-- Modal Editar Pago: en iOS ModalWrapper (vista/scroll correctos); en Android estructura actual -->
     <ModalWrapper
       :show="!!modalEditarCuota"
-      :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
-      @close="modalEditarCuota = false"
+      :z-index="60"
+      align="bottom"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      card-class="relative max-w-md w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-200 border-b-0 sm:border-b max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 my-0 sm:my-4"
+      @close="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+        <!-- Header con gradiente (fijo) - tamaño reducido ~20% -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -ml-10 -mb-10 blur-xl"></div>
           
           <div class="relative z-10">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <PencilIcon class="w-6 h-6 text-white" />
+            <div class="flex items-center gap-2 mb-1">
+              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30">
+                <PencilIcon class="w-5 h-5 text-white" />
               </div>
-              <h3 class="text-2xl font-display font-bold">
-                Editar Cuota
+              <h3 class="text-xl font-display font-bold">
+                Editar Pago
               </h3>
             </div>
-            <p class="text-white/90 text-sm">
-              Modifica el valor de la cuota
+            <p class="text-white/90 text-xs">
+              <span v-if="(cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada'">
+                Modifica el valor del pago registrado
+              </span>
+              <span v-else>
+                Modifica el valor pagado de la cuota
+              </span>
             </p>
           </div>
         </div>
 
-        <!-- Contenido -->
-        <div class="p-6 space-y-6">
+        <!-- Contenido con scroll (min-h-0 permite que flex reduzca y active overflow-y-auto) -->
+        <div 
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain relative"
+        >
           <!-- Card de información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
-            <div class="flex items-center gap-3 mb-4">
+          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
+            <!-- Alerta de ajustes si existe -->
+            <div v-if="tieneAjuste(cuotaEditando)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
+              <button
+                @click.stop="abrirModalHistorialAjustes(cuotaEditando)"
+                class="group w-full flex items-center justify-between gap-2 cursor-pointer"
+              >
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                  <div class="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                    <InformationCircleIcon class="w-4 h-4 text-white" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-blue-800 group-hover:text-blue-900 transition-colors">
+                      Esta cuota tiene ajustes de valor
+                    </p>
+                    <p class="text-xs text-blue-600 mt-0.5">
+                      Haz clic para ver el historial completo de cambios
+                    </p>
+                  </div>
+                </div>
+                <ChevronRightIcon class="w-4 h-4 text-blue-600 group-hover:text-blue-700 group-hover:translate-x-1 transition-all flex-shrink-0" />
+              </button>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-2">
               <img 
                 :src="getAvatarUrl(cuotaEditando?.socio_natillera?.socio?.nombre || cuotaEditando?.socio_natillera?.id, cuotaEditando?.socio_natillera?.socio?.avatar_seed, cuotaEditando?.socio_natillera?.socio?.avatar_style)" 
                 :alt="cuotaEditando?.socio_natillera?.socio?.nombre"
-                class="w-14 h-14 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
+                class="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-natillera-200 shadow-md object-cover"
               />
               <div class="flex-1 min-w-0">
-                <p class="font-semibold text-gray-800 truncate">
+                <p class="font-semibold text-gray-800 truncate text-sm">
                   {{ cuotaEditando?.socio_natillera?.socio?.nombre || 'Socio' }}
                 </p>
-                <p class="text-xs text-gray-500">
-                  {{ cuotaEditando?.descripcion || 'Cuota' }}
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ cuotaEditando?.descripcion && !tieneAjuste(cuotaEditando) ? cuotaEditando.descripcion : 'Cuota' }}
                 </p>
               </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-200">
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Valor Actual</p>
-                <p class="font-bold text-gray-800 text-lg">
-                  ${{ formatMoney(cuotaEditando?.valor_cuota || 0) }}
+            <!-- Cuota, Sanción y Actividades (solo cuando NO hay pago parcial) -->
+            <div
+              v-if="!tienePagoParcialCuota(cuotaEditando)"
+              class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5"
+            >
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-600">Cuota</span>
+                <span class="font-semibold text-gray-800">${{ formatMoney(cuotaEditando?.valor_cuota || 0) }}</span>
+              </div>
+              <div
+                v-if="(getSancionTotalCuota(cuotaEditando) || 0) > 0 || (cuotaEditando?.valor_pagado_sancion || 0) > 0"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Sanción</span>
+                <span class="font-semibold text-red-600">${{ formatMoney(getSancionTotalCuota(cuotaEditando) || cuotaEditando?.valor_pagado_sancion || 0) }}</span>
+              </div>
+              <div
+                v-if="getTotalActividadesPagadasEditar() > 0"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">{{ getTextoActividadesSocio(cuotaEditando) || 'Actividades' }}</span>
+                <span class="font-semibold text-purple-600">${{ formatMoney(getTotalActividadesPagadasEditar()) }}</span>
+              </div>
+              <div
+                v-if="getTotalCuotasPrestamosPagadasEditar() > 0"
+                class="flex items-center justify-between text-sm"
+              >
+                <span class="text-gray-600">Cuotas de préstamos</span>
+                <span class="font-semibold text-blue-600">${{ formatMoney(getTotalCuotasPrestamosPagadasEditar()) }}</span>
+              </div>
+              <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-gray-200">
+                <span class="text-gray-700">Total pagado</span>
+                <span class="text-natillera-700">${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}</span>
+              </div>
+            </div>
+
+            <!-- Total a pagar, Abonado, Total pendiente y Ya abonado desplegable (solo cuando hay pago parcial) -->
+            <div 
+              v-if="tienePagoParcialCuota(cuotaEditando)"
+              class="mb-3 space-y-2"
+            >
+              <div class="p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs text-gray-600">Total a pagar</p>
+                  <p class="font-bold text-gray-800 text-base">
+                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando)) + (cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
                 </p>
               </div>
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Pagado</p>
-                <p class="font-bold text-green-600 text-lg">
-                  ${{ formatMoney(cuotaEditando?.valor_pagado || 0) }}
+                <div class="flex items-center justify-between">
+                  <p class="text-xs text-gray-600">Abonado</p>
+                  <p class="font-bold text-green-600 text-base">
+                    ${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
                 </p>
               </div>
-              <div>
-                <p class="text-xs text-gray-500 mb-1">Pendiente</p>
-                <p class="font-bold text-orange-600 text-lg">
-                  ${{ formatMoney((cuotaEditando?.valor_cuota || 0) - (cuotaEditando?.valor_pagado || 0)) }}
-                </p>
+                <div class="flex items-center justify-between">
+                  <p class="text-xs text-gray-600">Total pendiente</p>
+                  <p :class="['font-bold text-base', cuotaEditando?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
+                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando))) }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <form @submit.prevent="guardarEdicionCuota" class="space-y-5">
-            <!-- Campo de valor de la cuota -->
+          <div class="space-y-5">
+            <!-- Campo de tipo de pago -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">
-                <span v-if="cuotaEditando?.valor_pagado && cuotaEditando.valor_pagado > 0">
-                  Valor Pagado <span class="text-red-500">*</span>
+                Tipo de pago <span class="text-red-500">*</span>
+              </label>
+              <div class="grid grid-cols-2 gap-2">
+                <!-- Opción Efectivo -->
+                <button
+                  type="button"
+                  @click="formEditarCuota.tipo_pago = 'efectivo'"
+                  :class="[
+                    'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    formEditarCuota.tipo_pago === 'efectivo'
+                      ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  <div class="flex flex-col items-center gap-1.5">
+                    <!-- Icono -->
+                    <div :class="[
+                      'w-9 h-9 rounded-full flex items-center justify-center transition-all',
+                      formEditarCuota.tipo_pago === 'efectivo'
+                        ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-400'
+                    ]">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                      </svg>
+                    </div>
+                    <!-- Texto -->
+                    <span :class="[
+                      'font-semibold text-xs',
+                      formEditarCuota.tipo_pago === 'efectivo'
+                        ? 'text-natillera-700'
+                        : 'text-gray-600'
+                    ]">
+                      Efectivo
+                    </span>
+                    <!-- Indicador de selección -->
+                    <div v-if="formEditarCuota.tipo_pago === 'efectivo'" class="absolute top-1.5 right-1.5">
+                      <div class="w-4 h-4 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Opción Transferencia -->
+                <button
+                  type="button"
+                  @click="formEditarCuota.tipo_pago = 'transferencia'"
+                  :class="[
+                    'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
+                    formEditarCuota.tipo_pago === 'transferencia'
+                      ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-500/20'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                  ]"
+                >
+                  <div class="flex flex-col items-center gap-1.5">
+                    <!-- Icono -->
+                    <div :class="[
+                      'w-9 h-9 rounded-full flex items-center justify-center transition-all',
+                      formEditarCuota.tipo_pago === 'transferencia'
+                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md'
+                        : 'bg-gray-100 text-gray-400'
+                    ]">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                      </svg>
+                    </div>
+                    <!-- Texto -->
+                    <span :class="[
+                      'font-semibold text-xs',
+                      formEditarCuota.tipo_pago === 'transferencia'
+                        ? 'text-blue-700'
+                        : 'text-gray-600'
+                    ]">
+                      Transferencia
+                    </span>
+                    <!-- Indicador de selección -->
+                    <div v-if="formEditarCuota.tipo_pago === 'transferencia'" class="absolute top-1.5 right-1.5">
+                      <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Campo de valor del pago -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <span v-if="(cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada'">
+                  Valor pagado total <span class="text-red-500">*</span>
+                  <span class="text-xs text-amber-600 font-normal ml-2">
+                    (Al cambiar el valor se generará un nuevo código de comprobante)
+                  </span>
                 </span>
                 <span v-else>
-                  Nuevo Valor de la Cuota <span class="text-red-500">*</span>
+                  Valor pagado <span class="text-red-500">*</span>
                 </span>
               </label>
               <div class="relative">
@@ -4295,36 +4772,190 @@
                   <CurrencyDollarIcon class="w-5 h-5" />
                 </div>
                 <input 
-                  :value="formatearValorPago(formEditarCuota.valor_cuota)"
-                  @input="handleValorCuotaEditarInput($event)"
-                  @focus="$event.target.select()"
+                  :value="formatearValorPago(formEditarCuota.valor)"
+                  @input="handleValorPagoEditarInput($event)"
+                  @focus="seleccionarValorPagoEditar"
+                  @click="seleccionarValorPagoEditar"
                   type="text"
-                  inputmode="numeric"
+                  inputmode="decimal"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
-                  placeholder="0"
+                  placeholder="Ingresa el valor total pagado"
                   required
                 />
               </div>
             </div>
 
-            <!-- Botones -->
-            <div class="flex gap-3 pt-2">
+            <!-- Desplegable de Actividades Pagadas -->
+            <div 
+              v-if="actividadesPagadasEditar.length > 0"
+              class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+            >
               <button 
                 type="button"
-                @click="modalEditarCuota = false"
-                class="btn-secondary flex-1"
+                @click="actividadesDesplegableAbiertoEditar = !actividadesDesplegableAbiertoEditar"
+                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 hover:from-green-100 hover:via-emerald-100 hover:to-green-100"
+              >
+                <div class="flex items-center gap-3 flex-1">
+                  <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-md">
+                    <SparklesIcon class="w-5 h-5 text-white" />
+                  </div>
+                  <div class="text-left flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                      <span>Actividades pagadas</span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white shadow-md shadow-emerald-500/30 whitespace-nowrap">
+                        {{ actividadesPagadasEditar.length }} {{ actividadesPagadasEditar.length === 1 ? 'Pagada' : 'Pagadas' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <ChevronDownIcon 
+                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', actividadesDesplegableAbiertoEditar ? 'rotate-180' : '']" 
+                />
+              </button>
+              
+              <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-[1000px]"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="opacity-100 max-h-[1000px]"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div v-show="actividadesDesplegableAbiertoEditar" class="border-t border-gray-200 bg-white">
+                  <div class="p-2 space-y-2 max-h-64 overflow-y-auto">
+                    <div
+                      v-for="actividad in actividadesPagadasEditar"
+                      :key="actividad.id"
+                      class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-2.5 border border-green-200"
+                    >
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex-shrink-0">
+                          <div class="w-5 h-5 rounded border-2 flex items-center justify-center bg-green-500 border-green-500">
+                            <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center justify-between gap-2 mb-1">
+                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                              {{ limpiarDescripcionActividad(actividad.actividad?.descripcion) }}
+                            </h4>
+                            <p class="text-xs font-bold text-green-600 flex-shrink-0">
+                              ${{ formatMoney(actividad.valor_pagado || 0) }}
+                            </p>
+                          </div>
+                          <div class="flex items-center gap-3 text-xs">
+                            <span class="text-gray-500">
+                              Asignado: <span class="font-semibold text-gray-700">${{ formatMoney(actividad.valor_asignado || 0) }}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+
+            <!-- Desplegable de Cuotas de Préstamos Pagadas -->
+            <div 
+              v-if="cuotasPrestamosPagadasEditar.length > 0"
+              class="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
+            >
+              <button
+                type="button"
+                @click="cuotasPrestamosDesplegableAbiertoEditar = !cuotasPrestamosDesplegableAbiertoEditar"
+                class="w-full flex items-center justify-between p-4 transition-all duration-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 hover:from-blue-100 hover:via-indigo-100 hover:to-blue-100"
+              >
+                <div class="flex items-center gap-3 flex-1">
+                  <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  </div>
+                  <div class="text-left flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-wrap">
+                      <span>Cuotas de préstamos pagadas</span>
+                      <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500 text-white shadow-md shadow-emerald-500/30 whitespace-nowrap">
+                        {{ cuotasPrestamosPagadasEditar.length }} {{ cuotasPrestamosPagadasEditar.length === 1 ? 'Pagada' : 'Pagadas' }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <ChevronDownIcon 
+                  :class="['w-5 h-5 text-gray-500 transition-transform duration-200', cuotasPrestamosDesplegableAbiertoEditar ? 'rotate-180' : '']" 
+                />
+              </button>
+              
+              <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="opacity-0 max-h-0"
+                enter-to-class="opacity-100 max-h-[1000px]"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="opacity-100 max-h-[1000px]"
+                leave-to-class="opacity-0 max-h-0"
+              >
+                <div v-show="cuotasPrestamosDesplegableAbiertoEditar" class="border-t border-gray-200 bg-white">
+                  <div class="p-2 space-y-2 max-h-64 overflow-y-auto">
+                    <div
+                      v-for="cuotaPrestamo in cuotasPrestamosPagadasEditar"
+                      :key="cuotaPrestamo.id"
+                      class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2.5 border border-blue-200"
+                    >
+                      <div class="flex items-center gap-2.5">
+                        <div class="flex-shrink-0">
+                          <div class="w-5 h-5 rounded border-2 flex items-center justify-center bg-blue-500 border-blue-500">
+                            <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center justify-between gap-2 mb-1">
+                            <h4 class="font-semibold text-gray-800 truncate text-sm">
+                              Cuota #{{ cuotaPrestamo.numero_cuota }} - {{ formatDate(cuotaPrestamo.fecha_proyectada) }}
+                            </h4>
+                            <p class="text-xs font-bold text-blue-600 flex-shrink-0">
+                              ${{ formatMoney(cuotaPrestamo.valor_pagado || 0) }}
+                            </p>
+                          </div>
+                          <div class="flex items-center gap-3 text-xs">
+                            <span class="text-gray-500">
+                              Valor cuota: <span class="font-semibold text-gray-700">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer con botones (fijo, pegados al fondo del modal) -->
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+          <div class="flex gap-3">
+            <button 
+              type="button"
+              @click="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
+              @touchstart="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
+              class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
+              style="pointer-events: auto !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25); min-height: 44px; z-index: 20 !important;"
               >
                 Cancelar
               </button>
               <button 
-                type="submit" 
-                class="btn-primary flex-1"
-                :disabled="cuotasStore.loading"
+              type="button"
+              @click="guardarEdicionCuota"
+              class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="cuotasStore.loading || !formEditarCuota.valor || formEditarCuota.valor <= 0"
               >
                 {{ cuotasStore.loading ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
             </div>
-          </form>
         </div>
     </ModalWrapper>
 
@@ -5356,6 +5987,10 @@ const exportando = ref(false)
 const cuotaSeleccionada = ref(null)
 const cuotaEditando = ref(null)
 const pagoRegistrado = ref(null)
+const modificacionRegistrada = ref(null)
+const modalModificacion = ref(false)
+const comprobanteModificacionRef = ref(null)
+const generandoImagenModificacion = ref(false)
 const modalDetalleCuota = ref(false)
 const cuotaDetalle = ref(null)
 const desgloseSancionDetalle = computed(() => getDesgloseSancionCuota(cuotaDetalle.value))
@@ -5389,6 +6024,7 @@ useBodyScrollLock(modalHistorialAjustes)
 useBodyScrollLock(modalEditarSocio)
 useBodyScrollLock(modalProgreso)
 useBodyScrollLock(modalSelectorMes)
+useBodyScrollLock(modalModificacion)
 
 // Bloquear scroll cuando se está registrando un pago
 useBodyScrollLock(bloqueandoRegistroPago)
@@ -5436,6 +6072,11 @@ const cuotasPrestamosDeLaCuotaActual = ref(new Set()) // IDs de cuotas de prést
 const cuotasPrestamosPagadasCache = ref(new Map()) // Caché de cuotas de préstamos pagadas por cuotaId
 // Caché de total cuotas de préstamos pendientes por periodo (socio_natillera_id-mes-anio-quincena) para mostrar en tarjetas
 const cuotasPrestamosPendientesPorPeriodo = ref(new Map())
+// Variables para el modal de editar
+const actividadesPagadasEditar = ref([]) // Actividades pagadas de la cuota que se está editando
+const cuotasPrestamosPagadasEditar = ref([]) // Cuotas de préstamos pagadas de la cuota que se está editando
+const actividadesDesplegableAbiertoEditar = ref(false) // Estado del desplegable de actividades en modal editar
+const cuotasPrestamosDesplegableAbiertoEditar = ref(false) // Estado del desplegable de cuotas de préstamos en modal editar
 
 // Computed para hacer reactivo el estado de loading del store
 const loadingPago = computed(() => cuotasStore.loading)
@@ -6119,7 +6760,14 @@ const resumenMesActual = computed(() => {
   const porcentajeRecaudado = totalValor > 0 ? (totalPagado / totalValor) * 100 : 0
   
   // Calcular total recaudado (suma de todos los pagos, completos y parciales)
-  const totalRecaudado = cuotasConEstadoReal.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+  // Incluir valor_pagado_sancion y actividades pagadas
+  const totalRecaudado = cuotasConEstadoReal.reduce((sum, c) => {
+    const valorCuota = c.valor_pagado || 0
+    const valorSancion = c.valor_pagado_sancion || 0
+    const actividadesPagadas = getActividadesInfoSocio(c).pagadas || 0
+    const cuotasPrestamosPagadas = getTotalCuotasPrestamosPagadasSocioSync(c) || 0
+    return sum + valorCuota + valorSancion + actividadesPagadas + cuotasPrestamosPagadas
+  }, 0)
   
   return {
     pagadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'pagada').length,
@@ -6148,13 +6796,26 @@ const estadisticasRecaudacion = computed(() => {
   }
   
   // Calcular total recaudado por tipo de pago
+  // Incluir valor_pagado, valor_pagado_sancion, actividades pagadas y cuotas de préstamos pagadas
   const totalRecaudadoEfectivo = cuotas
     .filter(c => (c.tipo_pago || 'efectivo') === 'efectivo')
-    .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    .reduce((sum, c) => {
+      const valorCuota = c.valor_pagado || 0
+      const valorSancion = c.valor_pagado_sancion || 0
+      const actividadesPagadas = getActividadesInfoSocio(c).pagadas || 0
+      const cuotasPrestamosPagadas = getTotalCuotasPrestamosPagadasSocioSync(c) || 0
+      return sum + valorCuota + valorSancion + actividadesPagadas + cuotasPrestamosPagadas
+    }, 0)
   
   const totalRecaudadoTransferencia = cuotas
     .filter(c => c.tipo_pago === 'transferencia')
-    .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    .reduce((sum, c) => {
+      const valorCuota = c.valor_pagado || 0
+      const valorSancion = c.valor_pagado_sancion || 0
+      const actividadesPagadas = getActividadesInfoSocio(c).pagadas || 0
+      const cuotasPrestamosPagadas = getTotalCuotasPrestamosPagadasSocioSync(c) || 0
+      return sum + valorCuota + valorSancion + actividadesPagadas + cuotasPrestamosPagadas
+    }, 0)
   
   const totalAportado = cuotas.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
   
@@ -6307,7 +6968,8 @@ const formPago = reactive({
 })
 
 const formEditarCuota = reactive({
-  valor_cuota: 0
+  valor: 0,
+  tipo_pago: 'efectivo' // Por defecto: efectivo, puede ser 'transferencia'
 })
 
 // Función para formatear el valor del pago con puntos
@@ -9028,15 +9690,118 @@ function obtenerAjustesFormateados(cuota) {
   }).reverse() // Mostrar el más reciente primero
 }
 
-function abrirModalEditar(cuota) {
+async function abrirModalEditar(cuota) {
   cuotaEditando.value = cuota
-  // Si hay un pago parcial, cargar el valor pagado; de lo contrario, cargar el valor de la cuota
-  if (cuota.valor_pagado && cuota.valor_pagado > 0) {
-    formEditarCuota.valor_cuota = cuota.valor_pagado
-  } else {
-    formEditarCuota.valor_cuota = cuota.valor_cuota || 0
-  }
+  formEditarCuota.tipo_pago = cuota.tipo_pago || 'efectivo'
+  
+  // Cargar actividades y cuotas de préstamos pagadas
+  await cargarActividadesPagadasEditar(cuota)
+  await cargarCuotasPrestamosPagadasEditar(cuota)
+  
+  // Calcular el valor pagado total incluyendo actividades y cuotas de préstamos pagadas
+  const valorCuotaPagado = cuota.valor_pagado || 0
+  const valorSancionPagado = cuota.valor_pagado_sancion || 0
+  const totalActividadesPagadas = getTotalActividadesPagadasEditar()
+  const totalCuotasPrestamosPagadas = getTotalCuotasPrestamosPagadasEditar()
+  const valorPagadoTotal = valorCuotaPagado + valorSancionPagado + totalActividadesPagadas + totalCuotasPrestamosPagadas
+  
+  formEditarCuota.valor = valorPagadoTotal > 0 ? valorPagadoTotal : (cuota.valor_pagado || 0)
+  
   modalEditarCuota.value = true
+}
+
+// Función para obtener el total de actividades pagadas en el modal de editar
+function getTotalActividadesPagadasEditar() {
+  return actividadesPagadasEditar.value.reduce((total, actividad) => {
+    return total + parseFloat(actividad.valor_pagado || 0)
+  }, 0)
+}
+
+// Función para obtener el total de cuotas de préstamos pagadas en el modal de editar
+function getTotalCuotasPrestamosPagadasEditar() {
+  return cuotasPrestamosPagadasEditar.value.reduce((total, cuotaPrestamo) => {
+    return total + parseFloat(cuotaPrestamo.valor_pagado || 0)
+  }, 0)
+}
+
+// Función para cargar actividades pagadas de la cuota
+async function cargarActividadesPagadasEditar(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) {
+    actividadesPagadasEditar.value = []
+    return
+  }
+
+  try {
+    const { data: sociosActividadData, error } = await supabase
+      .from('socios_actividad')
+      .select('*, actividad:actividades(*)')
+      .eq('socio_natillera_id', cuota.socio_natillera_id)
+      .in('estado', ['pagada', 'pagado'])
+      .eq('mes_pago', cuota.mes)
+      .eq('anio_pago', cuota.anio)
+      .gt('valor_pagado', 0)
+
+    if (error) {
+      console.error('Error cargando actividades pagadas:', error)
+      actividadesPagadasEditar.value = []
+      return
+    }
+
+    actividadesPagadasEditar.value = (sociosActividadData || []).filter(sa => sa.valor_pagado > 0)
+  } catch (error) {
+    console.error('Error cargando actividades pagadas:', error)
+    actividadesPagadasEditar.value = []
+  }
+}
+
+// Función para cargar cuotas de préstamos pagadas de la cuota
+async function cargarCuotasPrestamosPagadasEditar(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) {
+    cuotasPrestamosPagadasEditar.value = []
+    return
+  }
+
+  try {
+    // Obtener préstamos del socio
+    const { data: prestamos, error: errorPrestamos } = await supabase
+      .from('prestamos')
+      .select('id')
+      .eq('socio_natillera_id', cuota.socio_natillera_id)
+      .eq('estado', 'activo')
+
+    if (errorPrestamos || !prestamos || prestamos.length === 0) {
+      cuotasPrestamosPagadasEditar.value = []
+      return
+    }
+
+    const prestamoIds = prestamos.map(p => p.id)
+    const mesActual = cuota.mes
+    const anioActual = cuota.anio
+
+    // Obtener cuotas de préstamos pagadas del período
+    const { data: planPagos, error: errorPlanPagos } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('*, prestamo:prestamos(*)')
+      .in('prestamo_id', prestamoIds)
+      .gt('valor_pagado', 0)
+
+    if (errorPlanPagos) {
+      console.error('Error cargando cuotas de préstamos pagadas:', errorPlanPagos)
+      cuotasPrestamosPagadasEditar.value = []
+      return
+    }
+
+    // Filtrar por período y que tengan valor pagado
+    const fechaProyectada = new Date()
+    cuotasPrestamosPagadasEditar.value = (planPagos || []).filter(cp => {
+      if (!cp.fecha_proyectada) return false
+      const fecha = new Date(cp.fecha_proyectada)
+      return fecha.getMonth() + 1 === mesActual && fecha.getFullYear() === anioActual && cp.valor_pagado > 0
+    })
+  } catch (error) {
+    console.error('Error cargando cuotas de préstamos pagadas:', error)
+    cuotasPrestamosPagadasEditar.value = []
+  }
 }
 
 // Formulario para editar socio
@@ -9647,16 +10412,24 @@ async function handleGuardarSocio() {
 }
 
 // Manejar input del valor de la cuota en edición
-function handleValorCuotaEditarInput(event) {
+function handleValorPagoEditarInput(event) {
   const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
   if (valor === '') {
-    formEditarCuota.valor_cuota = 0
+    formEditarCuota.valor = 0
   } else {
     const numero = parseInt(valor, 10)
     if (!isNaN(numero) && numero >= 0) {
-      formEditarCuota.valor_cuota = numero
+      formEditarCuota.valor = numero
     }
   }
+}
+
+function seleccionarValorPagoEditar(event) {
+  const input = event?.target
+  if (!input || typeof input.select !== 'function') return
+  
+  // Seleccionar el texto del input
+  setTimeout(() => input.select(), 0)
 }
 
 // Función para generar código único de comprobante
@@ -9674,16 +10447,29 @@ async function guardarEdicionCuota() {
   if (!cuotaEditando.value) return
   
   try {
-    const nuevoValor = formEditarCuota.valor_cuota || 0
+    const nuevoValor = formEditarCuota.valor || 0
     const valorCuota = cuotaEditando.value.valor_cuota || 0
     const tienePagoParcial = cuotaEditando.value.valor_pagado && cuotaEditando.value.valor_pagado > 0
+    const estaPagada = (cuotaEditando.value.estadoReal || cuotaEditando.value.estado) === 'pagada'
     const valorPagadoAnterior = cuotaEditando.value.valor_pagado || 0
+    const valorPagadoSancionAnterior = cuotaEditando.value.valor_pagado_sancion || 0
+    
+    // Calcular el valor total anterior (cuota + sanciones + actividades + préstamos)
+    const actividadesPagadasAnterior = getActividadesInfoSocio(cuotaEditando.value).pagadas || 0
+    const cuotasPrestamosPagadasAnterior = getTotalCuotasPrestamosPagadasSocioSync(cuotaEditando.value) || 0
+    const valorTotalAnterior = valorPagadoAnterior + valorPagadoSancionAnterior + actividadesPagadasAnterior + cuotasPrestamosPagadasAnterior
+    
+    // Declarar variables de código de comprobante fuera del bloque condicional
+    let nuevoCodigoComprobante = null
+    const codigoAnterior = cuotaEditando.value.codigo_comprobante
+    let nuevoValorPagado = nuevoValor // Declarar fuera del bloque para que esté disponible después
+    let valorCambio = false // Declarar fuera del bloque para que esté disponible después
     
     let datosActualizar = {}
     
-    // Si hay un pago parcial, actualizar valor_pagado (reemplazar, no sumar)
-    if (tienePagoParcial) {
-      const nuevoValorPagado = nuevoValor
+    // Si hay un pago parcial o la cuota está pagada, actualizar valor_pagado (reemplazar, no sumar)
+    if (tienePagoParcial || estaPagada) {
+      nuevoValorPagado = nuevoValor
       // Calcular el nuevo estado basado en el valor pagado (incluyendo sanción)
       const sancion = getSancionCuota(cuotaEditando.value)
       const totalAPagar = valorCuota + sancion
@@ -9789,11 +10575,17 @@ async function guardarEdicionCuota() {
         }
       }
       
-      // Si el valor pagado cambió, generar un nuevo código de comprobante
-      let nuevoCodigoComprobante = null
-      const codigoAnterior = cuotaEditando.value.codigo_comprobante
+      // Si el valor total pagado cambió (comparando el total completo: cuota + sanciones + actividades + préstamos)
+      // o la cuota está pagada o tiene pago parcial y se está editando, generar un nuevo código de comprobante
+      valorCambio = nuevoValorPagado !== valorTotalAnterior
+      // Verificar si cambió la forma de pago
+      const tipoPagoAnterior = cuotaEditando.value.tipo_pago || 'efectivo'
+      const tipoPagoCambio = formEditarCuota.tipo_pago !== tipoPagoAnterior
+      // Generar código nuevo si: hay cambio de valor, o si está pagada/tiene pago parcial y hay cualquier cambio (valor o forma de pago)
+      // Si la cuota está pagada o tiene pago parcial, siempre generar código nuevo al hacer cualquier modificación
+      const debeGenerarCodigo = (valorCambio && nuevoValorPagado > 0) || ((estaPagada || tienePagoParcial) && (valorCambio || tipoPagoCambio))
       
-      if (nuevoValorPagado !== valorPagadoAnterior && nuevoValorPagado > 0) {
+      if (debeGenerarCodigo) {
         // Generar nuevo código de comprobante cuando se modifica el pago
         try {
           nuevoCodigoComprobante = generarCodigoComprobante()
@@ -9830,17 +10622,42 @@ async function guardarEdicionCuota() {
         fechaPagoActualizada = null
       }
       
+      // Calcular el desglose del nuevo valor total
+      // El nuevoValor es el total pagado (cuota + sanción + actividades + préstamos)
+      // Necesitamos desglosarlo correctamente
+      const valorSancionActual = cuotaEditando.value.valor_pagado_sancion || 0
+      const valorActividadesActual = cuotaEditando.value.valor_pagado_actividades || 0
+      
+      // Obtener el total de cuotas de préstamos pagadas (puede no estar en la cuota directamente)
+      const valorCuotasPrestamosActual = getTotalCuotasPrestamosPagadasSocioSync(cuotaEditando.value) || 0
+      
+      // El valor de la cuota base es el total menos los otros conceptos
+      const nuevoValorCuotaBase = Math.max(0, nuevoValorPagado - valorSancionActual - valorActividadesActual - valorCuotasPrestamosActual)
+      
       datosActualizar = {
-        valor_pagado: nuevoValorPagado,
+        valor_pagado: nuevoValorCuotaBase,
+        valor_pagado_sancion: valorSancionActual,
+        valor_pagado_actividades: valorActividadesActual,
         estado: nuevoEstado,
         fecha_pago: fechaPagoActualizada
+      }
+      
+      // Solo agregar valor_pagado_cuotas_prestamos si el campo existe en la tabla
+      // (puede que no exista en todas las versiones de la BD)
+      if (cuotaEditando.value.hasOwnProperty('valor_pagado_cuotas_prestamos')) {
+        datosActualizar.valor_pagado_cuotas_prestamos = valorCuotasPrestamosActual
+      }
+      
+      // Agregar tipo_pago si se proporciona
+      if (formEditarCuota.tipo_pago) {
+        datosActualizar.tipo_pago = formEditarCuota.tipo_pago
       }
       
       // Agregar el nuevo código de comprobante si se generó
       if (nuevoCodigoComprobante) {
         datosActualizar.codigo_comprobante = nuevoCodigoComprobante
         
-        // Guardar en historial si había un código anterior
+        // Guardar en historial si había un código anterior (importante: siempre guardar el código anterior en el historial)
         if (codigoAnterior) {
           try {
             await supabase
@@ -9851,7 +10668,7 @@ async function guardarEdicionCuota() {
                 codigo_comprobante_nuevo: nuevoCodigoComprobante,
                 valor_pagado_anterior: valorPagadoAnterior,
                 valor_pagado_nuevo: nuevoValorPagado,
-                motivo: 'actualizacion_pago',
+                motivo: estaPagada ? 'edicion_cuota_pagada' : 'actualizacion_pago',
                 fecha_actualizacion: new Date().toISOString()
               })
           } catch (e) {
@@ -9870,7 +10687,69 @@ async function guardarEdicionCuota() {
     const result = await cuotasStore.actualizarCuota(cuotaEditando.value.id, datosActualizar)
     
     if (result.success) {
+      // Si se generó un nuevo código de comprobante, mostrar el comprobante de modificación
+      // El código se genera cuando hay cambios (valor o forma de pago), así que si existe, mostrar el comprobante
+      if (nuevoCodigoComprobante) {
+        // Obtener información del socio
+        const socioNombre = cuotaEditando.value.socio_natillera?.socio?.nombre || 'Socio'
+        const socioTelefono = cuotaEditando.value.socio_natillera?.socio?.telefono || null
+        
+        // Formatear período
+        const mesLabel = getMesLabel(cuotaEditando.value.mes)
+        let periodo = `${mesLabel} ${cuotaEditando.value.anio}`
+        if (cuotaEditando.value.quincena === 1 || cuotaEditando.value.quincena === 2) {
+          periodo += ` - Q${cuotaEditando.value.quincena}`
+        }
+        
+        // Formatear fecha
+        const fecha = new Date()
+        const fechaCorta = fecha.toLocaleDateString('es-CO', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric' 
+        })
+        const fechaCompleta = fecha.toLocaleDateString('es-CO', { 
+          weekday: 'long', 
+          day: 'numeric', 
+          month: 'long', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+        
+        // Calcular si cambió la forma de pago
+        const tipoPagoAnteriorComprobante = cuotaEditando.value.tipo_pago || 'efectivo'
+        const tipoPagoNuevoComprobante = formEditarCuota.tipo_pago || 'efectivo'
+        const tipoPagoCambioComprobante = tipoPagoAnteriorComprobante !== tipoPagoNuevoComprobante
+        
+        // Preparar datos del comprobante de modificación
+        modificacionRegistrada.value = {
+          cuotaId: cuotaEditando.value.id,
+          socioNombre,
+          socioTelefono,
+          periodo,
+          fecha: fechaCompleta,
+          fechaCorta,
+          codigoNuevo: nuevoCodigoComprobante,
+          valorAnterior: valorTotalAnterior,
+          valorNuevo: nuevoValorPagado,
+          tipoPago: tipoPagoNuevoComprobante,
+          tipoPagoAnterior: tipoPagoAnteriorComprobante,
+          tipoPagoCambio: tipoPagoCambioComprobante,
+          diferencia: nuevoValorPagado - valorTotalAnterior,
+          motivo: estaPagada ? 'Edición de cuota pagada' : (tienePagoParcial ? 'Edición de pago parcial' : 'Actualización de pago')
+        }
+        
       modalEditarCuota.value = false
+        // Esperar un momento para que el modal se cierre antes de abrir el nuevo
+        await nextTick()
+        setTimeout(() => {
+          modalModificacion.value = true
+        }, 300)
+      } else {
+        modalEditarCuota.value = false
+      }
+      
       cuotaEditando.value = null
       // Recargar cuotas para asegurar que todo esté actualizado
       await cuotasStore.fetchCuotasNatillera(id)
@@ -11441,6 +12320,150 @@ async function compartirWhatsApp() {
     }
   } finally {
     generandoImagen.value = false
+  }
+}
+
+async function descargarComprobanteModificacion() {
+  console.log('Iniciando descarga de comprobante de modificación...')
+  
+  if (!comprobanteModificacionRef.value) {
+    alert('Error: El comprobante no está listo. Intenta de nuevo.')
+    return
+  }
+  
+  generandoImagenModificacion.value = true
+  
+  try {
+    const dataUrl = await toPng(comprobanteModificacionRef.value, {
+      backgroundColor: '#eff6ff',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    
+    console.log('Imagen generada, iniciando descarga...')
+    const link = document.createElement('a')
+    link.download = `comprobante-modificacion-${modificacionRegistrada.value?.socioNombre?.replace(/\s+/g, '-') || 'modificacion'}-${Date.now()}.png`
+    link.href = dataUrl
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    console.log('Descarga completada')
+    
+    // Registrar auditoría de descarga de comprobante
+    if (modificacionRegistrada.value) {
+      const auditoria = useAuditoria()
+      registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+        tipoAccion: 'DOWNLOAD',
+        entidad: 'comprobante',
+        entidadId: modificacionRegistrada.value.cuotaId,
+        descripcion: `Se descargó comprobante de modificación de ${modificacionRegistrada.value.socioNombre || 'socio'} (Código anterior: ${modificacionRegistrada.value.codigoAnterior || 'N/A'}, Código nuevo: ${modificacionRegistrada.value.codigoNuevo || 'N/A'})`,
+        natilleraId: id,
+        detalles: {
+          tipo_comprobante: 'modificacion_cuota',
+          codigo_comprobante_anterior: modificacionRegistrada.value.codigoAnterior,
+          codigo_comprobante_nuevo: modificacionRegistrada.value.codigoNuevo,
+          socio_nombre: modificacionRegistrada.value.socioNombre,
+          valor_anterior: modificacionRegistrada.value.valorAnterior,
+          valor_nuevo: modificacionRegistrada.value.valorNuevo
+        }
+      }))
+    }
+  } catch (e) {
+    console.error('Error completo:', e)
+    alert('Error al generar la imagen: ' + e.message)
+  } finally {
+    generandoImagenModificacion.value = false
+  }
+}
+
+async function compartirWhatsAppModificacion() {
+  if (!modificacionRegistrada.value || !comprobanteModificacionRef.value) return
+  
+  generandoImagenModificacion.value = true
+  
+  try {
+    const dataUrl = await toPng(comprobanteModificacionRef.value, {
+      backgroundColor: '#eff6ff',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    
+    const response = await fetch(dataUrl)
+    const blob = await response.blob()
+    
+    const nombreArchivo = `comprobante-modificacion-${modificacionRegistrada.value.socioNombre?.replace(/\s+/g, '-') || 'modificacion'}-${Date.now()}.png`
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+    
+    const periodo = modificacionRegistrada.value?.periodo || 'N/A'
+    const mensajeCompartir = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
+    
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      await navigator.share({
+        files: [archivo],
+        title: 'Comprobante de Modificación',
+        text: mensajeCompartir
+      })
+      
+      // Registrar auditoría de envío de comprobante
+      if (modificacionRegistrada.value?.cuotaId) {
+        const auditoria = useAuditoria()
+        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+          tipoAccion: 'SEND',
+          entidad: 'comprobante',
+          entidadId: modificacionRegistrada.value.cuotaId,
+          descripcion: `Se envió comprobante de modificación por WhatsApp a ${modificacionRegistrada.value.socioNombre || 'socio'} (Código anterior: ${modificacionRegistrada.value.codigoAnterior || 'N/A'}, Código nuevo: ${modificacionRegistrada.value.codigoNuevo || 'N/A'})`,
+          natilleraId: id,
+          detalles: {
+            tipo_comprobante: 'modificacion_cuota',
+            metodo_envio: 'whatsapp_share',
+            codigo_comprobante_anterior: modificacionRegistrada.value.codigoAnterior,
+            codigo_comprobante_nuevo: modificacionRegistrada.value.codigoNuevo,
+            socio_nombre: modificacionRegistrada.value.socioNombre,
+            socio_telefono: modificacionRegistrada.value.socioTelefono,
+            valor_anterior: modificacionRegistrada.value.valorAnterior,
+            valor_nuevo: modificacionRegistrada.value.valorNuevo
+          }
+        }))
+      }
+    } else {
+      // Fallback: descargar y abrir WhatsApp con mensaje
+      const dataUrl = await toPng(comprobanteModificacionRef.value, {
+        backgroundColor: '#eff6ff',
+        pixelRatio: 2,
+        quality: 1.0,
+        cacheBust: true
+      })
+      const link = document.createElement('a')
+      link.download = `comprobante-modificacion-${modificacionRegistrada.value?.socioNombre?.replace(/\s+/g, '-')}.png`
+      link.href = dataUrl
+      link.click()
+      
+      setTimeout(() => {
+        const telefono = modificacionRegistrada.value.socioTelefono?.replace(/\D/g, '')
+        if (telefono) {
+          const periodo = modificacionRegistrada.value?.periodo || 'N/A'
+          const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
+          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        }
+      }, 500)
+      
+      alert('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.')
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error('Error compartiendo:', e)
+      const telefono = modificacionRegistrada.value.socioTelefono?.replace(/\D/g, '')
+      if (telefono) {
+        const periodo = modificacionRegistrada.value?.periodo || 'N/A'
+        const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
+        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+      }
+    }
+  } finally {
+    generandoImagenModificacion.value = false
   }
 }
 
