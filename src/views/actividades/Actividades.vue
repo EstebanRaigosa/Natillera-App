@@ -4249,7 +4249,8 @@ async function confirmarLiquidacion() {
       }
     }
 
-    // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad y ganador
+    // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad, ganador y forma de pago
+    const formaPagoLiquidacion = (formLiquidar.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo'
     const { error: errorActividad } = await supabase
       .from('actividades')
       .update({
@@ -4260,7 +4261,8 @@ async function confirmarLiquidacion() {
         numero_ganador: numeroGanador,
         ganador_nombre: ganadorNombre,
         ganador_socio_natillera_id: ganadorSocioNatilleraId,
-        ganador_es_faltante: ganadorEsFaltante
+        ganador_es_faltante: ganadorEsFaltante,
+        forma_pago_liquidacion: formaPagoLiquidacion
       })
       .eq('id', actividadSeleccionada.value.id)
 
@@ -4348,29 +4350,47 @@ async function confirmarLiquidacion() {
 
     // 3. Registrar salida del fondo por el premio entregado (forma de pago seleccionada en el modal)
     if (gastosFinal > 0) {
-      const formaPagoPremio = (formLiquidar.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo'
       const { error: errorMov } = await supabase
         .from('movimientos_fondo')
         .insert({
           natillera_id: actividadSeleccionada.value.natillera_id,
           tipo: 'salida',
           monto: gastosFinal,
-          forma_pago: formaPagoPremio,
+          forma_pago: formaPagoLiquidacion,
           descripcion: `Premio rifa liquidada: ${actividadSeleccionada.value.descripcion || 'Rifa'}`,
           fecha: new Date().toISOString().slice(0, 10)
         })
       if (errorMov) throw errorMov
     }
 
-    // 4. Cerrar modales y recargar actividades
+    // 4. Cerrar modales de liquidación y recargar actividades
     modalLiquidarActividad.value = false
     modalConfirmarLiquidacionNegativa.value = false
-    modalDetalleActividad.value = false
     busquedaNumero.value = '' // Limpiar búsqueda al cerrar
     notificationStore.success('Actividad liquidada exitosamente', 'Éxito')
     
-    // Recargar actividades
+    // Recargar actividades para obtener la actividad con datos del ganador
     await fetchActividades()
+    
+    // Buscar la actividad actualizada con numero_ganador, ganador_nombre, ganador_socio_natillera, etc.
+    const actividadActualizada = actividades.value.find(a => a.id === actividadSeleccionada.value.id)
+    if (actividadActualizada) {
+      actividadSeleccionada.value = actividadActualizada
+    } else {
+      // Fallback: actualizar con los datos que ya calculamos
+      actividadSeleccionada.value = {
+        ...actividadSeleccionada.value,
+        numero_ganador: numeroGanador,
+        ganador_nombre: ganadorNombre,
+        ganador_es_faltante: ganadorEsFaltante,
+        ganador_socio_natillera_id: ganadorSocioNatilleraId,
+        estado: 'liquidada'
+      }
+    }
+    
+    // Cerrar modal de detalle y mostrar modal del ganador
+    modalDetalleActividad.value = false
+    modalGanadorRifa.value = true
   } catch (e) {
     console.error('Error liquidando actividad:', e)
     notificationStore.error(e.message || 'Error al liquidar la actividad', 'Error')

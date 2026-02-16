@@ -1532,7 +1532,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return codigo
   }
 
-  async function registrarPago(cuotaId, valorPagado, comprobante = null, tipoPago = null, valorActividades = 0) {
+  async function registrarPago(cuotaId, valorPagado, comprobante = null, tipoPago = null, valorActividades = 0, options = {}) {
     try {
       loading.value = true
       error.value = null
@@ -1920,6 +1920,27 @@ export const useCuotasStore = defineStore('cuotas', () => {
         updateData.tipo_pago = tipoPago
       }
       
+      // Desglose pago mixto: valor_pagado_efectivo y valor_pagado_transferencia
+      const valorEfectivo = options.valorEfectivo ?? (tipoPago === 'efectivo' ? valorPagado : 0)
+      const valorTransferencia = options.valorTransferencia ?? (tipoPago === 'transferencia' ? valorPagado : 0)
+      if (tipoPago === 'mixto' && (valorEfectivo > 0 || valorTransferencia > 0)) {
+        // Acumular con lo ya pagado (pago parcial anterior)
+        const vEfAnterior = parseFloat(cuotaActual.valor_pagado_efectivo) || 0
+        const vTrAnterior = parseFloat(cuotaActual.valor_pagado_transferencia) || 0
+        updateData.valor_pagado_efectivo = vEfAnterior + valorEfectivo
+        updateData.valor_pagado_transferencia = vTrAnterior + valorTransferencia
+      } else if (tipoPago === 'efectivo' || tipoPago === 'transferencia') {
+        const vEfAnterior = parseFloat(cuotaActual.valor_pagado_efectivo) || 0
+        const vTrAnterior = parseFloat(cuotaActual.valor_pagado_transferencia) || 0
+        if (tipoPago === 'efectivo') {
+          updateData.valor_pagado_efectivo = vEfAnterior + (nuevoValorPagado - valorPagadoAnterior)
+          updateData.valor_pagado_transferencia = vTrAnterior
+        } else {
+          updateData.valor_pagado_efectivo = vEfAnterior
+          updateData.valor_pagado_transferencia = vTrAnterior + (nuevoValorPagado - valorPagadoAnterior)
+        }
+      }
+      
       // Actualizar valor_multa (y desglose base/intereses) en la BD
       // IMPORTANTE: Solo quitar la sanción cuando la cuota esté completamente pagada
       if (nuevaEstado === 'pagada' && sancionQuitada) {
@@ -2031,6 +2052,23 @@ export const useCuotasStore = defineStore('cuotas', () => {
           .maybeSingle()
         data = retryActividades.data
         updateError = retryActividades.error
+      }
+
+      // Si falla por columnas desglose mixto (valor_pagado_efectivo/transferencia), reintentar sin ellas
+      if (updateError && updateError.message && (
+        updateError.message.includes('valor_pagado_efectivo') ||
+        updateError.message.includes('valor_pagado_transferencia')
+      )) {
+        delete updateData.valor_pagado_efectivo
+        delete updateData.valor_pagado_transferencia
+        const retryDesglose = await supabase
+          .from('cuotas')
+          .update(updateData)
+          .eq('id', cuotaId)
+          .select('*')
+          .maybeSingle()
+        data = retryDesglose.data
+        updateError = retryDesglose.error
       }
 
       if (updateError) throw updateError

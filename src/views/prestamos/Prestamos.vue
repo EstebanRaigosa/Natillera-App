@@ -1012,6 +1012,37 @@
               </div>
             </div>
 
+            <!-- Forma de pago del abono -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Forma de pago</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  @click="formAbono.tipo_pago = 'efectivo'"
+                  :class="[
+                    'p-3 rounded-xl border-2 transition-all',
+                    formAbono.tipo_pago === 'efectivo'
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  ]"
+                >
+                  <span class="font-semibold text-sm" :class="formAbono.tipo_pago === 'efectivo' ? 'text-green-700' : 'text-gray-600'">Efectivo</span>
+                </button>
+                <button
+                  type="button"
+                  @click="formAbono.tipo_pago = 'transferencia'"
+                  :class="[
+                    'p-3 rounded-xl border-2 transition-all',
+                    formAbono.tipo_pago === 'transferencia'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  ]"
+                >
+                  <span class="font-semibold text-sm" :class="formAbono.tipo_pago === 'transferencia' ? 'text-blue-700' : 'text-gray-600'">Transferencia</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Campo de fecha de pago -->
             <div>
               <label class="label mb-2 flex items-center gap-2">
@@ -2790,6 +2821,19 @@ import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
+/** Devuelve mes (1-12), anio y quincena (1 o 2) desde fecha_proyectada para plan_pagos_prestamo */
+function periodoDesdeFechaProyectada(fechaProyectada) {
+  if (!fechaProyectada) return { mes: null, anio: null, quincena: null }
+  const d = new Date(fechaProyectada)
+  if (isNaN(d.getTime())) return { mes: null, anio: null, quincena: null }
+  const dia = d.getDate()
+  return {
+    mes: d.getMonth() + 1,
+    anio: d.getFullYear(),
+    quincena: dia <= 15 ? 1 : 2
+  }
+}
+
 const notificationStore = useNotificationStore()
 const natillerasStore = useNatillerasStore()
 const auditoria = useAuditoria()
@@ -2861,7 +2905,10 @@ const modalNuevoPrestamoScrollRef = ref(null)
 
 const formAbono = reactive({
   valor: 0,
-  fecha_pago: getCurrentDateISO() // Fecha actual en formato YYYY-MM-DD
+  fecha_pago: getCurrentDateISO(),
+  tipo_pago: 'efectivo', // efectivo | transferencia
+  valor_efectivo: 0,
+  valor_transferencia: 0
 })
 
 const formRefinanciar = reactive({
@@ -3833,6 +3880,9 @@ function cerrarModalAbono() {
   modalAbono.value = false
   formAbono.valor = 0
   formAbono.fecha_pago = getCurrentDateISO()
+  formAbono.tipo_pago = 'efectivo'
+  formAbono.valor_efectivo = 0
+  formAbono.valor_transferencia = 0
   valorAbonoFormateado.value = ''
   prestamoSeleccionado.value = null
 }
@@ -4561,13 +4611,15 @@ async function aplicarAbonoAPlanPagos(prestamoId, valorAbono, fechaPago) {
       
       if (abonoRestante >= valorRestanteCuota) {
         // El abono cubre completamente el resto de esta cuota
-        // Marcar como pagada y actualizar valor_pagado
+        // mes, anio, quincena según fecha_proyectada (periodo de vencimiento)
+        const periodo = periodoDesdeFechaProyectada(cuota.fecha_proyectada)
         const { error: errorUpdate } = await supabase
           .from('plan_pagos_prestamo')
           .update({
             pagada: true,
             fecha_pago: fechaPago,
-            valor_pagado: valorCuota
+            valor_pagado: valorCuota,
+            ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
           })
           .eq('id', cuota.id)
 
@@ -4737,22 +4789,35 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
       valor_pagado: parseFloat(c.valor_pagado || 0)
     }))
 
-    // Resetear todas las cuotas: valor_pagado = 0, pagada = false
+    // Resetear todas las cuotas
     for (const cuota of todasCuotas) {
       await supabase
         .from('plan_pagos_prestamo')
         .update({
           valor_pagado: 0,
+          valor_pagado_efectivo: 0,
+          valor_pagado_transferencia: 0,
           pagada: false,
           fecha_pago: null
         })
         .eq('id', cuota.id)
     }
 
-    // Recalcular aplicando todos los pagos desde cero
+    // Totales de pagos (soportando desglose efectivo/transferencia)
     let abonoRestante = 0
+    let abonoRestanteEfectivo = 0
+    let abonoRestanteTransferencia = 0
     for (const pago of todosPagos) {
-      abonoRestante += parseFloat(pago.valor)
+      const v = parseFloat(pago.valor) || 0
+      const vEf = parseFloat(pago.valor_efectivo)
+      const vTr = parseFloat(pago.valor_transferencia)
+      abonoRestante += v
+      if (!isNaN(vEf) && !isNaN(vTr)) {
+        abonoRestanteEfectivo += vEf
+        abonoRestanteTransferencia += vTr
+      } else {
+        abonoRestanteEfectivo += v
+      }
     }
 
     // Ordenar las cuotas por número (ya están ordenadas, pero por seguridad)
@@ -4778,18 +4843,26 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
       if (abonoRestante >= valorCuota) {
         // El abono cubre completamente esta cuota
         const fechaUltimoPago = todosPagos[todosPagos.length - 1]?.fecha || new Date().toISOString()
-        
-        // Verificar si esta cuota se está marcando como pagada por primera vez
+        const periodo = periodoDesdeFechaProyectada(cuota.fecha_proyectada)
         const cuotaAnterior = cuotasAnteriores.find(c => c.id === cuota.id)
         const seMarcoComoPagada = !cuotaAnterior?.pagada
-
+        const ratioEf = abonoRestante > 0 ? abonoRestanteEfectivo / abonoRestante : 1
+        const vEf = Math.round(valorCuota * ratioEf)
+        const vTr = valorCuota - vEf
+        const updatePayload = {
+          pagada: true,
+          valor_pagado: valorCuota,
+          fecha_pago: fechaUltimoPago,
+          forma_pago: vEf > 0 && vTr > 0 ? null : (vEf > 0 ? 'efectivo' : 'transferencia'),
+          ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
+        }
+        if (vEf > 0 || vTr > 0) {
+          updatePayload.valor_pagado_efectivo = vEf
+          updatePayload.valor_pagado_transferencia = vTr
+        }
         await supabase
           .from('plan_pagos_prestamo')
-          .update({
-            pagada: true,
-            valor_pagado: valorCuota,
-            fecha_pago: fechaUltimoPago
-          })
+          .update(updatePayload)
           .eq('id', cuota.id)
 
         // Si se marcó como pagada, registrar el interés según el tipo de préstamo
@@ -4805,17 +4878,28 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
         }
 
         abonoRestante -= valorCuota
+        abonoRestanteEfectivo -= vEf
+        abonoRestanteTransferencia -= vTr
         indiceCuota++
       } else {
         // El abono no cubre completamente la cuota
+        const ratioEf = abonoRestante > 0 ? abonoRestanteEfectivo / abonoRestante : 1
+        const vEf = Math.round(abonoRestante * ratioEf)
+        const vTr = abonoRestante - vEf
+        const updatePayload = { valor_pagado: abonoRestante }
+        if (vEf > 0 || vTr > 0) {
+          updatePayload.valor_pagado_efectivo = vEf
+          updatePayload.valor_pagado_transferencia = vTr
+          updatePayload.forma_pago = vEf > 0 && vTr > 0 ? null : (vEf > 0 ? 'efectivo' : 'transferencia')
+        }
         await supabase
           .from('plan_pagos_prestamo')
-          .update({
-            valor_pagado: abonoRestante
-          })
+          .update(updatePayload)
           .eq('id', cuota.id)
 
         abonoRestante = 0
+        abonoRestanteEfectivo = 0
+        abonoRestanteTransferencia = 0
       }
     }
 
@@ -4986,15 +5070,18 @@ function generarPlanPagos(prestamo) {
     
     saldoRestante = Math.max(0, saldoRestante - capitalCuota)
     
+    const fp = formatDateToLocalISO(fechaProyectada)
+    const periodo = periodoDesdeFechaProyectada(fp)
     planPagos.push({
       prestamo_id: prestamo.id,
       numero_cuota: i,
-      fecha_proyectada: formatDateToLocalISO(fechaProyectada),
+      fecha_proyectada: fp,
       valor_cuota: Math.round(valorCuota),
       capital: Math.round(capitalCuota),
       interes: Math.round(interesCuota),
       saldo_proyectado: Math.round(saldoRestante),
-      pagada: false
+      pagada: false,
+      ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
     })
   }
   
@@ -5121,16 +5208,19 @@ function generarPlanPagosRefinanciado(prestamo, saldoActual, nuevaFechaInicio, d
     
     saldoRestante = Math.ceil(Math.max(0, saldoRestante - capitalCuota))
     
+    const fp = formatDateToLocalISO(fechaProyectada)
+    const periodo = periodoDesdeFechaProyectada(fp)
     planPagos.push({
       prestamo_id: prestamo.id,
       numero_cuota: i,
-      fecha_proyectada: formatDateToLocalISO(fechaProyectada),
+      fecha_proyectada: fp,
       valor_cuota: Math.ceil(valorCuota),
       capital: Math.ceil(capitalCuota),
       interes: Math.ceil(interesCuota),
       saldo_proyectado: Math.ceil(saldoRestante),
       pagada: false,
-      valor_pagado: 0
+      valor_pagado: 0,
+      ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
     })
   }
   
@@ -5830,11 +5920,15 @@ async function handleRegistrarAbono() {
     // La base de datos guardará la fecha correctamente
     const fechaPago = formAbono.fecha_pago || formatDateToLocalISO(new Date())
     
+    const fp = (formAbono.tipo_pago || 'efectivo').toLowerCase()
+    const v = parseFloat(formAbono.valor)
     const datosPago = {
       prestamo_id: prestamoSeleccionado.value.id,
-      valor: parseFloat(formAbono.valor),
+      valor: v,
       fecha: fechaPago,
-      codigo_comprobante: codigoComprobante
+      codigo_comprobante: codigoComprobante,
+      valor_efectivo: fp === 'transferencia' ? 0 : v,
+      valor_transferencia: fp === 'transferencia' ? v : 0
     }
     
     console.log('💾 Registrando abono con datos:', datosPago)
@@ -5982,6 +6076,7 @@ async function handleRegistrarAbono() {
     
     modalAbono.value = false
     formAbono.valor = 0
+    formAbono.tipo_pago = 'efectivo'
     valorAbonoFormateado.value = ''
     prestamoSeleccionado.value = null
     

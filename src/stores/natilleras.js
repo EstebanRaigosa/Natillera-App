@@ -195,6 +195,48 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
   }
 
+  /** Carga natillera con socios_natillera, cuotas y actividades (sin tocar loading ni natilleraActual). Usado por calcularEstadisticas cuando la natillera viene sin datos. */
+  async function getNatilleraConDatos(id) {
+    const { data, error: fetchError } = await supabase.from('natilleras').select('*').eq('id', id).maybeSingle()
+    if (fetchError || !data) return null
+    const [sociosRes, actividadesRes] = await Promise.all([
+      supabase.from('socios_natillera').select(`*, socio:socios(*)`).eq('natillera_id', id),
+      supabase.from('actividades').select('*').eq('natillera_id', id)
+    ])
+    const sociosData = sociosRes.data || []
+    const actividadesData = actividadesRes.data || []
+    const actividadesEnCurso = (actividadesData || []).filter(a => a.estado === 'en_curso')
+    const socioNatilleraIds = (sociosData || []).map(s => s.id)
+    const promisesSegundaRonda = []
+    if (actividadesEnCurso.length > 0) {
+      promisesSegundaRonda.push(supabase.from('socios_actividad').select('actividad_id, valor_pagado').in('actividad_id', actividadesEnCurso.map(a => a.id)))
+    } else {
+      promisesSegundaRonda.push(Promise.resolve({ data: null }))
+    }
+    if (socioNatilleraIds.length > 0) {
+      promisesSegundaRonda.push(supabase.from('cuotas').select('*').in('socio_natillera_id', socioNatilleraIds))
+    } else {
+      promisesSegundaRonda.push(Promise.resolve({ data: [] }))
+    }
+    const [sociosActividadRes, cuotasRes] = await Promise.all(promisesSegundaRonda)
+    const sociosActividad = sociosActividadRes.data
+    const cuotasData = cuotasRes.data || []
+    let actividadesConTotales = actividadesData || []
+    if (actividadesEnCurso.length > 0 && sociosActividad) {
+      const totalPagadoPorActividad = {}
+      sociosActividad.forEach(sa => {
+        const aid = sa.actividad_id
+        if (!totalPagadoPorActividad[aid]) totalPagadoPorActividad[aid] = 0
+        totalPagadoPorActividad[aid] += Number(sa.valor_pagado) || 0
+      })
+      actividadesConTotales = (actividadesData || []).map(a => {
+        if (a.estado === 'en_curso' && totalPagadoPorActividad[a.id] !== undefined) return { ...a, total_pagado: totalPagadoPorActividad[a.id] }
+        return a
+      })
+    }
+    return { ...data, socios_natillera: sociosData, actividades: actividadesConTotales, cuotas: cuotasData }
+  }
+
   async function fetchNatillera(id) {
     try {
       loading.value = true
@@ -810,9 +852,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
   async function calcularEstadisticas(natillera) {
     if (!natillera) return null
 
-    const socios = natillera.socios_natillera || []
-    const cuotas = natillera.cuotas || []
-    const actividades = natillera.actividades || []
+    // Si la natillera no trae cuotas/socios (ej. lista del Dashboard), cargar datos completos como en NatilleraDetalle
+    let nat = natillera
+    const tieneCuotas = Array.isArray(natillera.cuotas) && natillera.cuotas.length > 0
+    const tieneSocios = Array.isArray(natillera.socios_natillera) && natillera.socios_natillera.length > 0
+    if ((!tieneCuotas || !tieneSocios) && natillera.id) {
+      const cargada = await getNatilleraConDatos(natillera.id)
+      if (cargada) nat = cargada
+    }
+
+    const socios = nat.socios_natillera || []
+    const cuotas = nat.cuotas || []
+    const actividades = nat.actividades || []
 
     console.log('=== DEBUG ESTADISTICAS ===')
     console.log('Cuotas encontradas:', cuotas.length)
@@ -828,7 +879,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       const { data: natilleraData } = await supabase
         .from('natilleras')
         .select('reglas_multas')
-        .eq('id', natillera.id)
+        .eq('id', nat.id)
         .single()
       
       configSanciones = natilleraData?.reglas_multas?.sanciones || null
@@ -840,7 +891,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       
         // Calcular sanciones dinámicas para cuotas en mora si las sanciones están activas
         if (configSanciones?.activa) {
-          const periodicidadNatillera = natillera?.periodicidad || 'mensual'
+          const periodicidadNatillera = nat?.periodicidad || 'mensual'
           const cuotasMora = cuotas.filter(c => c.estado === 'mora')
           
           // Función para obtener valor de sanción por posición (escalonada acumulativa)
@@ -1007,14 +1058,14 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     const tipoTransferencia = (t) => String(t ?? '').toLowerCase().trim() === 'transferencia'
     
     // Recaudado neto: solo valor_cuota (sin sanciones ni actividades) - para la vista "Recaudado Neto"
-    const totalRecaudadoEfectivo = cuotas
+    let totalRecaudadoEfectivo = cuotas
       .filter(c => c.estado === 'pagada' && tipoEfectivo(c.tipo_pago))
       .reduce((sum, c) => {
         const valorCuota = c.valor_cuota || 0
         return sum + valorCuota
       }, 0)
 
-    const totalRecaudadoTransferencia = cuotas
+    let totalRecaudadoTransferencia = cuotas
       .filter(c => c.estado === 'pagada' && tipoTransferencia(c.tipo_pago))
       .reduce((sum, c) => {
         const valorCuota = c.valor_cuota || 0
@@ -1022,7 +1073,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       }, 0)
 
     // Recaudado completo: valor_pagado total (incluye cuota + sanciones + actividades) - para la vista "Recaudado Completo"
-    const recaudadoCompletoEfectivoBruto = cuotas
+    let recaudadoCompletoEfectivoBruto = cuotas
       .filter(c => c.estado === 'pagada' && tipoEfectivo(c.tipo_pago))
       .reduce((sum, c) => {
         // valor_pagado incluye: valor_cuota + valor_multa + valor_pagado_actividades
@@ -1030,7 +1081,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         return sum + valorPagado
       }, 0)
 
-    const recaudadoCompletoTransferenciaBruto = cuotas
+    let recaudadoCompletoTransferenciaBruto = cuotas
       .filter(c => c.estado === 'pagada' && tipoTransferencia(c.tipo_pago))
       .reduce((sum, c) => {
         // valor_pagado incluye: valor_cuota + valor_multa + valor_pagado_actividades
@@ -1069,11 +1120,11 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     let utilidadesRecogidas = 0
     const utilidadesPorTipo = {}
     const utilidadesPorFormaPagoMap = { efectivo: 0, transferencia: 0, otro: 0 }
-    if (natillera.id) {
+    if (nat.id) {
       const { data: filasUtilidades, error: errorUtil } = await supabase
         .from('utilidades_clasificadas')
         .select('tipo, forma_pago, monto')
-        .eq('natillera_id', natillera.id)
+        .eq('natillera_id', nat.id)
         .is('fecha_cierre', null)
       if (!errorUtil && filasUtilidades?.length) {
         filasUtilidades.forEach((r) => {
@@ -1105,7 +1156,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         const { data: acts } = await supabase
           .from('actividades')
           .select('utilidad, estado')
-          .eq('natillera_id', natillera.id)
+          .eq('natillera_id', nat.id)
         if (acts?.length) {
           utilidadActividadesFb = acts.reduce((sum, a) => sum + (parseFloat(a.utilidad) || 0), 0)
         }
@@ -1157,15 +1208,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
 
     // Total desembolsado en préstamos (sigue desde tabla prestamos, no es utilidad)
+    // Recaudado por cuotas de préstamos pagadas (suma al total recaudado por forma de pago)
     let totalDesembolsadoPrestamos = 0
     let totalDesembolsadoEfectivo = 0
     let totalDesembolsadoTransferencia = 0
-    if (natillera.id) {
+    let pagosPrestamosEfectivo = 0
+    let pagosPrestamosTransferencia = 0
+    if (nat.id) {
       try {
         const { data: sociosNatillera } = await supabase
           .from('socios_natillera')
           .select('id')
-          .eq('natillera_id', natillera.id)
+          .eq('natillera_id', nat.id)
         if (sociosNatillera?.length > 0) {
           const socioNatilleraIds = sociosNatillera.map(s => s.id)
           const { data: prestamos } = await supabase
@@ -1189,12 +1243,35 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             totalDesembolsadoTransferencia = prestamos
               .filter(p => (p.medio_entrega || '').toLowerCase() === 'transferencia')
               .reduce((sum, p) => sum + montoAfectaFondo(p), 0)
+
+            // Cuotas de préstamos pagadas (pagada = true): sumar al total recaudado por forma de pago
+            const prestamoIds = prestamos.map(p => p.id)
+            const { data: planesPago } = await supabase
+              .from('plan_pagos_prestamo')
+              .select('valor_pagado, valor_cuota, forma_pago')
+              .in('prestamo_id', prestamoIds)
+              .eq('pagada', true)
+            if (planesPago?.length > 0) {
+              const fpTransferencia = (fp) => String(fp ?? '').toLowerCase().trim() === 'transferencia'
+              planesPago.forEach((pp) => {
+                const v = parseFloat(pp.valor_pagado) ?? parseFloat(pp.valor_cuota) ?? 0
+                if (v <= 0) return
+                if (fpTransferencia(pp.forma_pago)) pagosPrestamosTransferencia += v
+                else pagosPrestamosEfectivo += v
+              })
+            }
           }
         }
       } catch (e) {
         console.error('Error obteniendo desembolsos de préstamos:', e)
       }
     }
+
+    // Incluir cuotas de préstamos pagadas en totales recaudados y en recaudado completo
+    totalRecaudadoEfectivo += pagosPrestamosEfectivo
+    totalRecaudadoTransferencia += pagosPrestamosTransferencia
+    recaudadoCompletoEfectivoBruto += pagosPrestamosEfectivo
+    recaudadoCompletoTransferenciaBruto += pagosPrestamosTransferencia
 
     // Valores para desglose recaudado completo (siguen desde cuotas)
     const sancionesEfectivo = cuotasPagadas
@@ -1236,12 +1313,12 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     let totalPremiosRifas = 0
     let totalPremiosEfectivo = 0
     let totalPremiosTransferencia = 0
-    if (natillera.id) {
+    if (nat.id) {
       try {
         const { data: movs } = await supabase
           .from('movimientos_fondo')
           .select('tipo, monto, forma_pago, descripcion')
-          .eq('natillera_id', natillera.id)
+          .eq('natillera_id', nat.id)
         if (movs?.length) {
           const descMov = (m) => (m && (m.descripcion ?? '')).toString().toLowerCase().trim()
           const esPremioRifa = (m) => {
@@ -1267,8 +1344,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       }
     }
 
-    // Recaudado neto: aportes menos préstamos desembolsados menos premios rifa entregados
-    const totalRecaudadoNeto = Math.max(0, totalAportado - totalDesembolsadoPrestamos - totalPremiosRifas)
+    // Recaudado neto: aportes (cuotas ahorro + cuotas préstamos pagadas) menos préstamos desembolsados menos premios rifa entregados
+    const totalRecaudadoNeto = Math.max(0, totalAportado + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
     // Fondo disponible: recaudado neto + utilidades + movimientos de fondo (premios rifa, depósitos, retiros)
     const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas + movimientosEfectivoNeto + movimientosTransferenciaNeto
 
@@ -1319,6 +1396,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       sancionesTransferencia,
       actividadesEfectivo,
       actividadesTransferencia,
+      pagosPrestamosEfectivo,
+      pagosPrestamosTransferencia,
       recaudadoCompletoEfectivo,
       recaudadoCompletoTransferencia,
       recaudadoCompletoTotal,
@@ -1534,6 +1613,102 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
   }
 
+  /**
+   * Carga en lote las estadísticas para el dashboard (totalRecaudadoNeto, utilidadesRecogidas, fondoTotal)
+   * por natillera. Mucho más rápido que llamar calcularEstadisticas por cada una (menos consultas).
+   * @param {string[]} natilleraIds
+   * @returns {Promise<Record<string, { totalRecaudadoNeto: number, utilidadesRecogidas: number, fondoTotal: number }>>}
+   */
+  async function calcularEstadisticasParaDashboard(natilleraIds) {
+    const resultado = {}
+    natilleraIds.forEach(id => {
+      resultado[id] = { totalRecaudadoNeto: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
+    })
+    if (!natilleraIds.length) return resultado
+
+    const ids = [...natilleraIds]
+
+    const [sociosRes, utilRes, actsRes, movsRes] = await Promise.all([
+      supabase.from('socios_natillera').select('id, natillera_id').in('natillera_id', ids),
+      supabase.from('utilidades_clasificadas').select('natillera_id, monto').in('natillera_id', ids).is('fecha_cierre', null),
+      supabase.from('actividades').select('natillera_id, utilidad').in('natillera_id', ids),
+      supabase.from('movimientos_fondo').select('natillera_id, tipo, monto, forma_pago, descripcion').in('natillera_id', ids)
+    ])
+
+    const socios = sociosRes.data || []
+    const socioIds = socios.map(s => s.id)
+    const snToNat = {}
+    socios.forEach(s => { snToNat[s.id] = s.natillera_id })
+
+    const [cuotasRes, prestamosRes] = await Promise.all([
+      socioIds.length ? supabase.from('cuotas').select('socio_natillera_id, estado, valor_cuota, tipo_pago, valor_pagado, valor_multa, valor_pagado_sancion').in('socio_natillera_id', socioIds) : Promise.resolve({ data: [] }),
+      socioIds.length ? supabase.from('prestamos').select('id, monto, medio_entrega, interes_anticipado, interes_total, socio_natillera_id').in('socio_natillera_id', socioIds).in('estado', ['pagado', 'activo']) : Promise.resolve({ data: [] })
+    ])
+
+    const cuotas = cuotasRes.data || []
+    const prestamos = prestamosRes.data || []
+    const prestamoIds = prestamos.map(p => p.id)
+    const prestamoToSn = {}
+    prestamos.forEach(p => { prestamoToSn[p.id] = p.socio_natillera_id })
+
+    const planPagosRes = prestamoIds.length
+      ? await supabase.from('plan_pagos_prestamo').select('prestamo_id, valor_pagado, valor_cuota, forma_pago').in('prestamo_id', prestamoIds).eq('pagada', true)
+      : { data: [] }
+    const planesPago = planPagosRes.data || []
+
+    const utilidades = utilRes.data || []
+    const actividades = actsRes.data || []
+    const movs = movsRes.data || []
+
+    const tipoEfectivo = (t) => String(t ?? 'efectivo').toLowerCase().trim() === 'efectivo'
+    const tipoTransferencia = (t) => String(t ?? '').toLowerCase().trim() === 'transferencia'
+    const montoAfectaFondo = (p) => {
+      const monto = parseFloat(p.monto || 0)
+      if (p.interes_anticipado && p.interes_total != null) return monto + parseFloat(p.interes_total)
+      return monto
+    }
+    const descMov = (m) => (m && (m.descripcion ?? '')).toString().toLowerCase().trim()
+    const esPremioRifa = (m) => m.tipo === 'salida' && (descMov(m).includes('premio rifa') || descMov(m).includes('rifa liquidada') || (descMov(m).includes('premio') && descMov(m).includes('rifa')))
+
+    ids.forEach(natId => {
+      const cuotasNat = cuotas.filter(c => snToNat[c.socio_natillera_id] === natId)
+      const cuotasPagadas = cuotasNat.filter(c => c.estado === 'pagada')
+      const totalAportado = cuotasPagadas.reduce((sum, c) => sum + (parseFloat(c.valor_cuota) || 0), 0)
+      const sociosNat = socios.filter(s => s.natillera_id === natId).map(s => s.id)
+      const prestamosNat = prestamos.filter(p => p.socio_natillera_id && sociosNat.includes(p.socio_natillera_id))
+      const totalDesembolsadoPrestamos = prestamosNat.reduce((sum, p) => sum + montoAfectaFondo(p), 0)
+      let pagosPrestamosEfectivo = 0
+      let pagosPrestamosTransferencia = 0
+      prestamosNat.forEach(p => {
+        planesPago.filter(pp => pp.prestamo_id === p.id).forEach(pp => {
+          const v = parseFloat(pp.valor_pagado) ?? parseFloat(pp.valor_cuota) ?? 0
+          if (v <= 0) return
+          if (tipoTransferencia(pp.forma_pago)) pagosPrestamosTransferencia += v
+          else pagosPrestamosEfectivo += v
+        })
+      })
+      const movsNat = movs.filter(m => m.natillera_id === natId)
+      const totalPremiosRifas = movsNat.filter(m => esPremioRifa(m)).reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+      const entradasEf = movsNat.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'entrada').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+      const salidasEf = movsNat.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'salida' && !esPremioRifa(m)).reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+      const entradasTr = movsNat.filter(m => m.forma_pago === 'transferencia' && m.tipo === 'entrada').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+      const salidasTr = movsNat.filter(m => m.forma_pago === 'transferencia' && m.tipo === 'salida' && !esPremioRifa(m)).reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+      const movimientosEfectivoNeto = entradasEf - salidasEf
+      const movimientosTransferenciaNeto = entradasTr - salidasTr
+      let utilidadesRecogidas = utilidades.filter(u => u.natillera_id === natId).reduce((s, u) => s + (parseFloat(u.monto) || 0), 0)
+      if (utilidadesRecogidas === 0 && cuotasPagadas.length > 0) {
+        const sanciones = cuotasPagadas.reduce((s, c) => s + (parseFloat(c.valor_pagado_sancion) || parseFloat(c.valor_multa) || 0), 0)
+        const utilAct = actividades.filter(a => a.natillera_id === natId).reduce((s, a) => s + (parseFloat(a.utilidad) || 0), 0)
+        utilidadesRecogidas = sanciones + utilAct
+      }
+      const totalRecaudadoNeto = Math.max(0, totalAportado + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
+      const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas + movimientosEfectivoNeto + movimientosTransferenciaNeto
+      resultado[natId] = { totalRecaudadoNeto: totalRecaudadoNeto, utilidadesRecogidas, fondoTotal }
+    })
+
+    return resultado
+  }
+
   return {
     natilleras,
     natillerasCompartidas,
@@ -1555,6 +1730,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     reasignarNatillera,
     eliminarNatillera,
     calcularEstadisticas,
+    calcularEstadisticasParaDashboard,
     clasificarYGuardarUtilidades
   }
 })

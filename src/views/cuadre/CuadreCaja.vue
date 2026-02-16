@@ -84,7 +84,7 @@
             ${{ formatMoney(totalEsperadoEfectivo) }}
           </p>
           <div class="mt-3 pt-3 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
-            <p>• Cuotas + Sanciones + Actividades: ${{ formatMoney(recaudadoEfectivo) }}</p>
+            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoEfectivo) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosEfectivo) }}</p>
             <p v-if="premiosEfectivo > 0">• − Premios rifa: ${{ formatMoney(premiosEfectivo) }}</p>
             <p v-if="movimientosEfectivoNeto !== 0">• {{ movimientosEfectivoNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosEfectivoNeto) }}</p>
@@ -110,12 +110,28 @@
             ${{ formatMoney(totalEsperadoTransferencia) }}
           </p>
           <div class="mt-3 pt-3 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
-            <p>• Cuotas + Sanciones + Actividades: ${{ formatMoney(recaudadoTransferencia) }}</p>
+            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoTransferencia) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosTransferencia) }}</p>
             <p v-if="premiosTransferencia > 0">• − Premios rifa: ${{ formatMoney(premiosTransferencia) }}</p>
             <p v-if="movimientosTransferenciaNeto !== 0">• {{ movimientosTransferenciaNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosTransferenciaNeto) }}</p>
           </div>
         </button>
+
+        <!-- Total general (efectivo + transferencia) -->
+        <div class="md:col-span-2 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
+              <CalculatorIcon class="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <p class="text-gray-700 font-semibold">TOTAL GENERAL</p>
+              <p class="text-gray-500 text-xs">Efectivo + Transferencia</p>
+            </div>
+          </div>
+          <p class="text-teal-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
+            ${{ formatMoney(totalEsperadoGeneral) }}
+          </p>
+        </div>
       </div>
 
       <!-- Modal desglose Recaudado vs Utilidad -->
@@ -157,13 +173,21 @@
                 <p class="text-white/90 text-sm mt-1">Desglose: Recaudado vs Utilidad</p>
               </div>
               <div class="flex-1 overflow-y-auto p-6 space-y-4">
-                <!-- Recaudado (cuotas) -->
+                <!-- Recaudado (cuotas ahorro) -->
                 <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'">
                   <p class="text-sm font-semibold text-gray-700 mb-1">Recaudado (cuotas)</p>
                   <p class="text-2xl font-bold tabular-nums" :class="modalDesgloseFormaPago === 'efectivo' ? 'text-green-700' : 'text-blue-700'">
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasEfectivo : recaudadoCuotasTransferencia) }}
                   </p>
                   <p class="text-xs text-gray-500 mt-0.5">Aportes de socios (valor cuota)</p>
+                </div>
+                <!-- Cuotas préstamos (pagos de cuotas de préstamos) -->
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-teal-50 border-teal-200">
+                  <p class="text-sm font-semibold text-gray-700 mb-1">Cuotas préstamos</p>
+                  <p class="text-2xl font-bold tabular-nums text-teal-700">
+                    ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-0.5">Pagos de cuotas de préstamos según forma de pago</p>
                 </div>
                 <!-- Utilidad (sanciones + actividades) -->
                 <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200'">
@@ -231,20 +255,56 @@
             />
           </div>
           <div class="flex flex-col sm:flex-row gap-4 flex-wrap">
-          <!-- Filtro categoría -->
-          <div class="flex items-center gap-2 min-w-0">
+          <!-- Filtro categoría (dropdown con checkboxes) -->
+          <div ref="dropdownCategoriasRef" class="relative flex flex-col gap-2 min-w-0">
             <label class="text-sm font-semibold text-gray-700 shrink-0">Categoría:</label>
-            <select
-              v-model="filtroDetalleCategoria"
-              class="flex-1 sm:w-auto min-w-0 px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm"
+            <button
+              type="button"
+              @click="dropdownCategoriasAbierto = !dropdownCategoriasAbierto"
+              class="flex items-center justify-between gap-2 min-w-[11rem] px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
             >
-              <option value="todos">Todas</option>
-              <option value="cuota">Cuota</option>
-              <option value="sancion">Sanción</option>
-              <option value="actividad">Actividad</option>
-              <option value="prestamo">Préstamo</option>
-              <option value="premio_rifa">Premio rifa</option>
-            </select>
+              <span class="truncate">{{ etiquetaFiltroCategorias }}</span>
+              <ChevronDownIcon :class="['w-5 h-5 text-gray-500 shrink-0 transition-transform', dropdownCategoriasAbierto && 'rotate-180']" />
+            </button>
+            <Transition
+              enter-active-class="transition duration-150 ease-out"
+              enter-from-class="opacity-0 scale-95"
+              enter-to-class="opacity-100 scale-100"
+              leave-active-class="transition duration-100 ease-in"
+              leave-from-class="opacity-100 scale-100"
+              leave-to-class="opacity-0 scale-95"
+            >
+              <div
+                v-show="dropdownCategoriasAbierto"
+                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[11rem] max-h-[16rem] overflow-y-auto"
+              >
+                <button
+                  type="button"
+                  @click="filtroDetalleCategorias = []; dropdownCategoriasAbierto = false"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 transition-colors"
+                  :class="filtroDetalleCategorias.length === 0 ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700'"
+                >
+                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.length === 0 ? 'border-teal-500 bg-teal-500' : 'border-gray-300'">
+                    <CheckIcon v-if="filtroDetalleCategorias.length === 0" class="w-3.5 h-3.5 text-white" />
+                  </span>
+                  Todas
+                </button>
+                <div class="border-t border-gray-100 my-1" />
+                <button
+                  v-for="cat in CATEGORIAS_DETALLE"
+                  :key="cat.value"
+                  type="button"
+                  @click="toggleFiltroCategoria(cat.value)"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-teal-50/80 transition-colors"
+                  :class="filtroDetalleCategorias.includes(cat.value) ? 'bg-teal-50/80 text-teal-800 font-medium' : 'text-gray-700'"
+                >
+                  <span class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0" :class="filtroDetalleCategorias.includes(cat.value) ? 'border-teal-500 bg-teal-500' : 'border-gray-300'">
+                    <CheckIcon v-if="filtroDetalleCategorias.includes(cat.value)" class="w-3.5 h-3.5 text-white" />
+                  </span>
+                  {{ cat.label }}
+                </button>
+              </div>
+            </Transition>
           </div>
           <!-- Filtro forma de pago -->
           <div class="flex items-center gap-2 flex-wrap">
@@ -260,6 +320,42 @@
               @click="filtroDetalleFormaPago = 'transferencia'"
               :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'transferencia' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']"
             >Transferencia</button>
+          </div>
+          <!-- Ordenar por -->
+          <div ref="dropdownOrdenarRef" class="relative flex flex-col gap-2 min-w-0">
+            <label class="text-sm font-semibold text-gray-700 shrink-0">Ordenar por:</label>
+            <button
+              type="button"
+              @click="dropdownOrdenarAbierto = !dropdownOrdenarAbierto"
+              class="flex items-center justify-between gap-2 min-w-[8rem] px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
+            >
+              <span class="truncate">{{ OPCIONES_ORDENAR.find(o => o.value === ordenarDetallePor)?.label || 'Socio' }}</span>
+              <ChevronDownIcon :class="['w-5 h-5 text-gray-500 shrink-0 transition-transform', dropdownOrdenarAbierto && 'rotate-180']" />
+            </button>
+            <Transition
+              enter-active-class="transition duration-150 ease-out"
+              enter-from-class="opacity-0 scale-95"
+              enter-to-class="opacity-100 scale-100"
+              leave-active-class="transition duration-100 ease-in"
+              leave-from-class="opacity-100 scale-100"
+              leave-to-class="opacity-0 scale-95"
+            >
+              <div
+                v-show="dropdownOrdenarAbierto"
+                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[8rem] overflow-hidden"
+              >
+                <button
+                  v-for="opt in OPCIONES_ORDENAR"
+                  :key="opt.value"
+                  type="button"
+                  @click="ordenarDetallePor = opt.value; dropdownOrdenarAbierto = false"
+                  class="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-teal-50/80 transition-colors text-sm"
+                  :class="ordenarDetallePor === opt.value ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700'"
+                >
+                  {{ opt.label }}
+                </button>
+              </div>
+            </Transition>
           </div>
           </div>
         </div>
@@ -285,7 +381,7 @@
                 class="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
               >
                 <td class="py-2.5 px-2">
-                  <span :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium max-w-[200px] truncate', getConceptoClass(item.tipo)]" :title="item.concepto">
+                  <span :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium max-w-[200px] truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
                     {{ item.concepto }}
                   </span>
                   <span v-if="item.mes" class="text-gray-500 ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
@@ -318,7 +414,7 @@
           >
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
-                <span :class="['inline-flex px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 max-w-full truncate', getConceptoClass(item.tipo)]" :title="item.concepto">
+                <span :class="['inline-flex px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 max-w-full truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
                   {{ item.concepto }}
                 </span>
                 <span v-if="item.mes" class="text-gray-500 text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
@@ -398,7 +494,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -415,7 +511,9 @@ import {
   TrashIcon,
   TableCellsIcon,
   ArrowDownTrayIcon,
-  XMarkIcon
+  XMarkIcon,
+  ChevronDownIcon,
+  CheckIcon
 } from '@heroicons/vue/24/outline'
 import * as XLSX from 'xlsx-js-style'
 
@@ -436,13 +534,32 @@ const estadisticas = ref({
 })
 const movimientos = ref([])
 const detalleItems = ref([])
-const filtroDetalleCategoria = ref('todos')
+const CATEGORIAS_DETALLE = [
+  { value: 'cuota', label: 'Cuota' },
+  { value: 'cuota_prestamo', label: 'Cuota préstamo' },
+  { value: 'sancion', label: 'Sanción' },
+  { value: 'actividad', label: 'Actividad' },
+  { value: 'prestamo', label: 'Préstamo' },
+  { value: 'premio_rifa', label: 'Premio rifa' }
+]
+const filtroDetalleCategorias = ref([]) // Array: vacío = todas, si tiene valores = filtrar por esas
 const filtroDetalleFormaPago = ref('todos')
 const filtroDetalleBusqueda = ref('')
+const ordenarDetallePor = ref('socio') // 'socio' | 'concepto' | 'monto' | 'periodo'
+const OPCIONES_ORDENAR = [
+  { value: 'socio', label: 'Socio' },
+  { value: 'concepto', label: 'Concepto' },
+  { value: 'monto', label: 'Monto' },
+  { value: 'periodo', label: 'Período' }
+]
 const efectivoContado = ref(0)
 const transferenciaContada = ref(0)
 
 const modalDesgloseFormaPago = ref(null) // 'efectivo' | 'transferencia' | null
+const dropdownCategoriasAbierto = ref(false)
+const dropdownCategoriasRef = ref(null)
+const dropdownOrdenarAbierto = ref(false)
+const dropdownOrdenarRef = ref(null)
 const movimientoAEliminar = ref(null)
 const eliminandoMovimiento = ref(false)
 const exportando = ref(false)
@@ -471,6 +588,12 @@ const recaudadoCuotasEfectivo = computed(() => {
 })
 const recaudadoCuotasTransferencia = computed(() => {
   return detalleItems.value.filter(i => i.tipo === 'cuota' && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+})
+const recaudadoCuotasPrestamoEfectivo = computed(() => {
+  return detalleItems.value.filter(i => i.tipo === 'cuota_prestamo' && (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+})
+const recaudadoCuotasPrestamoTransferencia = computed(() => {
+  return detalleItems.value.filter(i => i.tipo === 'cuota_prestamo' && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 const utilidadEfectivo = computed(() => {
   return detalleItems.value.filter(i => (i.tipo === 'sancion' || i.tipo === 'actividad') && (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
@@ -517,20 +640,23 @@ const totalEsperadoEfectivo = computed(() => {
 const totalEsperadoTransferencia = computed(() => {
   return Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value) + movimientosTransferenciaNeto.value
 })
+const totalEsperadoGeneral = computed(() => {
+  return totalEsperadoEfectivo.value + totalEsperadoTransferencia.value
+})
 
 // Log del cálculo de totales generales y valor de cada concepto (consola del navegador)
 function logCalculoTotalesGenerales() {
   const fmt = (n) => (parseFloat(n) || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
   console.group('📊 Totales generales – Cálculo por concepto')
   console.log('--- EFECTIVO ---')
-  console.log('  Recaudado (cuotas + sanciones + actividades):', fmt(recaudadoEfectivo.value))
+  console.log('  Recaudado (cuotas + cuotas préstamos + sanciones + actividades):', fmt(recaudadoEfectivo.value))
   console.log('  − Préstamos entregados:', fmt(prestamosEfectivo.value))
   console.log('  − Premios rifa:', fmt(premiosEfectivo.value))
   console.log('  Recaudado neto (recaudado − préstamos − premios):', fmt(Math.max(0, recaudadoEfectivo.value - prestamosEfectivo.value - premiosEfectivo.value)))
   console.log('  + Movimientos de fondo (neto, sin premios):', fmt(movimientosEfectivoNeto.value))
   console.log('  = Total esperado efectivo:', fmt(totalEsperadoEfectivo.value))
   console.log('--- TRANSFERENCIA ---')
-  console.log('  Recaudado (cuotas + sanciones + actividades):', fmt(recaudadoTransferencia.value))
+  console.log('  Recaudado (cuotas + cuotas préstamos + sanciones + actividades):', fmt(recaudadoTransferencia.value))
   console.log('  − Préstamos entregados:', fmt(prestamosTransferencia.value))
   console.log('  − Premios rifa:', fmt(premiosTransferencia.value))
   console.log('  Recaudado neto:', fmt(Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value)))
@@ -556,8 +682,8 @@ const movimientosOrdenados = computed(() => {
 
 const detalleFiltrado = computed(() => {
   let list = detalleItems.value
-  if (filtroDetalleCategoria.value !== 'todos') {
-    list = list.filter(i => i.tipo === filtroDetalleCategoria.value)
+  if (filtroDetalleCategorias.value.length > 0) {
+    list = list.filter(i => filtroDetalleCategorias.value.includes(i.tipo))
   }
   if (filtroDetalleFormaPago.value !== 'todos') {
     list = list.filter(i => (i.forma_pago || 'efectivo') === filtroDetalleFormaPago.value)
@@ -570,18 +696,51 @@ const detalleFiltrado = computed(() => {
       return concepto.includes(busqueda) || socio.includes(busqueda)
     })
   }
-  return list
+  const orden = ordenarDetallePor.value
+  return [...list].sort((a, b) => {
+    if (orden === 'socio') return (a.socio || '—').localeCompare(b.socio || '—', 'es')
+    if (orden === 'concepto') return (a.concepto || '').localeCompare(b.concepto || '', 'es')
+    if (orden === 'monto') return (parseFloat(b.monto) || 0) - (parseFloat(a.monto) || 0) // mayor primero
+    if (orden === 'periodo') {
+      const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}`
+      const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}`
+      return keyB.localeCompare(keyA) // más reciente primero
+    }
+    return 0
+  })
 })
 const totalDetalleFiltrado = computed(() => {
   return detalleFiltrado.value.reduce((s, i) => s + (parseFloat(i.monto) || 0), 0)
 })
 
+const etiquetaFiltroCategorias = computed(() => {
+  if (filtroDetalleCategorias.value.length === 0) return 'Todas'
+  if (filtroDetalleCategorias.value.length === 1) {
+    return CATEGORIAS_DETALLE.find(c => c.value === filtroDetalleCategorias.value[0])?.label || '1 categoría'
+  }
+  return `${filtroDetalleCategorias.value.length} categorías`
+})
+
+function toggleFiltroCategoria(value) {
+  const arr = [...filtroDetalleCategorias.value]
+  const idx = arr.indexOf(value)
+  if (idx >= 0) {
+    arr.splice(idx, 1)
+  } else {
+    arr.push(value)
+  }
+  filtroDetalleCategorias.value = arr
+}
+
 function getConceptoLabel(tipo) {
-  const map = { cuota: 'Cuota', sancion: 'Sanción', actividad: 'Actividad', prestamo: 'Préstamo', premio_rifa: 'Premio rifa' }
+  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', prestamo: 'Préstamo', premio_rifa: 'Premio rifa' }
   return map[tipo] || tipo
 }
-function getConceptoClass(tipo) {
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', prestamo: 'bg-blue-100 text-blue-800', premio_rifa: 'bg-amber-100 text-amber-800' }
+function getConceptoClass(tipo, esParcial = false) {
+  if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
+    return 'bg-orange-100 text-orange-800 border border-orange-300/60'
+  }
+  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', prestamo: 'bg-blue-100 text-blue-800', premio_rifa: 'bg-amber-100 text-amber-800' }
   return map[tipo] || 'bg-gray-100 text-gray-700'
 }
 function getMesLabel(mes) {
@@ -611,7 +770,7 @@ async function exportarAExcel() {
       [natillera.value?.nombre || 'Natillera'],
       ['Cuadre de Caja - Detalle por concepto'],
       ['Exportado:', new Date().toLocaleString('es-CO')],
-      ['Filtros:', `Categoría: ${filtroDetalleCategoria.value === 'todos' ? 'Todas' : getConceptoLabel(filtroDetalleCategoria.value)} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}`],
+      ['Filtros:', `Categoría: ${filtroDetalleCategorias.value.length === 0 ? 'Todas' : filtroDetalleCategorias.value.map(c => getConceptoLabel(c)).join(', ')} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}`],
       [],
       ['Concepto', 'Socio', 'Forma de pago', 'Período', 'Monto'],
       ...datosExportar.map(d => [d.Concepto, d.Socio, d['Forma de pago'], d.Período, d.Monto]),
@@ -698,37 +857,99 @@ function formatDate(str) {
   return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosData = null) {
+function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosData = null, cuotasPrestamoPagadas = []) {
   const items = []
   if (!nat) return items
   const sociosMap = {}
   ;(nat.socios_natillera || []).forEach(sn => {
     sociosMap[sn.id] = sn.socio?.nombre || 'Socio'
   })
-  const cuotasPagadas = (nat.cuotas || []).filter(c => c.estado === 'pagada')
+  // Incluir cuotas pagadas y con pago parcial (valor_pagado > 0)
+  const cuotasConPago = (nat.cuotas || []).filter(c => c.estado === 'pagada' || (parseFloat(c.valor_pagado) || 0) > 0)
   const tipoPago = (t) => (String(t || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo')
 
-  // Cuotas y sanciones (entradas) - usar valor_pagado_sancion para lo realmente cobrado
-  cuotasPagadas.forEach(c => {
+  // Cuotas y sanciones (entradas) - soporte pago mixto con desglose
+  cuotasConPago.forEach(c => {
     const socio = sociosMap[c.socio_natillera_id] || '—'
-    const fp = tipoPago(c.tipo_pago)
     const vCuota = parseFloat(c.valor_cuota) || 0
+    const vPagado = parseFloat(c.valor_pagado) || 0
+    const esParcial = c.estado === 'parcial' || (vPagado > 0 && vPagado < vCuota)
+    const montoCuota = esParcial ? vPagado : vCuota
     const vSancion = parseFloat(c.valor_pagado_sancion) || parseFloat(c.valor_multa) || 0
-    if (vCuota > 0) {
-      items.push({ tipo: 'cuota', concepto: 'Cuota', socio, forma_pago: fp, monto: vCuota, mes: c.mes, anio: c.anio })
+    const vEfectivo = parseFloat(c.valor_pagado_efectivo) || 0
+    const vTransferencia = parseFloat(c.valor_pagado_transferencia) || 0
+    const totalDesglose = vEfectivo + vTransferencia
+    const tieneDesglose = totalDesglose > 0 && (vEfectivo > 0 && vTransferencia > 0)
+    const fp = tipoPago(c.tipo_pago)
+    const pushCuota = (forma, monto) => {
+      if (monto <= 0) return
+      items.push({
+        tipo: 'cuota',
+        concepto: esParcial ? 'Cuota (Parcial)' : 'Cuota',
+        socio,
+        forma_pago: forma,
+        monto,
+        mes: c.mes,
+        anio: c.anio,
+        esParcial
+      })
     }
-    if (vSancion > 0) {
-      items.push({ tipo: 'sancion', concepto: 'Sanción', socio, forma_pago: fp, monto: vSancion, mes: c.mes, anio: c.anio })
+    const pushSancion = (forma, monto) => {
+      if (monto <= 0) return
+      items.push({ tipo: 'sancion', concepto: 'Sanción', socio, forma_pago: forma, monto, mes: c.mes, anio: c.anio })
+    }
+    if (tieneDesglose && totalDesglose > 0) {
+      const ratioCuota = montoCuota / totalDesglose
+      const ratioSancion = vSancion / totalDesglose
+      pushCuota('efectivo', Math.round(vEfectivo * ratioCuota))
+      pushCuota('transferencia', Math.round(vTransferencia * ratioCuota))
+      pushSancion('efectivo', Math.round(vEfectivo * ratioSancion))
+      pushSancion('transferencia', Math.round(vTransferencia * ratioSancion))
+    } else {
+      if (montoCuota > 0) pushCuota(fp, montoCuota)
+      if (vSancion > 0) pushSancion(fp, vSancion)
     }
   })
 
-  // Actividades desglosadas por nombre (desde socios_actividad)
+  // Cuotas de préstamos pagadas o con pago parcial - soporte pago mixto
+  ;(cuotasPrestamoPagadas || []).forEach(pp => {
+    const vEfectivo = parseFloat(pp.valor_pagado_efectivo) || 0
+    const vTransferencia = parseFloat(pp.valor_pagado_transferencia) || 0
+    const montoTotal = vEfectivo + vTransferencia
+    const monto = montoTotal > 0 ? montoTotal : (parseFloat(pp.valor_pagado) ?? 0)
+    if (monto <= 0) return
+    const esParcial = pp.pagada === false && monto > 0
+    const socio = (pp.nombre_socio || '').trim() || '—'
+    const baseConcepto = `Cuota préstamo ${pp.numero_cuota != null ? `#${pp.numero_cuota}` : ''}`.trim()
+    const concepto = esParcial ? `${baseConcepto || 'Cuota préstamo'} (Parcial)` : (baseConcepto || 'Cuota préstamo')
+    if (vEfectivo > 0 && vTransferencia > 0) {
+      items.push({ tipo: 'cuota_prestamo', concepto: concepto + ' (Efectivo)', socio, forma_pago: 'efectivo', monto: vEfectivo, esParcial })
+      items.push({ tipo: 'cuota_prestamo', concepto: concepto + ' (Transfer.)', socio, forma_pago: 'transferencia', monto: vTransferencia, esParcial })
+    } else if (vEfectivo > 0 || vTransferencia > 0) {
+      const fp = vEfectivo > 0 ? 'efectivo' : 'transferencia'
+      items.push({ tipo: 'cuota_prestamo', concepto, socio, forma_pago: fp, monto: vEfectivo || vTransferencia, esParcial })
+    } else {
+      const fp = tipoPago(pp.forma_pago)
+      items.push({ tipo: 'cuota_prestamo', concepto, socio, forma_pago: fp, monto, esParcial })
+    }
+  })
+
+  // Actividades desglosadas - soporte pago mixto
   ;(sociosActividadData || []).forEach(sa => {
     const socio = sa.socio_natillera?.socio?.nombre || sociosMap[sa.socio_natillera_id] || '—'
     const nombreActividad = sa.actividad?.descripcion || 'Actividad'
-    const fp = tipoPago(sa.forma_pago)
-    const monto = parseFloat(sa.valor_pagado) || 0
-    if (monto > 0) {
+    const vEfectivo = parseFloat(sa.valor_pagado_efectivo) || 0
+    const vTransferencia = parseFloat(sa.valor_pagado_transferencia) || 0
+    const monto = vEfectivo + vTransferencia || parseFloat(sa.valor_pagado) || 0
+    if (monto <= 0) return
+    if (vEfectivo > 0 && vTransferencia > 0) {
+      items.push({ tipo: 'actividad', concepto: nombreActividad + ' (Efectivo)', socio, forma_pago: 'efectivo', monto: vEfectivo })
+      items.push({ tipo: 'actividad', concepto: nombreActividad + ' (Transfer.)', socio, forma_pago: 'transferencia', monto: vTransferencia })
+    } else if (vEfectivo > 0 || vTransferencia > 0) {
+      const fp = vEfectivo > 0 ? 'efectivo' : 'transferencia'
+      items.push({ tipo: 'actividad', concepto: nombreActividad, socio, forma_pago: fp, monto: vEfectivo || vTransferencia })
+    } else {
+      const fp = tipoPago(sa.forma_pago)
       items.push({ tipo: 'actividad', concepto: nombreActividad, socio, forma_pago: fp, monto })
     }
   })
@@ -772,8 +993,8 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     })
   }
 
-  // Ordenar: por año-mes desc, luego por tipo (cuota, sancion, actividad, prestamo, premio_rifa)
-  const ordenTipo = { cuota: 0, sancion: 1, actividad: 2, prestamo: 3, premio_rifa: 4 }
+  // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, prestamo, premio_rifa)
+  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, actividad: 2, prestamo: 3, premio_rifa: 4 }
   items.sort((a, b) => {
     const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}-${ordenTipo[a.tipo] ?? 4}`
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}-${ordenTipo[b.tipo] ?? 4}`
@@ -791,7 +1012,7 @@ async function cargarSociosActividadParaDetalle(natilleraId, idsSocioNatillera =
   if (ids.length === 0) return []
   const { data } = await supabase
     .from('socios_actividad')
-    .select('valor_pagado, forma_pago, socio_natillera_id, actividad:actividades(descripcion)')
+    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, forma_pago, socio_natillera_id, actividad:actividades(descripcion)')
     .in('socio_natillera_id', ids)
     .gt('valor_pagado', 0)
   return data || []
@@ -810,6 +1031,16 @@ async function cargarPrestamosParaDetalle(natilleraId, idsSocioNatillera = null)
     .in('socio_natillera_id', ids)
     .in('estado', ['activo', 'pagado'])
   return prestamos || []
+}
+
+async function cargarCuotasPrestamoPagadasParaDetalle(prestamoIds) {
+  if (!prestamoIds || prestamoIds.length === 0) return []
+  const { data } = await supabase
+    .from('plan_pagos_prestamo')
+    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, valor_cuota, forma_pago, nombre_socio, numero_cuota, fecha_pago, pagada')
+    .in('prestamo_id', prestamoIds)
+    .gt('valor_pagado', 0)
+  return data || []
 }
 
 async function cargarDatos() {
@@ -840,7 +1071,9 @@ async function cargarDatos() {
     if (error) throw error
     movimientos.value = movs || []
 
-    detalleItems.value = buildDetalleItems(nat, prestamosData, sociosActividadData, movs || [])
+    const prestamoIds = (prestamosData || []).map(p => p.id)
+    const cuotasPrestamoPagadas = await cargarCuotasPrestamoPagadasParaDetalle(prestamoIds)
+    detalleItems.value = buildDetalleItems(nat, prestamosData, sociosActividadData, movs || [], cuotasPrestamoPagadas)
     misPermisos.value = permisos
     await nextTick()
     logCalculoTotalesGenerales()
@@ -877,6 +1110,18 @@ async function eliminarMovimientoConfirmado() {
 }
 
 watch(id, cargarDatos, { immediate: true })
+
+// Cerrar dropdown de categorías al hacer clic fuera
+function handleClickOutsideDropdowns(e) {
+  if (dropdownCategoriasAbierto.value && dropdownCategoriasRef.value && !dropdownCategoriasRef.value.contains(e.target)) {
+    dropdownCategoriasAbierto.value = false
+  }
+  if (dropdownOrdenarAbierto.value && dropdownOrdenarRef.value && !dropdownOrdenarRef.value.contains(e.target)) {
+    dropdownOrdenarAbierto.value = false
+  }
+}
+onMounted(() => document.addEventListener('click', handleClickOutsideDropdowns))
+onUnmounted(() => document.removeEventListener('click', handleClickOutsideDropdowns))
 </script>
 
 <style scoped>

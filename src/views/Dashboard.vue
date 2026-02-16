@@ -187,12 +187,12 @@
       </div>
 
       <div class="relative overflow-hidden rounded-xl bg-white border border-gray-200 shadow-sm p-4">
-        <div class="flex flex-col items-center">
+        <div class="flex flex-col items-center min-w-0 w-full">
           <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center mb-2">
             <CurrencyDollarIcon class="w-5 h-5 text-white" />
           </div>
-          <p class="text-2xl font-display font-bold text-gray-800 mb-0.5">${{ formatMoneyShort(totalRecaudado) }}</p>
-          <p class="text-xs font-semibold text-gray-600">Recaudado</p>
+          <p class="text-lg sm:text-2xl font-display font-bold text-gray-800 mb-0.5 text-center break-words overflow-visible" :title="'$' + formatMoney(totalFondo ?? 0)">${{ formatMoney(totalFondo ?? 0) }}</p>
+          <p class="text-xs font-semibold text-gray-600">Total del fondo</p>
         </div>
       </div>
 
@@ -236,12 +236,12 @@
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-accent-50/30 to-orange-50/20 border border-accent-200/50 shadow-lg hover:shadow-xl hover:shadow-accent-500/20 hover:-translate-y-1 transition-all duration-300 p-5 sm:p-6 animate-fade-in-up stagger-3">
         <!-- Efecto decorativo -->
         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-accent-400/15 to-orange-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
-        <div class="relative z-10">
+        <div class="relative z-10 min-w-0 w-full">
           <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-accent-400 to-accent-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-accent-500/30">
             <CurrencyDollarIcon class="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <p class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-1">${{ formatMoneyShort(totalRecaudado) }}</p>
-          <p class="text-xs sm:text-sm font-semibold text-gray-600">Recaudado</p>
+          <p class="text-xl sm:text-3xl font-display font-bold text-gray-800 mb-1 break-words overflow-visible" :title="'$' + formatMoney(totalFondo ?? 0)">${{ formatMoney(totalFondo ?? 0) }}</p>
+          <p class="text-xs sm:text-sm font-semibold text-gray-600">Total del fondo</p>
         </div>
       </div>
 
@@ -552,31 +552,34 @@
                 </div>
               </div>
 
-              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
-              <div class="grid grid-cols-2 gap-4 mb-4">
-                <!-- Columna SOCIOS -->
+              <!-- Cuerpo: SOCIOS, RECAUDADO, UTILIDADES, FONDO TOTAL -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <p class="text-xs text-gray-500 font-medium mb-1">SOCIOS</p>
                   <div class="flex items-center gap-2">
-                    <!-- Icono de usuarios -->
-                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
-                    <!-- Número total de socios -->
-                    <span class="text-lg font-bold text-gray-800">
-                      {{ natillera.socios_count || 0 }}
-                    </span>
+                    <UserGroupIcon class="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span class="text-base font-bold text-gray-800">{{ natillera.socios_count || 0 }}</span>
                   </div>
                 </div>
-
-                <!-- Columna TOTAL RECAUDADO -->
-                <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
-                  <div class="flex items-center gap-2">
-                    <!-- Icono de bolsa de dinero -->
-                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
-                    <!-- Cantidad recaudada -->
-                    <span class="text-lg font-bold text-green-600">
-                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
-                    </span>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">RECAUDADO</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-green-600 break-all" :title="'$' + formatMoney(obtenerRecaudadoNetoNatillera(natillera.id))">${{ formatMoney(obtenerRecaudadoNetoNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">UTILIDADES</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-violet-500 flex-shrink-0" />
+                    <span class="text-sm font-bold text-violet-600 break-all" :title="'$' + formatMoney(obtenerUtilidadesNatillera(natillera.id))">${{ formatMoney(obtenerUtilidadesNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">FONDO TOTAL</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-emerald-700 break-all" :title="'$' + formatMoney(obtenerFondoNatillera(natillera.id))">${{ formatMoney(obtenerFondoNatillera(natillera.id) ?? 0) }}</span>
                   </div>
                 </div>
               </div>
@@ -706,31 +709,34 @@
                 </div>
               </div>
 
-              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
-              <div class="grid grid-cols-2 gap-4 mb-4">
-                <!-- Columna SOCIOS -->
+              <!-- Cuerpo: SOCIOS, RECAUDADO, UTILIDADES, FONDO TOTAL -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <p class="text-xs text-gray-500 font-medium mb-1">SOCIOS</p>
                   <div class="flex items-center gap-2">
-                    <!-- Icono de usuarios -->
-                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
-                    <!-- Número total de socios -->
-                    <span class="text-lg font-bold text-gray-800">
-                      {{ natillera.socios_count || 0 }}
-                    </span>
+                    <UserGroupIcon class="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span class="text-base font-bold text-gray-800">{{ natillera.socios_count || 0 }}</span>
                   </div>
                 </div>
-
-                <!-- Columna TOTAL RECAUDADO -->
-                <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
-                  <div class="flex items-center gap-2">
-                    <!-- Icono de bolsa de dinero -->
-                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
-                    <!-- Cantidad recaudada -->
-                    <span class="text-lg font-bold text-green-600">
-                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
-                    </span>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">RECAUDADO</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-green-600 break-all" :title="'$' + formatMoney(obtenerRecaudadoNetoNatillera(natillera.id))">${{ formatMoney(obtenerRecaudadoNetoNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">UTILIDADES</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-violet-500 flex-shrink-0" />
+                    <span class="text-sm font-bold text-violet-600 break-all" :title="'$' + formatMoney(obtenerUtilidadesNatillera(natillera.id))">${{ formatMoney(obtenerUtilidadesNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">FONDO TOTAL</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-emerald-700 break-all" :title="'$' + formatMoney(obtenerFondoNatillera(natillera.id))">${{ formatMoney(obtenerFondoNatillera(natillera.id) ?? 0) }}</span>
                   </div>
                 </div>
               </div>
@@ -866,31 +872,34 @@
                 </div>
               </div>
 
-              <!-- Cuerpo: SOCIOS y TOTAL RECAUDADO -->
-              <div class="grid grid-cols-2 gap-4 mb-4">
-                <!-- Columna SOCIOS -->
+              <!-- Cuerpo: SOCIOS, RECAUDADO, UTILIDADES, FONDO TOTAL -->
+              <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">SOCIOS</p>
+                  <p class="text-xs text-gray-500 font-medium mb-1">SOCIOS</p>
                   <div class="flex items-center gap-2">
-                    <!-- Icono de usuarios -->
-                    <UserGroupIcon class="w-6 h-6 text-blue-600" />
-                    <!-- Número total de socios -->
-                    <span class="text-lg font-bold text-gray-800">
-                      {{ natillera.socios_count || 0 }}
-                    </span>
+                    <UserGroupIcon class="w-5 h-5 text-blue-600 flex-shrink-0" />
+                    <span class="text-base font-bold text-gray-800">{{ natillera.socios_count || 0 }}</span>
                   </div>
                 </div>
-
-                <!-- Columna TOTAL RECAUDADO -->
-                <div>
-                  <p class="text-xs text-gray-500 font-medium mb-2">TOTAL RECAUDADO</p>
-                  <div class="flex items-center gap-2">
-                    <!-- Icono de bolsa de dinero -->
-                    <CurrencyDollarIcon class="w-6 h-6 text-green-600" />
-                    <!-- Cantidad recaudada -->
-                    <span class="text-lg font-bold text-green-600">
-                      ${{ formatMoneyShort(obtenerRecaudadoNatillera(natillera.id)) }}
-                    </span>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">RECAUDADO</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-green-600 break-all" :title="'$' + formatMoney(obtenerRecaudadoNetoNatillera(natillera.id))">${{ formatMoney(obtenerRecaudadoNetoNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">UTILIDADES</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-violet-500 flex-shrink-0" />
+                    <span class="text-sm font-bold text-violet-600 break-all" :title="'$' + formatMoney(obtenerUtilidadesNatillera(natillera.id))">${{ formatMoney(obtenerUtilidadesNatillera(natillera.id) ?? 0) }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-xs text-gray-500 font-medium mb-1">FONDO TOTAL</p>
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <CurrencyDollarIcon class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                    <span class="text-sm font-bold text-emerald-700 break-all" :title="'$' + formatMoney(obtenerFondoNatillera(natillera.id))">${{ formatMoney(obtenerFondoNatillera(natillera.id) ?? 0) }}</span>
                   </div>
                 </div>
               </div>
@@ -1219,7 +1228,7 @@ const notificationStore = useNotificationStore()
 const colaboradoresStore = useColaboradoresStore()
 const isIos = useIsIos()
 
-const totalRecaudado = ref(0)
+const totalFondo = ref(0)
 const filtro = ref('todas')
 const vistaActiva = ref('todas')
 const natilleraAEliminar = ref(null)
@@ -1228,6 +1237,8 @@ const usuarioAutenticado = ref(null)
 const procesandoInvitacion = ref(null)
 const recaudadoPorNatillera = ref({})
 const progresoPorNatillera = ref({})
+const fondoPorNatillera = ref({}) // fondoTotal por natillera (mismo valor que en detalle)
+const statsPorNatillera = ref({}) // { totalRecaudadoNeto, utilidadesRecogidas, fondoTotal } por id
 const mostrarModalCrearNatillera = ref(false)
 const natillerasDondeEsSocio = ref([])
 const verificandoModal = ref(true) // Estado para la animación de carga
@@ -1601,16 +1612,12 @@ async function cargarEmailsPropietarios() {
   }
 }
 
-// Watch para cuando termine de cargar las natilleras - este es el momento principal
+// Watch para cuando termine de cargar las natilleras
+// No ocultamos aquí la ventana de carga: se oculta solo al terminar inicializarComponente (después de calcularTotalFondo y datos de las tarjetas)
 watch(() => natillerasStore.loading, async (loading, oldLoading) => {
   // Si las natilleras empiezan a cargar y no está la animación visible, mostrarla
   if (!oldLoading && loading && usuarioAutenticado.value && !verificandoModal.value) {
     verificandoModal.value = true
-  }
-  
-  // Solo actuar cuando cambie de true a false (terminó de cargar) y si aún está verificando
-  if (oldLoading && !loading && usuarioAutenticado.value && verificandoModal.value) {
-    await finalizarVerificacionYMostrarModal()
   }
 
   // Cuando terminan de cargar, si el usuario es raigo, cargar emails de propietarios para el borde teal
@@ -1619,79 +1626,57 @@ watch(() => natillerasStore.loading, async (loading, oldLoading) => {
   }
 })
 
-// Watch de respaldo: si el usuario se autentica después de que terminó la carga
+// Watch de respaldo: al autenticarse el usuario, cargar emails de propietarios si aplica
+// La ventana de carga se oculta solo al terminar inicializarComponente (con datos de tarjetas)
 watch(() => usuarioAutenticado.value, async (usuario) => {
-  if (usuario && !natillerasStore.loading && verificandoModal.value) {
-    await finalizarVerificacionYMostrarModal()
-  }
   if (usuario && esUsuarioRaigo.value && !natillerasStore.loading) {
     await cargarEmailsPropietarios()
   }
 })
 
-// Watch para cuando se verifique si es socio - solo si aún está verificando
-watch(esSocioEnAlgunaNatillera, async () => {
-  if (usuarioAutenticado.value && !natillerasStore.loading && verificandoModal.value) {
-    await finalizarVerificacionYMostrarModal()
-  }
-})
 
-async function calcularTotalRecaudado() {
+async function calcularTotalFondo() {
   try {
-    // OPTIMIZACIÓN: Calcular total recaudado sumando los valores ya calculados por natillera
-    // Si ya se calculó el recaudado por natillera, usar esos datos
-    // Asegurar que siempre sean arrays antes de usar map
-    const natillerasArray = Array.isArray(natillerasStore.natilleras) ? natillerasStore.natilleras : []
-    const natillerasCompartidasArray = Array.isArray(natillerasStore.natillerasCompartidas) ? natillerasStore.natillerasCompartidas : []
-    
-    // Filtrar IDs válidos (no null, no undefined)
-    const idsNatilleras = natillerasArray.map(n => n?.id).filter(id => id != null)
-    const idsNatillerasCompartidas = natillerasCompartidasArray.map(n => n?.id).filter(id => id != null)
-    const todasIds = [...idsNatilleras, ...idsNatillerasCompartidas]
-    
-    if (todasIds.length === 0) {
-      totalRecaudado.value = 0
+    const lista = todasLasNatilleras.value
+    if (!lista || lista.length === 0) {
+      totalFondo.value = 0
+      fondoPorNatillera.value = {}
+      statsPorNatillera.value = {}
       return
     }
-
-    // Si ya tenemos los recaudados por natillera calculados, sumarlos
-    if (Object.keys(recaudadoPorNatillera.value).length > 0) {
-      totalRecaudado.value = todasIds.reduce((sum, id) => {
-        return sum + (recaudadoPorNatillera.value[id] || 0)
-      }, 0)
-      return
-    }
-
-    // Si no están calculados aún, hacer la query directamente (caso inicial)
-    const natilleraIds = idsNatilleras
-    
-    if (natilleraIds.length === 0) {
-      totalRecaudado.value = 0
-      return
-    }
-
-    const { data: sociosNatillera } = await supabase
-      .from('socios_natillera')
-      .select('id')
-      .in('natillera_id', natilleraIds)
-
-    if (!sociosNatillera || sociosNatillera.length === 0) {
-      totalRecaudado.value = 0
-      return
-    }
-
-    const socioNatilleraIds = sociosNatillera.map(s => s.id)
-
-    const { data: cuotas } = await supabase
-      .from('cuotas')
-      .select('valor_pagado')
-      .in('socio_natillera_id', socioNatilleraIds)
-
-    totalRecaudado.value = (cuotas || []).reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    // Carga en lote (muchas menos consultas que calcularEstadisticas por cada natillera)
+    const ids = lista.map(n => n?.id).filter(id => id != null)
+    const batchResult = await natillerasStore.calcularEstadisticasParaDashboard(ids)
+    const porId = {}
+    const statsPorId = {}
+    let suma = 0
+    ids.forEach(id => {
+      const s = batchResult[id] || { totalRecaudadoNeto: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
+      porId[id] = s.fondoTotal
+      statsPorId[id] = { totalRecaudadoNeto: s.totalRecaudadoNeto, utilidadesRecogidas: s.utilidadesRecogidas, fondoTotal: s.fondoTotal }
+      suma += s.fondoTotal
+    })
+    fondoPorNatillera.value = porId
+    statsPorNatillera.value = statsPorId
+    totalFondo.value = suma
   } catch (e) {
-    console.error('Error calculando total recaudado:', e)
-    totalRecaudado.value = 0
+    console.error('Error calculando total del fondo:', e)
+    totalFondo.value = 0
+    fondoPorNatillera.value = {}
+    statsPorNatillera.value = {}
   }
+}
+
+function obtenerFondoNatillera(natilleraId) {
+  return fondoPorNatillera.value[natilleraId] ?? 0
+}
+
+function obtenerRecaudadoNetoNatillera(natilleraId) {
+  return statsPorNatillera.value[natilleraId]?.totalRecaudadoNeto ?? 0
+}
+
+function obtenerUtilidadesNatillera(natilleraId) {
+  return statsPorNatillera.value[natilleraId]?.utilidadesRecogidas ?? 0
 }
 
 function formatMoney(value) {
@@ -2158,8 +2143,8 @@ async function inicializarComponente() {
     ])
   }
   
-  // Calcular total recaudado usando los datos ya calculados (evita query duplicada)
-  calcularTotalRecaudado()
+  // Calcular total del fondo (recaudado neto + utilidades + movimientos) para las tarjetas del dashboard
+  await calcularTotalFondo()
   
   // IMPORTANTE: Ocultar animación de carga ANTES de cargar datos no críticos
   // para que el usuario vea la UI lo antes posible
@@ -2195,16 +2180,17 @@ onActivated(async () => {
     verificandoModal.value = true
   }
   
-  // Si no hay usuario autenticado o las natilleras ya están cargadas, no hacer nada
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || (!natillerasStore.loading && !verificandoModal.value)) {
-    return
-  }
-  
-  // Si las natilleras necesitan recargarse o están cargando, inicializar
+  if (!user) return
+
+  // Si las natilleras necesitan recargarse o están cargando, inicializar todo
   if (natillerasStore.loading || todasLasNatilleras.value.length === 0) {
     await inicializarComponente()
+    return
   }
+
+  // Si ya hay natilleras cargadas, actualizar solo el total del fondo al volver (cuadre con cambios en cuotas, préstamos, etc.)
+  await calcularTotalFondo()
 })
 </script>
 

@@ -84,13 +84,13 @@
         <Breadcrumbs />
       </div>
 
-      <!-- Tarjeta superior - encabezado unificado -->
-      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm mb-4 sm:mb-6">
+      <!-- Tarjeta superior - encabezado unificado (diseño móvil según referencia) -->
+      <div class="bg-gray-100 rounded-2xl sm:rounded-2xl p-4 sm:p-6 sm:bg-gradient-to-br sm:from-white sm:via-emerald-50/50 sm:to-teal-100/70 border border-gray-200/80 shadow-sm mb-4 sm:mb-6">
         <div>
           <!-- Fila: botón volver + icono + título + estado -->
           <div class="flex flex-wrap items-center gap-3 mb-1">
             <BackButton inline />
-            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-teal-500 rounded-full sm:rounded-xl flex items-center justify-center flex-shrink-0">
               <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div class="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 flex-wrap">
@@ -115,71 +115,68 @@
               </div>
             </div>
           </div>
-          <p class="text-gray-500 text-sm mb-4 sm:mb-5 mt-1">
+          <p class="text-gray-500 text-sm mb-4 mt-1 sm:mb-5">
             {{ rangoMesesCorto }}
             <span class="text-gray-400 mx-1">·</span>
             {{ fechaInicioCorta }}
           </p>
           
-          <!-- Métricas con iconos: Socios, Recaudado, Pendiente, Utilidad -->
-          <div class="grid grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5">
-            <!-- Socios -->
-            <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center mb-1.5 text-gray-600">
-                <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+          <!-- Métricas 2x2 en móvil (tarjetas pastel individuales), 4 cols en desktop -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-5">
+            <!-- Socios - fondo blanco -->
+            <div class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-white sm:bg-transparent shadow-sm sm:shadow-none border border-gray-200/80 sm:border-0">
+              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-gray-100 flex items-center justify-center mb-1 sm:mb-2 text-gray-600">
+                <UsersIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
               </div>
-              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Socios</p>
-              <p class="text-gray-800 text-lg sm:text-xl font-bold">{{ estadisticas.totalSocios }}</p>
+              <p class="text-gray-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Socios</p>
+              <p class="text-gray-800 text-base sm:text-xl font-bold leading-tight">{{ estadisticas.totalSocios }}</p>
             </div>
             
-            <!-- Recaudado (clickeable) -->
+            <!-- Recaudado - fondo verde pálido (clickeable) -->
             <button 
               @click="modalDesgloseRecaudacion = true"
-              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity"
+              class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#eafaf1] sm:bg-transparent text-left group hover:opacity-90 transition-opacity shadow-sm sm:shadow-none border border-green-200/50 sm:border-0"
             >
-              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center mb-1.5 text-green-600 group-hover:bg-green-200/80 transition-colors">
-                <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-green-100 flex items-center justify-center mb-1 sm:mb-2 text-green-600 group-hover:bg-green-200/80 transition-colors">
+                <BanknotesIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
               </div>
-              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Recaudado</p>
-              <p class="text-green-600 text-lg sm:text-xl font-bold">
-                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) }}</span>
-                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) }}</span>
-              </p>
+              <p class="text-green-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Recaudado</p>
+              <p class="text-green-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) }}</p>
             </button>
             
-            <!-- Pendiente -->
-            <div class="flex flex-col items-center sm:items-start text-center sm:text-left">
-              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-1.5 text-amber-600">
-                <ClipboardDocumentListIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+            <!-- Pendiente - fondo naranja pálido -->
+            <div class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#fff8ed] sm:bg-transparent shadow-sm sm:shadow-none border border-amber-200/60 sm:border-0">
+              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-amber-100 flex items-center justify-center mb-1 sm:mb-2 text-amber-600">
+                <ClipboardDocumentListIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
               </div>
-              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Pendiente</p>
-              <p class="text-amber-600 text-lg sm:text-xl font-bold">
-                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.totalPendiente) }}</span>
-                <span class="hidden sm:inline">${{ formatMoney(estadisticas.totalPendiente) }}</span>
-              </p>
+              <p class="text-amber-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Pendiente</p>
+              <p class="text-amber-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(estadisticas.totalPendiente) }}</p>
             </div>
             
-            <!-- Utilidad (clickeable: desglose) -->
+            <!-- Utilidad - fondo morado pálido (clickeable) -->
             <button
               type="button"
               @click="modalUtilidadesDesglose = true"
-              class="flex flex-col items-center sm:items-start text-center sm:text-left group hover:opacity-90 transition-opacity"
+              class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#fbf0ff] sm:bg-transparent text-left group hover:opacity-90 transition-opacity shadow-sm sm:shadow-none border border-violet-200/50 sm:border-0"
             >
-              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-violet-100 flex items-center justify-center mb-1.5 text-violet-600 group-hover:bg-violet-200/80 transition-colors">
-                <SparklesIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-violet-100 flex items-center justify-center mb-1 sm:mb-2 text-violet-600 group-hover:bg-violet-200/80 transition-colors">
+                <SparklesIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
               </div>
-              <p class="text-gray-500 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0.5">Utilidad</p>
-              <p class="text-violet-600 text-lg sm:text-xl font-bold">
-                <span class="sm:hidden">${{ formatMoneyShort(estadisticas.utilidadesRecogidas || 0) }}</span>
-                <span class="hidden sm:inline">${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}</span>
-              </p>
+              <p class="text-violet-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Utilidad</p>
+              <p class="text-violet-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(estadisticas.utilidadesRecogidas || 0) }}</p>
             </button>
           </div>
           
-          <!-- Fondo total (línea divisoria y valor destacado) -->
-          <div class="pt-4 sm:pt-5 mt-4 sm:mt-5 border-t-2 border-gray-300 flex items-center justify-between">
-            <p class="text-gray-500 text-xs sm:text-sm font-semibold uppercase tracking-wide">Fondo total</p>
-            <p class="text-violet-600 text-2xl sm:text-3xl lg:text-4xl font-extrabold tabular-nums tracking-tight">${{ formatMoney(estadisticas.fondoTotal) }}</p>
+          <!-- Fondo total: tarjeta ancha en móvil (blanca, icono), línea divisoria en desktop -->
+          <div class="relative mt-4 sm:mt-5 pt-4 sm:pt-5 sm:border-t-2 sm:border-gray-300 flex flex-col sm:flex-row sm:items-center sm:justify-end bg-white sm:bg-transparent rounded-xl sm:rounded-none p-4 sm:p-0 min-h-[100px] sm:min-h-0 shadow-sm sm:shadow-none border border-gray-200/80 sm:border-0">
+            <div class="flex-1 sm:flex-initial sm:text-right">
+              <p class="text-gray-600 text-xs sm:text-sm font-semibold uppercase tracking-wide mb-0.5">Fondo total</p>
+              <p class="text-[#2c2c54] sm:text-violet-600 text-2xl sm:text-3xl lg:text-4xl font-extrabold tabular-nums tracking-tight">${{ formatMoney(estadisticas.fondoTotal) }}</p>
+              <p class="text-gray-400 text-xs mt-0.5 sm:hidden">Total acumulado</p>
+            </div>
+            <div class="absolute bottom-4 right-4 sm:hidden w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
+              <ArrowTrendingUpIcon class="w-5 h-5 text-violet-600" />
+            </div>
           </div>
         </div>
       </div>
@@ -2637,7 +2634,8 @@
                 </p>
                 <div class="mt-2 pt-2 border-t border-green-200/60 text-xs text-gray-600 space-y-1">
                   <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
-                  <p>• Cuotas: ${{ formatMoney(estadisticas.totalRecaudadoEfectivo || 0) }}</p>
+                  <p>• Cuotas: ${{ formatMoney((estadisticas.totalRecaudadoEfectivo || 0) - (estadisticas.pagosPrestamosEfectivo || 0)) }}</p>
+                  <p v-if="(estadisticas.pagosPrestamosEfectivo || 0) > 0">• Cuotas préstamos: ${{ formatMoney(estadisticas.pagosPrestamosEfectivo || 0) }}</p>
                   <p v-if="(estadisticas.sancionesEfectivo || 0) > 0">• Sanciones: ${{ formatMoney(estadisticas.sancionesEfectivo || 0) }}</p>
                   <p v-if="(estadisticas.actividadesEfectivo || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesEfectivo || 0) }}</p>
                   <p class="pt-1 border-t border-green-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoEfectivo || 0) }}</p>
@@ -2666,7 +2664,8 @@
                 </p>
                 <div class="mt-2 pt-2 border-t border-blue-200/60 text-xs text-gray-600 space-y-1">
                   <p class="font-semibold text-gray-700">Desglose del recaudado:</p>
-                  <p>• Cuotas: ${{ formatMoney(estadisticas.totalRecaudadoTransferencia || 0) }}</p>
+                  <p>• Cuotas: ${{ formatMoney((estadisticas.totalRecaudadoTransferencia || 0) - (estadisticas.pagosPrestamosTransferencia || 0)) }}</p>
+                  <p v-if="(estadisticas.pagosPrestamosTransferencia || 0) > 0">• Cuotas préstamos: ${{ formatMoney(estadisticas.pagosPrestamosTransferencia || 0) }}</p>
                   <p v-if="(estadisticas.sancionesTransferencia || 0) > 0">• Sanciones: ${{ formatMoney(estadisticas.sancionesTransferencia || 0) }}</p>
                   <p v-if="(estadisticas.actividadesTransferencia || 0) > 0">• Actividades: ${{ formatMoney(estadisticas.actividadesTransferencia || 0) }}</p>
                   <p class="pt-1 border-t border-blue-200/40 font-semibold">Total recaudado: ${{ formatMoney(estadisticas.recaudadoCompletoTransferencia || 0) }}</p>
@@ -3037,6 +3036,7 @@ import {
   ArrowPathIcon,
   Bars3Icon,
   ChartBarIcon,
+  ArrowTrendingUpIcon,
   SparklesIcon,
   CalculatorIcon,
   Squares2X2Icon,
@@ -4372,6 +4372,8 @@ const estadisticas = ref({
   sancionesTransferencia: 0,
   actividadesEfectivo: 0,
   actividadesTransferencia: 0,
+  pagosPrestamosEfectivo: 0,
+  pagosPrestamosTransferencia: 0,
   recaudadoCompletoEfectivo: 0,
   recaudadoCompletoTransferencia: 0,
   recaudadoCompletoTotal: 0,
@@ -4402,6 +4404,8 @@ async function calcularEstadisticasAsync() {
       sancionesTransferencia: 0,
       actividadesEfectivo: 0,
       actividadesTransferencia: 0,
+      pagosPrestamosEfectivo: 0,
+      pagosPrestamosTransferencia: 0,
       recaudadoCompletoEfectivo: 0,
       recaudadoCompletoTransferencia: 0,
       recaudadoCompletoTotal: 0,
@@ -4432,6 +4436,8 @@ async function calcularEstadisticasAsync() {
     sancionesTransferencia: 0,
     actividadesEfectivo: 0,
     actividadesTransferencia: 0,
+    pagosPrestamosEfectivo: 0,
+    pagosPrestamosTransferencia: 0,
     recaudadoCompletoEfectivo: 0,
     recaudadoCompletoTransferencia: 0,
     recaudadoCompletoTotal: 0,
