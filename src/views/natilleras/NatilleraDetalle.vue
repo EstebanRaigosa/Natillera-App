@@ -5,7 +5,6 @@
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
-
     <!-- Pantalla de carga: en iPhone/Safari se usa LoadingScreenIos (desde cero); en Android la original -->
     <LoadingScreenIos
       v-if="cargandoNatillera && isIos"
@@ -77,13 +76,11 @@
         </div>
       </Transition>
     </Teleport>
-
     <template v-else-if="natillera">
       <!-- Breadcrumbs (solo desktop) -->
       <div class="hidden sm:block relative mb-4">
         <Breadcrumbs />
       </div>
-
       <!-- Tarjeta superior - encabezado unificado (diseño móvil según referencia) -->
       <div class="bg-gray-100 rounded-2xl sm:rounded-2xl p-4 sm:p-6 sm:bg-gradient-to-br sm:from-white sm:via-emerald-50/50 sm:to-teal-100/70 border border-gray-200/80 shadow-sm mb-4 sm:mb-6">
         <div>
@@ -180,7 +177,6 @@
           </div>
         </div>
       </div>
-
       <!-- Barra de acciones rápidas -->
       <div class="relative bg-white rounded-2xl sm:rounded-3xl p-3 sm:py-2 sm:px-4 lg:py-2.5 lg:px-5 shadow-lg border border-gray-200 mb-4 sm:mb-6 overflow-hidden">
         <div class="flex items-center justify-between sm:justify-center gap-1 sm:gap-2 lg:gap-4">
@@ -236,7 +232,6 @@
           </button>
         </div>
       </div>
-
       <!-- BANNER DE ALERTA DE MORA - Click para abrir modal -->
       <div 
         ref="bannerSociosEnMoraRef"
@@ -284,8 +279,6 @@
           </div>
         </div>
       </div>
-
-
       <!-- Menú Principal -->
       <div class="relative bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-200 overflow-hidden">
         <div class="relative z-10">
@@ -414,7 +407,6 @@
                 </p>
               </div>
             </router-link>
-
             <router-link 
               v-if="puedeVerCuotas"
               :to="`/natilleras/${id}/cuadre-caja`"
@@ -440,14 +432,12 @@
         </div>
       </div>
     </template>
-
     <div v-else class="card text-center py-12">
       <p class="text-gray-500">No se encontró la natillera</p>
       <router-link to="/natilleras" class="btn-primary mt-4 inline-block">
         Volver a natilleras
       </router-link>
     </div>
-
     <!-- Modal WhatsApp: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalWhatsApp"
@@ -513,7 +503,6 @@
             <p class="text-gray-400 text-sm">No se encontraron socios</p>
           </div>
         </div>
-
         <button 
           @click="cerrarModalWhatsApp"
           class="btn-secondary w-full mt-4 flex-shrink-0"
@@ -521,7 +510,6 @@
           Cerrar
         </button>
     </ModalWrapper>
-
     <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalDetalle"
@@ -560,7 +548,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-6 space-y-5">
           <!-- Valor de la cuota -->
@@ -575,7 +562,6 @@
               </div>
             </div>
           </div>
-
           <!-- Periodicidad -->
           <div class="relative p-5 rounded-xl border shadow-sm" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'">
             <div class="flex items-center gap-3 mb-2">
@@ -590,7 +576,6 @@
               </div>
             </div>
           </div>
-
           <!-- Teléfono -->
           <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-sm">
             <div class="flex items-center gap-3 mb-2">
@@ -611,7 +596,6 @@
               </a>
             </div>
           </div>
-
           <!-- Mensaje para más información -->
           <div class="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200 shadow-sm">
             <div class="flex items-start gap-3">
@@ -636,7 +620,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="p-6 border-t border-gray-200 bg-gray-50">
           <button 
@@ -647,7 +630,6 @@
           </button>
         </div>
     </ModalWrapper>
-
     <!-- Modal Buscar Comprobante: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalBuscarComprobante"
@@ -685,7 +667,6 @@
             </button>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="overflow-y-auto flex-1 p-6 space-y-6">
           <!-- Campo de búsqueda -->
@@ -718,7 +699,6 @@
               </button>
             </div>
           </div>
-
           <!-- Resultado de la búsqueda -->
           <div v-if="comprobanteEncontrado" class="space-y-4">
             <!-- Alerta si es un comprobante antiguo -->
@@ -823,7 +803,6 @@
                     </div>
                   </div>
                 </div>
-
                 <!-- Alerta de código actualizado -->
                 <div v-else-if="comprobanteEncontrado.codigo_nuevo" class="bg-red-50 border-2 border-red-400 rounded-lg p-4 mb-4">
                   <div class="flex items-start gap-3">
@@ -853,7 +832,6 @@
                     </div>
                   </div>
                 </div>
-
                 <!-- Información específica según el tipo -->
                 <template v-if="comprobanteEncontrado.tipo === 'abono_prestamo' || comprobanteEncontrado.tipo === 'abono_prestamo_eliminado' || comprobanteEncontrado.tipo === 'abono_prestamo_antiguo'">
                   <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
@@ -1091,7 +1069,6 @@
               </div>
             </div>
           </div>
-
           <!-- Error -->
           <div v-if="errorBusqueda" class="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-300 rounded-xl p-5 shadow-sm">
             <div class="flex items-center gap-3">
@@ -1102,7 +1079,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
           <button 
@@ -1113,7 +1089,6 @@
           </button>
         </div>
     </ModalWrapper>
-
     <!-- Modal Cuotas del Socio por Mes: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalCuotasSocio"
@@ -1169,7 +1144,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
           <!-- Estado de carga -->
@@ -1297,7 +1271,6 @@
                           PROGRAMADA
                         </span>
                       </div>
-
                       <!-- Fecha de vencimiento -->
                       <div class="flex items-center gap-2 mt-1">
                         <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -1306,7 +1279,6 @@
                         </span>
                       </div>
                     </div>
-
                     <!-- Lado derecho: Montos -->
                     <div class="flex flex-col items-end text-right flex-shrink-0">
                       <!-- Etiqueta según estado -->
@@ -1351,7 +1323,6 @@
                       </div>
                     </div>
                   </div>
-
                   <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
                   <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
                     <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
@@ -1359,7 +1330,6 @@
                       Pagado el: {{ formatDate(cuotaData.fechaPago) }}
                     </span>
                   </div>
-
                   <!-- Botón WhatsApp (si aplica) -->
                   <button
                     v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.telefono"
@@ -1371,7 +1341,6 @@
                     <span class="text-sm font-semibold">Recordar cuota</span>
                   </button>
                 </div>
-
                 <!-- Desktop: Layout horizontal original -->
                 <div class="hidden sm:flex sm:flex-col sm:gap-3">
                   <!-- Fila superior: Badges y botones -->
@@ -1420,7 +1389,6 @@
                       <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
                     </button>
                   </div>
-
                   <!-- Fila media: Monto principal -->
                   <div class="flex items-baseline justify-between gap-3">
                     <div class="flex-1">
@@ -1437,7 +1405,6 @@
                       </div>
                     </div>
                   </div>
-
                   <!-- Fila inferior: Detalles adicionales -->
                   <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
                     <div class="flex items-center gap-1.5">
@@ -1566,7 +1533,6 @@
                             PROGRAMADA
                           </span>
                         </div>
-
                         <!-- Fecha de vencimiento -->
                         <div class="flex items-center gap-2 mt-1">
                           <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -1575,7 +1541,6 @@
                           </span>
                         </div>
                       </div>
-
                       <!-- Lado derecho: Montos -->
                       <div class="flex flex-col items-end text-right flex-shrink-0">
                         <!-- Etiqueta según estado -->
@@ -1620,7 +1585,6 @@
                         </div>
                       </div>
                     </div>
-
                     <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
                     <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
                       <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
@@ -1628,7 +1592,6 @@
                         Pagado el: {{ formatDate(cuotaData.fechaPago) }}
                       </span>
                     </div>
-
                     <!-- Botón WhatsApp (si aplica) -->
                     <button
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.telefono"
@@ -1640,7 +1603,6 @@
                       <span class="text-sm font-semibold">Recordar cuota</span>
                     </button>
                   </div>
-
                   <!-- Desktop: Layout horizontal original -->
                   <div class="hidden sm:flex sm:flex-col sm:gap-3">
                     <!-- Fila superior: Badges y botones -->
@@ -1689,7 +1651,6 @@
                         <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
                       </button>
                     </div>
-
                     <!-- Fila media: Monto principal -->
                     <div class="flex items-baseline justify-between gap-3">
                       <div class="flex-1">
@@ -1706,7 +1667,6 @@
                         </div>
                       </div>
                     </div>
-
                     <!-- Fila inferior: Detalles adicionales -->
                     <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
                       <div class="flex items-center gap-1.5">
@@ -1723,13 +1683,12 @@
                 </div>
               </div>
               <!-- Fin del contenedor de cuotas del mes -->
-                </div>
+              </div>
               <!-- Fin del grupo de mes simplificado -->
             </div>
             </template>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
           <button 
@@ -1740,11 +1699,16 @@
           </button>
         </div>
     </ModalWrapper>
-
     <!-- Modal Configurar Período de Meses -->
-    <div v-if="modalConfigMeses" data-modal="config-meses" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50" @click="modalConfigMeses = false"></div>
-      <div class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl">
+    <ModalWrapper
+      :show="!!modalConfigMeses"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl"
+      card-max-width="28rem"
+      @close="modalConfigMeses = false"
+    >
         <div class="flex items-center gap-3 mb-6">
           <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-natillera-700 rounded-xl flex items-center justify-center">
             <CalendarDaysIcon class="w-6 h-6 text-white" />
@@ -1758,7 +1722,6 @@
             </p>
           </div>
         </div>
-
         <form @submit.prevent="guardarConfigMeses" class="space-y-4">
           <div>
             <label class="label">Año</label>
@@ -1771,7 +1734,6 @@
               required
             />
           </div>
-
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="label">Mes de inicio</label>
@@ -1785,7 +1747,6 @@
                 </option>
               </select>
             </div>
-
             <div>
               <label class="label">Mes de cierre</label>
               <select 
@@ -1799,7 +1760,6 @@
               </select>
             </div>
           </div>
-
           <div class="bg-natillera-50 border border-natillera-200 rounded-xl p-4">
             <p class="text-sm text-natillera-700 font-medium">
               📅 La natillera tendrá cuotas desde <strong>{{ meses.find(m => m.value === formConfigMeses.mes_inicio)?.label }}</strong> 
@@ -1811,7 +1771,6 @@
                 : 12 - formConfigMeses.mes_inicio + formConfigMeses.mes_fin + 1 }} meses
             </p>
           </div>
-
           <div class="flex gap-3 pt-4">
             <button 
               type="button"
@@ -1829,14 +1788,17 @@
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  </div>
-
+    </ModalWrapper>
     <!-- Modal Socios en Mora -->
-    <div v-if="modalSociosEnMora" data-modal="socios-en-mora" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSociosEnMora = false"></div>
-      <div class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="!!modalSociosEnMora"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-4xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="56rem"
+      @close="modalSociosEnMora = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0 z-10" :class="sociosEnMora.length >= 3 ? 'from-red-500 via-rose-600 to-red-700' : 'from-amber-500 via-orange-600 to-amber-700'">
           <!-- Efectos decorativos -->
@@ -1865,7 +1827,6 @@
             </button>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
           <!-- Resumen rápido -->
@@ -1940,7 +1901,6 @@
               ]">Total a cobrar</p>
             </div>
           </div>
-
           <!-- Lista de socios en mora -->
           <div class="space-y-3">
             <div 
@@ -2304,13 +2264,17 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
+      </ModalWrapper>
     <!-- Modal Cierre de Natillera -->
-    <div v-if="modalCierreNatillera" data-modal="cierre-natillera" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalCierreNatillera = false"></div>
-      <div class="relative w-full sm:max-w-5xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="!!modalCierreNatillera"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-5xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="64rem"
+      @close="modalCierreNatillera = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-red-500 via-orange-600 to-amber-700 p-4 sm:p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
@@ -2339,7 +2303,6 @@
             </button>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
           <!-- Loading -->
@@ -2347,7 +2310,6 @@
             <div class="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
             <p class="text-gray-500 text-sm">Calculando datos de cierre...</p>
           </div>
-
           <!-- Lista de socios -->
           <div v-else-if="datosCierre.length > 0" class="space-y-4">
             <div 
@@ -2374,7 +2336,6 @@
                   </p>
                 </div>
               </div>
-
               <!-- Información detallada -->
               <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 <!-- Monto ahorrado mensualmente -->
@@ -2382,31 +2343,26 @@
                   <p class="text-xs text-gray-600 font-medium mb-1">Monto ahorrado mensualmente</p>
                   <p class="font-bold text-blue-600 text-lg sm:text-xl">${{ formatMoney(dato.montoAhorradoMensual) }}</p>
                 </div>
-
                 <!-- Cantidad de cuotas pagadas -->
                 <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 border border-green-200">
                   <p class="text-xs text-gray-600 font-medium mb-1">Cuotas pagadas</p>
                   <p class="font-bold text-green-600 text-lg sm:text-xl">{{ dato.cantidadCuotasPagadas }}</p>
                 </div>
-
                 <!-- Cantidad de cuotas en deuda -->
                 <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 sm:p-4 border border-amber-200">
                   <p class="text-xs text-gray-600 font-medium mb-1">Cuotas en deuda</p>
                   <p class="font-bold text-amber-600 text-lg sm:text-xl">{{ dato.cantidadCuotasDeuda }}</p>
                 </div>
-
                 <!-- Utilidades -->
                 <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-purple-200">
                   <p class="text-xs text-gray-600 font-medium mb-1">Utilidades</p>
                   <p class="font-bold text-purple-600 text-lg sm:text-xl">${{ formatMoney(dato.utilidades) }}</p>
                 </div>
-
                 <!-- Total a entregar -->
                 <div class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-3 sm:p-4 border border-teal-200">
                   <p class="text-xs text-gray-600 font-medium mb-1">Total a entregar</p>
                   <p class="font-bold text-teal-600 text-lg sm:text-xl">${{ formatMoney(dato.totalAEntregar) }}</p>
                 </div>
-
                 <!-- Descuentos -->
                 <div class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-3 sm:p-4 border border-red-200">
                   <p class="text-xs text-gray-600 font-medium mb-1">Descuentos</p>
@@ -2421,7 +2377,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Total final destacado -->
               <div class="relative z-10 mt-4 pt-4 border-t-2 border-gray-300">
                 <div class="flex items-center justify-between">
@@ -2433,13 +2388,11 @@
               </div>
             </div>
           </div>
-
           <!-- Sin datos -->
           <div v-else class="text-center py-12">
             <p class="text-gray-500">No hay datos para mostrar</p>
           </div>
         </div>
-
         <!-- Footer -->
         <div v-if="!calculandoCierre && datosCierre.length > 0" class="border-t border-gray-200 bg-gray-50 p-4 sm:p-5 flex-shrink-0">
           <div class="flex flex-col sm:flex-row gap-3">
@@ -2457,30 +2410,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-
+      </ModalWrapper>
     <!-- Modal Desglose Recaudación -->
-    <div v-if="modalDesgloseRecaudacion" data-modal="desglose-recaudacion" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseRecaudacion = false; vistaRecaudacionModal = 'neto'"></div>
-      </Transition>
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-      >
-        <div class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="modalDesgloseRecaudacion"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="32rem"
+      @close="modalDesgloseRecaudacion = false; vistaRecaudacionModal = 'neto'"
+    >
           <!-- Header con gradiente -->
           <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
             <!-- Efectos decorativos -->
@@ -2511,7 +2451,6 @@
               </button>
             </div>
           </div>
-
           <!-- Selector de vista: neto / completo -->
           <div class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
             <button
@@ -2539,7 +2478,6 @@
               Recaudado Completo
             </button>
           </div>
-
           <!-- Contenido -->
           <div class="overflow-y-auto flex-1 p-6 space-y-4">
             <!-- Vista: Recaudado Neto -->
@@ -2548,7 +2486,6 @@
               <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
                 Los montos por forma de pago incluyen lo recaudado en cuotas menos los préstamos entregados en ese mismo medio, para facilitar las cuentas de caja.
               </p>
-
               <!-- Recaudado en Efectivo (neto: cuotas − préstamos entregados en efectivo) -->
               <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center justify-between mb-2">
@@ -2598,7 +2535,6 @@
                   <p v-if="(estadisticas.movimientosTransferenciaNeto || 0) !== 0">{{ (estadisticas.movimientosTransferenciaNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosTransferenciaNeto || 0) }}</p>
                 </div>
               </div>
-
               <!-- Fondo disponible: suma de los dos netos (efectivo + transferencia) + movimientos para que cuadre con el desglose -->
               <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
                 <p class="text-violet-800 text-sm font-semibold">Fondo disponible</p>
@@ -2606,14 +2542,12 @@
                 <p class="text-violet-600 text-xs mt-1">Solo recaudado neto (sin utilidades). Incluye movimientos de fondo.</p>
               </div>
             </template>
-
             <!-- Vista: Recaudado Completo -->
             <template v-if="vistaRecaudacionModal === 'completo'">
               <!-- Nota: desglose completo -->
               <p class="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
                 Desglose completo del recaudado incluyendo cuotas, sanciones y actividades, menos los préstamos entregados según su forma de pago.
               </p>
-
               <!-- Recaudado Completo en Efectivo -->
               <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
                 <div class="flex items-center justify-between mb-2">
@@ -2673,7 +2607,6 @@
                   <p v-if="(estadisticas.movimientosTransferenciaNeto || 0) !== 0" class="pt-1 border-t border-blue-200/40">{{ (estadisticas.movimientosTransferenciaNeto || 0) >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(estadisticas.movimientosTransferenciaNeto || 0) }}</p>
                 </div>
               </div>
-
               <!-- Total General (incluye movimientos; cuadra con fondo total del detalle) -->
               <div class="bg-violet-50 rounded-xl p-4 border border-violet-200 mt-4">
                 <p class="text-violet-800 text-sm font-semibold">Total Recaudado Completo</p>
@@ -2688,7 +2621,6 @@
               </div>
             </template>
           </div>
-
           <!-- Footer -->
           <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
             <button 
@@ -2698,31 +2630,17 @@
               Cerrar
             </button>
           </div>
-        </div>
-      </Transition>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal Desglose Utilidades -->
-    <div v-if="modalUtilidadesDesglose" data-modal="desglose-utilidades" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"></div>
-      </Transition>
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-      >
-        <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="modalUtilidadesDesglose"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="28rem"
+      @close="modalUtilidadesDesglose = false; vistaUtilidadesModal = 'origen'; cerrarDetalleUtilidad()"
+    >
           <!-- Header flat -->
           <div class="bg-violet-600 px-6 py-5 text-white">
             <div class="flex items-center justify-between">
@@ -2744,7 +2662,6 @@
               </button>
             </div>
           </div>
-
           <!-- Selector de vista: por origen / por forma de pago (solo si no estamos en detalle) -->
           <div v-if="!conceptoDetalleSeleccionado" class="flex border-b border-gray-200 bg-gray-50/80 px-4 gap-1">
             <button
@@ -2772,7 +2689,6 @@
               Por forma de pago
             </button>
           </div>
-
           <!-- Botón volver cuando estamos en detalle -->
           <div v-if="conceptoDetalleSeleccionado" class="border-b border-gray-200 bg-gray-50/80 px-4 py-2 flex items-center gap-2">
             <button
@@ -2784,7 +2700,6 @@
             </button>
             <span class="text-sm font-semibold text-gray-700">Detalle: {{ conceptoDetalleSeleccionado.label }}</span>
           </div>
-
           <!-- Lista flat y moderna -->
           <div class="overflow-y-auto flex-1 p-5 space-y-3">
             <!-- Vista detalle: filas que suman al concepto -->
@@ -2830,7 +2745,6 @@
                 <p class="font-medium">No hay registros para este concepto</p>
               </div>
             </template>
-
             <!-- Vista lista por origen (conceptos clicables) -->
             <template v-else-if="vistaUtilidadesModal === 'origen'">
               <template v-if="(estadisticas.utilidadesDesglose || []).length">
@@ -2855,7 +2769,6 @@
                 <p class="text-sm mt-1">Las utilidades aparecerán al recaudar multas, intereses o actividades.</p>
               </div>
             </template>
-
             <!-- Vista lista por forma de pago (conceptos clicables) -->
             <template v-else>
               <template v-if="(estadisticas.utilidadesPorFormaPago || []).length">
@@ -2880,7 +2793,6 @@
                 <p class="text-sm mt-1">Las multas pagadas en efectivo o transferencia aparecerán aquí.</p>
               </div>
             </template>
-
             <!-- Total (solo en lista, no en detalle) -->
             <div v-if="!conceptoDetalleSeleccionado" class="mt-4 pt-4 border-t-2 border-violet-200 rounded-xl bg-violet-50/80 p-4">
               <div class="flex items-center justify-between">
@@ -2891,7 +2803,6 @@
               </div>
             </div>
           </div>
-
           <!-- Footer -->
           <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
             <button
@@ -2902,14 +2813,17 @@
               Cerrar
             </button>
           </div>
-        </div>
-      </Transition>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal Sin Socios -->
-    <div v-if="modalSinSocios" data-modal="sin-socios" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalSinSocios = false"></div>
-      <div class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="!!modalSinSocios"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="28rem"
+      @close="modalSinSocios = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
@@ -2938,7 +2852,6 @@
             </button>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="overflow-y-auto flex-1 p-6 space-y-6">
           <!-- Ilustración/Icono -->
@@ -2947,7 +2860,6 @@
               <UsersIcon class="w-16 h-16 text-natillera-600" />
             </div>
           </div>
-
           <!-- Mensaje principal -->
           <div class="text-center space-y-3">
             <h4 class="text-xl font-display font-bold text-gray-800">
@@ -2957,7 +2869,6 @@
               Para que tu natillera pueda empezar a funcionar, necesitas agregar al menos un socio. Los socios son los participantes que realizarán los aportes mensuales o quincenales.
             </p>
           </div>
-
           <!-- Información adicional -->
           <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-blue-200">
             <div class="flex items-start gap-3">
@@ -2971,7 +2882,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
           <button 
@@ -2988,9 +2898,8 @@
             Cerrar
           </button>
         </div>
-      </div>
+      </ModalWrapper>
     </div>
-
     <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
     <div class="hidden">
       <ColaboradoresManager
@@ -3003,7 +2912,6 @@
       />
     </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -3058,11 +2966,9 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useIsIos } from '../../composables/useIsIos'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
-
 const props = defineProps({
   id: String
 })
-
 const route = useRoute()
 const router = useRouter()
 const natillerasStore = useNatillerasStore()
@@ -3071,7 +2977,6 @@ const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
 const colaboradoresStore = useColaboradoresStore()
-
 const modalWhatsApp = ref(false)
 const modalDetalle = ref(false)
 const modalConfigMeses = ref(false)
@@ -3116,7 +3021,6 @@ const modalSinSocios = ref(false) // Modal para cuando no hay socios
 const datosCierre = ref([]) // Datos de cierre para cada socio
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
-
 // Mensajes de carga que rotarán
 const mensajesCarga = [
   'Calienta toda la suplencia...',
@@ -3132,10 +3036,8 @@ const mensajesCarga = [
 ]
 const mensajeCargaActual = ref(mensajesCarga[0])
 let intervaloMensajeCarga = null
-
 // Variable para mantener el índice anterior fuera del intervalo
 let indiceMensajeAnterior = -1
-
 // Bloquear scroll del body cuando las modales están abiertas
 const isIos = useIsIos()
 useBodyScrollLock(modalWhatsApp)
@@ -3146,10 +3048,10 @@ useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalSociosEnMora)
 useBodyScrollLock(modalCierreNatillera)
 useBodyScrollLock(modalSinSocios)
-
+useBodyScrollLock(modalDesgloseRecaudacion)
+useBodyScrollLock(modalUtilidadesDesglose)
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
-
 // Configuración de meses
 const meses = [
   { value: 1, label: 'Enero' },
@@ -3165,26 +3067,22 @@ const meses = [
   { value: 11, label: 'Noviembre' },
   { value: 12, label: 'Diciembre' }
 ]
-
 const formConfigMeses = ref({
   mes_inicio: 1,
   mes_fin: 11,
   anio: new Date().getFullYear()
 })
-
 // Funciones para controlar el scroll del body
 function bloquearScroll() {
   document.body.style.overflow = 'hidden'
   document.body.style.position = 'fixed'
   document.body.style.width = '100%'
 }
-
 function desbloquearScroll() {
   document.body.style.overflow = ''
   document.body.style.position = ''
   document.body.style.width = ''
 }
-
 // Función para iniciar la rotación de mensajes de carga (aleatoria)
 function iniciarRotacionMensajes() {
   // Limpiar intervalo anterior si existe
@@ -3213,7 +3111,6 @@ function iniciarRotacionMensajes() {
     mensajeCargaActual.value = mensajesCarga[nuevoIndice]
   }, 2000)
 }
-
 // Función para detener la rotación de mensajes
 function detenerRotacionMensajes() {
   if (intervaloMensajeCarga) {
@@ -3221,7 +3118,6 @@ function detenerRotacionMensajes() {
     intervaloMensajeCarga = null
   }
 }
-
 function abrirConfigMeses() {
   formConfigMeses.value = {
     mes_inicio: natillera.value?.mes_inicio || 1,
@@ -3230,13 +3126,11 @@ function abrirConfigMeses() {
   }
   modalConfigMeses.value = true
 }
-
 function abrirFormularioInvitarColaborador() {
   if (colaboradoresManagerRef.value) {
     colaboradoresManagerRef.value.abrirModalInvitar()
   }
 }
-
 async function guardarConfigMeses() {
   const result = await natillerasStore.actualizarNatillera(props.id || route.params.id, {
     mes_inicio: formConfigMeses.value.mes_inicio,
@@ -3252,10 +3146,8 @@ async function guardarConfigMeses() {
     alert('Error al guardar la configuración: ' + result.error)
   }
 }
-
 // Etiquetas cortas de meses (Nov, Oct, etc.)
 const mesesCorto = { 1: 'Ene', 2: 'Feb', 3: 'Mar', 4: 'Abr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Ago', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dic' }
-
 // Computed para mostrar el rango de meses
 const rangoMesesTexto = computed(() => {
   if (!natillera.value) return ''
@@ -3264,7 +3156,6 @@ const rangoMesesTexto = computed(() => {
   const anio = natillera.value.anio || new Date().getFullYear()
   return `${inicio} - ${fin} ${anio}`
 })
-
 // Rango de meses abreviado para la tarjeta (ej: Nov 2025 - Oct 2026)
 const rangoMesesCorto = computed(() => {
   if (!natillera.value) return ''
@@ -3273,7 +3164,6 @@ const rangoMesesCorto = computed(() => {
   const anio = natillera.value.anio || new Date().getFullYear()
   return `${mesesCorto[mesInicio]} ${anio} - ${mesesCorto[mesFin]} ${anio}`
 })
-
 // Fecha de inicio completa con año (ej: Desde 01/11/2025)
 const fechaInicioCorta = computed(() => {
   if (!natillera.value?.fecha_inicio) return ''
@@ -3283,7 +3173,6 @@ const fechaInicioCorta = computed(() => {
   const year = d.getFullYear()
   return `Desde ${day}/${month}/${year}`
 })
-
 // Socios filtrados por búsqueda en el modal de WhatsApp
 const sociosFiltrados = computed(() => {
   if (!natillera.value?.socios_natillera) return []
@@ -3295,7 +3184,6 @@ const sociosFiltrados = computed(() => {
     sn.socio?.telefono?.includes(busqueda)
   )
 })
-
 // Cuotas agrupadas por mes y año
 const cuotasAgrupadasPorMes = computed(() => {
   if (!cuotasSocioPorMes.value || cuotasSocioPorMes.value.length === 0) return []
@@ -3332,14 +3220,11 @@ const cuotasAgrupadasPorMes = computed(() => {
     return a.mes - b.mes
   })
 })
-
 const natillera = computed(() => natillerasStore.natilleraActual)
-
 // Verificar si la natillera tiene socios
 const tieneSocios = computed(() => {
   return natillera.value?.socios_natillera && natillera.value.socios_natillera.length > 0
 })
-
 // Convertir nombre a Upper Camel Case (con espacios)
 const nombreNatilleraPascalCase = computed(() => {
   if (!natillera.value?.nombre) return ''
@@ -3348,103 +3233,86 @@ const nombreNatilleraPascalCase = computed(() => {
     .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
     .join(' ')
 })
-
 // Usuario autenticado y admin
 const usuarioAutenticado = ref(null)
 const adminActual = ref(null)
 const miRol = ref(null)
 const misPermisos = ref(null)
-
 // Verificar si el usuario es superusuario
 const esSuperUsuario = computed(() => {
   if (!usuarioAutenticado.value) return false
   const email = (usuarioAutenticado.value.email || '').toLowerCase().trim()
   return email === 'raigo.16@gmail.com'
 })
-
 // Verificar si el usuario es admin de la natillera
 const esAdmin = computed(() => {
   if (!usuarioAutenticado.value || !natillera.value) return false
   return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
 })
-
 // Verificar si el usuario es visor
 const esVisor = computed(() => {
   return miRol.value === 'visor'
 })
-
 // Computed properties para verificar permisos específicos
 const puedeVerSocios = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.editar_socios === true
 })
-
 const puedeVerCuotas = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.gestionar_cuotas === true
 })
-
 const puedeVerPrestamos = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.gestionar_prestamos === true
 })
-
 const puedeVerActividades = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.gestionar_actividades === true
 })
-
 const puedeConfigurar = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.configurar === true
 })
-
 const puedeBuscarComprobante = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.buscar_comprobante === true
 })
-
 const puedeInvitarColaboradores = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.invitar_colaboradores === true
 })
-
 const puedeNotificar = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.notificar === true
 })
-
 const puedeCerrarNatillera = computed(() => {
   if (esAdmin.value) return true
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.cerrar_natillera === true
 })
-
 // Cargar información del administrador actual
 async function cargarAdminActual() {
   if (!natillera.value?.admin_id) return
-
   try {
     const { data } = await supabase
       .from('user_profiles')
       .select('id, email, nombre')
       .eq('id', natillera.value.admin_id)
       .single()
-
     adminActual.value = data
   } catch (e) {
     console.error('Error cargando administrador actual:', e)
   }
 }
-
 // Función para buscar comprobante
 // Función auxiliar para calcular el total a pagar de una cuota incluyendo todos los conceptos
 async function calcularTotalAPagarCompleto(cuota) {
@@ -3459,7 +3327,6 @@ async function calcularTotalAPagarCompleto(cuota) {
       }
     }
   }
-
   // Valor de la cuota base
   const valorCuota = parseFloat(cuota.valor_cuota || 0)
   
@@ -3484,10 +3351,8 @@ async function calcularTotalAPagarCompleto(cuota) {
       mesCuota = parseInt(partes[1], 10)
     }
   }
-
   let valorActividades = 0
   let valorPrestamos = 0
-
   // Calcular actividades pendientes del mismo periodo
   if (mesCuota != null && anioCuota != null) {
     try {
@@ -3498,7 +3363,6 @@ async function calcularTotalAPagarCompleto(cuota) {
         .eq('mes_pago', mesCuota)
         .eq('anio_pago', anioCuota)
         .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
-
       if (sociosActividadData && sociosActividadData.length > 0) {
         // Filtrar actividades que corresponden a esta cuota (misma quincena)
         const actividadesDelPeriodo = sociosActividadData.filter(sa => {
@@ -3510,7 +3374,6 @@ async function calcularTotalAPagarCompleto(cuota) {
           }
           return quincenaActividad === quincenaCuota
         })
-
         // Calcular el valor total de actividades (valor_asignado, no pendiente)
         valorActividades = actividadesDelPeriodo.reduce((sum, sa) => {
           const valorAsignado = parseFloat(sa.valor_asignado || 0)
@@ -3520,7 +3383,6 @@ async function calcularTotalAPagarCompleto(cuota) {
     } catch (error) {
       console.error('Error calculando actividades a pagar:', error)
     }
-
     // Calcular cuotas de préstamos pendientes del mismo periodo
     try {
       // Obtener préstamos del socio
@@ -3529,7 +3391,6 @@ async function calcularTotalAPagarCompleto(cuota) {
         .select('id, periodicidad')
         .eq('socio_natillera_id', cuota.socio_natillera_id)
         .in('estado', ['activo', 'pagado'])
-
       if (prestamosSocio && prestamosSocio.length > 0) {
         const prestamoIds = prestamosSocio.map(p => p.id)
         // Crear un mapa de préstamo_id -> periodicidad para acceso rápido
@@ -3547,7 +3408,6 @@ async function calcularTotalAPagarCompleto(cuota) {
           .eq('pagada', false)
           .gte('fecha_proyectada', fechaInicioPeriodo.toISOString())
           .lte('fecha_proyectada', fechaFinPeriodo.toISOString())
-
         if (planPagosData && planPagosData.length > 0) {
           // Filtrar cuotas que corresponden al periodo según la periodicidad del préstamo
           const cuotasDelPeriodo = planPagosData.filter(cuotaPrestamo => {
@@ -3575,7 +3435,6 @@ async function calcularTotalAPagarCompleto(cuota) {
             }
             return false
           })
-
           valorPrestamos = cuotasDelPeriodo.reduce((sum, cp) => {
             return sum + (parseFloat(cp.valor_cuota) || 0)
           }, 0)
@@ -3585,9 +3444,7 @@ async function calcularTotalAPagarCompleto(cuota) {
       console.error('Error calculando préstamos a pagar:', error)
     }
   }
-
   const totalAPagar = valorCuota + valorSancion + valorActividades + valorPrestamos
-
   return {
     totalAPagar,
     desglose: {
@@ -3598,7 +3455,6 @@ async function calcularTotalAPagarCompleto(cuota) {
     }
   }
 }
-
 // Función auxiliar para calcular el total pagado de una cuota incluyendo todos los conceptos
 async function calcularTotalPagadoCompleto(cuota) {
   if (!cuota || !cuota.socio_natillera_id) {
@@ -3612,7 +3468,6 @@ async function calcularTotalPagadoCompleto(cuota) {
       }
     }
   }
-
   // Valor pagado de la cuota base
   const valorPagadoCuota = parseFloat(cuota.valor_pagado || 0)
   
@@ -3629,10 +3484,8 @@ async function calcularTotalPagadoCompleto(cuota) {
       mesCuota = parseInt(partes[1], 10)
     }
   }
-
   let valorPagadoActividades = 0
   let valorPagadoPrestamos = 0
-
   // Calcular actividades pagadas del mismo periodo
   if (mesCuota != null && anioCuota != null) {
     try {
@@ -3644,7 +3497,6 @@ async function calcularTotalPagadoCompleto(cuota) {
         .eq('anio_pago', anioCuota)
         .in('estado', ['pagada', 'pagado'])
         .gt('valor_pagado', 0)
-
       if (sociosActividadData && sociosActividadData.length > 0) {
         valorPagadoActividades = sociosActividadData.reduce((sum, sa) => {
           return sum + (parseFloat(sa.valor_pagado) || 0)
@@ -3653,7 +3505,6 @@ async function calcularTotalPagadoCompleto(cuota) {
     } catch (error) {
       console.error('Error calculando actividades pagadas:', error)
     }
-
     // Calcular cuotas de préstamos pagadas del mismo periodo
     try {
       // Obtener préstamos del socio
@@ -3662,7 +3513,6 @@ async function calcularTotalPagadoCompleto(cuota) {
         .select('id')
         .eq('socio_natillera_id', cuota.socio_natillera_id)
         .in('estado', ['activo', 'pagado'])
-
       if (prestamosSocio && prestamosSocio.length > 0) {
         const prestamoIds = prestamosSocio.map(p => p.id)
         
@@ -3711,9 +3561,7 @@ async function calcularTotalPagadoCompleto(cuota) {
       console.error('Error calculando préstamos pagados:', error)
     }
   }
-
   const totalPagado = valorPagadoCuota + valorPagadoSancion + valorPagadoActividades + valorPagadoPrestamos
-
   return {
     totalPagado,
     desglose: {
@@ -3724,7 +3572,6 @@ async function calcularTotalPagadoCompleto(cuota) {
     }
   }
 }
-
 async function buscarComprobante() {
   if (!codigoBusqueda.value.trim()) return
   
@@ -3933,7 +3780,6 @@ async function buscarComprobante() {
     buscandoComprobante.value = false
   }
 }
-
 // Función para buscar por el código nuevo cuando se encuentra un comprobante antiguo
 async function buscarPorCodigoNuevo() {
   if (!comprobanteNuevo.value) return
@@ -3953,7 +3799,6 @@ async function buscarPorCodigoNuevo() {
   infoComprobanteAntiguo.value = null // Ocultar la alerta de comprobante antiguo
   codigoBusqueda.value = comprobanteNuevo.value.codigo_comprobante // Actualizar el campo de búsqueda
 }
-
 function cerrarModalBuscarComprobante() {
   modalBuscarComprobante.value = false
   codigoBusqueda.value = ''
@@ -3964,7 +3809,6 @@ function cerrarModalBuscarComprobante() {
   desgloseAPagarAbierto.value = false
   desglosePagadoAbierto.value = false
 }
-
 // Función para obtener préstamos con cuotas vencidas - OPTIMIZADA
 async function obtenerPrestamosVencidos() {
   if (!id.value) return
@@ -4072,7 +3916,6 @@ async function obtenerPrestamosVencidos() {
     prestamosVencidos.value = []
   }
 }
-
 // Socios con problemas de mora o pendientes vencidos (incluyendo préstamos)
 const sociosEnMora = computed(() => {
   const hoy = new Date()
@@ -4270,13 +4113,11 @@ const sociosEnMora = computed(() => {
       return b.totalConSanciones - a.totalConSanciones
     })
 })
-
 // Estadísticas de mora
 const totalCuotasMora = computed(() => {
   if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
   return cuotasNatillera.value.filter(c => c && c.estado === 'mora').length
 })
-
 const totalCuotasPendientes = computed(() => {
   if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
   
@@ -4291,33 +4132,27 @@ const totalCuotasPendientes = computed(() => {
     return hoy > fechaLimite
   }).length
 })
-
 const totalDeudaMora = computed(() => {
   if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
   return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalConSanciones || s?.totalDeuda || 0), 0)
 })
-
 const totalSancionesMora = computed(() => {
   if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
   return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalSanciones || 0), 0)
 })
-
 // Estadísticas de préstamos vencidos
 const totalPrestamosVencidos = computed(() => {
   if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
   return prestamosVencidos.value.length
 })
-
 const totalCuotasPrestamosVencidos = computed(() => {
   if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
   return prestamosVencidos.value.reduce((sum, p) => sum + (p?.cuotasVencidas || 0), 0)
 })
-
 const totalDeudaPrestamosVencidos = computed(() => {
   if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
   return prestamosVencidos.value.reduce((sum, p) => sum + (p?.totalDeudaPrestamo || 0), 0)
 })
-
 // Resumen financiero del socio seleccionado
 const resumenSocio = computed(() => {
   if (!cuotasSocio.value.length) {
@@ -4330,18 +4165,15 @@ const resumenSocio = computed(() => {
       alDia: true
     }
   }
-
   const pagadas = cuotasSocio.value.filter(c => c.estado === 'pagada')
   const pendientes = cuotasSocio.value.filter(c => c.estado === 'pendiente' || c.estado === 'parcial')
   const enMora = cuotasSocio.value.filter(c => c.estado === 'mora')
-
   // Calcular total aportado solo con valor_cuota (sin incluir sanciones)
   // Las sanciones se reflejan en utilidades
   const totalAportado = pagadas.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
   const totalPendiente = cuotasSocio.value
     .filter(c => c.estado !== 'pagada')
     .reduce((sum, c) => sum + (c.valor_cuota - (c.valor_pagado || 0)), 0)
-
   return {
     totalAportado,
     totalPendiente,
@@ -4351,7 +4183,6 @@ const resumenSocio = computed(() => {
     alDia: pendientes.length === 0 && enMora.length === 0
   }
 })
-
 const estadisticas = ref({
   totalSocios: 0,
   sociosActivos: 0,
@@ -4380,7 +4211,6 @@ const estadisticas = ref({
   movimientosEfectivoNeto: 0,
   movimientosTransferenciaNeto: 0
 })
-
 // Función para calcular estadísticas de forma asíncrona
 async function calcularEstadisticasAsync() {
   if (!natillera.value) {
@@ -4445,12 +4275,10 @@ async function calcularEstadisticasAsync() {
     movimientosTransferenciaNeto: 0
   }
 }
-
 function volverAtras() {
   // Navegar siempre al dashboard
   router.push('/dashboard')
 }
-
 async function abrirDetalleUtilidadConcepto(payload) {
   if (!natillera.value?.id) return
   conceptoDetalleSeleccionado.value = payload
@@ -4479,10 +4307,8 @@ async function abrirDetalleUtilidadConcepto(payload) {
       }))
       return
     }
-
     const tipo = payload.tipo
     if (!tipo) return
-
     // Sanciones: cuotas con valor_pagado_sancion > 0 → grid Persona | Valor
     if (tipo === 'sanciones') {
       const { data: sociosNat } = await supabase.from('socios_natillera').select('id').eq('natillera_id', natilleraId)
@@ -4508,7 +4334,6 @@ async function abrirDetalleUtilidadConcepto(payload) {
       }))
       return
     }
-
     // Intereses préstamos: utilidades_clasificadas (tipo prestamos) + nombre del socio por id_actividad (prestamo_id)
     if (tipo === 'prestamos') {
       const { data: filas, error: errFilas } = await supabase
@@ -4541,7 +4366,6 @@ async function abrirDetalleUtilidadConcepto(payload) {
         }))
       return
     }
-
     // Actividades: socios_actividad (quién pagó qué actividad y cuánto)
     const tipoActividad = tipo === 'rifas' ? 'rifa' : tipo
     let actividadIds = []
@@ -4584,16 +4408,13 @@ async function abrirDetalleUtilidadConcepto(payload) {
     loadingDetalleUtilidad.value = false
   }
 }
-
 function cerrarDetalleUtilidad() {
   conceptoDetalleSeleccionado.value = null
   detalleUtilidadConcepto.value = []
 }
-
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
-
 function formatMoneyShort(value) {
   const num = Math.abs(value || 0)
   
@@ -4616,7 +4437,6 @@ function formatMoneyShort(value) {
   // Menos de 1000: mostrar el número completo
   return num.toString()
 }
-
 function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
   // Usar DiceBear Avatars con el estilo seleccionado
   const finalSeed = avatarSeed || seed || 'default'
@@ -4639,41 +4459,34 @@ function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
   const bgColors = backgroundColors[avatarStyle] || backgroundColors['adventurer']
   return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
 }
-
 // Las funciones formatDate y formatDateWithTime ahora se importan desde utils/formatDate.js
 // para evitar problemas de zona horaria. Las funciones locales fueron eliminadas.
-
 function cerrarModalWhatsApp() {
   modalWhatsApp.value = false
   busquedaSocio.value = ''
 }
-
 function enviarWhatsApp(socioNatillera, cerrarModal = true) {
   const telefono = socioNatillera.socio?.telefono?.replace(/\D/g, '')
   if (!telefono) {
     alert('Este socio no tiene teléfono registrado')
     return
   }
-
   // Usar el mensaje configurado con las variables reemplazadas
   const mensaje = configStore.generarMensajeIndividual(
     socioNatillera.socio?.nombre,
     formatMoney(socioNatillera.valor_cuota_individual)
   )
-
   const url = `https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`
   window.open(url, '_blank')
   if (cerrarModal) {
     cerrarModalWhatsApp()
   }
 }
-
 async function handleCerrarNatillera() {
   // Abrir modal de cierre
   await calcularDatosCierre()
   modalCierreNatillera.value = true
 }
-
 // Función para calcular los datos de cierre de la natillera
 async function calcularDatosCierre() {
   if (!natillera.value || calculandoCierre.value) return
@@ -4853,7 +4666,6 @@ async function calcularDatosCierre() {
     calculandoCierre.value = false
   }
 }
-
 // Función para confirmar y cerrar la natillera
 async function confirmarCerrarNatillera() {
   if (!confirm('¿Estás seguro de cerrar esta natillera? Esta acción no se puede deshacer.')) {
@@ -4869,11 +4681,9 @@ async function confirmarCerrarNatillera() {
     alert('Error al cerrar la natillera: ' + result.error)
   }
 }
-
 function toggleSeccion(seccion) {
   seccionActiva.value = seccionActiva.value === seccion ? null : seccion
 }
-
 async function verDetalleSocio(sn) {
   socioSeleccionado.value = sn
   modalDetalle.value = true
@@ -4883,13 +4693,11 @@ async function verDetalleSocio(sn) {
   const resumen = await sociosStore.obtenerResumenSocio(sn.id)
   cuotasSocio.value = resumen?.cuotas || []
 }
-
 // Función para obtener el nombre del mes
 function getMesLabel(mes) {
   const mesObj = meses.find(m => m.value === mes)
   return mesObj ? mesObj.label : `Mes ${mes}`
 }
-
 // Función para obtener el emoji del mes
 function getMesEmoji(mes) {
   const emojis = {
@@ -4908,7 +4716,6 @@ function getMesEmoji(mes) {
   }
   return emojis[mes] || '📅'
 }
-
 // Función para calcular el estado real de una cuota basándose en la fecha actual
 // Reglas según REGLAS.md:
 // - Programada: fecha_actual < fecha_limite
@@ -4975,7 +4782,6 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
   // Por defecto, mantener el estado original
   return cuota.estado || 'programada'
 }
-
 // Función para navegar a la vista de préstamos del socio
 function verPrestamoSocio(socioMora) {
   // Validar que el ID sea válido antes de navegar
@@ -4996,7 +4802,6 @@ function verPrestamoSocio(socioMora) {
     router.push(`/natilleras/${id.value}/prestamos`)
   }
 }
-
 // Función para abrir el modal de cuotas del socio
 async function verCuotasSocio(socioMora) {
   // Desactivar animaciones de cuotas en mora al hacer clic en "ver cuotas"
@@ -5175,32 +4980,27 @@ async function verCuotasSocio(socioMora) {
     loadingCuotasSocio.value = false
   }
 }
-
 function cerrarModalCuotasSocio() {
   modalCuotasSocio.value = false
   socioParaCuotas.value = null
   cuotasSocioPorMes.value = []
   loadingCuotasSocio.value = false
 }
-
 // Funciones para controlar la visualización de la modal de socios en mora (máximo 2 veces por día)
 function obtenerClaveModalSociosEnMora() {
   const fechaHoy = new Date().toISOString().split('T')[0] // YYYY-MM-DD
   return `modalSociosEnMora_${id.value}_${fechaHoy}`
 }
-
 function puedeMostrarModalSociosEnMora() {
   const clave = obtenerClaveModalSociosEnMora()
   const contador = parseInt(localStorage.getItem(clave) || '0', 10)
   return contador < 2
 }
-
 function incrementarContadorModalSociosEnMora() {
   const clave = obtenerClaveModalSociosEnMora()
   const contador = parseInt(localStorage.getItem(clave) || '0', 10)
   localStorage.setItem(clave, (contador + 1).toString())
 }
-
 // Función de debug para reiniciar el contador (solo para desarrollo)
 function reiniciarContadorModalSociosEnMora() {
   const clave = obtenerClaveModalSociosEnMora()
@@ -5208,7 +5008,6 @@ function reiniciarContadorModalSociosEnMora() {
   console.log('✅ Contador de modal de socios en mora reiniciado para esta natillera')
   alert('Contador reiniciado. La modal se mostrará automáticamente la próxima vez que ingreses.')
 }
-
 // Exponer la función en window para acceso desde la consola (solo en desarrollo)
 if (import.meta.env.DEV) {
   window.reiniciarContadorModalSociosEnMora = reiniciarContadorModalSociosEnMora
@@ -5219,7 +5018,6 @@ if (import.meta.env.DEV) {
     return contador
   }
 }
-
 // Función para enviar WhatsApp de una cuota específica
 function enviarWhatsAppCuota(cuotaData) {
   // Obtener el teléfono del socio - puede venir de diferentes formas según el contexto
@@ -5293,12 +5091,9 @@ function enviarWhatsAppCuota(cuotaData) {
   const url = `https://wa.me/57${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`
   window.open(url, '_blank')
 }
-
-
 // Observar cuando se abre la modal para poner el foco en el input
 // Función para manejar el botón atrás del navegador en móvil
 let modalHistoryState = null
-
 function handleModalBack(modalRef, modalName) {
   watch(modalRef, (isOpen) => {
     if (isOpen) {
@@ -5320,7 +5115,6 @@ function handleModalBack(modalRef, modalName) {
     }
   })
 }
-
 // Listener para el botón atrás del navegador
 function handlePopState(event) {
   // Verificar modales en orden de z-index (las más altas primero)
@@ -5405,7 +5199,6 @@ function handlePopState(event) {
   // Esto previene que el navegador restaure una posición de scroll anterior
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
-
 // Registrar watchers para cada modal
 handleModalBack(modalWhatsApp, 'whatsapp')
 handleModalBack(modalDetalle, 'detalle')
@@ -5413,7 +5206,6 @@ handleModalBack(modalConfigMeses, 'configMeses')
 handleModalBack(modalBuscarComprobante, 'buscarComprobante')
 handleModalBack(modalCuotasSocio, 'cuotasSocio')
 handleModalBack(modalSociosEnMora, 'sociosEnMora')
-
 watch(modalBuscarComprobante, async (isOpen) => {
   if (isOpen) {
     // Esperar a que el DOM se actualice y luego poner el foco
@@ -5423,7 +5215,6 @@ watch(modalBuscarComprobante, async (isOpen) => {
     }
   }
 })
-
 // Función para hacer scroll al banner
 async function scrollToBannerSociosEnMora() {
   if (!bannerSociosEnMoraRef.value) return
@@ -5436,7 +5227,6 @@ async function scrollToBannerSociosEnMora() {
     block: 'center' 
   })
 }
-
 // Watch para detectar cuando hay socios en mora (scroll automático deshabilitado)
 // watch(sociosEnMora, async (newValue, oldValue) => {
 //   // Solo hacer scroll si antes no había socios en mora y ahora sí hay
@@ -5448,14 +5238,12 @@ async function scrollToBannerSociosEnMora() {
 //     }, 300)
 //   }
 // }, { deep: true })
-
 // Watch para recalcular estadísticas cuando cambie la natillera
 watch(natillera, async () => {
   if (natillera.value) {
     await calcularEstadisticasAsync()
   }
 }, { deep: true })
-
 // Watch para asegurar scroll al inicio cuando se entra a la vista
 watch(() => route.name, (newName, oldName) => {
   if (newName === 'NatilleraDetalle' && newName !== oldName) {
@@ -5468,7 +5256,6 @@ watch(() => route.name, (newName, oldName) => {
     })
   }
 }, { immediate: true })
-
 // Watch para detectar cambios en el ID de la natillera y recargar datos
 watch(() => id.value, async (newId, oldId) => {
   // Solo recargar si el ID realmente cambió
@@ -5514,7 +5301,6 @@ watch(() => id.value, async (newId, oldId) => {
     }
   }
 })
-
 // Watch para controlar el bloqueo de scroll cuando se muestra/oculta la animación
 watch(cargandoNatillera, (mostrando) => {
   if (mostrando) {
@@ -5528,7 +5314,6 @@ watch(cargandoNatillera, (mostrando) => {
     detenerRotacionMensajes()
   }
 }, { immediate: true })
-
 onMounted(async () => {
   // Activar pantalla de carga al inicio
   cargandoNatillera.value = true
@@ -5658,7 +5443,6 @@ onMounted(async () => {
     cargandoNatillera.value = false
   }
 })
-
 onUnmounted(() => {
   // Remover listener del botón atrás
   window.removeEventListener('popstate', handlePopState)
@@ -5667,7 +5451,6 @@ onUnmounted(() => {
   desbloquearScroll()
 })
 </script>
-
 <style scoped>
 /* Animación de pulso lento para la sección de alertas */
 @keyframes pulse-slow {
@@ -5678,18 +5461,15 @@ onUnmounted(() => {
     opacity: 0.92;
   }
 }
-
 .animate-pulse-slow {
   animation: pulse-slow 3s ease-in-out infinite;
 }
-
 /* Estilos para tooltips - funcionan con hover y focus */
 .tooltip-container:hover .tooltip,
 .tooltip-container:focus-within .tooltip {
   visibility: visible !important;
   opacity: 1 !important;
 }
-
 /* Animación de rebote lento para el icono */
 @keyframes bounce-slow {
   0%, 100% {
@@ -5699,11 +5479,9 @@ onUnmounted(() => {
     transform: translateY(-5px);
   }
 }
-
 .animate-bounce-slow {
   animation: bounce-slow 2s ease-in-out infinite;
 }
-
 /* Efecto shimmer para llamar la atención */
 @keyframes shimmer {
   0% {
@@ -5713,11 +5491,9 @@ onUnmounted(() => {
     transform: translateX(100%);
   }
 }
-
 .animate-shimmer {
   animation: shimmer 3s ease-in-out infinite;
 }
-
 /* Animación de entrada para las cuotas */
 @keyframes fade-in-up {
   0% {
@@ -5729,11 +5505,9 @@ onUnmounted(() => {
     transform: translateY(0);
   }
 }
-
 .animate-fade-in-up {
   animation: fade-in-up 0.5s ease-out forwards;
 }
-
 /* Animación de resaltado para cuotas en mora */
 @keyframes mora-highlight {
   0%, 100% {
@@ -5745,11 +5519,9 @@ onUnmounted(() => {
     transform: scale(1.03);
   }
 }
-
 .animate-mora-highlight {
   animation: mora-highlight 1.5s ease-in-out infinite;
 }
-
 /* Efecto shimmer especial para cuotas en mora */
 @keyframes shimmer-mora {
   0% {
@@ -5764,11 +5536,9 @@ onUnmounted(() => {
     opacity: 0;
   }
 }
-
 .animate-shimmer-mora {
   animation: shimmer-mora 2s ease-in-out infinite;
 }
-
 /* Animación de entrada elegante para la sección de alerta */
 @keyframes fade-in-alerta {
   0% {
@@ -5780,11 +5550,9 @@ onUnmounted(() => {
     transform: translateY(0);
   }
 }
-
 .animate-fade-in-alerta {
   animation: fade-in-alerta 0.6s ease-out forwards;
 }
-
 /* Efecto de barrido automático (como hover periódico) */
 @keyframes sweep-hover {
   0% {
@@ -5808,12 +5576,10 @@ onUnmounted(() => {
     opacity: 0;
   }
 }
-
 .animate-sweep-hover {
   animation: sweep-hover 3.5s ease-in-out infinite;
   width: 80%;
 }
-
 /* Animaciones para la pantalla de carga */
 @keyframes spin-smooth {
   from {
@@ -5823,15 +5589,12 @@ onUnmounted(() => {
     transform: rotate(360deg);
   }
 }
-
 .animate-spin-smooth {
   animation: spin-smooth 1s linear infinite;
 }
-
 .animate-spin-reverse {
   animation: spin-smooth 0.8s linear infinite reverse;
 }
-
 @keyframes glow-pulse {
   0%, 100% {
     box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
@@ -5840,11 +5603,9 @@ onUnmounted(() => {
     box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
   }
 }
-
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
-
 @keyframes float-1 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -5855,7 +5616,6 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-
 @keyframes float-2 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -5866,7 +5626,6 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-
 @keyframes float-3 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -5877,21 +5636,17 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-
 .animate-float-1 {
   animation: float-1 2s ease-in-out infinite;
 }
-
 .animate-float-2 {
   animation: float-2 2.5s ease-in-out infinite;
   animation-delay: 0.5s;
 }
-
 .animate-float-3 {
   animation: float-3 2.2s ease-in-out infinite;
   animation-delay: 1s;
 }
-
 @keyframes fade-in-out {
   0%, 100% {
     opacity: 0.6;
@@ -5900,7 +5655,6 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-
 .animate-fade-in-out {
   animation: fade-in-out 2s ease-in-out infinite;
 }

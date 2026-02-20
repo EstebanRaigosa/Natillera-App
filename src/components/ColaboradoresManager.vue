@@ -15,7 +15,6 @@
         <span class="whitespace-nowrap">Invitar Colaborador</span>
       </button>
     </div>
-
     <!-- Mensaje de permisos -->
     <div v-if="!puedeInvitar" class="bg-amber-50 border border-amber-200 rounded-xl p-4">
       <div class="flex items-start gap-3">
@@ -30,13 +29,11 @@
         </p>
       </div>
     </div>
-
     <!-- Loading -->
     <div v-if="loading" class="text-center py-8">
       <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
       <p class="text-gray-500 mt-3">Cargando colaboradores...</p>
     </div>
-
     <!-- Lista de colaboradores -->
     <div v-else class="space-y-4">
       <!-- Administrador -->
@@ -60,14 +57,12 @@
           </div>
         </div>
       </div>
-
       <!-- Lista vacía -->
       <div v-if="colaboradores.length === 0" class="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
         <UsersIcon class="w-12 h-12 text-gray-300 mx-auto mb-3" />
         <p class="text-gray-500 font-medium">No hay colaboradores</p>
         <p class="text-sm text-gray-400 mt-1">Invita a otros usuarios para que puedan acceder a esta natillera</p>
       </div>
-
       <!-- Colaboradores -->
       <TransitionGroup
         name="list"
@@ -99,7 +94,6 @@
               ]">
                 {{ obtenerInicial(colaborador.nombre_usuario || colaborador.email_usuario) }}
               </div>
-
               <!-- Info -->
               <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2">
@@ -133,7 +127,6 @@
                   </span>
                 </div>
               </div>
-
               <!-- Acciones -->
               <div v-if="(!esColaborador && puedeInvitar) || (esColaborador && esMiColaborador(colaborador))" class="flex items-center gap-2">
                 <!-- Si es colaborador, solo puede eliminarse a sí mismo -->
@@ -195,7 +188,6 @@
                 </template>
               </div>
             </div>
-
             <!-- Info de invitación -->
             <div v-if="colaborador.invitado_por_nombre" class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400">
               <ClockIcon class="w-3.5 h-3.5" />
@@ -207,13 +199,15 @@
         </div>
       </TransitionGroup>
     </div>
-
     <!-- Modal Invitar Colaborador -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="modalInvitar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalInvitar"></div>
-          <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      :show="!!modalInvitar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      card-max-width="32rem"
+      @close="cerrarModalInvitar"
+    >
             <!-- Header -->
             <div class="sticky top-0 bg-gradient-to-r from-natillera-500 to-emerald-500 px-6 py-4 text-white">
               <h3 class="text-lg font-display font-bold">Invitar Colaborador</h3>
@@ -225,7 +219,6 @@
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
-
             <!-- Contenido -->
             <div class="p-6 space-y-5">
               <!-- Email -->
@@ -249,7 +242,6 @@
                   El usuario recibirá una notificación para aceptar la invitación
                 </p>
               </div>
-
               <!-- Rol -->
               <div>
                 <label class="label font-semibold text-gray-700">Rol *</label>
@@ -358,7 +350,6 @@
                   </div>
                 </div>
               </div>
-
               <!-- Notas -->
               <div>
                 <label class="label font-semibold text-gray-700">Notas (opcional)</label>
@@ -369,7 +360,6 @@
                 ></textarea>
               </div>
             </div>
-
             <!-- Footer -->
             <div class="sticky bottom-0 bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
               <button
@@ -386,17 +376,16 @@
                 {{ enviandoInvitacion ? 'Enviando...' : 'Enviar Invitación' }}
               </button>
             </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
+          </ModalWrapper>
     <!-- Modal Editar Colaborador -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="modalEditar && !esColaborador && miRol !== 'colaborador'" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalEditar"></div>
-          <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      :show="!!(modalEditar && !esColaborador && miRol !== 'colaborador')"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      card-max-width="32rem"
+      @close="cerrarModalEditar"
+    >
             <!-- Header -->
             <div class="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4 text-white">
               <h3 class="text-lg font-display font-bold">Editar Colaborador</h3>
@@ -408,7 +397,6 @@
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
-
             <!-- Contenido -->
             <div class="p-6 space-y-5">
               <!-- Rol -->
@@ -504,7 +492,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Footer -->
             <div class="sticky bottom-0 bg-gray-50 px-6 py-4 border-t flex justify-end gap-3">
               <button
@@ -521,17 +508,16 @@
                 {{ guardandoCambios ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
             </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
+          </ModalWrapper>
     <!-- Modal Confirmar Revocación -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="modalRevocar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalRevocar"></div>
-          <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <ModalWrapper
+      :show="!!modalRevocar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md"
+      card-max-width="28rem"
+      @close="cerrarModalRevocar"
+    >
             <div class="p-6 text-center">
               <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                 <ExclamationTriangleIcon class="w-8 h-8 text-red-500" />
@@ -561,17 +547,16 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
+        </ModalWrapper>
     <!-- Modal Confirmar Eliminación -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="modalEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalEliminar"></div>
-          <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <ModalWrapper
+      :show="!!modalEliminar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md"
+      card-max-width="28rem"
+      @close="cerrarModalEliminar"
+    >
             <div class="p-6 text-center">
               <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                 <TrashIcon class="w-8 h-8 text-red-500" />
@@ -606,11 +591,7 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-
+        </ModalWrapper>
     <!-- Notificación -->
     <Teleport to="body">
       <Transition name="notification">
@@ -636,11 +617,11 @@
     </Teleport>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useColaboradoresStore, PERMISOS_DISPONIBLES, PERMISOS_POR_ROL } from '../stores/colaboradores'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
+import ModalWrapper from './ModalWrapper.vue'
 import { supabase } from '../lib/supabase'
 import {
   UserPlusIcon,
@@ -657,7 +638,6 @@ import {
   XCircleIcon,
   TrashIcon
 } from '@heroicons/vue/24/outline'
-
 const props = defineProps({
   natilleraId: {
     type: String,
@@ -680,9 +660,7 @@ const props = defineProps({
     default: false
   }
 })
-
 const colaboradoresStore = useColaboradoresStore()
-
 // Estado
 const loading = ref(true)
 const colaboradores = computed(() => colaboradoresStore.colaboradores)
@@ -690,7 +668,6 @@ const modalInvitar = ref(false)
 const modalEditar = ref(false)
 const modalRevocar = ref(false)
 const modalEliminar = ref(false)
-
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalInvitar)
 useBodyScrollLock(modalEditar)
@@ -711,7 +688,6 @@ const miRol = ref(null)
 const miUsuarioId = ref(null)
 const miEmail = ref(null)
 const esColaborador = computed(() => miRol.value === 'colaborador')
-
 // Formulario invitar
 const formulario = ref({
   email: '',
@@ -719,13 +695,11 @@ const formulario = ref({
   permisos: { ...PERMISOS_POR_ROL.visor },
   notas: ''
 })
-
 // Formulario editar
 const formularioEditar = ref({
   rol: 'visor',
   permisos: {}
 })
-
 // Roles disponibles
 const rolesDisponibles = [
   {
@@ -744,7 +718,6 @@ const rolesDisponibles = [
     descripcion: 'Solo puede ver la información, sin hacer cambios'
   }
 ]
-
 // Permisos editables (todos excepto 'ver')
 const permisosEditables = computed(() => {
   const editables = {}
@@ -755,7 +728,6 @@ const permisosEditables = computed(() => {
   })
   return editables
 })
-
 // Mapeo de nombres de permisos para mostrar
 const nombresPermisos = {
   editar_socios: 'Socios',
@@ -765,7 +737,6 @@ const nombresPermisos = {
   ver_auditoria: 'Auditoría',
   configurar: 'Configuración'
 }
-
 // Función para inicializar permisos con estructura gestionar/consultar
 function inicializarPermisosColaborador(permisosBase) {
   const permisos = {}
@@ -780,7 +751,6 @@ function inicializarPermisosColaborador(permisosBase) {
   })
   return permisos
 }
-
 // Función para convertir permisos de estructura antigua a nueva (para compatibilidad)
 function normalizarPermisos(permisos, rol) {
   if (rol === 'colaborador') {
@@ -803,7 +773,6 @@ function normalizarPermisos(permisos, rol) {
   // Para otros roles (visor, etc.), mantener estructura simple
   return permisos
 }
-
 // Función para convertir permisos de estructura nueva a antigua (para guardar)
 function convertirPermisosParaGuardar(permisos, rol) {
   if (rol === 'colaborador') {
@@ -821,18 +790,15 @@ function convertirPermisosParaGuardar(permisos, rol) {
   // Para visor y otros roles, mantener estructura simple
   return permisos
 }
-
 // Computed
 const adminInicial = computed(() => 
   obtenerInicial(props.adminNombre || props.adminEmail)
 )
-
 // Helpers
 function obtenerInicial(texto) {
   if (!texto) return '?'
   return texto.charAt(0).toUpperCase()
 }
-
 function formatearRol(rol) {
   const nombres = {
     co_administrador: 'Co-Admin',
@@ -841,7 +807,6 @@ function formatearRol(rol) {
   }
   return nombres[rol] || rol
 }
-
 function obtenerClaseRol(rol) {
   const clases = {
     co_administrador: 'bg-purple-100 text-purple-700',
@@ -850,7 +815,6 @@ function obtenerClaseRol(rol) {
   }
   return clases[rol] || 'bg-gray-100 text-gray-700'
 }
-
 function formatearEstado(estado) {
   const nombres = {
     pendiente: 'Pendiente',
@@ -860,7 +824,6 @@ function formatearEstado(estado) {
   }
   return nombres[estado] || estado
 }
-
 function obtenerClaseEstado(estado) {
   const clases = {
     pendiente: 'bg-amber-100 text-amber-700',
@@ -870,7 +833,6 @@ function obtenerClaseEstado(estado) {
   }
   return clases[estado] || 'bg-gray-100 text-gray-500'
 }
-
 function formatearPermiso(permiso) {
   const nombres = {
     ver: 'Ver',
@@ -883,7 +845,6 @@ function formatearPermiso(permiso) {
   }
   return nombres[permiso] || permiso
 }
-
 function formatearFecha(fecha) {
   if (!fecha) return ''
   return new Date(fecha).toLocaleDateString('es-CO', {
@@ -892,7 +853,6 @@ function formatearFecha(fecha) {
     year: 'numeric'
   })
 }
-
 // Modal Invitar
 function abrirModalInvitar() {
   formulario.value = {
@@ -904,12 +864,10 @@ function abrirModalInvitar() {
   errorEmail.value = null
   modalInvitar.value = true
 }
-
 function cerrarModalInvitar() {
   modalInvitar.value = false
   errorEmail.value = null
 }
-
 // Watch para actualizar permisos cuando cambia el rol
 watch(() => formulario.value.rol, (nuevoRol) => {
   if (nuevoRol === 'colaborador') {
@@ -918,7 +876,6 @@ watch(() => formulario.value.rol, (nuevoRol) => {
     formulario.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
   }
 })
-
 watch(() => formularioEditar.value.rol, (nuevoRol) => {
   if (nuevoRol === 'colaborador') {
     formularioEditar.value.permisos = inicializarPermisosColaborador(PERMISOS_POR_ROL[nuevoRol])
@@ -926,17 +883,14 @@ watch(() => formularioEditar.value.rol, (nuevoRol) => {
     formularioEditar.value.permisos = { ...PERMISOS_POR_ROL[nuevoRol] }
   }
 })
-
 // Limpiar error cuando cambia el email
 watch(() => formulario.value.email, () => {
   if (errorEmail.value) {
     errorEmail.value = null
   }
 })
-
 async function enviarInvitacion() {
   if (!formulario.value.email) return
-
   // Limpiar error previo
   errorEmail.value = null
   enviandoInvitacion.value = true
@@ -951,7 +905,6 @@ async function enviarInvitacion() {
       permisos: permisosParaGuardar,
       notas: formulario.value.notas
     })
-
     if (resultado.success) {
       mostrarNotificacion('exito', 'Invitación enviada correctamente')
       cerrarModalInvitar()
@@ -983,7 +936,6 @@ async function enviarInvitacion() {
     enviandoInvitacion.value = false
   }
 }
-
 // Modal Editar
 function abrirModalEditar(colaborador) {
   // Si es colaborador, no puede editar
@@ -1000,22 +952,18 @@ function abrirModalEditar(colaborador) {
   }
   modalEditar.value = true
 }
-
 function cerrarModalEditar() {
   modalEditar.value = false
   colaboradorEditando.value = null
 }
-
 async function guardarCambios() {
   if (!colaboradorEditando.value) return
-
   // Si es colaborador, no puede editar
   if (esColaborador.value) {
     mostrarNotificacion('error', 'No tienes permisos para editar colaboradores')
     cerrarModalEditar()
     return
   }
-
   guardandoCambios.value = true
   try {
     // Convertir permisos para guardar (de estructura nueva a antigua si es colaborador)
@@ -1028,7 +976,6 @@ async function guardarCambios() {
         permisos: permisosParaGuardar
       }
     )
-
     if (resultado.success) {
       mostrarNotificacion('exito', 'Cambios guardados correctamente')
       cerrarModalEditar()
@@ -1042,21 +989,17 @@ async function guardarCambios() {
     guardandoCambios.value = false
   }
 }
-
 // Modal Revocar
 function confirmarRevocacion(colaborador) {
   colaboradorRevocando.value = colaborador
   modalRevocar.value = true
 }
-
 function cerrarModalRevocar() {
   modalRevocar.value = false
   colaboradorRevocando.value = null
 }
-
 async function ejecutarRevocacion() {
   if (!colaboradorRevocando.value) return
-
   revocando.value = true
   try {
     let resultado
@@ -1065,7 +1008,6 @@ async function ejecutarRevocacion() {
     } else {
       resultado = await colaboradoresStore.revocarColaborador(colaboradorRevocando.value.id)
     }
-
     if (resultado.success) {
       mostrarNotificacion('exito', 
         colaboradorRevocando.value.estado === 'pendiente' 
@@ -1083,10 +1025,8 @@ async function ejecutarRevocacion() {
     revocando.value = false
   }
 }
-
 async function reenviarInvitacion(colaborador) {
   if (!colaborador) return
-
   reenviando.value = true
   try {
     let resultado
@@ -1103,7 +1043,6 @@ async function reenviarInvitacion(colaborador) {
       mostrarNotificacion('error', 'No se puede reenviar invitación a un colaborador activo')
       return
     }
-
     if (resultado.success) {
       mostrarNotificacion('exito', 'Invitación reenviada correctamente')
       await cargarColaboradores()
@@ -1116,25 +1055,20 @@ async function reenviarInvitacion(colaborador) {
     reenviando.value = false
   }
 }
-
 // Modal Eliminar
 function confirmarEliminacion(colaborador) {
   colaboradorEliminando.value = colaborador
   modalEliminar.value = true
 }
-
 function cerrarModalEliminar() {
   modalEliminar.value = false
   colaboradorEliminando.value = null
 }
-
 async function ejecutarEliminacion() {
   if (!colaboradorEliminando.value) return
-
   eliminando.value = true
   try {
     const resultado = await colaboradoresStore.eliminarColaborador(colaboradorEliminando.value.id)
-
     if (resultado.success) {
       if (esColaborador.value && esMiColaborador(colaboradorEliminando.value)) {
         mostrarNotificacion('exito', 'Has salido de esta natillera')
@@ -1156,20 +1090,17 @@ async function ejecutarEliminacion() {
     eliminando.value = false
   }
 }
-
 function mostrarNotificacion(tipo, mensaje) {
   notificacion.value = { tipo, mensaje }
   setTimeout(() => {
     notificacion.value = null
   }, 4000)
 }
-
 async function cargarColaboradores() {
   loading.value = true
   await colaboradoresStore.fetchColaboradores(props.natilleraId)
   loading.value = false
 }
-
 // Verificar si un colaborador es el usuario actual
 function esMiColaborador(colaborador) {
   if (!miUsuarioId.value && !miEmail.value) return false
@@ -1186,7 +1117,6 @@ function esMiColaborador(colaborador) {
   
   return false
 }
-
 async function obtenerMiRolYUsuario() {
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -1216,7 +1146,6 @@ async function obtenerMiRolYUsuario() {
     miRol.value = null
   }
 }
-
 async function verificarPermisos() {
   if (props.esAdmin) {
     puedeInvitar.value = true
@@ -1236,81 +1165,66 @@ async function verificarPermisos() {
   
   puedeInvitar.value = await colaboradoresStore.tienePermiso(props.natilleraId, 'configurar')
 }
-
 onMounted(async () => {
   await obtenerMiRolYUsuario()
   await verificarPermisos()
   await cargarColaboradores()
 })
-
 // Watch para recargar cuando cambia la natillera
 watch(() => props.natilleraId, async () => {
   await obtenerMiRolYUsuario()
   await verificarPermisos()
   await cargarColaboradores()
 })
-
 // Exponer método para abrir modal desde el componente padre
 defineExpose({
   abrirModalInvitar
 })
 </script>
-
 <style scoped>
 .list-enter-active,
 .list-leave-active {
   transition: all 0.3s ease;
 }
-
 .list-enter-from {
   opacity: 0;
   transform: translateX(-20px);
 }
-
 .list-leave-to {
   opacity: 0;
   transform: translateX(20px);
 }
-
 .modal-enter-active,
 .modal-leave-active {
   transition: all 0.3s ease;
 }
-
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
 }
-
 .modal-enter-from .relative,
 .modal-leave-to .relative {
   transform: scale(0.95);
 }
-
 .fade-enter-active,
 .fade-leave-active {
   transition: all 0.2s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }
-
 .notification-enter-active,
 .notification-leave-active {
   transition: all 0.3s ease;
 }
-
 .notification-enter-from {
   opacity: 0;
   transform: translateY(20px);
 }
-
 .notification-leave-to {
   opacity: 0;
   transform: translateX(100px);
 }
 </style>
-

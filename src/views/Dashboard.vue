@@ -1198,6 +1198,7 @@ import { formatDate } from '../utils/formatDate'
 import LoadingScreenIos from '../components/LoadingScreenIos.vue'
 import ModalWrapper from '../components/ModalWrapper.vue'
 import { useIsIos } from '../composables/useIsIos'
+import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { 
   BanknotesIcon, 
   UsersIcon, 
@@ -1233,6 +1234,7 @@ const filtro = ref('todas')
 const vistaActiva = ref('todas')
 const natilleraAEliminar = ref(null)
 const eliminandoNatillera = ref(false) // Flag para rastrear cuando se está eliminando una natillera
+useBodyScrollLock(computed(() => !!natilleraAEliminar.value))
 const usuarioAutenticado = ref(null)
 const procesandoInvitacion = ref(null)
 const recaudadoPorNatillera = ref({})

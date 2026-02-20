@@ -5,7 +5,6 @@
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
-
     <!-- Header en tarjeta: título arriba; en móvil botón abajo dentro de la tarjeta, en desktop botón a la derecha -->
     <div class="relative">
       <Breadcrumbs />
@@ -33,11 +32,15 @@
         </div>
       </div>
     </div>
-
     <!-- Modal de Bienvenida / Tutorial -->
-    <div v-if="mostrarModalBienvenida" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="cerrarModalBienvenida"></div>
-      <div class="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!mostrarModalBienvenida"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="48rem"
+      @close="cerrarModalBienvenida"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-accent-500 via-orange-500 to-amber-600 p-6 sm:p-8 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl"></div>
@@ -66,7 +69,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-6 sm:p-8">
           <div class="space-y-6">
@@ -81,7 +83,6 @@
                   <p class="text-gray-600 text-sm mb-4">Existen dos formas de registrar actividades en el sistema:</p>
                 </div>
               </div>
-
               <div class="grid md:grid-cols-2 gap-4">
                 <!-- Liquidar Actividad -->
                 <div class="bg-white rounded-xl p-5 border-2 border-green-200/50 shadow-md">
@@ -109,7 +110,6 @@
                     </li>
                   </ul>
                 </div>
-
                 <!-- Actividad en Curso -->
                 <div class="bg-white rounded-xl p-5 border-2 border-amber-200/50 shadow-md">
                   <div class="flex items-center gap-3 mb-3">
@@ -142,7 +142,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Sección: Múltiples Meses -->
             <div class="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/30 rounded-2xl p-6 border-2 border-emerald-200/50">
               <div class="flex items-start gap-4 mb-4">
@@ -158,7 +157,6 @@
                   </p>
                 </div>
               </div>
-
               <div class="bg-white rounded-xl p-5 border-2 border-emerald-200/50">
                 <div class="space-y-3">
                   <div class="flex items-start gap-3">
@@ -191,7 +189,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Sección: Valores -->
             <div class="bg-gradient-to-br from-purple-50 via-pink-50/50 to-rose-50/30 rounded-2xl p-6 border-2 border-purple-200/50">
               <div class="flex items-start gap-4 mb-4">
@@ -207,7 +204,6 @@
                   </p>
                 </div>
               </div>
-
               <div class="grid md:grid-cols-2 gap-4">
                 <div class="bg-white rounded-xl p-4 border-2 border-purple-200/50">
                   <h4 class="font-bold text-gray-800 text-sm mb-2 flex items-center gap-2">
@@ -229,7 +225,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Nota importante -->
             <div class="bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 rounded-xl p-5 border-2 border-amber-300/50">
               <div class="flex items-start gap-3">
@@ -249,7 +244,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 sm:p-6 flex-shrink-0">
           <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -269,9 +263,7 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Tarjetas de resumen financiero (blanco, icono en círculo, valor, etiqueta mayúsculas) -->
     <div class="grid grid-cols-3 gap-2 sm:gap-4">
       <div class="card rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center text-center min-w-0">
@@ -305,7 +297,6 @@
         <p class="text-[11px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">Utilidad</p>
       </div>
     </div>
-
     <!-- Selector de vista Normal / Agrupada (solo si hay actividades) -->
     <div class="flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm overflow-hidden">
       <button
@@ -331,7 +322,6 @@
         Agrupada
       </button>
     </div>
-
     <!-- Lista vacía -->
     <div v-if="actividades.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-6 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
       <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
@@ -352,7 +342,6 @@
         </button>
       </div>
     </div>
-
     <div v-else class="space-y-6">
       <!-- Vista Normal: Todas las actividades sin agrupar (estilo referencia) -->
       <div v-if="!vistaAgrupada" class="space-y-4">
@@ -404,7 +393,6 @@
               </button>
             </div>
           </div>
-
           <!-- Vista para actividades liquidadas -->
           <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
             <div class="grid grid-cols-3 gap-2 sm:gap-3">
@@ -431,7 +419,6 @@
               </div>
             </div>
           </template>
-
           <!-- Vista para actividades en curso: Fecha límite, Total asignado, Total recaudado -->
           <template v-else>
             <div class="grid grid-cols-3 gap-2 sm:gap-3">
@@ -459,7 +446,6 @@
           </template>
         </div>
       </div>
-
       <!-- Vista Agrupada: Grupos colapsables y actividades individuales -->
       <div v-else class="space-y-6">
         <!-- Grupos de actividades y actividades individuales -->
@@ -604,7 +590,6 @@
                         </button>
                       </div>
                     </div>
-
                   <template v-if="actividad.estado === 'liquidada' || !actividad.estado">
                     <div class="grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
                       <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0 overflow-hidden">
@@ -630,7 +615,6 @@
                         </div>
                       </div>
                     </template>
-
                     <template v-else>
                       <div class="grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
                         <div class="rounded-xl p-2 sm:p-3 bg-amber-50 border border-amber-200/50 min-w-0 overflow-hidden">
@@ -710,7 +694,6 @@
                 </button>
               </div>
             </div>
-
             <template v-if="item.actividad.estado === 'liquidada' || !item.actividad.estado">
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <div class="rounded-xl p-2 sm:p-3 bg-green-50 border border-green-200/50 min-w-0">
@@ -736,7 +719,6 @@
                 </div>
               </div>
             </template>
-
             <template v-else>
               <div class="grid grid-cols-3 gap-2 sm:gap-3">
                 <div class="rounded-xl p-2 sm:p-3 bg-amber-50 border border-amber-200/50 min-w-0">
@@ -766,11 +748,15 @@
       </template>
       </div>
     </div>
-
     <!-- Modal Nueva Actividad -->
-    <div v-if="modalNuevaActividad" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px]" @click="modalNuevaActividad = false"></div>
-      <div class="relative max-w-lg w-full max-h-[90vh] rounded-2xl overflow-hidden flex flex-col border border-natillera-200/60 shadow-2xl shadow-natillera-900/10 bg-gradient-to-b from-white to-natillera-50/30">
+    <ModalWrapper
+      :show="!!modalNuevaActividad"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-lg w-full max-h-[90vh] rounded-2xl overflow-hidden flex flex-col border border-natillera-200/60 shadow-2xl shadow-natillera-900/10 bg-gradient-to-b from-white to-natillera-50/30"
+      card-max-width="32rem"
+      @close="modalNuevaActividad = false"
+    >
         <!-- Header con color -->
         <div class="bg-gradient-to-r from-natillera-500 via-natillera-600 to-emerald-600 px-5 py-4 flex-shrink-0 text-white">
           <div class="flex items-center gap-3">
@@ -783,7 +769,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto overscroll-contain bg-gradient-to-b from-natillera-50/20 to-slate-50/80">
           <form @submit.prevent="handleCrearActividad" class="p-4 sm:p-4 space-y-4">
@@ -826,7 +811,6 @@
                 </p>
               </div>
             </div>
-
             <!-- Bloque: Actividad + Modo rifa (Modo rifa solo cuando tipo de proceso es "en curso") -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
               <div class="grid gap-4" :class="formActividad.tipoProceso === 'en_curso' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
@@ -948,7 +932,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Bloque: Descripción + Repetir -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
@@ -979,7 +962,6 @@
                 <ArrowPathIcon class="w-5 h-5 text-slate-400 flex-shrink-0 pointer-events-none" />
               </label>
             </div>
-
             <!-- Período / Mes (solo en curso) - arriba -->
             <template v-if="formActividad.tipoProceso === 'en_curso'">
               <template v-if="!formActividad.esMultiplesMeses">
@@ -1008,7 +990,6 @@
                       />
                     </div>
                   </div>
-
                   <!-- Quincena de pago -->
                   <div v-if="natillera && natillera.periodicidad === 'quincenal'" class="mt-4">
                     <p class="text-xs text-slate-500 mb-2">Quincena de pago *</p>
@@ -1059,7 +1040,6 @@
                   </div>
                 </div>
               </template>
-
               <!-- Panel para múltiples meses -->
               <template v-else>
                 <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 space-y-4">
@@ -1115,7 +1095,6 @@
                 </div>
               </template>
             </template>
-
             <!-- Fecha de juego de la rifa (solo rifas en curso) -->
             <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Fecha de juego de la rifa *</label>
@@ -1165,7 +1144,6 @@
                 </div>
               </div>
             </div>
-
             <!-- Números por socio (rifa en curso: obligatorio en modo Auto) -->
             <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span v-if="formActividad.tipoRifa === 'aleatoria'" class="text-red-500">*</span></label>
@@ -1183,7 +1161,6 @@
               />
               <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 mt-1.5">Solo aplica en modo Auto (asignación automática de números).</p>
             </div>
-
             <!-- Bloque: Liquidar -->
             <template v-if="formActividad.tipoProceso === 'liquidar'">
               <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
@@ -1223,7 +1200,6 @@
                 </div>
               </div>
             </template>
-
             <!-- Formulario para Actividad en curso -->
             <template v-else>
               <!-- Bloque: Asignación y valores -->
@@ -1239,7 +1215,6 @@
                     Diferentes
                   </button>
                 </div>
-
                 <!-- Valor por socio + Total (cuando se elige Iguales) -->
                 <div v-if="formActividad.tipoValores === 'iguales'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="flex flex-col">
@@ -1266,7 +1241,6 @@
                     </div>
                   </div>
                 </div>
-
                 <!-- Lista de socios (cuando se elige Diferentes) -->
                 <div v-else>
                   <p class="text-xs text-slate-500 mb-2">Valor por socio</p>
@@ -1298,7 +1272,6 @@
             </template>
           </form>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-natillera-200/80 bg-gradient-to-r from-white to-natillera-50/40 px-4 sm:px-5 py-4 flex-shrink-0">
           <div class="flex flex-col-reverse sm:flex-row gap-3">
@@ -1310,13 +1283,16 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-
+      </ModalWrapper>
     <!-- Modal Detalle Actividad en Curso -->
-    <div v-if="modalDetalleActividad && actividadSeleccionada" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalleActividad = false"></div>
-      <div class="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!(modalDetalleActividad && actividadSeleccionada)"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="56rem"
+      @close="modalDetalleActividad = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-accent-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1345,7 +1321,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
           <!-- Información general -->
@@ -1391,7 +1366,6 @@
               </p>
             </div>
           </div>
-
           <!-- Vista de números para rifa manual -->
           <div v-if="actividadSeleccionada.tipo === 'rifa' && actividadSeleccionada.tipo_rifa === 'manual'">
             <!-- Total vendido (arriba, visible en móvil y desktop) -->
@@ -1481,7 +1455,6 @@
               </div>
             </div>
           </div>
-
           <!-- Lista de socios (solo si NO es rifa manual) -->
           <div v-else>
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -1676,7 +1649,6 @@
                         </p>
                       </div>
                     </div>
-
                     <!-- Botón Asignar al final (solo móvil) -->
                     <div class="mt-4 pt-3 border-t border-gray-300 sm:hidden">
                       <button
@@ -1693,7 +1665,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer con botón Liquidar -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
           <button 
@@ -1709,13 +1680,17 @@
             Liquidar Actividad
           </button>
         </div>
-      </div>
+      </ModalWrapper>
     </div>
-
     <!-- Modal Liquidar Actividad -->
-    <div v-if="modalLiquidarActividad && actividadSeleccionada" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalLiquidarActividad = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!(modalLiquidarActividad && actividadSeleccionada)"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="modalLiquidarActividad = false"
+    >
         <!-- Header -->
         <div class="bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 p-4 sm:p-5 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1741,7 +1716,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-4 sm:p-6 space-y-4">
           <!-- Total recaudado (solo lectura) -->
@@ -1760,7 +1734,6 @@
               />
             </div>
           </div>
-
           <!-- Premio entregado -->
           <div>
             <label class="label mb-2 block">Premio entregado *</label>
@@ -1780,7 +1753,6 @@
               />
             </div>
           </div>
-
           <!-- Forma de pago del premio (solo rifas) -->
           <div>
             <label class="label mb-2 block">Forma de pago del premio</label>
@@ -1813,7 +1785,6 @@
               </button>
             </div>
           </div>
-
           <!-- Número ganador (para mostrar ganador al abrir la rifa liquidada) -->
           <div>
             <label class="label mb-2 block">Número ganador *</label>
@@ -1828,7 +1799,6 @@
             />
             <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99)</p>
           </div>
-
           <!-- Utilidad calculada -->
           <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
             <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200/30 to-indigo-200/20 rounded-full blur-xl -translate-y-1/2 translate-x-1/2"></div>
@@ -1840,7 +1810,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex gap-3">
           <button 
@@ -1857,13 +1826,16 @@
             {{ loading ? 'Liquidando...' : 'Liquidar' }}
           </button>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal Confirmar Liquidación con Utilidad Negativa -->
-    <div v-if="modalConfirmarLiquidacionNegativa && actividadSeleccionada" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalConfirmarLiquidacionNegativa = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!(modalConfirmarLiquidacionNegativa && actividadSeleccionada)"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="modalConfirmarLiquidacionNegativa = false"
+    >
         <!-- Header con advertencia -->
         <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 p-4 sm:p-5 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1882,7 +1854,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-4 sm:p-6 space-y-4">
           <div class="bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 rounded-xl p-4 border-2 border-amber-200">
@@ -1911,7 +1882,6 @@
               </div>
             </div>
           </div>
-
           <!-- Resumen de valores -->
           <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
             <div class="space-y-2 text-sm">
@@ -1930,7 +1900,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex gap-3">
           <button 
@@ -1947,13 +1916,17 @@
             {{ loading ? 'Liquidando...' : 'Liquidar de todas formas' }}
           </button>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal Ganador Rifa (rifa liquidada) -->
-    <div v-if="modalGanadorRifa && actividadSeleccionada" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-modal="ganador-rifa">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalGanadorRifa = false"></div>
-      <div class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 sm:animate-none">
+    <ModalWrapper
+      :show="!!(modalGanadorRifa && actividadSeleccionada)"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+      card-max-width="28rem"
+      @close="modalGanadorRifa = false"
+    >
         <!-- Header con gradiente dorado/celebration -->
         <div class="relative bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-6 sm:p-8 text-white overflow-hidden">
           <div class="absolute inset-0 opacity-30">
@@ -1972,7 +1945,6 @@
             </p>
           </div>
         </div>
-
         <!-- Contenido: número ganador + ganador -->
         <div class="p-6 sm:p-8 space-y-6">
           <!-- Número ganador grande -->
@@ -1984,7 +1956,6 @@
               </span>
             </div>
           </div>
-
           <!-- Caso: número ganador lo tenía un Faltante → gana la natillera -->
           <div v-if="actividadSeleccionada.ganador_es_faltante" class="text-center">
             <div class="inline-flex flex-col items-center gap-4 p-6 rounded-2xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-lg">
@@ -2001,7 +1972,6 @@
               </div>
             </div>
           </div>
-
           <!-- Ganador: socio con avatar -->
           <div v-else-if="actividadSeleccionada.ganador_nombre && !actividadSeleccionada.ganador_es_faltante" class="text-center">
             <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Ganador / Ganadora</p>
@@ -2023,13 +1993,11 @@
               </p>
             </div>
           </div>
-
           <!-- Sin datos de ganador (rifas liquidadas antes de esta función) -->
           <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-4">
             <p class="text-sm text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 sm:p-5">
           <button 
@@ -2039,13 +2007,17 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal Ver ganadores (grupo de rifas) -->
-    <div v-if="grupoGanadoresSeleccionado" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" data-modal="ver-ganadores-grupo">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="grupoGanadoresSeleccionado = null"></div>
-      <div class="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200 sm:animate-none max-h-[90vh] flex flex-col">
+    <ModalWrapper
+      :show="!!grupoGanadoresSeleccionado"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+      card-max-width="32rem"
+      @close="grupoGanadoresSeleccionado = null"
+    >
         <!-- Header -->
         <div class="relative bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 px-4 py-3 text-white flex-shrink-0 flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-white/25 flex items-center justify-center flex-shrink-0"><span class="text-xl">🏆</span></div>
@@ -2055,7 +2027,6 @@
           </div>
           <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 flex-shrink-0">{{ (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length }} rifa{{ (grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length !== 1 ? 's' : '' }}</span>
         </div>
-
         <!-- Lista -->
         <div class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 min-h-0">
           <div v-if="!(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa').length" class="text-center py-8 text-gray-500 text-sm">No hay rifas en este grupo.</div>
@@ -2102,7 +2073,6 @@
             </div>
           </template>
         </div>
-
         <!-- Totalizador -->
         <div v-if="(grupoGanadoresSeleccionado?.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada').length" class="flex-shrink-0 border-t border-amber-200/60 bg-amber-50/80 px-3 py-3">
           <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-2">Totales (rifas liquidadas)</p>
@@ -2121,20 +2091,22 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 p-3 flex-shrink-0">
           <button @click="grupoGanadoresSeleccionado = null" class="w-full py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-natillera-500 to-emerald-600 text-white hover:from-natillera-600 hover:to-emerald-700 transition-colors">
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal de venta de rifa -->
-    <div v-if="modalVentaRifa" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalVentaRifa = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!modalVentaRifa"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="modalVentaRifa = false"
+    >
         <!-- Header -->
         <div class="bg-gradient-to-br from-natillera-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -2160,7 +2132,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-4 sm:p-6 space-y-4">
           <div>
@@ -2173,7 +2144,6 @@
               required
             />
           </div>
-
           <div>
             <label class="label">Teléfono del comprador</label>
             <input 
@@ -2183,7 +2153,6 @@
               placeholder="Ej: 3001234567"
             />
           </div>
-
           <div class="relative" data-socio-desplegable>
             <label class="label">Socio vendedor *</label>
             <div class="relative">
@@ -2220,7 +2189,6 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-
               <!-- Lista desplegable -->
               <div
                 v-if="desplegableSocioAbierto"
@@ -2263,7 +2231,6 @@
               </div>
             </div>
           </div>
-
           <div>
             <label class="label">Valor de la venta *</label>
             <div class="relative">
@@ -2282,7 +2249,6 @@
               />
             </div>
           </div>
-
           <!-- Checkbox para indicar si ya pagó -->
           <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 hover:border-emerald-300 transition-all">
             <label class="flex items-center gap-3 cursor-pointer flex-1 group">
@@ -2327,7 +2293,6 @@
             </label>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex gap-3">
           <button 
@@ -2343,13 +2308,16 @@
             Guardar Venta
           </button>
         </div>
-      </div>
-    </div>
-
+      </ModalWrapper>
     <!-- Modal de pago de rifa -->
-    <div v-if="modalPagarRifa" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalPagarRifa = false"></div>
-      <div class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!modalPagarRifa"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="modalPagarRifa = false"
+    >
         <!-- Header -->
         <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -2377,7 +2345,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-4 sm:p-6 space-y-4">
           <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
@@ -2392,7 +2359,6 @@
               </div>
             </div>
           </div>
-
           <!-- Checkbox para indicar si ya pagó -->
           <div class="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200 hover:border-emerald-300 transition-all">
             <label class="flex items-center gap-3 cursor-pointer flex-1 group">
@@ -2437,7 +2403,6 @@
             </label>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex gap-3">
           <button 
@@ -2453,13 +2418,16 @@
             Guardar
           </button>
         </div>
-      </div>
-    </div>
-
+    </ModalWrapper>
     <!-- Modal de confirmación para eliminar actividad -->
-    <div v-if="actividadAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="actividadAEliminar = null"></div>
-      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!actividadAEliminar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="actividadAEliminar = null"
+    >
         <!-- Efectos decorativos -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2480,7 +2448,6 @@
               </div>
             </div>
           </div>
-
           <!-- Contenido -->
           <div class="p-4 sm:p-6">
             <p class="text-gray-700 mb-4">
@@ -2514,7 +2481,6 @@
               </div>
             </div>
           </div>
-
           <!-- Footer -->
           <div class="p-4 sm:p-6 bg-gray-50 border-t border-gray-200 flex gap-3">
             <button
@@ -2534,14 +2500,16 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
+    </ModalWrapper>
   <!-- Modal de confirmación para eliminar grupo -->
-  <div v-if="grupoAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="grupoAEliminar = null"></div>
-    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+  <ModalWrapper
+    :show="!!grupoAEliminar"
+    :z-index="50"
+    overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden"
+    card-max-width="28rem"
+    @close="grupoAEliminar = null"
+  >
       <!-- Efectos decorativos -->
       <div class="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
       <div class="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2562,7 +2530,6 @@
             </div>
           </div>
         </div>
-
         <!-- Contenido -->
         <div class="p-4 sm:p-6">
           <p class="text-gray-700 mb-4">
@@ -2596,7 +2563,6 @@
             </div>
           </div>
         </div>
-
         <!-- Footer -->
         <div class="p-4 sm:p-6 bg-gray-50 border-t border-gray-200 flex gap-3">
           <button
@@ -2616,13 +2582,16 @@
           </button>
         </div>
       </div>
-    </div>
-  </div>
-
+  </ModalWrapper>
   <!-- Modal para asignar faltante a socio -->
-  <div v-if="modalAsignarFaltante && faltanteSeleccionado" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalAsignarFaltante = false"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+  <ModalWrapper
+    :show="!!(modalAsignarFaltante && faltanteSeleccionado)"
+    :z-index="50"
+    overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    card-class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+    card-max-width="28rem"
+    @close="modalAsignarFaltante = false"
+  >
       <!-- Header -->
       <div class="sticky top-0 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white p-6 rounded-t-3xl">
         <div class="flex items-center justify-between">
@@ -2638,7 +2607,6 @@
           </button>
         </div>
       </div>
-
       <!-- Contenido -->
       <div class="p-6 space-y-4">
         <!-- Información del faltante -->
@@ -2657,7 +2625,6 @@
             Total: {{ faltanteSeleccionado.numeros.length }} número(s)
           </p>
         </div>
-
         <!-- Selector de socio -->
         <div>
           <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -2681,7 +2648,6 @@
           </p>
         </div>
       </div>
-
       <!-- Footer -->
       <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-3xl border-t border-gray-200 flex gap-3">
         <button
@@ -2698,13 +2664,16 @@
           {{ asignandoFaltante ? 'Asignando...' : 'Asignar números' }}
         </button>
       </div>
-    </div>
-  </div>
-
+  </ModalWrapper>
   <!-- Modal de confirmación: asignar faltante en todos los meses de la actividad -->
-  <div v-if="modalConfirmarAsignarFaltanteTodosMeses" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalConfirmarAsignarFaltanteTodosMeses = false"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6">
+  <ModalWrapper
+    :show="!!modalConfirmarAsignarFaltanteTodosMeses"
+    :z-index="60"
+    overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+    card-class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6"
+    card-max-width="28rem"
+    @close="modalConfirmarAsignarFaltanteTodosMeses = false"
+  >
       <h3 class="text-lg font-bold text-gray-800 mb-3">Asignar desde este mes en adelante</h3>
       <p class="text-gray-600 text-sm mb-6">
         Se asignará el faltante <strong>{{ faltanteSeleccionado?.nombre }}</strong> al socio seleccionado desde <strong>este mes en adelante</strong> ({{ actividadesDelGrupoDesdeActualEnAdelante.length }} rifa(s)). Los meses anteriores quedarán sin asignar. ¿Desea continuar?
@@ -2724,16 +2693,15 @@
           Aceptar
         </button>
       </div>
-    </div>
-  </div>
+  </ModalWrapper>
 </template>
-
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import ModalWrapper from '../../components/ModalWrapper.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
@@ -2765,16 +2733,12 @@ import {
   BuildingLibraryIcon
 } from '@heroicons/vue/24/outline'
 import * as XLSX from 'xlsx-js-style'
-
 const notificationStore = useNotificationStore()
-
 const props = defineProps({
   id: String
 })
-
 const route = useRoute()
 const id = props.id || route.params.id
-
 const actividades = ref([])
 const loading = ref(false)
 const modalNuevaActividad = ref(false)
@@ -2832,7 +2796,6 @@ const formPagarRifa = reactive({
   valor: 0,
   yaPago: false
 })
-
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalNuevaActividad)
 useBodyScrollLock(modalDetalleActividad)
@@ -2845,7 +2808,8 @@ useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
 useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
-
+useBodyScrollLock(computed(() => !!actividadAEliminar.value))
+useBodyScrollLock(computed(() => !!grupoAEliminar.value))
 // Opciones para el dropdown de tipo de actividad (ítems estilizados)
 const opcionesTipoActividad = [
   { value: 'rifa', label: 'Rifa', icon: TicketIcon, bgIcon: 'bg-natillera-500', textColor: 'text-natillera-700', desc: 'Números y sorteos' },
@@ -2854,7 +2818,6 @@ const opcionesTipoActividad = [
   { value: 'evento', label: 'Evento', icon: CalendarIcon, bgIcon: 'bg-purple-500', textColor: 'text-purple-700', desc: 'Eventos y celebraciones' },
   { value: 'otro', label: 'Otro', icon: ClipboardDocumentListIcon, bgIcon: 'bg-slate-500', textColor: 'text-slate-700', desc: 'Otra actividad' }
 ]
-
 // Opciones para cuándo se juega la rifa (solo actividades tipo rifa en curso)
 const opcionesCuandoJuegoRifa = [
   { value: 'primera_quincena', label: 'Primera quincena' },
@@ -2863,7 +2826,6 @@ const opcionesCuandoJuegoRifa = [
   { value: 'viernes_despues_segunda', label: 'Viernes después de la 2ª quincena' },
   { value: 'fecha_especifica', label: 'Fecha específica' }
 ]
-
 // Configuración de meses
 const meses = [
   { value: 1, label: 'Enero' },
@@ -2879,7 +2841,6 @@ const meses = [
   { value: 11, label: 'Noviembre' },
   { value: 12, label: 'Diciembre' }
 ]
-
 // Generar lista de años (desde 2 años atrás hasta 5 años adelante)
 const anioActual = new Date().getFullYear()
 const aniosDisponibles = computed(() => {
@@ -2889,7 +2850,6 @@ const aniosDisponibles = computed(() => {
   }
   return anios
 })
-
 const formActividad = reactive({
   tipoProceso: 'liquidar', // 'liquidar' o 'en_curso'
   tipo: 'rifa',
@@ -2919,7 +2879,6 @@ const formActividad = reactive({
   fechaJuegoRifa: '', // fecha YYYY-MM-DD cuando un solo mes y fecha_especifica
   fechasJuegoPorMes: {} // { 'mes-anio': 'YYYY-MM-DD' } cuando múltiples meses y fecha_especifica
 })
-
 const totalIngresos = computed(() => 
   actividades.value.reduce((sum, a) => {
     if (a.estado === 'en_curso') {
@@ -2928,11 +2887,9 @@ const totalIngresos = computed(() =>
     return sum + (a.ingresos || 0)
   }, 0)
 )
-
 const totalGastos = computed(() => 
   actividades.value.reduce((sum, a) => sum + (a.gastos || 0), 0)
 )
-
 // Solo las rifas dependen de "liquidar" para sumar a utilidad; el resto al pagarse suma.
 // Las rifas en curso: lo recaudado se ve en el acumulado de la actividad, no en utilidades.
 const utilidadTotal = computed(() => 
@@ -2943,7 +2900,6 @@ const utilidadTotal = computed(() =>
     return sum + (a.utilidad || 0)
   }, 0)
 )
-
 const totalesGanadoresGrupo = computed(() => {
   const g = grupoGanadoresSeleccionado.value
   if (!g?.actividades) return { recogido: 0, entregado: 0, natillera: 0 }
@@ -2954,14 +2910,12 @@ const totalesGanadoresGrupo = computed(() => {
     natillera: rifas.reduce((s, a) => s + (parseFloat(a.utilidad) || 0), 0)
   }
 })
-
 const totalARecaudar = computed(() => {
   if (formActividad.tipoProceso === 'en_curso' && formActividad.tipoValores === 'iguales') {
     return (formActividad.valorIgual || 0) * socios.value.length
   }
   return Object.values(formActividad.valoresPorSocio).reduce((sum, valor) => sum + (Number(valor) || 0), 0)
 })
-
 // Números de rifa ordenados numéricamente (00-99)
 const numerosRifaOrdenados = computed(() => {
   return Object.values(numerosRifa.value)
@@ -2972,7 +2926,6 @@ const numerosRifaOrdenados = computed(() => {
       return numA - numB
     })
 })
-
 // Números de rifa filtrados por estado
 const numerosRifaFiltrados = computed(() => {
   if (filtroEstadoRifa.value === 'todos') {
@@ -2980,7 +2933,6 @@ const numerosRifaFiltrados = computed(() => {
   }
   return numerosRifaOrdenados.value.filter(numero => numero.estado === filtroEstadoRifa.value)
 })
-
 // Total proyecto para rifa manual (100 números * valor de la rifa)
 const totalProyectoRifa = computed(() => {
   if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'manual') {
@@ -2989,7 +2941,6 @@ const totalProyectoRifa = computed(() => {
   }
   return 0
 })
-
 // Total recaudado para rifa manual (suma de valores de números con estado "pagado")
 const totalRecaudadoRifa = computed(() => {
   if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'manual') {
@@ -2999,7 +2950,6 @@ const totalRecaudadoRifa = computed(() => {
   }
   return 0
 })
-
 // Total recaudado para liquidación (rifa manual: solo pagados, otras actividades: total_pagado)
 const totalRecaudadoLiquidar = computed(() => {
   if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'manual') {
@@ -3007,7 +2957,6 @@ const totalRecaudadoLiquidar = computed(() => {
   }
   return actividadSeleccionada.value?.total_pagado || 0
 })
-
 // Función de debug para verificar items
 function debugItem(item, index) {
   console.log(`🔍 Item ${index}:`, {
@@ -3021,7 +2970,6 @@ function debugItem(item, index) {
   })
   return true
 }
-
 // Agrupar actividades por actividad_serie_id
 const actividadesAgrupadas = computed(() => {
   console.log('🔄 Agrupando actividades. Total:', actividades.value.length)
@@ -3125,12 +3073,10 @@ const actividadesAgrupadas = computed(() => {
   
   return resultado
 })
-
 // Función para obtener números asignados de un socio (rifa automática)
 function getNumerosAsignadosSocio(socioId) {
   return numerosAsignadosPorSocio.value[socioId] || []
 }
-
 // Función para calcular valores de un socio en rifa automática.
 // Valor pagado considera ambos: lo registrado por número (numeros_rifa.estado) y lo registrado por socio (socios_actividad.valor_pagado),
 // así si el socio pagó a nivel de socio, se muestra correctamente.
@@ -3156,7 +3102,6 @@ function getValoresSocioRifaAutomatica(socioAct) {
     saldo
   }
 }
-
 // Para rifa aleatoria: estado mostrado según números (valor pagado vs valor a pagar), así el badge coincide con Valor pagado/Saldo
 function getEstadoDisplaySocio(socioAct) {
   if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'aleatoria') {
@@ -3168,7 +3113,6 @@ function getEstadoDisplaySocio(socioAct) {
   }
   return socioAct.estado || 'pendiente'
 }
-
 // Función para verificar si un socio tiene el número buscado
 function socioTieneNumero(socioAct) {
   if (!busquedaNumero.value) return true
@@ -3176,14 +3120,12 @@ function socioTieneNumero(socioAct) {
   const busqueda = busquedaNumero.value.trim().padStart(2, '0')
   return numeros.some(n => n === busqueda || n.includes(busquedaNumero.value.trim()))
 }
-
 // Función para verificar si un faltante tiene el número buscado
 function faltanteTieneNumero(faltante) {
   if (!busquedaNumero.value) return true
   const busqueda = busquedaNumero.value.trim().padStart(2, '0')
   return faltante.numeros.some(n => n.numero === busqueda || n.numero.includes(busquedaNumero.value.trim()))
 }
-
 // Computed para filtrar socios según búsqueda
 const sociosFiltrados = computed(() => {
   if (!busquedaNumero.value || !(actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'aleatoria')) {
@@ -3191,7 +3133,6 @@ const sociosFiltrados = computed(() => {
   }
   return sociosActividad.value.filter(socio => socioTieneNumero(socio))
 })
-
 // Computed para filtrar faltantes según búsqueda
 const faltantesFiltrados = computed(() => {
   if (!busquedaNumero.value || !(actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'aleatoria')) {
@@ -3199,7 +3140,6 @@ const faltantesFiltrados = computed(() => {
   }
   return faltantes.value.filter(faltante => faltanteTieneNumero(faltante))
 })
-
 // Actividades del mismo grupo que la actividad seleccionada (todas las rifas del grupo)
 const actividadesDeLaSerieActual = computed(() => {
   const a = actividadSeleccionada.value
@@ -3215,7 +3155,6 @@ const actividadesDeLaSerieActual = computed(() => {
   }
   return [a]
 })
-
 // Actividades del grupo desde la actual en adelante (por fecha: anio_pago, mes_pago). Hacia atrás no se asignan.
 const actividadesDelGrupoDesdeActualEnAdelante = computed(() => {
   const lista = actividadesDeLaSerieActual.value
@@ -3232,7 +3171,6 @@ const actividadesDelGrupoDesdeActualEnAdelante = computed(() => {
   if (idx < 0) return [a]
   return ordenadas.slice(idx)
 })
-
 // Computed para obtener socios sin números asignados (en esta actividad)
 // Incluye tanto socios sin registro en la actividad como socios con registro pero 0 números
 const sociosSinNumeros = computed(() => {
@@ -3270,14 +3208,12 @@ const sociosSinNumeros = computed(() => {
     estado: 'pendiente'
   }))
 })
-
 // Utilidad calculada para liquidación
 const utilidadLiquidar = computed(() => {
   const recaudado = totalRecaudadoLiquidar.value
   const premio = formLiquidar.premioEntregado || 0
   return recaudado - premio
 })
-
 // Número ganador válido (1 o 2 dígitos, 0-99) para liquidar rifa
 const numeroGanadorValido = computed(() => {
   const n = String(formLiquidar.numeroGanador || '').replace(/\D/g, '')
@@ -3285,18 +3221,15 @@ const numeroGanadorValido = computed(() => {
   const num = parseInt(n, 10)
   return num >= 0 && num <= 99
 })
-
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
-
 // Función para formatear número con separador de miles (punto)
 function formatNumberWithSeparator(value) {
   if (!value && value !== 0) return ''
   const numStr = String(value).replace(/\./g, '')
   return numStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
-
 // Función para parsear número con separador de miles
 function parseNumberWithSeparator(value) {
   if (!value) return 0
@@ -3304,7 +3237,6 @@ function parseNumberWithSeparator(value) {
   const num = parseFloat(numStr) || 0
   return num
 }
-
 // Formatear valor para input: miles con punto, decimales con coma (es-CO)
 function formatMilesInput(value) {
   if (value === null || value === undefined || value === '') return ''
@@ -3316,7 +3248,6 @@ function formatMilesInput(value) {
   if (!decTrimmed) return formattedInt
   return formattedInt + ',' + decTrimmed
 }
-
 // Parsear valor de input con punto como miles y coma como decimal
 function parseMilesInput(str) {
   if (!str || typeof str !== 'string') return 0
@@ -3324,7 +3255,6 @@ function parseMilesInput(str) {
   const num = parseFloat(cleaned)
   return isNaN(num) ? 0 : num
 }
-
 function formatMoneyCompact(value) {
   const num = Number(value) || 0
   if (num === 0) return '0'
@@ -3350,7 +3280,6 @@ function formatMoneyCompact(value) {
   
   return new Intl.NumberFormat('es-CO').format(num)
 }
-
 function getIconoActividad(tipo, tipoRifa = null) {
   // Si es rifa, personalizar según el tipo de rifa
   if (tipo === 'rifa' && tipoRifa) {
@@ -3370,7 +3299,6 @@ function getIconoActividad(tipo, tipoRifa = null) {
   }
   return iconos[tipo] || ClipboardDocumentListIcon
 }
-
 function getEstadoLabel(estado) {
   const labels = {
     pendiente: 'Pendiente',
@@ -3380,7 +3308,6 @@ function getEstadoLabel(estado) {
   }
   return labels[estado] || estado
 }
-
 // Funciones para expandir/colapsar grupos
 function toggleGrupo(serieId) {
   console.log('🔄 Toggle grupo:', serieId, 'Estado actual:', gruposExpandidos.value[serieId])
@@ -3388,11 +3315,9 @@ function toggleGrupo(serieId) {
   gruposExpandidos.value[serieId] = !gruposExpandidos.value[serieId]
   console.log('✅ Nuevo estado:', gruposExpandidos.value[serieId] ? 'expandido' : 'colapsado')
 }
-
 function isGrupoExpandido(serieId) {
   return gruposExpandidos.value[serieId] === true
 }
-
 // Función para exportar un grupo de actividades a Excel
 async function exportarGrupoAExcel(grupo) {
   try {
@@ -3668,7 +3593,6 @@ async function exportarGrupoAExcel(grupo) {
       // Obtener todos los datos de una vez (con paginación para evitar límite de 1000 filas de Supabase)
       const actividadesIds = grupo.actividades.map(a => a.id)
       const PAGE_SIZE = 1000
-
       // Helper: traer todas las filas paginando (Supabase limita 1000 filas por defecto)
       async function fetchAllRows (table, selectQuery) {
         const all = []
@@ -3691,7 +3615,6 @@ async function exportarGrupoAExcel(grupo) {
         }
         return all
       }
-
       // Obtener todos los socios_actividad (todas las páginas)
       const todosSociosActividad = await fetchAllRows(
         'socios_actividad',
@@ -3704,7 +3627,6 @@ async function exportarGrupoAExcel(grupo) {
           )
         `
       )
-
       // Obtener todos los números de rifa (todas las páginas)
       const todosNumerosRifa = await fetchAllRows('numeros_rifa', '*')
       
@@ -3995,7 +3917,6 @@ async function exportarGrupoAExcel(grupo) {
     notificationStore.error('Error al exportar el grupo a Excel', 'Error')
   }
 }
-
 // Inicializar números de rifa del 00 al 99
 function inicializarNumerosRifa() {
   const numeros = {}
@@ -4012,7 +3933,6 @@ function inicializarNumerosRifa() {
   }
   return numeros
 }
-
 async function verDetalleActividad(actividad) {
   actividadSeleccionada.value = actividad
   modalDetalleActividad.value = true
@@ -4066,7 +3986,6 @@ async function verDetalleActividad(actividad) {
       `)
       .eq('actividad_id', actividad.id)
       .order('created_at', { ascending: true })
-
     if (error) throw error
     
     // Nota: El estado de mora se calcula y muestra en el frontend
@@ -4145,7 +4064,6 @@ async function verDetalleActividad(actividad) {
     numerosAsignadosPorSocio.value = {}
   }
 }
-
 function handleVentaRifaValorInput(event) {
   const inputValue = event.target.value
   // Permitir solo números y puntos
@@ -4156,7 +4074,6 @@ function handleVentaRifaValorInput(event) {
   // Actualizar el input con formato
   event.target.value = formatNumberWithSeparator(parsedValue)
 }
-
 function handlePremioEntregadoInput(event) {
   const inputValue = event.target.value
   // Permitir solo números y puntos
@@ -4167,7 +4084,6 @@ function handlePremioEntregadoInput(event) {
   // Actualizar el input con formato
   event.target.value = formatNumberWithSeparator(parsedValue)
 }
-
 function abrirModalLiquidar() {
   // Solo permitir liquidar actividades de tipo rifa
   if (!actividadSeleccionada.value || actividadSeleccionada.value.tipo !== 'rifa') {
@@ -4179,39 +4095,31 @@ function abrirModalLiquidar() {
   formLiquidar.forma_pago = 'efectivo'
   modalLiquidarActividad.value = true
 }
-
 function abrirModalGanadorRifa(actividad) {
   actividadSeleccionada.value = actividad
   modalGanadorRifa.value = true
 }
-
 function abrirModalGanadoresGrupo(grupo) {
   grupoGanadoresSeleccionado.value = grupo
 }
-
 async function guardarLiquidacion() {
   if (!actividadSeleccionada.value) {
     notificationStore.error('Error: actividad no seleccionada', 'Error')
     return
   }
-
   if (!formLiquidar.premioEntregado || formLiquidar.premioEntregado <= 0) {
     notificationStore.error('Debe ingresar el premio entregado', 'Error')
     return
   }
-
   const utilidad = utilidadLiquidar.value
-
   // Si la utilidad es negativa, mostrar modal de confirmación
   if (utilidad < 0) {
     modalConfirmarLiquidacionNegativa.value = true
     return
   }
-
   // Si la utilidad es positiva o cero, proceder directamente
   await confirmarLiquidacion()
 }
-
 async function confirmarLiquidacion() {
   loading.value = true
   try {
@@ -4219,21 +4127,18 @@ async function confirmarLiquidacion() {
     const premioEntregado = formLiquidar.premioEntregado
     const utilidadNormal = utilidadLiquidar.value
     const numeroGanador = String(formLiquidar.numeroGanador || '').replace(/\D/g, '').padStart(2, '0')
-
     // Obtener ganador desde numeros_rifa (socio o Faltante)
     let ganadorNombre = 'Desconocido'
     let ganadorSocioNatilleraId = null
     let ganadorEsFaltante = false
     let utilidadFinal = utilidadNormal
     let gastosFinal = premioEntregado
-
     const { data: numeroGanadorData } = await supabase
       .from('numeros_rifa')
       .select('id, nombre_comprador, socio_vendedor_id, socio_vendedor:socios_natillera(socio:socios(nombre))')
       .eq('actividad_id', actividadSeleccionada.value.id)
       .eq('numero', numeroGanador)
       .maybeSingle()
-
     if (numeroGanadorData) {
       const esFaltante = numeroGanadorData.nombre_comprador && String(numeroGanadorData.nombre_comprador).trim().toLowerCase().startsWith('faltante')
       if (esFaltante) {
@@ -4248,7 +4153,6 @@ async function confirmarLiquidacion() {
         ganadorSocioNatilleraId = numeroGanadorData.socio_vendedor_id || null
       }
     }
-
     // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad, ganador y forma de pago
     const formaPagoLiquidacion = (formLiquidar.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo'
     const { error: errorActividad } = await supabase
@@ -4265,9 +4169,7 @@ async function confirmarLiquidacion() {
         forma_pago_liquidacion: formaPagoLiquidacion
       })
       .eq('id', actividadSeleccionada.value.id)
-
     if (errorActividad) throw errorActividad
-
     // 2. Utilidad de la rifa repartida por forma de pago (según cómo se recaudó)
     // Obtener recaudo por forma_pago desde socios_actividad de esta actividad
     const { data: sociosActividadRifa } = await supabase
@@ -4275,7 +4177,6 @@ async function confirmarLiquidacion() {
       .select('valor_pagado, forma_pago')
       .eq('actividad_id', actividadSeleccionada.value.id)
       .gt('valor_pagado', 0)
-
     let recaudoEfectivo = 0
     let recaudoTransferencia = 0
     let recaudoOtro = 0
@@ -4287,7 +4188,6 @@ async function confirmarLiquidacion() {
       else recaudoOtro += v
     })
     const totalRecaudoFormaPago = recaudoEfectivo + recaudoTransferencia + recaudoOtro
-
     // Eliminar registros previos de utilidad de esta rifa (pueden ser uno o varios por forma_pago)
     const { error: errorDelete } = await supabase
       .from('utilidades_clasificadas')
@@ -4296,7 +4196,6 @@ async function confirmarLiquidacion() {
       .eq('tipo', 'rifas')
       .eq('id_actividad', actividadSeleccionada.value.id)
     if (errorDelete) throw errorDelete
-
     const detallesComunes = {
       actividad_id: actividadSeleccionada.value.id,
       total_recaudado: totalRecaudado,
@@ -4304,7 +4203,6 @@ async function confirmarLiquidacion() {
       ganador_es_faltante: ganadorEsFaltante,
       fecha_liquidacion: new Date().toISOString()
     }
-
     // Repartir utilidad por forma de pago (proporcional al recaudo) o un solo registro si no hay desglose
     if (totalRecaudoFormaPago > 0 && utilidadFinal > 0) {
       let uE = totalRecaudoFormaPago ? (utilidadFinal * recaudoEfectivo) / totalRecaudoFormaPago : 0
@@ -4347,7 +4245,6 @@ async function confirmarLiquidacion() {
         })
       if (errIns) throw errIns
     }
-
     // 3. Registrar salida del fondo por el premio entregado (forma de pago seleccionada en el modal)
     if (gastosFinal > 0) {
       const { error: errorMov } = await supabase
@@ -4362,7 +4259,6 @@ async function confirmarLiquidacion() {
         })
       if (errorMov) throw errorMov
     }
-
     // 4. Cerrar modales de liquidación y recargar actividades
     modalLiquidarActividad.value = false
     modalConfirmarLiquidacionNegativa.value = false
@@ -4398,7 +4294,6 @@ async function confirmarLiquidacion() {
     loading.value = false
   }
 }
-
 function abrirModalVenta(numero) {
   numeroSeleccionado.value = numero
   formVentaRifa.numero = numero
@@ -4419,7 +4314,6 @@ function abrirModalVenta(numero) {
   desplegableSocioAbierto.value = false
   modalVentaRifa.value = true
 }
-
 function abrirModalPagar(numero) {
   const numeroData = numerosRifa.value[numero]
   if (!numeroData || (numeroData.estado !== 'vendido' && numeroData.estado !== 'pagado')) return
@@ -4430,7 +4324,6 @@ function abrirModalPagar(numero) {
   formPagarRifa.yaPago = numeroData.estado === 'pagado'
   modalPagarRifa.value = true
 }
-
 async function guardarVentaRifa() {
   if (!formVentaRifa.nombreComprador || !formVentaRifa.socioVendedor || !formVentaRifa.valor || formVentaRifa.valor <= 0) {
     notificationStore.error('Debe completar todos los campos requeridos', 'Error')
@@ -4465,7 +4358,6 @@ async function guardarVentaRifa() {
       })
       .select()
       .single()
-
     if (error) throw error
     
     // Actualizar el número en el estado local
@@ -4486,7 +4378,6 @@ async function guardarVentaRifa() {
     notificationStore.error(e.message || 'Error al guardar la venta', 'Error')
   }
 }
-
 async function guardarPagoRifa() {
   if (!formPagarRifa.numero) {
     notificationStore.error('Error: número no válido', 'Error')
@@ -4512,7 +4403,6 @@ async function guardarPagoRifa() {
       })
       .eq('actividad_id', actividadSeleccionada.value.id)
       .eq('numero', formPagarRifa.numero)
-
     if (error) throw error
     
     // Actualizar el número en el estado local
@@ -4529,7 +4419,6 @@ async function guardarPagoRifa() {
     notificationStore.error(e.message || 'Error al guardar el pago', 'Error')
   }
 }
-
 async function fetchActividades() {
   loading.value = true
   try {
@@ -4543,7 +4432,6 @@ async function fetchActividades() {
       `)
       .eq('natillera_id', id)
       .order('created_at', { ascending: false })
-
     if (error) {
       console.error('❌ Error al cargar actividades:', error)
       throw error
@@ -4568,7 +4456,6 @@ async function fetchActividades() {
             .from('socios_actividad')
             .select('id, valor_asignado, valor_pagado, estado')
             .eq('actividad_id', actividad.id)
-
           if (!errorSocios && sociosActividad) {
             // Nota: El estado de mora se calcula y muestra en el frontend
             // No es necesario actualizar la BD cada vez que se carga la vista
@@ -4621,7 +4508,6 @@ async function fetchActividades() {
     loading.value = false
   }
 }
-
 async function fetchSocios() {
   try {
     const { data, error } = await supabase
@@ -4633,7 +4519,6 @@ async function fetchSocios() {
       .eq('natillera_id', id)
       .eq('estado', 'activo')
       .order('created_at', { ascending: true })
-
     if (error) throw error
     socios.value = data || []
     
@@ -4658,7 +4543,6 @@ async function fetchSocios() {
     socios.value = []
   }
 }
-
 function resetearFormularioPorTipo() {
   if (formActividad.tipoProceso === 'liquidar') {
     formActividad.fechaLimitePago = ''
@@ -4696,7 +4580,6 @@ function resetearFormularioPorTipo() {
     })
   }
 }
-
 function handleValorIgualInput(event) {
   const inputValue = event.target.value
   // Permitir solo números y puntos
@@ -4707,7 +4590,6 @@ function handleValorIgualInput(event) {
   // Actualizar el input con formato
   event.target.value = formatNumberWithSeparator(parsedValue)
 }
-
 function aplicarValorIgual() {
   if (formActividad.tipoValores === 'iguales' && socios.value.length > 0) {
     const valor = formActividad.valorIgual || 0
@@ -4716,14 +4598,12 @@ function aplicarValorIgual() {
     })
   }
 }
-
 function limpiarValorIgual() {
   // Limpiar valores cuando se cambia a diferentes
   socios.value.forEach(socio => {
     formActividad.valoresPorSocio[socio.id] = 0
   })
 }
-
 // Función para obtener la natillera (maybeSingle evita 406 cuando no hay fila)
 async function fetchNatillera() {
   try {
@@ -4732,7 +4612,6 @@ async function fetchNatillera() {
       .select('*')
       .eq('id', id)
       .maybeSingle()
-
     if (error) throw error
     natillera.value = data
   } catch (e) {
@@ -4740,7 +4619,6 @@ async function fetchNatillera() {
     natillera.value = null
   }
 }
-
 // Computed para obtener los meses del período de la natillera
 const mesesDelPeriodo = computed(() => {
   if (!natillera.value) return []
@@ -4774,7 +4652,6 @@ const mesesDelPeriodo = computed(() => {
   
   return meses
 })
-
 // Computed para generar opciones del desplegable de periodo
 const opcionesPeriodo = computed(() => {
   return mesesDelPeriodo.value.map(periodo => {
@@ -4788,7 +4665,6 @@ const opcionesPeriodo = computed(() => {
     }
   })
 })
-
 // Computed para obtener el valor del periodo seleccionado como string
 const periodoSeleccionadoValue = computed({
   get: () => {
@@ -4807,7 +4683,6 @@ const periodoSeleccionadoValue = computed({
     }
   }
 })
-
 // Función para toggle múltiples meses
 function toggleMultiplesMeses() {
   formActividad.esMultiplesMeses = !formActividad.esMultiplesMeses
@@ -4835,12 +4710,10 @@ function toggleMultiplesMeses() {
     calcularFechaLimitePago()
   }
 }
-
 // Función para verificar si un mes está seleccionado
 function estaMesSeleccionado(mes, anio) {
   return formActividad.mesesSeleccionados.some(m => m.mes === mes && m.anio === anio)
 }
-
 // Función para toggle selección de mes
 function toggleMesSeleccionado(mes, anio) {
   const index = formActividad.mesesSeleccionados.findIndex(m => m.mes === mes && m.anio === anio)
@@ -4870,7 +4743,6 @@ function toggleMesSeleccionado(mes, anio) {
     })
   }
 }
-
 // Función para marcar todos los meses (asignar nuevo array para forzar reactividad)
 function marcarTodosMeses() {
   if (!natillera.value || mesesDelPeriodo.value.length === 0) return
@@ -4893,12 +4765,10 @@ function marcarTodosMeses() {
     quincena: quincenaFinal
   }))
 }
-
 // Función para desmarcar todos los meses (asignar nuevo array para forzar reactividad)
 function desmarcarTodosMeses() {
   formActividad.mesesSeleccionados = []
 }
-
 // Función para actualizar quincena en todos los meses seleccionados
 function actualizarQuincenaMeses() {
   if (natillera.value && natillera.value.periodicidad === 'quincenal') {
@@ -4907,7 +4777,6 @@ function actualizarQuincenaMeses() {
     })
   }
 }
-
 // Función que se ejecuta cuando se selecciona un periodo
 function onPeriodoSeleccionado() {
   if (formActividad.periodoSeleccionado) {
@@ -4920,11 +4789,9 @@ function onPeriodoSeleccionado() {
     formActividad.fechaLimitePago = ''
   }
 }
-
 // Función para calcular la fecha límite de pago basada en período y quincena
 function calcularFechaLimitePago() {
   if (formActividad.tipoProceso !== 'en_curso') return
-
   // Usar periodo seleccionado si está disponible, sino usar mesPago y anioPago (compatibilidad)
   const mes = formActividad.periodoSeleccionado?.mes || formActividad.mesPago
   const anio = formActividad.periodoSeleccionado?.anio || formActividad.anioPago
@@ -4933,17 +4800,13 @@ function calcularFechaLimitePago() {
     formActividad.fechaLimitePago = ''
     return
   }
-
   // Día límite segunda quincena/mensual: siempre 30, excepto febrero (28 o 29)
   const diaLimiteSegundaQuincena = (mes, anio) => (mes === 2 ? new Date(anio, 2, 0).getDate() : 30)
-
   // Formatear fecha
   const formatearFecha = (anio, mes, dia) => {
     return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
   }
-
   let diaPago = diaLimiteSegundaQuincena(mes, anio)
-
   // Si la natillera es quincenal
   if (natillera.value && natillera.value.periodicidad === 'quincenal') {
     // Si hay quincena seleccionada, usar esa
@@ -4973,10 +4836,8 @@ function calcularFechaLimitePago() {
     formActividad.quincenaPago = null
     diaPago = diaLimiteSegundaQuincena(mes, anio)
   }
-
   formActividad.fechaLimitePago = formatearFecha(anio, mes, diaPago)
 }
-
 /** Calcula la fecha de juego de la rifa según el preset y mes/año. Devuelve YYYY-MM-DD o null si preset es fecha_especifica. */
 function calcularFechaJuegoRifa(cuandoJuegoRifa, mes, anio) {
   if (!cuandoJuegoRifa || cuandoJuegoRifa === 'fecha_especifica') return null
@@ -4984,7 +4845,6 @@ function calcularFechaJuegoRifa(cuandoJuegoRifa, mes, anio) {
   // Día límite segunda quincena: 30, o 28/29 en febrero
   const diaLimite = (m, a) => (m === 2 ? new Date(a, 2, 0).getDate() : 30)
   const diaSemana = (a, m, d) => new Date(a, m - 1, d).getDay() // 0=dom, 5=viernes
-
   if (cuandoJuegoRifa === 'primera_quincena') {
     return formatear(anio, mes, 15)
   }
@@ -5007,13 +4867,11 @@ function calcularFechaJuegoRifa(cuandoJuegoRifa, mes, anio) {
   }
   return null
 }
-
 /** Etiqueta legible del preset de fecha de juego (para mostrar en detalle). */
 function etiquetaCuandoJuegoRifa(cuandoJuegoRifa) {
   const o = opcionesCuandoJuegoRifa.find(x => x.value === cuandoJuegoRifa)
   return o ? o.label : (cuandoJuegoRifa || '—')
 }
-
 async function handleCrearActividad() {
   loading.value = true
   try {
@@ -5026,7 +4884,6 @@ async function handleCrearActividad() {
       notificationStore.error('La descripción es requerida', 'Error')
       return
     }
-
     if (formActividad.tipoProceso === 'liquidar') {
       // Validaciones para Liquidar Actividad
       if (!formActividad.ingresos || formActividad.ingresos <= 0) {
@@ -5043,7 +4900,6 @@ async function handleCrearActividad() {
           notificationStore.error('Debe seleccionar al menos un mes', 'Error')
           return
         }
-
         // Si la natillera es quincenal, validar quincena
         if (natillera.value && natillera.value.periodicidad === 'quincenal' && !formActividad.quincenaPago) {
           loading.value = false
@@ -5057,14 +4913,12 @@ async function handleCrearActividad() {
           notificationStore.error('Debe seleccionar el período de pago', 'Error')
           return
         }
-
         // Si la natillera es quincenal, validar quincena
         if (natillera.value && natillera.value.periodicidad === 'quincenal' && !formActividad.quincenaPago) {
           loading.value = false
           notificationStore.error('Debe seleccionar la quincena de pago', 'Error')
           return
         }
-
         // Calcular fecha límite si no está calculada
         if (!formActividad.fechaLimitePago || formActividad.fechaLimitePago.trim() === '') {
           calcularFechaLimitePago()
@@ -5125,7 +4979,6 @@ async function handleCrearActividad() {
         notificationStore.error('Debe seleccionar un tipo de rifa', 'Error')
         return
       }
-
       // Validar fecha de juego para rifas en curso
       if (formActividad.tipo === 'rifa') {
         if (!formActividad.cuandoJuegoRifa) {
@@ -5153,7 +5006,6 @@ async function handleCrearActividad() {
         }
       }
     }
-
     // Helper para calcular fecha límite por mes (día límite segunda quincena: 30, o 28/29 feb)
     const calcularFechaLimiteParaMes = (mes, anio, quincena) => {
       const diaLimiteSegundaQuincena = (m, a) => (m === 2 ? new Date(a, 2, 0).getDate() : 30)
@@ -5232,7 +5084,6 @@ async function handleCrearActividad() {
         tipo_rifa: formActividad.tipo === 'rifa' ? formActividad.tipoRifa : null,
         actividad_serie_id: actividadSerieId // ID que agrupa actividades de la misma serie
       }
-
       // Fecha de juego de la rifa (solo rifas en curso)
       if (formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.cuandoJuegoRifa) {
         actividadData.cuando_juego_rifa = formActividad.cuandoJuegoRifa
@@ -5256,7 +5107,6 @@ async function handleCrearActividad() {
           console.warn('Campo valor_rifa no disponible en la tabla actividades')
         }
       }
-
       console.log('📝 Creando actividad con datos:', {
         ...actividadData,
         actividad_serie_id: actividadSerieId
@@ -5267,7 +5117,6 @@ async function handleCrearActividad() {
         .insert(actividadData)
         .select()
         .single()
-
       if (errorActividad) {
         console.error('❌ Error al crear actividad:', errorActividad)
         // Si el error es por campo inexistente, intentar sin esos campos
@@ -5326,7 +5175,6 @@ async function handleCrearActividad() {
           }
         }
       }
-
       // Si es actividad en curso y NO es rifa manual, crear los registros en socios_actividad
       if (formActividad.tipoProceso === 'en_curso' && !esRifaManual) {
         let sociosActividadData = []
@@ -5438,7 +5286,6 @@ async function handleCrearActividad() {
           // Por defecto, retornar 0 (mensual)
           return 0
         }
-
         // Obtener el nombre de la natillera una vez
         const nombreNatillera = natillera.value?.nombre || null
         
@@ -5497,7 +5344,6 @@ async function handleCrearActividad() {
               })
             })
         }
-
         if (sociosActividadData.length > 0) {
           // Validar que todos los estados sean válidos antes de insertar
           const estadosValidos = ['pendiente', 'parcial', 'pagado', 'mora']
@@ -5705,7 +5551,6 @@ async function handleCrearActividad() {
     loading.value = false
   }
 }
-
 // Cargar socios cuando se abre el modal y es actividad en curso
 watch(modalNuevaActividad, (isOpen) => {
   if (isOpen) {
@@ -5732,7 +5577,6 @@ watch(modalNuevaActividad, (isOpen) => {
     tooltipVisible.value = null // Cerrar tooltip al cerrar modal
   }
 })
-
 // Cerrar dropdown tipo actividad al hacer clic fuera y posicionar panel por encima de todo
 let dropdownTipoActividadCloseHandler = null
 watch(dropdownTipoActividad, (isOpen) => {
@@ -5766,28 +5610,24 @@ watch(dropdownTipoActividad, (isOpen) => {
     }, 0)
   })
 })
-
 // Cerrar tooltip al hacer clic fuera
 function handleClickOutside(event) {
   if (tooltipVisible.value && !event.target.closest('[data-tooltip-container]')) {
     tooltipVisible.value = null
   }
 }
-
 // Observar cambios en socios para recalcular fecha límite
 watch(() => socios.value, () => {
   if (formActividad.tipoProceso === 'en_curso' && modalNuevaActividad.value) {
     calcularFechaLimitePago()
   }
 }, { deep: true })
-
 // Resetear tipoRifa cuando el tipo de actividad cambia y ya no es 'rifa'
 watch(() => formActividad.tipo, (nuevoTipo) => {
   if (nuevoTipo !== 'rifa') {
     formActividad.tipoRifa = null
   }
 })
-
 // Función para abrir modal de asignar faltante
 async function abrirModalAsignarFaltante(faltante) {
   faltanteSeleccionado.value = faltante
@@ -5800,7 +5640,6 @@ async function abrirModalAsignarFaltante(faltante) {
   
   modalAsignarFaltante.value = true
 }
-
 // Al hacer clic en "Asignar números": si hay varios meses, mostrar confirmación; si no, asignar solo en este mes
 function alHacerClicAsignarFaltante() {
   if (actividadesDeLaSerieActual.value.length > 1) {
@@ -5809,32 +5648,27 @@ function alHacerClicAsignarFaltante() {
     confirmarAsignarFaltante(false)
   }
 }
-
 // Cerrar modal de confirmación y ejecutar asignación en todos los meses
 function confirmarAsignarFaltanteTodosMeses() {
   modalConfirmarAsignarFaltanteTodosMeses.value = false
   confirmarAsignarFaltante(true)
 }
-
 // Función para confirmar asignación de faltante a socio (asignarEnTodosLosMeses: true = en todas las actividades del grupo)
 async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
   if (!socioSeleccionadoParaFaltante.value || !faltanteSeleccionado.value) {
     notificationStore.error('Debe seleccionar un socio', 'Error')
     return
   }
-
   asignandoFaltante.value = true
   try {
     const socioId = socioSeleccionadoParaFaltante.value
     const numerosFaltante = faltanteSeleccionado.value.numeros
     const nombreFaltante = faltanteSeleccionado.value.nombre
-
     // Si hay grupo: asignar solo desde la actividad actual en adelante (febrero en adelante, no hacia atrás)
     const actividadesAAsignar = asignarEnTodosLosMeses && actividadesDeLaSerieActual.value.length > 1
       ? actividadesDelGrupoDesdeActualEnAdelante.value
       : [actividadSeleccionada.value]
     const actividadesIds = actividadesAAsignar.map(a => a.id)
-
     // Todos los números de rifa que son este faltante (por nombre) en las actividades del grupo, sin socio asignado
     const { data: numerosRifaData, error: errorFetch } = await supabase
       .from('numeros_rifa')
@@ -5842,13 +5676,10 @@ async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
       .in('actividad_id', actividadesIds)
       .is('socio_vendedor_id', null)
       .eq('nombre_comprador', nombreFaltante)
-
     if (errorFetch) throw errorFetch
-
     if (!numerosRifaData || numerosRifaData.length === 0) {
       throw new Error('No se encontraron los números a asignar')
     }
-
     // Actualizar los números asignándolos al socio
     const numerosIdsToUpdate = numerosRifaData.map(n => n.id)
     
@@ -5859,9 +5690,7 @@ async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
         nombre_comprador: null // Limpiar el nombre del faltante
       })
       .in('id', numerosIdsToUpdate)
-
     if (errorUpdate) throw errorUpdate
-
     // Asegurar registro en socios_actividad por cada actividad donde se asignaron números
     const actividadesActualizadas = [...new Set(numerosRifaData.map(n => n.actividad_id))]
     const valorTotalFaltante = numerosFaltante.reduce((sum, n) => sum + (n.valor || 0), 0)
@@ -5889,18 +5718,15 @@ async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
           fecha_limite_pago: actividad.fecha_limite_pago
         })
     }
-
     const mensaje = asignarEnTodosLosMeses && actividadesAAsignar.length > 1
       ? `Números asignados al socio en los ${actividadesAAsignar.length} meses`
       : 'Números asignados correctamente al socio'
     notificationStore.success(mensaje, 'Éxito')
-
     // Cerrar modales y recargar datos
     modalAsignarFaltante.value = false
     modalConfirmarAsignarFaltanteTodosMeses.value = false
     faltanteSeleccionado.value = null
     socioSeleccionadoParaFaltante.value = ''
-
     // Recargar el detalle de la actividad
     await verDetalleActividad(actividadSeleccionada.value)
   } catch (e) {
@@ -5910,7 +5736,6 @@ async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
     asignandoFaltante.value = false
   }
 }
-
 // Limpiar números de rifa cuando se cierra el modal de detalle
 watch(modalDetalleActividad, (isOpen) => {
   if (!isOpen) {
@@ -5922,49 +5747,39 @@ watch(modalDetalleActividad, (isOpen) => {
     socioSeleccionadoParaFaltante.value = ''
   }
 })
-
 // Cerrar desplegable cuando se cierra el modal de venta
 watch(modalVentaRifa, (isOpen) => {
   if (!isOpen) {
     desplegableSocioAbierto.value = false
   }
 })
-
 // Cerrar desplegable al hacer clic fuera
 function handleClickOutsideDesplegable(event) {
   if (desplegableSocioAbierto.value && !event.target.closest('[data-socio-desplegable]')) {
     desplegableSocioAbierto.value = false
   }
 }
-
 onMounted(() => {
   document.addEventListener('click', handleClickOutsideDesplegable)
 })
-
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutsideDesplegable)
 })
-
 function confirmarEliminarActividad(actividad) {
   actividadAEliminar.value = actividad
 }
-
 async function eliminarActividadConfirmado() {
   if (!actividadAEliminar.value) return
-
   eliminando.value = true
   const actividadId = actividadAEliminar.value.id
   const descripcionActividad = actividadAEliminar.value.descripcion
-
   try {
     // Eliminar la actividad (los registros relacionados en socios_actividad se eliminarán automáticamente por CASCADE)
     const { error } = await supabase
       .from('actividades')
       .delete()
       .eq('id', actividadId)
-
     if (error) throw error
-
     // Remover la actividad de la lista local
     actividades.value = actividades.value.filter(a => a.id !== actividadId)
     
@@ -5974,9 +5789,7 @@ async function eliminarActividadConfirmado() {
     busquedaNumero.value = '' // Limpiar búsqueda al cerrar
       actividadSeleccionada.value = null
     }
-
     actividadAEliminar.value = null
-
     notificationStore.success(
       `La actividad "${descripcionActividad}" ha sido eliminada exitosamente`,
       'Actividad eliminada'
@@ -5991,21 +5804,17 @@ async function eliminarActividadConfirmado() {
     eliminando.value = false
   }
 }
-
 function confirmarEliminarGrupo(grupo) {
   grupoAEliminar.value = grupo
 }
-
 async function eliminarGrupoConfirmado() {
   if (!grupoAEliminar.value || !grupoAEliminar.value.actividades) return
-
   eliminandoGrupo.value = true
   const grupo = grupoAEliminar.value
   const serieId = grupo.serieId
   const descripcionGrupo = grupo.descripcionBase
   const cantidadActividades = grupo.actividades.length
   const idsActividades = grupo.actividades.map(a => a.id)
-
   try {
     // Eliminar todas las actividades del grupo
     // Los registros relacionados en socios_actividad se eliminarán automáticamente por CASCADE
@@ -6013,9 +5822,7 @@ async function eliminarGrupoConfirmado() {
       .from('actividades')
       .delete()
       .in('id', idsActividades)
-
     if (error) throw error
-
     // Remover las actividades de la lista local
     actividades.value = actividades.value.filter(a => !idsActividades.includes(a.id))
     
@@ -6025,9 +5832,7 @@ async function eliminarGrupoConfirmado() {
       busquedaNumero.value = '' // Limpiar búsqueda al cerrar
       actividadSeleccionada.value = null
     }
-
     grupoAEliminar.value = null
-
     notificationStore.success(
       `El grupo "${descripcionGrupo}" con ${cantidadActividades} ${cantidadActividades === 1 ? 'actividad' : 'actividades'} ha sido eliminado exitosamente`,
       'Grupo eliminado'
@@ -6042,7 +5847,6 @@ async function eliminarGrupoConfirmado() {
     eliminandoGrupo.value = false
   }
 }
-
 // Función para verificar si debe mostrarse el modal de bienvenida
 function verificarModalBienvenida() {
   const clave = `actividades_bienvenida_${id}`
@@ -6051,7 +5855,6 @@ function verificarModalBienvenida() {
     mostrarModalBienvenida.value = true
   }
 }
-
 // Función para cerrar el modal de bienvenida
 function cerrarModalBienvenida() {
   mostrarModalBienvenida.value = false
@@ -6060,7 +5863,6 @@ function cerrarModalBienvenida() {
     localStorage.setItem(clave, 'true')
   }
 }
-
 onMounted(() => {
   fetchActividades()
   fetchNatillera()
@@ -6069,11 +5871,9 @@ onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('touchstart', handleClickOutside) // Para móvil
 })
-
 onUnmounted(() => {
   // Remover listener al desmontar
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('touchstart', handleClickOutside)
 })
 </script>
-

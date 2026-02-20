@@ -427,20 +427,14 @@
     </div>
 
     <!-- Modal de Olvidé mi contraseña -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <ModalWrapper
+      :show="showForgotPasswordModal"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+      card-max-width="28rem"
+      @close="closeForgotPasswordModal"
     >
-      <div
-        v-if="showForgotPasswordModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        @click.self="closeForgotPasswordModal"
-      >
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
           <!-- Header -->
           <div class="bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-600 p-5 text-white">
             <div class="flex items-center justify-between">
@@ -544,26 +538,16 @@
               </div>
             </form>
           </div>
-        </div>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal bloqueante de registro (no se puede cerrar) -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <ModalWrapper
+      :show="showRegistroModal"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+      card-max-width="28rem"
     >
-      <div
-        v-if="showRegistroModal"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-        @click.self.prevent
-        @keydown.esc.prevent
-      >
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
           <!-- Header -->
           <div class="bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-600 p-5 text-white">
             <div class="flex items-center gap-3">
@@ -631,9 +615,7 @@
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </Transition>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -644,6 +626,8 @@ import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { isDev, isLocalhost } from '../../config/environment'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -755,6 +739,10 @@ const nombreUsuario = ref('')
 const contadorReenvio = ref(0)
 const showRegistroModal = ref(false) // Modal bloqueante para registro
 const telefonoYaRegistrado = ref(false) // Indica si el teléfono ya está registrado
+
+// Bloquear scroll del body cuando las modales están abiertas
+useBodyScrollLock(showForgotPasswordModal)
+useBodyScrollLock(showRegistroModal)
 const emailTelefonoRegistrado = ref('') // Email asociado al teléfono
 let intervaloReenvio = null
 

@@ -376,18 +376,14 @@
       </div>
 
     <!-- Modal de Detalle -->
-    <Transition name="modal">
-      <div
-        v-if="registroSeleccionado"
-        class="fixed inset-0 z-50 overflow-y-auto"
-        @click.self="cerrarDetalle"
-      >
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm" @click="cerrarDetalle"></div>
-        
-        <!-- Modal Content -->
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-          <div class="modal-content relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+    <ModalWrapper
+      :show="!!registroSeleccionado"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl w-full max-w-4xl"
+      card-max-width="56rem"
+      @close="cerrarDetalle"
+    >
             <!-- Header del Modal -->
             <div class="bg-gradient-to-r from-natillera-500 to-natillera-600 px-6 py-5">
               <div class="flex items-center justify-between">
@@ -560,10 +556,7 @@
                 Cerrar
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -573,6 +566,8 @@ import { useAuditoria } from '../../composables/useAuditoria'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useUsersStore } from '../../stores/users'
 import { useAuthStore } from '../../stores/auth'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import {
   ClipboardDocumentListIcon,
   FunnelIcon,
@@ -588,6 +583,10 @@ const loading = ref(false)
 const registros = ref([])
 const totalRegistros = ref(0)
 const registroSeleccionado = ref(null)
+
+// Bloquear scroll del body cuando la modal está abierta
+const registroSeleccionadoOpen = computed(() => !!registroSeleccionado.value)
+useBodyScrollLock(registroSeleccionadoOpen)
 
 // Verificar si el usuario es super usuario
 const esSuperUsuario = computed(() => {

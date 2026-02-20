@@ -227,9 +227,15 @@
     </div>
 
     <!-- Modal de edición de usuario -->
-    <div v-if="usuarioSeleccionado" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalUsuario"></div>
-      <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="!!usuarioSeleccionado"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="42rem"
+      @close="cerrarModalUsuario"
+    >
         <!-- Header -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -358,8 +364,7 @@
             {{ usersStore.loading ? 'Guardando...' : 'Guardar Cambios' }}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -376,6 +381,8 @@ import {
 } from '@heroicons/vue/24/outline'
 import { getAvatarUrl } from '../../utils/avatars'
 import { formatDate } from '../../utils/formatDate'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const usersStore = useUsersStore()
 const authStore = useAuthStore()
@@ -385,6 +392,11 @@ const busqueda = ref('')
 const filtroRol = ref('')
 const filtroEstado = ref('')
 const usuarioSeleccionado = ref(null)
+
+// Bloquear scroll del body cuando la modal está abierta
+const usuarioSeleccionadoOpen = computed(() => !!usuarioSeleccionado.value)
+useBodyScrollLock(usuarioSeleccionadoOpen)
+
 const formUsuario = ref({
   nombre: '',
   email: '',

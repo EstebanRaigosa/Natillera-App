@@ -135,27 +135,16 @@
       </div>
 
       <!-- Modal desglose Recaudado vs Utilidad -->
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
+      <ModalWrapper
+        :show="!!modalDesgloseFormaPago"
+        :z-index="50"
+        align="bottom"
+        overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+        card-class="relative w-full sm:max-w-md max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border"
+        card-max-width="28rem"
+        @close="modalDesgloseFormaPago = null"
       >
-        <div v-if="modalDesgloseFormaPago" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDesgloseFormaPago = null"></div>
-          <Transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-            enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-            leave-to-class="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-          >
             <div
-              v-if="modalDesgloseFormaPago"
-              class="relative w-full sm:max-w-md max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border"
               :class="modalDesgloseFormaPago === 'efectivo' ? 'border-green-200' : 'border-blue-200'"
             >
               <div
@@ -218,19 +207,29 @@
                 </p>
               </div>
             </div>
-          </Transition>
-        </div>
-      </Transition>
+      </ModalWrapper>
 
       <!-- Detalle por concepto: Cuotas, Sanciones, Actividades, Préstamos -->
       <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div class="flex items-center gap-3">
+            <button
+              @click="detalleExpandido = !detalleExpandido"
+              class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              :title="detalleExpandido ? 'Ocultar detalle' : 'Mostrar detalle'"
+            >
+              <ChevronDownIcon
+                :class="['w-5 h-5 text-gray-600 transition-transform', detalleExpandido && 'rotate-180']"
+              />
+            </button>
           <div>
             <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
               <TableCellsIcon class="w-5 h-5 text-teal-600" />
               Detalle por concepto
+                <span class="text-sm font-normal text-gray-500">({{ detalleFiltrado.length }} registros)</span>
             </h2>
             <p class="text-sm text-gray-500 mt-0.5">Cuotas, sanciones y actividades con socio y forma de pago.</p>
+            </div>
           </div>
           <button
             @click="exportarAExcel"
@@ -241,6 +240,17 @@
             {{ exportando ? 'Exportando...' : 'Exportar a Excel' }}
           </button>
         </div>
+        
+        <!-- Contenido colapsable -->
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 max-h-0"
+          enter-to-class="opacity-100 max-h-[5000px]"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 max-h-[5000px]"
+          leave-to-class="opacity-0 max-h-0"
+        >
+          <div v-show="detalleExpandido" class="overflow-hidden">
         <!-- Filtros -->
         <div class="flex flex-col gap-4 mb-4">
           <!-- Barra de búsqueda -->
@@ -359,91 +369,135 @@
           </div>
           </div>
         </div>
-        <!-- Grid desktop / Cards móvil -->
-        <div v-if="detalleFiltrado.length === 0" class="text-center py-8 text-gray-500 rounded-xl bg-gray-50 border border-dashed border-gray-200">
-          <p class="font-medium">No hay registros para mostrar</p>
-        </div>
-        <!-- Desktop: tabla grid -->
-        <div v-else class="hidden sm:block overflow-x-auto -mx-1">
-          <table class="w-full min-w-[520px] text-sm">
-            <thead>
-              <tr class="border-b-2 border-gray-200 text-left text-gray-600 font-semibold">
-                <th class="py-3 px-2">Concepto</th>
-                <th class="py-3 px-2">Socio</th>
-                <th class="py-3 px-2">Forma de pago</th>
-                <th class="py-3 px-2 text-right">Monto</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(item, idx) in detalleFiltrado"
-                :key="`${item.tipo}-${idx}-${item.socio}-${item.monto}`"
-                class="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
-              >
-                <td class="py-2.5 px-2">
-                  <span :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium max-w-[200px] truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
-                    {{ item.concepto }}
-                  </span>
-                  <span v-if="item.mes" class="text-gray-500 ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
-                </td>
-                <td class="py-2.5 px-2 font-medium text-gray-800">{{ item.socio || '—' }}</td>
-                <td class="py-2.5 px-2">
-                  <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
-                </td>
-                <td class="py-2.5 px-2 text-right font-semibold" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
-                </td>
-              </tr>
-            </tbody>
-            <tfoot class="border-t-2 border-gray-200">
-              <tr class="font-bold text-gray-800">
-                <td colspan="3" class="py-3 px-2">Total (filtrado)</td>
-                <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
-                  {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <!-- Móvil: cards apiladas -->
-        <div class="sm:hidden space-y-2">
-          <div
-            v-for="(item, idx) in detalleFiltrado"
-            :key="`mob-${item.tipo}-${idx}-${item.socio}-${item.monto}`"
-            class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50"
-          >
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span :class="['inline-flex px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 max-w-full truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
-                  {{ item.concepto }}
-                </span>
-                <span v-if="item.mes" class="text-gray-500 text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
-              </div>
-              <p class="font-medium text-gray-800 truncate mt-0.5">{{ item.socio || '—' }}</p>
-              <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">
-                {{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
-              </p>
+            <!-- Grid desktop / Cards móvil -->
+            <div v-if="detalleFiltrado.length === 0" class="text-center py-8 text-gray-500 rounded-xl bg-gray-50 border border-dashed border-gray-200">
+              <p class="font-medium">No hay registros para mostrar</p>
             </div>
-            <span class="font-bold shrink-0 tabular-nums" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
-            </span>
+            <div v-else>
+              <!-- Desktop: tabla grid -->
+              <div class="hidden sm:block overflow-x-auto -mx-1 mb-4">
+                <table class="w-full min-w-[520px] text-sm">
+                  <thead>
+                    <tr class="border-b-2 border-gray-200 text-left text-gray-600 font-semibold">
+                      <th class="py-3 px-2">Concepto</th>
+                      <th class="py-3 px-2">Socio</th>
+                      <th class="py-3 px-2">Forma de pago</th>
+                      <th class="py-3 px-2 text-right">Monto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="(item, idx) in detallePaginado"
+                      :key="`${item.tipo}-${idx}-${item.socio}-${item.monto}`"
+                      class="border-b border-gray-100 hover:bg-gray-50/80 transition-colors"
+                    >
+                      <td class="py-2.5 px-2">
+                        <span :class="['inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium max-w-[200px] truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
+                          {{ item.concepto }}
+                        </span>
+                        <span v-if="item.mes" class="text-gray-500 ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
+                      </td>
+                      <td class="py-2.5 px-2 font-medium text-gray-800">{{ item.socio || '—' }}</td>
+                      <td class="py-2.5 px-2">
+                        <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
+                      </td>
+                      <td class="py-2.5 px-2 text-right font-semibold" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
+                        {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="border-t-2 border-gray-200">
+                    <tr class="font-bold text-gray-800">
+                      <td colspan="3" class="py-3 px-2">Total (filtrado)</td>
+                      <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
+                        {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              
+              <!-- Móvil: cards apiladas -->
+              <div class="sm:hidden space-y-2 mb-4">
+                <div
+                  v-for="(item, idx) in detallePaginado"
+                  :key="`mob-${item.tipo}-${idx}-${item.socio}-${item.monto}`"
+                  class="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50"
+                >
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span :class="['inline-flex px-2 py-0.5 rounded-lg text-xs font-medium shrink-0 max-w-full truncate', getConceptoClass(item.tipo, item.esParcial)]" :title="item.concepto">
+                        {{ item.concepto }}
+                      </span>
+                      <span v-if="item.mes" class="text-gray-500 text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
+                    </div>
+                    <p class="font-medium text-gray-800 truncate mt-0.5">{{ item.socio || '—' }}</p>
+                    <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">
+                      {{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                  </div>
+                  <span class="font-bold shrink-0 tabular-nums" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
+                  </span>
+                </div>
+                <div class="flex items-center justify-between p-3 rounded-xl border-2 border-teal-200 bg-teal-50/50 font-bold">
+                  <span class="text-gray-800">Total</span>
+                  <span :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Paginación -->
+              <div v-if="totalPaginas > 1" class="flex items-center justify-between gap-4 pt-4 border-t border-gray-200">
+                <div class="text-sm text-gray-600">
+                  Mostrando {{ inicioPagina }} - {{ finPagina }} de {{ detalleFiltrado.length }} registros
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    @click="paginaActual = Math.max(1, paginaActual - 1)"
+                    :disabled="paginaActual === 1"
+                    class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Página anterior"
+                  >
+                    <ChevronLeftIcon class="w-5 h-5" />
+                  </button>
+                  <span class="px-4 py-2 text-sm font-semibold text-gray-700">
+                    Página {{ paginaActual }} de {{ totalPaginas }}
+                  </span>
+                  <button
+                    @click="paginaActual = Math.min(totalPaginas, paginaActual + 1)"
+                    :disabled="paginaActual === totalPaginas"
+                    class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    title="Página siguiente"
+                  >
+                    <ChevronRightIcon class="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center justify-between p-3 rounded-xl border-2 border-teal-200 bg-teal-50/50 font-bold">
-            <span class="text-gray-800">Total</span>
-            <span :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
-              {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
-            </span>
-          </div>
-        </div>
+        </Transition>
       </div>
 
       <!-- Lista de movimientos -->
       <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
-        <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
           <ListBulletIcon class="w-5 h-5 text-teal-600" />
           Movimientos de caja
         </h2>
-        <p class="text-sm text-gray-500 mb-4">Entradas y salidas manuales (depósitos, retiros, gastos operativos).</p>
+            <p class="text-sm text-gray-500 mt-0.5">Entradas y salidas manuales (depósitos, retiros, gastos operativos).</p>
+          </div>
+          <button
+            @click="abrirModalMovimiento"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-semibold text-sm transition-colors shadow-md"
+          >
+            <PlusIcon class="w-5 h-5" />
+            Nuevo Movimiento
+          </button>
+        </div>
         <div v-if="movimientos.length === 0" class="text-center py-8 text-gray-500 rounded-xl bg-gray-50 border border-dashed border-gray-200">
           <p class="font-medium">No hay movimientos registrados</p>
           <p class="text-sm mt-1">Los movimientos se suman o restan del total esperado.</p>
@@ -452,24 +506,88 @@
           <div
             v-for="m in movimientosOrdenados"
             :key="m.id"
-            class="flex items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 hover:bg-gray-50/50 transition-colors"
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl border-2 hover:shadow-md transition-all"
+            :class="m.tipo === 'entrada' ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'"
           >
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-gray-800 truncate">{{ m.descripcion || (m.tipo === 'entrada' ? 'Entrada' : 'Salida') }}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{{ formatDate(m.fecha) }} · {{ m.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}</p>
+            <div class="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+              <!-- Icono de entrada/salida -->
+              <div
+                :class="[
+                  'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm',
+                  m.tipo === 'entrada' 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-red-500 text-white'
+                ]"
+              >
+                <ArrowUpCircleIcon v-if="m.tipo === 'entrada'" class="w-6 h-6 sm:w-7 sm:h-7" />
+                <ArrowDownCircleIcon v-else class="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <!-- Forma de pago -->
+                <div class="flex items-center gap-2 flex-wrap mb-1.5 sm:mb-2">
+                  <span
+                    :class="[
+                      'px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs font-bold shrink-0',
+                      m.forma_pago === 'efectivo'
+                        ? 'bg-green-100 text-green-800 border-2 border-green-400'
+                        : 'bg-blue-100 text-blue-800 border-2 border-blue-400'
+                    ]"
+                  >
+                    {{ m.forma_pago === 'efectivo' ? '💵 Efectivo' : '🏦 Transferencia' }}
+                  </span>
+                </div>
+                
+                <!-- Información del movimiento -->
+                <div class="space-y-1">
+                  <!-- Si es transferencia, mostrar origen y destino claramente -->
+                  <div v-if="esTransferencia(m)" class="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                    <span class="font-semibold text-gray-700 shrink-0">Transferencia:</span>
+                    <span class="px-1.5 sm:px-2 py-0.5 rounded bg-orange-100 text-orange-800 font-medium text-xs border border-orange-300 shrink-0">
+                      {{ obtenerOrigenTransferencia(m) }}
+                    </span>
+                    <ArrowRightIcon class="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 shrink-0" />
+                    <span class="px-1.5 sm:px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-medium text-xs border border-teal-300 shrink-0">
+                      {{ obtenerDestinoTransferencia(m) }}
+                    </span>
+                  </div>
+                  
+                  <!-- Descripción -->
+                  <p class="font-semibold text-gray-900 text-sm sm:text-base leading-tight break-words">
+                    {{ obtenerDescripcionLimpia(m) }}
+                  </p>
+                  
+                  <!-- Fecha -->
+                  <p class="text-xs text-gray-500 font-medium">{{ formatDate(m.fecha) }}</p>
+                </div>
+              </div>
             </div>
-            <div class="flex items-center gap-3 flex-shrink-0">
-              <span :class="m.tipo === 'entrada' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+            <div class="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 flex-shrink-0 sm:flex-shrink-0">
+              <span
+                :class="[
+                  'text-base sm:text-lg font-extrabold tabular-nums',
+                  m.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'
+                ]"
+              >
                 {{ m.tipo === 'entrada' ? '+' : '−' }}${{ formatMoney(m.monto) }}
               </span>
-              <button
-                v-if="puedeGestionarCuotas"
-                @click="confirmarEliminarMovimiento(m)"
-                class="p-2 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-600 transition-colors"
-                title="Eliminar movimiento"
-              >
-                <TrashIcon class="w-5 h-5" />
-              </button>
+              <div class="flex items-center gap-1 sm:gap-2">
+                <button
+                  v-if="puedeGestionarCuotas"
+                  @click="abrirModalEditarMovimiento(m)"
+                  class="p-1.5 sm:p-2 hover:bg-teal-50 rounded-lg text-teal-500 hover:text-teal-600 transition-colors"
+                  title="Editar movimiento"
+                >
+                  <PencilIcon class="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                <button
+                  v-if="puedeGestionarCuotas"
+                  @click="confirmarEliminarMovimiento(m)"
+                  class="p-1.5 sm:p-2 hover:bg-red-50 rounded-lg text-red-500 hover:text-red-600 transition-colors"
+                  title="Eliminar movimiento"
+                >
+                  <TrashIcon class="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -477,9 +595,14 @@
     </template>
 
     <!-- Modal confirmar eliminar movimiento -->
-    <div v-if="movimientoAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-[2px]" @click="movimientoAEliminar = null"></div>
-      <div class="relative max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-gray-200 p-6">
+    <ModalWrapper
+      :show="!!movimientoAEliminar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-gray-200 p-6"
+      card-max-width="24rem"
+      @close="movimientoAEliminar = null"
+    >
         <h3 class="text-lg font-bold text-gray-800 mb-2">¿Eliminar movimiento?</h3>
         <p class="text-gray-600 text-sm mb-4">{{ movimientoAEliminar?.descripcion || (movimientoAEliminar?.tipo === 'entrada' ? 'Entrada' : 'Salida') }} — ${{ formatMoney(movimientoAEliminar?.monto) }}</p>
         <div class="flex gap-3">
@@ -488,8 +611,180 @@
             {{ eliminandoMovimiento ? 'Eliminando...' : 'Sí, Eliminar' }}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
+
+    <!-- Modal nuevo movimiento -->
+    <ModalWrapper
+      :show="modalMovimientoAbierto"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="32rem"
+      @close="cerrarModalMovimiento"
+    >
+            <!-- Header -->
+            <div class="p-6 text-white bg-gradient-to-br from-teal-500 to-emerald-600">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold">{{ editandoMovimiento ? 'Editar Movimiento' : 'Nuevo Movimiento' }}</h3>
+                <button @click="cerrarModalMovimiento" class="p-2 rounded-lg hover:bg-white/20 transition-colors">
+                  <XMarkIcon class="w-6 h-6" />
+                </button>
+              </div>
+              <p class="text-white/90 text-sm mt-1">{{ editandoMovimiento ? 'Modifica los datos del movimiento' : 'Registra transferencias, ingresos o egresos' }}</p>
+            </div>
+
+            <!-- Contenido -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+              <!-- Tipo de movimiento (solo si no está editando) -->
+              <div v-if="!editandoMovimiento">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">Tipo de movimiento</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button
+                    @click="tipoMovimiento = 'transferencia'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'transferencia' ? 'bg-teal-50 border-teal-500 text-teal-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <ArrowPathIcon class="w-5 h-5 mx-auto mb-1" />
+                    Transferencia
+                  </button>
+                  <button
+                    @click="tipoMovimiento = 'ingreso'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'ingreso' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <BanknotesIcon class="w-5 h-5 mx-auto mb-1" />
+                    Ingreso
+                  </button>
+                  <button
+                    @click="tipoMovimiento = 'egreso'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all', tipoMovimiento === 'egreso' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <ArrowDownTrayIcon class="w-5 h-5 mx-auto mb-1 rotate-180" />
+                    Egreso
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Información del movimiento (solo si está editando) -->
+              <div v-if="editandoMovimiento" class="rounded-xl p-4 bg-gray-50 border-2 border-gray-200">
+                <p class="text-sm font-semibold text-gray-700 mb-1">Movimiento actual:</p>
+                <p class="text-sm text-gray-600">
+                  <span :class="movimientoEditando?.tipo === 'entrada' ? 'text-green-600 font-bold' : 'text-red-600 font-bold'">
+                    {{ movimientoEditando?.tipo === 'entrada' ? 'Entrada' : 'Salida' }}
+                  </span>
+                  · 
+                  <span :class="movimientoEditando?.forma_pago === 'efectivo' ? 'text-green-600' : 'text-blue-600'">
+                    {{ movimientoEditando?.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
+                  </span>
+                  · ${{ formatMoney(movimientoEditando?.monto) }}
+                </p>
+              </div>
+
+              <!-- Transferencia entre formas de pago (solo si no está editando) -->
+              <div v-if="!editandoMovimiento && tipoMovimiento === 'transferencia'">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Dirección de transferencia</label>
+                <div class="space-y-2">
+                  <button
+                    @click="formMovimiento.direccionTransferencia = 'efectivo_transferencia'"
+                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'efectivo_transferencia' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <BanknotesIcon class="w-5 h-5" />
+                    <span>Efectivo</span>
+                    <ArrowRightIcon class="w-4 h-4" />
+                    <ArrowPathIcon class="w-5 h-5" />
+                    <span>Transferencia</span>
+                  </button>
+                  <button
+                    @click="formMovimiento.direccionTransferencia = 'transferencia_efectivo'"
+                    :class="['w-full px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.direccionTransferencia === 'transferencia_efectivo' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <ArrowPathIcon class="w-5 h-5" />
+                    <span>Transferencia</span>
+                    <ArrowRightIcon class="w-4 h-4" />
+                    <BanknotesIcon class="w-5 h-5" />
+                    <span>Efectivo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Forma de pago (para ingresos/egresos o cuando está editando) -->
+              <div v-if="editandoMovimiento || tipoMovimiento === 'ingreso' || tipoMovimiento === 'egreso'">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Forma de pago</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    @click="formMovimiento.formaPago = 'efectivo'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'efectivo' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <BanknotesIcon class="w-5 h-5" />
+                    Efectivo
+                  </button>
+                  <button
+                    @click="formMovimiento.formaPago = 'transferencia'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.formaPago === 'transferencia' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <ArrowPathIcon class="w-5 h-5" />
+                    Transferencia
+                  </button>
+                </div>
+              </div>
+
+              <!-- Monto -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Monto <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                  <input
+                    v-model="montoFormateado"
+                    type="text"
+                    @input="handleMontoInput"
+                    @blur="handleMontoBlur"
+                    placeholder="0"
+                    class="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-lg font-semibold"
+                    :class="erroresFormulario.monto ? 'border-red-500' : ''"
+                  />
+                </div>
+                <p v-if="erroresFormulario.monto" class="text-red-500 text-xs mt-1">{{ erroresFormulario.monto }}</p>
+              </div>
+
+              <!-- Descripción -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción</label>
+                <textarea
+                  v-model.trim="formMovimiento.descripcion"
+                  rows="3"
+                  placeholder="Ej: Transferencia para pagar gastos, Depósito adicional, etc."
+                  class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm resize-none"
+                ></textarea>
+              </div>
+
+              <!-- Fecha -->
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha</label>
+                <input
+                  v-model="formMovimiento.fecha"
+                  type="date"
+                  class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm"
+                />
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-6 border-t border-gray-200 flex gap-3">
+              <button
+                @click="cerrarModalMovimiento"
+                :disabled="guardandoMovimiento"
+                class="flex-1 py-2.5 rounded-xl border-2 border-gray-200 font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                @click="guardarMovimiento"
+                :disabled="guardandoMovimiento"
+                class="flex-1 py-2.5 rounded-xl bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-50"
+              >
+                {{ guardandoMovimiento ? (editandoMovimiento ? 'Actualizando...' : 'Guardando...') : (editandoMovimiento ? 'Actualizar' : 'Guardar') }}
+              </button>
+            </div>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -503,6 +798,9 @@ import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notifications'
 import BackButton from '../../components/BackButton.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import {
   CalculatorIcon,
   BanknotesIcon,
@@ -513,7 +811,15 @@ import {
   ArrowDownTrayIcon,
   XMarkIcon,
   ChevronDownIcon,
-  CheckIcon
+  CheckIcon,
+  PlusIcon,
+  ArrowRightIcon,
+  ArrowUpCircleIcon,
+  ArrowDownCircleIcon,
+  ChevronUpIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PencilIcon
 } from '@heroicons/vue/24/outline'
 import * as XLSX from 'xlsx-js-style'
 
@@ -556,21 +862,58 @@ const efectivoContado = ref(0)
 const transferenciaContada = ref(0)
 
 const modalDesgloseFormaPago = ref(null) // 'efectivo' | 'transferencia' | null
+
+// Bloquear scroll del body cuando las modales están abiertas
+const modalDesgloseOpen = computed(() => !!modalDesgloseFormaPago.value)
+useBodyScrollLock(modalDesgloseOpen)
 const dropdownCategoriasAbierto = ref(false)
 const dropdownCategoriasRef = ref(null)
 const dropdownOrdenarAbierto = ref(false)
 const dropdownOrdenarRef = ref(null)
 const movimientoAEliminar = ref(null)
+const movimientoAEliminarOpen = computed(() => !!movimientoAEliminar.value)
+useBodyScrollLock(movimientoAEliminarOpen)
 const eliminandoMovimiento = ref(false)
 const exportando = ref(false)
 
+// Modal de nuevo movimiento
+const modalMovimientoAbierto = ref(false)
+useBodyScrollLock(modalMovimientoAbierto)
+const editandoMovimiento = ref(false) // true si estamos editando, false si estamos creando
+const movimientoEditando = ref(null) // Movimiento que se está editando
+const tipoMovimiento = ref('transferencia') // 'transferencia' | 'ingreso' | 'egreso'
+const formMovimiento = ref({
+  direccionTransferencia: 'efectivo_transferencia', // 'efectivo_transferencia' | 'transferencia_efectivo'
+  formaPago: 'efectivo', // 'efectivo' | 'transferencia'
+  monto: '',
+  descripcion: '',
+  fecha: new Date().toISOString().split('T')[0]
+})
+const guardandoMovimiento = ref(false)
+const erroresFormulario = ref({})
+const montoFormateado = ref('')
+
+// Detalle por concepto - colapsable y paginación
+const detalleExpandido = ref(false)
+const paginaActual = ref(1)
+const itemsPorPagina = ref(20)
+
 // Permisos
+// Verificar si el usuario es superusuario (raigo.16@gmail.com)
+const esSuperUsuario = computed(() => {
+  if (!authStore.user) return false
+  const email = (authStore.userEmail || '').toLowerCase().trim()
+  return email === 'raigo.16@gmail.com'
+})
+
 const esAdmin = computed(() => {
-  return natillera.value?.admin_id && authStore.user?.id === natillera.value?.admin_id
+  if (!authStore.user || !natillera.value) return false
+  return (natillera.value?.admin_id && authStore.user?.id === natillera.value?.admin_id) || esSuperUsuario.value
 })
 const misPermisos = ref(null)
 const puedeGestionarCuotas = computed(() => {
   if (esAdmin.value) return true
+  if (esSuperUsuario.value) return true // Superusuario tiene todos los permisos
   return misPermisos.value?.permisos?.gestionar_cuotas === true
 })
 
@@ -711,6 +1054,30 @@ const detalleFiltrado = computed(() => {
 })
 const totalDetalleFiltrado = computed(() => {
   return detalleFiltrado.value.reduce((s, i) => s + (parseFloat(i.monto) || 0), 0)
+})
+
+// Paginación del detalle
+const totalPaginas = computed(() => {
+  return Math.ceil(detalleFiltrado.value.length / itemsPorPagina.value)
+})
+
+const inicioPagina = computed(() => {
+  return detalleFiltrado.value.length === 0 ? 0 : (paginaActual.value - 1) * itemsPorPagina.value + 1
+})
+
+const finPagina = computed(() => {
+  return Math.min(paginaActual.value * itemsPorPagina.value, detalleFiltrado.value.length)
+})
+
+const detallePaginado = computed(() => {
+  const inicio = (paginaActual.value - 1) * itemsPorPagina.value
+  const fin = inicio + itemsPorPagina.value
+  return detalleFiltrado.value.slice(inicio, fin)
+})
+
+// Resetear a página 1 cuando cambian los filtros
+watch([filtroDetalleCategorias, filtroDetalleFormaPago, filtroDetalleBusqueda, ordenarDetallePor], () => {
+  paginaActual.value = 1
 })
 
 const etiquetaFiltroCategorias = computed(() => {
@@ -855,6 +1222,45 @@ function formatDate(str) {
   if (!str) return '—'
   const d = new Date(str)
   return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Funciones helper para movimientos
+function esTransferencia(m) {
+  if (!m.descripcion) return false
+  const desc = m.descripcion.toLowerCase()
+  return desc.includes('transferencia') && (desc.includes('→') || desc.includes('efectivo') || desc.includes('transferencia'))
+}
+
+function obtenerOrigenTransferencia(m) {
+  if (!esTransferencia(m)) return ''
+  const desc = m.descripcion.toLowerCase()
+  if (m.tipo === 'salida') {
+    return m.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'
+  } else {
+    // Si es entrada, el origen es el opuesto
+    return m.forma_pago === 'efectivo' ? 'Transferencia' : 'Efectivo'
+  }
+}
+
+function obtenerDestinoTransferencia(m) {
+  if (!esTransferencia(m)) return ''
+  if (m.tipo === 'entrada') {
+    return m.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'
+  } else {
+    // Si es salida, el destino es el opuesto
+    return m.forma_pago === 'efectivo' ? 'Transferencia' : 'Efectivo'
+  }
+}
+
+function obtenerDescripcionLimpia(m) {
+  if (!m.descripcion) {
+    return m.tipo === 'entrada' ? 'Ingreso manual' : 'Egreso manual'
+  }
+  // Si es transferencia, simplificar la descripción
+  if (esTransferencia(m)) {
+    return 'Transferencia entre formas de pago'
+  }
+  return m.descripcion
 }
 
 function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosData = null, cuotasPrestamoPagadas = []) {
@@ -1093,19 +1499,962 @@ async function eliminarMovimientoConfirmado() {
   if (!movimientoAEliminar.value) return
   eliminandoMovimiento.value = true
   try {
+    const movimiento = movimientoAEliminar.value
+    const esTransferencia = esTransferenciaMovimiento(movimiento)
+    
+    // Preparar datos completos del movimiento antes de eliminar
+    const datosCompletosEliminacion = {
+      id: movimiento.id,
+      natillera_id: movimiento.natillera_id,
+      tipo: movimiento.tipo,
+      monto: movimiento.monto,
+      forma_pago: movimiento.forma_pago,
+      descripcion: movimiento.descripcion,
+      fecha: movimiento.fecha,
+      created_at: movimiento.created_at,
+      updated_at: movimiento.updated_at
+    }
+
+    // Si es transferencia, buscar el movimiento relacionado antes de eliminar
+    let movimientoRelacionado = null
+    if (esTransferencia) {
+      const tipoOpuesto = movimiento.tipo === 'entrada' ? 'salida' : 'entrada'
+      const formaPagoOpuesta = movimiento.forma_pago === 'efectivo' ? 'transferencia' : 'efectivo'
+      
+      // Búsqueda mejorada del movimiento relacionado (similar a actualizarMovimiento)
+      // Primero intentar con la forma de pago opuesta
+      const { data: movimientosRelacionados1 } = await supabase
+        .from('movimientos_fondo')
+        .select('*')
+        .eq('natillera_id', id.value)
+        .eq('fecha', movimiento.fecha)
+        .eq('tipo', tipoOpuesto)
+        .eq('forma_pago', formaPagoOpuesta)
+        .eq('monto', movimiento.monto)
+        .neq('id', movimiento.id)
+        .ilike('descripcion', `%transferencia%`)
+        .limit(1)
+
+      movimientoRelacionado = movimientosRelacionados1?.[0]
+      
+      // Si no se encuentra, buscar sin restricción de forma de pago
+      if (!movimientoRelacionado) {
+        const { data: movimientosRelacionados2 } = await supabase
+          .from('movimientos_fondo')
+          .select('*')
+          .eq('natillera_id', id.value)
+          .eq('fecha', movimiento.fecha)
+          .eq('tipo', tipoOpuesto)
+          .eq('monto', movimiento.monto)
+          .neq('id', movimiento.id)
+          .ilike('descripcion', `%transferencia%`)
+          .limit(1)
+        
+        movimientoRelacionado = movimientosRelacionados2?.[0]
+      }
+    }
+
+    // Si es transferencia y no se encontró el movimiento relacionado, mostrar advertencia pero continuar
+    if (esTransferencia && !movimientoRelacionado) {
+      console.warn('⚠️ Advertencia: No se encontró movimiento relacionado para la transferencia. Se eliminará solo el movimiento seleccionado.')
+    }
+
+    // Eliminar ambos movimientos si es transferencia (o solo uno si no es transferencia)
+    // Primero eliminar el movimiento relacionado si existe, luego el original
+    if (esTransferencia && movimientoRelacionado) {
+      // Eliminar primero el movimiento relacionado
+      const { error: errorRelacionado } = await supabase
+        .from('movimientos_fondo')
+        .delete()
+        .eq('id', movimientoRelacionado.id)
+      
+      if (errorRelacionado) {
+        throw new Error(`Error al eliminar movimiento relacionado: ${errorRelacionado.message}`)
+      }
+    }
+
+    // Eliminar el movimiento original
     const { error } = await supabase
       .from('movimientos_fondo')
       .delete()
-      .eq('id', movimientoAEliminar.value.id)
-    if (error) throw error
+      .eq('id', movimiento.id)
+    
+    if (error) {
+      // Si falla la eliminación del original pero ya se eliminó el relacionado, 
+      // intentar recrear el relacionado (rollback parcial)
+      if (esTransferencia && movimientoRelacionado) {
+        console.error('❌ Error al eliminar movimiento original después de eliminar el relacionado. Se intentará recrear el relacionado.')
+        // No podemos recrear fácilmente, así que solo registramos el error
+      }
+      throw error
+    }
+
+    // Registrar auditoría detallada de eliminación
+    const auditoria = useAuditoria()
+    const tipoMovimientoTexto = esTransferencia 
+      ? 'TRANSFERENCIA' 
+      : (movimiento.tipo === 'entrada' ? 'INGRESO' : 'EGRESO')
+    
+    const descripcionEliminacion = `[${tipoMovimientoTexto} - ELIMINACIÓN] ${esTransferencia ? 'Transferencia' : movimiento.tipo === 'entrada' ? 'Ingreso' : 'Egreso'} de $${movimiento.monto.toLocaleString('es-CO')} en ${movimiento.forma_pago === 'efectivo' ? 'Efectivo' : 'Transferencia'}${movimiento.descripcion ? ` - ${movimiento.descripcion}` : ''} eliminado`
+
+    // Si existe movimiento relacionado, registrar auditoría de su eliminación
+    if (esTransferencia && movimientoRelacionado) {
+      const datosRelacionadoCompletos = {
+        id: movimientoRelacionado.id,
+        natillera_id: movimientoRelacionado.natillera_id,
+        tipo: movimientoRelacionado.tipo,
+        monto: movimientoRelacionado.monto,
+        forma_pago: movimientoRelacionado.forma_pago,
+        descripcion: movimientoRelacionado.descripcion,
+        fecha: movimientoRelacionado.fecha,
+        created_at: movimientoRelacionado.created_at,
+        updated_at: movimientoRelacionado.updated_at
+      }
+
+      // Registrar auditoría del movimiento relacionado eliminado
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarEliminacion(
+          'movimientos_fondo',
+          movimientoRelacionado.id,
+          `[TRANSFERENCIA - ELIMINACIÓN] Movimiento relacionado (${movimientoRelacionado.tipo === 'entrada' ? 'entrada' : 'salida'}) de transferencia eliminado automáticamente junto con el movimiento principal`,
+          datosRelacionadoCompletos,
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            monto_formateado: `$${movimientoRelacionado.monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(movimientoRelacionado.fecha).toLocaleDateString('es-CO'),
+            forma_pago: movimientoRelacionado.forma_pago,
+            descripcion: movimientoRelacionado.descripcion,
+            movimiento_relacionado_id: movimiento.id,
+            eliminacion_automatica: true,
+            eliminacion_coherente: true,
+            motivo_eliminacion: 'Eliminación automática por ser parte de transferencia eliminada. Ambos movimientos (entrada y salida) fueron eliminados para mantener coherencia.'
+          }
+        )
+      )
+      
+      // Actualizar la descripción de eliminación del movimiento principal para indicar que se eliminaron ambos
+      const descripcionEliminacionActualizada = `[${tipoMovimientoTexto} - ELIMINACIÓN] Transferencia completa eliminada (ambos movimientos: ${movimiento.tipo} y ${movimientoRelacionado.tipo}) de $${movimiento.monto.toLocaleString('es-CO')}${movimiento.descripcion ? ` - ${movimiento.descripcion}` : ''}`
+      
+      // Actualizar la auditoría del movimiento principal con información de que se eliminaron ambos
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarEliminacion(
+          'movimientos_fondo',
+          movimiento.id,
+          descripcionEliminacionActualizada,
+          datosCompletosEliminacion,
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            monto_formateado: `$${movimiento.monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(movimiento.fecha).toLocaleDateString('es-CO'),
+            forma_pago: movimiento.forma_pago,
+            descripcion: movimiento.descripcion,
+            movimiento_relacionado_id: movimientoRelacionado.id,
+            movimiento_relacionado_encontrado: true,
+            eliminacion_coherente: true,
+            ambos_movimientos_eliminados: true,
+            motivo_eliminacion: 'Eliminación manual por usuario. Ambos movimientos de la transferencia fueron eliminados para mantener coherencia.'
+          }
+        )
+      )
+    } else {
+      // Si no es transferencia o no se encontró relacionado, usar la auditoría original
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarEliminacion(
+          'movimientos_fondo',
+          movimiento.id,
+          descripcionEliminacion,
+          datosCompletosEliminacion,
+          id.value,
+          {
+            tipo_movimiento: esTransferencia ? 'transferencia' : (movimiento.tipo === 'entrada' ? 'ingreso' : 'egreso'),
+            monto_formateado: `$${movimiento.monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(movimiento.fecha).toLocaleDateString('es-CO'),
+            forma_pago: movimiento.forma_pago,
+            descripcion: movimiento.descripcion,
+            movimiento_relacionado_id: movimientoRelacionado?.id || null,
+            movimiento_relacionado_encontrado: !!movimientoRelacionado,
+            motivo_eliminacion: esTransferencia && !movimientoRelacionado 
+              ? 'Eliminación manual por usuario. No se encontró movimiento relacionado.' 
+              : 'Eliminación manual por usuario'
+          }
+        )
+      )
+    }
+
     movimientoAEliminar.value = null
-    notificationStore.success('Movimiento eliminado', 'Eliminado')
+    
+    // Mensaje de éxito según si se eliminaron ambos movimientos
+    if (esTransferencia && movimientoRelacionado) {
+      notificationStore.success('Transferencia eliminada correctamente (ambos movimientos)', 'Eliminado')
+    } else {
+      notificationStore.success('Movimiento eliminado correctamente', 'Eliminado')
+    }
+    
     await cargarDatos()
   } catch (e) {
     console.error('Error eliminando movimiento:', e)
     notificationStore.error(e.message || 'Error al eliminar', 'Error')
   } finally {
     eliminandoMovimiento.value = false
+  }
+}
+
+// Funciones para modal de nuevo movimiento
+function abrirModalMovimiento() {
+  editandoMovimiento.value = false
+  movimientoEditando.value = null
+  modalMovimientoAbierto.value = true
+  // Resetear formulario
+  tipoMovimiento.value = 'transferencia'
+  formMovimiento.value = {
+    direccionTransferencia: 'efectivo_transferencia',
+    formaPago: 'efectivo',
+    monto: '',
+    descripcion: '',
+    fecha: new Date().toISOString().split('T')[0]
+  }
+  montoFormateado.value = ''
+  erroresFormulario.value = {}
+}
+
+function abrirModalEditarMovimiento(movimiento) {
+  editandoMovimiento.value = true
+  movimientoEditando.value = movimiento
+  modalMovimientoAbierto.value = true
+  
+  // Determinar tipo de movimiento
+  const esTransferencia = esTransferenciaMovimiento(movimiento)
+  if (esTransferencia) {
+    tipoMovimiento.value = 'transferencia'
+    // Determinar dirección de transferencia
+    if (movimiento.tipo === 'salida') {
+      formMovimiento.value.direccionTransferencia = movimiento.forma_pago === 'efectivo' ? 'efectivo_transferencia' : 'transferencia_efectivo'
+    } else {
+      formMovimiento.value.direccionTransferencia = movimiento.forma_pago === 'efectivo' ? 'transferencia_efectivo' : 'efectivo_transferencia'
+    }
+  } else {
+    tipoMovimiento.value = movimiento.tipo === 'entrada' ? 'ingreso' : 'egreso'
+  }
+  
+  // Llenar formulario con datos del movimiento
+  formMovimiento.value = {
+    direccionTransferencia: formMovimiento.value.direccionTransferencia || 'efectivo_transferencia',
+    formaPago: movimiento.forma_pago || 'efectivo',
+    monto: movimiento.monto || '',
+    descripcion: movimiento.descripcion || '',
+    fecha: movimiento.fecha || new Date().toISOString().split('T')[0]
+  }
+  montoFormateado.value = formatearMonto(movimiento.monto)
+  erroresFormulario.value = {}
+}
+
+function esTransferenciaMovimiento(m) {
+  if (!m.descripcion) return false
+  const desc = m.descripcion.toLowerCase()
+  return desc.includes('transferencia') && (desc.includes('→') || desc.includes('efectivo'))
+}
+
+// Formatear monto con separador de miles (coma)
+function formatearMonto(value) {
+  if (!value && value !== 0) return ''
+  const numStr = String(value).replace(/\./g, '').replace(/[^\d]/g, '')
+  if (numStr === '') return ''
+  const num = parseFloat(numStr)
+  if (isNaN(num)) return ''
+  return num.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+// Manejar input del monto
+function handleMontoInput(event) {
+  const valorOriginal = event.target.value
+  // Remover comas y cualquier carácter no numérico
+  const valorLimpio = valorOriginal.replace(/,/g, '').replace(/[^\d]/g, '')
+  
+  if (valorLimpio === '') {
+    formMovimiento.value.monto = ''
+    montoFormateado.value = ''
+  } else {
+    const numero = parseFloat(valorLimpio)
+    if (!isNaN(numero) && numero >= 0) {
+      formMovimiento.value.monto = numero
+      montoFormateado.value = formatearMonto(numero)
+    }
+  }
+}
+
+// Manejar blur del monto para formatear correctamente
+function handleMontoBlur(event) {
+  if (formMovimiento.value.monto) {
+    montoFormateado.value = formatearMonto(formMovimiento.value.monto)
+  }
+}
+
+function cerrarModalMovimiento() {
+  if (guardandoMovimiento.value) return
+  modalMovimientoAbierto.value = false
+  editandoMovimiento.value = false
+  movimientoEditando.value = null
+  erroresFormulario.value = {}
+}
+
+function validarFormulario() {
+  erroresFormulario.value = {}
+  let valido = true
+
+  // Parsear el monto desde el formato con comas
+  const montoNumerico = typeof formMovimiento.value.monto === 'string' 
+    ? parseFloat(formMovimiento.value.monto.replace(/,/g, '')) 
+    : parseFloat(formMovimiento.value.monto)
+
+  if (!montoNumerico || isNaN(montoNumerico) || montoNumerico <= 0) {
+    erroresFormulario.value.monto = 'El monto debe ser mayor a 0'
+    valido = false
+  } else {
+    // Asegurar que el monto esté en formato numérico
+    formMovimiento.value.monto = montoNumerico
+  }
+
+  return valido
+}
+
+async function guardarMovimiento() {
+  if (!validarFormulario()) return
+
+  // Validar permisos
+  if (!puedeGestionarCuotas.value) {
+    notificationStore.error('No tienes permisos para gestionar movimientos', 'Sin permisos')
+    return
+  }
+
+  guardandoMovimiento.value = true
+  try {
+    const auditoria = useAuditoria()
+    // Parsear monto (puede venir con comas del formato)
+    const montoRaw = typeof formMovimiento.value.monto === 'string' 
+      ? formMovimiento.value.monto.replace(/,/g, '') 
+      : formMovimiento.value.monto
+    const monto = parseFloat(montoRaw)
+    if (isNaN(monto) || monto <= 0) {
+      throw new Error('El monto debe ser un número válido mayor a 0')
+    }
+    const fecha = formMovimiento.value.fecha || new Date().toISOString().split('T')[0]
+
+    // Si está editando, actualizar movimiento existente
+    if (editandoMovimiento.value && movimientoEditando.value) {
+      await actualizarMovimiento(movimientoEditando.value, monto, fecha, auditoria)
+    } else if (tipoMovimiento.value === 'transferencia') {
+      // Crear 2 movimientos: salida del origen y entrada al destino
+      const esEfectivoATransferencia = formMovimiento.value.direccionTransferencia === 'efectivo_transferencia'
+      const formaPagoOrigen = esEfectivoATransferencia ? 'efectivo' : 'transferencia'
+      const formaPagoDestino = esEfectivoATransferencia ? 'transferencia' : 'efectivo'
+      const descripcionBase = formMovimiento.value.descripcion || `Transferencia: ${formaPagoOrigen === 'efectivo' ? 'Efectivo' : 'Transferencia'} → ${formaPagoDestino === 'efectivo' ? 'Efectivo' : 'Transferencia'}`
+
+      // Movimiento de salida (origen)
+      const { data: movimientoSalida, error: errorSalida } = await supabase
+        .from('movimientos_fondo')
+        .insert({
+          natillera_id: id.value,
+          tipo: 'salida',
+          monto: monto,
+          forma_pago: formaPagoOrigen,
+          descripcion: descripcionBase,
+          fecha: fecha
+        })
+        .select()
+        .single()
+
+      if (errorSalida) throw errorSalida
+
+      // Movimiento de entrada (destino)
+      const { data: movimientoEntrada, error: errorEntrada } = await supabase
+        .from('movimientos_fondo')
+        .insert({
+          natillera_id: id.value,
+          tipo: 'entrada',
+          monto: monto,
+          forma_pago: formaPagoDestino,
+          descripcion: descripcionBase,
+          fecha: fecha
+        })
+        .select()
+        .single()
+
+      if (errorEntrada) {
+        // Si falla la entrada, eliminar la salida creada
+        await supabase.from('movimientos_fondo').delete().eq('id', movimientoSalida.id)
+        throw errorEntrada
+      }
+
+      // Registrar auditoría detallada para ambos movimientos
+      const descripcionAuditoria = `Transferencia interna de $${monto.toLocaleString('es-CO')} desde ${formaPagoOrigen === 'efectivo' ? 'Efectivo' : 'Transferencia'} hacia ${formaPagoDestino === 'efectivo' ? 'Efectivo' : 'Transferencia'}${descripcionBase && descripcionBase !== `Transferencia: ${formaPagoOrigen === 'efectivo' ? 'Efectivo' : 'Transferencia'} → ${formaPagoDestino === 'efectivo' ? 'Efectivo' : 'Transferencia'}` ? ` - ${descripcionBase}` : ''}`
+      
+      // Auditoría para movimiento de salida
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarCreacion(
+          'movimientos_fondo',
+          movimientoSalida.id,
+          `[TRANSFERENCIA - SALIDA] ${descripcionAuditoria}`,
+          {
+            id: movimientoSalida.id,
+            natillera_id: movimientoSalida.natillera_id,
+            tipo: movimientoSalida.tipo,
+            monto: movimientoSalida.monto,
+            forma_pago: movimientoSalida.forma_pago,
+            descripcion: movimientoSalida.descripcion,
+            fecha: movimientoSalida.fecha,
+            created_at: movimientoSalida.created_at
+          },
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            direccion: formMovimiento.value.direccionTransferencia,
+            origen: formaPagoOrigen,
+            destino: formaPagoDestino,
+            movimiento_entrada_id: movimientoEntrada.id,
+            movimiento_salida_id: movimientoSalida.id,
+            monto_formateado: `$${monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(fecha).toLocaleDateString('es-CO'),
+            descripcion_usuario: descripcionBase
+          }
+        )
+      )
+      
+      // Auditoría para movimiento de entrada
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarCreacion(
+          'movimientos_fondo',
+          movimientoEntrada.id,
+          `[TRANSFERENCIA - ENTRADA] ${descripcionAuditoria}`,
+          {
+            id: movimientoEntrada.id,
+            natillera_id: movimientoEntrada.natillera_id,
+            tipo: movimientoEntrada.tipo,
+            monto: movimientoEntrada.monto,
+            forma_pago: movimientoEntrada.forma_pago,
+            descripcion: movimientoEntrada.descripcion,
+            fecha: movimientoEntrada.fecha,
+            created_at: movimientoEntrada.created_at
+          },
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            direccion: formMovimiento.value.direccionTransferencia,
+            origen: formaPagoOrigen,
+            destino: formaPagoDestino,
+            movimiento_entrada_id: movimientoEntrada.id,
+            movimiento_salida_id: movimientoSalida.id,
+            monto_formateado: `$${monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(fecha).toLocaleDateString('es-CO'),
+            descripcion_usuario: descripcionBase
+          }
+        )
+      )
+
+      notificationStore.success('Transferencia registrada correctamente', 'Éxito')
+    } else if (tipoMovimiento.value === 'ingreso') {
+      // Crear 1 movimiento de entrada
+      const descripcion = formMovimiento.value.descripcion || `Ingreso manual - ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}`
+
+      const { data: movimiento, error } = await supabase
+        .from('movimientos_fondo')
+        .insert({
+          natillera_id: id.value,
+          tipo: 'entrada',
+          monto: monto,
+          forma_pago: formMovimiento.value.formaPago,
+          descripcion: descripcion,
+          fecha: fecha
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Registrar auditoría detallada
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarCreacion(
+          'movimientos_fondo',
+          movimiento.id,
+          `[INGRESO MANUAL] Ingreso de $${monto.toLocaleString('es-CO')} en ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}${descripcion && descripcion !== `Ingreso manual - ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}` ? ` - ${descripcion}` : ''}`,
+          {
+            id: movimiento.id,
+            natillera_id: movimiento.natillera_id,
+            tipo: movimiento.tipo,
+            monto: movimiento.monto,
+            forma_pago: movimiento.forma_pago,
+            descripcion: movimiento.descripcion,
+            fecha: movimiento.fecha,
+            created_at: movimiento.created_at
+          },
+          id.value,
+          {
+            tipo_movimiento: 'ingreso',
+            forma_pago: formMovimiento.value.formaPago,
+            monto_formateado: `$${monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(fecha).toLocaleDateString('es-CO'),
+            descripcion_usuario: descripcion,
+            es_manual: true
+          }
+        )
+      )
+
+      notificationStore.success('Ingreso registrado correctamente', 'Éxito')
+    } else if (tipoMovimiento.value === 'egreso') {
+      // Crear 1 movimiento de salida
+      const descripcion = formMovimiento.value.descripcion || `Egreso manual - ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}`
+
+      const { data: movimiento, error } = await supabase
+        .from('movimientos_fondo')
+        .insert({
+          natillera_id: id.value,
+          tipo: 'salida',
+          monto: monto,
+          forma_pago: formMovimiento.value.formaPago,
+          descripcion: descripcion,
+          fecha: fecha
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Registrar auditoría detallada
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarCreacion(
+          'movimientos_fondo',
+          movimiento.id,
+          `[EGRESO MANUAL] Egreso de $${monto.toLocaleString('es-CO')} en ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}${descripcion && descripcion !== `Egreso manual - ${formMovimiento.value.formaPago === 'efectivo' ? 'Efectivo' : 'Transferencia'}` ? ` - ${descripcion}` : ''}`,
+          {
+            id: movimiento.id,
+            natillera_id: movimiento.natillera_id,
+            tipo: movimiento.tipo,
+            monto: movimiento.monto,
+            forma_pago: movimiento.forma_pago,
+            descripcion: movimiento.descripcion,
+            fecha: movimiento.fecha,
+            created_at: movimiento.created_at
+          },
+          id.value,
+          {
+            tipo_movimiento: 'egreso',
+            forma_pago: formMovimiento.value.formaPago,
+            monto_formateado: `$${monto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(fecha).toLocaleDateString('es-CO'),
+            descripcion_usuario: descripcion,
+            es_manual: true
+          }
+        )
+      )
+
+      notificationStore.success('Egreso registrado correctamente', 'Éxito')
+    }
+
+    // Recargar datos
+    await cargarDatos()
+    
+    // Cerrar modal después de un pequeño delay para que se vea la notificación
+    guardandoMovimiento.value = false
+    setTimeout(() => {
+      cerrarModalMovimiento()
+    }, 300)
+  } catch (e) {
+    console.error('Error guardando movimiento:', e)
+    notificationStore.error(e.message || 'Error al guardar movimiento', 'Error')
+    guardandoMovimiento.value = false
+  }
+}
+
+// Función para actualizar un movimiento existente
+async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, auditoria) {
+  // Obtener datos anteriores completos para auditoría
+  const datosAnteriores = {
+    id: movimientoOriginal.id,
+    natillera_id: movimientoOriginal.natillera_id,
+    tipo: movimientoOriginal.tipo,
+    monto: movimientoOriginal.monto,
+    forma_pago: movimientoOriginal.forma_pago,
+    descripcion: movimientoOriginal.descripcion,
+    fecha: movimientoOriginal.fecha,
+    created_at: movimientoOriginal.created_at,
+    updated_at: movimientoOriginal.updated_at
+  }
+
+  const esTransferencia = esTransferenciaMovimiento(movimientoOriginal)
+  
+  if (esTransferencia) {
+    // Si es transferencia, necesito encontrar y actualizar el movimiento relacionado
+    const descripcionBase = formMovimiento.value.descripcion || movimientoOriginal.descripcion || 'Transferencia'
+    
+    // Determinar tipo opuesto
+    const tipoOpuesto = movimientoOriginal.tipo === 'entrada' ? 'salida' : 'entrada'
+    
+    // Determinar la forma de pago opuesta basada en la nueva forma de pago seleccionada
+    // Si el movimiento original es salida con efectivo, el relacionado debe ser entrada con transferencia
+    // Si el movimiento original es entrada con transferencia, el relacionado debe ser salida con efectivo
+    // Pero si el usuario cambió la forma de pago, necesitamos recalcular
+    const nuevaFormaPagoOpuesta = formMovimiento.value.formaPago === 'efectivo' ? 'transferencia' : 'efectivo'
+    
+    // Buscar el movimiento relacionado de manera más flexible
+    // Primero intentar con la forma de pago opuesta original
+    const formaPagoOpuestaOriginal = movimientoOriginal.forma_pago === 'efectivo' ? 'transferencia' : 'efectivo'
+    
+    let movimientoRelacionado = null
+    
+    // Buscar con la forma de pago opuesta original (caso más común)
+    const { data: movimientosRelacionados1 } = await supabase
+      .from('movimientos_fondo')
+      .select('*')
+      .eq('natillera_id', id.value)
+      .eq('fecha', movimientoOriginal.fecha)
+      .eq('tipo', tipoOpuesto)
+      .eq('forma_pago', formaPagoOpuestaOriginal)
+      .eq('monto', movimientoOriginal.monto)
+      .neq('id', movimientoOriginal.id)
+      .ilike('descripcion', `%transferencia%`)
+      .limit(1)
+    
+    movimientoRelacionado = movimientosRelacionados1?.[0]
+    
+    // Si no se encuentra, buscar con la nueva forma de pago opuesta (por si cambió la dirección)
+    if (!movimientoRelacionado) {
+      const { data: movimientosRelacionados2 } = await supabase
+        .from('movimientos_fondo')
+        .select('*')
+        .eq('natillera_id', id.value)
+        .eq('fecha', movimientoOriginal.fecha)
+        .eq('tipo', tipoOpuesto)
+        .eq('forma_pago', nuevaFormaPagoOpuesta)
+        .eq('monto', movimientoOriginal.monto)
+        .neq('id', movimientoOriginal.id)
+        .ilike('descripcion', `%transferencia%`)
+        .limit(1)
+      
+      movimientoRelacionado = movimientosRelacionados2?.[0]
+    }
+    
+    // Si aún no se encuentra, buscar sin restricción de forma de pago (último recurso)
+    if (!movimientoRelacionado) {
+      const { data: movimientosRelacionados3 } = await supabase
+        .from('movimientos_fondo')
+        .select('*')
+        .eq('natillera_id', id.value)
+        .eq('fecha', movimientoOriginal.fecha)
+        .eq('tipo', tipoOpuesto)
+        .eq('monto', movimientoOriginal.monto)
+        .neq('id', movimientoOriginal.id)
+        .ilike('descripcion', `%transferencia%`)
+        .limit(1)
+      
+      movimientoRelacionado = movimientosRelacionados3?.[0]
+    }
+
+    // Actualizar movimiento original
+    const datosActualizados = {
+      monto: nuevoMonto,
+      forma_pago: formMovimiento.value.formaPago,
+      descripcion: descripcionBase,
+      fecha: nuevaFecha
+    }
+
+    const { data: movimientoActualizado, error: errorUpdate } = await supabase
+      .from('movimientos_fondo')
+      .update(datosActualizados)
+      .eq('id', movimientoOriginal.id)
+      .select()
+      .single()
+
+    if (errorUpdate) throw errorUpdate
+
+    // Si existe movimiento relacionado, actualizarlo también con los mismos valores coherentes
+    if (movimientoRelacionado) {
+      // Asegurar que el movimiento relacionado tenga la forma de pago opuesta correcta
+      const formaPagoRelacionado = nuevaFormaPagoOpuesta
+      
+      const datosRelacionados = {
+        monto: nuevoMonto, // Mismo monto
+        forma_pago: formaPagoRelacionado, // Forma de pago opuesta
+        descripcion: descripcionBase, // Misma descripción
+        fecha: nuevaFecha // Misma fecha
+      }
+
+      const { data: relacionadoActualizado, error: errorRelacionado } = await supabase
+        .from('movimientos_fondo')
+        .update(datosRelacionados)
+        .eq('id', movimientoRelacionado.id)
+        .select()
+        .single()
+
+      if (errorRelacionado) {
+        // Revertir el cambio del movimiento original antes de lanzar el error
+        await supabase
+          .from('movimientos_fondo')
+          .update({
+            monto: datosAnteriores.monto,
+            forma_pago: datosAnteriores.forma_pago,
+            descripcion: datosAnteriores.descripcion,
+            fecha: datosAnteriores.fecha
+          })
+          .eq('id', movimientoOriginal.id)
+        throw new Error(`Error al actualizar movimiento relacionado: ${errorRelacionado.message}`)
+      }
+      
+      // Verificar coherencia: ambos movimientos deben tener los mismos valores (excepto tipo y forma_pago)
+      if (movimientoActualizado.monto !== relacionadoActualizado.monto ||
+          movimientoActualizado.fecha !== relacionadoActualizado.fecha ||
+          movimientoActualizado.descripcion !== relacionadoActualizado.descripcion) {
+        console.error('❌ Error de coherencia: Los movimientos relacionados no tienen valores coherentes', {
+          original: {
+            monto: movimientoActualizado.monto,
+            fecha: movimientoActualizado.fecha,
+            descripcion: movimientoActualizado.descripcion
+          },
+          relacionado: {
+            monto: relacionadoActualizado.monto,
+            fecha: relacionadoActualizado.fecha,
+            descripcion: relacionadoActualizado.descripcion
+          }
+        })
+        // Intentar corregir automáticamente
+        await supabase
+          .from('movimientos_fondo')
+          .update({
+            monto: nuevoMonto,
+            descripcion: descripcionBase,
+            fecha: nuevaFecha
+          })
+          .eq('id', movimientoRelacionado.id)
+      }
+      
+      // Verificar que la forma de pago sea opuesta
+      if (movimientoActualizado.forma_pago === relacionadoActualizado.forma_pago) {
+        console.error('❌ Error de coherencia: Ambos movimientos tienen la misma forma de pago', {
+          forma_pago_original: movimientoActualizado.forma_pago,
+          forma_pago_relacionado: relacionadoActualizado.forma_pago
+        })
+        // Corregir automáticamente
+        await supabase
+          .from('movimientos_fondo')
+          .update({
+            forma_pago: nuevaFormaPagoOpuesta
+          })
+          .eq('id', movimientoRelacionado.id)
+        
+        // Recargar el movimiento relacionado actualizado
+        const { data: relacionadoCorregido } = await supabase
+          .from('movimientos_fondo')
+          .select('*')
+          .eq('id', movimientoRelacionado.id)
+          .single()
+        
+        if (relacionadoCorregido) {
+          relacionadoActualizado.forma_pago = relacionadoCorregido.forma_pago
+        }
+      }
+
+      // Obtener datos anteriores del movimiento relacionado
+      const datosAnterioresRelacionado = {
+        id: movimientoRelacionado.id,
+        natillera_id: movimientoRelacionado.natillera_id,
+        tipo: movimientoRelacionado.tipo,
+        monto: movimientoRelacionado.monto,
+        forma_pago: movimientoRelacionado.forma_pago,
+        descripcion: movimientoRelacionado.descripcion,
+        fecha: movimientoRelacionado.fecha,
+        created_at: movimientoRelacionado.created_at,
+        updated_at: movimientoRelacionado.updated_at
+      }
+
+      // Preparar datos nuevos completos
+      const datosNuevosCompletos = {
+        ...movimientoActualizado,
+        monto_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+        fecha_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+      }
+
+      const datosNuevosRelacionadoCompletos = {
+        ...relacionadoActualizado,
+        monto_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+        fecha_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+      }
+
+      // Detectar cambios específicos
+      const cambiosDetectados = {
+        monto: datosAnteriores.monto !== nuevoMonto ? { anterior: datosAnteriores.monto, nuevo: nuevoMonto } : null,
+        forma_pago: datosAnteriores.forma_pago !== formMovimiento.value.formaPago ? { anterior: datosAnteriores.forma_pago, nuevo: formMovimiento.value.formaPago } : null,
+        descripcion: datosAnteriores.descripcion !== descripcionBase ? { anterior: datosAnteriores.descripcion, nuevo: descripcionBase } : null,
+        fecha: datosAnteriores.fecha !== nuevaFecha ? { anterior: datosAnteriores.fecha, nuevo: nuevaFecha } : null
+      }
+
+      // Registrar auditoría detallada para movimiento original
+      const descripcionCambios = Object.entries(cambiosDetectados)
+        .filter(([_, cambio]) => cambio !== null)
+        .map(([campo, cambio]) => {
+          if (campo === 'monto') return `Monto: $${cambio.anterior.toLocaleString('es-CO')} → $${cambio.nuevo.toLocaleString('es-CO')}`
+          if (campo === 'forma_pago') return `Forma de pago: ${cambio.anterior} → ${cambio.nuevo}`
+          if (campo === 'descripcion') return `Descripción: "${cambio.anterior}" → "${cambio.nuevo}"`
+          if (campo === 'fecha') return `Fecha: ${new Date(cambio.anterior).toLocaleDateString('es-CO')} → ${new Date(cambio.nuevo).toLocaleDateString('es-CO')}`
+          return `${campo}: ${cambio.anterior} → ${cambio.nuevo}`
+        })
+        .join(' | ')
+
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarActualizacion(
+          'movimientos_fondo',
+          movimientoOriginal.id,
+          `[TRANSFERENCIA - ACTUALIZACIÓN] Movimiento de salida actualizado. Cambios: ${descripcionCambios || 'Sin cambios detectados'}`,
+          datosAnteriores,
+          datosNuevosCompletos,
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            movimiento_relacionado_id: movimientoRelacionado.id,
+            cambios: cambiosDetectados,
+            descripcion_cambios: descripcionCambios,
+            monto_anterior_formateado: `$${datosAnteriores.monto.toLocaleString('es-CO')}`,
+            monto_nuevo_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+            fecha_anterior_formateada: new Date(datosAnteriores.fecha).toLocaleDateString('es-CO'),
+            fecha_nueva_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+          }
+        )
+      )
+
+      // Registrar auditoría detallada para movimiento relacionado
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarActualizacion(
+          'movimientos_fondo',
+          movimientoRelacionado.id,
+          `[TRANSFERENCIA - ACTUALIZACIÓN] Movimiento de entrada relacionado actualizado. Cambios: ${descripcionCambios || 'Sin cambios detectados'}`,
+          datosAnterioresRelacionado,
+          datosNuevosRelacionadoCompletos,
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            movimiento_relacionado_id: movimientoOriginal.id,
+            cambios: cambiosDetectados,
+            descripcion_cambios: descripcionCambios,
+            monto_anterior_formateado: `$${datosAnterioresRelacionado.monto.toLocaleString('es-CO')}`,
+            monto_nuevo_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+            fecha_anterior_formateada: new Date(datosAnterioresRelacionado.fecha).toLocaleDateString('es-CO'),
+            fecha_nueva_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+          }
+        )
+      )
+
+      notificationStore.success('Transferencia actualizada correctamente', 'Éxito')
+    } else {
+      // Si no se encontró movimiento relacionado, solo actualizar este
+      const cambiosDetectadosSolo = {
+        monto: datosAnteriores.monto !== nuevoMonto ? { anterior: datosAnteriores.monto, nuevo: nuevoMonto } : null,
+        forma_pago: datosAnteriores.forma_pago !== formMovimiento.value.formaPago ? { anterior: datosAnteriores.forma_pago, nuevo: formMovimiento.value.formaPago } : null,
+        descripcion: datosAnteriores.descripcion !== descripcionBase ? { anterior: datosAnteriores.descripcion, nuevo: descripcionBase } : null,
+        fecha: datosAnteriores.fecha !== nuevaFecha ? { anterior: datosAnteriores.fecha, nuevo: nuevaFecha } : null
+      }
+
+      const descripcionCambiosSolo = Object.entries(cambiosDetectadosSolo)
+        .filter(([_, cambio]) => cambio !== null)
+        .map(([campo, cambio]) => {
+          if (campo === 'monto') return `Monto: $${cambio.anterior.toLocaleString('es-CO')} → $${cambio.nuevo.toLocaleString('es-CO')}`
+          if (campo === 'forma_pago') return `Forma de pago: ${cambio.anterior} → ${cambio.nuevo}`
+          if (campo === 'descripcion') return `Descripción: "${cambio.anterior}" → "${cambio.nuevo}"`
+          if (campo === 'fecha') return `Fecha: ${new Date(cambio.anterior).toLocaleDateString('es-CO')} → ${new Date(cambio.nuevo).toLocaleDateString('es-CO')}`
+          return `${campo}: ${cambio.anterior} → ${cambio.nuevo}`
+        })
+        .join(' | ')
+
+      registrarAuditoriaEnSegundoPlano(
+        auditoria.registrarActualizacion(
+          'movimientos_fondo',
+          movimientoOriginal.id,
+          `[TRANSFERENCIA - ACTUALIZACIÓN] Movimiento actualizado (sin relación encontrada). Cambios: ${descripcionCambiosSolo || 'Sin cambios detectados'}`,
+          datosAnteriores,
+          {
+            ...movimientoActualizado,
+            monto_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+            fecha_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+          },
+          id.value,
+          {
+            tipo_movimiento: 'transferencia',
+            movimiento_relacionado_encontrado: false,
+            cambios: cambiosDetectadosSolo,
+            descripcion_cambios: descripcionCambiosSolo,
+            monto_anterior_formateado: `$${datosAnteriores.monto.toLocaleString('es-CO')}`,
+            monto_nuevo_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+            fecha_anterior_formateada: new Date(datosAnteriores.fecha).toLocaleDateString('es-CO'),
+            fecha_nueva_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+          }
+        )
+      )
+      notificationStore.success('Movimiento actualizado correctamente', 'Éxito')
+    }
+  } else {
+    // Si no es transferencia, solo actualizar este movimiento
+    const datosActualizados = {
+      monto: nuevoMonto,
+      forma_pago: formMovimiento.value.formaPago,
+      descripcion: formMovimiento.value.descripcion || (movimientoOriginal.tipo === 'entrada' ? 'Ingreso manual' : 'Egreso manual'),
+      fecha: nuevaFecha
+    }
+
+    const { data: movimientoActualizado, error: errorUpdate } = await supabase
+      .from('movimientos_fondo')
+      .update(datosActualizados)
+      .eq('id', movimientoOriginal.id)
+      .select()
+      .single()
+
+    if (errorUpdate) throw errorUpdate
+
+    // Detectar cambios específicos
+    const cambiosDetectadosIngresoEgreso = {
+      monto: datosAnteriores.monto !== nuevoMonto ? { anterior: datosAnteriores.monto, nuevo: nuevoMonto } : null,
+      forma_pago: datosAnteriores.forma_pago !== formMovimiento.value.formaPago ? { anterior: datosAnteriores.forma_pago, nuevo: formMovimiento.value.formaPago } : null,
+      descripcion: datosAnteriores.descripcion !== datosActualizados.descripcion ? { anterior: datosAnteriores.descripcion, nuevo: datosActualizados.descripcion } : null,
+      fecha: datosAnteriores.fecha !== nuevaFecha ? { anterior: datosAnteriores.fecha, nuevo: nuevaFecha } : null
+    }
+
+    const descripcionCambiosIngresoEgreso = Object.entries(cambiosDetectadosIngresoEgreso)
+      .filter(([_, cambio]) => cambio !== null)
+      .map(([campo, cambio]) => {
+        if (campo === 'monto') return `Monto: $${cambio.anterior.toLocaleString('es-CO')} → $${cambio.nuevo.toLocaleString('es-CO')}`
+        if (campo === 'forma_pago') return `Forma de pago: ${cambio.anterior} → ${cambio.nuevo}`
+        if (campo === 'descripcion') return `Descripción: "${cambio.anterior}" → "${cambio.nuevo}"`
+        if (campo === 'fecha') return `Fecha: ${new Date(cambio.anterior).toLocaleDateString('es-CO')} → ${new Date(cambio.nuevo).toLocaleDateString('es-CO')}`
+        return `${campo}: ${cambio.anterior} → ${cambio.nuevo}`
+      })
+      .join(' | ')
+
+    // Registrar auditoría detallada
+    registrarAuditoriaEnSegundoPlano(
+      auditoria.registrarActualizacion(
+        'movimientos_fondo',
+        movimientoOriginal.id,
+        `[${movimientoOriginal.tipo === 'entrada' ? 'INGRESO' : 'EGRESO'} - ACTUALIZACIÓN] Movimiento ${movimientoOriginal.tipo === 'entrada' ? 'de ingreso' : 'de egreso'} actualizado. Cambios: ${descripcionCambiosIngresoEgreso || 'Sin cambios detectados'}`,
+        datosAnteriores,
+        {
+          ...movimientoActualizado,
+          monto_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+          fecha_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO')
+        },
+        id.value,
+        {
+          tipo_movimiento: movimientoOriginal.tipo === 'entrada' ? 'ingreso' : 'egreso',
+          cambios: cambiosDetectadosIngresoEgreso,
+          descripcion_cambios: descripcionCambiosIngresoEgreso,
+          monto_anterior_formateado: `$${datosAnteriores.monto.toLocaleString('es-CO')}`,
+          monto_nuevo_formateado: `$${nuevoMonto.toLocaleString('es-CO')}`,
+          fecha_anterior_formateada: new Date(datosAnteriores.fecha).toLocaleDateString('es-CO'),
+          fecha_nueva_formateada: new Date(nuevaFecha).toLocaleDateString('es-CO'),
+          forma_pago_anterior: datosAnteriores.forma_pago,
+          forma_pago_nueva: formMovimiento.value.formaPago,
+          es_manual: true
+        }
+      )
+    )
+
+    notificationStore.success(`${movimientoOriginal.tipo === 'entrada' ? 'Ingreso' : 'Egreso'} actualizado correctamente`, 'Éxito')
   }
 }
 

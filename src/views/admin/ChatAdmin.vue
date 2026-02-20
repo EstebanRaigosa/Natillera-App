@@ -132,12 +132,14 @@
     </div>
 
     <!-- Modal de ticket detallado -->
-    <div
-      v-if="selectedConversation"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      @click.self="selectedConversation = null"
+    <ModalWrapper
+      :show="!!selectedConversation"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col"
+      card-max-width="56rem"
+      @close="selectedConversation = null"
     >
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         <!-- Header -->
         <div class="bg-gradient-to-r from-natillera-500 to-emerald-600 p-6 text-white flex items-center justify-between rounded-t-2xl flex-shrink-0">
           <div class="flex-1">
@@ -266,24 +268,17 @@
             </p>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal de confirmación de eliminación -->
-    <Transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+    <ModalWrapper
+      :show="showDeleteConfirm"
+      :z-index="10000"
+      overlay-class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+      card-max-width="28rem"
+      @close="cancelDelete"
     >
-      <div
-        v-if="showDeleteConfirm"
-        class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-        @click.self="cancelDelete"
-      >
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
           <!-- Header -->
           <div class="bg-gradient-to-r from-red-500 via-rose-500 to-red-600 p-4 sm:p-5 text-white">
             <div class="flex items-center gap-3">
@@ -327,9 +322,7 @@
               <span>{{ isDeleting ? 'Eliminando...' : 'Eliminar' }}</span>
             </button>
           </div>
-        </div>
-      </div>
-    </Transition>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -341,6 +334,8 @@ import { useSupportStore } from '../../stores/support'
 import { useNotificationStore } from '../../stores/notifications'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import AppBrand from '../../components/AppBrand.vue'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { ChevronRightIcon, XMarkIcon, PaperClipIcon, TrashIcon, EnvelopeIcon, DocumentIcon, PhotoIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
 import { generateShortTicketNumber, generateSupportSubject, generateSupportEmailBody } from '../../utils/ticketHelper'
 import emailjs from '@emailjs/browser'
@@ -355,6 +350,11 @@ const hasAccess = ref(false)
 const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
 const conversationToDelete = ref(null)
+
+// Bloquear scroll del body cuando las modales están abiertas
+const selectedConversationOpen = computed(() => !!selectedConversation.value)
+useBodyScrollLock(selectedConversationOpen)
+useBodyScrollLock(showDeleteConfirm)
 const replyMessage = ref('')
 const isSendingReply = ref(false)
 

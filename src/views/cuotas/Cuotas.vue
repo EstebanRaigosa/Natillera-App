@@ -5428,21 +5428,14 @@
     </ModalWrapper>
 
     <!-- Modal de Progreso de Actualización de Socio - DISEÑO ULTRA MODERNO -->
-    <Transition name="modal-fade">
-      <div v-if="modalProgreso" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <!-- Fondo con efecto glassmorphism -->
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-black/60 to-teal-900/30 backdrop-blur-xl"></div>
-        
-        <!-- Partículas decorativas flotantes -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-          <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-emerald-400 rounded-full animate-float-particle opacity-60"></div>
-          <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-green-300 rounded-full animate-float-particle-slow opacity-40" style="animation-delay: 0.5s"></div>
-          <div class="absolute bottom-1/3 left-1/3 w-2 h-2 bg-teal-400 rounded-full animate-float-particle opacity-50" style="animation-delay: 1s"></div>
-          <div class="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full animate-float-particle-slow opacity-70" style="animation-delay: 1.5s"></div>
-        </div>
-        
-        <Transition name="modal-scale" appear>
-          <div class="relative w-full max-w-sm">
+    <ModalWrapper
+      :show="modalProgreso"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative w-full max-w-sm"
+      card-max-width="24rem"
+    >
+          <div class="relative w-full">
             <!-- Tarjeta principal con efecto 3D -->
             <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
               <!-- Gradiente superior decorativo -->
@@ -5685,9 +5678,7 @@
               </div>
             </div>
           </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
@@ -6167,6 +6158,7 @@ const actividadesSeleccionadas = ref(new Set()) // IDs de actividades selecciona
 const actividadesDeLaCuotaActual = ref(new Set()) // IDs de actividades que corresponden al periodo de la cuota actual (no se pueden deseleccionar)
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
 const mostrandoAnimacionPago = ref(false) // Controla la animación de registro de pago
+useBodyScrollLock(mostrandoAnimacionPago) // Bloquear scroll durante la animación de pago
 const cuotasPrestamosPendientes = ref([]) // Cuotas de préstamos pendientes del socio
 const cuotasPrestamosDesplegableAbierto = ref(false) // Estado del desplegable de cuotas de préstamos
 const cargandoCuotasPrestamos = ref(false) // Estado de carga de cuotas de préstamos
@@ -7465,6 +7457,9 @@ function getSancionTotalCuota(cuota) {
   if (!sancionesActivas.value) return 0
   if (!cuota) return 0
   
+  // Si la cuota tiene marcado no_calcular_multa, retornar 0
+  if (cuota.no_calcular_multa) return 0
+  
   // Para cuotas en mora, usar la sanción calculada dinámicamente
   if (cuota.estado === 'mora') {
     // Si ya está calculada, usarla
@@ -7492,6 +7487,9 @@ function getSancionCuota(cuota) {
   // Si las sanciones no están activadas, retornar 0
   if (!sancionesActivas.value) return 0
   if (!cuota) return 0
+  
+  // Si la cuota tiene marcado no_calcular_multa, retornar 0
+  if (cuota.no_calcular_multa) return 0
   
   // Obtener la sanción total (sin restar pagos)
   const sancionTotal = getSancionTotalCuota(cuota)
@@ -7550,31 +7548,42 @@ function getSancionCuota(cuota) {
 }
 
 // Función auxiliar para obtener información de actividades (total y pagadas)
+// IMPORTANTE: "pagadas" usa valor_pagado_actividades de la cuota para que el monto abonado
+// a actividades se muestre en la cuota donde se pagó (aunque la actividad sea de otro periodo).
 function getActividadesInfoSocio(cuota) {
   if (!cuota || !cuota.id) return { total: 0, pagadas: 0 }
   
+  // Prioridad: lo abonado a actividades EN ESTA CUOTA (valor_pagado_actividades en BD).
+  // Así, si se paga una actividad de otro periodo en esta cuota, el monto se muestra aquí y no en la otra.
+  const pagadasEnEstaCuota = (typeof cuota.valor_pagado_actividades === 'number' || cuota.valor_pagado_actividades != null)
+    ? (parseFloat(cuota.valor_pagado_actividades) || 0)
+    : null
+
   const datos = actividadesPendientesPorSocio.value[cuota.id]
   if (typeof datos === 'number') {
-    // Estructura antigua: solo tenemos el total pendiente
-    // No podemos calcular cuánto se pagó sin consultar la BD
-    return { total: datos, pagadas: 0 }
+    return {
+      total: datos,
+      pagadas: pagadasEnEstaCuota !== null ? pagadasEnEstaCuota : 0,
+      totalOriginal: datos
+    }
   }
   
-  // Si es objeto con nueva estructura
   if (!datos) {
-    return { total: 0, pagadas: 0 }
+    return {
+      total: 0,
+      pagadas: pagadasEnEstaCuota !== null ? pagadasEnEstaCuota : 0,
+      totalOriginal: 0
+    }
   }
   
-  // Obtener el total pendiente y cuánto se pagó
   const totalPendiente = datos.total || 0
-  const totalPagado = datos.totalPagado || 0
+  const totalPagado = pagadasEnEstaCuota !== null ? pagadasEnEstaCuota : (datos.totalPagado || 0)
   
   // Calcular el total original sumando todos los valor_asignado de las actividades
   let totalOriginal = 0
   if (datos.actividades && Array.isArray(datos.actividades)) {
     totalOriginal = datos.actividades.reduce((sum, act) => sum + (parseFloat(act.valor_asignado) || 0), 0)
   }
-  // Si no hay actividades pero hay total pagado o pendiente, usar la suma como fallback
   if (totalOriginal === 0 && (totalPendiente > 0 || totalPagado > 0)) {
     totalOriginal = totalPendiente + totalPagado
   }
@@ -7586,6 +7595,9 @@ function getActividadesInfoSocio(cuota) {
 // Detecta cuando hay una sanción basándose en valor_multa o en el sobrepago
 function getSancionCuotaDetalle(cuota) {
   if (!cuota) return 0
+  
+  // Si la cuota tiene marcado no_calcular_multa, retornar 0
+  if (cuota.no_calcular_multa) return 0
   
   const valorCuota = cuota.valor_cuota || 0
   const valorPagado = cuota.valor_pagado || 0
@@ -11311,12 +11323,15 @@ async function handleRegistrarPago() {
     
     // Calcular cuánto se pagó de cada concepto según el orden de pago
     // Usar el valor_multa de la cuota actualizada si está disponible (es más preciso)
-    const valorMultaEnBD = parseFloat(cuotaActualizada?.valor_multa) || 0
-    const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
+    // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, la sanción debe ser 0
+    const tieneNoCalcularMulta = cuotaActualizada?.no_calcular_multa || cuotaSeleccionada.value?.no_calcular_multa
+    const valorMultaEnBD = tieneNoCalcularMulta ? 0 : (parseFloat(cuotaActualizada?.valor_multa) || 0)
+    const sancionTotal = tieneNoCalcularMulta ? 0 : (valorMultaEnBD > 0 ? valorMultaEnBD : sancion)
     
     // Usar los valores calculados en registrarPago para asegurar consistencia
+    // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, forzar valorSancionPagada a 0
     const valorCuotaPagada = result.valorCuotaPagado || valorCuotaPagado
-    const valorSancionPagadaCalculada = result.valorSancionPagada || valorSancionPagada
+    const valorSancionPagadaCalculada = tieneNoCalcularMulta ? 0 : (result.valorSancionPagada || valorSancionPagada)
     const valorActividadesPagadoFinal = result.valorActividadesPagado || valorActividadesPagado
     const valorCuotasPrestamosPagadoFinal = valorCuotasPrestamosPagado
     
@@ -11349,10 +11364,12 @@ async function handleRegistrarPago() {
     const seCompletoPago = !esParcialCalculado && teniaPagoParcial
     
     // Cuando se completa un pago parcial: mostrar comprobante como pago normal (total + desglose completo)
+    // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el comprobante
+    // (tieneNoCalcularMulta ya está declarado arriba)
     const actividadesPagadasAntesComprobante = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
     const valorParaComprobante = seCompletoPago ? valorPagadoAcumulado : valorPagadoEstaTransaccion
     const valorCuotaParaComprobante = seCompletoPago ? valorCuota : valorCuotaPagada
-    const valorSancionParaComprobante = seCompletoPago ? sancionTotal : valorSancionPagadaCalculada
+    const valorSancionParaComprobante = tieneNoCalcularMulta ? 0 : (seCompletoPago ? sancionTotal : valorSancionPagadaCalculada)
     // Al completar parcial: incluir actividades del 1er pago + las pagadas en este (para que aparezcan en conceptos)
     const valorActividadesParaComprobante = seCompletoPago 
       ? (actividadesPagadasAntesComprobante + (valorActividadesPagadoFinal || 0)) 
@@ -11397,9 +11414,10 @@ async function handleRegistrarPago() {
       const actividadesPagadasAntes = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
       
       // Pago 1 (anterior)
+      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el historial
       const conceptosPago1 = []
       if (valorPagadoAnterior > 0) conceptosPago1.push({ nombre: 'Cuota', valor: valorPagadoAnterior })
-      if (sancionPagadaAnterior > 0) conceptosPago1.push({ nombre: 'Sanción', valor: sancionPagadaAnterior })
+      if (!tieneNoCalcularMulta && sancionPagadaAnterior > 0) conceptosPago1.push({ nombre: 'Sanción', valor: sancionPagadaAnterior })
       if (actividadesPagadasAntes > 0) {
         // Obtener las actividades pagadas del primer pago para desglosarlas por nombre
         const datosActividadesPrimerPago = actividadesPendientesPorSocio.value[cuotaSeleccionada.value.id]
@@ -11431,14 +11449,15 @@ async function handleRegistrarPago() {
             ? new Date(cuotaSeleccionada.value.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
             : 'Anterior',
           conceptos: conceptosPago1,
-          total: valorPagadoAnterior + sancionPagadaAnterior + actividadesPagadasAntes
+          total: valorPagadoAnterior + (tieneNoCalcularMulta ? 0 : sancionPagadaAnterior) + actividadesPagadasAntes
         })
       }
       
       // Pago 2 (este)
+      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el historial
       const conceptosPago2 = []
       if (valorCuotaPagada > 0) conceptosPago2.push({ nombre: 'Cuota', valor: valorCuotaPagada })
-      if (valorSancionPagadaCalculada > 0) conceptosPago2.push({ nombre: 'Sanción', valor: valorSancionPagadaCalculada })
+      if (!tieneNoCalcularMulta && valorSancionPagadaCalculada > 0) conceptosPago2.push({ nombre: 'Sanción', valor: valorSancionPagadaCalculada })
       if (valorActividadesPagadoFinal > 0) {
         const actividadesConValor = actividadesPagadas.filter(a => {
           const valorA = (a.valor_pendiente || 0) || ((a.valor_asignado || 0) - (a.valor_pagado_anterior || 0))
@@ -11491,12 +11510,12 @@ async function handleRegistrarPago() {
       periodo: obtenerPeriodoComprobante(cuotaSeleccionada.value), // Período limpio (sin texto de ajustes)
       descripcionCuota,
       codigoComprobante, // Código único del comprobante
-      sancion: sancionTotal, // Sanción total (pagada + pendiente)
-      valorSancionPagada: valorSancionParaComprobante, // Para comprobante: total si completó, o de esta transacción
+      sancion: tieneNoCalcularMulta ? 0 : sancionTotal, // Sanción total (pagada + pendiente), 0 si no_calcular_multa está marcado
+      valorSancionPagada: valorSancionParaComprobante, // Para comprobante: total si completó, o de esta transacción (ya verifica no_calcular_multa)
       valorActividadesPagado: valorActividadesParaComprobante, // Para comprobante: total si completó, o de esta transacción
       valorCuotasPrestamosPagado: valorCuotasPrestamosParaComprobante, // Para comprobante: cuotas de préstamos pagadas
       valorCuotaPagada: valorCuotaParaComprobante, // Para comprobante: total si completó, o de esta transacción
-      tieneSancion: sancionTotal > 0, // Indica si hay sanción
+      tieneSancion: !tieneNoCalcularMulta && sancionTotal > 0, // Indica si hay sanción (verifica no_calcular_multa)
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
@@ -12688,17 +12707,23 @@ watch(modalConfirmacion, async (nuevoValor) => {
 async function reenviarComprobante(cuota) {
   // Usar el campo valor_pagado_sancion de la BD: ahí se guarda lo abonado a sanciones.
   // valor_pagado en BD = solo lo abonado a la cuota; total = valor_pagado + valor_pagado_sancion.
+  // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, la sanción debe ser 0
+  const tieneNoCalcularMulta = cuota.no_calcular_multa
   const valorCuota = parseFloat(cuota.valor_cuota) || 0
   const valorCuotaPagada = parseFloat(cuota.valor_pagado) || 0
-  const valorSancionPagada = parseFloat(cuota.valor_pagado_sancion) || 0
-  const sancion = getSancionCuotaDetalle(cuota)
-  const valorMultaEnBD = parseFloat(cuota.valor_multa) || 0
-  const sancionTotal = valorMultaEnBD > 0 ? valorMultaEnBD : sancion
+  const valorSancionPagada = tieneNoCalcularMulta ? 0 : (parseFloat(cuota.valor_pagado_sancion) || 0)
+  const sancion = tieneNoCalcularMulta ? 0 : getSancionCuotaDetalle(cuota)
+  const valorMultaEnBD = tieneNoCalcularMulta ? 0 : (parseFloat(cuota.valor_multa) || 0)
+  const sancionTotal = tieneNoCalcularMulta ? 0 : (valorMultaEnBD > 0 ? valorMultaEnBD : sancion)
+  
+  // Fuente de verdad: lo abonado a actividades EN ESTA CUOTA (valor_pagado_actividades).
+  // Así se incluyen actividades pagadas en esta cuota aunque pertenezcan a otro periodo.
+  const valorActividadesPagadoEnCuota = parseFloat(cuota.valor_pagado_actividades) || 0
   
   // Buscar actividades pagadas que corresponden al mismo periodo y quincena que esta cuota
-  // (no por fecha de pago: así la 2ª quincena no muestra actividades de la 1ª)
+  // (para desglose por nombre cuando aplica)
   let actividadesPagadas = []
-  let totalActividades = 0
+  let totalActividades = valorActividadesPagadoEnCuota
   let cuotasPrestamosPagadas = []
   let totalCuotasPrestamos = 0
   
@@ -12765,7 +12790,30 @@ async function reenviarComprobante(cuota) {
               }
             })
           
-          totalActividades = actividadesPagadas.reduce((sum, a) => sum + (a.valor_pendiente || 0), 0)
+          const totalDesdeQuery = actividadesPagadas.reduce((sum, a) => sum + (a.valor_pendiente || 0), 0)
+          // Si en esta cuota se pagó más a actividades (ej. actividad de otro periodo), añadir línea genérica
+          if (valorActividadesPagadoEnCuota > totalDesdeQuery) {
+            const diferencia = valorActividadesPagadoEnCuota - totalDesdeQuery
+            actividadesPagadas.push({
+              id: null,
+              descripcion: 'Actividades',
+              tipo: 'otro',
+              valor_pendiente: diferencia,
+              valor_asignado: diferencia,
+              valor_pagado_anterior: 0
+            })
+          }
+          totalActividades = valorActividadesPagadoEnCuota
+        } else if (valorActividadesPagadoEnCuota > 0) {
+          // Actividad(es) pagada(s) en esta cuota pero de otro periodo: mostrar una línea genérica
+          actividadesPagadas = [{
+            id: null,
+            descripcion: 'Actividades',
+            tipo: 'otro',
+            valor_pendiente: valorActividadesPagadoEnCuota,
+            valor_asignado: valorActividadesPagadoEnCuota,
+            valor_pagado_anterior: 0
+          }]
         }
         
         // Obtener cuotas de préstamos pagadas del socio
@@ -12850,10 +12898,10 @@ async function reenviarComprobante(cuota) {
     periodo: obtenerPeriodoComprobante(cuota), // Período limpio (sin texto de ajustes)
     codigoComprobante: cuota.codigo_comprobante || null, // Incluir código del comprobante
     descripcionCuota: cuota.descripcion || formatDate(cuota.fecha_limite),
-    sancion: sancionTotal, // Sanción total (pagada + pendiente)
-    valorSancionPagada, // Cuánto de sanción se pagó
+    sancion: sancionTotal, // Sanción total (pagada + pendiente), 0 si no_calcular_multa está marcado
+    valorSancionPagada, // Cuánto de sanción se pagó (ya verifica no_calcular_multa)
     valorCuotaPagada, // Cuánto de cuota se pagó
-    tieneSancion: valorSancionPagada > 0, // Indica si se pagó sanción
+    tieneSancion: !tieneNoCalcularMulta && valorSancionPagada > 0, // Indica si se pagó sanción (verifica no_calcular_multa)
     tipoPago: cuota.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
     fecha: cuota.fecha_pago 
       ? (() => {

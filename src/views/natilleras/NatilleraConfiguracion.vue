@@ -62,38 +62,28 @@
             <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-natillera-500 to-emerald-500"></div>
             <div class="relative p-5 sm:p-6 space-y-4">
               <!-- Pantalla de carga al guardar -->
-              <Teleport to="body">
-                <Transition
-                  enter-active-class="transition duration-300 ease-out"
-                  enter-from-class="opacity-0"
-                  enter-to-class="opacity-100"
-                  leave-active-class="transition duration-200 ease-in"
-                  leave-from-class="opacity-100"
-                  leave-to-class="opacity-0"
-                >
-                  <div
-                    v-if="guardandoBasica"
-                    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-                  >
-                    <div class="flex flex-col items-center gap-6 p-8 rounded-3xl bg-white/95 shadow-2xl border border-white/20 max-w-sm mx-4">
-                      <div class="relative">
-                        <div class="w-20 h-20 rounded-full border-4 border-natillera-200 border-t-natillera-500 animate-spin"></div>
-                        <div class="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
-                        <div class="absolute inset-2 w-16 h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-500 opacity-20 animate-pulse"></div>
-                      </div>
-                      <div class="text-center">
-                        <p class="text-lg font-bold text-gray-800">Guardando configuración</p>
-                        <p class="text-sm text-gray-500 mt-1">Un momento por favor...</p>
-                      </div>
-                      <div class="flex gap-1">
-                        <span class="w-2 h-2 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0ms"></span>
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 150ms"></span>
-                        <span class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 300ms"></span>
-                      </div>
+              <ModalWrapper
+                :show="guardandoBasica"
+                :z-index="100"
+                overlay-class="fixed inset-0 z-[100] flex items-center justify-center"
+                card-class="relative flex flex-col items-center gap-6 p-8 rounded-3xl bg-white/95 shadow-2xl border border-white/20 max-w-sm mx-4"
+                card-max-width="24rem"
+              >
+                    <div class="relative">
+                      <div class="w-20 h-20 rounded-full border-4 border-natillera-200 border-t-natillera-500 animate-spin"></div>
+                      <div class="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
+                      <div class="absolute inset-2 w-16 h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-500 opacity-20 animate-pulse"></div>
                     </div>
-                  </div>
-                </Transition>
-              </Teleport>
+                    <div class="text-center">
+                      <p class="text-lg font-bold text-gray-800">Guardando configuración</p>
+                      <p class="text-sm text-gray-500 mt-1">Un momento por favor...</p>
+                    </div>
+                    <div class="flex gap-1">
+                      <span class="w-2 h-2 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0ms"></span>
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 150ms"></span>
+                      <span class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 300ms"></span>
+                    </div>
+              </ModalWrapper>
 
               <!-- Tabs Configuración General: estilo pestañas que envuelven el contenido -->
               <div class="rounded-xl border-2 border-gray-200 bg-white shadow-md overflow-hidden mt-2">
@@ -1597,6 +1587,8 @@ import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
+import ModalWrapper from '../../components/ModalWrapper.vue'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { 
   ArrowLeftIcon,
   CalendarDaysIcon,
@@ -1629,6 +1621,7 @@ const usersStore = useUsersStore()
 const colaboradoresStore = useColaboradoresStore()
 const cuotasStore = useCuotasStore()
 const guardandoBasica = ref(false)
+useBodyScrollLock(guardandoBasica)
 const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
 const guardandoMensajes = ref(false)

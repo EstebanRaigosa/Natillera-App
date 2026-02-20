@@ -454,11 +454,14 @@
     </TransitionGroup>
 
     <!-- Modal Detalle Socio -->
-    <Transition name="modal-fade">
-      <div v-if="modalDetalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalle = false"></div>
-        <Transition name="modal-scale" appear>
-          <div class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      :show="!!modalDetalle"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto"
+      card-max-width="32rem"
+      @close="modalDetalle = false"
+    >
         <!-- Header del modal -->
         <div class="flex items-center gap-4 mb-6">
           <img 
@@ -666,17 +669,17 @@
             Cerrar
           </button>
         </div>
-        </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal Importar CSV -->
-    <Transition name="modal-fade">
-      <div v-if="modalImportar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalImportar"></div>
-        <Transition name="modal-scale" appear>
-          <div class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      :show="!!modalImportar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto"
+      card-max-width="32rem"
+      @close="cerrarModalImportar"
+    >
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-xl font-display font-bold text-gray-800">
             Importar Socios desde CSV
@@ -790,17 +793,17 @@
             {{ importando ? 'Importando...' : `Importar ${sociosPreview.length} socios` }}
           </button>
         </div>
-          </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal Agregar Socio -->
-    <Transition name="modal-fade">
-      <div v-if="modalAgregar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModal"></div>
-        <Transition name="modal-scale" appear>
-          <div class="card relative max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      :show="!!modalAgregar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="card relative max-w-md w-full max-h-[90vh] overflow-y-auto"
+      card-max-width="28rem"
+      @close="cerrarModal"
+    >
         <h3 class="text-xl font-display font-bold text-gray-800 mb-6">
           {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
         </h3>
@@ -1112,17 +1115,18 @@
             </button>
           </div>
         </form>
-        </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal Cuotas del Socio por Mes -->
-    <Transition name="modal-fade">
-      <div v-if="modalCuotasSocio" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalCuotasSocio"></div>
-        <Transition name="modal-scale" appear>
-          <div class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200">
+    <ModalWrapper
+      :show="!!modalCuotasSocio"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="42rem"
+      @close="cerrarModalCuotasSocio"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0 z-10">
           <!-- Efectos decorativos -->
@@ -1825,17 +1829,18 @@
             Cerrar
           </button>
         </div>
-          </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal de confirmación para eliminar socio -->
-    <Transition name="modal-fade">
-      <div v-if="socioAEliminar" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="socioAEliminar = null"></div>
-        <Transition name="modal-scale" appear>
-          <div class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-red-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!socioAEliminar"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-red-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="socioAEliminar = null"
+    >
         <!-- Header con gradiente rojo -->
         <div class="bg-gradient-to-br from-red-500 via-red-600 to-rose-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
@@ -1938,27 +1943,17 @@
             <span v-else>Sí, Eliminar</span>
           </button>
         </div>
-          </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
 
     <!-- Modal de Progreso de Creación de Socio - DISEÑO ULTRA MODERNO -->
-    <Transition name="modal-fade">
-      <div v-if="modalProgreso" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <!-- Fondo con efecto glassmorphism -->
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-black/60 to-teal-900/30 backdrop-blur-xl"></div>
-        
-        <!-- Partículas decorativas flotantes -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-          <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-emerald-400 rounded-full animate-float-particle opacity-60"></div>
-          <div class="absolute top-1/3 right-1/4 w-3 h-3 bg-green-300 rounded-full animate-float-particle-slow opacity-40" style="animation-delay: 0.5s"></div>
-          <div class="absolute bottom-1/3 left-1/3 w-2 h-2 bg-teal-400 rounded-full animate-float-particle opacity-50" style="animation-delay: 1s"></div>
-          <div class="absolute top-1/2 right-1/3 w-1.5 h-1.5 bg-emerald-300 rounded-full animate-float-particle-slow opacity-70" style="animation-delay: 1.5s"></div>
-        </div>
-        
-        <Transition name="modal-scale" appear>
-          <div class="relative w-full max-w-sm">
+    <ModalWrapper
+      :show="modalProgreso"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative w-full max-w-sm"
+      card-max-width="24rem"
+    >
+          <div class="relative w-full">
             <!-- Tarjeta principal con efecto 3D -->
             <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
               <!-- Gradiente superior decorativo -->
@@ -2200,9 +2195,7 @@
               </div>
             </div>
           </div>
-        </Transition>
-      </div>
-    </Transition>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -2217,6 +2210,7 @@ import { useNotificationStore } from '../../stores/notifications'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
@@ -2295,6 +2289,7 @@ const cuotasSocio = ref([])
 const loadingDetalle = ref(false)
 const busqueda = ref('')
 const socioAEliminar = ref(null)
+useBodyScrollLock(computed(() => !!socioAEliminar.value))
 const guardando = ref(false)
 const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga

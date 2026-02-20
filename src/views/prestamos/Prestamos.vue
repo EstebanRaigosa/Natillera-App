@@ -304,9 +304,14 @@
     </div>
 
     <!-- Modal Nuevo Préstamo -->
-    <div v-if="modalNuevoPrestamo" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalNuevoPrestamo = false"></div>
-      <div class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!modalNuevoPrestamo"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="32rem"
+      @close="modalNuevoPrestamo = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -861,6 +866,18 @@
                 </div>
               </template>
             </div>
+            
+            <!-- Botón Compartir por WhatsApp -->
+            <div v-if="socioSeleccionado" class="pt-3 border-t border-gray-200">
+              <button
+                type="button"
+                @click="abrirModalCompartirPrestamoWhatsApp"
+                class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/25"
+              >
+                <ChatBubbleLeftIcon class="w-5 h-5" />
+                Compartir información por WhatsApp
+              </button>
+            </div>
           </div>
           </form>
         </div>
@@ -885,13 +902,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Abono -->
-    <div v-if="modalAbono" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="cerrarModalAbono"></div>
-      <div class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!modalAbono"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="cerrarModalAbono"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1089,13 +1110,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Comprobante de Abono -->
-    <div v-if="modalComprobanteAbono && comprobanteAbono" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalComprobanteAbono = false"></div>
-      <div class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!(modalComprobanteAbono && comprobanteAbono)"
+      :z-index="70"
+      overlay-class="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="modalComprobanteAbono = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1252,13 +1277,17 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Editar Abono -->
-    <div v-if="modalEditarAbono && abonoAEditar" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="modalEditarAbono = false; abonoAEditar = null"></div>
-      <div class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!(modalEditarAbono && abonoAEditar)"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="32rem"
+      @close="modalEditarAbono = false; abonoAEditar = null"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-5 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl"></div>
@@ -1395,13 +1424,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Refinanciar Préstamo -->
-    <div v-if="modalRefinanciar" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="cerrarModalRefinanciar"></div>
-      <div class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!modalRefinanciar"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="32rem"
+      @close="cerrarModalRefinanciar"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -1683,13 +1716,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Detalle Préstamo -->
-    <div v-if="modalDetalle" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalDetalle = false"></div>
-      <div class="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!modalDetalle"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="48rem"
+      @close="modalDetalle = false"
+    >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -2504,13 +2541,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal Compartir Préstamo por WhatsApp -->
-    <div v-if="modalCompartirPrestamo" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="modalCompartirPrestamo = false"></div>
-      <div class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+    <ModalWrapper
+      :show="!!modalCompartirPrestamo"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="modalCompartirPrestamo = false"
+    >
         <!-- Header -->
         <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
@@ -2645,13 +2686,216 @@
             Cerrar
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
+
+    <!-- Modal Compartir Préstamo Nuevo por WhatsApp -->
+    <ModalWrapper
+      :show="!!modalCompartirPrestamoNuevo"
+      :z-index="60"
+      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="modalCompartirPrestamoNuevo = false"
+    >
+        <!-- Header -->
+        <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
+          <div class="relative z-10 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+                <ChatBubbleLeftIcon class="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 class="text-xl font-display font-bold">
+                  Compartir Información del Préstamo
+                </h3>
+                <p class="text-white/90 text-xs">{{ socioSeleccionado?.socio?.nombre }}</p>
+              </div>
+            </div>
+            <button 
+              @click="modalCompartirPrestamoNuevo = false"
+              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            >
+              <XMarkIcon class="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido con scroll -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          <!-- Información del préstamo para compartir -->
+          <div 
+            ref="prestamoNuevoRef"
+            class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 space-y-4"
+          >
+            <div class="text-center mb-4">
+              <h4 class="text-2xl font-bold text-gray-800 mb-2">Información del Préstamo</h4>
+              <p class="text-sm text-gray-600">{{ socioSeleccionado?.socio?.nombre }}</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Monto del préstamo</p>
+                <p class="font-bold text-lg text-gray-800">${{ formatMoney(formPrestamo.monto) }}</p>
+              </div>
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Interés mensual</p>
+                <p class="font-bold text-lg text-blue-600">{{ formPrestamo.interes }}%</p>
+              </div>
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Número de cuotas</p>
+                <p class="font-bold text-lg text-gray-800">{{ formPrestamo.numero_cuotas || 1 }}</p>
+              </div>
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Valor de la cuota</p>
+                <p class="font-bold text-lg text-purple-600">${{ formatMoney(cuotaMensual) }}</p>
+              </div>
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Valor a entregar</p>
+                <p class="font-bold text-lg text-emerald-600">${{ formatMoney(valorAEntregarAlSocio) }}</p>
+              </div>
+              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
+                <p class="text-xs text-gray-500 mb-1">Valor total a pagar</p>
+                <p class="font-bold text-lg text-orange-600">${{ formatMoney(montoAPagar) }}</p>
+              </div>
+            </div>
+            
+            <div v-if="mostrarInteresAnticipado" class="bg-white/70 rounded-lg p-3 border border-orange-200 mt-4">
+              <p class="text-xs text-gray-500 mb-1">Interés cobrado al inicio</p>
+              <p class="font-bold text-lg text-orange-600">${{ formatMoney(interesTotal) }}</p>
+            </div>
+          </div>
+
+          <!-- Selector de contacto -->
+          <div class="space-y-3">
+            <label class="block text-sm font-semibold text-gray-700">Seleccionar contacto para enviar</label>
+            <div class="space-y-2">
+              <!-- Opción: Socio del préstamo -->
+              <button
+                v-if="socioSeleccionado?.socio?.telefono"
+                type="button"
+                @click="contactoSeleccionadoWhatsApp = { nombre: socioSeleccionado.socio.nombre, telefono: socioSeleccionado.socio.telefono }"
+                :class="[
+                  'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
+                  contactoSeleccionadoWhatsApp?.telefono === socioSeleccionado.socio.telefono
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                ]"
+              >
+                <img 
+                  :src="getAvatarUrl(socioSeleccionado.socio.nombre, socioSeleccionado.socio.avatar_seed, socioSeleccionado.socio.avatar_style)"
+                  :alt="socioSeleccionado.socio.nombre"
+                  class="w-12 h-12 rounded-xl border-2 border-gray-200 flex-shrink-0 object-cover"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-gray-800">{{ socioSeleccionado.socio.nombre }}</p>
+                  <p class="text-sm text-gray-500">{{ socioSeleccionado.socio.telefono }}</p>
+                </div>
+                <div v-if="contactoSeleccionadoWhatsApp?.telefono === socioSeleccionado.socio.telefono" class="flex-shrink-0">
+                  <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
+
+              <!-- Opción: Otro contacto (input manual) -->
+              <div class="space-y-2">
+                <button
+                  type="button"
+                  @click="contactoSeleccionadoWhatsApp = { nombre: '', telefono: '' }"
+                  :class="[
+                    'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
+                    contactoSeleccionadoWhatsApp && !contactoSeleccionadoWhatsApp.telefono
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  ]"
+                >
+                  <div class="w-12 h-12 rounded-xl bg-gray-100 border-2 border-gray-200 flex items-center justify-center flex-shrink-0">
+                    <UserIcon class="w-6 h-6 text-gray-400" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-800">Otro contacto</p>
+                    <p class="text-sm text-gray-500">Ingresar número manualmente</p>
+                  </div>
+                </button>
+
+                <!-- Input para otro contacto -->
+                <div v-if="contactoSeleccionadoWhatsApp && !contactoSeleccionadoWhatsApp.telefono" class="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre del contacto</label>
+                    <input
+                      v-model="contactoSeleccionadoWhatsApp.nombre"
+                      type="text"
+                      placeholder="Ej: Juan Pérez"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Número de teléfono *</label>
+                    <input
+                      v-model="contactoSeleccionadoWhatsApp.telefono"
+                      type="tel"
+                      placeholder="Ej: 3001234567"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer fijo con botones -->
+        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
+          <div class="space-y-3">
+            <button 
+              @click="descargarPrestamoNuevo"
+              :disabled="generandoImagenPrestamoNuevo"
+              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowDownTrayIcon class="w-5 h-5" />
+              {{ generandoImagenPrestamoNuevo ? 'Generando...' : 'Descargar Imagen' }}
+            </button>
+
+            <button 
+              @click="compartirPrestamoNuevoWhatsApp"
+              :disabled="generandoImagenPrestamoNuevo || !contactoSeleccionadoWhatsApp?.telefono"
+              :class="[
+                'w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
+                (generandoImagenPrestamoNuevo || !contactoSeleccionadoWhatsApp?.telefono)
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              ]"
+              :title="!contactoSeleccionadoWhatsApp?.telefono ? 'Selecciona o ingresa un número de teléfono' : ''"
+            >
+              <ChatBubbleLeftIcon class="w-5 h-5" />
+              <span v-if="generandoImagenPrestamoNuevo">Preparando...</span>
+              <span v-else-if="!contactoSeleccionadoWhatsApp?.telefono">📲 Selecciona un contacto</span>
+              <span v-else>📲 Compartir por WhatsApp</span>
+            </button>
+          </div>
+
+          <button 
+            @click="modalCompartirPrestamoNuevo = false"
+            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          >
+            Cerrar
+          </button>
+        </div>
+      </ModalWrapper>
 
     <!-- Modal de confirmación para eliminar abono -->
-    <div v-if="abonoAEliminar" class="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="abonoAEliminar = null"></div>
-      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!abonoAEliminar"
+      :z-index="70"
+      overlay-class="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="abonoAEliminar = null"
+    >
         <!-- Efectos decorativos -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-amber-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-amber-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2715,13 +2959,17 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
 
     <!-- Modal de confirmación para eliminar préstamo -->
-    <div v-if="prestamoAEliminar" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="prestamoAEliminar = null"></div>
-      <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden">
+    <ModalWrapper
+      :show="!!prestamoAEliminar"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
+      card-max-width="28rem"
+      @close="prestamoAEliminar = null"
+    >
         <!-- Efectos decorativos -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2787,8 +3035,7 @@
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
   </div>
 </template>
 
@@ -2820,6 +3067,7 @@ import DateInput from '../../components/DateInput.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import ModalWrapper from '../../components/ModalWrapper.vue'
 
 /** Devuelve mes (1-12), anio y quincena (1 o 2) desde fecha_proyectada para plan_pagos_prestamo */
 function periodoDesdeFechaProyectada(fechaProyectada) {
@@ -2864,9 +3112,14 @@ const prestamoAEliminar = ref(null)
 const abonoAEliminar = ref(null)
 const abonoAEditar = ref(null)
 const modalCompartirPrestamo = ref(false)
+const modalCompartirPrestamoNuevo = ref(false)
+const modalComprobanteAbono = ref(false)
 const generandoImagenPrestamo = ref(false)
+const generandoImagenPrestamoNuevo = ref(false)
+const contactoSeleccionadoWhatsApp = ref(null)
 const historialRefinanciaciones = ref([])
 const prestamoRef = ref(null)
+const prestamoNuevoRef = ref(null)
 const prestamosMoraExpandidos = ref(new Set())
 
 // Bloquear scroll del body cuando las modales están abiertas
@@ -2876,6 +3129,10 @@ useBodyScrollLock(modalEditarAbono)
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalRefinanciar)
 useBodyScrollLock(modalCompartirPrestamo)
+useBodyScrollLock(modalCompartirPrestamoNuevo)
+useBodyScrollLock(modalComprobanteAbono)
+useBodyScrollLock(computed(() => !!prestamoAEliminar.value))
+useBodyScrollLock(computed(() => !!abonoAEliminar.value))
 
 // Función para toggle del desplegable de información de mora
 const toggleMoraInfo = (prestamoId) => {
@@ -2921,7 +3178,6 @@ const formRefinanciar = reactive({
 const valorAbonoFormateado = ref('')
 const valorAbonoEditadoFormateado = ref('')
 const inputValorAbonoRef = ref(null)
-const modalComprobanteAbono = ref(false)
 const comprobanteAbono = ref(null)
 const generandoImagenComprobante = ref(false)
 const comprobanteRef = ref(null)
@@ -7074,6 +7330,541 @@ async function compartirPrestamoWhatsApp() {
     }
   } finally {
     generandoImagenPrestamo.value = false
+  }
+}
+
+// Función para abrir el modal de compartir préstamo nuevo
+function abrirModalCompartirPrestamoWhatsApp() {
+  if (!socioSeleccionado.value) {
+    notificationStore.error('Debes seleccionar un socio primero', 'Error')
+    return
+  }
+  
+  // Inicializar contacto seleccionado con el socio si tiene teléfono
+  if (socioSeleccionado.value.socio?.telefono) {
+    contactoSeleccionadoWhatsApp.value = {
+      nombre: socioSeleccionado.value.socio.nombre,
+      telefono: socioSeleccionado.value.socio.telefono
+    }
+  } else {
+    contactoSeleccionadoWhatsApp.value = { nombre: '', telefono: '' }
+  }
+  
+  modalCompartirPrestamoNuevo.value = true
+}
+
+// Función para generar imagen del préstamo nuevo
+function generarImagenPrestamoNuevo() {
+  return new Promise((resolve) => {
+    try {
+      if (!socioSeleccionado.value || !formPrestamo.monto) {
+        resolve(null)
+        return
+      }
+
+      const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
+      const montoPrestamo = parseFloat(formPrestamo.monto) || 0
+      const interesMensual = parseFloat(formPrestamo.interes) || 0
+      const numeroCuotas = parseInt(formPrestamo.numero_cuotas) || 1
+      
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      const width = 480
+      const height = 750
+      const scale = 2
+      
+      canvas.width = width * scale
+      canvas.height = height * scale
+      ctx.scale(scale, scale)
+      
+      // Agregar roundRect si no existe
+      if (!ctx.roundRect) {
+        ctx.roundRect = function(x, y, w, h, r) {
+          if (w < 2 * r) r = w / 2
+          if (h < 2 * r) r = h / 2
+          this.beginPath()
+          this.moveTo(x + r, y)
+          this.arcTo(x + w, y, x + w, y + h, r)
+          this.arcTo(x + w, y + h, x, y + h, r)
+          this.arcTo(x, y + h, x, y, r)
+          this.arcTo(x, y, x + w, y, r)
+          this.closePath()
+        }
+      }
+      
+      // === FONDO DEGRADADO MODERNO ===
+      const bgGradient = ctx.createLinearGradient(0, 0, width, height)
+      bgGradient.addColorStop(0, '#0f172a')
+      bgGradient.addColorStop(0.5, '#1e293b')
+      bgGradient.addColorStop(1, '#0f172a')
+      ctx.fillStyle = bgGradient
+      ctx.fillRect(0, 0, width, height)
+      
+      // === EFECTOS DE LUZ ===
+      const light1 = ctx.createRadialGradient(width - 80, 100, 0, width - 80, 100, 200)
+      light1.addColorStop(0, 'rgba(16, 185, 129, 0.3)')
+      light1.addColorStop(1, 'transparent')
+      ctx.fillStyle = light1
+      ctx.fillRect(0, 0, width, height)
+      
+      const light2 = ctx.createRadialGradient(80, height - 150, 0, 80, height - 150, 180)
+      light2.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
+      light2.addColorStop(1, 'transparent')
+      ctx.fillStyle = light2
+      ctx.fillRect(0, 0, width, height)
+      
+      // === HEADER ===
+      ctx.fillStyle = 'rgba(255,255,255,0.95)'
+      ctx.font = 'bold 28px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('Información del Préstamo', 32, 52)
+      
+      ctx.font = '12px Arial'
+      ctx.textAlign = 'right'
+      ctx.strokeStyle = 'rgba(0,0,0,1)'
+      ctx.lineWidth = 0.7
+      ctx.lineJoin = 'round'
+      ctx.miterLimit = 2
+      ctx.strokeText('natillerapp', width - 32, 52)
+      ctx.fillStyle = 'rgba(255,255,255,0.6)'
+      ctx.fillText('natillerapp', width - 32, 52)
+      
+      // Línea decorativa
+      const lineGradient = ctx.createLinearGradient(32, 0, width - 32, 0)
+      lineGradient.addColorStop(0, 'transparent')
+      lineGradient.addColorStop(0.3, '#10b981')
+      lineGradient.addColorStop(0.5, '#06b6d4')
+      lineGradient.addColorStop(0.7, '#10b981')
+      lineGradient.addColorStop(1, 'transparent')
+      ctx.strokeStyle = lineGradient
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(32, 72)
+      ctx.lineTo(width - 32, 72)
+      ctx.stroke()
+      
+      // === TARJETA GLASSMORPHISM ===
+      const cardY = 95
+      const cardHeight = 540
+      const cardMargin = 24
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.98)'
+      ctx.beginPath()
+      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.1)'
+      ctx.shadowBlur = 10
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 4
+      ctx.beginPath()
+      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
+      ctx.fill()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      const cardInnerX = cardMargin + 28
+      const cardInnerWidth = width - cardMargin*2 - 56
+      const cardHalfWidth = (cardInnerWidth - 12) / 2
+      
+      // === MONTO DEL PRÉSTAMO (HERO) ===
+      ctx.fillStyle = '#64748b'
+      ctx.font = '13px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('MONTO DEL PRÉSTAMO', width/2, cardY + 50)
+      
+      const montoText = '$' + formatMoney(montoPrestamo)
+      ctx.font = 'bold 52px Arial'
+      const montoGradient = ctx.createLinearGradient(0, cardY + 55, 0, cardY + 110)
+      montoGradient.addColorStop(0, '#059669')
+      montoGradient.addColorStop(1, '#10b981')
+      ctx.fillStyle = montoGradient
+      ctx.fillText(montoText, width/2, cardY + 105)
+      
+      // Badge "NUEVO PRÉSTAMO"
+      const badgeY = cardY + 125
+      ctx.fillStyle = '#dbeafe'
+      ctx.beginPath()
+      ctx.roundRect(width/2 - 60, badgeY, 120, 32, 16)
+      ctx.fill()
+      
+      ctx.fillStyle = '#2563eb'
+      ctx.font = 'bold 13px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('NUEVO PRÉSTAMO', width/2, badgeY + 21)
+      
+      // === DETALLES EN CARDS ===
+      let detailsY = badgeY + 50
+      
+      // Card: Socio (ancho completo)
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('SOCIO', cardInnerX + 18, detailsY + 22)
+      
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 16px Arial'
+      ctx.fillText(nombreSocio, cardInnerX + 18, detailsY + 42)
+      
+      // Fila 1: Interés Mensual y Número de Cuotas
+      const row1Y = detailsY + 70
+      
+      // Card: Interés Mensual (izquierda)
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('INTERÉS', cardInnerX + 14, row1Y + 22)
+      
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 16px Arial'
+      ctx.fillText(interesMensual + '%', cardInnerX + 14, row1Y + 42)
+      
+      // Card: Número de Cuotas (derecha)
+      const cuotasX = cardInnerX + cardHalfWidth + 12
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('CUOTAS', cuotasX + 14, row1Y + 22)
+      
+      ctx.fillStyle = '#1e293b'
+      ctx.font = 'bold 16px Arial'
+      ctx.fillText(numeroCuotas.toString(), cuotasX + 14, row1Y + 42)
+      
+      // Fila 2: Valor de la Cuota y Valor a Entregar
+      const row2Y = row1Y + 70
+      
+      // Card: Valor de la Cuota (izquierda)
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('VALOR CUOTA', cardInnerX + 14, row2Y + 22)
+      
+      ctx.fillStyle = '#9333ea'
+      ctx.font = 'bold 14px Arial'
+      const valorCuotaText = '$' + formatMoney(cuotaMensual.value)
+      const maxWidthCuota = cardHalfWidth - 28
+      if (ctx.measureText(valorCuotaText).width > maxWidthCuota) {
+        ctx.font = 'bold 12px Arial'
+      }
+      ctx.fillText(valorCuotaText, cardInnerX + 14, row2Y + 42)
+      
+      // Card: Valor a Entregar (derecha)
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('A ENTREGAR', cuotasX + 14, row2Y + 22)
+      
+      ctx.fillStyle = '#059669'
+      ctx.font = 'bold 14px Arial'
+      const valorEntregarText = '$' + formatMoney(valorAEntregarAlSocio.value)
+      const maxWidthEntregar = cardHalfWidth - 28
+      if (ctx.measureText(valorEntregarText).width > maxWidthEntregar) {
+        ctx.font = 'bold 12px Arial'
+      }
+      ctx.fillText(valorEntregarText, cuotasX + 14, row2Y + 42)
+      
+      // Fila 3: Valor Total a Pagar (ancho completo)
+      const row3Y = row2Y + 70
+      
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row3Y, cardInnerWidth, 58, 14)
+      ctx.fill()
+      
+      ctx.shadowColor = 'rgba(0,0,0,0.05)'
+      ctx.shadowBlur = 4
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 2
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, row3Y, cardInnerWidth, 58, 14)
+      ctx.stroke()
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      ctx.fillStyle = '#10b981'
+      ctx.font = 'bold 10px Arial'
+      ctx.textAlign = 'left'
+      ctx.fillText('VALOR TOTAL A PAGAR', cardInnerX + 18, row3Y + 22)
+      
+      ctx.fillStyle = '#ea580c'
+      ctx.font = 'bold 16px Arial'
+      const valorTotalText = '$' + formatMoney(montoAPagar.value)
+      ctx.fillText(valorTotalText, cardInnerX + 18, row3Y + 42)
+      
+      // Fila 4: Interés Anticipado (si aplica)
+      if (mostrarInteresAnticipado.value) {
+        const row4Y = row3Y + 70
+        
+        ctx.fillStyle = '#f8fafc'
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
+        ctx.fill()
+        
+        ctx.shadowColor = 'rgba(0,0,0,0.05)'
+        ctx.shadowBlur = 4
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 2
+        ctx.strokeStyle = '#e2e8f0'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
+        ctx.stroke()
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        ctx.fillStyle = '#10b981'
+        ctx.font = 'bold 10px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('INTERÉS COBRADO AL INICIO', cardInnerX + 18, row4Y + 22)
+        
+        ctx.fillStyle = '#ea580c'
+        ctx.font = 'bold 16px Arial'
+        const interesAnticipadoText = '$' + formatMoney(interesTotal.value)
+        ctx.fillText(interesAnticipadoText, cardInnerX + 18, row4Y + 42)
+      }
+      
+      // === BOTÓN DE CONFIRMACIÓN ===
+      const btnY = cardY + cardHeight + 20
+      
+      ctx.fillStyle = 'rgba(5, 150, 105, 0.3)'
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX + 2, btnY + 2, cardInnerWidth, 52, 14)
+      ctx.fill()
+      
+      const btnGradient = ctx.createLinearGradient(cardInnerX, btnY, cardInnerX, btnY + 52)
+      btnGradient.addColorStop(0, '#059669')
+      btnGradient.addColorStop(0.5, '#10b981')
+      btnGradient.addColorStop(1, '#047857')
+      ctx.fillStyle = btnGradient
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
+      ctx.fill()
+      
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
+      ctx.stroke()
+      
+      ctx.fillStyle = 'rgba(0,0,0,0.1)'
+      ctx.font = 'bold 16px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('INFORMACIÓN DEL PRÉSTAMO', cardInnerX + cardInnerWidth/2 + 1, btnY + 34)
+      
+      ctx.fillStyle = 'white'
+      ctx.font = 'bold 16px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('INFORMACIÓN DEL PRÉSTAMO', cardInnerX + cardInnerWidth/2, btnY + 33)
+      
+      resolve(canvas)
+    } catch (e) {
+      console.error('Error generando canvas:', e)
+      resolve(null)
+    }
+  })
+}
+
+// Función para descargar imagen del préstamo nuevo
+async function descargarPrestamoNuevo() {
+  if (!socioSeleccionado.value) {
+    notificationStore.error('No hay información del préstamo disponible', 'Error')
+    return
+  }
+  
+  generandoImagenPrestamoNuevo.value = true
+  
+  try {
+    const canvas = await generarImagenPrestamoNuevo()
+    
+    if (!canvas) {
+      throw new Error('No se pudo generar el canvas')
+    }
+    
+    const dataUrl = canvas.toDataURL('image/png')
+    const link = document.createElement('a')
+    link.download = `prestamo-${socioSeleccionado.value.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
+    link.href = dataUrl
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    notificationStore.success('Imagen descargada exitosamente', 'Éxito')
+  } catch (e) {
+    console.error('Error al generar imagen:', e)
+    notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
+  } finally {
+    generandoImagenPrestamoNuevo.value = false
+  }
+}
+
+// Función para compartir préstamo nuevo por WhatsApp
+async function compartirPrestamoNuevoWhatsApp() {
+  if (!socioSeleccionado.value || !contactoSeleccionadoWhatsApp.value?.telefono) {
+    notificationStore.error('Debes seleccionar un contacto con teléfono', 'Error')
+    return
+  }
+  
+  generandoImagenPrestamoNuevo.value = true
+  
+  try {
+    const canvas = await generarImagenPrestamoNuevo()
+    if (!canvas) throw new Error('No se pudo generar la imagen')
+    
+    // Convertir canvas a blob
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+    
+    // Nombre del archivo
+    const nombreContacto = contactoSeleccionadoWhatsApp.value.nombre || 'contacto'
+    const nombreArchivo = `prestamo-${nombreContacto.replace(/\s+/g, '-')}-${Date.now()}.png`
+    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+    
+    // Crear mensaje personalizado
+    const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
+    const mensajeCompartir = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío la información del préstamo de ${nombreSocio} en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+    
+    // Verificar si el navegador soporta Web Share API con archivos
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      await navigator.share({
+        files: [archivo],
+        title: `Información del Préstamo - ${nombreSocio}`,
+        text: mensajeCompartir
+      })
+      
+      notificationStore.success('Información compartida exitosamente', 'Éxito')
+    } else {
+      // Fallback: descargar y abrir WhatsApp con mensaje
+      const link = document.createElement('a')
+      link.download = nombreArchivo
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+      
+      // Esperar un poco y abrir WhatsApp
+      setTimeout(() => {
+        const telefono = contactoSeleccionadoWhatsApp.value.telefono.replace(/\D/g, '')
+        if (telefono) {
+          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensajeCompartir)}`, '_blank')
+        }
+      }, 500)
+      
+      notificationStore.info('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.', 'Descargado')
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error('Error compartiendo:', e)
+      // Fallback: solo abrir WhatsApp con texto
+      const telefono = contactoSeleccionadoWhatsApp.value.telefono?.replace(/\D/g, '')
+      if (telefono) {
+        const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
+        const mensaje = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío la información del préstamo de ${nombreSocio} en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+      }
+    }
+  } finally {
+    generandoImagenPrestamoNuevo.value = false
   }
 }
 </script>

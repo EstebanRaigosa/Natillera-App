@@ -1560,9 +1560,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
         throw new Error('No se pudo obtener la natillera asociada a la cuota')
       }
 
+      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, la multa debe ser siempre 0
+      const tieneNoCalcularMulta = cuotaActual.no_calcular_multa || false
+      
       // Obtener configuración de sanciones y calcular sanción dinámica si la cuota está en mora
-      let sancionDinamica = cuotaActual.valor_multa || 0
-      if (cuotaActual.estado === 'mora') {
+      // NO calcular si tiene no_calcular_multa marcado
+      let sancionDinamica = tieneNoCalcularMulta ? 0 : (cuotaActual.valor_multa || 0)
+      if (cuotaActual.estado === 'mora' && !tieneNoCalcularMulta) {
         const { data: natillera } = await supabase
           .from('natilleras')
           .select('reglas_multas, periodicidad')
@@ -1726,10 +1730,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Para multa escalonada: si la cuota ya tiene valor_multa guardado, usarlo para no recalcular
       // (al pagar la primera cuota en mora, la lista de mora se reduce y la segunda quedaría como "primera" = sanción 1; pero su valor_multa ya es 2)
       // IMPORTANTE: sancionAPagar debe ser la sanción PENDIENTE (total - ya pagado), no el total
-      const valorMultaGuardado = parseFloat(cuotaActual.valor_multa) || 0
-      const sancionPagadaAnterior = parseFloat(cuotaActual.valor_pagado_sancion) || 0
-      const sancionTotal = valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0)
-      const sancionAPagar = Math.max(0, sancionTotal - sancionPagadaAnterior)
+      // IMPORTANTE: Si tiene no_calcular_multa marcado, la sanción debe ser siempre 0
+      const valorMultaGuardado = tieneNoCalcularMulta ? 0 : (parseFloat(cuotaActual.valor_multa) || 0)
+      const sancionPagadaAnterior = tieneNoCalcularMulta ? 0 : (parseFloat(cuotaActual.valor_pagado_sancion) || 0)
+      const sancionTotal = tieneNoCalcularMulta ? 0 : (valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0))
+      const sancionAPagar = tieneNoCalcularMulta ? 0 : Math.max(0, sancionTotal - sancionPagadaAnterior)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
       const valorActividadesPendientes = parseFloat(valorActividades) || 0
@@ -1942,26 +1947,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
       
       // Actualizar valor_multa (y desglose base/intereses) en la BD
-      // IMPORTANTE: Solo quitar la sanción cuando la cuota esté completamente pagada
-      if (nuevaEstado === 'pagada' && sancionQuitada) {
+      // IMPORTANTE: Si tiene no_calcular_multa marcado, siempre poner la multa en 0
+      if (tieneNoCalcularMulta) {
+        // Si tiene no_calcular_multa marcado, forzar todos los valores de multa a 0
         updateData.valor_multa = 0
         updateData.valor_multa_base = 0
         updateData.valor_multa_intereses = 0
-      } else if (sancionQuitada && sancionAPagar > 0) {
-        // Se pagó la sanción pero la cuota queda parcial: mantener el valor_multa original
-        // para que no se recalcule cuando se llame a calcularSancionesTotales
-        // Usar el valor original de la sanción, no 0
-        updateData.valor_multa = sancionAPagar
-      } else if (sancionDinamica > 0) {
-        // Si hay sanción dinámica calculada y no se pagó, usarla
-        updateData.valor_multa = sancionDinamica
-      } else if (cuotaActual.valor_multa && cuotaActual.valor_multa > 0) {
-        // Si no hay sanción dinámica pero ya había una guardada, mantenerla
-        updateData.valor_multa = cuotaActual.valor_multa
+        updateData.valor_pagado_sancion = 0
+      } else {
+        // Solo quitar la sanción cuando la cuota esté completamente pagada
+        if (nuevaEstado === 'pagada' && sancionQuitada) {
+          updateData.valor_multa = 0
+          updateData.valor_multa_base = 0
+          updateData.valor_multa_intereses = 0
+        } else if (sancionQuitada && sancionAPagar > 0) {
+          // Se pagó la sanción pero la cuota queda parcial: mantener el valor_multa original
+          // para que no se recalcule cuando se llame a calcularSancionesTotales
+          // Usar el valor original de la sanción, no 0
+          updateData.valor_multa = sancionAPagar
+        } else if (sancionDinamica > 0) {
+          // Si hay sanción dinámica calculada y no se pagó, usarla
+          updateData.valor_multa = sancionDinamica
+        } else if (cuotaActual.valor_multa && cuotaActual.valor_multa > 0) {
+          // Si no hay sanción dinámica pero ya había una guardada, mantenerla
+          updateData.valor_multa = cuotaActual.valor_multa
+        }
+        
+        // Guardar cuánto se abonó a sanción (campo valor_pagado_sancion)
+        updateData.valor_pagado_sancion = sancionPagadaAnterior + valorSancionPagada
       }
-      
-      // Guardar cuánto se abonó a sanción (campo valor_pagado_sancion)
-      updateData.valor_pagado_sancion = sancionPagadaAnterior + valorSancionPagada
       
       // Guardar cuánto se abonó a actividades en esta cuota (campo valor_pagado_actividades)
       const valorPagadoActividadesAnterior = parseFloat(cuotaActual.valor_pagado_actividades) || 0
@@ -2093,8 +2107,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Registrar sanción en utilidades_clasificadas si se pagó una sanción
       // El valor de la sanción pagada es el que se calculó anteriormente (valorSancionPagada)
       // Si se pagó la sanción (sancionQuitada = true), registrar en utilidades
-      const debeRegistrarUtilidad = sancionQuitada && valorSancionPagada > 0
-      const valorMultaPagada = valorSancionPagada
+      // IMPORTANTE: No registrar si tiene no_calcular_multa marcado
+      const debeRegistrarUtilidad = !tieneNoCalcularMulta && sancionQuitada && valorSancionPagada > 0
+      const valorMultaPagada = tieneNoCalcularMulta ? 0 : valorSancionPagada
 
       console.log('🔍 [UTILIDADES] Verificando registro de sanción:', {
         nuevaEstado,
@@ -2311,10 +2326,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       ))
 
+      // IMPORTANTE: Si tiene no_calcular_multa marcado, asegurar que valorSancionPagada sea 0 en el retorno
+      const valorSancionPagadaFinal = tieneNoCalcularMulta ? 0 : valorSancionPagada
+      
       return { 
         success: true, 
         data,
-        valorSancionPagada,
+        valorSancionPagada: valorSancionPagadaFinal,
         valorActividadesPagado,
         valorCuotaPagado
       }
