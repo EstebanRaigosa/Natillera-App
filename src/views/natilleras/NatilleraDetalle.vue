@@ -111,6 +111,18 @@
                 </span>
               </div>
             </div>
+            <!-- Recordatorio personal (solo raigo.16@gmail.com): en móvil icono circular, en desktop pill con texto -->
+            <button
+              v-if="puedeUsarRecordatorio"
+              type="button"
+              @click="abrirModalRecordatorio"
+              class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-amber-700 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 border border-amber-200 transition-colors touch-manipulation"
+              title="Recordatorios"
+              aria-label="Recordatorios"
+            >
+              <BellAlertIcon class="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span class="text-xs font-semibold hidden sm:inline">Recordatorio</span>
+            </button>
           </div>
           <p class="text-gray-500 text-sm mb-4 mt-1 sm:mb-5">
             {{ rangoMesesCorto }}
@@ -2411,6 +2423,120 @@
           </div>
         </div>
       </ModalWrapper>
+    <!-- Modal Recordatorio personal (solo raigo.16@gmail.com). z-index alto para verse en móvil encima de otros modales. -->
+    <ModalWrapper
+      v-if="puedeUsarRecordatorio"
+      :show="showRecordatorioModal"
+      :z-index="9998"
+      align="bottom"
+      overlay-class="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] max-h-[85dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-max-width="28rem"
+      @close="cerrarRecordatorioModal"
+    >
+      <div class="bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 p-5 text-white relative overflow-hidden flex-shrink-0">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-xl"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+              <BellAlertIcon class="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 class="text-lg font-bold">
+                {{ editandoRecordatorio ? 'Configurar recordatorio' : 'Tus recordatorios' }}
+              </h3>
+              <p class="text-white/90 text-sm">
+                {{ editandoRecordatorio ? 'Escribe la nota que quieres ver al entrar a cada natillera' : 'Te mostramos estos recordatorios cada vez que entras a una natillera' }}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="cerrarRecordatorioModal"
+            class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          >
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      <div class="overflow-y-auto flex-1 min-h-0 p-5">
+        <!-- Modo ver lista de recordatorios -->
+        <template v-if="!editandoRecordatorio">
+          <div v-if="loadingRecordatorios" class="py-4 text-center text-gray-500 text-sm">Cargando recordatorios...</div>
+          <div v-else-if="listRecordatorios.length > 0" class="space-y-3">
+            <div
+              v-for="(item, idx) in listRecordatorios"
+              :key="item.id"
+              class="flex gap-2 items-start rounded-xl bg-amber-50 border border-amber-200 p-3"
+            >
+              <p class="flex-1 min-w-0 text-gray-700 whitespace-pre-wrap text-sm">{{ item.texto }}</p>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <button
+                  type="button"
+                  @click="abrirRecordatorioParaEditar(idx)"
+                  class="p-2 text-amber-600 hover:bg-amber-200 rounded-lg transition-colors"
+                  title="Editar"
+                >
+                  <PencilSquareIcon class="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  @click="eliminarRecordatorio(item.id)"
+                  class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                  title="Eliminar"
+                >
+                  <TrashIcon class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <p v-else class="text-gray-500 italic text-sm">Aún no tienes recordatorios. Haz clic en "Agregar recordatorio" para crear uno.</p>
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button
+              type="button"
+              @click="cerrarRecordatorioModal"
+              class="px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+            >
+              Entendido
+            </button>
+            <button
+              type="button"
+              @click="abrirRecordatorioParaEditar(-1)"
+              class="px-4 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-xl border border-amber-200 transition-colors flex items-center gap-2"
+            >
+              <PlusIcon class="w-4 h-4" />
+              Agregar recordatorio
+            </button>
+          </div>
+        </template>
+        <!-- Modo editar / nuevo recordatorio -->
+        <template v-else>
+          <textarea
+            v-model="recordatorioEdicion"
+            rows="4"
+            class="w-full rounded-xl border border-gray-300 p-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
+            placeholder="Escribe aquí tu nota o recordatorio..."
+          />
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button
+              type="button"
+              @click="guardarRecordatorio"
+              class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+            >
+              <CheckCircleIcon class="w-4 h-4" />
+              Guardar
+            </button>
+            <button
+              type="button"
+              @click="cancelarEdicionRecordatorio"
+              class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </template>
+      </div>
+    </ModalWrapper>
     <!-- Modal Desglose Recaudación -->
     <ModalWrapper
       :show="modalDesgloseRecaudacion"
@@ -2949,7 +3075,10 @@ import {
   CalculatorIcon,
   Squares2X2Icon,
   DocumentCheckIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  BellAlertIcon,
+  PencilSquareIcon,
+  TrashIcon
 } from '@heroicons/vue/24/outline'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -3018,6 +3147,15 @@ const configSancionesActiva = ref(false)
 const prestamosVencidos = ref([]) // Préstamos con cuotas vencidas agrupadas por socio
 const modalCierreNatillera = ref(false) // Modal de cierre de natillera
 const modalSinSocios = ref(false) // Modal para cuando no hay socios
+// Recordatorio personal (solo usuario raigo.16@gmail.com) — persistidos en Supabase
+const RECORDATORIO_EMAIL = 'raigo.16@gmail.com'
+const RECORDATORIO_STORAGE_KEY_LEGACY = 'natillerapp_recordatorio' // migración desde localStorage
+const showRecordatorioModal = ref(false)
+const editandoRecordatorio = ref(false)
+const recordatorioEdicion = ref('')
+const recordatorioEdicionId = ref(null) // uuid al editar, null al crear
+const listRecordatorios = ref([]) // { id, texto }[] desde Supabase
+const loadingRecordatorios = ref(false)
 const datosCierre = ref([]) // Datos de cierre para cada socio
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
@@ -3048,6 +3186,7 @@ useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalSociosEnMora)
 useBodyScrollLock(modalCierreNatillera)
 useBodyScrollLock(modalSinSocios)
+useBodyScrollLock(showRecordatorioModal)
 useBodyScrollLock(modalDesgloseRecaudacion)
 useBodyScrollLock(modalUtilidadesDesglose)
 // Obtener el ID de la natillera
@@ -3249,6 +3388,113 @@ const esAdmin = computed(() => {
   if (!usuarioAutenticado.value || !natillera.value) return false
   return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
 })
+// Recordatorio personal: solo disponible para raigo.16@gmail.com
+const puedeUsarRecordatorio = computed(() => authStore.userEmail === RECORDATORIO_EMAIL)
+
+async function fetchRecordatorios() {
+  const user = usuarioAutenticado.value || authStore.user
+  const userId = user?.id
+  if (!userId) return
+  loadingRecordatorios.value = true
+  try {
+    const { data, error } = await supabase
+      .from('recordatorios_usuario')
+      .select('id, texto, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    listRecordatorios.value = (data || []).map(r => ({ id: r.id, texto: r.texto }))
+    // Migrar datos antiguos de localStorage una sola vez
+    if (listRecordatorios.value.length === 0 && typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(RECORDATORIO_STORAGE_KEY_LEGACY)
+      if (raw?.trim()) {
+        const textos = raw.startsWith('[') ? (() => { try { return JSON.parse(raw).filter(Boolean) } catch { return [raw] } })() : [raw]
+        for (const texto of textos) {
+          if (!String(texto).trim()) continue
+          await supabase.from('recordatorios_usuario').insert({ user_id: userId, texto: String(texto).trim() })
+        }
+        if (textos.length > 0) {
+          localStorage.removeItem(RECORDATORIO_STORAGE_KEY_LEGACY)
+          const { data } = await supabase.from('recordatorios_usuario').select('id, texto').eq('user_id', userId).order('created_at', { ascending: true })
+          listRecordatorios.value = (data || []).map(r => ({ id: r.id, texto: r.texto }))
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Error cargando recordatorios:', e)
+  } finally {
+    loadingRecordatorios.value = false
+  }
+}
+
+function abrirRecordatorioParaEditar(indice) {
+  recordatorioEdicionId.value = indice >= 0 && listRecordatorios.value[indice] ? listRecordatorios.value[indice].id : null
+  recordatorioEdicion.value = indice >= 0 && listRecordatorios.value[indice] ? listRecordatorios.value[indice].texto : ''
+  editandoRecordatorio.value = true
+}
+
+async function guardarRecordatorio() {
+  const texto = (recordatorioEdicion.value || '').trim()
+  const user = usuarioAutenticado.value || authStore.user
+  const userId = user?.id
+  if (!userId) return
+  try {
+    const id = recordatorioEdicionId.value
+    if (id) {
+      if (texto) {
+        const { error } = await supabase.from('recordatorios_usuario').update({ texto }).eq('id', id).eq('user_id', userId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('recordatorios_usuario').delete().eq('id', id).eq('user_id', userId)
+        if (error) throw error
+      }
+    } else if (texto) {
+      const { error } = await supabase.from('recordatorios_usuario').insert({ user_id: userId, texto })
+      if (error) throw error
+    }
+    await fetchRecordatorios()
+    recordatorioEdicionId.value = null
+    editandoRecordatorio.value = false
+    showRecordatorioModal.value = false
+  } catch (e) {
+    console.warn('Error guardando recordatorio:', e)
+  }
+}
+
+async function eliminarRecordatorio(id) {
+  const user = usuarioAutenticado.value || authStore.user
+  if (!user?.id) return
+  try {
+    const { error } = await supabase.from('recordatorios_usuario').delete().eq('id', id).eq('user_id', user.id)
+    if (error) throw error
+    listRecordatorios.value = listRecordatorios.value.filter(r => r.id !== id)
+    if (recordatorioEdicionId.value === id) {
+      recordatorioEdicionId.value = null
+      editandoRecordatorio.value = false
+    }
+  } catch (e) {
+    console.warn('Error eliminando recordatorio:', e)
+  }
+}
+
+function cerrarRecordatorioModal() {
+  showRecordatorioModal.value = false
+  editandoRecordatorio.value = false
+  recordatorioEdicionId.value = null
+}
+
+function cancelarEdicionRecordatorio() {
+  editandoRecordatorio.value = false
+  recordatorioEdicionId.value = null
+}
+
+async function abrirModalRecordatorio() {
+  recordatorioEdicionId.value = null
+  recordatorioEdicion.value = ''
+  await fetchRecordatorios()
+  editandoRecordatorio.value = listRecordatorios.value.length === 0
+  showRecordatorioModal.value = true
+}
 // Verificar si el usuario es visor
 const esVisor = computed(() => {
   return miRol.value === 'visor'
@@ -5424,7 +5670,7 @@ onMounted(async () => {
     }, 50)
     
     // Mostrar modales después de un pequeño delay para que la UI se renderice primero
-    setTimeout(() => {
+    setTimeout(async () => {
       // Si no hay socios, mostrar modal para agregar socios
       if (!tieneSocios.value) {
         modalSinSocios.value = true
@@ -5434,6 +5680,16 @@ onMounted(async () => {
         if (puedeMostrarModalSociosEnMora()) {
           modalSociosEnMora.value = true
           incrementarContadorModalSociosEnMora()
+        }
+      }
+      // Recordatorio personal: mostrar al entrar (solo raigo.16@gmail.com)
+      const email = authStore.userEmail || usuarioAutenticado.value?.email || ''
+      if (email === RECORDATORIO_EMAIL) {
+        await fetchRecordatorios()
+        if (listRecordatorios.value.length > 0) {
+          showRecordatorioModal.value = true
+          editandoRecordatorio.value = false
+          recordatorioEdicionId.value = null
         }
       }
     }, 300)
