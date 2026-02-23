@@ -2032,7 +2032,7 @@
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
       card-class="relative max-w-2xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
       card-max-width="42rem"
-      @close="modalDetalleCuota = false"
+      @close="cerrarModalDetalleCuota"
     >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
@@ -2057,8 +2057,8 @@
                 </div>
               </div>
               <button 
-                @click="modalDetalleCuota = false"
-                @touchstart="modalDetalleCuota = false"
+                @click="cerrarModalDetalleCuota"
+                @touchstart="cerrarModalDetalleCuota"
                 class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
                 style="pointer-events: auto !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3); min-width: 44px; min-height: 44px; z-index: 20 !important;"
               >
@@ -2370,26 +2370,45 @@
                     </div>
                     
                     <!-- Si no es modificación, mostrar información normal -->
-                    <div v-else class="grid grid-cols-2 gap-3 mt-3">
-                      <div>
-                        <p class="text-xs text-gray-500 mb-1">Valor Pagado</p>
-                        <p 
-                          :class="[
-                            'text-lg font-bold',
-                            pago.es_actual ? 'text-green-700' : 'text-gray-700'
-                          ]"
-                        >
-                          ${{ formatMoney(pago.valor_pagado) }}
-                        </p>
+                    <div v-else class="mt-3 space-y-3">
+                      <!-- Pago actual: desglose cuota + sanción + actividades -->
+                      <div v-if="pago.es_actual && cuotaDetalle" class="p-3 rounded-lg bg-white/80 border border-green-200/60 space-y-2">
+                        <p class="text-xs font-semibold text-gray-700 mb-2">Desglose del pago</p>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-gray-600">Cuota</span>
+                          <span class="font-semibold text-gray-800">${{ formatMoney(cuotaDetalle.valor_pagado || 0) }}</span>
+                        </div>
+                        <div v-if="(cuotaDetalle.valor_pagado_sancion || 0) > 0" class="flex justify-between text-sm">
+                          <span class="text-gray-600">Sanción / multa</span>
+                          <span class="font-semibold text-red-700">${{ formatMoney(cuotaDetalle.valor_pagado_sancion || 0) }}</span>
+                        </div>
+                        <template v-if="getDesgloseActividadesCuota(cuotaDetalle).total > 0">
+                          <div v-for="(item, idx) in getDesgloseActividadesCuota(cuotaDetalle).items" :key="idx" class="flex justify-between text-sm">
+                            <span class="text-gray-600 truncate pr-2">{{ item.nombre }}</span>
+                            <span class="font-semibold text-purple-700 shrink-0">${{ formatMoney(item.valor) }}</span>
+                          </div>
+                        </template>
+                        <div class="flex justify-between text-sm pt-2 border-t border-green-200/60">
+                          <span class="font-bold text-gray-800">Total pagado</span>
+                          <span class="font-bold text-green-700">${{ formatMoney(getTotalPagadoConActividadesSocio(cuotaDetalle)) }}</span>
+                        </div>
                       </div>
-                      <div>
+                      <!-- Pago no actual: solo valor y fecha -->
+                      <div v-if="!pago.es_actual" class="flex justify-between text-sm">
+                        <div>
+                          <p class="text-xs text-gray-500 mb-1">Valor Pagado</p>
+                          <p class="text-lg font-bold text-gray-700">${{ formatMoney(pago.valor_pagado) }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs text-gray-500 mb-1">Fecha</p>
+                          <p class="text-sm font-semibold text-gray-700">{{ formatDate(pago.fecha_actualizacion) }}</p>
+                          <p class="text-xs text-gray-500 mt-0.5">{{ formatTime(pago.fecha_actualizacion) }}</p>
+                        </div>
+                      </div>
+                      <!-- Fecha cuando es pago actual -->
+                      <div v-if="pago.es_actual" class="pt-1">
                         <p class="text-xs text-gray-500 mb-1">Fecha</p>
-                        <p class="text-sm font-semibold text-gray-700">
-                          {{ formatDate(pago.fecha_actualizacion) }}
-                        </p>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                          {{ formatTime(pago.fecha_actualizacion) }}
-                        </p>
+                        <p class="text-sm font-semibold text-gray-700">{{ formatDate(pago.fecha_actualizacion) }} {{ formatTime(pago.fecha_actualizacion) }}</p>
                       </div>
                     </div>
                   </div>
@@ -2416,14 +2435,14 @@
         <!-- Footer con acciones -->
         <div class="p-6 border-t border-gray-200 bg-gray-50 flex gap-3">
           <button 
-            @click="modalDetalleCuota = false"
+            @click="cerrarModalDetalleCuota"
             class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
             Cerrar
           </button>
-          <button 
+            <button
             v-if="(cuotaDetalle?.estadoReal || cuotaDetalle?.estado) !== 'pagada'"
-            @click="modalDetalleCuota = false; abrirModalPago(cuotaDetalle)"
+            @click="cerrarModalDetalleCuota(); abrirModalPago(cuotaDetalle)"
             class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl"
           >
             Registrar Pago
@@ -6093,6 +6112,9 @@ const cargandoHistorialPagos = ref(false)
 const modalDetalleSocio = ref(false)
 const modalHistorialAjustes = ref(false)
 const modalEditarSocio = ref(false)
+// Guardar scroll de main y window antes de abrir modal (al hacer clic en la tarjeta)
+const scrollMainAntesModal = ref(0)
+const scrollWindowAntesModal = ref(0)
 const modalProgreso = ref(false)
 const modalSelectorMes = ref(false)
 const desplegableYaAbonadoOpen = ref(false)
@@ -8166,19 +8188,59 @@ async function reenviarComprobantePorCodigo(codigoComprobante, valorPagado) {
   await reenviarComprobante(cuotaTemporal)
 }
 
+function guardarScrollMain() {
+  const main = document.querySelector('main')
+  const mainScroll = main ? main.scrollTop : 0
+  const windowScroll = typeof window !== 'undefined' ? (window.scrollY || document.documentElement.scrollTop) : 0
+  scrollMainAntesModal.value = mainScroll
+  scrollWindowAntesModal.value = windowScroll
+  // Para que useBodyScrollLock use esta posición al bloquear (evita que el scroll salte al abrir la modal)
+  if (typeof window !== 'undefined') {
+    window.__scrollPositionBeforeModal = { main: mainScroll, window: windowScroll }
+  }
+}
+
+/** Reasignar la posición guardada justo antes de abrir la modal (el lock la usa al aplicar) */
+function asignarScrollAntesDeAbrirModal() {
+  if (typeof window !== 'undefined') {
+    window.__scrollPositionBeforeModal = { main: scrollMainAntesModal.value, window: scrollWindowAntesModal.value }
+  }
+}
+
+function restaurarScrollMain() {
+  nextTick(() => {
+    const main = document.querySelector('main')
+    if (main && scrollMainAntesModal.value > 0) main.scrollTop = scrollMainAntesModal.value
+  })
+}
+
 async function abrirModalDetalleCuota(cuota) {
+  guardarScrollMain() // guardar scroll al instante del clic (antes de cualquier await)
   // Asegurar que tengamos reglas de la natillera para el desglose de sanciones en el modal
   if (!natilleraConfigCache) await cargarNatillera()
   // Asegurar estadoReal para mostrar correctamente cuando cuota pagada tras pago parcial
   const estadoReal = cuota?.estadoReal ?? calcularEstadoRealCuota(cuota, diasGracia.value)
   cuotaDetalle.value = { ...cuota, estadoReal }
+  asignarScrollAntesDeAbrirModal() // que el lock use la posición guardada al hacer clic
   modalDetalleCuota.value = true
+  // Forzar que main no pierda la posición (p. ej. iOS donde no se usa position:fixed en main)
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const main = document.querySelector('main')
+      if (main && scrollMainAntesModal.value > 0) main.scrollTop = scrollMainAntesModal.value
+    })
+  })
   // Cargar historial de pagos si la cuota tiene pagos
   if (cuota && (cuota.valor_pagado > 0 || cuota.codigo_comprobante)) {
     await cargarHistorialPagosCuota(cuota.id)
   } else {
     historialPagosCuota.value = []
   }
+}
+
+function cerrarModalDetalleCuota() {
+  modalDetalleCuota.value = false
+  restaurarScrollMain()
 }
 
 async function cargarHistorialPagosCuota(cuotaId) {
@@ -10066,6 +10128,8 @@ function verDetalleSocio(socioNatillera) {
 }
 
 function editarSocio(sn) {
+  guardarScrollMain() // guardar scroll al instante del clic
+  asignarScrollAntesDeAbrirModal()
   socioEditando.value = sn
   formSocio.nombre = sn.socio?.nombre || ''
   formSocio.documento = sn.socio?.documento || ''
@@ -10078,10 +10142,17 @@ function editarSocio(sn) {
   mostrarAvatares.value = false
   mostrarContacto.value = false
   modalEditarSocio.value = true
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const main = document.querySelector('main')
+      if (main && scrollMainAntesModal.value > 0) main.scrollTop = scrollMainAntesModal.value
+    })
+  })
 }
 
 function cerrarModalEditarSocio() {
   modalEditarSocio.value = false
+  restaurarScrollMain()
   socioEditando.value = null
   errorSocio.value = ''
   estadoGuardadoSocio.value = ''

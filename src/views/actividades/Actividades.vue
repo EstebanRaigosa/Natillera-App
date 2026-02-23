@@ -350,7 +350,10 @@
           :key="actividad.id"
           @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
           :class="[
-            'card rounded-2xl p-3 sm:p-5 transition-all duration-300',
+            'card rounded-2xl p-3 sm:p-5 transition-all duration-300 border-l-4',
+            actividad.estado === 'liquidada'
+              ? 'bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-200/60 border-l-emerald-500'
+              : 'bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/60 border-l-amber-500',
             (actividad.estado === 'en_curso' || (actividad.tipo === 'rifa' && actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl' : ''
           ]"
         >
@@ -417,6 +420,21 @@
                   <span class="hidden sm:inline">${{ formatMoney(actividad.utilidad) }}</span>
                 </p>
               </div>
+            </div>
+            <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+            <div v-if="actividad.tipo === 'rifa' && actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80">
+              <p class="text-[11px] sm:text-xs text-gray-600">
+                Premio entregado: <span class="font-semibold">{{ (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
+              </p>
+              <button
+                type="button"
+                @click.stop="abrirModalFormaPagoLiquidacion(actividad)"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                title="Cambiar forma de pago"
+              >
+                <PencilSquareIcon class="w-4 h-4" />
+                Cambiar
+              </button>
             </div>
           </template>
           <!-- Vista para actividades en curso: Fecha límite, Total asignado, Total recaudado -->
@@ -547,7 +565,10 @@
                     :key="actividad.id"
                     @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
                     :class="[
-                      'card rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 min-w-0 overflow-hidden',
+                      'card rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 min-w-0 overflow-hidden border-l-4',
+                      actividad.estado === 'liquidada'
+                        ? 'bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-200/60 border-l-emerald-500'
+                        : 'bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/60 border-l-amber-500',
                       (actividad.estado === 'en_curso' || (actividad.tipo === 'rifa' && actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl active:scale-[0.99]' : ''
                     ]"
                   >
@@ -614,6 +635,16 @@
                           </p>
                         </div>
                       </div>
+                    <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+                    <div v-if="actividad.tipo === 'rifa' && actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80 min-w-0">
+                      <p class="text-[11px] sm:text-xs text-gray-600">
+                        Premio entregado: <span class="font-semibold">{{ (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
+                      </p>
+                      <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
+                        <PencilSquareIcon class="w-4 h-4" />
+                        Cambiar
+                      </button>
+                    </div>
                     </template>
                     <template v-else>
                       <div class="grid grid-cols-3 gap-2 sm:gap-3 min-w-0">
@@ -651,7 +682,10 @@
             :key="item.actividad.id"
             @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
             :class="[
-              'card rounded-2xl p-3 sm:p-5 transition-all duration-300',
+              'card rounded-2xl p-3 sm:p-5 transition-all duration-300 border-l-4',
+              item.actividad.estado === 'liquidada'
+                ? 'bg-gradient-to-br from-emerald-50/80 to-white border border-emerald-200/60 border-l-emerald-500'
+                : 'bg-gradient-to-br from-amber-50/80 to-white border border-amber-200/60 border-l-amber-500',
               (item.actividad.estado === 'en_curso' || (item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada')) ? 'cursor-pointer hover:shadow-2xl' : ''
             ]"
           >
@@ -717,6 +751,16 @@
                     <span class="hidden sm:inline">${{ formatMoney(item.actividad.utilidad) }}</span>
                   </p>
                 </div>
+              </div>
+              <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+              <div v-if="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80">
+                <p class="text-[11px] sm:text-xs text-gray-600">
+                  Premio entregado: <span class="font-semibold">{{ (item.actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
+                </p>
+                <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(item.actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
+                  <PencilSquareIcon class="w-4 h-4" />
+                  Cambiar
+                </button>
               </div>
             </template>
             <template v-else>
@@ -1788,16 +1832,20 @@
           <!-- Número ganador (para mostrar ganador al abrir la rifa liquidada) -->
           <div>
             <label class="label mb-2 block">Número ganador *</label>
-            <input 
-              v-model="formLiquidar.numeroGanador"
-              type="text" 
-              inputmode="numeric"
-              maxlength="2"
-              class="input-field text-center text-xl font-bold tracking-[0.3em]"
-              placeholder="00"
-              @input="formLiquidar.numeroGanador = formLiquidar.numeroGanador.replace(/\D/g, '').slice(0, 2)"
-            />
-            <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99)</p>
+            <div class="relative flex items-center gap-2">
+              <input 
+                v-model="formLiquidar.numeroGanador"
+                type="text" 
+                inputmode="numeric"
+                maxlength="2"
+                class="input-field text-center text-xl font-bold tracking-[0.3em] flex-1"
+                placeholder="00"
+                :disabled="loadingNumeroGanador"
+                @input="formLiquidar.numeroGanador = formLiquidar.numeroGanador.replace(/\D/g, '').slice(0, 2)"
+              />
+              <span v-if="loadingNumeroGanador" class="text-xs text-gray-500 whitespace-nowrap">Obteniendo...</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99). Si hay fecha de juego, se completa con las 2 últimas cifras del resultado de la Lotería de Medellín.</p>
           </div>
           <!-- Utilidad calculada -->
           <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
@@ -1923,90 +1971,178 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+      card-class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       card-max-width="28rem"
       @close="modalGanadorRifa = false"
     >
-        <!-- Header con gradiente dorado/celebration -->
-        <div class="relative bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 p-6 sm:p-8 text-white overflow-hidden">
-          <div class="absolute inset-0 opacity-30">
-            <div class="absolute top-0 left-1/4 w-32 h-32 bg-white rounded-full blur-2xl"></div>
-            <div class="absolute bottom-0 right-1/4 w-40 h-40 bg-white rounded-full blur-3xl"></div>
-          </div>
-          <div class="relative z-10 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white/25 backdrop-blur-sm rounded-2xl border-2 border-white/40 mb-4 shadow-lg">
-              <span class="text-3xl sm:text-4xl">🏆</span>
+        <!-- Header muy compacto -->
+        <div class="relative bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 py-2.5 px-3 sm:py-3 sm:px-4 text-white overflow-hidden flex-shrink-0">
+          <div class="relative z-10 flex items-center gap-2 sm:gap-3 min-w-0">
+            <div class="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-white/25 rounded-lg border border-white/40 text-lg sm:text-xl">
+              🏆
             </div>
-            <h2 class="text-xl sm:text-2xl font-display font-bold tracking-tight drop-shadow-sm">
-              ¡Rifa liquidada!
-            </h2>
-            <p class="text-white/95 text-sm sm:text-base mt-1 font-medium truncate px-2">
-              {{ actividadSeleccionada.descripcion }}
-            </p>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-sm sm:text-base font-bold tracking-tight drop-shadow-sm leading-tight">
+                ¡Rifa liquidada!
+              </h2>
+              <p class="text-white/90 text-xs truncate mt-0.5">
+                {{ actividadSeleccionada.descripcion }}
+              </p>
+            </div>
           </div>
         </div>
-        <!-- Contenido: número ganador + ganador -->
-        <div class="p-6 sm:p-8 space-y-6">
-          <!-- Número ganador grande -->
+        <!-- Contenido con scroll -->
+        <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <!-- Ganador / Ganadora o Gana la natillera (arriba) -->
+          <div v-if="actividadSeleccionada.ganador_es_faltante" class="text-center">
+            <div class="inline-flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-md">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center shadow-lg ring-2 ring-natillera-200 text-2xl sm:text-3xl">🏦</div>
+              <p class="font-display font-bold text-base sm:text-lg text-natillera-800">¡Gana la natillera!</p>
+              <p class="text-xs text-gray-600 max-w-xs leading-snug">
+                Este número no estaba asignado. El premio y la utilidad se suman al fondo.
+              </p>
+            </div>
+          </div>
+          <div v-else-if="actividadSeleccionada.ganador_nombre && !actividadSeleccionada.ganador_es_faltante" class="text-center w-full">
+            <div class="w-full flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-md">
+              <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 shadow-lg ring-2 ring-natillera-200">🏆</div>
+              <p class="text-xs font-medium text-natillera-600">Ganador/a</p>
+              <p class="font-display font-bold text-lg sm:text-xl text-natillera-800">{{ actividadSeleccionada.ganador_nombre }}</p>
+            </div>
+          </div>
+          <!-- Número ganador (justo después del ganador) -->
           <div v-if="actividadSeleccionada.numero_ganador != null && actividadSeleccionada.numero_ganador !== ''" class="text-center">
-            <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Número ganador</p>
-            <div class="inline-flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-amber-100 to-yellow-200 border-2 border-amber-300 shadow-lg shadow-amber-200/50">
-              <span class="text-4xl sm:text-5xl font-black text-amber-800 tracking-widest">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Número ganador</p>
+            <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-amber-100 to-yellow-200 border-2 border-amber-300 shadow-md">
+              <span class="text-3xl sm:text-4xl font-black text-amber-800 tracking-widest">
                 {{ String(actividadSeleccionada.numero_ganador).padStart(2, '0') }}
               </span>
             </div>
           </div>
-          <!-- Caso: número ganador lo tenía un Faltante → gana la natillera -->
-          <div v-if="actividadSeleccionada.ganador_es_faltante" class="text-center">
-            <div class="inline-flex flex-col items-center gap-4 p-6 rounded-2xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200 shadow-lg">
-              <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center shadow-xl ring-4 ring-natillera-200">
-                <span class="text-4xl sm:text-5xl">🏦</span>
+          <!-- Bloque: información del sorteo Lotería de Medellín -->
+          <div v-if="actividadSeleccionada.sorteo_loteria_medellin || actividadSeleccionada.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 bg-white p-3 shadow-md">
+            <p class="text-red-700 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
+            <p class="text-red-600 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada.sorteo_loteria_medellin || '—' }}</p>
+            <p class="text-red-600 text-xs mb-2">{{ formatDateSorteoDisplay(actividadSeleccionada.fecha_juego_rifa) || '—' }}</p>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-red-600 text-xs font-semibold uppercase tracking-wider mb-1">Número</p>
+                <div class="rounded-lg bg-red-600 text-white text-center py-2 px-2">
+                  <span class="text-lg font-bold">{{ actividadSeleccionada.numero_completo_loteria_medellin || '—' }}</span>
+                </div>
               </div>
-              <div class="space-y-2">
-                <p class="font-display font-bold text-xl sm:text-2xl text-natillera-800">
-                  ¡Gana la natillera!
-                </p>
-                <p class="text-sm sm:text-base text-gray-600 max-w-xs leading-relaxed">
-                  Este número no estaba asignado a un socio todavía. El premio y la utilidad se suman al fondo de la natillera.
-                </p>
+              <div>
+                <p class="text-red-600 text-xs font-semibold uppercase tracking-wider mb-1">Serie</p>
+                <div class="rounded-lg bg-red-600 text-white text-center py-2 px-2">
+                  <span class="text-lg font-bold">{{ actividadSeleccionada.serie_loteria_medellin || '—' }}</span>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Ganador: socio con avatar -->
-          <div v-else-if="actividadSeleccionada.ganador_nombre && !actividadSeleccionada.ganador_es_faltante" class="text-center">
-            <p class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Ganador / Ganadora</p>
-            <div class="flex flex-col items-center gap-3">
-              <div class="relative">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-amber-200 shadow-xl overflow-hidden bg-gray-100">
-                  <img 
-                    :src="getAvatarUrl(actividadSeleccionada.ganador_nombre, actividadSeleccionada.ganador_socio_natillera?.socio?.avatar_seed, actividadSeleccionada.ganador_socio_natillera?.socio?.avatar_style || 'adventurer')" 
-                    :alt="actividadSeleccionada.ganador_nombre"
-                    class="w-full h-full object-cover"
-                  />
-                </div>
-                <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center border-2 border-white shadow">
-                  <span class="text-white text-sm">✓</span>
-                </div>
-              </div>
-              <p class="font-display font-bold text-lg sm:text-xl text-gray-800">
-                {{ actividadSeleccionada.ganador_nombre }}
-              </p>
-            </div>
-          </div>
-          <!-- Sin datos de ganador (rifas liquidadas antes de esta función) -->
-          <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-4">
-            <p class="text-sm text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
+          <!-- Sin datos de ganador -->
+          <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-3">
+            <p class="text-xs text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
           </div>
         </div>
-        <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 sm:p-5">
+        <!-- Footer fijo -->
+        <div class="border-t border-gray-200 bg-gray-50 p-3 sm:p-4 space-y-2 flex-shrink-0">
+          <div class="grid gap-2" :class="isMobile ? 'grid-cols-2' : 'grid-cols-1'">
+            <button 
+              type="button"
+              @click="descargarTarjetaGanador"
+              :disabled="compartiendoODescargando"
+              class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              <span>{{ compartiendoODescargando ? '...' : 'Descargar' }}</span>
+            </button>
+            <button 
+              v-if="isMobile"
+              type="button"
+              @click="compartirGanadorWhatsApp"
+              :disabled="compartiendoODescargando"
+              class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-white font-semibold hover:bg-[#20bd5a] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+            >
+              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              <span>{{ compartiendoODescargando ? '...' : 'WhatsApp' }}</span>
+            </button>
+            <p v-else class="text-center text-xs text-gray-500 py-1.5 px-2">
+              En móvil puedes compartir por WhatsApp desde este mismo modal.
+            </p>
+          </div>
           <button 
             @click="modalGanadorRifa = false"
             class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
           >
             Cerrar
           </button>
+          <!-- Solo en desarrollo: revertir liquidación para pruebas -->
+          <button 
+            v-if="isDev"
+            type="button"
+            @click="revertirLiquidacionRifa"
+            :disabled="revertiendoLiquidacion"
+            class="w-full px-4 py-2.5 text-sm font-medium rounded-xl border-2 border-amber-400 bg-amber-50 text-amber-800 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {{ revertiendoLiquidacion ? 'Revirtiendo...' : 'Revertir liquidación (solo dev)' }}
+          </button>
         </div>
+    </ModalWrapper>
+    <!-- Modal Cambiar forma de pago entrega premio (rifa liquidada) -->
+    <ModalWrapper
+      :show="!!actividadParaFormaPago"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-sm w-full rounded-2xl overflow-hidden border border-gray-200 shadow-xl bg-white"
+      @close="actividadParaFormaPago = null"
+    >
+      <div class="p-5">
+        <h3 class="text-lg font-bold text-gray-800 mb-1">Forma de pago del premio</h3>
+        <p class="text-sm text-gray-500 mb-4 truncate">{{ actividadParaFormaPago?.descripcion }}</p>
+        <div class="flex gap-2 mb-4">
+          <button
+            type="button"
+            @click="formFormaPagoLiquidacion.forma_pago = 'efectivo'"
+            :class="[
+              'flex-1 p-3 rounded-xl border-2 transition-all text-sm font-medium',
+              formFormaPagoLiquidacion.forma_pago === 'efectivo'
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+            ]"
+          >
+            Efectivo
+          </button>
+          <button
+            type="button"
+            @click="formFormaPagoLiquidacion.forma_pago = 'transferencia'"
+            :class="[
+              'flex-1 p-3 rounded-xl border-2 transition-all text-sm font-medium',
+              formFormaPagoLiquidacion.forma_pago === 'transferencia'
+                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+            ]"
+          >
+            Transferencia
+          </button>
+        </div>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            @click="actividadParaFormaPago = null"
+            class="flex-1 px-4 py-2.5 rounded-xl border-2 border-gray-200 text-gray-700 font-medium hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            @click="guardarFormaPagoLiquidacion"
+            :disabled="guardandoFormaPago"
+            class="flex-1 px-4 py-2.5 rounded-xl bg-natillera-500 text-white font-semibold hover:bg-natillera-600 disabled:opacity-50"
+          >
+            {{ guardandoFormaPago ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
     </ModalWrapper>
     <!-- Modal Ver ganadores (grupo de rifas) -->
     <ModalWrapper
@@ -2694,6 +2830,54 @@
         </button>
       </div>
   </ModalWrapper>
+  <!-- Tarjeta para captura (compartir/descargar): en viewport pero detrás del modal (z-40) para que se pinte y no salga en blanco -->
+  <div
+    v-show="modalGanadorRifa && actividadSeleccionada"
+    ref="tarjetaGanadorRef"
+    class="fixed left-0 top-0 w-[400px] bg-white rounded-2xl shadow-2xl overflow-hidden z-40"
+    style="top: 0; left: 0"
+  >
+    <div class="bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 py-4 px-4 text-white">
+      <h2 class="text-lg font-bold tracking-tight truncate text-center">{{ actividadSeleccionada?.descripcion }}</h2>
+    </div>
+    <div class="p-5 space-y-4">
+      <!-- Ganador / Ganadora o Gana la natillera (arriba) -->
+      <div v-if="actividadSeleccionada?.ganador_es_faltante" class="text-center py-3 px-4 rounded-xl bg-natillera-50 border-2 border-natillera-200">
+        <span class="text-3xl">🏦</span>
+        <p class="font-bold text-natillera-800 text-lg mt-1">¡Gana la natillera!</p>
+        <p class="text-xs text-gray-600 max-w-xs mx-auto leading-snug mt-1.5">
+          Este número no estaba asignado. El premio y la utilidad se suman al fondo.
+        </p>
+      </div>
+      <div v-else-if="actividadSeleccionada?.ganador_nombre" class="w-full text-center py-3 px-4 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-100 flex items-center justify-center text-2xl sm:text-3xl border-2 border-amber-300 shadow-lg ring-2 ring-natillera-200 mx-auto">🏆</div>
+        <p class="text-xs font-medium text-natillera-600 mt-2">Ganador/a</p>
+        <p class="font-bold text-lg sm:text-xl text-natillera-800 mt-0.5">{{ actividadSeleccionada.ganador_nombre }}</p>
+      </div>
+      <!-- Número ganador (justo después del ganador) -->
+      <div v-if="actividadSeleccionada?.numero_ganador != null && actividadSeleccionada?.numero_ganador !== ''" class="text-center">
+        <p class="text-gray-500 text-xs font-semibold uppercase tracking-wider mb-1">Número ganador</p>
+        <div class="inline-flex w-20 h-20 items-center justify-center rounded-full bg-amber-100 border-2 border-amber-300">
+          <span class="text-3xl font-black text-amber-800">{{ String(actividadSeleccionada?.numero_ganador || '').padStart(2, '0') }}</span>
+        </div>
+      </div>
+      <div v-if="actividadSeleccionada?.sorteo_loteria_medellin || actividadSeleccionada?.numero_completo_loteria_medellin" class="rounded-xl border-2 border-red-200 bg-white p-3">
+        <p class="text-red-700 font-bold text-sm sm:text-base mb-2">Resultado Lotería de Medellín</p>
+        <p class="text-red-600 font-bold text-base mb-0.5">Sorteo {{ actividadSeleccionada?.sorteo_loteria_medellin || '—' }}</p>
+        <p class="text-red-600 text-xs mb-3">{{ formatDateSorteoDisplay(actividadSeleccionada?.fecha_juego_rifa) || '—' }}</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <p class="text-red-600 text-xs font-semibold uppercase mb-1">Número</p>
+            <div class="rounded-lg bg-red-600 text-white text-center py-2"><span class="text-lg font-bold">{{ actividadSeleccionada?.numero_completo_loteria_medellin || '—' }}</span></div>
+          </div>
+          <div>
+            <p class="text-red-600 text-xs font-semibold uppercase mb-1">Serie</p>
+            <div class="rounded-lg bg-red-600 text-white text-center py-2"><span class="text-lg font-bold">{{ actividadSeleccionada?.serie_loteria_medellin || '—' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
@@ -2705,8 +2889,20 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
-import { formatDate } from '../../utils/formatDate.js'
+import { formatDate, parseDateLocal } from '../../utils/formatDate.js'
 import { getAvatarUrl } from '../../utils/avatars.js'
+import { toPng } from 'html-to-image'
+
+const MESES_SORTEO = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+function formatDateSorteoDisplay(date) {
+  if (!date) return ''
+  const d = parseDateLocal(date)
+  if (!d || isNaN(d.getTime())) return ''
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = MESES_SORTEO[d.getMonth()]
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
+}
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -2769,6 +2965,9 @@ const gruposExpandidos = ref({}) // Objeto { serieId: true/false } para rastrear
 const modalConfirmarLiquidacionNegativa = ref(false)
 const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganador + ganador
 const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
+const actividadParaFormaPago = ref(null) // Rifa liquidada para editar forma de pago entrega premio
+const formFormaPagoLiquidacion = reactive({ forma_pago: 'efectivo' })
+const guardandoFormaPago = ref(false)
 const modalAsignarFaltante = ref(false)
 const modalConfirmarAsignarFaltanteTodosMeses = ref(false)
 const faltanteSeleccionado = ref(null)
@@ -2785,6 +2984,17 @@ const formVentaRifa = reactive({
   valor: 0,
   yaPago: false
 })
+const loadingNumeroGanador = ref(false) // Cargando resultado Lotería de Medellín por fecha de juego
+/** Resultado completo del sorteo Lotería de Medellín (sorteo, numero, serie, fecha) para guardar al liquidar */
+const resultadoSorteoMedellinRef = ref(null)
+const isDev = import.meta.env.DEV
+const revertiendoLiquidacion = ref(false)
+const tarjetaGanadorRef = ref(null)
+const compartiendoODescargando = ref(false)
+const isMobile = ref(false)
+function actualizarIsMobile() {
+  isMobile.value = typeof window !== 'undefined' && (window.innerWidth <= 768 || 'ontouchstart' in window)
+}
 const formLiquidar = reactive({
   premioEntregado: 0,
   numeroGanador: '', // Número ganador de la rifa (00-99) para mostrar en modal ganador
@@ -2806,6 +3016,7 @@ useBodyScrollLock(modalLiquidarActividad)
 useBodyScrollLock(modalConfirmarLiquidacionNegativa)
 useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
+useBodyScrollLock(computed(() => !!actividadParaFormaPago.value))
 useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
 useBodyScrollLock(computed(() => !!actividadAEliminar.value))
@@ -4084,7 +4295,7 @@ function handlePremioEntregadoInput(event) {
   // Actualizar el input con formato
   event.target.value = formatNumberWithSeparator(parsedValue)
 }
-function abrirModalLiquidar() {
+async function abrirModalLiquidar() {
   // Solo permitir liquidar actividades de tipo rifa
   if (!actividadSeleccionada.value || actividadSeleccionada.value.tipo !== 'rifa') {
     notificationStore.error('Solo se pueden liquidar actividades de tipo rifa', 'Error')
@@ -4093,11 +4304,247 @@ function abrirModalLiquidar() {
   formLiquidar.premioEntregado = 0
   formLiquidar.numeroGanador = ''
   formLiquidar.forma_pago = 'efectivo'
+  resultadoSorteoMedellinRef.value = null
   modalLiquidarActividad.value = true
+
+  // Obtener número ganador desde Lotería de Medellín por fecha de juego (2 últimas cifras)
+  const fechaJuego = actividadSeleccionada.value.fecha_juego_rifa
+  if (!fechaJuego) return
+
+  let dateStr = ''
+  if (typeof fechaJuego === 'string') dateStr = fechaJuego.slice(0, 10)
+  else if (fechaJuego instanceof Date) dateStr = fechaJuego.toISOString().slice(0, 10)
+  else if (fechaJuego && typeof fechaJuego === 'object' && fechaJuego.toISOString) dateStr = fechaJuego.toISOString().slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return
+
+  loadingNumeroGanador.value = true
+  const TIMEOUT_MS = 4000 // 4 segundos máximo
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  try {
+    const nextDay = new Date(dateStr + 'T12:00:00Z')
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1)
+    const nextDayStr = nextDay.toISOString().slice(0, 10)
+    const whereClause = `fecha >= '${dateStr}T00:00:00.000' AND fecha < '${nextDayStr}T00:00:00.000'`
+    const urlDatos = `https://www.datos.gov.co/resource/4w3i-wxax.json?${new URLSearchParams({ $where: whereClause, $limit: '1' }).toString()}`
+    const resDatos = await fetch(urlDatos, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    const dataDatos = await resDatos.json()
+    let ultimasDos = ''
+    if (Array.isArray(dataDatos) && dataDatos.length > 0) {
+      const row = dataDatos[0]
+      const numero = row.n_mero ?? row.numero ?? row.número
+      if (numero != null && String(numero).trim() !== '') {
+        const s = String(numero).trim()
+        ultimasDos = s.slice(-2).replace(/\D/g, '').slice(0, 2) || s.slice(-2)
+      }
+      // Guardar resultado completo del sorteo para mostrarlo en el modal del ganador
+      resultadoSorteoMedellinRef.value = {
+        sorteo: row.sorteo != null ? String(row.sorteo).trim() : null,
+        numero: numero != null ? String(numero).trim() : null,
+        serie: row.serie != null ? String(row.serie).trim() : null,
+        fecha: row.fecha != null ? String(row.fecha).slice(0, 10) : dateStr
+      }
+    }
+    if (ultimasDos) formLiquidar.numeroGanador = ultimasDos
+    else
+      notificationStore.error(
+        'No hay resultado de Lotería de Medellín para esta fecha. Ingresa el número ganador manualmente.',
+        'Resultado no disponible'
+      )
+  } catch (e) {
+    clearTimeout(timeoutId)
+    if (e?.name === 'AbortError')
+      notificationStore.error(
+        'La consulta tardó demasiado. Ingresa el número ganador manualmente.',
+        'Tiempo agotado'
+      )
+    else
+      notificationStore.error(
+        'No se pudo obtener el resultado de la Lotería de Medellín. Ingresa el número ganador manualmente.',
+        'Resultado no disponible'
+      )
+  } finally {
+    loadingNumeroGanador.value = false
+  }
 }
 function abrirModalGanadorRifa(actividad) {
   actividadSeleccionada.value = actividad
   modalGanadorRifa.value = true
+}
+function abrirModalFormaPagoLiquidacion(actividad) {
+  actividadParaFormaPago.value = actividad
+  formFormaPagoLiquidacion.forma_pago = (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
+}
+async function guardarFormaPagoLiquidacion() {
+  const act = actividadParaFormaPago.value
+  if (!act?.id) return
+  const nuevaForma = (formFormaPagoLiquidacion.forma_pago || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
+  guardandoFormaPago.value = true
+  try {
+    const { error: errAct } = await supabase
+      .from('actividades')
+      .update({ forma_pago_liquidacion: nuevaForma })
+      .eq('id', act.id)
+    if (errAct) throw errAct
+    const descPremio = `Premio rifa liquidada: ${act.descripcion || 'Rifa'}`
+    const montoPremio = parseFloat(act.gastos) || 0
+    const { data: movs } = await supabase
+      .from('movimientos_fondo')
+      .select('id')
+      .eq('natillera_id', act.natillera_id)
+      .eq('tipo', 'salida')
+      .eq('descripcion', descPremio)
+      .eq('monto', montoPremio)
+      .limit(1)
+    if (movs?.length) {
+      await supabase.from('movimientos_fondo').update({ forma_pago: nuevaForma }).eq('id', movs[0].id)
+    }
+    await fetchActividades()
+    actividadParaFormaPago.value = null
+    notificationStore.success('Forma de pago actualizada', 'Listo')
+  } catch (e) {
+    console.error('Error actualizando forma de pago:', e)
+    notificationStore.error(e?.message || 'No se pudo actualizar', 'Error')
+  } finally {
+    guardandoFormaPago.value = false
+  }
+}
+/** Solo dev: revierte una rifa liquidada a "en curso" (elimina utilidades_clasificadas, movimiento premio, actualiza actividad) */
+async function revertirLiquidacionRifa() {
+  const act = actividadSeleccionada.value
+  if (!act || act.tipo !== 'rifa' || act.estado !== 'liquidada') {
+    notificationStore.error('Solo se puede revertir una rifa en estado liquidada', 'Error')
+    return
+  }
+  revertiendoLiquidacion.value = true
+  try {
+    const natilleraId = act.natillera_id
+    const actividadId = act.id
+    const descripcionPremio = `Premio rifa liquidada: ${act.descripcion || 'Rifa'}`
+    const montoPremio = parseFloat(act.gastos) || 0
+
+    // 1. Eliminar registros de utilidades_clasificadas de esta rifa
+    const { error: errUtil } = await supabase
+      .from('utilidades_clasificadas')
+      .delete()
+      .eq('natillera_id', natilleraId)
+      .eq('tipo', 'rifas')
+      .eq('id_actividad', actividadId)
+    if (errUtil) throw errUtil
+
+    // 2. Eliminar movimiento(s) de premio rifa en movimientos_fondo (descripción + monto para acotar)
+    const { data: movs } = await supabase
+      .from('movimientos_fondo')
+      .select('id')
+      .eq('natillera_id', natilleraId)
+      .eq('tipo', 'salida')
+      .eq('descripcion', descripcionPremio)
+      .eq('monto', montoPremio)
+    if (movs && movs.length > 0) {
+      const idsToDelete = movs.map((m) => m.id)
+      for (const id of idsToDelete) {
+        const { error: errMov } = await supabase.from('movimientos_fondo').delete().eq('id', id)
+        if (errMov) throw errMov
+      }
+    }
+
+    // 3. Volver la actividad a "en curso" y limpiar datos de liquidación
+    const { error: errAct } = await supabase
+      .from('actividades')
+      .update({
+        estado: 'en_curso',
+        ingresos: 0,
+        gastos: 0,
+        utilidad: 0,
+        numero_ganador: null,
+        ganador_nombre: null,
+        ganador_socio_natillera_id: null,
+        ganador_es_faltante: null,
+        forma_pago_liquidacion: null,
+        sorteo_loteria_medellin: null,
+        numero_completo_loteria_medellin: null,
+        serie_loteria_medellin: null
+      })
+      .eq('id', actividadId)
+    if (errAct) throw errAct
+
+    notificationStore.success('Rifa revertida a "en curso". Solo para pruebas en dev.', 'Revertido')
+    modalGanadorRifa.value = false
+    await fetchActividades()
+  } catch (e) {
+    console.error('Error revirtiendo liquidación:', e)
+    notificationStore.error(e?.message || 'Error al revertir la liquidación', 'Error')
+  } finally {
+    revertiendoLiquidacion.value = false
+  }
+}
+async function generarImagenTarjetaGanador() {
+  if (!tarjetaGanadorRef.value) return null
+  await nextTick()
+  await new Promise((r) => requestAnimationFrame(r))
+  await new Promise((r) => setTimeout(r, 50))
+  return await toPng(tarjetaGanadorRef.value, {
+    backgroundColor: '#ffffff',
+    pixelRatio: 2,
+    quality: 1,
+    cacheBust: true
+  })
+}
+async function descargarTarjetaGanador() {
+  const act = actividadSeleccionada.value
+  if (!act || !tarjetaGanadorRef.value) return
+  compartiendoODescargando.value = true
+  try {
+    const dataUrl = await generarImagenTarjetaGanador()
+    if (!dataUrl) throw new Error('No se pudo generar la imagen')
+    const nombre = `ganador-rifa-${(act.descripcion || 'rifa').replace(/\s+/g, '-').slice(0, 40)}.png`
+    const link = document.createElement('a')
+    link.download = nombre
+    link.href = dataUrl
+    link.click()
+    notificationStore.success('Imagen descargada', 'Listo')
+  } catch (e) {
+    console.error('Error descargando tarjeta ganador:', e)
+    notificationStore.error(e?.message || 'No se pudo descargar la imagen', 'Error')
+  } finally {
+    compartiendoODescargando.value = false
+  }
+}
+async function compartirGanadorWhatsApp() {
+  const act = actividadSeleccionada.value
+  if (!act || !tarjetaGanadorRef.value) return
+  compartiendoODescargando.value = true
+  try {
+    const dataUrl = await generarImagenTarjetaGanador()
+    if (!dataUrl) throw new Error('No se pudo generar la imagen')
+    const response = await fetch(dataUrl)
+    const blob = await response.blob()
+    const nombre = `ganador-rifa-${(act.descripcion || 'rifa').replace(/\s+/g, '-').slice(0, 30)}.png`
+    const archivo = new File([blob], nombre, { type: 'image/png' })
+    const mensaje = `${act.descripcion || 'Rifa'}\n${act.ganador_es_faltante ? 'Ganamos todos! 💃🕺' : act.ganador_nombre ? `Felicitaciones!! 🎉\nGanador/a: ${act.ganador_nombre}` : 'Nº ganador: ' + (act.numero_ganador || '—')}`
+    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      await navigator.share({
+        files: [archivo],
+        title: `Ganador - ${act.descripcion || 'Rifa'}`,
+        text: mensaje
+      })
+      notificationStore.success('Compartido correctamente', 'Listo')
+    } else {
+      const link = document.createElement('a')
+      link.download = nombre
+      link.href = dataUrl
+      link.click()
+      const textoWa = encodeURIComponent(mensaje)
+      window.open(`https://wa.me/?text=${textoWa}`, '_blank')
+      notificationStore.success('Imagen descargada. Ábrela y compártela en WhatsApp.', 'Compartir')
+    }
+  } catch (e) {
+    console.error('Error compartiendo ganador:', e)
+    notificationStore.error(e?.message || 'No se pudo compartir', 'Error')
+  } finally {
+    compartiendoODescargando.value = false
+  }
 }
 function abrirModalGanadoresGrupo(grupo) {
   grupoGanadoresSeleccionado.value = grupo
@@ -4153,21 +4600,28 @@ async function confirmarLiquidacion() {
         ganadorSocioNatilleraId = numeroGanadorData.socio_vendedor_id || null
       }
     }
-    // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad, ganador y forma de pago
+    // 1. Actualizar la actividad a estado "liquidada", ingresos/gastos/utilidad, ganador, forma de pago y datos del sorteo Lotería de Medellín
     const formaPagoLiquidacion = (formLiquidar.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'transferencia' : 'efectivo'
+    const sorteoInfo = resultadoSorteoMedellinRef.value
+    const updatePayload = {
+      estado: 'liquidada',
+      ingresos: totalRecaudado,
+      gastos: gastosFinal,
+      utilidad: utilidadFinal,
+      numero_ganador: numeroGanador,
+      ganador_nombre: ganadorNombre,
+      ganador_socio_natillera_id: ganadorSocioNatilleraId,
+      ganador_es_faltante: ganadorEsFaltante,
+      forma_pago_liquidacion: formaPagoLiquidacion
+    }
+    if (sorteoInfo) {
+      if (sorteoInfo.sorteo != null) updatePayload.sorteo_loteria_medellin = sorteoInfo.sorteo
+      if (sorteoInfo.numero != null) updatePayload.numero_completo_loteria_medellin = sorteoInfo.numero
+      if (sorteoInfo.serie != null) updatePayload.serie_loteria_medellin = sorteoInfo.serie
+    }
     const { error: errorActividad } = await supabase
       .from('actividades')
-      .update({
-        estado: 'liquidada',
-        ingresos: totalRecaudado,
-        gastos: gastosFinal,
-        utilidad: utilidadFinal,
-        numero_ganador: numeroGanador,
-        ganador_nombre: ganadorNombre,
-        ganador_socio_natillera_id: ganadorSocioNatilleraId,
-        ganador_es_faltante: ganadorEsFaltante,
-        forma_pago_liquidacion: formaPagoLiquidacion
-      })
+      .update(updatePayload)
       .eq('id', actividadSeleccionada.value.id)
     if (errorActividad) throw errorActividad
     // 2. Utilidad de la rifa repartida por forma de pago (según cómo se recaudó)
@@ -4268,23 +4722,29 @@ async function confirmarLiquidacion() {
     // Recargar actividades para obtener la actividad con datos del ganador
     await fetchActividades()
     
-    // Buscar la actividad actualizada con numero_ganador, ganador_nombre, ganador_socio_natillera, etc.
+    // Buscar la actividad actualizada con numero_ganador, ganador_nombre, datos del sorteo, etc.
     const actividadActualizada = actividades.value.find(a => a.id === actividadSeleccionada.value.id)
     if (actividadActualizada) {
       actividadSeleccionada.value = actividadActualizada
     } else {
-      // Fallback: actualizar con los datos que ya calculamos
+      // Fallback: actualizar con los datos que ya calculamos (incl. info sorteo si la tenemos)
+      const sorteoRef = resultadoSorteoMedellinRef.value
       actividadSeleccionada.value = {
         ...actividadSeleccionada.value,
         numero_ganador: numeroGanador,
         ganador_nombre: ganadorNombre,
         ganador_es_faltante: ganadorEsFaltante,
         ganador_socio_natillera_id: ganadorSocioNatilleraId,
-        estado: 'liquidada'
+        estado: 'liquidada',
+        ...(sorteoRef && {
+          sorteo_loteria_medellin: sorteoRef.sorteo,
+          numero_completo_loteria_medellin: sorteoRef.numero,
+          serie_loteria_medellin: sorteoRef.serie
+        })
       }
     }
-    
-    // Cerrar modal de detalle y mostrar modal del ganador
+    resultadoSorteoMedellinRef.value = null
+    // Cerrar modal de detalle y mostrar modal del ganador (inmediatamente después de liquidar)
     modalDetalleActividad.value = false
     modalGanadorRifa.value = true
   } catch (e) {
@@ -5867,12 +6327,14 @@ onMounted(() => {
   fetchActividades()
   fetchNatillera()
   verificarModalBienvenida()
+  actualizarIsMobile()
+  window.addEventListener('resize', actualizarIsMobile)
   // Agregar listener para cerrar tooltip al hacer clic fuera
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('touchstart', handleClickOutside) // Para móvil
 })
 onUnmounted(() => {
-  // Remover listener al desmontar
+  window.removeEventListener('resize', actualizarIsMobile)
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('touchstart', handleClickOutside)
 })

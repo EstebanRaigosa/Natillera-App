@@ -21,8 +21,19 @@ function updateLockedRef() {
 
 function applyLock() {
   const html = document.documentElement
-  savedScrollY = window.scrollY || html.scrollTop
-  
+  // Usar posición guardada por la vista antes de abrir la modal (evita que el scroll se pierda al abrir)
+  const pending = typeof window !== 'undefined' && window.__scrollPositionBeforeModal
+  if (pending) {
+    savedScrollY = pending.window ?? (window.scrollY || html.scrollTop)
+    const main = document.querySelector('main')
+    savedScrollYMain = pending.main ?? (main ? main.scrollTop : 0)
+    delete window.__scrollPositionBeforeModal
+  } else {
+    savedScrollY = window.scrollY || html.scrollTop
+    const main = document.querySelector('main')
+    savedScrollYMain = main ? main.scrollTop : 0
+  }
+
   // En iOS/Safari, usar un método que NO toque <main> para que las modales (fixed)
   // sigan usando el viewport como containing block. Si main tiene overflow:hidden,
   // Safari recorta o no muestra los fixed que están dentro de main.
@@ -41,7 +52,6 @@ function applyLock() {
     // NO modificar main en iOS: evita que las modales (fixed dentro de la página) dejen de verse
     const main = document.querySelector('main')
     if (main) {
-      savedScrollYMain = main.scrollTop
       main.setAttribute('data-scroll-y', savedScrollYMain.toString())
       // No aplicar height/overflow a main en iOS
     }
@@ -70,7 +80,6 @@ function applyLock() {
 
     const main = document.querySelector('main')
     if (main) {
-      savedScrollYMain = main.scrollTop
       main.style.position = 'fixed'
       main.style.top = `-${savedScrollYMain}px`
       main.style.left = '0'

@@ -291,7 +291,7 @@ export function useAuditoria() {
    * 
    * @param {Object} params - Parámetros de la auditoría
    * @param {string} params.tipoAccion - Tipo de acción: 'CREATE', 'UPDATE', 'DELETE', 'GENERATE', 'REGISTER', 'CANCEL', 'APPROVE', 'REJECT'
-   * @param {string} params.entidad - Tipo de entidad: 'natillera', 'socio', 'socio_natillera', 'cuota', 'pago', 'comprobante', 'prestamo', 'pago_prestamo', 'actividad', 'multa', 'configuracion'
+   * @param {string} params.entidad - Tipo de entidad: 'natillera', 'socio', 'socio_natillera', 'cuota', 'pago', 'comprobante', 'prestamo', 'pago_prestamo', 'actividad', 'multa', 'configuracion', 'colaborador', 'movimientos_fondo'
    * @param {string} params.entidadId - ID de la entidad afectada (UUID)
    * @param {string} params.descripcion - Descripción legible de la acción
    * @param {string} params.natilleraId - ID de la natillera relacionada (opcional)

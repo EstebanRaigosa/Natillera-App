@@ -707,14 +707,14 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
         return permisoActual.value
       }
 
-      // Buscar permisos de colaborador
+      // Buscar permisos de colaborador (maybeSingle: si es admin no hay fila → no 406)
       const { data: colaborador } = await supabase
         .from('natillera_colaboradores')
         .select('rol, permisos, estado')
         .eq('natillera_id', natilleraId)
         .eq('usuario_id', user.id)
         .eq('estado', 'aceptada')
-        .single()
+        .maybeSingle()
 
       if (colaborador) {
         permisoActual.value = {

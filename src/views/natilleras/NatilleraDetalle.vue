@@ -1184,7 +1184,7 @@
                   <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
-                  <div class="flex-1">
+                  <div class="flex-1 min-w-0">
                     <h4 class="font-bold text-gray-900 text-base sm:text-xl">
                       {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
                     </h4>
@@ -1192,6 +1192,15 @@
                       {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    @click="irACuotasDelMes(grupoMes)"
+                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-natillera-300/80 text-natillera-700 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
+                    title="Ir a cuotas de este mes"
+                  >
+                    <span class="hidden sm:inline">Ir a cuotas</span>
+                    <ArrowRightIcon class="w-4 h-4" />
+                  </button>
                 </div>
                 
                 <!-- Contenedor de cuotas del mes -->
@@ -1451,7 +1460,7 @@
                   <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
-                  <div class="flex-1">
+                  <div class="flex-1 min-w-0">
                     <h4 class="font-bold text-gray-900 text-base sm:text-xl">
                       {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
                     </h4>
@@ -1459,6 +1468,15 @@
                       {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    @click="irACuotasDelMes(grupoMes)"
+                    class="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-white/90 hover:bg-white border border-natillera-300/80 text-natillera-700 font-semibold text-xs sm:text-sm shadow-sm hover:shadow transition-all"
+                    title="Ir a cuotas de este mes"
+                  >
+                    <span class="hidden sm:inline">Ir a cuotas</span>
+                    <ArrowRightIcon class="w-4 h-4" />
+                  </button>
                 </div>
                 
                 <!-- Contenedor de cuotas del mes -->
@@ -2443,10 +2461,10 @@
             </div>
             <div>
               <h3 class="text-lg font-bold">
-                {{ editandoRecordatorio ? 'Configurar recordatorio' : 'Tus recordatorios' }}
+                {{ editandoRecordatorio ? 'Configurar recordatorio' : 'Recordatorios de esta natillera' }}
               </h3>
               <p class="text-white/90 text-sm">
-                {{ editandoRecordatorio ? 'Escribe la nota que quieres ver al entrar a cada natillera' : 'Te mostramos estos recordatorios cada vez que entras a una natillera' }}
+                {{ editandoRecordatorio ? 'Notas que verás al entrar a esta natillera' : 'Se muestran al entrar a esta natillera' }}
               </p>
             </div>
           </div>
@@ -3394,29 +3412,31 @@ const puedeUsarRecordatorio = computed(() => authStore.userEmail === RECORDATORI
 async function fetchRecordatorios() {
   const user = usuarioAutenticado.value || authStore.user
   const userId = user?.id
-  if (!userId) return
+  const natilleraId = id.value
+  if (!userId || !natilleraId) return
   loadingRecordatorios.value = true
   try {
     const { data, error } = await supabase
       .from('recordatorios_usuario')
       .select('id, texto, created_at')
       .eq('user_id', userId)
+      .eq('natillera_id', natilleraId)
       .order('created_at', { ascending: true })
     if (error) throw error
     listRecordatorios.value = (data || []).map(r => ({ id: r.id, texto: r.texto }))
-    // Migrar datos antiguos de localStorage una sola vez
+    // Migrar datos antiguos de localStorage una sola vez (se guardan en la natillera actual)
     if (listRecordatorios.value.length === 0 && typeof localStorage !== 'undefined') {
       const raw = localStorage.getItem(RECORDATORIO_STORAGE_KEY_LEGACY)
       if (raw?.trim()) {
         const textos = raw.startsWith('[') ? (() => { try { return JSON.parse(raw).filter(Boolean) } catch { return [raw] } })() : [raw]
         for (const texto of textos) {
           if (!String(texto).trim()) continue
-          await supabase.from('recordatorios_usuario').insert({ user_id: userId, texto: String(texto).trim() })
+          await supabase.from('recordatorios_usuario').insert({ user_id: userId, natillera_id: natilleraId, texto: String(texto).trim() })
         }
         if (textos.length > 0) {
           localStorage.removeItem(RECORDATORIO_STORAGE_KEY_LEGACY)
-          const { data } = await supabase.from('recordatorios_usuario').select('id, texto').eq('user_id', userId).order('created_at', { ascending: true })
-          listRecordatorios.value = (data || []).map(r => ({ id: r.id, texto: r.texto }))
+          const { data: data2 } = await supabase.from('recordatorios_usuario').select('id, texto').eq('user_id', userId).eq('natillera_id', natilleraId).order('created_at', { ascending: true })
+          listRecordatorios.value = (data2 || []).map(r => ({ id: r.id, texto: r.texto }))
         }
       }
     }
@@ -3438,18 +3458,20 @@ async function guardarRecordatorio() {
   const user = usuarioAutenticado.value || authStore.user
   const userId = user?.id
   if (!userId) return
+  const natilleraId = id.value
+  if (!natilleraId) return
   try {
-    const id = recordatorioEdicionId.value
-    if (id) {
+    const recordatorioId = recordatorioEdicionId.value
+    if (recordatorioId) {
       if (texto) {
-        const { error } = await supabase.from('recordatorios_usuario').update({ texto }).eq('id', id).eq('user_id', userId)
+        const { error } = await supabase.from('recordatorios_usuario').update({ texto }).eq('id', recordatorioId).eq('user_id', userId)
         if (error) throw error
       } else {
-        const { error } = await supabase.from('recordatorios_usuario').delete().eq('id', id).eq('user_id', userId)
+        const { error } = await supabase.from('recordatorios_usuario').delete().eq('id', recordatorioId).eq('user_id', userId)
         if (error) throw error
       }
     } else if (texto) {
-      const { error } = await supabase.from('recordatorios_usuario').insert({ user_id: userId, texto })
+      const { error } = await supabase.from('recordatorios_usuario').insert({ user_id: userId, natillera_id: natilleraId, texto })
       if (error) throw error
     }
     await fetchRecordatorios()
@@ -5231,6 +5253,12 @@ function cerrarModalCuotasSocio() {
   socioParaCuotas.value = null
   cuotasSocioPorMes.value = []
   loadingCuotasSocio.value = false
+}
+
+function irACuotasDelMes(grupoMes) {
+  if (!id.value || !grupoMes?.mes) return
+  cerrarModalCuotasSocio()
+  router.push(`/natilleras/${id.value}/cuotas/${grupoMes.mes}`)
 }
 // Funciones para controlar la visualización de la modal de socios en mora (máximo 2 veces por día)
 function obtenerClaveModalSociosEnMora() {

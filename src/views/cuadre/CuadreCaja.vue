@@ -1515,43 +1515,10 @@ async function eliminarMovimientoConfirmado() {
       updated_at: movimiento.updated_at
     }
 
-    // Si es transferencia, buscar el movimiento relacionado antes de eliminar
+    // Si es transferencia, buscar el movimiento relacionado (par entrada/salida) para eliminar ambos
     let movimientoRelacionado = null
     if (esTransferencia) {
-      const tipoOpuesto = movimiento.tipo === 'entrada' ? 'salida' : 'entrada'
-      const formaPagoOpuesta = movimiento.forma_pago === 'efectivo' ? 'transferencia' : 'efectivo'
-      
-      // Búsqueda mejorada del movimiento relacionado (similar a actualizarMovimiento)
-      // Primero intentar con la forma de pago opuesta
-      const { data: movimientosRelacionados1 } = await supabase
-        .from('movimientos_fondo')
-        .select('*')
-        .eq('natillera_id', id.value)
-        .eq('fecha', movimiento.fecha)
-        .eq('tipo', tipoOpuesto)
-        .eq('forma_pago', formaPagoOpuesta)
-        .eq('monto', movimiento.monto)
-        .neq('id', movimiento.id)
-        .ilike('descripcion', `%transferencia%`)
-        .limit(1)
-
-      movimientoRelacionado = movimientosRelacionados1?.[0]
-      
-      // Si no se encuentra, buscar sin restricción de forma de pago
-      if (!movimientoRelacionado) {
-        const { data: movimientosRelacionados2 } = await supabase
-          .from('movimientos_fondo')
-          .select('*')
-          .eq('natillera_id', id.value)
-          .eq('fecha', movimiento.fecha)
-          .eq('tipo', tipoOpuesto)
-          .eq('monto', movimiento.monto)
-          .neq('id', movimiento.id)
-          .ilike('descripcion', `%transferencia%`)
-          .limit(1)
-        
-        movimientoRelacionado = movimientosRelacionados2?.[0]
-      }
+      movimientoRelacionado = await buscarMovimientoRelacionadoTransferencia(movimiento)
     }
 
     // Si es transferencia y no se encontró el movimiento relacionado, mostrar advertencia pero continuar
@@ -1754,6 +1721,54 @@ function esTransferenciaMovimiento(m) {
   if (!m.descripcion) return false
   const desc = m.descripcion.toLowerCase()
   return desc.includes('transferencia') && (desc.includes('→') || desc.includes('efectivo'))
+}
+
+// Normalizar fecha a YYYY-MM-DD (la API puede devolver ISO con hora)
+function normalizarFechaParaConsulta(fecha) {
+  if (!fecha) return ''
+  const s = typeof fecha === 'string' ? fecha : (fecha && fecha.toISOString ? fecha.toISOString() : String(fecha))
+  return s.includes('T') ? s.split('T')[0] : s
+}
+
+// Buscar el movimiento "gemelo" de una transferencia (el otro registro del par entrada/salida)
+async function buscarMovimientoRelacionadoTransferencia(movimiento) {
+  if (!esTransferenciaMovimiento(movimiento)) return null
+  const tipoOpuesto = movimiento.tipo === 'entrada' ? 'salida' : 'entrada'
+  const formaPagoOpuesta = movimiento.forma_pago === 'efectivo' ? 'transferencia' : 'efectivo'
+  const fechaNorm = normalizarFechaParaConsulta(movimiento.fecha)
+  const montoNorm = parseFloat(movimiento.monto)
+  if (!fechaNorm || isNaN(montoNorm)) return null
+
+  // Buscar por misma fecha (normalizada), monto, tipo opuesto y forma de pago opuesta
+  const { data: lista } = await supabase
+    .from('movimientos_fondo')
+    .select('*')
+    .eq('natillera_id', id.value)
+    .eq('fecha', fechaNorm)
+    .eq('tipo', tipoOpuesto)
+    .eq('forma_pago', formaPagoOpuesta)
+    .eq('monto', montoNorm)
+    .neq('id', movimiento.id)
+    .ilike('descripcion', '%transferencia%')
+    .limit(1)
+
+  if (lista?.[0]) return lista[0]
+
+  // Fallback: la columna fecha puede venir con hora; traer candidatos y filtrar por fecha en JS
+  const { data: candidatos } = await supabase
+    .from('movimientos_fondo')
+    .select('*')
+    .eq('natillera_id', id.value)
+    .eq('tipo', tipoOpuesto)
+    .eq('forma_pago', formaPagoOpuesta)
+    .eq('monto', montoNorm)
+    .neq('id', movimiento.id)
+    .ilike('descripcion', '%transferencia%')
+    .limit(5)
+
+  if (!candidatos?.length) return null
+  const relacionado = candidatos.find(m => normalizarFechaParaConsulta(m.fecha) === fechaNorm)
+  return relacionado || null
 }
 
 // Formatear monto con separador de miles (coma)
@@ -2084,71 +2099,10 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
   const esTransferencia = esTransferenciaMovimiento(movimientoOriginal)
   
   if (esTransferencia) {
-    // Si es transferencia, necesito encontrar y actualizar el movimiento relacionado
+    // Si es transferencia, encontrar y actualizar también el movimiento relacionado (par entrada/salida)
     const descripcionBase = formMovimiento.value.descripcion || movimientoOriginal.descripcion || 'Transferencia'
-    
-    // Determinar tipo opuesto
-    const tipoOpuesto = movimientoOriginal.tipo === 'entrada' ? 'salida' : 'entrada'
-    
-    // Determinar la forma de pago opuesta basada en la nueva forma de pago seleccionada
-    // Si el movimiento original es salida con efectivo, el relacionado debe ser entrada con transferencia
-    // Si el movimiento original es entrada con transferencia, el relacionado debe ser salida con efectivo
-    // Pero si el usuario cambió la forma de pago, necesitamos recalcular
     const nuevaFormaPagoOpuesta = formMovimiento.value.formaPago === 'efectivo' ? 'transferencia' : 'efectivo'
-    
-    // Buscar el movimiento relacionado de manera más flexible
-    // Primero intentar con la forma de pago opuesta original
-    const formaPagoOpuestaOriginal = movimientoOriginal.forma_pago === 'efectivo' ? 'transferencia' : 'efectivo'
-    
-    let movimientoRelacionado = null
-    
-    // Buscar con la forma de pago opuesta original (caso más común)
-    const { data: movimientosRelacionados1 } = await supabase
-      .from('movimientos_fondo')
-      .select('*')
-      .eq('natillera_id', id.value)
-      .eq('fecha', movimientoOriginal.fecha)
-      .eq('tipo', tipoOpuesto)
-      .eq('forma_pago', formaPagoOpuestaOriginal)
-      .eq('monto', movimientoOriginal.monto)
-      .neq('id', movimientoOriginal.id)
-      .ilike('descripcion', `%transferencia%`)
-      .limit(1)
-    
-    movimientoRelacionado = movimientosRelacionados1?.[0]
-    
-    // Si no se encuentra, buscar con la nueva forma de pago opuesta (por si cambió la dirección)
-    if (!movimientoRelacionado) {
-      const { data: movimientosRelacionados2 } = await supabase
-        .from('movimientos_fondo')
-        .select('*')
-        .eq('natillera_id', id.value)
-        .eq('fecha', movimientoOriginal.fecha)
-        .eq('tipo', tipoOpuesto)
-        .eq('forma_pago', nuevaFormaPagoOpuesta)
-        .eq('monto', movimientoOriginal.monto)
-        .neq('id', movimientoOriginal.id)
-        .ilike('descripcion', `%transferencia%`)
-        .limit(1)
-      
-      movimientoRelacionado = movimientosRelacionados2?.[0]
-    }
-    
-    // Si aún no se encuentra, buscar sin restricción de forma de pago (último recurso)
-    if (!movimientoRelacionado) {
-      const { data: movimientosRelacionados3 } = await supabase
-        .from('movimientos_fondo')
-        .select('*')
-        .eq('natillera_id', id.value)
-        .eq('fecha', movimientoOriginal.fecha)
-        .eq('tipo', tipoOpuesto)
-        .eq('monto', movimientoOriginal.monto)
-        .neq('id', movimientoOriginal.id)
-        .ilike('descripcion', `%transferencia%`)
-        .limit(1)
-      
-      movimientoRelacionado = movimientosRelacionados3?.[0]
-    }
+    const movimientoRelacionado = await buscarMovimientoRelacionadoTransferencia(movimientoOriginal)
 
     // Actualizar movimiento original
     const datosActualizados = {

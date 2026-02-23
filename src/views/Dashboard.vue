@@ -585,7 +585,7 @@
               </div>
               </div>
             </router-link>
-            <!-- Pie de la tarjeta: fecha y botón eliminar en la misma fila -->
+            <!-- Pie de la tarjeta: fecha, pin (solo raigo) y botón eliminar en la misma fila -->
             <div class="px-5 pb-5 pt-0 border-t border-gray-100 flex items-center justify-between gap-2">
               <router-link
                 :to="`/natilleras/${natillera.id}`"
@@ -594,15 +594,32 @@
                 <CalendarIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <span class="truncate">{{ formatearRangoMeses(natillera) }}</span>
               </router-link>
-              <button
-                v-if="puedeEliminarNatillera(natillera) && natillera.es_propia"
-                type="button"
-                @click.stop="confirmarEliminarNatillera(natillera)"
-                class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
-                title="Eliminar natillera"
-              >
-                <TrashIcon class="w-4 h-4" />
-              </button>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <button
+                  v-if="esUsuarioRaigo"
+                  type="button"
+                  @click.stop="togglePinNatillera(natillera.id)"
+                  :class="[
+                    'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                    estaPineada(natillera.id)
+                      ? 'bg-teal-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  ]"
+                  :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
+                >
+                  <MapPinIconSolid v-if="estaPineada(natillera.id)" class="w-4 h-4" />
+                  <MapPinIcon v-else class="w-4 h-4" />
+                </button>
+                <button
+                  v-if="puedeEliminarNatillera(natillera) && natillera.es_propia"
+                  type="button"
+                  @click.stop="confirmarEliminarNatillera(natillera)"
+                  class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
+                  title="Eliminar natillera"
+                >
+                  <TrashIcon class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -742,7 +759,7 @@
               </div>
               </div>
             </router-link>
-            <!-- Pie de la tarjeta: fecha y botón eliminar en la misma fila -->
+            <!-- Pie de la tarjeta: fecha, pin (solo raigo) y botón eliminar en la misma fila -->
             <div class="px-5 pb-5 pt-0 border-t border-gray-100 flex items-center justify-between gap-2">
               <router-link
                 :to="`/natilleras/${natillera.id}`"
@@ -751,15 +768,32 @@
                 <CalendarIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
                 <span class="truncate">{{ formatearRangoMeses(natillera) }}</span>
               </router-link>
-              <button
-                v-if="puedeEliminarNatillera(natillera)"
-                type="button"
-                @click.stop="confirmarEliminarNatillera(natillera)"
-                class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
-                title="Eliminar natillera"
-              >
-                <TrashIcon class="w-4 h-4" />
-              </button>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <button
+                  v-if="esUsuarioRaigo"
+                  type="button"
+                  @click.stop="togglePinNatillera(natillera.id)"
+                  :class="[
+                    'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                    estaPineada(natillera.id)
+                      ? 'bg-teal-500 text-white shadow-lg'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  ]"
+                  :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
+                >
+                  <MapPinIconSolid v-if="estaPineada(natillera.id)" class="w-4 h-4" />
+                  <MapPinIcon v-else class="w-4 h-4" />
+                </button>
+                <button
+                  v-if="puedeEliminarNatillera(natillera)"
+                  type="button"
+                  @click.stop="confirmarEliminarNatillera(natillera)"
+                  class="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg flex-shrink-0"
+                  title="Eliminar natillera"
+                >
+                  <TrashIcon class="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -904,16 +938,32 @@
                 </div>
               </div>
               </div>
-
-              <!-- Pie de la tarjeta: Rango de fechas -->
-              <div class="px-5 pb-5 pt-0 border-t border-gray-100">
-                <!-- Rango de fechas -->
-                <div class="flex items-center gap-1.5 text-xs text-gray-600">
-                  <CalendarIcon class="w-4 h-4 text-gray-400" />
-                  <span>{{ formatearRangoMeses(natillera) }}</span>
-                </div>
-              </div>
             </router-link>
+            <!-- Pie de la tarjeta: fecha y pin (solo raigo) -->
+            <div class="px-5 pb-5 pt-0 border-t border-gray-100 flex items-center justify-between gap-2">
+              <router-link
+                :to="`/natilleras/${natillera.id}`"
+                class="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-800 min-w-0"
+              >
+                <CalendarIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <span class="truncate">{{ formatearRangoMeses(natillera) }}</span>
+              </router-link>
+              <button
+                v-if="esUsuarioRaigo"
+                type="button"
+                @click.stop="togglePinNatillera(natillera.id)"
+                :class="[
+                  'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                  estaPineada(natillera.id)
+                    ? 'bg-teal-500 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                ]"
+                :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
+              >
+                <MapPinIconSolid v-if="estaPineada(natillera.id)" class="w-4 h-4" />
+                <MapPinIcon v-else class="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -1219,8 +1269,10 @@ import {
   ClockIcon,
   FunnelIcon,
   ChevronUpIcon,
-  CalendarIcon
+  CalendarIcon,
+  MapPinIcon
 } from '@heroicons/vue/24/outline'
+import { MapPinIcon as MapPinIconSolid } from '@heroicons/vue/24/solid'
 
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
@@ -1246,6 +1298,45 @@ const natillerasDondeEsSocio = ref([])
 const verificandoModal = ref(true) // Estado para la animación de carga
 const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
 const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
+
+// Pinear natilleras (solo raigo.16@gmail.com): guardado en localStorage, orden: pineadas primero
+const KEY_PIN_NATILLERAS = 'natilleras_pineadas_raigo'
+const natillerasPineadas = ref([])
+function cargarPineadas() {
+  try {
+    const raw = localStorage.getItem(KEY_PIN_NATILLERAS)
+    const arr = raw ? JSON.parse(raw) : []
+    natillerasPineadas.value = Array.isArray(arr) ? arr : []
+  } catch {
+    natillerasPineadas.value = []
+  }
+}
+function guardarPineadas() {
+  localStorage.setItem(KEY_PIN_NATILLERAS, JSON.stringify(natillerasPineadas.value))
+}
+function togglePinNatillera(natilleraId) {
+  const arr = [...natillerasPineadas.value]
+  const i = arr.indexOf(natilleraId)
+  if (i >= 0) arr.splice(i, 1)
+  else arr.push(natilleraId)
+  natillerasPineadas.value = arr
+  guardarPineadas()
+}
+function estaPineada(natilleraId) {
+  return natillerasPineadas.value.includes(natilleraId)
+}
+function ordenarPineadasPrimero(lista) {
+  if (!esUsuarioRaigo.value || !lista.length) return lista
+  const orden = [...natillerasPineadas.value]
+  return [...lista].sort((a, b) => {
+    const ia = orden.indexOf(a.id)
+    const ib = orden.indexOf(b.id)
+    if (ia >= 0 && ib < 0) return -1
+    if (ia < 0 && ib >= 0) return 1
+    if (ia >= 0 && ib >= 0) return ia - ib
+    return 0
+  })
+}
 
 // Solo para raigo.16@gmail.com: resaltar con contorno teal las natilleras cuyo propietario NO es raigo.16@gmail.com
 const esUsuarioRaigo = computed(() => (authStore.userEmail || '').toLowerCase().trim() === 'raigo.16@gmail.com')
@@ -1311,14 +1402,14 @@ const natillerasFiltradas = computed(() => {
   if (userId) {
     list = list.filter(n => n.admin_id === userId)
   }
-  return list
+  return ordenarPineadasPrimero(list)
 })
 
 const natillerasCompartidasFiltradas = computed(() => {
-  if (filtro.value === 'todas') {
-    return natillerasStore.natillerasCompartidas
-  }
-  return natillerasStore.natillerasCompartidas.filter(n => n.estado === filtro.value)
+  let list = filtro.value === 'todas'
+    ? natillerasStore.natillerasCompartidas
+    : natillerasStore.natillerasCompartidas.filter(n => n.estado === filtro.value)
+  return ordenarPineadasPrimero(list)
 })
 
 // Combinar natilleras propias y compartidas con flag de diferenciación
@@ -1336,11 +1427,12 @@ const todasLasNatillerasFiltradas = computed(() => {
   }
   
   // Ordenar: primero las propias, luego las compartidas
-  return todas.sort((a, b) => {
+  todas = todas.sort((a, b) => {
     if (a.es_propia && !b.es_propia) return -1
     if (!a.es_propia && b.es_propia) return 1
     return 0
   })
+  return ordenarPineadasPrimero(todas)
 })
 
 // Verificar si el usuario es socio en alguna natillera
@@ -2163,6 +2255,7 @@ async function inicializarComponente() {
 }
 
 onMounted(async () => {
+  cargarPineadas()
   // Activar animación de carga al inicio
   verificandoModal.value = true
   await inicializarComponente()
