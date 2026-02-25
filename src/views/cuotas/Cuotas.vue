@@ -2148,7 +2148,7 @@
               </p>
               <p v-else-if="(cuotaDetalle.estadoReal || cuotaDetalle.estado) === 'mora' && getDiasMora(cuotaDetalle) > 0" class="text-[11px] text-gray-500 mt-1">
                 {{ getDiasMora(cuotaDetalle) }} {{ getDiasMora(cuotaDetalle) === 1 ? 'día' : 'días' }} en mora
-                <template v-if="cuotaDetalle.fecha_mora || cuotaDetalle.fecha_limite"> desde {{ formatDate(cuotaDetalle.fecha_mora || cuotaDetalle.fecha_limite) }}</template>
+                <template v-if="cuotaDetalle.fecha_vencimiento || cuotaDetalle.fecha_limite"> desde {{ formatDate(cuotaDetalle.fecha_vencimiento || cuotaDetalle.fecha_limite) }}</template>
               </p>
             </div>
 
@@ -8074,7 +8074,7 @@ function getTotalAPagarConActividadesSocio(cuota) {
   return totalCuota + actividadesPendientes + cuotasPrestamosPendientes
 }
 
-// Calcular días en mora desde fecha_limite
+// Calcular días en mora desde la fecha de vencimiento (primer día en mora = día siguiente al vencimiento)
 // Función para verificar si una cuota tiene una anotación de ajuste
 function tieneAjuste(cuota) {
   if (!cuota.descripcion) return false
@@ -8106,25 +8106,27 @@ function getTextoAjuste(cuota) {
 }
 
 function getDiasMora(cuota) {
-  if (!cuota || cuota.estado !== 'mora') return 0
+  const enMora = cuota?.estado === 'mora' || cuota?.estadoReal === 'mora'
+  if (!cuota || !enMora) return 0
   
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
-  // Usar fecha_limite como referencia (fecha desde la cual está en mora)
-  const fechaReferencia = cuota.fecha_limite
+  // Usar fecha_vencimiento como referencia: los días en mora se cuentan desde el vencimiento
+  // (el primer día en mora es el día siguiente al vencimiento)
+  const fechaReferencia = cuota.fecha_vencimiento || cuota.fecha_limite
   if (!fechaReferencia) return 0
   
-  let fechaLimite
+  let fechaVencimiento
   if (typeof fechaReferencia === 'string') {
     const [anio, mes, dia] = fechaReferencia.split('-').map(Number)
-    fechaLimite = new Date(anio, mes - 1, dia)
+    fechaVencimiento = new Date(anio, mes - 1, dia)
   } else {
-    fechaLimite = new Date(fechaReferencia)
+    fechaVencimiento = new Date(fechaReferencia)
   }
-  fechaLimite.setHours(0, 0, 0, 0)
+  fechaVencimiento.setHours(0, 0, 0, 0)
   
-  const diasMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
+  const diasMora = Math.floor((hoy - fechaVencimiento) / (1000 * 60 * 60 * 24))
   return Math.max(0, diasMora)
 }
 
