@@ -346,9 +346,9 @@
         <div 
           :class="[
             'relative z-10',
-            sn.estado === 'inactivo' ? 'cursor-not-allowed' : 'cursor-pointer'
+            'cursor-pointer'
           ]"
-          @click="sn.estado === 'activo' ? verDetalleSocio(sn) : null"
+          @click="sn.estado === 'activo' ? verDetalleSocio(sn) : verComprobanteSalida(sn)"
         >
           <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-4 flex-1 min-w-0">
@@ -427,7 +427,7 @@
                 </button>
                 <button 
                   v-if="!esVisor"
-                  @click.stop="toggleEstado(sn)"
+                  @click.stop="abrirModalDesactivar(sn)"
                   class="p-2 text-amber-600 hover:text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 bg-amber-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
                   title="Desactivar"
                   aria-label="Desactivar socio"
@@ -438,7 +438,7 @@
               <!-- Solo botón de activar cuando está inactivo - Destacado con color vibrante -->
               <button 
                 v-else-if="!esVisor"
-                @click.stop="toggleEstado(sn)"
+                @click.stop="abrirModalActivar(sn)"
                 class="px-4 py-2.5 text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-2 border-green-400 rounded-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2 animate-pulse hover:animate-none relative z-20"
                 style="filter: none !important;"
                 title="Activar socio"
@@ -1945,6 +1945,373 @@
         </div>
     </ModalWrapper>
 
+    <!-- Modal Desactivar Socio: sanción opcional y totales -->
+    <ModalWrapper
+      :show="!!socioADesactivar"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-amber-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="cerrarModalDesactivar()"
+    >
+      <!-- Header -->
+      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
+              <XCircleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-lg sm:text-xl font-bold truncate">Desactivar socio</h3>
+              <p class="text-white/90 text-xs sm:text-sm truncate">{{ socioADesactivar?.socio?.nombre }}</p>
+            </div>
+          </div>
+          <button type="button" @click="cerrarModalDesactivar()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <!-- Check: Aplicar sanción por retiro (estiludo) -->
+        <button
+          type="button"
+          @click="desactivarSancionar = !desactivarSancionar"
+          :class="[
+            'w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200',
+            desactivarSancionar
+              ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-md shadow-amber-200/40'
+              : 'bg-gray-50 border-gray-200 hover:border-amber-200 hover:bg-amber-50/30'
+          ]"
+        >
+          <span
+            :class="[
+              'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-200',
+              desactivarSancionar
+                ? 'border-amber-500 bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-inner'
+                : 'border-gray-300 bg-white'
+            ]"
+          >
+            <CheckIcon v-if="desactivarSancionar" class="w-4 h-4 stroke-[2.5]" />
+          </span>
+          <span class="min-w-0 flex-1 pt-0.5">
+            <p class="font-semibold text-gray-800 text-sm sm:text-base">Aplicar sanción por retiro</p>
+            <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Descontar un porcentaje para el fondo (sanción por retiro)</p>
+          </span>
+        </button>
+
+        <!-- Porcentaje de sanción (solo si aplica sanción) -->
+        <div v-if="desactivarSancionar" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">Porcentaje de sanción por retiro (%)</label>
+          <input
+            v-model.number="desactivarPorcentajeSancion"
+            type="number"
+            min="0"
+            max="100"
+            step="0.5"
+            class="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-gray-800 font-medium"
+            placeholder="0"
+          />
+        </div>
+
+        <!-- Resumen: totales del socio -->
+        <div class="rounded-xl border-2 border-gray-200 overflow-hidden">
+          <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+            <p class="font-semibold text-gray-700 text-sm">Resumen del socio</p>
+          </div>
+          <div class="divide-y divide-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+              <span class="text-gray-600 text-sm">Total ahorrado</span>
+              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">Cargando...</span>
+              <span v-else class="font-bold text-natillera-700 tabular-nums">${{ formatMoney(totalesDesactivar.totalAhorrado) }}</span>
+            </div>
+            <div class="flex items-center justify-between px-4 py-3">
+              <span class="text-gray-600 text-sm">Total entregado en actividades</span>
+              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">—</span>
+              <span v-else class="font-bold text-gray-800 tabular-nums">${{ formatMoney(totalesDesactivar.totalActividades) }}</span>
+            </div>
+            <div class="flex items-center justify-between px-4 py-3">
+              <span class="text-gray-600 text-sm">Total pagado en sanciones</span>
+              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">—</span>
+              <span v-else class="font-bold text-rose-600 tabular-nums">${{ formatMoney(totalesDesactivar.totalSancionesPagadas) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Valor a entregar y valor para el fondo -->
+        <div class="rounded-xl border-2 border-amber-200 bg-amber-50/50 overflow-hidden">
+          <div class="bg-amber-100/80 px-4 py-2.5 border-b border-amber-200">
+            <p class="font-semibold text-amber-900 text-sm">Liquidación al desactivar</p>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-700 font-medium">Valor a entregar al socio</span>
+              <span class="font-bold text-lg text-natillera-700 tabular-nums">${{ formatMoney(valorEntregarDesactivar) }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-700 font-medium">Valor para el fondo (sanción por retiro)</span>
+              <span class="font-bold text-lg text-amber-700 tabular-nums">${{ formatMoney(valorFondoDesactivar) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forma de pago de la liquidación (resta de efectivo o transferencia) -->
+        <div class="rounded-xl border-2 border-gray-200 overflow-hidden">
+          <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
+            <p class="font-semibold text-gray-700 text-sm">Forma de pago de la liquidación</p>
+            <p class="text-xs text-gray-500 mt-0.5">Se descontará el total (entregar + sanción) de esta forma de pago en cuadre de caja</p>
+          </div>
+          <div class="p-4 flex gap-3">
+            <button
+              type="button"
+              @click="desactivarFormaPago = 'efectivo'"
+              :class="[
+                'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-medium transition-all',
+                desactivarFormaPago === 'efectivo'
+                  ? 'border-amber-500 bg-amber-50 text-amber-800'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-amber-200'
+              ]"
+            >
+              <BanknotesIcon class="w-5 h-5" />
+              Efectivo
+            </button>
+            <button
+              type="button"
+              @click="desactivarFormaPago = 'transferencia'"
+              :class="[
+                'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-medium transition-all',
+                desactivarFormaPago === 'transferencia'
+                  ? 'border-blue-500 bg-blue-50 text-blue-800'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200'
+              ]"
+            >
+              <BuildingOffice2Icon class="w-5 h-5" />
+              Transferencia
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex gap-2 sm:gap-3 flex-shrink-0">
+        <button
+          type="button"
+          @click="cerrarModalDesactivar()"
+          :disabled="desactivando"
+          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold text-sm sm:text-base rounded-xl transition-all shadow-sm"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          @click="confirmarDesactivarSocio"
+          :disabled="desactivando"
+          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="desactivando" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Desactivando...
+          </span>
+          <span v-else>Confirmar desactivar</span>
+        </button>
+      </div>
+    </ModalWrapper>
+
+    <!-- Modal Activar Socio: confirmación y reversión de movimientos -->
+    <ModalWrapper
+      :show="!!socioAActivar"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-emerald-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="cerrarModalActivar()"
+    >
+      <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-green-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
+              <CheckCircleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-lg sm:text-xl font-bold truncate">Activar socio</h3>
+              <p class="text-white/90 text-xs sm:text-sm truncate">{{ socioAActivar?.socio?.nombre }}</p>
+            </div>
+          </div>
+          <button type="button" @click="cerrarModalActivar()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+        <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 overflow-hidden">
+          <div class="bg-emerald-100/80 px-4 py-2.5 border-b border-emerald-200">
+            <p class="font-semibold text-emerald-900 text-sm">Confirmar reactivación</p>
+          </div>
+          <div class="p-4 space-y-3">
+            <p class="text-gray-700 text-sm leading-relaxed">
+              El socio volverá a estar <strong>activo</strong> en la natillera. Si al desactivarse se generó liquidación (comprobante de salida), se revertirán automáticamente los movimientos de caja y la sanción por retiro asociados.
+            </p>
+            <p class="text-gray-600 text-sm">
+              ¿Deseas continuar?
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-shrink-0 p-4 sm:p-5 pt-0 flex gap-3">
+        <button
+          type="button"
+          @click="cerrarModalActivar()"
+          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold text-sm sm:text-base rounded-xl hover:bg-gray-50 transition-all"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          @click="confirmarActivarSocio"
+          :disabled="activando"
+          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="activando" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Activando...
+          </span>
+          <span v-else>Confirmar activar</span>
+        </button>
+      </div>
+    </ModalWrapper>
+
+    <!-- Modal Comprobante de Desactivación -->
+    <ModalWrapper
+      :show="!!comprobanteDesactivacion"
+      :z-index="55"
+      align="bottom"
+      overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-amber-200 overflow-hidden flex flex-col"
+      card-max-width="28rem"
+      @close="cerrarComprobanteDesactivacion()"
+    >
+      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+        <div class="relative z-10 flex items-center justify-between">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
+              <DocumentTextIcon class="w-5 h-5 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-lg sm:text-xl font-bold truncate">Comprobante de salida</h3>
+              <p class="text-white/90 text-xs sm:text-sm truncate">Salida de la natillera</p>
+            </div>
+          </div>
+          <button type="button" @click="cerrarComprobanteDesactivacion()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+      <div class="overflow-y-auto flex-1 p-3 sm:p-4">
+        <div
+          ref="comprobanteDesactivacionRef"
+          class="bg-white rounded-2xl overflow-hidden mx-auto"
+          style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 340px;"
+        >
+          <div style="background: #fffbeb; padding: 14px 12px; color: #1f2937;">
+            <div style="text-align: center; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                  Liquidación por Salida
+                </h1>
+              </div>
+            </div>
+            <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+              <div style="text-align: center; margin-bottom: 10px;">
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">VALOR A ENTREGAR</p>
+                <p style="font-size: 26px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -1px; color: #b45309;">
+                  ${{ formatMoney(comprobanteDesactivacion?.valorEntregar) }}
+                </p>
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1.5px solid #fcd34d; border-radius: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                  <span style="width: 5px; height: 5px; background: #d97706; border-radius: 50%; display: inline-block;"></span>
+                  <p style="color: #b45309; font-size: 9px; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">SALIDA DE LA NATILLERA</p>
+                </div>
+                <p v-if="comprobanteDesactivacion?.codigoComprobante" style="color: #9ca3af; font-size: 11px; margin: 6px 0 0 0; font-weight: 500; letter-spacing: 0.3px; font-family: 'Courier New', monospace;">
+                  {{ comprobanteDesactivacion.codigoComprobante }}
+                </p>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ comprobanteDesactivacion?.socioNombre }}</p>
+                </div>
+                <div>
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha</p>
+                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.4;">{{ comprobanteDesactivacion?.fecha }}</p>
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
+              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">RESUMEN</p>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #065f46; font-size: 11px; font-weight: 600;">Total ahorrado</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #065f46;">${{ formatMoney(comprobanteDesactivacion?.totalAhorrado || 0) }}</span>
+                </div>
+                <div v-if="(comprobanteDesactivacion?.valorFondo || 0) > 0" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #991b1b; font-size: 11px; font-weight: 600;">Sanción por retiro</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #dc2626;">${{ formatMoney(comprobanteDesactivacion?.valorFondo) }}</span>
+                </div>
+                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="color: #b45309; font-size: 11px; font-weight: 700;">Valor a entregar</span>
+                  <span style="font-size: 14px; font-weight: 800; color: #b45309;">${{ formatMoney(comprobanteDesactivacion?.valorEntregar) }}</span>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%;"></div>
+                <p style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 10px; margin: 0; font-weight: 700;">Natillerapp</p>
+                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 flex gap-3">
+        <button
+          type="button"
+          @click="descargarComprobanteDesactivacion"
+          :disabled="generandoImagenDesactivacion"
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white font-semibold text-sm bg-blue-600 hover:bg-blue-700 shadow-md transition-all disabled:opacity-50"
+        >
+          <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+          {{ generandoImagenDesactivacion ? '...' : 'Descargar' }}
+        </button>
+        <button
+          type="button"
+          @click="compartirWhatsAppDesactivacion"
+          :disabled="generandoImagenDesactivacion"
+          :class="['flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm shadow-md transition-all', comprobanteDesactivacion?.socioTelefono && !generandoImagenDesactivacion ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed']"
+        >
+          <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
+          Compartir
+        </button>
+      </div>
+    </ModalWrapper>
+
     <!-- Modal de Progreso de Creación de Socio - DISEÑO ULTRA MODERNO -->
     <ModalWrapper
       :show="modalProgreso"
@@ -2210,6 +2577,7 @@ import { useNotificationStore } from '../../stores/notifications'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
@@ -2245,7 +2613,9 @@ import {
   Squares2X2Icon,
   Bars3Icon,
   TrashIcon,
-  SparklesIcon
+  SparklesIcon,
+  CheckIcon,
+  BuildingOffice2Icon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -2290,6 +2660,33 @@ const loadingDetalle = ref(false)
 const busqueda = ref('')
 const socioAEliminar = ref(null)
 useBodyScrollLock(computed(() => !!socioAEliminar.value))
+
+// Modal desactivar socio: sanción opcional y totales
+const socioADesactivar = ref(null)
+const desactivarSancionar = ref(false)
+const desactivarPorcentajeSancion = ref(0)
+const desactivarFormaPago = ref('efectivo') // efectivo | transferencia
+const totalesDesactivar = ref({
+  totalAhorrado: 0,
+  totalActividades: 0,
+  totalSancionesPagadas: 0,
+  valorRecaudado: 0
+})
+const loadingTotalesDesactivar = ref(false)
+const desactivando = ref(false)
+const comprobanteDesactivacion = ref(null)
+const comprobanteDesactivacionRef = ref(null)
+const generandoImagenDesactivacion = ref(false)
+const comprobantesSalidaGuardados = ref({})
+const loadingComprobanteSalida = ref(false)
+useBodyScrollLock(computed(() => !!socioADesactivar.value))
+useBodyScrollLock(computed(() => !!comprobanteDesactivacion.value))
+
+// Modal activar socio (confirmación y reversión)
+const socioAActivar = ref(null)
+const activando = ref(false)
+useBodyScrollLock(computed(() => !!socioAActivar.value))
+
 const guardando = ref(false)
 const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga
@@ -3419,6 +3816,325 @@ function cerrarModalProgreso() {
   }
 }
 
+// Totales para modal desactivar: valor recaudado = total ahorrado (base para %)
+const valorEntregarDesactivar = computed(() => {
+  const rec = totalesDesactivar.value.valorRecaudado || 0
+  const pct = desactivarSancionar.value ? Math.min(100, Math.max(0, desactivarPorcentajeSancion.value)) : 0
+  return rec * (1 - pct / 100)
+})
+const valorFondoDesactivar = computed(() => {
+  const rec = totalesDesactivar.value.valorRecaudado || 0
+  const pct = desactivarSancionar.value ? Math.min(100, Math.max(0, desactivarPorcentajeSancion.value)) : 0
+  return rec * (pct / 100)
+})
+
+async function cargarTotalesDesactivar(socioNatilleraId) {
+  if (!socioNatilleraId || !id) return
+  loadingTotalesDesactivar.value = true
+  totalesDesactivar.value = { totalAhorrado: 0, totalActividades: 0, totalSancionesPagadas: 0, valorRecaudado: 0 }
+  try {
+    const [
+      { data: cuotas },
+      { data: sociosActividad }
+    ] = await Promise.all([
+      supabase.from('cuotas').select('estado, valor_pagado, valor_multa').eq('socio_natillera_id', socioNatilleraId),
+      supabase.from('socios_actividad').select('valor_pagado').eq('socio_natillera_id', socioNatilleraId)
+    ])
+    const pagadas = (cuotas || []).filter(c => c.estado === 'pagada')
+    const totalAhorrado = pagadas.reduce((sum, c) => sum + (parseFloat(c.valor_pagado || 0) - parseFloat(c.valor_multa || 0)), 0)
+    const totalSancionesPagadas = pagadas.reduce((sum, c) => sum + parseFloat(c.valor_multa || 0), 0)
+    const totalActividades = (sociosActividad || []).reduce((sum, sa) => sum + parseFloat(sa.valor_pagado || 0), 0)
+    const valorRecaudado = totalAhorrado
+    totalesDesactivar.value = { totalAhorrado, totalActividades, totalSancionesPagadas, valorRecaudado }
+  } catch (e) {
+    console.error('Error cargando totales para desactivar:', e)
+    totalesDesactivar.value = { totalAhorrado: 0, totalActividades: 0, totalSancionesPagadas: 0, valorRecaudado: 0 }
+  } finally {
+    loadingTotalesDesactivar.value = false
+  }
+}
+
+function abrirModalDesactivar(sn) {
+  if (sn.estado !== 'activo') return
+  socioADesactivar.value = sn
+  desactivarSancionar.value = false
+  desactivarPorcentajeSancion.value = 0
+  desactivarFormaPago.value = 'efectivo'
+  cargarTotalesDesactivar(sn.id)
+}
+
+function cerrarModalDesactivar() {
+  socioADesactivar.value = null
+  desactivarSancionar.value = false
+  desactivarPorcentajeSancion.value = 0
+  desactivarFormaPago.value = 'efectivo'
+}
+
+function abrirModalActivar(sn) {
+  if (sn.estado !== 'inactivo') return
+  socioAActivar.value = sn
+}
+
+function cerrarModalActivar() {
+  socioAActivar.value = null
+}
+
+async function confirmarActivarSocio() {
+  const sn = socioAActivar.value
+  if (!sn || !id) return
+  const natilleraId = id
+  const nombreSocio = sn.socio?.nombre || 'Socio'
+  activando.value = true
+  try {
+    // Si existe comprobante de salida, revertir los movimientos que se hicieron al desactivar
+    const { data: comprobante, error: errComp } = await supabase
+      .from('comprobantes_salida')
+      .select('socio_nombre, valor_entregar, valor_sancion')
+      .eq('socio_natillera_id', sn.id)
+      .maybeSingle()
+
+    if (!errComp && comprobante) {
+      const valorEntregar = parseFloat(comprobante.valor_entregar) || 0
+      const valorSancion = parseFloat(comprobante.valor_sancion) || 0
+      const totalSalida = valorEntregar + valorSancion
+      const socioNombre = comprobante.socio_nombre || nombreSocio
+
+      if (totalSalida > 0) {
+        // Buscar el movimiento de salida para obtener forma_pago (mismo que se usó al desactivar)
+        const descripcionSalida = `Liquidación por salida - ${socioNombre}`
+        const { data: movs, error: errMovs } = await supabase
+          .from('movimientos_fondo')
+          .select('id, forma_pago, monto')
+          .eq('natillera_id', natilleraId)
+          .eq('tipo', 'salida')
+          .eq('descripcion', descripcionSalida)
+          .eq('monto', totalSalida)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        const formaPago = (movs?.[0]?.forma_pago || 'efectivo').toLowerCase().trim()
+        const formaPagoNorm = formaPago === 'transferencia' ? 'transferencia' : 'efectivo'
+
+        // Reversar: entrada por el mismo monto (restaura el fondo)
+        const { error: errEntrada } = await supabase.from('movimientos_fondo').insert({
+          natillera_id: natilleraId,
+          tipo: 'entrada',
+          monto: totalSalida,
+          forma_pago: formaPagoNorm,
+          descripcion: `Reversión reactivación - ${socioNombre}`,
+          fecha: new Date().toISOString().split('T')[0]
+        })
+        if (errEntrada) throw errEntrada
+      }
+
+      // Revertir sanción por retiro en utilidades (si hubo sanción)
+      if (valorSancion > 0) {
+        const { data: utilList } = await supabase
+          .from('utilidades_clasificadas')
+          .select('id, forma_pago')
+          .eq('natillera_id', natilleraId)
+          .eq('tipo', 'sanciones')
+          .eq('descripcion', `Sanción por retiro: ${socioNombre}`)
+          .is('fecha_cierre', null)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        const utilExist = utilList?.[0]
+        if (utilExist?.id) {
+          const formaPagoUtil = (utilExist.forma_pago || 'efectivo').toLowerCase().trim()
+          const formaPagoUtilNorm = formaPagoUtil === 'transferencia' ? 'transferencia' : 'efectivo'
+          const { error: errUtil } = await supabase.from('utilidades_clasificadas').insert({
+            natillera_id: natilleraId,
+            tipo: 'sanciones',
+            monto: -valorSancion,
+            forma_pago: formaPagoUtilNorm,
+            descripcion: `Reversión reactivación - Sanción por retiro: ${socioNombre}`
+          })
+          if (errUtil) throw errUtil
+        }
+      }
+
+      // Eliminar comprobante de salida (el socio vuelve a estar activo, ya no aplica el comprobante)
+      await supabase.from('comprobantes_salida').delete().eq('socio_natillera_id', sn.id)
+      delete comprobantesSalidaGuardados.value[sn.id]
+    }
+
+    const resultado = await sociosStore.cambiarEstadoSocio(sn.id, 'activo')
+    if (resultado.success) {
+      cerrarModalActivar()
+      if (modalDetalle.value && socioSeleccionado.value?.id === sn.id) {
+        modalDetalle.value = false
+        socioSeleccionado.value = null
+      }
+      notificationStore.success(
+        `${nombreSocio} ha sido activado`,
+        'Socio activado',
+        2500
+      )
+    } else {
+      notificationStore.error(resultado.error || 'No se pudo activar', 'Error')
+    }
+  } catch (e) {
+    console.error('Error al activar socio:', e)
+    notificationStore.error(e?.message || 'Error al activar socio', 'Error')
+  } finally {
+    activando.value = false
+  }
+}
+
+function generarCodigoComprobanteSalida() {
+  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let codigo = 'SAL-'
+  for (let i = 0; i < 8; i++) {
+    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length))
+  }
+  return codigo
+}
+
+function cerrarComprobanteDesactivacion() {
+  comprobanteDesactivacion.value = null
+}
+
+async function descargarComprobanteDesactivacion() {
+  if (!comprobanteDesactivacionRef.value) return
+  generandoImagenDesactivacion.value = true
+  try {
+    const dataUrl = await toPng(comprobanteDesactivacionRef.value, {
+      quality: 1,
+      pixelRatio: 2,
+      backgroundColor: '#fffbeb'
+    })
+    const link = document.createElement('a')
+    link.href = dataUrl
+    link.download = `comprobante-salida-${(comprobanteDesactivacion.value?.socioNombre || 'socio').replace(/\s+/g, '-')}-${Date.now()}.png`
+    link.click()
+  } catch (e) {
+    console.error('Error descargando comprobante:', e)
+    notificationStore.error('No se pudo generar la imagen', 'Error')
+  } finally {
+    generandoImagenDesactivacion.value = false
+  }
+}
+
+async function compartirWhatsAppDesactivacion() {
+  if (!comprobanteDesactivacion.value || !comprobanteDesactivacionRef.value) return
+  generandoImagenDesactivacion.value = true
+  try {
+    const dataUrl = await toPng(comprobanteDesactivacionRef.value, {
+      quality: 1,
+      pixelRatio: 2,
+      backgroundColor: '#fffbeb'
+    })
+    const nombreArchivo = `comprobante-salida-${(comprobanteDesactivacion.value.socioNombre || 'socio').replace(/\s+/g, '-')}-${Date.now()}.png`
+    const blob = await fetch(dataUrl).then(r => r.blob())
+    const file = new File([blob], nombreArchivo, { type: 'image/png' })
+    const tel = comprobanteDesactivacion.value.socioTelefono?.replace(/\D/g, '') || ''
+    if (tel && navigator.share && navigator.canShare?.({ files: [file] })) {
+      await navigator.share({
+        title: 'Comprobante de salida',
+        text: `Liquidación por salida de la natillera - ${comprobanteDesactivacion.value.socioNombre}`,
+        files: [file]
+      })
+    } else if (tel) {
+      const url = `https://wa.me/57${tel}?text=${encodeURIComponent('Comprobante de salida de la natillera - Natillerapp')}`
+      window.open(url, '_blank')
+    }
+  } catch (e) {
+    console.error('Error compartiendo comprobante:', e)
+    notificationStore.error('No se pudo compartir', 'Error')
+  } finally {
+    generandoImagenDesactivacion.value = false
+  }
+}
+
+async function confirmarDesactivarSocio() {
+  const sn = socioADesactivar.value
+  if (!sn || !id) return
+  desactivando.value = true
+  const natilleraId = id
+  const tot = totalesDesactivar.value
+  const valorEntregar = valorEntregarDesactivar.value
+  const valorFondo = valorFondoDesactivar.value
+  const formaPago = (desactivarFormaPago.value || 'efectivo').toLowerCase().trim()
+  const formaPagoNorm = formaPago === 'transferencia' ? 'transferencia' : 'efectivo'
+  const nombreSocio = sn.socio?.nombre || 'Socio'
+  try {
+    // Sanción por retiro → utilidades (con forma de pago para cuadre)
+    if (desactivarSancionar.value && desactivarPorcentajeSancion.value > 0 && valorFondo > 0) {
+      const insertUtilidad = {
+        natillera_id: natilleraId,
+        tipo: 'sanciones',
+        monto: valorFondo,
+        forma_pago: formaPagoNorm,
+        descripcion: `Sanción por retiro: ${nombreSocio}`
+      }
+      const { error } = await supabase.from('utilidades_clasificadas').insert(insertUtilidad)
+      if (error) throw error
+    }
+    // Salida en movimientos_fondo: total entregado al socio + sanción (se descuenta de efectivo o transferencia)
+    const totalSalida = valorEntregar + valorFondo
+    if (totalSalida > 0) {
+      const descripcionSalida = `Liquidación por salida - ${nombreSocio}`
+      const { error: errMov } = await supabase.from('movimientos_fondo').insert({
+        natillera_id: natilleraId,
+        tipo: 'salida',
+        monto: totalSalida,
+        forma_pago: formaPagoNorm,
+        descripcion: descripcionSalida,
+        fecha: new Date().toISOString().split('T')[0]
+      })
+      if (errMov) throw errMov
+    }
+    const resultado = await sociosStore.cambiarEstadoSocio(sn.id, 'inactivo')
+    if (resultado.success) {
+      if (modalDetalle.value && socioSeleccionado.value?.id === sn.id) {
+        modalDetalle.value = false
+        socioSeleccionado.value = null
+      }
+      const codigoComprobante = generarCodigoComprobanteSalida()
+      const fechaComprobante = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const datosComprobante = {
+        socioNombre: sn.socio?.nombre || 'Socio',
+        socioTelefono: sn.socio?.telefono || null,
+        fecha: fechaComprobante,
+        totalAhorrado: tot.totalAhorrado || 0,
+        totalActividades: tot.totalActividades || 0,
+        totalSancionesPagadas: tot.totalSancionesPagadas || 0,
+        valorEntregar,
+        valorFondo,
+        codigoComprobante
+      }
+      const { error: errComprobante } = await supabase.from('comprobantes_salida').upsert({
+        socio_natillera_id: sn.id,
+        socio_nombre: datosComprobante.socioNombre,
+        socio_telefono: datosComprobante.socioTelefono || null,
+        fecha: fechaComprobante,
+        total_ahorrado: datosComprobante.totalAhorrado,
+        valor_sancion: datosComprobante.valorFondo,
+        valor_entregar: datosComprobante.valorEntregar,
+        codigo_comprobante: codigoComprobante
+      }, { onConflict: 'socio_natillera_id' })
+      if (errComprobante) console.error('Error guardando comprobante de salida:', errComprobante)
+      comprobanteDesactivacion.value = datosComprobante
+      comprobantesSalidaGuardados.value[sn.id] = { ...datosComprobante }
+      cerrarModalDesactivar()
+      await nextTick()
+      notificationStore.warning(
+        `${sn.socio?.nombre || 'El socio'} ha sido desactivado`,
+        'Socio desactivado',
+        2500
+      )
+    } else {
+      notificationStore.error(resultado.error || 'No se pudo desactivar', 'Error')
+    }
+  } catch (e) {
+    console.error('Error al desactivar socio:', e)
+    notificationStore.error(e?.message || 'Error al desactivar socio', 'Error')
+  } finally {
+    desactivando.value = false
+  }
+}
+
 async function toggleEstado(sn) {
   const nuevoEstado = sn.estado === 'activo' ? 'inactivo' : 'activo'
   const resultado = await sociosStore.cambiarEstadoSocio(sn.id, nuevoEstado)
@@ -4184,6 +4900,45 @@ async function verDetalleSocio(sn) {
   const resumen = await sociosStore.obtenerResumenSocio(sn.id)
   cuotasSocio.value = resumen?.cuotas || []
   loadingDetalle.value = false
+}
+
+async function verComprobanteSalida(sn) {
+  if (sn.estado !== 'inactivo') return
+  const guardado = comprobantesSalidaGuardados.value[sn.id]
+  if (guardado) {
+    comprobanteDesactivacion.value = { ...guardado }
+    return
+  }
+  loadingComprobanteSalida.value = true
+  const { data: row, error } = await supabase
+    .from('comprobantes_salida')
+    .select('socio_nombre, socio_telefono, fecha, total_ahorrado, valor_sancion, valor_entregar, codigo_comprobante')
+    .eq('socio_natillera_id', sn.id)
+    .maybeSingle()
+  loadingComprobanteSalida.value = false
+  if (error) {
+    console.error('Error cargando comprobante de salida:', error)
+    notificationStore.error('No se pudo cargar el comprobante', 'Error')
+    return
+  }
+  if (row) {
+    comprobanteDesactivacion.value = {
+      socioNombre: row.socio_nombre || sn.socio?.nombre || 'Socio',
+      socioTelefono: row.socio_telefono || sn.socio?.telefono || null,
+      fecha: row.fecha,
+      totalAhorrado: parseFloat(row.total_ahorrado) || 0,
+      valorFondo: parseFloat(row.valor_sancion) || 0,
+      valorEntregar: parseFloat(row.valor_entregar) || 0,
+      codigoComprobante: row.codigo_comprobante
+    }
+    comprobantesSalidaGuardados.value[sn.id] = { ...comprobanteDesactivacion.value }
+  } else {
+    notificationStore.warning(
+      'No hay comprobante de salida para este socio. Se genera al desactivar desde la opción "Desactivar".',
+      'Sin comprobante',
+      4000
+    )
+  }
 }
 
 

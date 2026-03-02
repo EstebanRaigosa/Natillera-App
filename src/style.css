@@ -1202,6 +1202,39 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   will-change: transform;
 }
 
+/* Animación "toca para ver" - visible en Android, GPU-friendly (solo transform) */
+@keyframes tap-hint-utilidades {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.animate-tap-hint-utilidades {
+  animation: tap-hint-utilidades 1.8s ease-in-out 3;
+  will-change: transform;
+}
+
+/* Pequeño bounce para el texto "Ver desglose" en móvil */
+@keyframes tap-hint-badge {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+}
+
+.animate-tap-hint-badge {
+  animation: tap-hint-badge 2s ease-in-out 3;
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
+}
+
 /* Animación de crecimiento para partículas */
 @keyframes grow-slow {
   0%, 100% {

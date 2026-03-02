@@ -87,59 +87,63 @@
 
               <!-- Tabs Configuración General: estilo pestañas que envuelven el contenido -->
               <div class="rounded-xl border-2 border-gray-200 bg-white shadow-md overflow-hidden mt-2">
-                <!-- Barra de pestañas -->
-                <div class="flex gap-0.5 pt-2 px-2 pb-0 bg-gray-100 border-b border-gray-200 overflow-x-auto min-h-[48px]">
+                <!-- Barra de pestañas: en móvil grid 2x2, en desktop fila horizontal -->
+                <div class="grid grid-cols-2 sm:flex sm:flex-nowrap gap-2 sm:gap-0.5 pt-2 px-2 pb-2 sm:pb-0 bg-gray-100 border-b border-gray-200 sm:min-h-[48px]">
                   <button
                     type="button"
                     @click="tabGeneralActiva = 'basica'"
                     :class="[
-                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      'flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-t-lg sm:rounded-b-none border sm:border-b-0',
                       tabGeneralActiva === 'basica'
-                        ? 'bg-white text-natillera-700 border-natillera-300 border-b-white -mb-px shadow-sm z-10'
-                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                        ? 'bg-white text-natillera-700 border-natillera-300 sm:border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-gray-200 sm:border-transparent hover:text-gray-700 hover:bg-gray-100'
                     ]"
                   >
                     <CurrencyDollarIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="whitespace-nowrap">Información básica</span>
+                    <span class="sm:hidden">Básica</span>
+                    <span class="hidden sm:inline">Información básica</span>
                   </button>
                   <button
                     type="button"
                     @click="tabGeneralActiva = 'periodo'"
                     :class="[
-                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      'flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-t-lg sm:rounded-b-none border sm:border-b-0',
                       tabGeneralActiva === 'periodo'
-                        ? 'bg-white text-blue-700 border-blue-300 border-b-white -mb-px shadow-sm z-10'
-                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                        ? 'bg-white text-blue-700 border-blue-300 sm:border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-gray-200 sm:border-transparent hover:text-gray-700 hover:bg-gray-100'
                     ]"
                   >
                     <CalendarDaysIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="whitespace-nowrap">Período</span>
+                    <span class="sm:hidden">Período</span>
+                    <span class="hidden sm:inline">Período</span>
                   </button>
                   <button
                     type="button"
                     @click="tabGeneralActiva = 'sanciones'"
                     :class="[
-                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      'flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-t-lg sm:rounded-b-none border sm:border-b-0',
                       tabGeneralActiva === 'sanciones'
-                        ? 'bg-white text-red-700 border-red-300 border-b-white -mb-px shadow-sm z-10'
-                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                        ? 'bg-white text-red-700 border-red-300 sm:border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-gray-200 sm:border-transparent hover:text-gray-700 hover:bg-gray-100'
                     ]"
                   >
                     <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="whitespace-nowrap">Sanciones por mora</span>
+                    <span class="sm:hidden">Sanciones</span>
+                    <span class="hidden sm:inline">Sanciones por mora</span>
                   </button>
                   <button
                     type="button"
                     @click="tabGeneralActiva = 'cierre'"
                     :class="[
-                      'flex-shrink-0 px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 rounded-t-lg border border-b-0',
+                      'flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-t-lg sm:rounded-b-none border sm:border-b-0',
                       tabGeneralActiva === 'cierre'
-                        ? 'bg-white text-purple-700 border-purple-300 border-b-white -mb-px shadow-sm z-10'
-                        : 'bg-gray-50/80 text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'
+                        ? 'bg-white text-purple-700 border-purple-300 sm:border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-gray-200 sm:border-transparent hover:text-gray-700 hover:bg-gray-100'
                     ]"
                   >
                     <CurrencyDollarIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="whitespace-nowrap">Cierre de Natillera</span>
+                    <span class="sm:hidden">Cierre</span>
+                    <span class="hidden sm:inline">Cierre de Natillera</span>
                   </button>
                 </div>
 
@@ -268,342 +272,331 @@
               </div>
 
               <!-- Tab Sanciones por mora -->
-              <div v-if="tabGeneralActiva === 'sanciones'" class="p-5 sm:p-6">
-                <div class="relative overflow-hidden bg-gradient-to-br from-white via-red-50/30 to-rose-50/40 rounded-2xl shadow-xl shadow-red-500/10 border-2 border-red-200/50 p-5 sm:p-6">
-                  <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-red-500 to-rose-500"></div>
-                  <div class="relative pl-2">
-              <!-- Activar/Desactivar -->
-              <div class="mb-5">
-                <label class="flex items-center gap-3 cursor-pointer">
-                  <div class="relative">
-                    <input type="checkbox" v-model="configSanciones.activa" class="sr-only peer" />
-                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                  </div>
-                  <span class="font-semibold text-gray-700">Activar sanciones por mora</span>
-                </label>
-              </div>
-
-              <div v-if="configSanciones.activa" class="space-y-5">
-                <!-- Tipo de sanción -->
-                <div>
-                  <label class="label font-semibold text-gray-700 mb-3 block">Tipo de Sanción</label>
-                  <div class="grid grid-cols-3 gap-3">
-                    <button 
-                      type="button"
-                      @click="configSanciones.tipo = 'simple'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'simple' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
-                    >
-                      <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'simple' ? 'text-red-500' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Simple</p>
-                      <p class="text-xs text-gray-500">Valor fijo</p>
-                    </button>
-                    <button 
-                      type="button"
-                      @click="configSanciones.tipo = 'escalonada'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'escalonada' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
-                    >
-                      <ChartBarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'escalonada' ? 'text-red-500' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Escalonada</p>
-                      <p class="text-xs text-gray-500">Progresiva</p>
-                    </button>
-                    <button 
-                      type="button"
-                      @click="configSanciones.tipo = 'diaria'"
-                      :class="['p-3 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'diaria' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
-                    >
-                      <ClockIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'diaria' ? 'text-red-500' : 'text-gray-400'" />
-                      <p class="font-semibold text-sm text-gray-800">Por día</p>
-                      <p class="text-xs text-gray-500">Por día de mora</p>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Simple -->
-                <div v-if="configSanciones.tipo === 'simple'" class="p-4 bg-white rounded-xl border border-gray-200">
-                  <label class="label font-semibold text-gray-700">Valor de multa por mora</label>
-                  <div class="relative mt-2">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
-                    <input 
-                      :value="formatNumberWithSeparators(configSanciones.valorFijo)"
-                      @input="(e) => {
-                        const rawValue = removeNumberFormat(e.target.value)
-                        configSanciones.valorFijo = rawValue ? parseInt(rawValue) || 0 : 0
-                      }"
-                      @focus="(e) => e.target.select()"
-                      type="text"
-                      inputmode="numeric"
-                      pattern="[0-9.,]*"
-                      class="input-field pl-8 w-full sm:w-48 font-semibold" 
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                <!-- Por día -->
-                <div v-if="configSanciones.tipo === 'diaria'" class="p-4 bg-white rounded-xl border border-gray-200">
-                  <label class="label font-semibold text-gray-700">Valor por día de mora</label>
-                  <p class="text-xs text-gray-500 mb-2">Por cada día de atraso se suma este valor a la sanción.</p>
-                  <div class="relative mt-2">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
-                    <input 
-                      :value="formatNumberWithSeparators(configSanciones.valorPorDia)"
-                      @input="(e) => {
-                        const rawValue = removeNumberFormat(e.target.value)
-                        configSanciones.valorPorDia = rawValue ? parseInt(rawValue) || 0 : 0
-                      }"
-                      @focus="(e) => e.target.select()"
-                      type="text"
-                      inputmode="numeric"
-                      pattern="[0-9.,]*"
-                      class="input-field pl-8 w-full sm:w-48 font-semibold" 
-                      placeholder="500"
-                    />
-                  </div>
-                </div>
-
-                <!-- Intereses adicionales por días (visible para todos los tipos) -->
-                <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
-                     :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
-                     @click.stop>
-                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                         @click.stop.prevent="toggleInteresesAdicionales">
-                    <div class="relative flex-shrink-0">
-                      <input 
-                        type="checkbox" 
-                        :checked="configSanciones.interesesAdicionales.activo" 
-                        @click.stop.prevent="toggleInteresesAdicionales" 
-                        class="sr-only peer" 
-                      />
-                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+              <div v-if="tabGeneralActiva === 'sanciones'" class="p-3 sm:p-6">
+                <!-- Activar/Desactivar -->
+                <div class="mb-4 sm:mb-5">
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <div class="relative">
+                      <input type="checkbox" v-model="configSanciones.activa" class="sr-only peer" />
+                      <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-red-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                     </div>
-                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
-                      Intereses adicionales por días
-                    </span>
+                    <span class="font-semibold text-gray-700 text-sm sm:text-base">Activar sanciones por mora</span>
                   </label>
-                  <Transition
-                    enter-active-class="transition duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-2"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition duration-150 ease-out"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-2"
-                  >
-                    <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
-                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
-                        <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
-                        <input 
-                          v-model.number="configSanciones.interesesAdicionales.dias" 
-                          type="number" 
-                          min="1" 
-                          max="30" 
-                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                        />
-                        <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
-                        <div class="relative flex-1 sm:flex-initial">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
-                          <input 
-                            :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
-                            @input="(e) => {
-                              const rawValue = removeNumberFormat(e.target.value)
-                              configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                            }"
-                            @focus="(e) => e.target.select()"
-                            type="text"
-                            inputmode="numeric"
-                            pattern="[0-9.,]*"
-                            class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                            placeholder="0"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </Transition>
                 </div>
 
-                <!-- Escalonada -->
-                <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
-                  <div class="p-4 bg-white rounded-xl border border-gray-200">
-                    <label class="label font-semibold text-gray-700 mb-3 block">Intereses por cuotas vencidas</label>
-                    <div class="space-y-2">
-                      <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-3">
-                        <span class="text-sm text-gray-600 w-20 font-medium">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
-                        <div class="relative flex-1 max-w-[140px]">
-                          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
-                          <input 
-                            :value="formatNumberWithSeparators(nivel.valor)"
-                            @input="(e) => {
-                              const rawValue = removeNumberFormat(e.target.value)
-                              nivel.valor = rawValue ? parseInt(rawValue) || 0 : 0
-                            }"
-                            @focus="(e) => e.target.select()"
-                            type="text"
-                            inputmode="numeric"
-                            pattern="[0-9.,]*"
-                            min="0"
-                            class="input-field pl-7 py-1.5 text-sm font-semibold" 
-                            placeholder="0"
-                          />
-                        </div>
-                        <button v-if="configSanciones.niveles.length > 1" @click="eliminarNivel(index)" class="text-red-500 hover:text-red-700 p-1 transition-colors">
-                          <XMarkIcon class="w-4 h-4" />
-                        </button>
-                      </div>
+                <div v-if="configSanciones.activa" class="space-y-5">
+                  <!-- Tipo de sanción -->
+                  <div>
+                    <label class="label font-semibold text-gray-700 mb-3 block text-sm sm:text-base">Tipo de Sanción</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <button 
+                        type="button"
+                        @click="configSanciones.tipo = 'simple'"
+                        :class="['p-3 sm:p-4 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'simple' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                      >
+                        <CurrencyDollarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'simple' ? 'text-red-500' : 'text-gray-400'" />
+                        <p class="font-semibold text-sm text-gray-800">Simple</p>
+                        <p class="text-xs text-gray-500 break-words">Valor fijo</p>
+                      </button>
+                      <button 
+                        type="button"
+                        @click="configSanciones.tipo = 'escalonada'"
+                        :class="['p-3 sm:p-4 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'escalonada' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                      >
+                        <ChartBarIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'escalonada' ? 'text-red-500' : 'text-gray-400'" />
+                        <p class="font-semibold text-sm text-gray-800">Escalonada</p>
+                        <p class="text-xs text-gray-500 break-words">Progresiva</p>
+                      </button>
+                      <button 
+                        type="button"
+                        @click="configSanciones.tipo = 'diaria'"
+                        :class="['p-3 sm:p-4 rounded-xl border-2 text-left transition-all', configSanciones.tipo === 'diaria' ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-white hover:border-red-300']"
+                      >
+                        <ClockIcon class="w-5 h-5 mb-1" :class="configSanciones.tipo === 'diaria' ? 'text-red-500' : 'text-gray-400'" />
+                        <p class="font-semibold text-sm text-gray-800">Por día</p>
+                        <p class="text-xs text-gray-500 break-words">Por día de mora</p>
+                      </button>
                     </div>
-                    <button v-if="configSanciones.niveles.length < 10" @click="agregarNivel" class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 transition-colors">
-                      <PlusIcon class="w-4 h-4" /> Agregar nivel
-                    </button>
                   </div>
-                </div>
 
-                <!-- Devolución por mora excesiva (visible para todos los tipos) -->
-                <div class="p-4 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
-                     :class="configSanciones.devolucion.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
-                     @click.stop>
-                  <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                         @click.stop.prevent="toggleDevolucion">
-                    <div class="relative flex-shrink-0">
+                  <!-- Simple -->
+                  <div v-if="configSanciones.tipo === 'simple'" class="p-3 sm:p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="label font-semibold text-gray-700 text-sm sm:text-base">Valor de multa por mora</label>
+                    <div class="relative mt-2">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
                       <input 
-                        type="checkbox" 
-                        :checked="configSanciones.devolucion.activo" 
-                        @click.stop.prevent="toggleDevolucion" 
-                        class="sr-only peer" 
+                        :value="formatNumberWithSeparators(configSanciones.valorFijo)"
+                        @input="(e) => {
+                          const rawValue = removeNumberFormat(e.target.value)
+                          configSanciones.valorFijo = rawValue ? parseInt(rawValue) || 0 : 0
+                        }"
+                        @focus="(e) => e.target.select()"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9.,]*"
+                        class="input-field pl-8 w-full sm:w-48 font-semibold" 
+                        placeholder="0"
                       />
-                      <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
                     </div>
-                    <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
-                      Devolución por mora excesiva
-                    </span>
-                  </label>
-                  <Transition
-                    enter-active-class="transition duration-200 ease-out"
-                    enter-from-class="opacity-0 -translate-y-2"
-                    enter-to-class="opacity-100 translate-y-0"
-                    leave-active-class="transition duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0"
-                    leave-to-class="opacity-0 -translate-y-2"
-                  >
-                    <div v-if="configSanciones.devolucion.activo" class="mt-4 pt-4 border-t border-gray-200 space-y-4">
-                      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base flex-wrap">
-                        <span class="text-gray-600 font-medium whitespace-nowrap">Después de</span>
-                        <input 
-                          v-model.number="configSanciones.devolucion.cuotasLimite" 
-                          type="number" 
-                          min="1" 
-                          max="12" 
-                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                        />
-                        <span class="text-gray-600 font-medium whitespace-nowrap">cuotas, multa del</span>
-                        <input 
-                          v-model.number="configSanciones.devolucion.porcentajeMulta" 
-                          type="number" 
-                          min="0" 
-                          max="100" 
-                          class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
-                        />
-                        <span class="text-gray-600 font-medium">%</span>
-                      </div>
-                      <label class="flex items-center gap-3 sm:gap-4 cursor-pointer py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
-                             @click.stop.prevent="toggleSinUtilidades">
-                        <div class="relative flex-shrink-0">
-                          <input 
-                            type="checkbox" 
-                            :checked="configSanciones.devolucion.sinUtilidades" 
-                            @click.stop.prevent="toggleSinUtilidades" 
-                            class="sr-only peer" 
-                          />
-                          <div class="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                        </div>
-                        <span class="text-sm sm:text-base text-gray-700 font-medium select-none">
-                          Devolución sin utilidades
-                        </span>
-                      </label>
-                    </div>
-                  </Transition>
-                </div>
+                  </div>
 
-                <!-- Resumen -->
-                <div class="p-4 bg-red-50 border border-red-200 rounded-xl">
-                  <p class="text-xs font-semibold text-red-700 mb-2">📋 Resumen</p>
-                  <div v-if="configSanciones.tipo === 'simple'" class="text-sm text-gray-700">
-                    Multa fija: <strong>${{ formatMoney(configSanciones.valorFijo) }}</strong>
+                  <!-- Por día -->
+                  <div v-if="configSanciones.tipo === 'diaria'" class="p-3 sm:p-4 bg-white rounded-xl border border-gray-200">
+                    <label class="label font-semibold text-gray-700 text-sm sm:text-base">Valor por día de mora</label>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-2 break-words">Por cada día de atraso se suma este valor a la sanción.</p>
+                    <div class="relative mt-2">
+                      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">$</span>
+                      <input 
+                        :value="formatNumberWithSeparators(configSanciones.valorPorDia)"
+                        @input="(e) => {
+                          const rawValue = removeNumberFormat(e.target.value)
+                          configSanciones.valorPorDia = rawValue ? parseInt(rawValue) || 0 : 0
+                        }"
+                        @focus="(e) => e.target.select()"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9.,]*"
+                        class="input-field pl-8 w-full sm:w-48 font-semibold" 
+                        placeholder="500"
+                      />
+                    </div>
                   </div>
-                  <div v-else-if="configSanciones.tipo === 'diaria'" class="text-sm text-gray-700">
-                    Por día de mora: <strong>${{ formatMoney(configSanciones.valorPorDia) }}</strong> por cada día después del vencimiento (y días de gracia).
+
+                  <!-- Intereses adicionales por días (visible para todos los tipos) -->
+                  <div class="p-3 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
+                       :class="configSanciones.interesesAdicionales.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
+                       @click.stop>
+                    <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                           @click.stop.prevent="toggleInteresesAdicionales">
+                      <div class="relative flex-shrink-0">
+                        <input 
+                          type="checkbox" 
+                          :checked="configSanciones.interesesAdicionales.activo" 
+                          @click.stop.prevent="toggleInteresesAdicionales" 
+                          class="sr-only peer" 
+                        />
+                        <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                      </div>
+                      <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
+                        Intereses adicionales por días
+                      </span>
+                    </label>
+                    <Transition
+                      enter-active-class="transition duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-2"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition duration-150 ease-out"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-2"
+                    >
+                      <div v-if="configSanciones.interesesAdicionales.activo" class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base">
+                          <span class="text-gray-600 font-medium whitespace-nowrap">Cada</span>
+                          <input 
+                            v-model.number="configSanciones.interesesAdicionales.dias" 
+                            type="number" 
+                            min="1" 
+                            max="30" 
+                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                          />
+                          <span class="text-gray-600 font-medium whitespace-nowrap">días, sumar</span>
+                          <div class="relative flex-1 sm:flex-initial">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+                            <input 
+                              :value="formatNumberWithSeparators(configSanciones.interesesAdicionales.valor)"
+                              @input="(e) => {
+                                const rawValue = removeNumberFormat(e.target.value)
+                                configSanciones.interesesAdicionales.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                              }"
+                              @focus="(e) => e.target.select()"
+                              type="text"
+                              inputmode="numeric"
+                              pattern="[0-9.,]*"
+                              class="input-field w-full sm:w-32 py-2 sm:py-1.5 pl-8 font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </Transition>
                   </div>
-                  <div v-else class="text-sm text-gray-700 space-y-1">
-                    <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
-                      {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
-                    </p>
+
+                  <!-- Escalonada -->
+                  <div v-if="configSanciones.tipo === 'escalonada'" class="space-y-4">
+                    <div class="p-3 sm:p-4 bg-white rounded-xl border border-gray-200">
+                      <label class="label font-semibold text-gray-700 mb-3 block text-sm sm:text-base">Intereses por cuotas vencidas</label>
+                      <div class="space-y-2">
+                        <div v-for="(nivel, index) in configSanciones.niveles" :key="index" class="flex items-center gap-3">
+                          <span class="text-sm text-gray-600 w-20 font-medium">{{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}</span>
+                          <div class="relative flex-1 max-w-[140px]">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-semibold">$</span>
+                            <input 
+                              :value="formatNumberWithSeparators(nivel.valor)"
+                              @input="(e) => {
+                                const rawValue = removeNumberFormat(e.target.value)
+                                nivel.valor = rawValue ? parseInt(rawValue) || 0 : 0
+                              }"
+                              @focus="(e) => e.target.select()"
+                              type="text"
+                              inputmode="numeric"
+                              pattern="[0-9.,]*"
+                              min="0"
+                              class="input-field pl-7 py-1.5 text-sm font-semibold" 
+                              placeholder="0"
+                            />
+                          </div>
+                          <button v-if="configSanciones.niveles.length > 1" @click="eliminarNivel(index)" class="text-red-500 hover:text-red-700 p-1 transition-colors">
+                            <XMarkIcon class="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <button v-if="configSanciones.niveles.length < 10" @click="agregarNivel" class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1 transition-colors">
+                        <PlusIcon class="w-4 h-4" /> Agregar nivel
+                      </button>
+                    </div>
                   </div>
-                  <div v-if="configSanciones.interesesAdicionales?.activo" class="mt-3 pt-3 border-t border-red-200 text-sm text-gray-700">
-                    <p class="font-medium text-red-800 mb-1">Intereses adicionales por días</p>
-                    <p>
-                      Cada <strong>{{ configSanciones.interesesAdicionales.dias }}</strong> {{ configSanciones.interesesAdicionales.dias === 1 ? 'día' : 'días' }} en mora después del vencimiento se suma <strong>${{ formatMoney(configSanciones.interesesAdicionales.valor) }}</strong> a la sanción de la cuota.
-                    </p>
+
+                  <!-- Devolución por mora excesiva (visible para todos los tipos) -->
+                  <div class="p-3 sm:p-5 bg-white rounded-xl border-2 transition-all duration-200" 
+                       :class="configSanciones.devolucion.activo ? 'border-red-300 bg-red-50/30 shadow-md' : 'border-gray-200 hover:border-gray-300'" 
+                       @click.stop>
+                    <label class="flex items-center gap-3 sm:gap-4 cursor-pointer mb-3 py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                           @click.stop.prevent="toggleDevolucion">
+                      <div class="relative flex-shrink-0">
+                        <input 
+                          type="checkbox" 
+                          :checked="configSanciones.devolucion.activo" 
+                          @click.stop.prevent="toggleDevolucion" 
+                          class="sr-only peer" 
+                        />
+                        <div class="w-11 h-6 sm:w-12 sm:h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 sm:after:h-6 sm:after:w-6 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                      </div>
+                      <span class="font-semibold text-gray-700 text-sm sm:text-base flex-1 select-none">
+                        Devolución por mora excesiva
+                      </span>
+                    </label>
+                    <Transition
+                      enter-active-class="transition duration-200 ease-out"
+                      enter-from-class="opacity-0 -translate-y-2"
+                      enter-to-class="opacity-100 translate-y-0"
+                      leave-active-class="transition duration-150 ease-in"
+                      leave-from-class="opacity-100 translate-y-0"
+                      leave-to-class="opacity-0 -translate-y-2"
+                    >
+                      <div v-if="configSanciones.devolucion.activo" class="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-2 text-sm sm:text-base flex-wrap">
+                          <span class="text-gray-600 font-medium whitespace-nowrap">Después de</span>
+                          <input 
+                            v-model.number="configSanciones.devolucion.cuotasLimite" 
+                            type="number" 
+                            min="1" 
+                            max="12" 
+                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                          />
+                          <span class="text-gray-600 font-medium whitespace-nowrap">cuotas, multa del</span>
+                          <input 
+                            v-model.number="configSanciones.devolucion.porcentajeMulta" 
+                            type="number" 
+                            min="0" 
+                            max="100" 
+                            class="input-field w-20 sm:w-16 py-2 sm:py-1.5 text-center font-semibold border-2 focus:border-red-400 focus:ring-2 focus:ring-red-200" 
+                          />
+                          <span class="text-gray-600 font-medium">%</span>
+                        </div>
+                        <label class="flex items-center gap-3 sm:gap-4 cursor-pointer py-2 -mx-1 px-1 rounded-lg hover:bg-white/50 transition-colors" 
+                               @click.stop.prevent="toggleSinUtilidades">
+                          <div class="relative flex-shrink-0">
+                            <input 
+                              type="checkbox" 
+                              :checked="configSanciones.devolucion.sinUtilidades" 
+                              @click.stop.prevent="toggleSinUtilidades" 
+                              class="sr-only peer" 
+                            />
+                            <div class="w-10 h-5 sm:w-11 sm:h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] sm:after:top-[3px] sm:after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 sm:after:h-5 sm:after:w-5 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                          </div>
+                          <span class="text-sm sm:text-base text-gray-700 font-medium select-none">
+                            Devolución sin utilidades
+                          </span>
+                        </label>
+                      </div>
+                    </Transition>
                   </div>
-                </div>
-              </div>
+
+                  <!-- Resumen -->
+                  <div class="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p class="text-xs font-semibold text-red-700 mb-2">📋 Resumen</p>
+                    <div v-if="configSanciones.tipo === 'simple'" class="text-sm text-gray-700">
+                      Multa fija: <strong>${{ formatMoney(configSanciones.valorFijo) }}</strong>
+                    </div>
+                    <div v-else-if="configSanciones.tipo === 'diaria'" class="text-sm text-gray-700">
+                      Por día de mora: <strong>${{ formatMoney(configSanciones.valorPorDia) }}</strong> por cada día después del vencimiento (y días de gracia).
+                    </div>
+                    <div v-else class="text-sm text-gray-700 space-y-1">
+                      <p v-for="nivel in configSanciones.niveles" :key="nivel.cuotas">
+                        {{ nivel.cuotas }} {{ nivel.cuotas === 1 ? 'cuota' : 'cuotas' }}: <strong>${{ formatMoney(nivel.valor) }}</strong>
+                      </p>
+                    </div>
+                    <div v-if="configSanciones.interesesAdicionales?.activo" class="mt-3 pt-3 border-t border-red-200 text-sm text-gray-700">
+                      <p class="font-medium text-red-800 mb-1">Intereses adicionales por días</p>
+                      <p>
+                        Cada <strong>{{ configSanciones.interesesAdicionales.dias }}</strong> {{ configSanciones.interesesAdicionales.dias === 1 ? 'día' : 'días' }} en mora después del vencimiento se suma <strong>${{ formatMoney(configSanciones.interesesAdicionales.valor) }}</strong> a la sanción de la cuota.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- Tab Cierre de Natillera -->
-              <div v-if="tabGeneralActiva === 'cierre'" class="p-5 sm:p-6">
-              <div class="relative overflow-hidden bg-gradient-to-br from-purple-50 via-indigo-50/80 to-purple-50/60 rounded-2xl border-2 border-purple-200/50 shadow-lg p-5 sm:p-6">
-                <!-- Efectos decorativos -->
-                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-300/20 to-indigo-300/15 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-                <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-300/15 to-purple-300/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-                
-                <div class="relative z-10">
-                  <!-- Header -->
-                  <div class="flex items-center gap-3 mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-                      <CurrencyDollarIcon class="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 class="text-lg font-display font-bold text-gray-800">
-                        Cierre de Natillera
-                      </h3>
-                      <p class="text-xs text-gray-600">
-                        Configura cómo se repartirán las utilidades al cerrar
-                      </p>
-                    </div>
+              <div v-if="tabGeneralActiva === 'cierre'" class="p-3 sm:p-6">
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+                    <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
+                  <div class="min-w-0 flex-1">
+                    <h3 class="text-base sm:text-lg font-display font-bold text-gray-800">
+                      Cierre de Natillera
+                    </h3>
+                    <p class="text-xs text-gray-600 mt-0.5">
+                      Configura cómo se repartirán las utilidades al cerrar
+                    </p>
+                  </div>
+                </div>
 
-                  <!-- Configuración de Utilidades de Actividades -->
+                <!-- Configuración de Utilidades de Actividades -->
                   <div class="mb-6">
                     <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <CalendarDaysIcon class="w-4 h-4 text-purple-600" />
-                      Utilidades de Actividades
+                      <CalendarDaysIcon class="w-4 h-4 text-purple-600 flex-shrink-0" />
+                      <span class="text-sm sm:text-base">Utilidades de Actividades</span>
                     </label>
-                    <p class="text-xs text-gray-500 mb-3">
+                    <p class="text-xs text-gray-500 mb-3 break-words">
                       Selecciona si quieres configurar todas las actividades igual o cada una por separado
                     </p>
                     
                     <!-- Selector de modo -->
-                    <div class="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <div class="mb-4 p-3 sm:p-4 bg-gray-50 rounded-xl border border-gray-200">
                       <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-semibold text-gray-700">Modo de configuración</span>
+                        <span class="text-xs sm:text-sm font-semibold text-gray-700">Modo de configuración</span>
                       </div>
                       <div class="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           @click="configCierre.modoActividades = 'general'"
                           :class="[
-                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center',
+                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center overflow-hidden',
                             configCierre.modoActividades === 'general'
                               ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
                               : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
                           ]"
                         >
-                          <div class="flex items-center justify-center gap-2">
+                          <div class="flex items-center justify-center gap-2 min-w-0">
                             <UsersIcon 
                               class="w-4 h-4 flex-shrink-0" 
                               :class="configCierre.modoActividades === 'general' ? 'text-purple-600' : 'text-gray-400'" 
                             />
                             <span 
                               :class="[
-                                'font-semibold text-sm',
+                                'font-semibold text-sm min-w-0 truncate',
                                 configCierre.modoActividades === 'general' ? 'text-purple-700' : 'text-gray-600'
                               ]"
                             >
@@ -624,20 +617,20 @@
                           type="button"
                           @click="configCierre.modoActividades = 'individual'"
                           :class="[
-                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center',
+                            'relative p-3 rounded-lg border-2 transition-all duration-200 text-center overflow-hidden',
                             configCierre.modoActividades === 'individual'
                               ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
                               : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
                           ]"
                         >
-                          <div class="flex items-center justify-center gap-2">
+                          <div class="flex items-center justify-center gap-2 min-w-0">
                             <ChartBarIcon 
                               class="w-4 h-4 flex-shrink-0" 
                               :class="configCierre.modoActividades === 'individual' ? 'text-purple-600' : 'text-gray-400'" 
                             />
                             <span 
                               :class="[
-                                'font-semibold text-sm',
+                                'font-semibold text-sm min-w-0 truncate',
                                 configCierre.modoActividades === 'individual' ? 'text-purple-700' : 'text-gray-600'
                               ]"
                             >
@@ -659,7 +652,7 @@
 
                     <!-- Configuración General -->
                     <div v-if="configCierre.modoActividades === 'general'" class="space-y-3">
-                      <p class="text-xs text-gray-500 mb-3">
+                      <p class="text-xs text-gray-500 mb-3 break-words">
                         Esta configuración aplicará a todas las actividades (Rifas, Bingos, Ventas, Eventos, Otros)
                       </p>
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -667,13 +660,13 @@
                           type="button"
                           @click="configCierre.actividades.general = 'equitativa'"
                           :class="[
-                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
                             configCierre.actividades.general === 'equitativa'
                               ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-200'
                               : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
                           ]"
                         >
-                          <div class="flex items-center gap-3 mb-2">
+                          <div class="flex items-center gap-3 mb-2 min-w-0">
                             <div 
                               :class="[
                                 'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
@@ -687,7 +680,7 @@
                             <div class="flex-1 min-w-0">
                               <span 
                                 :class="[
-                                  'font-bold text-sm block',
+                                  'font-bold text-sm block truncate',
                                   configCierre.actividades.general === 'equitativa' ? 'text-purple-700' : 'text-gray-700'
                                 ]"
                               >
@@ -705,7 +698,7 @@
                           </div>
                           <p 
                             :class="[
-                              'text-xs',
+                              'text-xs break-words',
                               configCierre.actividades.general === 'equitativa' ? 'text-purple-600' : 'text-gray-500'
                             ]"
                           >
@@ -716,13 +709,13 @@
                           type="button"
                           @click="configCierre.actividades.general = 'proporcional'"
                           :class="[
-                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                            'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
                             configCierre.actividades.general === 'proporcional'
                               ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-200'
                               : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
                           ]"
                         >
-                          <div class="flex items-center gap-3 mb-2">
+                          <div class="flex items-center gap-3 mb-2 min-w-0">
                             <div 
                               :class="[
                                 'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
@@ -736,7 +729,7 @@
                             <div class="flex-1 min-w-0">
                               <span 
                                 :class="[
-                                  'font-bold text-sm block',
+                                  'font-bold text-sm block truncate',
                                   configCierre.actividades.general === 'proporcional' ? 'text-purple-700' : 'text-gray-700'
                                 ]"
                               >
@@ -754,7 +747,7 @@
                           </div>
                           <p 
                             :class="[
-                              'text-xs',
+                              'text-xs break-words',
                               configCierre.actividades.general === 'proporcional' ? 'text-purple-600' : 'text-gray-500'
                             ]"
                           >
@@ -766,7 +759,7 @@
 
                     <!-- Configuración Individual -->
                     <div v-else class="space-y-4">
-                      <p class="text-xs text-gray-500 mb-3">
+                      <p class="text-xs text-gray-500 mb-3 break-words">
                         Configura cómo se repartirán las utilidades para cada tipo de actividad
                       </p>
                       <div
@@ -785,20 +778,20 @@
                             type="button"
                             @click="configCierre.actividades[tipo.valor] = 'equitativa'"
                             :class="[
-                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left',
+                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left overflow-hidden',
                               configCierre.actividades[tipo.valor] === 'equitativa'
                                 ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
                                 : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-white'
                             ]"
                           >
-                            <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center gap-2 mb-1 min-w-0">
                               <UsersIcon 
                                 class="w-4 h-4 flex-shrink-0" 
                                 :class="configCierre.actividades[tipo.valor] === 'equitativa' ? 'text-purple-600' : 'text-gray-400'" 
                               />
                               <span 
                                 :class="[
-                                  'font-semibold text-xs',
+                                  'font-semibold text-xs min-w-0 truncate',
                                   configCierre.actividades[tipo.valor] === 'equitativa' ? 'text-purple-700' : 'text-gray-600'
                                 ]"
                               >
@@ -819,20 +812,20 @@
                             type="button"
                             @click="configCierre.actividades[tipo.valor] = 'proporcional'"
                             :class="[
-                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left',
+                              'relative p-3 rounded-lg border-2 transition-all duration-200 text-left overflow-hidden',
                               configCierre.actividades[tipo.valor] === 'proporcional'
                                 ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-md shadow-purple-500/20'
                                 : 'border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-white'
                             ]"
                           >
-                            <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center gap-2 mb-1 min-w-0">
                               <ChartBarIcon 
                                 class="w-4 h-4 flex-shrink-0" 
                                 :class="configCierre.actividades[tipo.valor] === 'proporcional' ? 'text-purple-600' : 'text-gray-400'" 
                               />
                               <span 
                                 :class="[
-                                  'font-semibold text-xs',
+                                  'font-semibold text-xs min-w-0 truncate',
                                   configCierre.actividades[tipo.valor] === 'proporcional' ? 'text-purple-700' : 'text-gray-600'
                                 ]"
                               >
@@ -857,10 +850,10 @@
                   <!-- Configuración de Utilidades de Préstamos -->
                   <div>
                     <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                      <BanknotesIcon class="w-4 h-4 text-amber-600" />
-                      Utilidades de Préstamos
+                      <BanknotesIcon class="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <span class="text-sm sm:text-base">Utilidades de Préstamos</span>
                     </label>
-                    <p class="text-xs text-gray-500 mb-3">
+                    <p class="text-xs text-gray-500 mb-3 break-words">
                       Selecciona cómo se repartirán los intereses generados por los préstamos
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -888,7 +881,7 @@
                           <div class="flex-1 min-w-0">
                             <span 
                               :class="[
-                                'font-bold text-sm block',
+                                'font-bold text-sm block truncate',
                                 configCierre.prestamos === 'equitativa' ? 'text-amber-700' : 'text-gray-700'
                               ]"
                             >
@@ -906,7 +899,7 @@
                         </div>
                         <p 
                           :class="[
-                            'text-xs',
+                            'text-xs break-words',
                             configCierre.prestamos === 'equitativa' ? 'text-amber-600' : 'text-gray-500'
                           ]"
                         >
@@ -917,7 +910,7 @@
                         type="button"
                         @click="configCierre.prestamos = 'proporcional'"
                         :class="[
-                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
                           configCierre.prestamos === 'proporcional'
                             ? 'border-amber-500 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg shadow-amber-500/20 ring-2 ring-amber-200'
                             : 'border-gray-200 bg-white hover:border-amber-300 hover:bg-gray-50'
@@ -937,7 +930,7 @@
                           <div class="flex-1 min-w-0">
                             <span 
                               :class="[
-                                'font-bold text-sm block',
+                                'font-bold text-sm block truncate',
                                 configCierre.prestamos === 'proporcional' ? 'text-amber-700' : 'text-gray-700'
                               ]"
                             >
@@ -955,7 +948,7 @@
                         </div>
                         <p 
                           :class="[
-                            'text-xs',
+                            'text-xs break-words',
                             configCierre.prestamos === 'proporcional' ? 'text-amber-600' : 'text-gray-500'
                           ]"
                         >
@@ -964,12 +957,121 @@
                       </button>
                     </div>
                   </div>
+
+                  <!-- Configuración de Sanciones al cierre -->
+                  <div class="mb-6">
+                    <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <ExclamationTriangleIcon class="w-4 h-4 text-red-600 flex-shrink-0" />
+                      <span class="text-sm sm:text-base">Sanciones al cierre</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3 break-words">
+                      Define cómo se reparten las multas por mora al momento del cierre
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        @click="configCierre.sanciones = 'equitativa'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
+                          configCierre.sanciones === 'equitativa'
+                            ? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 shadow-lg shadow-red-500/20 ring-2 ring-red-200'
+                            : 'border-gray-200 bg-white hover:border-red-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2 min-w-0">
+                          <div 
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.sanciones === 'equitativa'
+                                ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <UsersIcon class="w-5 h-5" :class="configCierre.sanciones === 'equitativa' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span 
+                              :class="[
+                                'font-bold text-sm block truncate',
+                                configCierre.sanciones === 'equitativa' ? 'text-red-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Equitativa
+                            </span>
+                          </div>
+                          <div 
+                            v-if="configCierre.sanciones === 'equitativa'"
+                            class="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p 
+                          :class="[
+                            'text-xs break-words',
+                            configCierre.sanciones === 'equitativa' ? 'text-red-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Las multas se reparten a partes iguales entre todos los socios
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        @click="configCierre.sanciones = 'proporcional'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
+                          configCierre.sanciones === 'proporcional'
+                            ? 'border-red-500 bg-gradient-to-br from-red-50 to-rose-50 shadow-lg shadow-red-500/20 ring-2 ring-red-200'
+                            : 'border-gray-200 bg-white hover:border-red-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2 min-w-0">
+                          <div 
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.sanciones === 'proporcional'
+                                ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <ChartBarIcon class="w-5 h-5" :class="configCierre.sanciones === 'proporcional' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span 
+                              :class="[
+                                'font-bold text-sm block truncate',
+                                configCierre.sanciones === 'proporcional' ? 'text-red-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Proporcional
+                            </span>
+                          </div>
+                          <div 
+                            v-if="configCierre.sanciones === 'proporcional'"
+                            class="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p 
+                          :class="[
+                            'text-xs break-words',
+                            configCierre.sanciones === 'proporcional' ? 'text-red-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Las multas se reparten según lo ahorrado por cada socio
+                        </p>
+                      </button>
+                    </div>
                   </div>
-                </div>
               </div>
 
                 </div>
-              </div>
+                </div>
 
               <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
           <button 
@@ -1035,53 +1137,53 @@
                   </h3>
                   <p class="text-xs text-gray-500 mt-0.5">Selecciona el tipo de mensaje que deseas configurar</p>
                 </div>
-                <div class="flex gap-2 overflow-x-auto pb-1">
+                <div class="grid grid-cols-2 sm:flex sm:flex-nowrap gap-2 overflow-visible">
                   <button
                     @click="tipoMensajeActivo = 'individual'"
                     :class="[
-                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'individual'
-                        ? 'border-green-500 text-green-700 bg-green-50 shadow-md scale-105'
+                        ? 'border-green-500 text-green-700 bg-green-50 shadow-md sm:scale-105'
                         : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
                     ]"
                   >
-                    <UserIcon class="w-5 h-5" />
+                    <UserIcon class="w-5 h-5 flex-shrink-0" />
                     <span>Individual</span>
                   </button>
                   <button
                     @click="tipoMensajeActivo = 'general'"
                     :class="[
-                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'general'
-                        ? 'border-purple-500 text-purple-700 bg-purple-50 shadow-md scale-105'
+                        ? 'border-purple-500 text-purple-700 bg-purple-50 shadow-md sm:scale-105'
                         : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
                     ]"
                   >
-                    <UsersIcon class="w-5 h-5" />
+                    <UsersIcon class="w-5 h-5 flex-shrink-0" />
                     <span>General</span>
                   </button>
                   <button
                     @click="tipoMensajeActivo = 'mora'"
                     :class="[
-                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'mora'
-                        ? 'border-red-500 text-red-700 bg-red-50 shadow-md scale-105'
+                        ? 'border-red-500 text-red-700 bg-red-50 shadow-md sm:scale-105'
                         : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
                     ]"
                   >
-                    <ExclamationTriangleIcon class="w-5 h-5" />
+                    <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
                     <span>En Mora</span>
                   </button>
                   <button
                     @click="tipoMensajeActivo = 'pendiente'"
                     :class="[
-                      'px-5 py-3 text-sm font-semibold transition-all whitespace-nowrap rounded-lg shadow-sm border-2 flex items-center gap-2',
+                      'px-3 sm:px-5 py-2.5 sm:py-3 text-sm font-semibold transition-all rounded-lg shadow-sm border-2 flex items-center justify-center gap-1.5 sm:gap-2',
                       tipoMensajeActivo === 'pendiente'
-                        ? 'border-amber-500 text-amber-700 bg-amber-50 shadow-md scale-105'
+                        ? 'border-amber-500 text-amber-700 bg-amber-50 shadow-md sm:scale-105'
                         : 'border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow'
                     ]"
                   >
-                    <ClockIcon class="w-5 h-5" />
+                    <ClockIcon class="w-5 h-5 flex-shrink-0" />
                     <span>Pendiente</span>
                   </button>
                 </div>
@@ -1723,7 +1825,8 @@ const configCierre = ref({
     evento: 'equitativa',
     otro: 'equitativa'
   },
-  prestamos: 'equitativa' // 'equitativa' o 'proporcional'
+  prestamos: 'equitativa', // 'equitativa' o 'proporcional'
+  sanciones: 'equitativa' // 'equitativa' o 'proporcional'
 })
 
 // Tipos de actividades disponibles
@@ -1897,7 +2000,8 @@ async function guardarConfigBasica() {
     config_cierre: {
       modoActividades: configCierre.value.modoActividades,
       actividades: configCierre.value.actividades,
-      prestamos: configCierre.value.prestamos
+      prestamos: configCierre.value.prestamos,
+      sanciones: configCierre.value.sanciones
     },
     mes_inicio: configPeriodo.value.mes_inicio,
     anio_inicio: configPeriodo.value.anio_inicio,
@@ -2264,7 +2368,8 @@ function actualizarValoresDesdeNatillera() {
         evento: actividadesConfig.evento || 'equitativa',
         otro: actividadesConfig.otro || 'equitativa'
       },
-      prestamos: configCierreActual.prestamos || 'equitativa'
+      prestamos: configCierreActual.prestamos || 'equitativa',
+      sanciones: configCierreActual.sanciones || 'equitativa'
     }
     
     // Cargar configuración de sanciones

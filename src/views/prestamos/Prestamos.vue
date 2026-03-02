@@ -3689,33 +3689,18 @@ function calcularInteresGeneradoDetalle(prestamo) {
     return parseFloat(prestamo.interes_total) || 0
   }
   
-  // Si es interés mes vencido, calcular basado en lo pagado
-  const monto = prestamo.monto || 0
-  const saldoActual = prestamo.saldo_actual || 0
+  // Interés normal (mes vencido): el interés total del préstamo es monto * tasa * cuotas (simple) o compuesto
+  // saldo_actual en BD es el saldo TOTAL a pagar (capital + interés), no solo capital, por eso no se puede
+  // usar monto - saldo_actual para proporción. Mostramos el interés total del préstamo.
+  const monto = parseFloat(prestamo.monto || 0)
   const tasaMensual = (prestamo.interes || 0) / 100
-  
-  // Calcular el interés total del préstamo
   const numeroCuotas = prestamo.numero_cuotas || 1
-  let interesTotal = 0
   
   if (prestamo.tipo_interes === 'compuesto') {
     const montoFinal = monto * Math.pow(1 + tasaMensual, numeroCuotas)
-    interesTotal = montoFinal - monto
-  } else {
-    interesTotal = monto * tasaMensual * numeroCuotas
+    return montoFinal - monto
   }
-  
-  // Si ya está pagado, retornar el interés total
-  if (saldoActual <= 0) {
-    return interesTotal
-  }
-  
-  // Calcular proporción pagada
-  const montoPagado = monto - saldoActual
-  const proporcionPagada = montoPagado / monto
-  
-  // Retornar interés generado proporcional a lo pagado
-  return interesTotal * proporcionPagada
+  return monto * tasaMensual * numeroCuotas
 }
 
 function seleccionarSocio(socio) {

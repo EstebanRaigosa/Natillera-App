@@ -481,8 +481,12 @@
           <div
             v-for="natillera in todasLasNatillerasFiltradas" 
             :key="natillera.id"
-            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
-            :class="{ 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken': mostrarBordeTealNatillera(natillera) }"
+            :class="[
+              'group relative overflow-hidden rounded-2xl bg-white border shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col',
+              mostrarBordeTealNatillera(natillera) && 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken',
+              !mostrarBordeTealNatillera(natillera) && (estaPineada(natillera.id) && esUsuarioRaigo) && 'border-l-4 border-l-teal-500 border-gray-200 shadow-teal-500/5',
+              !mostrarBordeTealNatillera(natillera) && !(estaPineada(natillera.id) && esUsuarioRaigo) && 'border-gray-200'
+            ]"
           >
             <!-- Cinta diagonal: De otro usuario (solo para raigo, cuando el propietario no es raigo) -->
             <div
@@ -600,10 +604,10 @@
                   type="button"
                   @click.stop="togglePinNatillera(natillera.id)"
                   :class="[
-                    'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                    'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0 ring-2 ring-transparent',
                     estaPineada(natillera.id)
-                      ? 'bg-teal-500 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      ? 'bg-teal-500 text-white shadow-md shadow-teal-500/30 ring-teal-400/50'
+                      : 'bg-gray-100 text-gray-500 hover:bg-teal-50 hover:text-teal-600 hover:ring-teal-200/50'
                   ]"
                   :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
                 >
@@ -677,7 +681,12 @@
           <div
             v-for="natillera in natillerasFiltradas" 
             :key="natillera.id"
-            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
+            :class="[
+              'group relative overflow-hidden rounded-2xl bg-white border shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col',
+              estaPineada(natillera.id) && esUsuarioRaigo
+                ? 'border-l-4 border-l-teal-500 border-gray-200 shadow-teal-500/5'
+                : 'border-gray-200'
+            ]"
           >
             <!-- Router-link que envuelve toda la tarjeta (excepto botones de acción) -->
             <router-link 
@@ -774,10 +783,10 @@
                   type="button"
                   @click.stop="togglePinNatillera(natillera.id)"
                   :class="[
-                    'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                    'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0 ring-2 ring-transparent',
                     estaPineada(natillera.id)
-                      ? 'bg-teal-500 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      ? 'bg-teal-500 text-white shadow-md shadow-teal-500/30 ring-teal-400/50'
+                      : 'bg-gray-100 text-gray-500 hover:bg-teal-50 hover:text-teal-600 hover:ring-teal-200/50'
                   ]"
                   :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
                 >
@@ -843,8 +852,12 @@
           <div
             v-for="natillera in natillerasCompartidasFiltradas" 
             :key="natillera.id"
-            class="group relative overflow-hidden rounded-2xl bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col"
-            :class="{ 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken': mostrarBordeTealNatillera(natillera) }"
+            :class="[
+              'group relative overflow-hidden rounded-2xl bg-white border shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col',
+              mostrarBordeTealNatillera(natillera) && 'ring-2 ring-teal-400 border-teal-400 shadow-none card-sunken',
+              !mostrarBordeTealNatillera(natillera) && (estaPineada(natillera.id) && esUsuarioRaigo) && 'border-l-4 border-l-teal-500 border-gray-200 shadow-teal-500/5',
+              !mostrarBordeTealNatillera(natillera) && !(estaPineada(natillera.id) && esUsuarioRaigo) && 'border-gray-200'
+            ]"
           >
             <!-- Cinta diagonal: De otro usuario (solo para raigo, cuando el propietario no es raigo) -->
             <div
@@ -953,10 +966,10 @@
                 type="button"
                 @click.stop="togglePinNatillera(natillera.id)"
                 :class="[
-                  'w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 flex-shrink-0',
+                  'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 flex-shrink-0 ring-2 ring-transparent',
                   estaPineada(natillera.id)
-                    ? 'bg-teal-500 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    ? 'bg-teal-500 text-white shadow-md shadow-teal-500/30 ring-teal-400/50'
+                    : 'bg-gray-100 text-gray-500 hover:bg-teal-50 hover:text-teal-600 hover:ring-teal-200/50'
                 ]"
                 :title="estaPineada(natillera.id) ? 'Quitar de fijadas' : 'Fijar arriba'"
               >
@@ -1299,29 +1312,92 @@ const verificandoModal = ref(true) // Estado para la animación de carga
 const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
 const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
 
-// Pinear natilleras (solo raigo.16@gmail.com): guardado en localStorage, orden: pineadas primero
-const KEY_PIN_NATILLERAS = 'natilleras_pineadas_raigo'
+// Natilleras fijadas (pin): persistidas en Supabase para que se mantengan en todos los navegadores/dispositivos
 const natillerasPineadas = ref([])
-function cargarPineadas() {
-  try {
-    const raw = localStorage.getItem(KEY_PIN_NATILLERAS)
-    const arr = raw ? JSON.parse(raw) : []
-    natillerasPineadas.value = Array.isArray(arr) ? arr : []
-  } catch {
+const loadingPineadas = ref(false)
+
+async function cargarPineadas(userId) {
+  if (!userId) {
     natillerasPineadas.value = []
+    return
+  }
+  loadingPineadas.value = true
+  try {
+    const { data, error } = await supabase
+      .from('user_natillera_pinned')
+      .select('natillera_id, orden')
+      .eq('user_id', userId)
+      .order('orden', { ascending: true })
+
+    if (error) throw error
+    natillerasPineadas.value = (data || []).map((r) => r.natillera_id)
+
+    // Migración única: si es raigo y tenía datos en localStorage, subirlos a Supabase y limpiar
+    if (esUsuarioRaigo.value && natillerasPineadas.value.length === 0) {
+      try {
+        const raw = localStorage.getItem('natilleras_pineadas_raigo')
+        const legacy = raw ? JSON.parse(raw) : []
+        const ids = Array.isArray(legacy) ? legacy : []
+        if (ids.length > 0) {
+          await supabase.from('user_natillera_pinned').insert(
+            ids.map((natillera_id, index) => ({ user_id: userId, natillera_id, orden: index }))
+          )
+          localStorage.removeItem('natilleras_pineadas_raigo')
+          const { data: after } = await supabase
+            .from('user_natillera_pinned')
+            .select('natillera_id')
+            .eq('user_id', userId)
+            .order('orden', { ascending: true })
+          natillerasPineadas.value = (after || []).map((r) => r.natillera_id)
+        }
+      } catch (_) {
+        // ignorar fallo de migración
+      }
+    }
+  } catch (e) {
+    console.error('Error cargando natilleras fijadas:', e)
+    natillerasPineadas.value = []
+  } finally {
+    loadingPineadas.value = false
   }
 }
-function guardarPineadas() {
-  localStorage.setItem(KEY_PIN_NATILLERAS, JSON.stringify(natillerasPineadas.value))
-}
-function togglePinNatillera(natilleraId) {
+
+async function togglePinNatillera(natilleraId) {
+  const userId = usuarioAutenticado.value?.id
+  if (!userId) return
+
   const arr = [...natillerasPineadas.value]
   const i = arr.indexOf(natilleraId)
-  if (i >= 0) arr.splice(i, 1)
-  else arr.push(natilleraId)
-  natillerasPineadas.value = arr
-  guardarPineadas()
+  const isPinned = i >= 0
+
+  if (isPinned) {
+    arr.splice(i, 1)
+    natillerasPineadas.value = arr
+    const { error } = await supabase
+      .from('user_natillera_pinned')
+      .delete()
+      .eq('user_id', userId)
+      .eq('natillera_id', natilleraId)
+    if (error) {
+      natillerasPineadas.value = [...natillerasPineadas.value]
+      if (i >= 0) natillerasPineadas.value.splice(i, 0, natilleraId)
+      notificationStore.error('No se pudo quitar de fijadas')
+    }
+  } else {
+    arr.push(natilleraId)
+    natillerasPineadas.value = arr
+    const { error } = await supabase.from('user_natillera_pinned').insert({
+      user_id: userId,
+      natillera_id: natilleraId,
+      orden: arr.length - 1
+    })
+    if (error) {
+      natillerasPineadas.value = natillerasPineadas.value.filter((id) => id !== natilleraId)
+      notificationStore.error('No se pudo fijar la natillera')
+    }
+  }
 }
+
 function estaPineada(natilleraId) {
   return natillerasPineadas.value.includes(natilleraId)
 }
@@ -1745,9 +1821,9 @@ async function calcularTotalFondo() {
     const statsPorId = {}
     let suma = 0
     ids.forEach(id => {
-      const s = batchResult[id] || { totalRecaudadoNeto: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
+      const s = batchResult[id] || { totalRecaudadoNeto: 0, totalRecaudadoNetoInclParciales: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
       porId[id] = s.fondoTotal
-      statsPorId[id] = { totalRecaudadoNeto: s.totalRecaudadoNeto, utilidadesRecogidas: s.utilidadesRecogidas, fondoTotal: s.fondoTotal }
+      statsPorId[id] = { totalRecaudadoNeto: s.totalRecaudadoNeto, totalRecaudadoNetoInclParciales: s.totalRecaudadoNetoInclParciales, utilidadesRecogidas: s.utilidadesRecogidas, fondoTotal: s.fondoTotal }
       suma += s.fondoTotal
     })
     fondoPorNatillera.value = porId
@@ -1766,7 +1842,7 @@ function obtenerFondoNatillera(natilleraId) {
 }
 
 function obtenerRecaudadoNetoNatillera(natilleraId) {
-  return statsPorNatillera.value[natilleraId]?.totalRecaudadoNeto ?? 0
+  return statsPorNatillera.value[natilleraId]?.totalRecaudadoNetoInclParciales ?? statsPorNatillera.value[natilleraId]?.totalRecaudadoNeto ?? 0
 }
 
 function obtenerUtilidadesNatillera(natilleraId) {
@@ -2116,8 +2192,10 @@ async function eliminarNatilleraConfirmado() {
     
     if (resultado.success) {
       cerrarModalEliminacion()
-      await natillerasStore.fetchNatilleras()
-      await calcularTotalRecaudado()
+      await natillerasStore.fetchTodasLasNatilleras()
+      await calcularTotalFondo()
+      // Ocultar ventana de carga que pudo activarse por el watcher al recargar natilleras
+      verificandoModal.value = false
       notificationStore.success('Natillera eliminada exitosamente', 'Éxito')
     } else {
       const mensajeError = resultado.error || 'Error desconocido al eliminar la natillera'
@@ -2195,6 +2273,9 @@ async function inicializarComponente() {
     verificandoModal.value = false
     return
   }
+
+  // Cargar natilleras fijadas desde Supabase (sincronizado en todos los dispositivos)
+  await cargarPineadas(user.id)
   
   // Si las natilleras están cargando, mostrar la animación de carga
   if (natillerasStore.loading) {
@@ -2255,8 +2336,7 @@ async function inicializarComponente() {
 }
 
 onMounted(async () => {
-  cargarPineadas()
-  // Activar animación de carga al inicio
+  // Activar animación de carga al inicio; las pineadas se cargan dentro de inicializarComponente
   verificandoModal.value = true
   await inicializarComponente()
 })

@@ -182,9 +182,27 @@
                 <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200'">
                   <p class="text-sm font-semibold text-gray-700 mb-1">Utilidad (sanciones + actividades)</p>
                   <p class="text-2xl font-bold tabular-nums text-violet-700">
-                    ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? utilidadEfectivo : utilidadTransferencia) }}
+                    ${{ formatMoney(Math.max(0, (modalDesgloseFormaPago === 'efectivo' ? utilidadEfectivo : utilidadTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) + (modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia))) }}
                   </p>
-                  <p class="text-xs text-gray-500 mt-0.5">Multas pagadas y actividades extraordinarias</p>
+                  <p class="text-xs text-gray-500 mt-0.5">Multas y actividades extraordinarias</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) > 0" class="text-xs text-red-600 mt-0.5">(egresos de utilidades descontados: − ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? egresosUtilidadesEfectivo : egresosUtilidadesTransferencia) }})</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) > 0" class="text-xs text-green-600 mt-0.5">(ingresos sumados a utilidades: + ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? ingresosUtilidadesEfectivo : ingresosUtilidadesTransferencia) }})</p>
+                </div>
+                <!-- Egresos salidos de recaudado (restan del indicador recaudado) -->
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? egresosRecaudadoEfectivo : egresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-red-50 border-red-200">
+                  <p class="text-sm font-semibold text-gray-700 mb-1">− Egresos salidos de recaudado</p>
+                  <p class="text-xl font-bold tabular-nums text-red-700">
+                    − ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? egresosRecaudadoEfectivo : egresosRecaudadoTransferencia) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-0.5">Egresos registrados como “sale de recaudado”</p>
+                </div>
+                <!-- Ingresos sumados a recaudado -->
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? ingresosRecaudadoEfectivo : ingresosRecaudadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-green-50 border-green-200">
+                  <p class="text-sm font-semibold text-gray-700 mb-1">+ Ingresos sumados a recaudado</p>
+                  <p class="text-xl font-bold tabular-nums text-green-700">
+                    + ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? ingresosRecaudadoEfectivo : ingresosRecaudadoTransferencia) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-0.5">Ingresos registrados como “va a recaudado”</p>
                 </div>
                 <!-- Total recaudado y resta de préstamos -->
                 <div class="rounded-xl p-4 bg-gray-50 border-2 border-gray-200 space-y-2">
@@ -263,6 +281,23 @@
               class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm placeholder-gray-400"
               autocomplete="off"
             />
+          </div>
+          <!-- Filtro por mes (solo meses que existen en la natillera) -->
+          <div class="flex flex-col sm:flex-row gap-2 sm:items-center flex-wrap">
+            <label class="text-sm font-semibold text-gray-700 shrink-0">Mes:</label>
+            <div class="flex items-center gap-2 flex-wrap">
+              <select
+                v-model="filtroDetalleMes"
+                class="px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm bg-white min-w-[11rem]"
+              >
+                <option value="">Todos los meses</option>
+                <option
+                  v-for="op in mesesEnNatillera"
+                  :key="op.value"
+                  :value="op.value"
+                >{{ op.label }}</option>
+              </select>
+            </div>
           </div>
           <div class="flex flex-col sm:flex-row gap-4 flex-wrap">
           <!-- Filtro categoría (dropdown con checkboxes) -->
@@ -727,6 +762,50 @@
                 </div>
               </div>
 
+              <!-- Origen del egreso: de dónde sale el dinero (solo para egresos) -->
+              <div v-if="(editandoMovimiento && movimientoEditando?.tipo === 'salida') || (!editandoMovimiento && tipoMovimiento === 'egreso')">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">¿De dónde sale el dinero?</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    @click="formMovimiento.origenEgreso = 'recaudado'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'recaudado' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <BanknotesIcon class="w-5 h-5" />
+                    Recaudado
+                  </button>
+                  <button
+                    @click="formMovimiento.origenEgreso = 'utilidades'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.origenEgreso === 'utilidades' ? 'bg-amber-50 border-amber-500 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <span class="text-lg">📊</span>
+                    Utilidades
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Se descontará del indicador correspondiente en el desglose</p>
+              </div>
+
+              <!-- Destino del ingreso: a dónde va el dinero (solo para ingresos) -->
+              <div v-if="(editandoMovimiento && movimientoEditando?.tipo === 'entrada') || (!editandoMovimiento && tipoMovimiento === 'ingreso')">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">¿A dónde va el dinero?</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button
+                    @click="formMovimiento.destinoIngreso = 'recaudado'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'recaudado' ? 'bg-green-50 border-green-500 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <BanknotesIcon class="w-5 h-5" />
+                    Recaudado
+                  </button>
+                  <button
+                    @click="formMovimiento.destinoIngreso = 'utilidades'"
+                    :class="['px-4 py-3 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2', formMovimiento.destinoIngreso === 'utilidades' ? 'bg-amber-50 border-amber-500 text-amber-700' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100']"
+                  >
+                    <span class="text-lg">📊</span>
+                    Utilidades
+                  </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Se sumará al indicador correspondiente en el detalle de la natillera</p>
+              </div>
+
               <!-- Monto -->
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Monto <span class="text-red-500">*</span></label>
@@ -846,11 +925,13 @@ const CATEGORIAS_DETALLE = [
   { value: 'sancion', label: 'Sanción' },
   { value: 'actividad', label: 'Actividad' },
   { value: 'prestamo', label: 'Préstamo' },
+  { value: 'liquidacion_salida', label: 'Liquidación por salida' },
   { value: 'premio_rifa', label: 'Premio rifa' }
 ]
 const filtroDetalleCategorias = ref([]) // Array: vacío = todas, si tiene valores = filtrar por esas
 const filtroDetalleFormaPago = ref('todos')
 const filtroDetalleBusqueda = ref('')
+const filtroDetalleMes = ref('') // '' = todos los meses; 'YYYY-MM' = mes específico (solo meses en la natillera)
 const ordenarDetallePor = ref('socio') // 'socio' | 'concepto' | 'monto' | 'periodo'
 const OPCIONES_ORDENAR = [
   { value: 'socio', label: 'Socio' },
@@ -885,6 +966,8 @@ const tipoMovimiento = ref('transferencia') // 'transferencia' | 'ingreso' | 'eg
 const formMovimiento = ref({
   direccionTransferencia: 'efectivo_transferencia', // 'efectivo_transferencia' | 'transferencia_efectivo'
   formaPago: 'efectivo', // 'efectivo' | 'transferencia'
+  origenEgreso: 'recaudado', // 'recaudado' | 'utilidades' — solo para egresos
+  destinoIngreso: 'recaudado', // 'recaudado' | 'utilidades' — solo para ingresos
   monto: '',
   descripcion: '',
   fecha: new Date().toISOString().split('T')[0]
@@ -966,6 +1049,48 @@ function esPremioRifaMovimiento(m) {
 const movimientosSinPremios = computed(() => {
   return movimientos.value.filter(m => !esPremioRifaMovimiento(m))
 })
+// Egresos clasificados por origen (solo salidas con origen_egreso definido)
+const egresosRecaudadoEfectivo = computed(() => {
+  return movimientosSinPremios.value
+    .filter(m => m.tipo === 'salida' && m.forma_pago === 'efectivo' && m.origen_egreso === 'recaudado')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const egresosRecaudadoTransferencia = computed(() => {
+  return movimientosSinPremios.value
+    .filter(m => m.tipo === 'salida' && m.forma_pago === 'transferencia' && m.origen_egreso === 'recaudado')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const egresosUtilidadesEfectivo = computed(() => {
+  return movimientosSinPremios.value
+    .filter(m => m.tipo === 'salida' && m.forma_pago === 'efectivo' && m.origen_egreso === 'utilidades')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const egresosUtilidadesTransferencia = computed(() => {
+  return movimientosSinPremios.value
+    .filter(m => m.tipo === 'salida' && m.forma_pago === 'transferencia' && m.origen_egreso === 'utilidades')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+// Ingresos clasificados por destino (solo entradas con destino_ingreso definido)
+const ingresosRecaudadoEfectivo = computed(() => {
+  return movimientos.value
+    .filter(m => m.tipo === 'entrada' && m.forma_pago === 'efectivo' && m.destino_ingreso === 'recaudado')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const ingresosRecaudadoTransferencia = computed(() => {
+  return movimientos.value
+    .filter(m => m.tipo === 'entrada' && m.forma_pago === 'transferencia' && m.destino_ingreso === 'recaudado')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const ingresosUtilidadesEfectivo = computed(() => {
+  return movimientos.value
+    .filter(m => m.tipo === 'entrada' && m.forma_pago === 'efectivo' && m.destino_ingreso === 'utilidades')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
+const ingresosUtilidadesTransferencia = computed(() => {
+  return movimientos.value
+    .filter(m => m.tipo === 'entrada' && m.forma_pago === 'transferencia' && m.destino_ingreso === 'utilidades')
+    .reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+})
 const movimientosEfectivoNeto = computed(() => {
   const entradas = movimientosSinPremios.value.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'entrada').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
   const salidas = movimientosSinPremios.value.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'salida').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
@@ -1023,6 +1148,23 @@ const movimientosOrdenados = computed(() => {
   return [...movimientos.value].sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
 })
 
+// Meses que realmente existen en el detalle de la natillera (para el filtro)
+const mesesEnNatillera = computed(() => {
+  const set = new Set()
+  detalleItems.value.forEach(i => {
+    if (i.mes != null && i.anio != null) {
+      const key = `${i.anio}-${String(i.mes).padStart(2, '0')}`
+      set.add(key)
+    }
+  })
+  return Array.from(set)
+    .sort((a, b) => b.localeCompare(a)) // más reciente primero
+    .map(key => {
+      const [anio, mes] = key.split('-')
+      return { value: key, label: `${getMesLabel(Number(mes))} ${anio}` }
+    })
+})
+
 const detalleFiltrado = computed(() => {
   let list = detalleItems.value
   if (filtroDetalleCategorias.value.length > 0) {
@@ -1030,6 +1172,11 @@ const detalleFiltrado = computed(() => {
   }
   if (filtroDetalleFormaPago.value !== 'todos') {
     list = list.filter(i => (i.forma_pago || 'efectivo') === filtroDetalleFormaPago.value)
+  }
+  // Filtro por mes específico (formato YYYY-MM)
+  if (filtroDetalleMes.value) {
+    const [y, m] = filtroDetalleMes.value.split('-').map(Number)
+    list = list.filter(i => Number(i.anio) === y && Number(i.mes) === m)
   }
   const busqueda = filtroDetalleBusqueda.value.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
   if (busqueda) {
@@ -1076,9 +1223,16 @@ const detallePaginado = computed(() => {
 })
 
 // Resetear a página 1 cuando cambian los filtros
-watch([filtroDetalleCategorias, filtroDetalleFormaPago, filtroDetalleBusqueda, ordenarDetallePor], () => {
+watch([filtroDetalleCategorias, filtroDetalleFormaPago, filtroDetalleBusqueda, filtroDetalleMes, ordenarDetallePor], () => {
   paginaActual.value = 1
 })
+
+// Si el mes seleccionado ya no está en la natillera, quitar filtro
+watch(mesesEnNatillera, (nuevos) => {
+  if (filtroDetalleMes.value && !nuevos.some(m => m.value === filtroDetalleMes.value)) {
+    filtroDetalleMes.value = ''
+  }
+}, { immediate: true })
 
 const etiquetaFiltroCategorias = computed(() => {
   if (filtroDetalleCategorias.value.length === 0) return 'Todas'
@@ -1100,14 +1254,14 @@ function toggleFiltroCategoria(value) {
 }
 
 function getConceptoLabel(tipo) {
-  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', prestamo: 'Préstamo', premio_rifa: 'Premio rifa' }
+  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', prestamo: 'Préstamo', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa' }
   return map[tipo] || tipo
 }
 function getConceptoClass(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
     return 'bg-orange-100 text-orange-800 border border-orange-300/60'
   }
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', prestamo: 'bg-blue-100 text-blue-800', premio_rifa: 'bg-amber-100 text-amber-800' }
+  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800' }
   return map[tipo] || 'bg-gray-100 text-gray-700'
 }
 function getMesLabel(mes) {
@@ -1137,7 +1291,7 @@ async function exportarAExcel() {
       [natillera.value?.nombre || 'Natillera'],
       ['Cuadre de Caja - Detalle por concepto'],
       ['Exportado:', new Date().toLocaleString('es-CO')],
-      ['Filtros:', `Categoría: ${filtroDetalleCategorias.value.length === 0 ? 'Todas' : filtroDetalleCategorias.value.map(c => getConceptoLabel(c)).join(', ')} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}`],
+      ['Filtros:', `Categoría: ${filtroDetalleCategorias.value.length === 0 ? 'Todas' : filtroDetalleCategorias.value.map(c => getConceptoLabel(c)).join(', ')} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}${filtroDetalleMes.value ? ` | Mes: ${getMesLabel(Number(filtroDetalleMes.value.split('-')[1]))} ${filtroDetalleMes.value.split('-')[0]}` : ''}`],
       [],
       ['Concepto', 'Socio', 'Forma de pago', 'Período', 'Monto'],
       ...datosExportar.map(d => [d.Concepto, d.Socio, d['Forma de pago'], d.Período, d.Monto]),
@@ -1399,8 +1553,28 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     })
   }
 
-  // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, prestamo, premio_rifa)
-  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, actividad: 2, prestamo: 3, premio_rifa: 4 }
+  // Liquidaciones por salida (desactivación de socio): salidas en movimientos_fondo con descripción "Liquidación por salida - ..."
+  const esLiquidacionSalida = (m) => {
+    if (m.tipo !== 'salida') return false
+    const d = descripcionMov(m)
+    return d.includes('liquidación por salida') || d.includes('liquidacion por salida')
+  }
+  const liquidacionesFromMov = (movimientosData || []).filter(esLiquidacionSalida)
+  liquidacionesFromMov.forEach(m => {
+    const fp = tipoPagoMov(m.forma_pago ?? m.Forma_pago)
+    const monto = parseFloat(m.monto ?? m.Monto) || 0
+    if (monto > 0) {
+      const desc = (m.descripcion || m.Descripcion || '').toString().trim()
+      const socioDesc = desc.replace(/^Liquidación por salida\s*[-–]\s*/i, '').trim() || '—'
+      const fechaMov = m.fecha ? new Date(m.fecha) : null
+      const anio = fechaMov ? fechaMov.getFullYear() : 0
+      const mes = fechaMov ? fechaMov.getMonth() + 1 : 0
+      items.push({ tipo: 'liquidacion_salida', concepto: 'Liquidación por salida', socio: socioDesc, forma_pago: fp, monto: -monto, anio, mes })
+    }
+  })
+
+  // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, prestamo, liquidacion_salida, premio_rifa)
+  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, actividad: 2, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4 }
   items.sort((a, b) => {
     const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}-${ordenTipo[a.tipo] ?? 4}`
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}-${ordenTipo[b.tipo] ?? 4}`
@@ -1465,7 +1639,7 @@ async function cargarDatos() {
     const [movimientosResult, prestamosData, sociosActividadData, permisos] = await Promise.all([
       supabase
         .from('movimientos_fondo')
-        .select('id, tipo, monto, forma_pago, descripcion, fecha')
+        .select('id, tipo, monto, forma_pago, descripcion, fecha, origen_egreso, destino_ingreso')
         .eq('natillera_id', id.value)
         .order('fecha', { ascending: false }),
       cargarPrestamosParaDetalle(id.value, idsSocioNatillera),
@@ -1678,6 +1852,8 @@ function abrirModalMovimiento() {
   formMovimiento.value = {
     direccionTransferencia: 'efectivo_transferencia',
     formaPago: 'efectivo',
+    origenEgreso: 'recaudado',
+    destinoIngreso: 'recaudado',
     monto: '',
     descripcion: '',
     fecha: new Date().toISOString().split('T')[0]
@@ -1709,6 +1885,8 @@ function abrirModalEditarMovimiento(movimiento) {
   formMovimiento.value = {
     direccionTransferencia: formMovimiento.value.direccionTransferencia || 'efectivo_transferencia',
     formaPago: movimiento.forma_pago || 'efectivo',
+    origenEgreso: (movimiento.tipo === 'salida' && (movimiento.origen_egreso === 'recaudado' || movimiento.origen_egreso === 'utilidades')) ? movimiento.origen_egreso : 'recaudado',
+    destinoIngreso: (movimiento.tipo === 'entrada' && (movimiento.destino_ingreso === 'recaudado' || movimiento.destino_ingreso === 'utilidades')) ? movimiento.destino_ingreso : 'recaudado',
     monto: movimiento.monto || '',
     descripcion: movimiento.descripcion || '',
     fecha: movimiento.fecha || new Date().toISOString().split('T')[0]
@@ -1980,7 +2158,8 @@ async function guardarMovimiento() {
           monto: monto,
           forma_pago: formMovimiento.value.formaPago,
           descripcion: descripcion,
-          fecha: fecha
+          fecha: fecha,
+          destino_ingreso: formMovimiento.value.destinoIngreso || null
         })
         .select()
         .single()
@@ -2028,7 +2207,8 @@ async function guardarMovimiento() {
           monto: monto,
           forma_pago: formMovimiento.value.formaPago,
           descripcion: descripcion,
-          fecha: fecha
+          fecha: fecha,
+          origen_egreso: formMovimiento.value.origenEgreso || null
         })
         .select()
         .single()
@@ -2092,6 +2272,8 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
     forma_pago: movimientoOriginal.forma_pago,
     descripcion: movimientoOriginal.descripcion,
     fecha: movimientoOriginal.fecha,
+    origen_egreso: movimientoOriginal.origen_egreso ?? undefined,
+    destino_ingreso: movimientoOriginal.destino_ingreso ?? undefined,
     created_at: movimientoOriginal.created_at,
     updated_at: movimientoOriginal.updated_at
   }
@@ -2351,6 +2533,12 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
       descripcion: formMovimiento.value.descripcion || (movimientoOriginal.tipo === 'entrada' ? 'Ingreso manual' : 'Egreso manual'),
       fecha: nuevaFecha
     }
+    if (movimientoOriginal.tipo === 'salida') {
+      datosActualizados.origen_egreso = formMovimiento.value.origenEgreso || null
+    }
+    if (movimientoOriginal.tipo === 'entrada') {
+      datosActualizados.destino_ingreso = formMovimiento.value.destinoIngreso || null
+    }
 
     const { data: movimientoActualizado, error: errorUpdate } = await supabase
       .from('movimientos_fondo')
@@ -2366,7 +2554,9 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
       monto: datosAnteriores.monto !== nuevoMonto ? { anterior: datosAnteriores.monto, nuevo: nuevoMonto } : null,
       forma_pago: datosAnteriores.forma_pago !== formMovimiento.value.formaPago ? { anterior: datosAnteriores.forma_pago, nuevo: formMovimiento.value.formaPago } : null,
       descripcion: datosAnteriores.descripcion !== datosActualizados.descripcion ? { anterior: datosAnteriores.descripcion, nuevo: datosActualizados.descripcion } : null,
-      fecha: datosAnteriores.fecha !== nuevaFecha ? { anterior: datosAnteriores.fecha, nuevo: nuevaFecha } : null
+      fecha: datosAnteriores.fecha !== nuevaFecha ? { anterior: datosAnteriores.fecha, nuevo: nuevaFecha } : null,
+      origen_egreso: (movimientoOriginal.tipo === 'salida' && (datosAnteriores.origen_egreso !== (formMovimiento.value.origenEgreso || null))) ? { anterior: datosAnteriores.origen_egreso, nuevo: formMovimiento.value.origenEgreso || null } : null,
+      destino_ingreso: (movimientoOriginal.tipo === 'entrada' && (datosAnteriores.destino_ingreso !== (formMovimiento.value.destinoIngreso || null))) ? { anterior: datosAnteriores.destino_ingreso, nuevo: formMovimiento.value.destinoIngreso || null } : null
     }
 
     const descripcionCambiosIngresoEgreso = Object.entries(cambiosDetectadosIngresoEgreso)
@@ -2376,6 +2566,8 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
         if (campo === 'forma_pago') return `Forma de pago: ${cambio.anterior} → ${cambio.nuevo}`
         if (campo === 'descripcion') return `Descripción: "${cambio.anterior}" → "${cambio.nuevo}"`
         if (campo === 'fecha') return `Fecha: ${new Date(cambio.anterior).toLocaleDateString('es-CO')} → ${new Date(cambio.nuevo).toLocaleDateString('es-CO')}`
+        if (campo === 'origen_egreso') return `Origen egreso: ${cambio.anterior || '—'} → ${cambio.nuevo || '—'}`
+        if (campo === 'destino_ingreso') return `Destino ingreso: ${cambio.anterior || '—'} → ${cambio.nuevo || '—'}`
         return `${campo}: ${cambio.anterior} → ${cambio.nuevo}`
       })
       .join(' | ')

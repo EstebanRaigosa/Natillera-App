@@ -1115,7 +1115,9 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       return sum + deudaCuota + sancionPendiente
     }, 0)
 
-    // Utilidades: desde utilidades_clasificadas (periodo abierto: fecha_cierre null)
+    // Utilidades: desde utilidades_clasificadas. Se incluyen todas las filas (con y sin fecha_cierre)
+    // para que rifas y otros tipos con varias filas por forma_pago sumen correctamente (ej. efectivo + transferencia).
+    // Se agrega por tipo para que el total de cada concepto (p. ej. Rifas) sea la suma de todas las formas de pago.
     // Fallback: si la tabla está vacía, calcular desde cuotas (sanciones) y actividades
     let utilidadesRecogidas = 0
     const utilidadesPorTipo = {}
@@ -1125,12 +1127,14 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         .from('utilidades_clasificadas')
         .select('tipo, forma_pago, monto')
         .eq('natillera_id', nat.id)
-        .is('fecha_cierre', null)
       if (!errorUtil && filasUtilidades?.length) {
         filasUtilidades.forEach((r) => {
           const m = parseFloat(r.monto) || 0
           utilidadesRecogidas += m
-          utilidadesPorTipo[r.tipo] = (utilidadesPorTipo[r.tipo] || 0) + m
+          const tipoNorm = (r.tipo || '').toString().toLowerCase().trim()
+          if (tipoNorm) {
+            utilidadesPorTipo[tipoNorm] = (utilidadesPorTipo[tipoNorm] || 0) + m
+          }
           const fp = (r.forma_pago || '').toLowerCase().trim()
           if (fp === 'efectivo') utilidadesPorFormaPagoMap.efectivo += m
           else if (fp === 'transferencia') utilidadesPorFormaPagoMap.transferencia += m
@@ -1176,7 +1180,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       }
     }
     const etiquetasTipo = {
-      sanciones: { label: 'Multas por mora', desc: 'Sanciones pagadas por cuotas en mora' },
+      sanciones: { label: 'Sanciones', desc: 'Multas por mora y sanciones por retiro (desactivación de socio)' },
       prestamos: { label: 'Intereses de préstamos', desc: 'Intereses generados por préstamos' },
       rifas: { label: 'Rifas', desc: 'Utilidad de actividades tipo Rifas' },
       bingo: { label: 'Bingo', desc: 'Utilidad de actividades tipo Bingo' },
@@ -1313,11 +1317,15 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     let totalPremiosRifas = 0
     let totalPremiosEfectivo = 0
     let totalPremiosTransferencia = 0
+    let egresosRecaudado = 0
+    let egresosUtilidades = 0
+    let ingresosRecaudado = 0
+    let ingresosUtilidades = 0
     if (nat.id) {
       try {
         const { data: movs } = await supabase
           .from('movimientos_fondo')
-          .select('tipo, monto, forma_pago, descripcion')
+          .select('tipo, monto, forma_pago, descripcion, origen_egreso, destino_ingreso')
           .eq('natillera_id', nat.id)
         if (movs?.length) {
           const descMov = (m) => (m && (m.descripcion ?? '')).toString().toLowerCase().trim()
@@ -1331,6 +1339,14 @@ export const useNatillerasStore = defineStore('natilleras', () => {
           totalPremiosRifas = premiosEfectivo + premiosTransferencia
           totalPremiosEfectivo = premiosEfectivo
           totalPremiosTransferencia = premiosTransferencia
+          // Egresos por origen (para reflejar en indicadores Recaudado/Utilidad en NatilleraDetalle)
+          const salidasSinPremio = movs.filter(m => m.tipo === 'salida' && !esPremioRifa(m))
+          egresosRecaudado = salidasSinPremio.filter(m => m.origen_egreso === 'recaudado').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+          egresosUtilidades = salidasSinPremio.filter(m => m.origen_egreso === 'utilidades').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+          // Ingresos por destino (suman al indicador correspondiente en NatilleraDetalle)
+          const entradas = movs.filter(m => m.tipo === 'entrada')
+          ingresosRecaudado = entradas.filter(m => m.destino_ingreso === 'recaudado').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
+          ingresosUtilidades = entradas.filter(m => m.destino_ingreso === 'utilidades').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
           // Movimientos netos EXCLUYENDO premios rifa (el premio se resta del recaudo, no de movimientos)
           const entradasEfectivo = movs.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'entrada').reduce((s, m) => s + parseFloat(m.monto || 0), 0)
           const salidasEfectivo = movs.filter(m => m.forma_pago === 'efectivo' && m.tipo === 'salida' && !esPremioRifa(m)).reduce((s, m) => s + parseFloat(m.monto || 0), 0)
@@ -1346,6 +1362,15 @@ export const useNatillerasStore = defineStore('natilleras', () => {
 
     // Recaudado neto: aportes (cuotas ahorro + cuotas préstamos pagadas) menos préstamos desembolsados menos premios rifa entregados
     const totalRecaudadoNeto = Math.max(0, totalAportado + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
+    // Total recaudo incluyendo pagos parciales (suma valor_pagado de todas las cuotas con pago, no solo pagadas)
+    const totalRecaudadoEfectivoInclParciales = cuotas
+      .filter(c => (c.valor_pagado || 0) > 0 && tipoEfectivo(c.tipo_pago))
+      .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    const totalRecaudadoTransferenciaInclParciales = cuotas
+      .filter(c => (c.valor_pagado || 0) > 0 && tipoTransferencia(c.tipo_pago))
+      .reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
+    const totalRecaudadoCuotasInclParciales = totalRecaudadoEfectivoInclParciales + totalRecaudadoTransferenciaInclParciales
+    const totalRecaudadoNetoInclParciales = Math.max(0, totalRecaudadoCuotasInclParciales + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
     // Fondo disponible: recaudado neto + utilidades + movimientos de fondo (premios rifa, depósitos, retiros)
     const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas + movimientosEfectivoNeto + movimientosTransferenciaNeto
 
@@ -1391,6 +1416,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       totalPremiosTransferencia,
       totalRecaudadoEfectivo,
       totalRecaudadoTransferencia,
+      totalRecaudadoNetoInclParciales,
       // Valores desglosados para el desglose completo
       sancionesEfectivo,
       sancionesTransferencia,
@@ -1402,7 +1428,11 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       recaudadoCompletoTransferencia,
       recaudadoCompletoTotal,
       movimientosEfectivoNeto,
-      movimientosTransferenciaNeto
+      movimientosTransferenciaNeto,
+      egresosRecaudado,
+      egresosUtilidades,
+      ingresosRecaudado,
+      ingresosUtilidades
     }
   }
 
@@ -1614,15 +1644,15 @@ export const useNatillerasStore = defineStore('natilleras', () => {
   }
 
   /**
-   * Carga en lote las estadísticas para el dashboard (totalRecaudadoNeto, utilidadesRecogidas, fondoTotal)
+   * Carga en lote las estadísticas para el dashboard (totalRecaudadoNeto, totalRecaudadoNetoInclParciales, utilidadesRecogidas, fondoTotal)
    * por natillera. Mucho más rápido que llamar calcularEstadisticas por cada una (menos consultas).
    * @param {string[]} natilleraIds
-   * @returns {Promise<Record<string, { totalRecaudadoNeto: number, utilidadesRecogidas: number, fondoTotal: number }>>}
+   * @returns {Promise<Record<string, { totalRecaudadoNeto: number, totalRecaudadoNetoInclParciales: number, utilidadesRecogidas: number, fondoTotal: number }>>}
    */
   async function calcularEstadisticasParaDashboard(natilleraIds) {
     const resultado = {}
     natilleraIds.forEach(id => {
-      resultado[id] = { totalRecaudadoNeto: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
+      resultado[id] = { totalRecaudadoNeto: 0, totalRecaudadoNetoInclParciales: 0, utilidadesRecogidas: 0, fondoTotal: 0 }
     })
     if (!natilleraIds.length) return resultado
 
@@ -1702,8 +1732,13 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         utilidadesRecogidas = sanciones + utilAct
       }
       const totalRecaudadoNeto = Math.max(0, totalAportado + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
+      // Total recaudo incluyendo pagos parciales (valor_pagado de todas las cuotas con pago)
+      const totalRecaudadoCuotasInclParciales = cuotasNat
+        .filter(c => (parseFloat(c.valor_pagado) || 0) > 0)
+        .reduce((sum, c) => sum + (parseFloat(c.valor_pagado) || 0), 0)
+      const totalRecaudadoNetoInclParciales = Math.max(0, totalRecaudadoCuotasInclParciales + pagosPrestamosEfectivo + pagosPrestamosTransferencia - totalDesembolsadoPrestamos - totalPremiosRifas)
       const fondoTotal = totalRecaudadoNeto + utilidadesRecogidas + movimientosEfectivoNeto + movimientosTransferenciaNeto
-      resultado[natId] = { totalRecaudadoNeto: totalRecaudadoNeto, utilidadesRecogidas, fondoTotal }
+      resultado[natId] = { totalRecaudadoNeto: totalRecaudadoNeto, totalRecaudadoNetoInclParciales, utilidadesRecogidas, fondoTotal }
     })
 
     return resultado

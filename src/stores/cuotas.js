@@ -31,10 +31,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
       loading.value = true
       error.value = null
 
-      // Primero obtener los IDs de socios_natillera de esta natillera
+      // Primero obtener los IDs de socios_natillera de esta natillera (incluye estado para filtrar inactivos en vista de cuotas)
       const { data: sociosNatillera, error: sociosError } = await supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, periodicidad, socio:socios(*)')
+        .select('id, valor_cuota_individual, periodicidad, estado, socio:socios(*)')
         .eq('natillera_id', natilleraId)
 
       if (sociosError) throw sociosError
@@ -198,7 +198,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
 
     // Calcular multa base según el tipo de sanción (simple / escalonada)
-    let multaBase = calcularMulta(configSanciones, cantidadCuotasMoraSocio)
+    // Para escalonada: usar la POSICIÓN de la cuota (mora_orden), no el total de cuotas en mora,
+    // para que la 1ª cuota vencida tenga $4000, la 2ª $4500, etc., y no todas el nivel máximo.
+    let multaBase = 0
+    if (configSanciones.tipo === 'escalonada') {
+      const posicion = (cuota.mora_orden != null && cuota.mora_orden !== '')
+        ? Math.min(Number(cuota.mora_orden), 999)
+        : cantidadCuotasMoraSocio
+      multaBase = obtenerValorSancionPorPosicion(configSanciones, posicion)
+    } else {
+      multaBase = calcularMulta(configSanciones, cantidadCuotasMoraSocio)
+    }
 
     const diasEnMora = Math.floor((hoy - fechaLimite) / (1000 * 60 * 60 * 24))
 
@@ -422,20 +432,21 @@ export const useCuotasStore = defineStore('cuotas', () => {
               if (multaBase > 0) sancionesBases[cuota.id] = multaBase
             }
           } else if (tieneBasePersistida && tieneMoraOrden) {
+            // Para simple y escalonada: respetar la BASE guardada (snapshot) y no recalcularla,
+            // así la cuota que fue 2ª en la racha mantiene siempre su nivel (p.ej. $4.500)
+            // aunque se pague la 1ª cuota y cambie la cantidad de cuotas en mora.
             multaBase = Number(cuota.valor_multa_base)
           } else {
-            // Cuota nueva en mora: asignar mora_orden por racha. Procesamos por fecha_limite (más antigua primero).
-            const otrasEnMoraConOrden = cuotasSocio.filter(c => c.id !== cuota.id && c.mora_orden != null && c.mora_orden !== '')
-            const maxOrden = otrasEnMoraConOrden.length > 0
-              ? Math.max(...otrasEnMoraConOrden.map(c => Number(c.mora_orden)))
-              : 0
-            moraOrdenCuota = maxOrden + 1
+            // Cuota nueva en mora: asignar mora_orden por racha (por fecha_limite, más antigua primero).
+            // Para escalonada usar siempre la posición en la lista (1ª, 2ª, 3ª…) para no depender
+            // de mora_orden en memoria y evitar que todas terminen con el nivel máximo (6000).
+            const posicionEnRacha = indexEnSocio + 1
+            moraOrdenCuota = posicionEnRacha
             cuota.mora_orden = moraOrdenCuota
-            const ordenParaValor = Math.min(moraOrdenCuota, 4)
             if (configSanciones.tipo === 'simple') {
               multaBase = configSanciones.valorFijo || 0
             } else if (configSanciones.tipo === 'escalonada') {
-              multaBase = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor)
+              multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionEnRacha)
             }
             if (multaBase > 0) {
               sancionesBases[cuota.id] = multaBase
@@ -2091,6 +2102,35 @@ export const useCuotasStore = defineStore('cuotas', () => {
         throw new Error('No se pudo actualizar la cuota')
       }
 
+      // Si había pago parcial y se agregó más (completar parcial): guardar en historial para que al reenviar se muestre "Historial de pagos"
+      const totalPagadoAntes = valorPagadoAnterior + sancionPagadaAnterior + valorPagadoActividadesAnterior
+      const totalPagadoDespues = nuevoValorPagado + (sancionPagadaAnterior + valorSancionPagada) + (valorPagadoActividadesAnterior + valorActividadesPagado)
+      let insertedHistorialComprobanteId = null
+      if (valorPagadoAnterior > 0 && totalPagadoDespues > totalPagadoAntes && codigoComprobante) {
+        try {
+          const { data: insertedHistorial, error: errHistInsert } = await supabase
+            .from('historial_comprobantes')
+            .insert({
+              cuota_id: cuotaId,
+              codigo_comprobante_anterior: codigoComprobante,
+              codigo_comprobante_nuevo: codigoComprobante,
+              valor_pagado_anterior: totalPagadoAntes,
+              valor_pagado_nuevo: totalPagadoDespues,
+              motivo: 'completar_pago_parcial',
+              fecha_actualizacion: new Date().toISOString()
+            })
+            .select('id')
+            .single()
+          if (!errHistInsert && insertedHistorial?.id) {
+            insertedHistorialComprobanteId = insertedHistorial.id
+          }
+        } catch (e) {
+          if (!e.message || !e.message.includes('historial_comprobantes')) {
+            console.warn('No se pudo guardar en historial de comprobantes (pago parcial completado):', e.message)
+          }
+        }
+      }
+
       // Si se generó un nuevo código y había uno anterior, guardar en historial
       // Nota: En registrarPago solo se genera código si no existe, así que no debería haber historial aquí
       // El historial se guarda principalmente en guardarEdicionCuota cuando se actualiza un código existente
@@ -2334,7 +2374,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
         data,
         valorSancionPagada: valorSancionPagadaFinal,
         valorActividadesPagado,
-        valorCuotaPagado
+        valorCuotaPagado,
+        insertedHistorialComprobanteId
       }
     } catch (e) {
       error.value = e.message
@@ -2403,10 +2444,25 @@ export const useCuotasStore = defineStore('cuotas', () => {
     })
   }
 
-  // Obtener resumen de cuotas por mes específico
+  // Obtener resumen de cuotas por mes específico (excluye socios inactivos sin pago completo en ese mes)
   function getResumenPorMes(mes, anio = null) {
     const cuotasMes = getCuotasPorMes(mes, anio)
-    return calcularResumenCuotas(cuotasMes)
+    // Excluir cuotas de socios inactivos que no tengan pago completo en el mes
+    const porSocio = {}
+    cuotasMes.forEach(c => {
+      const sid = c.socio_natillera_id
+      if (!porSocio[sid]) porSocio[sid] = []
+      porSocio[sid].push(c)
+    })
+    const ocultarIds = new Set()
+    Object.entries(porSocio).forEach(([, cuotasSocio]) => {
+      const primera = cuotasSocio[0]
+      if (primera?.socio_natillera?.estado !== 'inactivo') return
+      const todasPagadas = cuotasSocio.every(c => (c.valor_pagado || 0) >= (c.valor_cuota || 0))
+      if (!todasPagadas) ocultarIds.add(primera.socio_natillera_id)
+    })
+    const cuotasParaResumen = cuotasMes.filter(c => !ocultarIds.has(c.socio_natillera_id))
+    return calcularResumenCuotas(cuotasParaResumen)
   }
 
   // Función para obtener el último día de un mes (28-31 según mes)

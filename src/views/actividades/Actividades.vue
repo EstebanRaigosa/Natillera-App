@@ -421,20 +421,31 @@
                 </p>
               </div>
             </div>
-            <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+            <!-- Forma de pago entrega premio + botón desglose (solo rifas liquidadas) -->
             <div v-if="actividad.tipo === 'rifa' && actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80">
               <p class="text-[11px] sm:text-xs text-gray-600">
                 Premio entregado: <span class="font-semibold">{{ (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
               </p>
-              <button
-                type="button"
-                @click.stop="abrirModalFormaPagoLiquidacion(actividad)"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                title="Cambiar forma de pago"
-              >
-                <PencilSquareIcon class="w-4 h-4" />
-                Cambiar
-              </button>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  @click.stop="abrirModalDesglosePagosRifa(actividad)"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 shadow-sm"
+                  title="Ver valores pagados"
+                >
+                  <CurrencyDollarIcon class="w-4 h-4" />
+                  Valores pagados
+                </button>
+                <button
+                  type="button"
+                  @click.stop="abrirModalFormaPagoLiquidacion(actividad)"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  title="Cambiar forma de pago"
+                >
+                  <PencilSquareIcon class="w-4 h-4" />
+                  Cambiar
+                </button>
+              </div>
             </div>
           </template>
           <!-- Vista para actividades en curso: Fecha límite, Total asignado, Total recaudado -->
@@ -635,15 +646,21 @@
                           </p>
                         </div>
                       </div>
-                    <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+                    <!-- Forma de pago entrega premio + botón desglose (solo rifas liquidadas) -->
                     <div v-if="actividad.tipo === 'rifa' && actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80 min-w-0">
                       <p class="text-[11px] sm:text-xs text-gray-600">
                         Premio entregado: <span class="font-semibold">{{ (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
                       </p>
-                      <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
-                        <PencilSquareIcon class="w-4 h-4" />
-                        Cambiar
-                      </button>
+                      <div class="flex items-center gap-1.5">
+                        <button type="button" @click.stop="abrirModalDesglosePagosRifa(actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 shadow-sm" title="Ver valores pagados">
+                          <CurrencyDollarIcon class="w-4 h-4" />
+                          Valores pagados
+                        </button>
+                        <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
+                          <PencilSquareIcon class="w-4 h-4" />
+                          Cambiar
+                        </button>
+                      </div>
                     </div>
                     </template>
                     <template v-else>
@@ -752,15 +769,21 @@
                   </p>
                 </div>
               </div>
-              <!-- Forma de pago entrega premio (solo rifas liquidadas) -->
+              <!-- Forma de pago entrega premio + botón desglose (solo rifas liquidadas) -->
               <div v-if="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada'" class="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl p-2 sm:p-2.5 bg-gray-50 border border-gray-200/80">
                 <p class="text-[11px] sm:text-xs text-gray-600">
                   Premio entregado: <span class="font-semibold">{{ (item.actividad.forma_pago_liquidacion || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
                 </p>
-                <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(item.actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
-                  <PencilSquareIcon class="w-4 h-4" />
-                  Cambiar
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" @click.stop="abrirModalDesglosePagosRifa(item.actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200 hover:bg-emerald-200 shadow-sm" title="Ver valores pagados">
+                    <CurrencyDollarIcon class="w-4 h-4" />
+                    Valores pagados
+                  </button>
+                  <button type="button" @click.stop="abrirModalFormaPagoLiquidacion(item.actividad)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm" title="Cambiar forma de pago">
+                    <PencilSquareIcon class="w-4 h-4" />
+                    Cambiar
+                  </button>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -2144,6 +2167,61 @@
         </div>
       </div>
     </ModalWrapper>
+    <!-- Modal Desglose valores pagados (rifa liquidada) -->
+    <ModalWrapper
+      :show="!!actividadParaDesglosePagos"
+      :z-index="50"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      card-class="relative max-w-md w-full rounded-2xl overflow-hidden border border-gray-200 shadow-xl bg-white flex flex-col max-h-[85vh]"
+      @close="actividadParaDesglosePagos = null"
+    >
+      <div class="p-4 sm:p-5 flex flex-col min-h-0 flex-1">
+        <h3 class="text-lg font-bold text-gray-800 mb-1 truncate pr-8">{{ actividadParaDesglosePagos?.descripcion }}</h3>
+        <p class="text-sm text-gray-500 mb-4">Valores pagados en esta rifa</p>
+        <div class="flex-1 min-h-0 overflow-auto border border-gray-200 rounded-xl">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 sticky top-0">
+              <tr>
+                <th class="w-12 text-center py-2.5 px-2 font-semibold text-gray-700">Nº</th>
+                <th class="text-left py-2.5 px-3 font-semibold text-gray-700">Nombre del socio</th>
+                <th class="text-right py-2.5 px-3 font-semibold text-gray-700">Valor pagado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(p, i) in (actividadParaDesglosePagos?.valores_pagados_rifa || [])"
+                :key="i"
+                :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
+                class="border-b border-gray-100"
+              >
+                <td class="py-2 px-2 text-center text-gray-500 font-medium">{{ i + 1 }}</td>
+                <td class="py-2 px-3 text-gray-800">{{ p.nombre }}</td>
+                <td class="py-2 px-3 text-right font-medium text-green-700">${{ formatMoney(p.valor_pagado) }}</td>
+              </tr>
+              <tr v-if="!(actividadParaDesglosePagos?.valores_pagados_rifa || []).length" class="bg-white">
+                <td colspan="3" class="py-6 px-3 text-center text-gray-500">No hay registros de pagos.</td>
+              </tr>
+            </tbody>
+            <tfoot v-if="(actividadParaDesglosePagos?.valores_pagados_rifa || []).length > 0" class="bg-emerald-50 border-t-2 border-emerald-200">
+              <tr>
+                <td class="py-2.5 px-2"></td>
+                <td class="py-2.5 px-3 font-bold text-gray-800">Total</td>
+                <td class="py-2.5 px-3 text-right font-bold text-emerald-700">
+                  ${{ formatMoney((actividadParaDesglosePagos?.valores_pagados_rifa || []).reduce((s, p) => s + (p.valor_pagado || 0), 0)) }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <button
+          type="button"
+          @click="actividadParaDesglosePagos = null"
+          class="mt-4 w-full px-4 py-3 bg-gray-800 text-white font-semibold rounded-xl hover:bg-gray-700 transition-colors"
+        >
+          Cerrar
+        </button>
+      </div>
+    </ModalWrapper>
     <!-- Modal Ver ganadores (grupo de rifas) -->
     <ModalWrapper
       :show="!!grupoGanadoresSeleccionado"
@@ -2966,6 +3044,7 @@ const modalConfirmarLiquidacionNegativa = ref(false)
 const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganador + ganador
 const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
 const actividadParaFormaPago = ref(null) // Rifa liquidada para editar forma de pago entrega premio
+const actividadParaDesglosePagos = ref(null) // Rifa liquidada para modal grilla valores pagados
 const formFormaPagoLiquidacion = reactive({ forma_pago: 'efectivo' })
 const guardandoFormaPago = ref(false)
 const modalAsignarFaltante = ref(false)
@@ -3017,6 +3096,7 @@ useBodyScrollLock(modalConfirmarLiquidacionNegativa)
 useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
 useBodyScrollLock(computed(() => !!actividadParaFormaPago.value))
+useBodyScrollLock(computed(() => !!actividadParaDesglosePagos.value))
 useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
 useBodyScrollLock(computed(() => !!actividadAEliminar.value))
@@ -4376,6 +4456,9 @@ function abrirModalFormaPagoLiquidacion(actividad) {
   actividadParaFormaPago.value = actividad
   formFormaPagoLiquidacion.forma_pago = (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
 }
+function abrirModalDesglosePagosRifa(actividad) {
+  actividadParaDesglosePagos.value = actividad
+}
 async function guardarFormaPagoLiquidacion() {
   const act = actividadParaFormaPago.value
   if (!act?.id) return
@@ -4907,7 +4990,7 @@ async function fetchActividades() {
       })))
     }
     
-    // Para actividades en curso, cargar información de socios_actividad y actualizar estados
+    // Para actividades en curso, cargar socios_actividad (totales). Para rifas liquidadas, cargar lista de valores pagados por socio.
     const actividadesConTotales = await Promise.all(
       (data || []).map(async (actividad) => {
         if (actividad.estado === 'en_curso') {
@@ -4917,17 +5000,29 @@ async function fetchActividades() {
             .select('id, valor_asignado, valor_pagado, estado')
             .eq('actividad_id', actividad.id)
           if (!errorSocios && sociosActividad) {
-            // Nota: El estado de mora se calcula y muestra en el frontend
-            // No es necesario actualizar la BD cada vez que se carga la vista
-            
             const totalAsignado = sociosActividad.reduce((sum, sa) => sum + (Number(sa.valor_asignado) || 0), 0)
             const totalPagado = sociosActividad.reduce((sum, sa) => sum + (Number(sa.valor_pagado) || 0), 0)
-            
             return {
               ...actividad,
               total_asignado: totalAsignado,
               total_pagado: totalPagado
             }
+          }
+        }
+        if (actividad.estado === 'liquidada' && actividad.tipo === 'rifa') {
+          // Lista rápida de valores pagados en esta rifa (para mostrar en la tarjeta)
+          const { data: pagosRifa, error: errPagos } = await supabase
+            .from('socios_actividad')
+            .select('valor_pagado, socio_natillera:socios_natillera(socio:socios(nombre))')
+            .eq('actividad_id', actividad.id)
+            .gt('valor_pagado', 0)
+          if (!errPagos && pagosRifa && pagosRifa.length > 0) {
+            const valoresPagadosRifa = pagosRifa.map((sa) => {
+              const nombre = sa.socio_natillera?.socio?.nombre || 'Socio'
+              const valor = Number(sa.valor_pagado) || 0
+              return { nombre, valor_pagado: valor }
+            }).filter((p) => p.valor_pagado > 0)
+            return { ...actividad, valores_pagados_rifa: valoresPagadosRifa }
           }
         }
         return actividad
