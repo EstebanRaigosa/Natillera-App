@@ -2568,9 +2568,9 @@
             <table class="w-full text-xs sm:text-sm">
               <thead>
                 <tr class="bg-gray-100 text-gray-600 font-semibold">
+                  <th class="text-left py-2.5 px-3">Socio</th>
                   <th class="text-right py-2.5 px-3">Valor préstamo</th>
                   <th class="text-left py-2.5 px-3">Fecha</th>
-                  <th class="text-right py-2.5 px-3">Nº cuotas</th>
                   <th class="text-right py-2.5 px-3">Intereses</th>
                   <th class="text-right py-2.5 px-3">% interés</th>
                 </tr>
@@ -2582,15 +2582,15 @@
                   class="border-t border-gray-100"
                   :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
                 >
+                  <td class="py-2.5 px-3 text-gray-800">{{ item.socio }}</td>
                   <td class="py-2.5 px-3 text-right tabular-nums font-medium text-gray-800">${{ formatMoney(item.valorPrestamo) }}</td>
                   <td class="py-2.5 px-3 text-gray-600">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
-                  <td class="py-2.5 px-3 text-right tabular-nums text-gray-700">{{ item.numeroCuotas != null ? item.numeroCuotas : '—' }}</td>
                   <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-green-600">${{ formatMoney(item.intereses) }}</td>
                   <td class="py-2.5 px-3 text-right tabular-nums text-gray-700">{{ item.porcentaje != null ? item.porcentaje + '%' : '—' }}</td>
                 </tr>
                 <tr class="border-t-2 border-gray-300 bg-gray-100 font-semibold text-gray-800">
-                  <td class="py-2.5 px-3"></td>
                   <td class="py-2.5 px-3">Total</td>
+                  <td class="py-2.5 px-3"></td>
                   <td class="py-2.5 px-3"></td>
                   <td class="py-2.5 px-3 text-right tabular-nums text-green-600">${{ formatMoney(detallePrestamos.lista.reduce((s, it) => s + (it.intereses || 0), 0)) }}</td>
                   <td class="py-2.5 px-3"></td>
@@ -2686,10 +2686,10 @@
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       card-class="relative w-full sm:max-w-5xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
       card-max-width="64rem"
-      @close="modalCierreNatillera = false"
+      @close="modalCierreNatillera = false; detalleCierreExpandidoId = null"
     >
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-red-500 via-orange-600 to-amber-700 p-4 sm:p-6 text-white relative overflow-hidden">
+        <div class="bg-gradient-to-br from-red-500 via-orange-600 to-amber-700 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -2717,110 +2717,249 @@
           </div>
         </div>
         <!-- Contenido -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div class="flex-1 overflow-hidden flex flex-col min-h-0">
           <!-- Loading -->
           <div v-if="calculandoCierre" class="flex flex-col items-center justify-center py-12">
             <div class="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full mb-4"></div>
             <p class="text-gray-500 text-sm">Calculando datos de cierre...</p>
           </div>
-          <!-- Lista de socios -->
-          <div v-else-if="datosCierre.length > 0" class="space-y-4">
-            <div 
-              v-for="(dato, index) in datosCierre" 
-              :key="dato.socio?.id || index"
-              class="relative overflow-hidden rounded-2xl p-4 sm:p-5 border-2 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white via-gray-50/40 to-white"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-              
-              <!-- Header del socio -->
-              <div class="relative z-10 flex items-center gap-3 sm:gap-4 mb-4 pb-4 border-b border-gray-200">
-                <img 
-                  :src="getAvatarUrl(dato.socio?.nombre || 'default', dato.socio?.avatar_seed, dato.socio?.avatar_style)" 
-                  :alt="dato.socio?.nombre"
-                  class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border-2 border-natillera-200 flex-shrink-0 object-cover"
-                />
-                <div class="flex-1 min-w-0">
-                  <h4 class="font-bold text-lg sm:text-xl text-gray-800 truncate">
-                    {{ dato.socio?.nombre || 'Socio sin nombre' }}
-                  </h4>
-                  <p v-if="dato.socio?.telefono" class="text-sm text-gray-500 truncate">
-                    {{ dato.socio.telefono }}
-                  </p>
-                </div>
+          <!-- Tabla y Cards con buscador -->
+          <div v-else-if="datosCierre.length > 0" class="flex-1 overflow-hidden flex flex-col p-3 sm:p-4">
+            <div class="mb-3 relative flex-shrink-0">
+              <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                v-model.trim="busquedaCierre"
+                type="search"
+                placeholder="Buscar socio..."
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm transition-all"
+                autocomplete="off"
+              />
+            </div>
+            
+            <div class="flex-1 overflow-auto">
+              <!-- Vista Desktop: Tabla compacta tipo Excel -->
+              <div class="hidden sm:block rounded-xl border-2 border-gray-200 overflow-hidden shadow-inner bg-white min-w-[640px]">
+                <table class="w-full text-sm border-collapse">
+                  <thead>
+                    <tr class="bg-gradient-to-r from-gray-100 to-gray-50 border-b-2 border-gray-200 sticky top-0 z-10">
+                      <th class="py-2.5 px-2 sm:px-3 w-10 text-center">
+                        <input type="checkbox" v-model="todosSeleccionadosPdf" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer" title="Seleccionar todos para PDF">
+                      </th>
+                      <th class="text-left py-2.5 px-2 sm:px-3 font-bold text-gray-700 whitespace-nowrap">Socio</th>
+                      <th class="text-right py-2.5 px-2 sm:px-3 font-bold text-sky-700 whitespace-nowrap">Ahorro</th>
+                      <th class="text-right py-2.5 px-2 sm:px-3 font-bold text-purple-700 whitespace-nowrap">Utilidades</th>
+                      <th class="text-right py-2.5 px-2 sm:px-3 font-bold text-teal-700 whitespace-nowrap">Total a ent.</th>
+                      <th class="text-right py-2.5 px-2 sm:px-3 font-bold text-red-700 whitespace-nowrap">Descuentos</th>
+                      <th class="text-right py-2.5 px-2 sm:px-3 font-bold text-gray-800 whitespace-nowrap">Total final</th>
+                      <th class="text-center py-2.5 px-1 sm:px-2 font-bold text-gray-600 whitespace-nowrap w-20">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="(dato, index) in datosCierreFiltrados" :key="dato.socio?.id || index">
+                      <tr
+                        :class="[
+                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/70',
+                          'border-b border-gray-100 hover:bg-teal-50/50 transition-colors'
+                        ]"
+                      >
+                        <td class="py-2 px-2 sm:px-3 text-center">
+                          <input type="checkbox" :value="dato.socioNatillera?.id || dato.socio?.id" v-model="sociosSeleccionadosPdf" class="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer">
+                        </td>
+                        <td class="py-2 px-2 sm:px-3">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <button
+                              v-if="dato.utilidadesPorConcepto && Object.keys(dato.utilidadesPorConcepto).some(t => dato.utilidadesPorConcepto[t] > 0)"
+                              type="button"
+                              @click="detalleCierreExpandidoId = detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
+                              class="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-gray-500 hover:bg-purple-100 hover:text-purple-700"
+                              :title="detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id) ? 'Ocultar detalle' : 'Ver utilidades por concepto'"
+                            >
+                              <ChevronRightIcon :class="['w-4 h-4 transition-transform', detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id) && 'rotate-90']" />
+                            </button>
+                            <div class="min-w-0">
+                              <p class="font-semibold text-gray-800 truncate max-w-[140px] sm:max-w-[200px]" :title="dato.socio?.nombre">{{ dato.socio?.nombre || 'Socio' }}</p>
+                              <p v-if="dato.socio?.telefono" class="text-xs text-gray-500 truncate max-w-[140px] sm:max-w-[200px]">{{ dato.socio.telefono }}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="text-right py-2 px-2 sm:px-3 font-medium text-sky-600 tabular-nums">${{ formatMoney(dato.ahorro) }}</td>
+                        <td class="text-right py-2 px-2 sm:px-3 font-medium text-purple-600 tabular-nums">${{ formatMoney(dato.utilidades) }}</td>
+                        <td class="text-right py-2 px-2 sm:px-3 font-medium text-teal-600 tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
+                        <td class="text-right py-2 px-2 sm:px-3 font-medium text-red-600 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
+                        <td class="text-right py-2 px-2 sm:px-3 font-bold tabular-nums" :class="dato.totalFinal >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(dato.totalFinal) }}</td>
+                        <td class="py-2 px-1 sm:px-2">
+                          <div class="flex items-center justify-center gap-0.5">
+                            <button
+                              type="button"
+                              @click="descargarComprobanteSocio(dato)"
+                              class="p-1.5 rounded-lg text-teal-600 hover:bg-teal-100 transition-colors"
+                              title="Descargar comprobante"
+                            >
+                              <ArrowDownTrayIcon class="w-4 h-4" />
+                            </button>
+                            <button
+                              v-if="dato.socio?.telefono"
+                              type="button"
+                              @click="compartirComprobanteSocioWhatsApp(dato)"
+                              class="p-1.5 rounded-lg text-green-600 hover:bg-green-100 transition-colors inline-flex"
+                              title="Compartir por WhatsApp"
+                            >
+                              <ChatBubbleLeftIcon class="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      <!-- Fila expandible: desglose por concepto -->
+                      <tr
+                        v-if="dato.utilidadesPorConcepto && detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id)"
+                        class="bg-purple-50/80 border-b border-purple-100"
+                      >
+                        <td colspan="8" class="py-2 px-3">
+                          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                            <span class="font-semibold text-purple-800">Utilidades por concepto:</span>
+                            <template v-for="tipo in TIPOS_UTILIDAD_CIERRE" :key="tipo">
+                              <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="text-gray-700">
+                                {{ LABELS_UTILIDAD_CIERRE[tipo] || tipo }}: <strong class="text-purple-700">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</strong>
+                              </span>
+                            </template>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
               </div>
-              <!-- Información detallada -->
-              <div class="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <!-- Monto ahorrado mensualmente -->
-                <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-3 sm:p-4 border border-blue-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Monto ahorrado mensualmente</p>
-                  <p class="font-bold text-blue-600 text-lg sm:text-xl">${{ formatMoney(dato.montoAhorradoMensual) }}</p>
+
+                      <!-- Vista Móvil: Cards compactas -->
+              <div class="block sm:hidden space-y-3">
+                <div class="flex items-center gap-2 px-1 mb-2">
+                  <input type="checkbox" id="selectAllMobile" v-model="todosSeleccionadosPdf" class="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                  <label for="selectAllMobile" class="text-base text-gray-700 font-medium">Seleccionar todos para exportar</label>
                 </div>
-                <!-- Cantidad de cuotas pagadas -->
-                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 sm:p-4 border border-green-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Cuotas pagadas</p>
-                  <p class="font-bold text-green-600 text-lg sm:text-xl">{{ dato.cantidadCuotasPagadas }}</p>
-                </div>
-                <!-- Cantidad de cuotas en deuda -->
-                <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 sm:p-4 border border-amber-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Cuotas en deuda</p>
-                  <p class="font-bold text-amber-600 text-lg sm:text-xl">{{ dato.cantidadCuotasDeuda }}</p>
-                </div>
-                <!-- Utilidades -->
-                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-3 sm:p-4 border border-purple-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Utilidades</p>
-                  <p class="font-bold text-purple-600 text-lg sm:text-xl">${{ formatMoney(dato.utilidades) }}</p>
-                </div>
-                <!-- Total a entregar -->
-                <div class="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl p-3 sm:p-4 border border-teal-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Total a entregar</p>
-                  <p class="font-bold text-teal-600 text-lg sm:text-xl">${{ formatMoney(dato.totalAEntregar) }}</p>
-                </div>
-                <!-- Descuentos -->
-                <div class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-3 sm:p-4 border border-red-200">
-                  <p class="text-xs text-gray-600 font-medium mb-1">Descuentos</p>
-                  <p class="font-bold text-red-600 text-lg sm:text-xl">${{ formatMoney(dato.descuentos) }}</p>
-                  <div v-if="dato.descuentosDesglose" class="mt-2 pt-2 border-t border-red-200/50 space-y-1">
-                    <p class="text-[10px] text-red-600">
-                      Préstamos: ${{ formatMoney(dato.descuentosDesglose.prestamosPendientes) }}
-                    </p>
-                    <p class="text-[10px] text-red-600">
-                      Cuotas: ${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar) }}
-                    </p>
+                <div
+                  v-for="(dato, index) in datosCierreFiltrados"
+                  :key="'m-'+(dato.socio?.id || index)"
+                  class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+                >
+                  <div class="p-3 border-b border-gray-100 flex items-center justify-between gap-2 bg-gray-50/50">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                      <input type="checkbox" :value="dato.socioNatillera?.id || dato.socio?.id" v-model="sociosSeleccionadosPdf" class="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500 flex-shrink-0">
+                      <div class="min-w-0 flex-1">
+                        <p class="font-bold text-gray-800 truncate text-base" :title="dato.socio?.nombre">{{ dato.socio?.nombre || 'Socio' }}</p>
+                        <p v-if="dato.socio?.telefono" class="text-xs text-gray-500 truncate">{{ dato.socio.telefono }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        @click="descargarComprobanteSocio(dato)"
+                        class="p-2.5 rounded-xl bg-teal-50 text-teal-600 hover:bg-teal-100 transition-colors flex-shrink-0 flex items-center justify-center shadow-sm border border-teal-100"
+                        title="Descargar"
+                      >
+                        <ArrowDownTrayIcon class="w-5 h-5" />
+                      </button>
+                      <button
+                        v-if="dato.socio?.telefono"
+                        type="button"
+                        @click="compartirComprobanteSocioWhatsApp(dato)"
+                        class="p-2.5 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 transition-colors flex-shrink-0 flex items-center justify-center shadow-sm border border-green-100"
+                        title="WhatsApp"
+                      >
+                        <ChatBubbleLeftIcon class="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="p-3">
+                    <div class="flex justify-between items-center mb-1 text-xs">
+                      <div class="flex flex-col">
+                        <span class="text-gray-500">Ahorro:</span>
+                        <span class="text-[10px] text-gray-400">{{ dato.cantidadCuotasPagadas }} cuotas de ${{ formatMoney(dato.montoAhorradoMensual) }}</span>
+                        <span class="text-[10px] text-gray-400">{{ natillera?.periodicidad === 'quincenal' ? 'Quincenales' : 'Mensuales' }}</span>
+                      </div>
+                      <span class="font-medium text-sky-600 text-sm">$ {{ formatMoney(dato.ahorro) }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mb-1 text-xs">
+                      <span class="text-gray-500 flex items-center gap-1">
+                        Utilidades:
+                        <button
+                          v-if="dato.utilidadesPorConcepto && Object.keys(dato.utilidadesPorConcepto).some(t => dato.utilidadesPorConcepto[t] > 0)"
+                          type="button"
+                          @click="detalleCierreExpandidoId = detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
+                          class="p-0.5 rounded text-purple-600 hover:bg-purple-100"
+                        >
+                          <ChevronRightIcon :class="['w-3 h-3 transition-transform', detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id) && 'rotate-90']" />
+                        </button>
+                      </span>
+                      <span class="font-medium text-purple-600">$ {{ formatMoney(dato.utilidades) }}</span>
+                    </div>
+
+                    <div
+                      v-if="dato.utilidadesPorConcepto && detalleCierreExpandidoId === (dato.socioNatillera?.id || dato.socio?.id)"
+                      class="mb-2 p-2 bg-purple-50 rounded text-[11px] grid grid-cols-2 gap-1"
+                    >
+                      <template v-for="tipo in TIPOS_UTILIDAD_CIERRE" :key="tipo">
+                        <div v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex justify-between gap-1">
+                          <span class="text-gray-500">{{ LABELS_UTILIDAD_CIERRE[tipo] || tipo }}:</span>
+                          <span class="font-semibold text-purple-700">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                        </div>
+                      </template>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-2 text-xs">
+                      <span class="text-gray-500">Descuentos:</span>
+                      <span class="font-medium text-red-600">$ {{ formatMoney(dato.descuentos) }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                      <span class="font-bold text-gray-700 text-sm">Total a pagar:</span>
+                      <span class="font-extrabold text-sm" :class="dato.totalFinal >= 0 ? 'text-green-600' : 'text-red-600'">
+                        $ {{ formatMoney(dato.totalFinal) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <!-- Total final destacado -->
-              <div class="relative z-10 mt-4 pt-4 border-t-2 border-gray-300">
-                <div class="flex items-center justify-between">
-                  <p class="text-sm sm:text-base font-bold text-gray-700">Total a pagar al socio:</p>
-                  <p class="text-xl sm:text-2xl font-extrabold" :class="dato.totalFinal >= 0 ? 'text-green-600' : 'text-red-600'">
-                    ${{ formatMoney(dato.totalFinal) }}
-                  </p>
-                </div>
+
+              <div v-if="datosCierreFiltrados.length === 0" class="py-8 text-center text-gray-500 text-sm">
+                No hay socios que coincidan con la búsqueda.
               </div>
+              <p v-else class="text-xs text-gray-500 mt-2 hidden sm:block">
+                Toca la flecha junto al nombre para ver el desglose por concepto. Total: {{ datosCierreFiltrados.length }} {{ datosCierreFiltrados.length === 1 ? 'socio' : 'socios' }}.
+              </p>
             </div>
           </div>
           <!-- Sin datos -->
-          <div v-else class="text-center py-12">
+          <div v-else class="flex-1 flex items-center justify-center p-8">
             <p class="text-gray-500">No hay datos para mostrar</p>
           </div>
         </div>
         <!-- Footer -->
         <div v-if="!calculandoCierre && datosCierre.length > 0" class="border-t border-gray-200 bg-gray-50 p-4 sm:p-5 flex-shrink-0">
-          <div class="flex flex-col sm:flex-row gap-3">
-            <button 
-              @click="modalCierreNatillera = false"
-              class="btn-secondary flex-1"
-            >
-              Cancelar
-            </button>
-            <button 
-              @click="confirmarCerrarNatillera"
-              class="btn-primary flex-1 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
-            >
-              Confirmar Cierre
-            </button>
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                @click="exportarComprobanteCierrePdf"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-teal-200 bg-teal-50 text-teal-700 font-semibold hover:bg-teal-100 transition-colors"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5" />
+                Exportar comprobante (PDF)
+              </button>
+              <button 
+                @click="modalCierreNatillera = false"
+                class="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button 
+                @click="confirmarCerrarNatillera"
+                class="btn-primary flex-1 bg-gradient-to-r from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700"
+              >
+                Confirmar Cierre
+              </button>
+            </div>
           </div>
         </div>
       </ModalWrapper>
@@ -3035,10 +3174,127 @@
         :es-admin="esAdmin"
       />
     </div>
+
+    <!-- Comprobante Visual para WhatsApp (esto se convierte en imagen) -->
+    <div style="position: absolute; left: -9999px; top: -9999px;">
+      <div 
+        v-if="comprobanteActivo"
+        id="comprobante-cierre-whatsapp"
+        ref="comprobanteWhatsappRef"
+        class="bg-white rounded-2xl overflow-hidden"
+        style="width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: system-ui, -apple-system, sans-serif;"
+      >
+        <!-- Contenido del comprobante con fondo azulado claro (diferente al de cuota que es verde) -->
+        <div class="comprobante-content" style="background: #f0f9ff; padding: 24px 20px; color: #1f2937;">
+          <!-- TÍTULO Y CORONA (Diferente al chulo verde de cuota) -->
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+              <!-- Ícono de copa/corona azul -->
+              <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="white"/>
+                </svg>
+              </div>
+              <!-- Título -->
+              <h1 style="font-size: 24px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                Cierre de Natillera
+              </h1>
+            </div>
+          </div>
+          
+          <!-- SECCIÓN 1: INFORMACIÓN PRINCIPAL (Parte Superior) -->
+          <div style="background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); margin-bottom: 16px;">
+            <div style="text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #e5e7eb;">
+              <p style="color: #6b7280; font-size: 10px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">TOTAL ENTREGADO</p>
+              <p style="font-size: 32px; font-weight: 900; margin: 0; letter-spacing: -1px;" :style="{ color: ((comprobanteActivo.ahorro || 0) + Math.round((comprobanteActivo.utilidades || 0) / 50) * 50 - (comprobanteActivo.descuentos || 0)) >= 0 ? '#2563eb' : '#e11d48' }">
+                ${{ formatMoney((comprobanteActivo.ahorro || 0) + Math.round((comprobanteActivo.utilidades || 0) / 50) * 50 - (comprobanteActivo.descuentos || 0)) }}
+              </p>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 12px; text-align: center;">
+              <div>
+                <p style="color: #9ca3af; font-size: 10px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Socio Participante</p>
+                <p style="font-weight: 700; font-size: 16px; margin: 0; color: #111827;">{{ comprobanteActivo.socio?.nombre }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: DESGLOSE SIMPLIFICADO -->
+          <div style="background: white; padding: 16px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);">
+            <p style="color: #374151; font-size: 12px; font-weight: 700; text-transform: uppercase; margin: 0 0 12px 0; letter-spacing: 0.5px; border-bottom: 2px solid #f3f4f6; padding-bottom: 8px;">
+              Resumen Final
+            </p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+              <div style="display: flex; flex-direction: column; background: #ecfdf5; padding: 10px 12px; border-radius: 10px; border: 1px solid #d1fae5;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <span style="color: #047857; font-weight: 700;">Ahorro total</span>
+                  </div>
+                  <span style="font-weight: 800; color: #059669; font-size: 15px;">${{ formatMoney(comprobanteActivo.ahorro) }}</span>
+                </div>
+                <div style="margin-top: 6px; padding-left: 36px; font-size: 11px; color: #047857; display: flex; flex-direction: column; gap: 2px;">
+                  <span>{{ comprobanteActivo.cantidadCuotasPagadas }} cuotas de ${{ formatMoney(comprobanteActivo.montoAhorradoMensual) }}</span>
+                  <span>Periodicidad: {{ natillera?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}</span>
+                </div>
+              </div>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; background: #faf5ff; padding: 10px 12px; border-radius: 10px; border: 1px solid #f3e8ff;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 28px; height: 28px; background: #a855f7; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  </div>
+                  <span style="color: #7e22ce; font-weight: 700;">Total Ganancias</span>
+                </div>
+                <span style="font-weight: 800; color: #9333ea; font-size: 15px;">${{ formatMoney(Math.round((comprobanteActivo.utilidades || 0) / 50) * 50) }}</span>
+              </div>
+
+              <div style="display: flex; flex-direction: column; background: #fff1f2; padding: 10px 12px; border-radius: 10px; border: 1px solid #ffe4e6;" v-if="comprobanteActivo.descuentos > 0">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 28px; height: 28px; background: #f43f5e; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </div>
+                    <span style="color: #be123c; font-weight: 700;">Total Descuentos</span>
+                  </div>
+                  <span style="font-weight: 800; color: #e11d48; font-size: 15px;">-${{ formatMoney(comprobanteActivo.descuentos) }}</span>
+                </div>
+                <div v-if="comprobanteActivo.descuentosDesglose" style="margin-top: 6px; padding-left: 36px; font-size: 11px; color: #be123c; display: flex; flex-direction: column; gap: 2px;">
+                  <div v-if="comprobanteActivo.descuentosDesglose.prestamosPendientes > 0" style="display: flex; justify-content: space-between;">
+                    <span>Préstamos pendientes</span>
+                    <span>-${{ formatMoney(comprobanteActivo.descuentosDesglose.prestamosPendientes) }}</span>
+                  </div>
+                  <div v-if="comprobanteActivo.descuentosDesglose.cuotasSinPagar > 0" style="display: flex; justify-content: space-between;">
+                    <span>Cuotas o Sanciones pendientes</span>
+                    <span>-${{ formatMoney(comprobanteActivo.descuentosDesglose.cuotasSinPagar) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- FOOTER: FECHA Y MARCA -->
+          <div style="text-align: center; margin-top: 20px;">
+            <p style="color: #9ca3af; font-size: 10px; margin: 0 0 6px 0;">
+              Generado el {{ new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' }) }}
+            </p>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+              <span style="color: #d1d5db;">✨</span>
+              <p style="color: #d1d5db; font-size: 10px; font-weight: 600; margin: 0; letter-spacing: 0.5px;">NATILLERAPP</p>
+              <span style="color: #d1d5db;">✨</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { toPng } from 'html-to-image'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { 
   ArrowLeftIcon,
@@ -3046,6 +3302,7 @@ import {
   UsersIcon,
   CurrencyDollarIcon,
   BanknotesIcon,
+  ArrowDownTrayIcon,
   CalendarIcon,
   ChatBubbleLeftIcon,
   XMarkIcon,
@@ -3091,6 +3348,7 @@ import LoadingScreenIos from '../../components/LoadingScreenIos.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useIsIos } from '../../composables/useIsIos'
+import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
 const props = defineProps({
   id: String
@@ -3159,7 +3417,55 @@ const recordatorioEdicionId = ref(null) // uuid al editar, null al crear
 const listRecordatorios = ref([]) // { id, texto }[] desde Supabase
 const loadingRecordatorios = ref(false)
 const datosCierre = ref([]) // Datos de cierre para cada socio
+const busquedaCierre = ref('') // Termino de búsqueda para el cierre
+const sociosSeleccionadosPdf = ref([]) // IDs de los socios seleccionados para exportar a PDF
+const comprobanteWhatsappRef = ref(null) // Referencia al contenedor de la imagen
+const comprobanteActivo = ref(null) // Datos del socio activo para generar imagen
+
+const todosSeleccionadosPdf = computed({
+  get() {
+    return datosCierreFiltrados.value.length > 0 && 
+           datosCierreFiltrados.value.every(d => sociosSeleccionadosPdf.value.includes(d.socioNatillera?.id || d.socio?.id))
+  },
+  set(val) {
+    if (val) {
+      // Select all visible
+      const nuevos = datosCierreFiltrados.value.map(d => d.socioNatillera?.id || d.socio?.id)
+      sociosSeleccionadosPdf.value = [...new Set([...sociosSeleccionadosPdf.value, ...nuevos])]
+    } else {
+      // Deselect all visible
+      const visibles = datosCierreFiltrados.value.map(d => d.socioNatillera?.id || d.socio?.id)
+      sociosSeleccionadosPdf.value = sociosSeleccionadosPdf.value.filter(id => !visibles.includes(id))
+    }
+  }
+})
+
+const datosCierreFiltrados = computed(() => {
+  let list = [...datosCierre.value]
+  // Ordenar alfabéticamente
+  list.sort((a, b) => {
+    const nombreA = (a.socio?.nombre || '').toLowerCase()
+    const nombreB = (b.socio?.nombre || '').toLowerCase()
+    return nombreA.localeCompare(nombreB)
+  })
+  // Filtrar por búsqueda
+  const q = busquedaCierre.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter(d => (d.socio?.nombre || '').toLowerCase().includes(q) || (d.socio?.telefono || '').includes(q))
+  }
+  return list
+})
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
+const detalleCierreExpandidoId = ref(null) // id socio_natillera para mostrar desglose utilidades por concepto
+const LABELS_UTILIDAD_CIERRE = {
+  prestamos: 'Préstamos',
+  rifas: 'Rifas',
+  bingo: 'Bingos',
+  venta: 'Ventas',
+  evento: 'Eventos',
+  otro: 'Otros',
+  sanciones: 'Sanciones'
+}
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
 // Mensajes de carga que rotarán
 const mensajesCarga = [
@@ -4820,15 +5126,29 @@ async function cargarDetallePrestamos() {
     })
     const { data: prestamosData, error: errP } = await supabase
       .from('prestamos')
-      .select('id, monto, interes, created_at, numero_cuotas')
+      .select('id, monto, interes, created_at, numero_cuotas, socio_natillera_id')
       .in('id', prestamoIds)
     if (errP) throw errP
     const prestamosList = prestamosData || []
+
+    const socioNatilleraIdsUnicos = [...new Set(prestamosList.map(p => p.socio_natillera_id).filter(Boolean))]
+    let nombresPorSn = {}
+    if (socioNatilleraIdsUnicos.length > 0) {
+      const { data: snData } = await supabase
+        .from('socios_natillera')
+        .select('id, socio:socios(nombre)')
+        .in('id', socioNatilleraIdsUnicos)
+      ;(snData || []).forEach(sn => {
+        nombresPorSn[sn.id] = sn.socio?.nombre || 'Socio'
+      })
+    }
+
     const lista = prestamosList
       .map((p) => {
         const intereses = montosPorPrestamo[p.id] ?? 0
         const numeroCuotas = p.numero_cuotas != null ? Number(p.numero_cuotas) : null
         return {
+          socio: nombresPorSn[p.socio_natillera_id] || 'Desconocido',
           valorPrestamo: parseFloat(p.monto) || 0,
           fecha: p.created_at || null,
           intereses,
@@ -4987,181 +5307,30 @@ async function handleCerrarNatillera() {
   await calcularDatosCierre()
   modalCierreNatillera.value = true
 }
-// Función para calcular los datos de cierre de la natillera
+// Función para calcular los datos de cierre de la natillera (usa lógica compartida con simulador)
 async function calcularDatosCierre() {
   if (!natillera.value || calculandoCierre.value) return
-  
   calculandoCierre.value = true
-  
   try {
     const natilleraId = id.value
-    const socios = natillera.value.socios_natillera || []
-    const cuotas = natillera.value.cuotas || []
-    const actividades = natillera.value.actividades || []
-    
-    // Obtener préstamos pendientes
-    const socioNatilleraIds = socios.map(s => s.id)
-    const { data: prestamos, error: prestamosError } = await supabase
-      .from('prestamos')
-      .select(`
-        id,
-        socio_natillera_id,
-        monto,
-        saldo_actual,
-        estado
-      `)
-      .in('socio_natillera_id', socioNatilleraIds)
-      .in('estado', ['activo', 'pendiente'])
-    
-    if (prestamosError) {
-      console.error('Error obteniendo préstamos:', prestamosError)
-    }
-    
-    const prestamosPorSocio = {}
-    ;(prestamos || []).forEach(p => {
-      if (!prestamosPorSocio[p.socio_natillera_id]) {
-        prestamosPorSocio[p.socio_natillera_id] = []
-      }
-      prestamosPorSocio[p.socio_natillera_id].push(p)
+    const result = await calcularCierreNatillera(natilleraId, {
+      configCierre: natillera.value.config_cierre
     })
-    
-    // Calcular utilidades totales: solo rifas dependen de "liquidar"; el resto al pagarse suma
-    const utilidadActividades = actividades.reduce((sum, a) => {
-      if (a.estado === 'liquidada') return sum + (a.utilidad || 0)
-      if (a.estado === 'en_curso' && a.tipo === 'rifa') return sum
-      if (a.estado === 'en_curso') return sum + ((a.total_pagado || 0) - (a.gastos || 0))
-      return sum + (a.utilidad || 0)
-    }, 0)
-    
-    // Obtener sanciones pagadas: RPC primero; fallback a tabla si RPC falla
-    let sancionesPagadas = 0
-    try {
-      const { data: montoRpc, error: errorRpc } = await supabase
-        .rpc('obtener_sanciones_pagadas', { p_natillera_id: natilleraId })
-      if (!errorRpc && montoRpc != null) {
-        const valor = Array.isArray(montoRpc) ? montoRpc[0] : montoRpc
-        sancionesPagadas = parseFloat(valor) || 0
-      }
-      // Fallback: sumar todos los registros de sanciones (puede haber uno por forma_pago)
-      if (sancionesPagadas === 0 && (errorRpc || montoRpc == null)) {
-        const { data: filasSanciones } = await supabase
-          .from('utilidades_clasificadas')
-          .select('monto')
-          .eq('natillera_id', natilleraId)
-          .eq('tipo', 'sanciones')
-          .is('fecha_cierre', null)
-        if (filasSanciones?.length) {
-          sancionesPagadas = filasSanciones.reduce((sum, r) => sum + (parseFloat(r.monto) || 0), 0)
-        }
-      }
-    } catch (e) {
-      console.error('Error obteniendo sanciones:', e)
-      const { data: filasSanciones } = await supabase
-        .from('utilidades_clasificadas')
-        .select('monto')
-        .eq('natillera_id', natilleraId)
-        .eq('tipo', 'sanciones')
-        .is('fecha_cierre', null)
-      if (filasSanciones?.length) {
-        sancionesPagadas = filasSanciones.reduce((sum, r) => sum + (parseFloat(r.monto) || 0), 0)
-      }
+    if (result.error) {
+      alert('Error al calcular los datos de cierre: ' + result.error)
+      datosCierre.value = []
+      return
     }
-    
-    // Obtener intereses de préstamos
-    
-    let interesesPrestamos = 0
-    if (prestamos && prestamos.length > 0) {
-      // Obtener préstamos pagados para calcular intereses
-      const { data: prestamosPagados } = await supabase
-        .from('prestamos')
-        .select('monto, saldo_actual, interes, interes_anticipado, interes_total')
-        .in('socio_natillera_id', socioNatilleraIds)
-        .eq('estado', 'pagado')
-      
-      if (prestamosPagados) {
-        interesesPrestamos = prestamosPagados.reduce((sum, prestamo) => {
-          if (prestamo.interes_anticipado && prestamo.interes_total) {
-            return sum + (parseFloat(prestamo.interes_total) || 0)
-          }
-          const monto = parseFloat(prestamo.monto || 0)
-          const saldoActual = parseFloat(prestamo.saldo_actual || 0)
-          const interes = parseFloat(prestamo.interes || 0)
-          const interesGenerado = (monto - saldoActual) * (interes / 100)
-          return sum + interesGenerado
-        }, 0)
-      }
-    }
-    
-    const utilidadesTotales = sancionesPagadas + interesesPrestamos + utilidadActividades
-    
-    // Calcular total aportado (cuotas pagadas sin sanciones)
-    // Usar valor_cuota directamente porque es el valor base sin sanción
-    // Las sanciones se reflejan en utilidades
-    const totalAportado = cuotas
-      .filter(c => c.estado === 'pagada')
-      .reduce((sum, c) => {
-        const valorCuota = c.valor_cuota || 0
-        return sum + valorCuota
-      }, 0)
-    
-    // Calcular datos para cada socio
-    const datosSocios = socios.map(socioNatillera => {
-      const cuotasSocio = cuotas.filter(c => c.socio_natillera_id === socioNatillera.id)
-      const cuotasPagadasSocio = cuotasSocio.filter(c => c.estado === 'pagada')
-      const cuotasDeudaSocio = cuotasSocio.filter(c => c.estado !== 'pagada' && c.estado !== 'programada')
-      
-      // Calcular cuotas pagadas sin sanciones
-      const totalCuotasPagadasSinSanciones = cuotasPagadasSocio.reduce((sum, c) => {
-        const valorPagado = c.valor_pagado || 0
-        const sancionPagada = c.valor_multa || 0
-        return sum + (valorPagado - sancionPagada)
-      }, 0)
-      
-      // Calcular valor de cuotas en deuda
-      const valorCuotasDeuda = cuotasDeudaSocio.reduce((sum, c) => {
-        return sum + ((c.valor_cuota || 0) - (c.valor_pagado || 0))
-      }, 0)
-      
-      // Calcular préstamos pendientes
-      const prestamosSocio = prestamosPorSocio[socioNatillera.id] || []
-      const totalPrestamosPendientes = prestamosSocio.reduce((sum, p) => {
-        return sum + (parseFloat(p.saldo_actual) || 0)
-      }, 0)
-      
-      // Calcular utilidades del socio
-      // Por ahora, distribuir proporcionalmente al aporte
-      const porcentajeAporte = totalAportado > 0 ? totalCuotasPagadasSinSanciones / totalAportado : 0
-      const utilidadesSocio = utilidadesTotales * porcentajeAporte
-      
-      // Total a entregar (cuotas pagadas sin sanciones + utilidades)
-      const totalAEntregar = totalCuotasPagadasSinSanciones + utilidadesSocio
-      
-      // Descuentos (préstamos pendientes + cuotas sin pagar)
-      const descuentos = totalPrestamosPendientes + valorCuotasDeuda
-      
-      // Total final (total a entregar - descuentos)
-      const totalFinal = totalAEntregar - descuentos
-      
-      return {
-        socio: socioNatillera.socio,
-        montoAhorradoMensual: parseFloat(socioNatillera.valor_cuota_individual) || 0,
-        cantidadCuotasPagadas: cuotasPagadasSocio.length,
-        cantidadCuotasDeuda: cuotasDeudaSocio.length,
-        utilidades: utilidadesSocio,
-        totalAEntregar: totalAEntregar,
-        descuentos: descuentos,
-        descuentosDesglose: {
-          prestamosPendientes: totalPrestamosPendientes,
-          cuotasSinPagar: valorCuotasDeuda
-        },
-        totalFinal: totalFinal
-      }
-    })
-    
-    datosCierre.value = datosSocios
+    datosCierre.value = (result.socios || []).map(s => ({
+      ...s,
+      utilidades: s.utilidadesTotal
+    }))
+    // Inicializar todos los socios como seleccionados para exportar a PDF
+    sociosSeleccionadosPdf.value = datosCierre.value.map(d => d.socioNatillera?.id || d.socio?.id)
   } catch (error) {
     console.error('Error calculando datos de cierre:', error)
-    alert('Error al calcular los datos de cierre: ' + error.message)
+    alert('Error al calcular los datos de cierre: ' + (error?.message || error))
+    datosCierre.value = []
   } finally {
     calculandoCierre.value = false
   }
@@ -5180,6 +5349,222 @@ async function confirmarCerrarNatillera() {
   } else {
     alert('Error al cerrar la natillera: ' + result.error)
   }
+}
+
+const esMobile = computed(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+
+function textoComprobanteSocio(dato) {
+  const nombre = dato.socio?.nombre || 'Socio'
+  const ahorro = formatMoney(dato.ahorro)
+  const utilidades = formatMoney(dato.utilidadesTotal)
+  const total = formatMoney(dato.totalFinal)
+  
+  let utilidadesDetalle = ''
+  if (dato.utilidadesPorConcepto) {
+    const detalles = []
+    for (const tipo in dato.utilidadesPorConcepto) {
+      if (dato.utilidadesPorConcepto[tipo] > 0) {
+        const label = LABELS_UTILIDAD_CIERRE[tipo] || tipo
+        detalles.push(`- ${label}: $${formatMoney(dato.utilidadesPorConcepto[tipo])}`)
+      }
+    }
+    if (detalles.length > 0) {
+      utilidadesDetalle = `\nDetalle ganancias:\n${detalles.join('\n')}`
+    }
+  }
+
+  let descuentosDetalle = ''
+  if (dato.descuentos > 0 && dato.descuentosDesglose) {
+    const desc = []
+    if (dato.descuentosDesglose.prestamosPendientes > 0) desc.push(`- Préstamos pendientes: $${formatMoney(dato.descuentosDesglose.prestamosPendientes)}`)
+    if (dato.descuentosDesglose.cuotasSinPagar > 0) desc.push(`- Cuotas en deuda: $${formatMoney(dato.descuentosDesglose.cuotasSinPagar)}`)
+    if (desc.length > 0) {
+      descuentosDetalle = `\n\nDescuentos:\n${desc.join('\n')}`
+    }
+  }
+
+  return `*Comprobante de cierre*\n👤 Participante: ${nombre}\n\n💰 Ahorro acumulado: $${ahorro}\n📈 Ganancias: $${utilidades}${utilidadesDetalle}${descuentosDetalle}\n\n💵 *TOTAL A ENTREGAR: $${total}*`
+}
+
+function enlaceWhatsAppComprobante(dato) {
+  const telefono = (dato.socio?.telefono || '').replace(/\D/g, '')
+  if (!telefono) return '#'
+  const numero = telefono.length === 10 ? '57' + telefono : telefono
+  const texto = textoComprobanteSocio(dato)
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`
+}
+
+async function compartirComprobanteSocioWhatsApp(dato) {
+  const telefono = (dato.socio?.telefono || '').replace(/\D/g, '')
+  if (!telefono) {
+    alert('Este socio no tiene teléfono registrado.')
+    return
+  }
+
+  // Preparar los datos y esperar que Vue actualice el DOM
+  comprobanteActivo.value = dato
+  await nextTick()
+  // Esperar un momento adicional para fuentes/estilos
+  await new Promise(resolve => setTimeout(resolve, 150))
+
+  if (!comprobanteWhatsappRef.value) return
+
+  try {
+    const dataUrl = await toPng(comprobanteWhatsappRef.value, {
+      backgroundColor: '#f0f9ff',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+
+    const numero = telefono.length === 10 ? '57' + telefono : telefono
+    const texto = textoComprobanteSocio(dato)
+
+    // Intentar usar Web Share API si es posible (en móvil funciona muy bien)
+    try {
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], `comprobante-cierre-${dato.socio?.nombre?.replace(/\s+/g, '-') || 'socio'}.png`, { type: 'image/png' })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Comprobante de Cierre',
+          text: texto
+        })
+        return
+      }
+    } catch (shareError) {
+      console.warn('Web Share API no disponible o cancelado:', shareError)
+    }
+
+    // Fallback: descargar y abrir WhatsApp Web / App
+    const link = document.createElement('a')
+    link.download = `comprobante-cierre-${dato.socio?.nombre?.replace(/\s+/g, '-') || 'socio'}.png`
+    link.href = dataUrl
+    link.click()
+    
+    setTimeout(() => {
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
+      alert('📱 La imagen del comprobante se descargó. Ahora adjúntala en WhatsApp.')
+    }, 500)
+    
+  } catch (error) {
+    console.error('Error generando imagen de comprobante:', error)
+    alert('Hubo un error al generar la imagen. Abriendo WhatsApp solo con texto.')
+    const numero = telefono.length === 10 ? '57' + telefono : telefono
+    const texto = textoComprobanteSocio(dato)
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
+  } finally {
+    // Limpiar
+    comprobanteActivo.value = null
+  }
+}
+
+function htmlComprobanteSocio(dato, nombreNatillera) {
+  const nombre = dato.socio?.nombre || 'Socio'
+  
+  let descuentosTexto = ''
+  if (dato.descuentos > 0 && dato.descuentosDesglose) {
+    const desc = []
+    if (dato.descuentosDesglose.prestamosPendientes > 0) desc.push(`Préstamos pendientes`)
+    if (dato.descuentosDesglose.cuotasSinPagar > 0) desc.push(`Cuotas en deuda`)
+    if (desc.length > 0) {
+      descuentosTexto = ` <span style="font-size: 11px; color: #6b7280; font-weight: normal;">(${desc.join(', ')})</span>`
+    }
+  }
+
+  return `
+    <div style="font-family: system-ui, -apple-system, sans-serif; padding: 12px; max-width: 500px; margin: 0 auto; border: 1px dashed #9ca3af; background-color: #ffffff; break-inside: avoid; page-break-inside: avoid;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+        <tbody>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; width: 30%; color: #374151;">Participante</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 700; color: #111827;" colspan="3">${nombre}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Ahorro mensual</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;">$${formatMoney(dato.montoAhorradoMensual)}</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Cuotas</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827; width: 15%;">${dato.cantidadCuotasPagadas}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Total Ahorro</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.ahorro)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Descuentos</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">${dato.descuentos > 0 ? '$' + formatMoney(dato.descuentos) + descuentosTexto : ''}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Ganancias</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.utilidadesTotal)}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 8px 10px; font-weight: 700; background-color: #e5e7eb; color: #000000; text-transform: uppercase;">Total a entregar</td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 10px; text-align: right; background-color: #e5e7eb; color: #000000; font-weight: 800; font-size: 16px;" colspan="3">
+              $${formatMoney(dato.totalFinal)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `
+}
+
+async function descargarComprobanteSocio(dato) {
+  // Preparar los datos y esperar que Vue actualice el DOM
+  comprobanteActivo.value = dato
+  await nextTick()
+  // Esperar un momento adicional para fuentes/estilos
+  await new Promise(resolve => setTimeout(resolve, 150))
+
+  if (!comprobanteWhatsappRef.value) return
+
+  try {
+    const dataUrl = await toPng(comprobanteWhatsappRef.value, {
+      backgroundColor: '#f0f9ff',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+
+    const link = document.createElement('a')
+    link.download = `comprobante-cierre-${dato.socio?.nombre?.replace(/\s+/g, '-') || 'socio'}.png`
+    link.href = dataUrl
+    link.click()
+  } catch (error) {
+    console.error('Error generando imagen de comprobante:', error)
+    alert('Hubo un error al generar la imagen del comprobante.')
+  } finally {
+    // Limpiar
+    comprobanteActivo.value = null
+  }
+}
+
+function exportarComprobanteCierrePdf() {
+  const seleccionados = datosCierreFiltrados.value.filter(d => 
+    sociosSeleccionadosPdf.value.includes(d.socioNatillera?.id || d.socio?.id)
+  )
+
+  if (seleccionados.length === 0) {
+    alert('Por favor, selecciona al menos un socio para exportar su comprobante.')
+    return
+  }
+
+  const nombreNatillera = natillera.value?.nombre || 'Natillera'
+  const partes = seleccionados.map(d => htmlComprobanteSocio(d, nombreNatillera))
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comprobante de cierre - ${nombreNatillera}</title><style>body{font-family:system-ui,sans-serif;padding:1rem}.socio{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #eee}</style></head><body><h1 style="margin-bottom:1.5rem">Comprobante de cierre - ${nombreNatillera}</h1>${partes.map(p => `<div class="socio">${p}</div>`).join('')}</body></html>`
+  const w = window.open('', '_blank')
+  if (!w) {
+    alert('Permite ventanas emergentes para exportar el comprobante.')
+    return
+  }
+  w.document.write(html)
+  w.document.close()
+  w.focus()
+  setTimeout(() => {
+    w.print()
+    w.close()
+  }, 250)
 }
 function toggleSeccion(seccion) {
   seccionActiva.value = seccionActiva.value === seccion ? null : seccion
