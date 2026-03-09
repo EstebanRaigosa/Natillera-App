@@ -25,6 +25,36 @@
       </div>
     </div>
 
+    <!-- Pestañas: Totales | Simulador de cierre -->
+    <div v-if="!loading" class="relative">
+      <div class="flex rounded-xl bg-gray-100 p-1 border border-gray-200/80 shadow-inner">
+        <button
+          type="button"
+          @click="tabActiva = 'totales'"
+          :class="[
+            'flex-1 sm:flex-none min-w-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
+            tabActiva === 'totales'
+              ? 'bg-white text-teal-700 shadow-md border border-gray-200'
+              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+          ]"
+        >
+          Totales
+        </button>
+        <button
+          type="button"
+          @click="tabActiva = 'simulador'"
+          :class="[
+            'flex-1 sm:flex-none min-w-0 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
+            tabActiva === 'simulador'
+              ? 'bg-white text-teal-700 shadow-md border border-gray-200'
+              : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+          ]"
+        >
+          Simulador de cierre
+        </button>
+      </div>
+    </div>
+
     <!-- Pantalla de carga -->
     <Teleport to="body">
       <Transition
@@ -63,6 +93,7 @@
     </Teleport>
 
     <template v-if="!loading">
+      <div v-show="tabActiva === 'totales'">
       <!-- Tarjetas: Total esperado por forma de pago (clic para desglose) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <!-- Efectivo esperado -->
@@ -655,7 +686,7 @@
           </div>
         </div>
       </div>
-    </template>
+      </div>
 
     <!-- Modal confirmar eliminar movimiento -->
     <ModalWrapper
@@ -892,6 +923,160 @@
               </button>
             </div>
     </ModalWrapper>
+
+      <!-- Simulador de cierre -->
+      <div v-show="tabActiva === 'simulador'">
+        <div class="space-y-6">
+          <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
+            <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+              <CalculatorIcon class="w-5 h-5 text-teal-600" />
+              Simulador de cierre
+            </h2>
+            <p class="text-sm text-gray-500 mb-4">Valores estimados por socio a la fecha, sin ejecutar el cierre definitivo.</p>
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+              <label class="text-sm font-semibold text-gray-700">Fecha de corte:</label>
+              <input
+                v-model="simuladorFechaCorte"
+                type="date"
+                class="px-3 py-2 rounded-xl border-2 border-gray-200 focus:border-teal-500 text-sm"
+              />
+              <button
+                type="button"
+                @click="ejecutarSimulador"
+                :disabled="simuladorLoading"
+                class="px-4 py-2 rounded-xl bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-50 transition-colors"
+              >
+                {{ simuladorLoading ? 'Calculando...' : 'Calcular' }}
+              </button>
+            </div>
+            <div v-if="simuladorError" class="text-sm text-red-600 mb-4">{{ simuladorError }}            </div>
+          </div>
+          <div v-if="simuladorSocios.length > 0" class="space-y-4">
+            <p class="text-sm font-semibold text-gray-700">Resumen por socio ({{ simuladorSocios.length }})</p>
+            
+            <!-- Vista Desktop: Tabla -->
+            <div class="hidden sm:block overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
+              <table class="w-full text-sm text-left">
+                <thead class="bg-gray-50 text-gray-700 font-semibold border-b border-gray-200">
+                  <tr>
+                    <th class="px-4 py-3">Socio</th>
+                    <th class="px-4 py-3 text-right">Ahorro</th>
+                    <th class="px-4 py-3 text-right">Utilidades</th>
+                    <th class="px-4 py-3 text-right">Total (Antes de desc.)</th>
+                    <th class="px-4 py-3 text-right text-red-600">Descuentos</th>
+                    <th class="px-4 py-3 text-right font-bold">A Entregar</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                  <template v-for="(dato, idx) in simuladorSociosFiltrados" :key="dato.socio?.id || dato.socioNatillera?.id || idx">
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="px-4 py-3">
+                        <button
+                          type="button"
+                          @click="simuladorDetalleId = simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
+                          class="flex items-center gap-2 text-left w-full hover:text-teal-600 transition-colors focus:outline-none"
+                        >
+                          <ChevronRightIcon :class="['w-4 h-4 text-gray-400 transition-transform flex-shrink-0', simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) && 'rotate-90']" />
+                          <div>
+                            <span class="font-bold text-gray-800">{{ dato.socio?.nombre || 'Socio' }}</span>
+                            <span v-if="dato.socio?.telefono" class="block text-xs text-gray-500 font-normal mt-0.5">{{ dato.socio.telefono }}</span>
+                          </div>
+                        </button>
+                      </td>
+                      <td class="px-4 py-3 text-right font-medium text-sky-600 tabular-nums">${{ formatMoney(dato.ahorro) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-purple-600 tabular-nums">${{ formatMoney(dato.utilidadesTotal) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-gray-600 tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
+                      <td class="px-4 py-3 text-right font-medium text-red-600 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
+                      <td class="px-4 py-3 text-right font-bold tabular-nums" :class="dato.totalFinal >= 0 ? 'text-teal-600' : 'text-red-600'">
+                        ${{ formatMoney(dato.totalFinal) }}
+                      </td>
+                    </tr>
+                    <tr v-show="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id)" class="bg-gray-50/80">
+                      <td colspan="6" class="px-4 py-3 border-t border-gray-100/50">
+                        <div class="pl-6 flex items-center gap-4 flex-wrap text-xs">
+                          <span class="font-semibold text-gray-600">Desglose de utilidades:</span>
+                          <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
+                            <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-gray-200">
+                              <span class="text-gray-500">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}:</span>
+                              <span class="font-bold text-gray-800">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                            </span>
+                          </template>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Vista Mobile: Cards -->
+            <div class="block sm:hidden space-y-3">
+              <div
+                v-for="(dato, idx) in simuladorSociosFiltrados"
+                :key="'m-'+(dato.socio?.id || dato.socioNatillera?.id || idx)"
+                class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-200"
+                :class="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? 'ring-2 ring-teal-500/20 border-teal-200' : ''"
+              >
+                <!-- Cabecera de la Card (Siempre visible) -->
+                <button
+                  type="button"
+                  @click="simuladorDetalleId = simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id) ? null : (dato.socioNatillera?.id || dato.socio?.id)"
+                  class="w-full text-left p-3.5 bg-gray-50/50 hover:bg-teal-50/30 transition-colors flex items-center justify-between gap-3 border-b border-gray-100"
+                >
+                  <div class="min-w-0">
+                    <span class="font-bold text-gray-800 text-sm truncate block">{{ dato.socio?.nombre || 'Socio' }}</span>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-[11px] font-semibold text-sky-600 bg-sky-50 px-1.5 py-0.5 rounded">Ah: ${{ formatMoney(dato.ahorro) }}</span>
+                      <span class="text-[11px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded">Ut: ${{ formatMoney(dato.utilidadesTotal) }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col items-end flex-shrink-0">
+                    <span class="text-xs text-gray-500 mb-0.5">A entregar</span>
+                    <span class="font-bold text-[15px]" :class="dato.totalFinal >= 0 ? 'text-teal-600' : 'text-red-600'">
+                      ${{ formatMoney(dato.totalFinal) }}
+                    </span>
+                  </div>
+                </button>
+                
+                <!-- Cuerpo Expandible (Detalle) -->
+                <div
+                  v-show="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id)"
+                  class="p-3.5 space-y-3"
+                >
+                  <!-- Resumen Financiero Completo -->
+                  <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="bg-gray-50 p-2 rounded-lg border border-gray-100">
+                      <span class="text-gray-500 block mb-0.5">Total (antes desc.)</span>
+                      <span class="font-semibold text-gray-700">${{ formatMoney(dato.totalAEntregar) }}</span>
+                    </div>
+                    <div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                      <span class="text-red-500/80 block mb-0.5">Descuentos</span>
+                      <span class="font-semibold text-red-600">-${{ formatMoney(dato.descuentos) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Desglose de utilidades -->
+                  <div v-if="dato.utilidadesPorConcepto && Object.keys(dato.utilidadesPorConcepto).some(t => dato.utilidadesPorConcepto[t] > 0)">
+                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Desglose de Utilidades</p>
+                    <div class="grid grid-cols-2 gap-2">
+                      <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
+                        <div
+                          v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0"
+                          class="flex justify-between items-center bg-purple-50/50 px-2 py-1.5 rounded border border-purple-100/50"
+                        >
+                          <span class="text-[11px] text-gray-600">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}</span>
+                          <span class="font-semibold text-purple-700 text-[11px]">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -908,6 +1093,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
+import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_SIMULADOR } from '../../composables/useCierreNatillera'
 import {
   CalculatorIcon,
   BanknotesIcon,
@@ -971,6 +1157,63 @@ const efectivoContado = ref(0)
 const transferenciaContada = ref(0)
 
 const modalDesgloseFormaPago = ref(null) // 'efectivo' | 'transferencia' | null
+
+const tabActiva = ref('totales') // 'totales' | 'simulador'
+const simuladorSocios = ref([])
+const simuladorSociosFiltrados = ref([])
+const simuladorLoading = ref(false)
+const simuladorFechaCorte = ref(new Date().toISOString().split('T')[0])
+const simuladorError = ref('')
+const simuladorDetalleId = ref(null)
+const LABELS_UTILIDAD_SIMULADOR = {
+  prestamos: 'Préstamos',
+  rifas: 'Rifas',
+  bingo: 'Bingos',
+  venta: 'Ventas',
+  evento: 'Eventos',
+  otro: 'Otros',
+  sanciones: 'Sanciones'
+}
+async function ejecutarSimulador() {
+  simuladorError.value = ''
+  simuladorLoading.value = true
+  simuladorSocios.value = []
+  simuladorSociosFiltrados.value = []
+  try {
+    const opts = {}
+    if (simuladorFechaCorte) opts.fechaCorte = simuladorFechaCorte
+    const result = await calcularCierreNatillera(id.value, opts)
+    if (result.error) {
+      simuladorError.value = result.error
+      return
+    }
+    
+    const sociosMapeados = (result.socios || []).map(socio => {
+      // Calcular el total a entregar antes de descuentos
+      const totalAEntregar = (socio.ahorro || 0) + (socio.utilidadesTotal || 0)
+      // El total final es lo que se entrega menos lo que debe
+      const totalFinal = totalAEntregar - (socio.descuentos || 0)
+      
+      return {
+        ...socio,
+        totalAEntregar,
+        totalFinal
+      }
+    })
+
+    // Ordenar alfabéticamente por el nombre del socio
+    const sociosOrdenados = sociosMapeados.sort((a, b) => {
+      const nombreA = (a.socio?.nombre || '').toLowerCase()
+      const nombreB = (b.socio?.nombre || '').toLowerCase()
+      return nombreA.localeCompare(nombreB)
+    })
+
+    simuladorSocios.value = sociosOrdenados
+    simuladorSociosFiltrados.value = sociosOrdenados
+  } finally {
+    simuladorLoading.value = false
+  }
+}
 
 // Bloquear scroll del body cuando las modales están abiertas
 const modalDesgloseOpen = computed(() => !!modalDesgloseFormaPago.value)
