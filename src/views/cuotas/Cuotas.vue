@@ -87,6 +87,54 @@
     </div>
   </Transition>
 
+  <!-- Pantalla de carga al reenviar comprobante (elegante, compatible Safari/iPhone) -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition duration-400 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-300 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="cargandoComprobanteReenvio"
+        class="cargando-comprobante-reenvio"
+        role="status"
+        aria-live="polite"
+        aria-label="Preparando comprobante"
+      >
+        <!-- Fondo suave con orbes decorativos -->
+        <div class="cargando-comprobante-reenvio__bg">
+          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--1"></div>
+          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--2"></div>
+          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--3"></div>
+        </div>
+
+        <div class="cargando-comprobante-reenvio__inner">
+          <!-- Spinner doble anillo + icono central -->
+          <div class="cargando-comprobante-reenvio__spinner-wrap">
+            <div class="cargando-comprobante-reenvio__ring cargando-comprobante-reenvio__ring--outer"></div>
+            <div class="cargando-comprobante-reenvio__ring cargando-comprobante-reenvio__ring--mid"></div>
+            <div class="cargando-comprobante-reenvio__icon-wrap">
+              <svg class="cargando-comprobante-reenvio__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <p class="cargando-comprobante-reenvio__title">Preparando comprobante</p>
+          <p class="cargando-comprobante-reenvio__message">Listo en un momento</p>
+
+          <!-- Barra de progreso sutil -->
+          <div class="cargando-comprobante-reenvio__bar-wrap">
+            <div class="cargando-comprobante-reenvio__bar"></div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
   <div v-if="!inicializando" class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -2341,14 +2389,24 @@
                         <p v-if="pago.es_modificacion && pago.codigo_nuevo" class="text-xs text-orange-600 mt-1 font-semibold break-all">
                           → Modificado a código: {{ pago.codigo_nuevo }}
                         </p>
-                        <!-- Forma de pago -->
+                        <!-- Forma de pago: badge diferenciador -->
                         <p class="text-xs text-gray-600 mt-1 flex items-center gap-1.5 flex-wrap">
                           <span class="font-medium text-gray-700">Forma de pago:</span>
-                          <span v-if="pago.forma_pago" class="inline-flex items-center gap-1">
-                            <BanknotesIcon v-if="(pago.forma_pago || '').toLowerCase() === 'efectivo'" class="w-3.5 h-3.5 text-amber-600" />
-                            <BuildingOffice2Icon v-else-if="(pago.forma_pago || '').toLowerCase() === 'transferencia'" class="w-3.5 h-3.5 text-blue-600" />
-                            <CreditCardIcon v-else-if="(pago.forma_pago || '').toLowerCase() === 'tarjeta'" class="w-3.5 h-3.5 text-gray-600" />
-                            <span class="font-semibold capitalize">{{ (pago.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : (pago.forma_pago || '').toLowerCase() === 'tarjeta' ? 'Tarjeta' : 'Efectivo' }}</span>
+                          <span
+                            v-if="pago.forma_pago"
+                            :class="[
+                              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold border',
+                              (pago.forma_pago || '').toLowerCase() === 'transferencia'
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : (pago.forma_pago || '').toLowerCase() === 'tarjeta'
+                                ? 'bg-slate-100 text-slate-700 border-slate-200'
+                                : 'bg-green-100 text-green-800 border-green-200'
+                            ]"
+                          >
+                            <BanknotesIcon v-if="(pago.forma_pago || '').toLowerCase() === 'efectivo'" class="w-3.5 h-3.5" />
+                            <BuildingOffice2Icon v-else-if="(pago.forma_pago || '').toLowerCase() === 'transferencia'" class="w-3.5 h-3.5" />
+                            <CreditCardIcon v-else-if="(pago.forma_pago || '').toLowerCase() === 'tarjeta'" class="w-3.5 h-3.5" />
+                            <span class="capitalize">{{ (pago.forma_pago || 'efectivo').toLowerCase() === 'transferencia' ? 'Transferencia' : (pago.forma_pago || '').toLowerCase() === 'tarjeta' ? 'Tarjeta' : 'Efectivo' }}</span>
                           </span>
                           <span v-else class="text-gray-400">—</span>
                         </p>
@@ -3989,7 +4047,7 @@
               <!-- Valor pagado y estado -->
               <div style="text-align: center; margin-bottom: 10px;">
                 <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MONTO PAGADO</p>
-                <p style="font-size: 28px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -1px; color: #059669;">
+                <p style="font-size: 28px; font-weight: 900; margin: 0 0 4px 0; letter-spacing: -1px; color: #059669;">
                   ${{ formatMoney(pagoRegistrado?.valor) }}
                 </p>
                 <div 
@@ -4135,8 +4193,8 @@
               </div>
             </div>
 
-            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (solo cuando se completó un pago parcial) -->
-            <div v-if="pagoRegistrado?.historialPagos?.length > 0" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
+            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (solo cuando hay más de 1 pago registrado para la cuota) -->
+            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
               <div class="flex items-center gap-2 mb-3">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600" style="font-size: 11px; font-weight: 800;">📋</span>
                 <p class="m-0 text-xs font-bold uppercase tracking-wider" style="color: #047857; letter-spacing: 0.8px;">Historial de pagos</p>
@@ -4148,8 +4206,27 @@
                   class="relative overflow-hidden rounded-lg border border-emerald-100 bg-white/90 shadow-sm"
                   style="padding: 10px 12px; padding-left: 14px; border-left: 3px solid #10b981;"
                 >
-                  <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold" style="color: #047857;">{{ item.pago }}° Pago</span>
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-1.5">
+                      <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold">
+                        {{ item.pago }}° Pago
+                      </span>
+                      <!-- Badge forma de pago diferenciada -->
+                      <span
+                        v-if="item.formaPagoTexto"
+                        class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold border"
+                        :style="(item.formaPago || 'efectivo') === 'transferencia'
+                          ? 'background: #dbeafe; color: #1e40af; border-color: #93c5fd;'
+                          : (item.formaPago || '').toLowerCase() === 'tarjeta'
+                          ? 'background: #f1f5f9; color: #475569; border-color: #cbd5e1;'
+                          : 'background: #d1fae5; color: #047857; border-color: #6ee7b7;'"
+                      >
+                        <span v-if="(item.formaPago || 'efectivo') === 'transferencia'" style="font-size: 10px;">💳</span>
+                        <span v-else-if="(item.formaPago || '').toLowerCase() === 'tarjeta'" style="font-size: 10px;">💳</span>
+                        <span v-else style="font-size: 10px;">💵</span>
+                        {{ item.formaPagoTexto }}
+                      </span>
+                    </div>
                     <span class="text-xs font-medium" style="color: #64748b;">{{ item.fecha }}</span>
                   </div>
                   <!-- Móvil: conceptos en columna; escritorio: en fila -->
@@ -6069,6 +6146,7 @@ const modalGenerarCuotas = ref(false)
 const modalPago = ref(false)
 const preparandoModalPago = ref(false) // Pantalla de carga mientras se prepara el modal de registro de pago
 const modalConfirmacion = ref(false)
+const cargandoComprobanteReenvio = ref(false)
 const modalConfirmarBorrar = ref(false)
 const modalExportar = ref(false)
 const modalConfirmarPago = ref(false) // Modal de confirmación antes de registrar el pago
@@ -6141,6 +6219,7 @@ useBodyScrollLock(modalPago)
 useBodyScrollLock(preparandoModalPago)
 useBodyScrollLock(modalConfirmarPago)
 useBodyScrollLock(modalConfirmacion)
+useBodyScrollLock(cargandoComprobanteReenvio)
 useBodyScrollLock(modalConfirmarBorrar)
 useBodyScrollLock(modalExportar)
 useBodyScrollLock(modalEditarCuota)
@@ -11529,94 +11608,39 @@ async function handleRegistrarPago() {
       cuotasPrestamosParaConceptos = cuotasPrestamosPagadas
     }
     
-    // Historial de pagos (solo cuando se completa un pago parcial)
-    const historialPagos = []
-    if (seCompletoPago) {
-      const sancionPagadaAnterior = parseFloat(cuotaSeleccionada.value?.valor_pagado_sancion) || 0
-      const actividadesPagadasAntes = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
-      
-      // Pago 1 (anterior)
-      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el historial
-      const conceptosPago1 = []
-      if (valorPagadoAnterior > 0) conceptosPago1.push({ nombre: 'Cuota', valor: valorPagadoAnterior })
-      if (!tieneNoCalcularMulta && sancionPagadaAnterior > 0) conceptosPago1.push({ nombre: 'Sanción', valor: sancionPagadaAnterior })
-      if (actividadesPagadasAntes > 0) {
-        // Obtener las actividades pagadas del primer pago para desglosarlas por nombre
-        const datosActividadesPrimerPago = actividadesPendientesPorSocio.value[cuotaSeleccionada.value.id]
-        if (datosActividadesPrimerPago && typeof datosActividadesPrimerPago !== 'number' && datosActividadesPrimerPago.actividades) {
-          // Filtrar actividades que tienen valor_pagado > 0 (actividades pagadas en el primer pago)
-          const actividadesPagadasPrimerPago = datosActividadesPrimerPago.actividades.filter(a => (a.valor_pagado || 0) > 0)
-          if (actividadesPagadasPrimerPago.length > 0) {
-            // Desglosar cada actividad pagada por nombre
-            actividadesPagadasPrimerPago.forEach(a => {
-              conceptosPago1.push({ 
-                nombre: limpiarDescripcionActividad(a.descripcion || 'Actividad'), 
-                valor: a.valor_pagado || 0 
-              })
-            })
-          } else {
-            // Si no se pueden obtener los detalles, mostrar como concepto genérico
-            conceptosPago1.push({ nombre: 'Actividades', valor: actividadesPagadasAntes })
+    // Historial de pagos: obtenerlo siempre desde la tabla historial_pagos_cuota (fuente de verdad)
+    let historialPagos = []
+    try {
+      const { data: historialRows } = await supabase
+        .from('historial_pagos_cuota')
+        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo')
+        .eq('cuota_id', cuotaSeleccionada.value.id)
+        .order('fecha_pago', { ascending: true })
+      if (historialRows && historialRows.length > 0) {
+        historialPagos = historialRows.map((row, idx) => {
+          const conceptos = []
+          if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
+          if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
+          if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+          if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
+          const formaPago = (row.forma_pago || 'efectivo').toLowerCase()
+          const formaPagoTexto = formaPago === 'transferencia' ? 'Transferencia' : formaPago === 'tarjeta' ? 'Tarjeta' : 'Efectivo'
+          const fecha = row.fecha_pago
+            ? new Date(row.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'N/A'
+          const total = conceptos.reduce((sum, c) => sum + (parseFloat(c.valor) || 0), 0)
+          return {
+            pago: idx + 1,
+            fecha,
+            conceptos,
+            total,
+            formaPago,
+            formaPagoTexto
           }
-        } else {
-          // Si no hay datos detallados disponibles, mostrar como concepto genérico
-          conceptosPago1.push({ nombre: 'Actividades', valor: actividadesPagadasAntes })
-        }
-      }
-      
-      if (conceptosPago1.length > 0) {
-        historialPagos.push({
-          pago: 1,
-          fecha: cuotaSeleccionada.value?.fecha_pago 
-            ? new Date(cuotaSeleccionada.value.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-            : 'Anterior',
-          conceptos: conceptosPago1,
-          total: valorPagadoAnterior + (tieneNoCalcularMulta ? 0 : sancionPagadaAnterior) + actividadesPagadasAntes
         })
       }
-      
-      // Pago 2 (este)
-      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el historial
-      const conceptosPago2 = []
-      if (valorCuotaPagada > 0) conceptosPago2.push({ nombre: 'Cuota', valor: valorCuotaPagada })
-      if (!tieneNoCalcularMulta && valorSancionPagadaCalculada > 0) conceptosPago2.push({ nombre: 'Sanción', valor: valorSancionPagadaCalculada })
-      if (valorActividadesPagadoFinal > 0) {
-        const actividadesConValor = actividadesPagadas.filter(a => {
-          const valorA = (a.valor_pendiente || 0) || ((a.valor_asignado || 0) - (a.valor_pagado_anterior || 0))
-          return valorA > 0
-        })
-        if (actividadesConValor.length > 0) {
-          actividadesConValor.forEach(a => {
-            const valorA = (a.valor_pendiente || 0) || ((a.valor_asignado || 0) - (a.valor_pagado_anterior || 0))
-            conceptosPago2.push({ nombre: limpiarDescripcionActividad(a.descripcion || a.actividad?.descripcion), valor: valorA })
-          })
-        } else {
-          conceptosPago2.push({ nombre: 'Actividades', valor: valorActividadesPagadoFinal })
-        }
-      }
-      if (valorCuotasPrestamosPagadoFinal > 0) {
-        // Obtener las cuotas de préstamos pagadas para desglosarlas
-        const cuotasPrestamosPagadas = cuotasPrestamosPendientes.value
-          .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
-          .map(cp => ({
-            nombre: `Cuota préstamo #${cp.numero_cuota}`,
-            valor: cp.valor_pendiente || 0
-          }))
-        if (cuotasPrestamosPagadas.length > 0) {
-          conceptosPago2.push(...cuotasPrestamosPagadas)
-        } else {
-          conceptosPago2.push({ nombre: 'Cuotas de préstamos', valor: valorCuotasPrestamosPagadoFinal })
-        }
-      }
-      
-      if (conceptosPago2.length > 0) {
-        historialPagos.push({
-          pago: 2,
-          fecha: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
-          conceptos: conceptosPago2,
-          total: valorPagadoEstaTransaccion
-        })
-      }
+    } catch (eHist) {
+      console.warn('No se pudo cargar historial_pagos_cuota para comprobante:', eHist.message)
     }
     
     // Guardar info del pago para el modal de confirmación
@@ -11639,6 +11663,8 @@ async function handleRegistrarPago() {
       valorCuotaPagada: valorCuotaParaComprobante, // Para comprobante: total si completó, o de esta transacción
       tieneSancion: !tieneNoCalcularMulta && sancionTotal > 0, // Indica si hay sanción (verifica no_calcular_multa)
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
+      valorEfectivo, // Total de esta transacción en efectivo
+      valorTransferencia, // Total de esta transacción en transferencia
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
@@ -11768,8 +11794,8 @@ function generarImagenComprobante() {
       if (esParcial) {
         height += 80
       }
-      // Agregar espacio para historial de pagos (cuando se completó un parcial)
-      if (historialPagos.length > 0) {
+      // Agregar espacio para historial de pagos (solo cuando hay más de 1 pago)
+      if (historialPagos.length > 1) {
         height += 35 + historialPagos.length * 42
       }
       const scale = 2
@@ -11914,8 +11940,22 @@ function generarImagenComprobante() {
       ctx.textAlign = 'center'
       ctx.fillText(valorText, width/2, currentY + 50)
       
+      // Desglose por forma de pago (si existe)
+      const vEf = pagoRegistrado.value?.valorEfectivo || 0
+      const vTr = pagoRegistrado.value?.valorTransferencia || 0
+      if (vEf > 0 || vTr > 0) {
+        currentY += 30
+        ctx.font = '9px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#4b5563'
+        const partes = []
+        if (vEf > 0) partes.push('Efectivo: $' + formatMoney(vEf))
+        if (vTr > 0) partes.push('Transferencia: $' + formatMoney(vTr))
+        ctx.fillText(partes.join('   ·   '), width/2, currentY + 4)
+      }
+      
       // Estado del pago
-      currentY += 60
+      currentY += 30
       const estadoBadgeY = currentY
       const esParcialEstado = pagoRegistrado.value?.esParcial || false
       ctx.fillStyle = esParcialEstado ? '#fef3c7' : '#dcfce7'
@@ -12223,8 +12263,8 @@ function generarImagenComprobante() {
       
       currentY = conceptosY + conceptosHeight + 10
       
-      // === SECCIÓN 2B: HISTORIAL DE PAGOS (cuando se completó un parcial) ===
-      if (historialPagos.length > 0) {
+      // === SECCIÓN 2B: HISTORIAL DE PAGOS (solo cuando hay más de 1 pago para la cuota) ===
+      if (historialPagos.length > 1) {
         const historialY = currentY
         const historialItemHeight = 40
         const historialHeight = 25 + historialPagos.length * historialItemHeight
@@ -12248,7 +12288,10 @@ function generarImagenComprobante() {
           const itemY = historialY + 22 + idx * historialItemHeight
           ctx.fillStyle = '#475569'
           ctx.font = 'bold 9px Arial'
-          ctx.fillText(item.pago + '° Pago', cardInnerX + 10, itemY + 8)
+          const tituloPago = item.formaPagoTexto
+            ? `${item.pago}° Pago (${item.formaPagoTexto})`
+            : `${item.pago}° Pago`
+          ctx.fillText(tituloPago, cardInnerX + 10, itemY + 8)
           ctx.font = '8px Arial'
           ctx.fillStyle = '#94a3b8'
           ctx.textAlign = 'right'
@@ -12863,6 +12906,15 @@ watch(modalConfirmacion, async (nuevoValor) => {
 })
 
 async function reenviarComprobante(cuota) {
+  cargandoComprobanteReenvio.value = true
+  // Lanzar historial en paralelo para reducir tiempo total (se espera más abajo)
+  const historialPromise = supabase
+    .from('historial_pagos_cuota')
+    .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo')
+    .eq('cuota_id', cuota.id)
+    .order('fecha_pago', { ascending: true })
+
+  try {
   // Usar el campo valor_pagado_sancion de la BD: ahí se guarda lo abonado a sanciones.
   // valor_pagado en BD = solo lo abonado a la cuota; total = valor_pagado + valor_pagado_sancion.
   // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, la sanción debe ser 0
@@ -12873,6 +12925,20 @@ async function reenviarComprobante(cuota) {
   const sancion = tieneNoCalcularMulta ? 0 : getSancionCuotaDetalle(cuota)
   const valorMultaEnBD = tieneNoCalcularMulta ? 0 : (parseFloat(cuota.valor_multa) || 0)
   const sancionTotal = tieneNoCalcularMulta ? 0 : (valorMultaEnBD > 0 ? valorMultaEnBD : sancion)
+  // Desglose por forma de pago (columnas nuevas). Para cuotas antiguas sin desglose, derivar desde tipo_pago.
+  let valorEfectivo = parseFloat(cuota.valor_pagado_efectivo) || 0
+  let valorTransferencia = parseFloat(cuota.valor_pagado_transferencia) || 0
+  const totalDesglose = valorEfectivo + valorTransferencia
+  if (totalDesglose === 0) {
+    const tipoPagoCuota = (cuota.tipo_pago || 'efectivo').toLowerCase()
+    if (tipoPagoCuota === 'transferencia') {
+      valorTransferencia = valorCuotaPagada + valorSancionPagada + (parseFloat(cuota.valor_pagado_actividades) || 0)
+      valorEfectivo = 0
+    } else {
+      valorEfectivo = valorCuotaPagada + valorSancionPagada + (parseFloat(cuota.valor_pagado_actividades) || 0)
+      valorTransferencia = 0
+    }
+  }
   
   // Fuente de verdad: lo abonado a actividades EN ESTA CUOTA (valor_pagado_actividades).
   // Así se incluyen actividades pagadas en esta cuota aunque pertenezcan a otro periodo.
@@ -12884,7 +12950,6 @@ async function reenviarComprobante(cuota) {
   let totalActividades = valorActividadesPagadoEnCuota
   let cuotasPrestamosPagadas = []
   let totalCuotasPrestamos = 0
-  let historialRegistrosParaReenvio = []
   
   if (cuota.socio_natillera_id) {
     try {
@@ -12907,37 +12972,33 @@ async function reenviarComprobante(cuota) {
       // Solo consultar si tenemos periodo válido (mes y año)
       if (mesCuota != null && anioCuota != null) {
         const tieneAlgunPago = (valorCuotaPagada + valorSancionPagada + valorActividadesPagadoEnCuota) > 0
-        const [sociosActividadRes, prestamosRes, historialRes] = await Promise.all([
-          supabase
-            .from('socios_actividad')
-            .select(`
-              *,
-              actividades(
-                id,
-                tipo,
-                descripcion
-              )
-            `)
-            .eq('socio_natillera_id', cuota.socio_natillera_id)
-            .eq('mes_pago', mesCuota)
-            .eq('anio_pago', anioCuota)
-            .in('estado', ['pagado', 'parcial']),
-          supabase
-            .from('prestamos')
-            .select('id')
-            .eq('socio_natillera_id', cuota.socio_natillera_id)
-            .in('estado', ['activo', 'pagado']),
-          cuota.id && tieneAlgunPago
-            ? supabase
-                .from('historial_comprobantes')
-                .select('valor_pagado_anterior, valor_pagado_nuevo, fecha_actualizacion, historial_pagos')
-                .eq('cuota_id', cuota.id)
-                .order('fecha_actualizacion', { ascending: true })
-            : Promise.resolve({ data: null, error: null })
+        // Optimizar: solo consultar socios_actividad si realmente hay valor_pagado_actividades en esta cuota
+        const promSociosActividad = valorActividadesPagadoEnCuota > 0
+          ? supabase
+              .from('socios_actividad')
+              .select(`
+                *,
+                actividades(
+                  id,
+                  tipo,
+                  descripcion
+                )
+              `)
+              .eq('socio_natillera_id', cuota.socio_natillera_id)
+              .eq('mes_pago', mesCuota)
+              .eq('anio_pago', anioCuota)
+              .in('estado', ['pagado', 'parcial'])
+          : Promise.resolve({ data: [] })
+        const promPrestamos = supabase
+          .from('prestamos')
+          .select('id')
+          .eq('socio_natillera_id', cuota.socio_natillera_id)
+          .in('estado', ['activo', 'pagado'])
+
+        const [sociosActividadRes, prestamosRes] = await Promise.all([
+          promSociosActividad,
+          promPrestamos
         ])
-        if (historialRes?.data && !historialRes.error) {
-          historialRegistrosParaReenvio = historialRes.data || []
-        }
         
         const sociosActividadData = sociosActividadRes.data
         if (sociosActividadData && sociosActividadData.length > 0) {
@@ -13054,91 +13115,50 @@ async function reenviarComprobante(cuota) {
   const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
   const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
   
-  // Historial de pagos para comprobante reenviado: solo cuando hubo varios pagos (parcial(es) + pago completo)
+  // Historial de pagos para comprobante reenviado: usar siempre historial_pagos_cuota (ya lanzado en paralelo)
   let historialPagosReenvio = []
-  if (valorPagadoTotal > 0 && historialRegistrosParaReenvio.length > 0) {
-    try {
-      const historialRegistros = historialRegistrosParaReenvio
-      // Si algún registro tiene el desglose real guardado (historial_pagos), usarlo para mostrar valores correctos
-      const conDesglose = historialRegistros.filter(r => r.historial_pagos && Array.isArray(r.historial_pagos) && r.historial_pagos.length >= 2).pop()
-      if (conDesglose?.historial_pagos) {
-          historialPagosReenvio = conDesglose.historial_pagos
-        } else {
-          // Fallback: construir desde totales (valores aproximados por proporción)
-          const totalActual = valorPagadoTotal
-          let acumulado = 0
-          historialRegistros.forEach((reg, idx) => {
-            const vAnt = parseFloat(reg.valor_pagado_anterior) || 0
-            const vNuevo = parseFloat(reg.valor_pagado_nuevo) || 0
-            const fechaHist = reg.fecha_actualizacion
-              ? new Date(reg.fecha_actualizacion).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-              : 'N/A'
-            if (idx === 0 && vAnt > 0) {
-              acumulado = vAnt
-              const ratio = totalActual > 0 ? vAnt / totalActual : 1
-              historialPagosReenvio.push({
-                pago: historialPagosReenvio.length + 1,
-                fecha: fechaHist,
-                conceptos: [
-                  ...(valorCuotaPagada > 0 ? [{ nombre: 'Cuota', valor: Math.round(valorCuotaPagada * ratio) }] : []),
-                  ...(!tieneNoCalcularMulta && valorSancionPagada > 0 ? [{ nombre: 'Sanción', valor: Math.round(valorSancionPagada * ratio) }] : []),
-                  ...(totalActividades > 0 ? [{ nombre: 'Actividades', valor: Math.round(totalActividades * ratio) }] : []),
-                  ...(totalCuotasPrestamos > 0 ? [{ nombre: 'Cuotas de préstamos', valor: Math.round(totalCuotasPrestamos * ratio) }] : [])
-                ].filter(c => c.valor > 0),
-                total: vAnt
-              })
-              if (historialPagosReenvio[historialPagosReenvio.length - 1].conceptos.length === 0) {
-                historialPagosReenvio[historialPagosReenvio.length - 1].conceptos = [{ nombre: 'Total', valor: vAnt }]
-              }
-            }
-            const diferencia = Math.max(0, vNuevo - acumulado)
-            if (diferencia > 0) {
-              acumulado = vNuevo
-              const ratio = totalActual > 0 ? diferencia / totalActual : 1
-              historialPagosReenvio.push({
-                pago: historialPagosReenvio.length + 1,
-                fecha: fechaHist,
-                conceptos: [
-                  ...(valorCuotaPagada > 0 ? [{ nombre: 'Cuota', valor: Math.round(valorCuotaPagada * ratio) }] : []),
-                  ...(!tieneNoCalcularMulta && valorSancionPagada > 0 ? [{ nombre: 'Sanción', valor: Math.round(valorSancionPagada * ratio) }] : []),
-                  ...(totalActividades > 0 ? [{ nombre: 'Actividades', valor: Math.round(totalActividades * ratio) }] : []),
-                  ...(totalCuotasPrestamos > 0 ? [{ nombre: 'Cuotas de préstamos', valor: Math.round(totalCuotasPrestamos * ratio) }] : [])
-                ].filter(c => c.valor > 0),
-                total: diferencia
-              })
-              if (historialPagosReenvio[historialPagosReenvio.length - 1].conceptos.length === 0) {
-                historialPagosReenvio[historialPagosReenvio.length - 1].conceptos = [{ nombre: 'Total', valor: diferencia }]
-              }
-            }
-          })
-          if (acumulado < totalActual && acumulado > 0) {
-            const resto = totalActual - acumulado
-            historialPagosReenvio.push({
-              pago: historialPagosReenvio.length + 1,
-              fecha: cuota.fecha_pago
-                ? new Date(cuota.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-                : 'N/A',
-              conceptos: [
-                ...(valorCuotaPagada > 0 ? [{ nombre: 'Cuota', valor: valorCuotaPagada - Math.round(valorCuotaPagada * (acumulado / totalActual)) }] : []),
-                ...(!tieneNoCalcularMulta && valorSancionPagada > 0 ? [{ nombre: 'Sanción', valor: valorSancionPagada - Math.round(valorSancionPagada * (acumulado / totalActual)) }] : []),
-                ...(totalActividades > 0 ? [{ nombre: 'Actividades', valor: totalActividades - Math.round(totalActividades * (acumulado / totalActual)) }] : []),
-                ...(totalCuotasPrestamos > 0 ? [{ nombre: 'Cuotas de préstamos', valor: totalCuotasPrestamos - Math.round(totalCuotasPrestamos * (acumulado / totalActual)) }] : [])
-              ].filter(c => c.valor > 0),
-              total: resto
-            })
-            if (historialPagosReenvio[historialPagosReenvio.length - 1].conceptos.length === 0) {
-              historialPagosReenvio[historialPagosReenvio.length - 1].conceptos = [{ nombre: 'Total', valor: resto }]
-            }
-          }
-        }
-      // Solo incluir historial en el comprobante si hubo realmente varios pagos (≥ 2 ítems)
-      if (historialPagosReenvio.length < 2) {
-        historialPagosReenvio = []
-      }
-    } catch (e) {
-      console.warn('Error construyendo historial de pagos para reenvío:', e)
-      historialPagosReenvio = []
+  try {
+    const { data: historialRows, error: historialError } = await historialPromise
+    // Log para depuración: registros encontrados en historial_pagos_cuota
+    console.log('[Reenvío comprobante] historial_pagos_cuota:', {
+      cuota_id: cuota.id,
+      cantidad_registros: historialRows?.length ?? 0,
+      error: historialError ? { message: historialError.message, code: historialError.code } : null,
+      registros_raw: historialRows ?? []
+    })
+    if (historialError) {
+      console.warn('[Reenvío comprobante] Error al consultar historial_pagos_cuota:', historialError.message)
     }
+    if (!historialError && (!historialRows || historialRows.length === 0)) {
+      console.warn('[Reenvío comprobante] 0 filas para cuota_id:', cuota.id, '- Si en Supabase sí ves filas para este cuota_id, aplica la migración fix_historial_pagos_cuota_rls.sql (RLS).')
+    }
+    if (historialRows && historialRows.length > 0) {
+      historialPagosReenvio = historialRows.map((row, idx) => {
+        const conceptos = []
+        if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
+        if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
+        if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+        if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
+        const formaPago = (row.forma_pago || 'efectivo').toLowerCase()
+        const formaPagoTexto = formaPago === 'transferencia' ? 'Transferencia' : formaPago === 'tarjeta' ? 'Tarjeta' : 'Efectivo'
+        const fecha = row.fecha_pago
+          ? new Date(row.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+          : 'N/A'
+        const total = conceptos.reduce((sum, c) => sum + (parseFloat(c.valor) || 0), 0)
+        return {
+          pago: idx + 1,
+          fecha,
+          conceptos,
+          total,
+          formaPago,
+          formaPagoTexto
+        }
+      })
+      console.log('[Reenvío comprobante] historialPagosReenvio construido (se mostrará sección Historial si length > 1):', historialPagosReenvio)
+    }
+  } catch (e) {
+    console.warn('Error construyendo historial de pagos para reenvío desde historial_pagos_cuota:', e)
+    historialPagosReenvio = []
   }
   
   // Preparar datos del pago para mostrar el comprobante
@@ -13159,6 +13179,8 @@ async function reenviarComprobante(cuota) {
     valorCuotaPagada, // Cuánto de cuota se pagó
     tieneSancion: !tieneNoCalcularMulta && valorSancionPagada > 0, // Indica si se pagó sanción (verifica no_calcular_multa)
     tipoPago: cuota.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
+    valorEfectivo,
+    valorTransferencia,
     fecha: cuota.fecha_pago 
       ? (() => {
           const d = new Date(cuota.fecha_pago)
@@ -13212,8 +13234,11 @@ async function reenviarComprobante(cuota) {
       es_parcial: esParcial
     }
   }))
-  
+
   modalConfirmacion.value = true
+  } finally {
+    cargandoComprobanteReenvio.value = false
+  }
 }
 
 // Caché de configuración de natillera para evitar consultas repetidas
@@ -14072,6 +14097,242 @@ onUnmounted(() => {
     border-radius: 20px !important;
     gap: 6px !important;
   }
+}
+
+/* Pantalla de carga al reenviar comprobante (elegante, compatible Safari/iPhone) */
+.cargando-comprobante-reenvio {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  min-height: 100vh !important;
+  min-height: 100dvh !important;
+  min-height: -webkit-fill-available !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  height: -webkit-fill-available !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 35%, #d1fae5 70%, #ccfbf1 100%);
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+  box-sizing: border-box;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.cargando-comprobante-reenvio__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cargando-comprobante-reenvio__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  -webkit-filter: blur(60px);
+  opacity: 0.5;
+  -webkit-animation: cargando-comprobante-float 6s ease-in-out infinite;
+  animation: cargando-comprobante-float 6s ease-in-out infinite;
+}
+
+.cargando-comprobante-reenvio__orb--1 {
+  width: 280px;
+  height: 280px;
+  background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
+  top: 10%;
+  left: 15%;
+  -webkit-animation-delay: 0s;
+  animation-delay: 0s;
+}
+
+.cargando-comprobante-reenvio__orb--2 {
+  width: 240px;
+  height: 240px;
+  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%);
+  bottom: 20%;
+  right: 10%;
+  -webkit-animation-delay: 2s;
+  animation-delay: 2s;
+}
+
+.cargando-comprobante-reenvio__orb--3 {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%);
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  -webkit-animation-delay: 4s;
+  animation-delay: 4s;
+}
+
+@-webkit-keyframes cargando-comprobante-float {
+  0%, 100% { -webkit-transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { -webkit-transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+}
+
+@keyframes cargando-comprobante-float {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+}
+
+.cargando-comprobante-reenvio__orb--1,
+.cargando-comprobante-reenvio__orb--2 {
+  -webkit-animation-name: cargando-comprobante-float-alt;
+  animation-name: cargando-comprobante-float-alt;
+}
+
+@-webkit-keyframes cargando-comprobante-float-alt {
+  0%, 100% { -webkit-transform: translate(0, 0) scale(1); opacity: 0.45; }
+  50% { -webkit-transform: translate(10px, -10px) scale(1.08); opacity: 0.55; }
+}
+
+@keyframes cargando-comprobante-float-alt {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.45; }
+  50% { transform: translate(10px, -10px) scale(1.08); opacity: 0.55; }
+}
+
+.cargando-comprobante-reenvio__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  max-width: 90%;
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  box-shadow: 0 32px 64px -12px rgba(5, 150, 105, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  border: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.cargando-comprobante-reenvio__spinner-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
+}
+
+.cargando-comprobante-reenvio__ring {
+  position: absolute;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: transparent;
+}
+
+.cargando-comprobante-reenvio__ring--outer {
+  inset: 0;
+  border-width: 3px;
+  border-top-color: #10b981;
+  border-right-color: #34d399;
+  -webkit-animation: cargando-comprobante-spin 1.2s linear infinite;
+  animation: cargando-comprobante-spin 1.2s linear infinite;
+}
+
+.cargando-comprobante-reenvio__ring--mid {
+  inset: 10px;
+  border-width: 2px;
+  border-bottom-color: #059669;
+  border-left-color: #6ee7b7;
+  -webkit-animation: cargando-comprobante-spin 0.9s linear infinite reverse;
+  animation: cargando-comprobante-spin 0.9s linear infinite reverse;
+}
+
+@-webkit-keyframes cargando-comprobante-spin {
+  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+}
+
+@keyframes cargando-comprobante-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cargando-comprobante-reenvio__icon-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cargando-comprobante-reenvio__icon {
+  width: 28px;
+  height: 28px;
+  color: #059669;
+  -webkit-animation: cargando-comprobante-pulse 2s ease-in-out infinite;
+  animation: cargando-comprobante-pulse 2s ease-in-out infinite;
+}
+
+@-webkit-keyframes cargando-comprobante-pulse {
+  0%, 100% { opacity: 0.85; -webkit-transform: scale(1); transform: scale(1); }
+  50% { opacity: 1; -webkit-transform: scale(1.05); transform: scale(1.05); }
+}
+
+@keyframes cargando-comprobante-pulse {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.cargando-comprobante-reenvio__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 0.35rem 0;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.cargando-comprobante-reenvio__message {
+  font-size: 0.9375rem;
+  color: #047857;
+  margin: 0;
+  text-align: center;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.cargando-comprobante-reenvio__bar-wrap {
+  width: 120px;
+  height: 4px;
+  margin-top: 1.25rem;
+  background: rgba(16, 185, 129, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.cargando-comprobante-reenvio__bar {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  border-radius: 999px;
+  -webkit-animation: cargando-comprobante-bar 1.4s ease-in-out infinite;
+  animation: cargando-comprobante-bar 1.4s ease-in-out infinite;
+}
+
+@-webkit-keyframes cargando-comprobante-bar {
+  0% { -webkit-transform: translateX(-100%); transform: translateX(-100%); }
+  100% { -webkit-transform: translateX(350%); transform: translateX(350%); }
+}
+
+@keyframes cargando-comprobante-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
 }
 
 </style>

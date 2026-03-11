@@ -2368,7 +2368,46 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // IMPORTANTE: Si tiene no_calcular_multa marcado, asegurar que valorSancionPagada sea 0 en el retorno
       const valorSancionPagadaFinal = tieneNoCalcularMulta ? 0 : valorSancionPagada
-      
+
+      // Registrar en historial_pagos_cuota este abono (historial detallado de pagos de la cuota)
+      try {
+        // Obtener nombre de la natillera para contexto en reportes/comprobantes (no es crítico si falla)
+        let natilleraNombre = null
+        try {
+          const { data: natData } = await supabase
+            .from('natilleras')
+            .select('nombre')
+            .eq('id', natilleraId)
+            .maybeSingle()
+          natilleraNombre = natData?.nombre || null
+        } catch (eNat) {
+          console.warn('No se pudo obtener nombre de natillera para historial_pagos_cuota:', eNat.message)
+        }
+
+        const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
+        const valorTotalHist = (valorCuotaPagado || 0) + (valorSancionPagadaFinal || 0) + (valorActividadesPagado || 0)
+        const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
+
+        await supabase
+          .from('historial_pagos_cuota')
+          .insert({
+            cuota_id: cuotaId,
+            fecha_pago: new Date().toISOString(),
+            forma_pago: formaPagoHist,
+            socio_nombre: nombreSocio,
+            natillera_nombre: natilleraNombre,
+            valor_total: valorTotalHist,
+            valor_cuota: valorCuotaPagado || 0,
+            valor_sancion: valorSancionPagadaFinal || 0,
+            valor_actividades: valorActividadesPagado || 0,
+            valor_cuotas_prestamo: 0,
+            valor_pagado_cuota_total: valorPagadoCuotaTotal
+          })
+      } catch (eHist) {
+        // No bloquear el flujo de pago si falla el registro del historial
+        console.warn('No se pudo registrar historial_pagos_cuota:', eHist.message)
+      }
+
       return { 
         success: true, 
         data,

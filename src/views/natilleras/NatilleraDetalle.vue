@@ -5067,6 +5067,8 @@ async function cargarDetalleSanciones() {
     })
     const lista = filas.map((c) => {
       const valor = parseFloat(c.valor_pagado_sancion) || 0
+      const anio = c.anio != null ? Number(c.anio) : 9999
+      const mes = c.mes != null ? Number(c.mes) : 13
       let periodo = ''
       if (c.mes != null && c.anio != null) {
         const mesNombre = MESES_NOMBRE[Number(c.mes) - 1] || c.mes
@@ -5086,10 +5088,17 @@ async function cargarDetalleSanciones() {
       return {
         socio: nombresPorSn[c.socio_natillera_id] || 'Socio',
         valor,
-        periodo
+        periodo,
+        anio,
+        mes
       }
     })
-    lista.sort((a, b) => (b.valor || 0) - (a.valor || 0))
+    // Ordenar por mes: enero primero, luego febrero, etc. (por año y luego por mes; dentro del mismo mes por valor desc)
+    lista.sort((a, b) => {
+      if (a.anio !== b.anio) return a.anio - b.anio
+      if (a.mes !== b.mes) return a.mes - b.mes
+      return (b.valor || 0) - (a.valor || 0)
+    })
     detalleSanciones.value = { loading: false, lista }
   } catch (e) {
     console.error('Error cargando detalle sanciones:', e)
