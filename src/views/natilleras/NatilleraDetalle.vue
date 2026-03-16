@@ -467,10 +467,10 @@
       @close="cerrarModalWhatsApp"
     >
         <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-2 sm:mb-3">
-          Enviar Recordatorio por WhatsApp
+          Comprobante de estado del socio
         </h3>
         <p class="text-gray-500 text-xs sm:text-sm mb-3">
-          Selecciona un socio para enviarle un recordatorio de pago.
+          Selecciona un socio para generar un comprobante con su estado (ahorro, cuotas, sanciones, actividades y préstamos). Podrás descargarlo o enviarlo por WhatsApp.
         </p>
         
         <!-- Barra de búsqueda -->
@@ -489,31 +489,26 @@
           <button 
             v-for="sn in sociosFiltrados" 
             :key="sn.id"
-            @click="enviarWhatsApp(sn)"
-            :disabled="!sn.socio?.telefono"
+            @click="generarComprobanteEstadoSocio(sn)"
+            :disabled="loadingEstadoSocio"
             :class="[
               'w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left',
-              sn.socio?.telefono 
-                ? 'bg-gray-50 hover:bg-green-50 active:bg-green-100 cursor-pointer' 
-                : 'bg-gray-100 opacity-50 cursor-not-allowed'
+              !loadingEstadoSocio
+                ? 'bg-gray-50 hover:bg-teal-50 active:bg-teal-100 cursor-pointer' 
+                : 'bg-gray-100 opacity-70 cursor-wait'
             ]"
           >
             <img 
               :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)" 
               :alt="sn.socio?.nombre"
-              :class="[
-                'w-10 h-10 rounded-full flex-shrink-0 border-2',
-                sn.socio?.telefono ? 'border-green-400' : 'border-gray-300 grayscale'
-              ]"
+              class="w-10 h-10 rounded-full flex-shrink-0 border-2 border-teal-400"
             />
             <div class="min-w-0 flex-1">
               <p class="font-medium text-gray-800 truncate text-sm sm:text-base">{{ sn.socio?.nombre }}</p>
-              <p class="text-xs sm:text-sm text-gray-500 truncate">{{ sn.socio?.telefono || 'Sin teléfono registrado' }}</p>
+              <p class="text-xs sm:text-sm text-gray-500 truncate">{{ sn.socio?.telefono ? `Tel: ${sn.socio.telefono}` : 'Sin teléfono' }}</p>
             </div>
-            <div v-if="sn.socio?.telefono" class="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-              <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
+            <div class="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0">
+              <DocumentCheckIcon class="w-3.5 h-3.5 text-white" />
             </div>
           </button>
           
@@ -529,6 +524,160 @@
           Cerrar
         </button>
     </ModalWrapper>
+
+    <!-- Modal Comprobante de Estado del Socio -->
+    <ModalWrapper
+      :show="!!modalComprobanteEstadoSocio && !!comprobanteEstadoSocio"
+      :z-index="50"
+      align="bottom"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      card-class="card relative w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col bg-white shadow-2xl border border-gray-200 p-4 sm:p-6"
+      @close="modalComprobanteEstadoSocio = false; comprobanteEstadoSocio = null"
+    >
+      <h3 class="text-lg sm:text-xl font-display font-bold text-gray-800 mb-3 flex-shrink-0">
+        Comprobante de estado
+      </h3>
+      <div class="overflow-y-auto flex-1 min-h-0 rounded-xl border border-gray-200 bg-gray-50 p-3">
+        <!-- Comprobante visual (mismo ref para exportar a imagen) -->
+        <div
+          v-if="comprobanteEstadoSocio"
+          ref="comprobanteEstadoRef"
+          class="bg-white rounded-2xl overflow-hidden mx-auto"
+          style="width: 360px; max-width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: system-ui, -apple-system, sans-serif;"
+        >
+          <div class="comprobante-content" style="background: #ecfdf5; padding: 20px 16px; color: #1f2937;">
+            <!-- Título -->
+            <div style="text-align: center; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                  Estado del socio
+                </h1>
+              </div>
+            </div>
+
+            <!-- Socio -->
+            <div style="background: white; padding: 12px 14px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px; text-align: center;">
+              <p style="color: #9ca3af; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
+              <p style="font-size: 18px; font-weight: 800; margin: 0; color: #111827;">{{ comprobanteEstadoSocio.socio?.nombre || 'Socio' }}</p>
+            </div>
+
+            <!-- Resumen en tarjetas -->
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Cuota actual -->
+              <div v-if="(comprobanteEstadoSocio.cuotasPendientes || 0) > 0 || (comprobanteEstadoSocio.totalPendiente || 0) > 0" style="background: #fef3c7; padding: 10px 12px; border-radius: 10px; border: 1px solid #fde68a;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #b45309; font-weight: 700; font-size: 12px;">Cuota actual {{ comprobanteEstadoSocio.cuotasPendientes ? `(${comprobanteEstadoSocio.cuotasPendientes})` : '' }}</span>
+                  <span style="font-weight: 800; color: #d97706; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalPendiente || 0) }}</span>
+                </div>
+                <div v-if="(comprobanteEstadoSocio.cuotasPendientesList || []).length > 0" style="font-size: 10px; color: #92400e; display: flex; flex-direction: column; gap: 2px;">
+                  <span v-for="(item, i) in comprobanteEstadoSocio.cuotasPendientesList" :key="'p-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
+                </div>
+              </div>
+              <!-- Cuotas en mora -->
+              <div v-if="(comprobanteEstadoSocio.cuotasMora || 0) > 0 || (comprobanteEstadoSocio.totalMora || 0) > 0" style="background: #fef2f2; padding: 10px 12px; border-radius: 10px; border: 1px solid #fecaca;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #b91c1c; font-weight: 700; font-size: 12px;">Cuotas en mora {{ comprobanteEstadoSocio.cuotasMora ? `(${comprobanteEstadoSocio.cuotasMora})` : '' }}</span>
+                  <span style="font-weight: 800; color: #dc2626; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalMora || 0) }}</span>
+                </div>
+                <div v-if="(comprobanteEstadoSocio.cuotasMoraList || []).length > 0" style="font-size: 10px; color: #991b1b; display: flex; flex-direction: column; gap: 2px;">
+                  <span v-for="(item, i) in comprobanteEstadoSocio.cuotasMoraList" :key="'m-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
+                </div>
+              </div>
+              <!-- Sanciones a pagar -->
+              <div v-if="(comprobanteEstadoSocio.totalSancionesPendientes || 0) > 0" style="background: #fff1f2; padding: 10px 12px; border-radius: 10px; border: 1px solid #ffe4e6;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #be123c; font-weight: 700; font-size: 12px;">Sanciones a pagar</span>
+                  <span style="font-weight: 800; color: #e11d48; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalSancionesPendientes) }}</span>
+                </div>
+                <div v-if="(comprobanteEstadoSocio.sancionesDesglose || []).length > 0" style="font-size: 10px; color: #be123c; display: flex; flex-direction: column; gap: 2px;">
+                  <span v-for="(item, i) in comprobanteEstadoSocio.sancionesDesglose" :key="'s-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
+                </div>
+              </div>
+              <!-- Actividades pendientes (a la fecha) -->
+              <div v-if="(comprobanteEstadoSocio.actividadesPendientesTotal || 0) > 0" style="background: #eff6ff; padding: 10px 12px; border-radius: 10px; border: 1px solid #bfdbfe;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #1d4ed8; font-weight: 700; font-size: 12px;">Actividades pendientes (a la fecha)</span>
+                  <span style="font-weight: 800; color: #2563eb; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.actividadesPendientesTotal) }}</span>
+                </div>
+                <div v-if="(comprobanteEstadoSocio.actividadesPendientesDesglose || []).length > 0" style="font-size: 10px; color: #1d4ed8; display: flex; flex-direction: column; gap: 2px;">
+                  <span v-for="(item, i) in comprobanteEstadoSocio.actividadesPendientesDesglose" :key="'act-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
+                </div>
+              </div>
+              <!-- Cuotas de préstamos pendientes (a la fecha) -->
+              <div v-if="(comprobanteEstadoSocio.totalPrestamosPendiente || 0) > 0" style="background: #faf5ff; padding: 10px 12px; border-radius: 10px; border: 1px solid #f3e8ff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="color: #6b21a8; font-weight: 700; font-size: 12px;">Cuotas de préstamos pendientes (a la fecha)</span>
+                  <span style="font-weight: 800; color: #7e22ce; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalPrestamosPendiente) }}</span>
+                </div>
+                <div v-if="(comprobanteEstadoSocio.prestamosPendientesDesglose || []).length > 0" style="font-size: 10px; color: #6b21a8; display: flex; flex-direction: column; gap: 2px;">
+                  <span v-for="(item, i) in comprobanteEstadoSocio.prestamosPendientesDesglose" :key="'pr-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total a pagar para estar al día (destacado) -->
+            <div style="margin-top: 14px; background: white; border-radius: 14px; padding: 14px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 2px solid #1d4ed8;">
+              <p style="color: #1e40af; font-size: 10px; font-weight: 800; margin: 0 0 6px 0; text-transform: uppercase; letter-spacing: 0.5px;">Total a pagar para estar al día</p>
+              <p v-if="(comprobanteEstadoSocio.totalAPagar || 0) > 0" style="font-size: 26px; font-weight: 900; margin: 0; color: #1d4ed8; letter-spacing: -0.5px; line-height: 1.2;">${{ formatMoney(comprobanteEstadoSocio.totalAPagar) }}</p>
+              <p v-else style="font-size: 22px; font-weight: 800; margin: 0; color: #059669; line-height: 1.2;">Al día ✓</p>
+            </div>
+
+
+            <!-- Aviso 4x1000 (si hay total a pagar) -->
+            <div v-if="(comprobanteEstadoSocio.totalAPagar || 0) > 0 && (comprobanteEstadoSocio.valor4x1000 || 0) > 0" style="margin-top: 12px; background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 10px 12px;">
+              <p style="color: #854d0e; font-size: 10px; font-weight: 700; margin: 0 0 4px 0;">4×1000 (transferencia)</p>
+              <p style="color: #713f12; font-size: 11px; margin: 0 0 4px 0;">Si va a pagar por transferencia, debe incluir el 4×1000:</p>
+              <p style="font-size: 14px; font-weight: 800; color: #a16207; margin: 0;">${{ formatMoney(comprobanteEstadoSocio.valor4x1000) }}</p>
+            </div>
+
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 16px;">
+              <p style="color: #9ca3af; font-size: 10px; margin: 0 0 4px 0;">
+                Generado el {{ new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
+              </p>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+                <span style="color: #d1d5db;">✨</span>
+                <p style="color: #d1d5db; font-size: 10px; font-weight: 600; margin: 0;">NATILLERAPP</p>
+                <span style="color: #d1d5db;">✨</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones: Descargar y (solo móvil) Enviar por WhatsApp -->
+      <div class="flex flex-col sm:flex-row gap-2 mt-4 flex-shrink-0">
+        <button
+          @click="descargarComprobanteEstadoSocio"
+          :disabled="generandoImagenEstadoSocio"
+          class="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <ArrowDownTrayIcon class="w-5 h-5" />
+          Descargar
+        </button>
+        <button
+          v-if="esMobile"
+          @click="enviarComprobanteEstadoSocioWhatsApp"
+          :disabled="generandoImagenEstadoSocio || !comprobanteEstadoSocio?.socio?.telefono"
+          class="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          <ChatBubbleLeftIcon class="w-5 h-5" />
+          Enviar por WhatsApp
+        </button>
+      </div>
+      <button
+        @click="modalComprobanteEstadoSocio = false; comprobanteEstadoSocio = null"
+        class="btn-secondary w-full mt-2 flex-shrink-0"
+      >
+        Cerrar
+      </button>
+    </ModalWrapper>
+
     <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalDetalle"
@@ -3362,6 +3511,11 @@ const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
 const colaboradoresStore = useColaboradoresStore()
 const modalWhatsApp = ref(false)
+const modalComprobanteEstadoSocio = ref(false)
+const comprobanteEstadoSocio = ref(null)
+const loadingEstadoSocio = ref(false)
+const comprobanteEstadoRef = ref(null)
+const generandoImagenEstadoSocio = ref(false)
 const modalDetalle = ref(false)
 const modalConfigMeses = ref(false)
 const modalBuscarComprobante = ref(false)
@@ -3487,6 +3641,7 @@ let indiceMensajeAnterior = -1
 // Bloquear scroll del body cuando las modales están abiertas
 const isIos = useIsIos()
 useBodyScrollLock(modalWhatsApp)
+useBodyScrollLock(modalComprobanteEstadoSocio)
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalConfigMeses)
 useBodyScrollLock(modalBuscarComprobante)
@@ -4042,7 +4197,8 @@ async function calcularTotalPagadoCompleto(cuota) {
   }
   let valorPagadoActividades = 0
   let valorPagadoPrestamos = 0
-  // Calcular actividades pagadas del mismo periodo
+
+  // 1) Actividades pagadas del mismo periodo (se mantienen como antes, por mes/año)
   if (mesCuota != null && anioCuota != null) {
     try {
       const { data: sociosActividadData } = await supabase
@@ -4061,9 +4217,27 @@ async function calcularTotalPagadoCompleto(cuota) {
     } catch (error) {
       console.error('Error calculando actividades pagadas:', error)
     }
-    // Calcular cuotas de préstamos pagadas del mismo periodo
+  }
+
+  // 2) Préstamos: PRIORIDAD = historial de ESTA cuota (monto pagado por préstamos en esta cuota)
+  if (cuota.id) {
     try {
-      // Obtener préstamos del socio
+      const { data: historialRows } = await supabase
+        .from('historial_pagos_cuota')
+        .select('valor_cuotas_prestamo')
+        .eq('cuota_id', cuota.id)
+      if (historialRows && historialRows.length > 0) {
+        valorPagadoPrestamos = historialRows.reduce((s, r) => s + (parseFloat(r.valor_cuotas_prestamo) || 0), 0)
+      }
+    } catch (e) {
+      console.warn('Error obteniendo valor préstamos desde historial_pagos_cuota:', e)
+    }
+  }
+
+  // 3) Fallback antiguo: si por alguna razón no hay historial (comprobantes viejos),
+  // usar las cuotas de préstamo totalmente pagadas del periodo, como antes.
+  if (valorPagadoPrestamos === 0 && mesCuota != null && anioCuota != null) {
+    try {
       const { data: prestamosSocio } = await supabase
         .from('prestamos')
         .select('id')
@@ -4071,20 +4245,17 @@ async function calcularTotalPagadoCompleto(cuota) {
         .in('estado', ['activo', 'pagado'])
       if (prestamosSocio && prestamosSocio.length > 0) {
         const prestamoIds = prestamosSocio.map(p => p.id)
-        
-        // Buscar cuotas de préstamos pagadas en el mismo periodo
+
         const fechaInicioPeriodo = new Date(anioCuota, mesCuota - 1, 1)
         const fechaFinPeriodo = new Date(anioCuota, mesCuota, 0, 23, 59, 59)
-        
-        // Si la cuota tiene fecha_pago, buscar cuotas pagadas en la misma fecha o muy cercana
+
         let cuotasPrestamosData = null
-        
         if (cuota.fecha_pago) {
           const fechaPagoCuota = new Date(cuota.fecha_pago)
           fechaPagoCuota.setHours(0, 0, 0, 0)
           const fechaFinDia = new Date(fechaPagoCuota)
           fechaFinDia.setHours(23, 59, 59, 999)
-          
+
           const { data } = await supabase
             .from('plan_pagos_prestamo')
             .select('valor_pagado')
@@ -4092,10 +4263,8 @@ async function calcularTotalPagadoCompleto(cuota) {
             .eq('pagada', true)
             .gte('fecha_pago', fechaPagoCuota.toISOString())
             .lte('fecha_pago', fechaFinDia.toISOString())
-          
           cuotasPrestamosData = data
         } else {
-          // Si no hay fecha_pago, buscar en el mismo periodo
           const { data } = await supabase
             .from('plan_pagos_prestamo')
             .select('valor_pagado')
@@ -4103,10 +4272,9 @@ async function calcularTotalPagadoCompleto(cuota) {
             .eq('pagada', true)
             .gte('fecha_pago', fechaInicioPeriodo.toISOString())
             .lte('fecha_pago', fechaFinPeriodo.toISOString())
-          
           cuotasPrestamosData = data
         }
-        
+
         if (cuotasPrestamosData && cuotasPrestamosData.length > 0) {
           valorPagadoPrestamos = cuotasPrestamosData.reduce((sum, cp) => {
             return sum + (parseFloat(cp.valor_pagado) || 0)
@@ -4114,7 +4282,7 @@ async function calcularTotalPagadoCompleto(cuota) {
         }
       }
     } catch (error) {
-      console.error('Error calculando préstamos pagados:', error)
+      console.error('Error calculando préstamos pagados (fallback periodo):', error)
     }
   }
   const totalPagado = valorPagadoCuota + valorPagadoSancion + valorPagadoActividades + valorPagadoPrestamos
@@ -5294,6 +5462,307 @@ function cerrarModalWhatsApp() {
   modalWhatsApp.value = false
   busquedaSocio.value = ''
 }
+
+// Calcular estado del socio para el comprobante (ahorro, cuotas, sanciones, actividades, préstamos)
+async function calcularEstadoSocioParaComprobante(sn) {
+  const natilleraId = props.id || route.params.id
+  const diasGracia = natillera.value?.reglas_multas?.dias_gracia || 3
+
+  const resumen = await sociosStore.obtenerResumenSocio(sn.id)
+  const cuotas = resumen?.cuotas || []
+
+  let totalAhorrado = 0
+  let cuotasPendientes = 0
+  let cuotasMora = 0
+  let totalPendiente = 0
+  let totalMora = 0
+  let totalSancionesPendientes = 0
+  const cuotasPendientesList = []
+  const cuotasMoraList = []
+  const sancionesDesglose = []
+
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
+  const sancionesMap = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
+
+  cuotas.forEach(cuota => {
+    const estadoReal = calcularEstadoRealCuota(cuota, diasGracia)
+    const valorCuota = parseFloat(cuota.valor_cuota || 0)
+    const valorPagado = parseFloat(cuota.valor_pagado || 0)
+    const deuda = valorCuota - valorPagado
+    const periodo = formatoPeriodoCuotaComprobante(cuota)
+
+    if (estadoReal === 'pagada') {
+      totalAhorrado += valorCuota
+      return
+    }
+    if (estadoReal === 'mora') {
+      cuotasMora++
+      totalMora += deuda
+      cuotasMoraList.push({ periodo, valor: deuda })
+      const sancion = sancionesMap[cuota.id] ?? parseFloat(cuota.valor_multa || 0)
+      if (sancion > 0) {
+        totalSancionesPendientes += sancion
+        sancionesDesglose.push({ periodo, valor: sancion })
+      }
+    } else if (estadoReal === 'pendiente') {
+      cuotasPendientes++
+      totalPendiente += deuda
+      cuotasPendientesList.push({ periodo, valor: deuda })
+      const sancion = parseFloat(cuota.valor_multa || 0)
+      if (sancion > 0) {
+        totalSancionesPendientes += sancion
+        sancionesDesglose.push({ periodo, valor: sancion })
+      }
+    }
+  })
+
+  // Actividades pendientes solo "a la fecha": periodo (mes/año/quincena) ya vencido o actual; con desglose
+  let actividadesPendientesTotal = 0
+  const actividadesPendientesDesglose = []
+  const mesesCortoAct = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  try {
+    const hoy = new Date()
+    const mesActual = hoy.getMonth() + 1
+    const anioActual = hoy.getFullYear()
+    const quincenaActual = hoy.getDate() <= 15 ? 1 : 2
+
+    const { data: sociosActividad } = await supabase
+      .from('socios_actividad')
+      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion)')
+      .eq('socio_natillera_id', sn.id)
+    if (sociosActividad && sociosActividad.length > 0) {
+      sociosActividad.forEach(sa => {
+        const asignado = parseFloat(sa.valor_asignado || 0)
+        const pagado = parseFloat(sa.valor_pagado || 0)
+        if (asignado <= pagado) return
+
+        const mes = sa.mes_pago != null ? Number(sa.mes_pago) : null
+        const anio = sa.anio_pago != null ? Number(sa.anio_pago) : null
+        const quincena = sa.quincena_pago != null ? Number(sa.quincena_pago) : null
+
+        // Incluir solo si el periodo ya pasó o es el actual (a la fecha)
+        let esPeriodoALaFecha = false
+        if (anio != null && mes != null) {
+          if (anio < anioActual) esPeriodoALaFecha = true
+          else if (anio === anioActual && mes < mesActual) esPeriodoALaFecha = true
+          else if (anio === anioActual && mes === mesActual) {
+            if (quincena == null || quincena === 0) esPeriodoALaFecha = true
+            else if (quincena <= quincenaActual) esPeriodoALaFecha = true
+          }
+        } else {
+          esPeriodoALaFecha = false
+        }
+        if (esPeriodoALaFecha) {
+          const valorPendiente = asignado - pagado
+          actividadesPendientesTotal += valorPendiente
+          const descripcion = sa.actividad?.descripcion || (mes && anio ? `${mesesCortoAct[mes - 1] || ''} ${anio}` + (quincena === 1 ? ' - 1ra quincena' : quincena === 2 ? ' - 2da quincena' : '') : 'Actividad')
+          actividadesPendientesDesglose.push({ periodo: descripcion.trim() || 'Actividad', valor: valorPendiente })
+        }
+      })
+    }
+  } catch (e) {
+    console.warn('Error cargando actividades pendientes:', e)
+  }
+
+  // Solo cuotas de préstamos pendientes a la fecha (fecha_proyectada <= hoy), no el valor total del préstamo
+  let totalPrestamosPendiente = 0
+  let cuotasPrestamosPendientes = 0
+  const prestamosPendientesDesglose = []
+  try {
+    const hoy = new Date()
+    hoy.setHours(23, 59, 59, 999)
+
+    const { data: prestamos } = await supabase
+      .from('prestamos')
+      .select('id')
+      .eq('socio_natillera_id', sn.id)
+      .in('estado', ['activo', 'pagado'])
+    if (prestamos && prestamos.length > 0) {
+      const prestamoIds = prestamos.map(p => p.id)
+      const { data: planPagos } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('valor_cuota, valor_pagado, pagada, fecha_proyectada, numero_cuota')
+        .in('prestamo_id', prestamoIds)
+      if (planPagos) {
+        planPagos.forEach(pp => {
+          if (pp.pagada) return
+          const fechaProyectada = pp.fecha_proyectada ? new Date(pp.fecha_proyectada) : null
+          if (fechaProyectada && fechaProyectada.getTime() > hoy.getTime()) return // cuota futura, no incluir
+          cuotasPrestamosPendientes++
+          const valorCuota = parseFloat(pp.valor_cuota || 0)
+          const valorPagado = parseFloat(pp.valor_pagado || 0)
+          const pendiente = Math.max(0, valorCuota - valorPagado)
+          totalPrestamosPendiente += pendiente
+          const periodo = fechaProyectada
+            ? fechaProyectada.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }).replace(/\./g, '') + (pp.numero_cuota != null ? ` (cuota ${pp.numero_cuota})` : '')
+            : (pp.numero_cuota != null ? `Cuota ${pp.numero_cuota}` : 'Préstamo')
+          prestamosPendientesDesglose.push({ periodo, valor: pendiente })
+        })
+      }
+    }
+  } catch (e) {
+    console.warn('Error cargando préstamos pendientes:', e)
+  }
+
+  // Total a pagar (base para 4x1000 si paga por transferencia)
+  const totalAPagar = totalPendiente + totalMora + totalSancionesPendientes + actividadesPendientesTotal + totalPrestamosPendiente
+  const valor4x1000 = Math.round(totalAPagar * 0.004)
+
+  return {
+    socio: sn.socio || { nombre: 'Socio', telefono: sn.socio?.telefono },
+    nombreNatillera: natillera.value?.nombre || 'Natillera',
+    totalAhorrado,
+    cuotasPendientes,
+    cuotasMora,
+    totalPendiente,
+    totalMora,
+    cuotasPendientesList,
+    cuotasMoraList,
+    totalSancionesPendientes,
+    sancionesDesglose,
+    actividadesPendientesTotal,
+    actividadesPendientesDesglose,
+    totalPrestamosPendiente,
+    cuotasPrestamosPendientes,
+    prestamosPendientesDesglose,
+    totalAPagar,
+    valor4x1000
+  }
+}
+
+function formatoPeriodoCuotaComprobante(cuota) {
+  let mes = cuota.mes
+  let anio = cuota.anio
+  const quincena = cuota.quincena != null ? Number(cuota.quincena) : null
+  if ((mes == null || anio == null) && cuota.fecha_limite) {
+    const str = String(cuota.fecha_limite)
+    if (str.includes('-')) {
+      const [y, m] = str.split('-')
+      anio = parseInt(y, 10)
+      mes = parseInt(m, 10)
+    }
+  }
+  const mesesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+  const mesLabel = (mes >= 1 && mes <= 12) ? mesesCorto[mes - 1] : `Mes ${mes}`
+  let label = `${mesLabel} ${anio || ''}`
+  if (quincena === 1) label += ' - 1ra quincena'
+  else if (quincena === 2) label += ' - 2da quincena'
+  return label
+}
+
+async function generarComprobanteEstadoSocio(sn) {
+  if (loadingEstadoSocio.value) return
+  loadingEstadoSocio.value = true
+  try {
+    const estado = await calcularEstadoSocioParaComprobante(sn)
+    comprobanteEstadoSocio.value = estado
+    cerrarModalWhatsApp()
+    modalComprobanteEstadoSocio.value = true
+    await nextTick()
+  } catch (e) {
+    console.error('Error generando comprobante de estado:', e)
+    alert('No se pudo generar el comprobante. Intenta de nuevo.')
+  } finally {
+    loadingEstadoSocio.value = false
+  }
+}
+
+function textoComprobanteEstadoSocio(estado) {
+  const total = estado.totalAPagar || 0
+  const cuatroPorMil = estado.valor4x1000 || 0
+  const totalCon4x1000 = total + cuatroPorMil
+
+  let text = '*Valor a pagar para estar al día*\n\n'
+  if (total > 0) {
+    text += `💰 $${formatMoney(total)}\n\n`
+    if (cuatroPorMil > 0) {
+      text += `💳 Si paga por transferencia (incluye 4×1000):\n$${formatMoney(totalCon4x1000)}\n`
+    }
+  } else {
+    text += '✅ Al día\n'
+  }
+  return text.trim()
+}
+
+async function descargarComprobanteEstadoSocio() {
+  if (!comprobanteEstadoRef.value || !comprobanteEstadoSocio.value) return
+  generandoImagenEstadoSocio.value = true
+  try {
+    await nextTick()
+    await new Promise(r => setTimeout(r, 150))
+    const dataUrl = await toPng(comprobanteEstadoRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    const nombre = (comprobanteEstadoSocio.value.socio?.nombre || 'socio').replace(/\s+/g, '-')
+    const link = document.createElement('a')
+    link.download = `estado-socio-${nombre}.png`
+    link.href = dataUrl
+    link.click()
+  } catch (e) {
+    console.error('Error descargando comprobante:', e)
+    alert('No se pudo descargar la imagen. Intenta de nuevo.')
+  } finally {
+    generandoImagenEstadoSocio.value = false
+  }
+}
+
+async function enviarComprobanteEstadoSocioWhatsApp() {
+  if (!comprobanteEstadoRef.value || !comprobanteEstadoSocio.value) return
+  const telefono = (comprobanteEstadoSocio.value.socio?.telefono || '').replace(/\D/g, '')
+  if (!telefono) {
+    alert('Este socio no tiene teléfono registrado.')
+    return
+  }
+  generandoImagenEstadoSocio.value = true
+  try {
+    await nextTick()
+    await new Promise(r => setTimeout(r, 150))
+    const dataUrl = await toPng(comprobanteEstadoRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    const numero = telefono.length === 10 ? '57' + telefono : telefono
+    const texto = textoComprobanteEstadoSocio(comprobanteEstadoSocio.value)
+    const nombre = (comprobanteEstadoSocio.value.socio?.nombre || 'socio').replace(/\s+/g, '-')
+
+    try {
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], `estado-socio-${nombre}.png`, { type: 'image/png' })
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Estado del socio',
+          text: texto
+        })
+        return
+      }
+    } catch (shareErr) {
+      console.warn('Web Share no disponible o cancelado:', shareErr)
+    }
+
+    const link = document.createElement('a')
+    link.download = `estado-socio-${nombre}.png`
+    link.href = dataUrl
+    link.click()
+    setTimeout(() => {
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
+      alert('La imagen se descargó. Adjúntala en WhatsApp para enviarla al socio.')
+    }, 500)
+  } catch (e) {
+    console.error('Error enviando comprobante por WhatsApp:', e)
+    alert('No se pudo generar la imagen. Abriendo WhatsApp solo con texto.')
+    const numero = telefono.length === 10 ? '57' + telefono : telefono
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(textoComprobanteEstadoSocio(comprobanteEstadoSocio.value))}`, '_blank')
+  } finally {
+    generandoImagenEstadoSocio.value = false
+  }
+}
+
 function enviarWhatsApp(socioNatillera, cerrarModal = true) {
   const telefono = socioNatillera.socio?.telefono?.replace(/\D/g, '')
   if (!telefono) {
@@ -5998,7 +6467,7 @@ function handleModalBack(modalRef, modalName) {
   watch(modalRef, (isOpen) => {
     if (isOpen) {
       // Verificar si hay otras modales abiertas
-      const hayOtrasModales = modalWhatsApp.value || modalDetalle.value || 
+const hayOtrasModales = modalComprobanteEstadoSocio.value || modalWhatsApp.value || modalDetalle.value ||
                               modalConfigMeses.value || modalBuscarComprobante.value ||
                               (modalName !== 'sociosEnMora' && modalSociosEnMora.value) ||
                               (modalName !== 'cuotasSocio' && modalCuotasSocio.value)
@@ -6040,6 +6509,12 @@ function handlePopState(event) {
     return
   }
   
+  // Modal Comprobante Estado Socio (z-50) - se abre después de cerrar WhatsApp, no hay modal debajo
+  if (modalComprobanteEstadoSocio.value) {
+    modalComprobanteEstadoSocio.value = false
+    comprobanteEstadoSocio.value = null
+    return
+  }
   // Modal WhatsApp (z-50)
   if (modalWhatsApp.value) {
     modalWhatsApp.value = false
@@ -6100,6 +6575,7 @@ function handlePopState(event) {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 // Registrar watchers para cada modal
+handleModalBack(modalComprobanteEstadoSocio, 'comprobanteEstado')
 handleModalBack(modalWhatsApp, 'whatsapp')
 handleModalBack(modalDetalle, 'detalle')
 handleModalBack(modalConfigMeses, 'configMeses')

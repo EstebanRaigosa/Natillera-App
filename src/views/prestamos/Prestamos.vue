@@ -841,8 +841,8 @@
               <!-- Vista Anticipado -->
               <template v-else>
                 <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="text-gray-600">Desembolso:</span>
-                  <span class="font-bold text-gray-800">${{ formatMoney(capitalAPrestar) }}</span>
+                  <span class="text-gray-600">Desembolso (lo que recibe el socio):</span>
+                  <span class="font-bold text-gray-800">${{ formatMoney(montoARecibir) }}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
                   <span class="text-gray-600">Interés cobrado al inicio:</span>
@@ -3036,6 +3036,28 @@
           </div>
         </div>
     </ModalWrapper>
+
+    <!-- Ventana de carga al generar préstamo (compatible Safari/iPhone) -->
+    <Teleport to="body">
+      <Transition name="generando-prestamo">
+        <div
+          v-if="generandoPrestamo"
+          class="generando-prestamo-overlay"
+          role="status"
+          aria-live="polite"
+          aria-label="Generando préstamo"
+        >
+          <div class="generando-prestamo-card">
+            <div class="generando-prestamo-icon-wrap">
+              <BanknotesIcon class="generando-prestamo-icon" aria-hidden="true" />
+            </div>
+            <p class="generando-prestamo-title">Generando préstamo</p>
+            <p class="generando-prestamo-subtitle">Estamos creando el plan de pagos y registrando el préstamo.</p>
+            <div class="generando-prestamo-spinner" aria-hidden="true"></div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -3082,6 +3104,23 @@ function periodoDesdeFechaProyectada(fechaProyectada) {
   }
 }
 
+/**
+ * Calcula la fecha proyectada para una cuota mensual respetando el día de pago.
+ * Si el mes no tiene ese día (ej. 31 en febrero o en abril), usa el último día del mes.
+ * Ej: día 31 → en febrero 28/29, en abril 30; día 30 → en febrero 28/29.
+ */
+function fechaProyectadaMensual(fechaInicio, numeroCuota) {
+  const diaPago = fechaInicio.getDate()
+  const anioInicio = fechaInicio.getFullYear()
+  const mesInicio = fechaInicio.getMonth()
+  const mesObjetivo = mesInicio + (numeroCuota - 1)
+  const anioObjetivo = anioInicio + Math.floor(mesObjetivo / 12)
+  const mes = ((mesObjetivo % 12) + 12) % 12
+  const ultimoDiaDelMes = new Date(anioObjetivo, mes + 1, 0).getDate()
+  const dia = Math.min(diaPago, ultimoDiaDelMes)
+  return new Date(anioObjetivo, mes, dia, fechaInicio.getHours(), fechaInicio.getMinutes(), fechaInicio.getSeconds(), fechaInicio.getMilliseconds())
+}
+
 const notificationStore = useNotificationStore()
 const natillerasStore = useNatillerasStore()
 const auditoria = useAuditoria()
@@ -3116,6 +3155,7 @@ const modalCompartirPrestamoNuevo = ref(false)
 const modalComprobanteAbono = ref(false)
 const generandoImagenPrestamo = ref(false)
 const generandoImagenPrestamoNuevo = ref(false)
+const generandoPrestamo = ref(false)
 const contactoSeleccionadoWhatsApp = ref(null)
 const historialRefinanciaciones = ref([])
 const prestamoRef = ref(null)
@@ -3468,6 +3508,10 @@ const capitalAPrestar = computed(() => {
   return formPrestamo.monto || 0
 })
 
+// El interés se calcula SIEMPRE igual (como interés normal: simple o compuesto).
+// La única diferencia entre anticipado y normal es CUÁNDO se suma a utilidades:
+// - Anticipado: todo el interés se suma a utilidades al crear el préstamo.
+// - Normal: el interés se va sumando a utilidades al pagar cada cuota (proporcional por cuota).
 const interesTotal = computed(() => {
   if (!capitalAPrestar.value || !formPrestamo.interes || !formPrestamo.numero_cuotas) return 0
   
@@ -3475,28 +3519,10 @@ const interesTotal = computed(() => {
   const tasaMensual = formPrestamo.interes / 100
   const cuotas = formPrestamo.numero_cuotas
   const periodicidad = formPrestamo.periodicidad || 'mensual'
-  
-  // Si es interés anticipado, usar la fórmula: Bruto = valorprestamo / (1 - d)
-  // donde d = interes × meses
-  if (mostrarInteresAnticipado.value) {
-    // Calcular tasa periódica según periodicidad
-    const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-    // d = interes × meses
-    const d = tasaPeriodica * cuotas
-    // Validar que d < 1 para evitar división por cero o valores negativos
-    if (d >= 1) return 0
-    // Bruto = valorprestamo / (1 - d)
-    const bruto = monto / (1 - d)
-    // Interés = Bruto - valorprestamo
-    return bruto - monto
-  }
-  
-  // Calcular tasa periódica según periodicidad
   const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
   
   if (formPrestamo.tipo_interes === 'compuesto') {
-    // Interés compuesto: M = C * (1 + i)^n
-    // Interés = M - C
+    // Interés compuesto: M = C * (1 + i)^n; Interés = M - C
     const montoFinal = monto * Math.pow(1 + tasaPeriodica, cuotas)
     return montoFinal - monto
   } else {
@@ -3505,23 +3531,8 @@ const interesTotal = computed(() => {
   }
 })
 
+// Total a pagar por el socio: capital + intereses (igual para anticipado y normal)
 const montoTotal = computed(() => {
-  // Si es interés anticipado, el monto total es el bruto calculado
-  if (mostrarInteresAnticipado.value) {
-    if (!capitalAPrestar.value || !formPrestamo.interes || !formPrestamo.numero_cuotas) return capitalAPrestar.value || 0
-    
-    const monto = capitalAPrestar.value
-    const tasaMensual = formPrestamo.interes / 100
-    const cuotas = formPrestamo.numero_cuotas
-    const periodicidad = formPrestamo.periodicidad || 'mensual'
-    const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-    const d = tasaPeriodica * cuotas
-    
-    if (d >= 1) return monto
-    // Bruto = valorprestamo / (1 - d)
-    return monto / (1 - d)
-  }
-  
   return capitalAPrestar.value + interesTotal.value
 })
 
@@ -3553,13 +3564,10 @@ function calcularCapitalNecesario(montoARecibir, tasaMensual, cuotas, tipoIntere
 // El monto que recibe el socio (desembolso real)
 const montoARecibir = computed(() => {
   if (mostrarInteresAnticipado.value) {
-    // Con interés anticipado, el socio recibe el capital menos el interés (que se retiene)
-    // El interés se calcula con la nueva fórmula: Bruto = valorprestamo / (1 - d)
+    // Con interés anticipado, el socio recibe el capital menos el interés (que se retiene y va a utilidades)
     const montoARecibirCalculado = capitalAPrestar.value - interesTotal.value
-    // Asegurar que no sea negativo
     return Math.max(0, montoARecibirCalculado)
   }
-  // Con interés normal, el socio recibe el capital completo
   return capitalAPrestar.value
 })
 
@@ -3573,10 +3581,9 @@ const movimientoFondoInicio = computed(() => {
   return capitalAPrestar.value
 })
 
-// Valor a entregar al socio (desembolso)
+// Valor a entregar al socio (desembolso): con anticipado recibe capital - interés; con normal recibe el capital completo
 const valorAEntregarAlSocio = computed(() => {
-  // Siempre es el capital, independientemente del tipo de interés
-  return capitalAPrestar.value
+  return mostrarInteresAnticipado.value ? montoARecibir.value : capitalAPrestar.value
 })
 
 // Valor total a pagar por el socio
@@ -5241,35 +5248,19 @@ function generarPlanPagos(prestamo) {
   let valorCuota = 0
   let interesTotal = 0
   
-  if (prestamo.interes_anticipado) {
-    // Con interés anticipado, usar el interés_total guardado
-    interesTotal = prestamo.interes_total || 0
-    // Con interés anticipado, calcular el bruto usando la fórmula: Bruto = valorprestamo / (1 - d)
-    // donde d = interes × meses
-    const d = tasaPeriodica * numeroCuotas
-    let montoTotalAPagar = monto + interesTotal
-    if (d < 1) {
-      // Si hay interés_total guardado, usarlo; si no, calcular con la fórmula
-      if (!prestamo.interes_total || prestamo.interes_total === 0) {
-        montoTotalAPagar = monto / (1 - d)
-        interesTotal = montoTotalAPagar - monto
-      } else {
-        // Usar el interés_total guardado (ya calculado con la fórmula al crear el préstamo)
-        montoTotalAPagar = monto + interesTotal
-      }
-    }
-    // Con interés anticipado, la cuota incluye capital + intereses dividido entre las cuotas
-    valorCuota = montoTotalAPagar / numeroCuotas
+  // El interés se calcula igual para anticipado y normal (simple o compuesto)
+  if (prestamo.tipo_interes === 'compuesto') {
+    const montoFinal = monto * Math.pow(1 + tasaPeriodica, numeroCuotas)
+    interesTotal = montoFinal - monto
+    valorCuota = (monto + interesTotal) / numeroCuotas
   } else {
-    // Con interés normal
-    if (prestamo.tipo_interes === 'compuesto') {
-      const montoFinal = monto * Math.pow(1 + tasaPeriodica, numeroCuotas)
-      interesTotal = montoFinal - monto
-      valorCuota = montoFinal / numeroCuotas
-    } else {
-      interesTotal = monto * tasaPeriodica * numeroCuotas
-      valorCuota = (monto + interesTotal) / numeroCuotas
-    }
+    interesTotal = monto * tasaPeriodica * numeroCuotas
+    valorCuota = (monto + interesTotal) / numeroCuotas
+  }
+  // Si hay interés_total guardado (ej. al crear/refinanciar), usarlo para consistencia
+  if (prestamo.interes_total != null && prestamo.interes_total !== '' && !Number.isNaN(Number(prestamo.interes_total))) {
+    interesTotal = Number(prestamo.interes_total)
+    valorCuota = (monto + interesTotal) / numeroCuotas
   }
   
   // El saldo inicial siempre debe incluir capital + intereses (total a pagar)
@@ -5279,19 +5270,20 @@ function generarPlanPagos(prestamo) {
   
   for (let i = 1; i <= numeroCuotas; i++) {
     // Calcular fecha proyectada según periodicidad
-    const fechaProyectada = new Date(fechaInicio)
+    let fechaProyectada
     if (periodicidad === 'quincenal') {
+      fechaProyectada = new Date(fechaInicio)
       // Para quincenal: sumar 15 días por cada cuota
       fechaProyectada.setDate(fechaProyectada.getDate() + (15 * (i - 1)))
     } else {
-      // Para mensual: sumar 1 mes por cada cuota
-      fechaProyectada.setMonth(fechaProyectada.getMonth() + (i - 1))
+      // Para mensual: mismo día cada mes; si el mes no tiene ese día (ej. 31 en feb/abr), usar último día del mes
+      fechaProyectada = fechaProyectadaMensual(fechaInicio, i)
     }
-    
+
     // Calcular capital e interés de esta cuota
     let capitalCuota = 0
     let interesCuota = 0
-    
+
     if (prestamo.interes_anticipado) {
       // Con interés anticipado, distribuir el interés proporcionalmente en las cuotas
       // El interés total ya está calculado y se distribuye equitativamente entre todas las cuotas
@@ -5410,17 +5402,19 @@ function generarPlanPagosRefinanciado(prestamo, saldoActual, nuevaFechaInicio, d
   
   for (let i = 1; i <= numeroCuotas; i++) {
     // Calcular fecha proyectada según periodicidad
-    const fechaProyectada = new Date(fechaInicio)
+    let fechaProyectada
     if (periodicidad === 'quincenal') {
+      fechaProyectada = new Date(fechaInicio)
       fechaProyectada.setDate(fechaProyectada.getDate() + (15 * (i - 1)))
     } else {
-      fechaProyectada.setMonth(fechaProyectada.getMonth() + (i - 1))
+      // Para mensual: mismo día cada mes; si el mes no tiene ese día (ej. 31 en feb/abr), usar último día del mes
+      fechaProyectada = fechaProyectadaMensual(fechaInicio, i)
     }
-    
+
     // Calcular capital e interés de esta cuota
     let capitalCuota = 0
     let interesCuota = 0
-    
+
     if (mantenerInteresOriginal && diferenciaIntereses > 0) {
       // Si el préstamo inicial fue con interés anticipado, solo distribuimos la diferencia
       let diferenciaPorCuota = 0
@@ -5881,13 +5875,20 @@ async function handleRefinanciar() {
 }
 
 async function handleCrearPrestamo() {
+  // Mostrar ventana de carga de inmediato al hacer clic
+  generandoPrestamo.value = true
+  loading.value = true
+  await nextTick() // Dar tiempo a que se pinte el overlay antes de validaciones/async
+
   // Validar monto mínimo
   const capital = Math.round(capitalAPrestar.value)
   if (capital < 10000) {
+    generandoPrestamo.value = false
+    loading.value = false
     notificationStore.warning('El monto mínimo del préstamo es $10.000', 'Monto insuficiente')
     return
   }
-  
+
   // Validar interés anticipado: d = interes × meses debe ser < 1
   if (mostrarInteresAnticipado.value) {
     const tasaMensual = formPrestamo.interes / 100
@@ -5895,8 +5896,10 @@ async function handleCrearPrestamo() {
     const periodicidad = formPrestamo.periodicidad || 'mensual'
     const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
     const d = tasaPeriodica * cuotas
-    
+
     if (d >= 1) {
+      generandoPrestamo.value = false
+      loading.value = false
       notificationStore.error(
         `El valor de interés × meses (${(d * 100).toFixed(2)}%) debe ser menor al 100%. Por favor, reduce el interés o aumenta el número de cuotas.`,
         'Error en cálculo de interés anticipado'
@@ -5916,6 +5919,8 @@ async function handleCrearPrestamo() {
         const disponibleEfectivo = Math.max(0, (stats.totalRecaudadoEfectivo || 0) - (stats.totalDesembolsadoEfectivo || 0))
         const disponibleTransferencia = Math.max(0, (stats.totalRecaudadoTransferencia || 0) - (stats.totalDesembolsadoTransferencia || 0))
         if (medio === 'efectivo' && capital > disponibleEfectivo) {
+          generandoPrestamo.value = false
+          loading.value = false
           notificationStore.warning(
             `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor a entregar: $${formatMoney(capital)}.`,
             'Fondo insuficiente (efectivo)'
@@ -5923,6 +5928,8 @@ async function handleCrearPrestamo() {
           return
         }
         if (medio === 'transferencia' && capital > disponibleTransferencia) {
+          generandoPrestamo.value = false
+          loading.value = false
           notificationStore.warning(
             `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor a entregar: $${formatMoney(capital)}.`,
             'Fondo insuficiente (transferencia)'
@@ -5935,18 +5942,12 @@ async function handleCrearPrestamo() {
       // No bloquear la creación si falla la consulta de estadísticas
     }
   }
-  
-  loading.value = true
+
   try {
-    // Calcular el interés total
+    // Calcular el interés total (siempre con la misma fórmula: simple o compuesto)
     const interesTotalCalculado = Math.round(interesTotal.value)
-    // El saldo inicial siempre debe incluir capital + intereses (total a pagar)
-    // Con interés anticipado, se usa la fórmula: Bruto = valorprestamo / (1 - d)
-    // donde d = interes × meses, y el saldo inicial es el bruto calculado
-    // Con interés normal, el saldo inicial es capital + intereses
-    const saldoInicial = mostrarInteresAnticipado.value 
-      ? Math.round(montoTotal.value) 
-      : capital + interesTotalCalculado
+    // El saldo inicial siempre es capital + intereses (total a pagar por el socio)
+    const saldoInicial = capital + interesTotalCalculado
     
     const { data, error } = await supabase
       .from('prestamos')
@@ -6061,6 +6062,7 @@ async function handleCrearPrestamo() {
     notificationStore.error(e.message || 'Error al crear el préstamo', 'Error')
   } finally {
     loading.value = false
+    generandoPrestamo.value = false
   }
 }
 
@@ -7853,6 +7855,121 @@ async function compartirPrestamoNuevoWhatsApp() {
   }
 }
 </script>
+
+<style>
+/* Ventana de carga "Generando préstamo" - compatible Safari/iPhone (no scoped para Teleport a body) */
+.generando-prestamo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  touch-action: none;
+  overflow: hidden;
+}
+
+.generando-prestamo-card {
+  background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 50%, #ecfdf5 100%);
+  border-radius: 1.5rem;
+  padding: 2rem 2rem 2.25rem;
+  max-width: 20rem;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(255, 255, 255, 0.8),
+              0 0 40px rgba(16, 185, 129, 0.15);
+}
+
+.generando-prestamo-icon-wrap {
+  width: 4rem;
+  height: 4rem;
+  margin: 0 auto 1.25rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+}
+
+.generando-prestamo-icon {
+  width: 2rem;
+  height: 2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.generando-prestamo-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #065f46;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.generando-prestamo-subtitle {
+  font-size: 0.875rem;
+  color: #047857;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+
+.generando-prestamo-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 auto;
+  border: 3px solid #a7f3d0;
+  border-top-color: #059669;
+  border-radius: 50%;
+  -webkit-animation: generando-prestamo-spin 0.8s linear infinite;
+  animation: generando-prestamo-spin 0.8s linear infinite;
+}
+
+@-webkit-keyframes generando-prestamo-spin {
+  to {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes generando-prestamo-spin {
+  to {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+
+/* Transición de entrada/salida */
+.generando-prestamo-enter-active,
+.generando-prestamo-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.generando-prestamo-enter-active .generando-prestamo-card,
+.generando-prestamo-leave-active .generando-prestamo-card {
+  transition: transform 0.25s ease;
+}
+
+.generando-prestamo-enter-from,
+.generando-prestamo-leave-to {
+  opacity: 0;
+}
+
+.generando-prestamo-enter-from .generando-prestamo-card,
+.generando-prestamo-leave-to .generando-prestamo-card {
+  transform: scale(0.95);
+  opacity: 0;
+}
+</style>
 
 <style scoped>
 /* Tarjeta en mora - efecto sutil de brillo mejorado */
