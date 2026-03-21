@@ -2499,32 +2499,50 @@
           <div v-else-if="!detalleRifas.porMes || detalleRifas.porMes.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay rifas liquidadas.
           </div>
-          <div v-else class="space-y-5">
-            <div
-              v-for="(bloque, idx) in detalleRifas.porMes"
-              :key="idx"
-              class="rounded-xl border border-gray-200 bg-white overflow-hidden"
-            >
-              <div class="px-3 py-2.5 bg-gray-50 border-b border-gray-100">
-                <p class="text-sm font-semibold text-gray-800">{{ bloque.label }}</p>
-              </div>
-              <div class="p-3 space-y-3">
-                <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div>
-                    <p class="text-gray-500">Recaudado</p>
-                    <p class="font-semibold text-violet-600">${{ formatMoney(bloque.totalRecogido) }}</p>
-                  </div>
-                  <div>
-                    <p class="text-gray-500">Premio</p>
-                    <p class="font-semibold text-red-600">${{ formatMoney(bloque.totalPremio) }}</p>
-                  </div>
-                  <div>
-                    <p class="text-gray-500">Utilidad</p>
-                    <p class="font-semibold text-green-600">${{ formatMoney(bloque.totalUtilidad) }}</p>
-                  </div>
+          <div v-else class="space-y-6">
+            <!-- Totales acumulados (todas las rifas) -->
+            <div class="rounded-xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm">
+              <p class="text-xs font-bold uppercase tracking-wider text-violet-700 mb-3">Totales acumulados</p>
+              <div class="grid grid-cols-3 gap-3 text-center text-xs">
+                <div>
+                  <p class="text-gray-500">Recaudado</p>
+                  <p class="font-bold text-violet-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalRecogido) }}</p>
                 </div>
-                <div v-for="rifa in bloque.rifas" :key="rifa.id" class="rounded-lg bg-gray-50/80 border border-gray-100 p-2.5">
+                <div>
+                  <p class="text-gray-500">Premio</p>
+                  <p class="font-bold text-red-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalPremio) }}</p>
+                </div>
+                <div>
+                  <p class="text-gray-500">Utilidad</p>
+                  <p class="font-bold text-green-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalUtilidad) }}</p>
+                </div>
+              </div>
+            </div>
+            <!-- Desglose por mes -->
+            <div class="space-y-8">
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Desglose por mes</p>
+              <div
+                v-for="(bloque, idx) in detalleRifas.porMes"
+                :key="idx"
+                class="rounded-xl border-2 border-gray-200 bg-white overflow-hidden shadow-sm"
+              >
+                <div class="p-3 space-y-3">
+                  <div v-for="rifa in bloque.rifas" :key="rifa.id" class="rounded-xl bg-slate-50 border-2 border-slate-200 p-2.5 shadow-md shadow-slate-200/50 hover:shadow-lg hover:shadow-slate-300/40 transition-shadow duration-200">
                   <p class="text-sm font-medium text-gray-800 line-clamp-2">{{ rifa.descripcion }}</p>
+                  <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2.5 py-2 px-2 rounded-lg bg-white/80 border border-gray-100">
+                    <div>
+                      <p class="text-gray-500">Recaudado</p>
+                      <p class="font-semibold text-violet-600">${{ formatMoney(rifa.totalRecogido) }}</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500"><span class="sm:hidden">Premio</span><span class="hidden sm:inline">Premio entregado</span></p>
+                      <p class="font-semibold text-red-600">${{ formatMoney(rifa.premio) }}</p>
+                    </div>
+                    <div>
+                      <p class="text-gray-500">Utilidad</p>
+                      <p class="font-semibold text-green-600">${{ formatMoney(rifa.utilidad) }}</p>
+                    </div>
+                  </div>
                   <div v-if="rifa.socios && rifa.socios.length" class="mt-2">
                     <button
                       type="button"
@@ -2572,6 +2590,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -2885,6 +2904,21 @@
               />
             </div>
             
+            <!-- Total General -->
+            <div class="mb-3 bg-gradient-to-r from-red-50 to-orange-100 rounded-xl p-4 border-2 border-red-200 shadow-sm flex-shrink-0">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-red-800 mb-1">Total a entregar</p>
+                  <p class="text-xs text-red-600">Dinero total que se debe tener disponible</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-2xl sm:text-3xl font-extrabold text-red-700 tabular-nums">
+                    ${{ formatMoney(totalCierreGeneral) }}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <div class="flex-1 overflow-auto">
               <!-- Vista Desktop: Tabla compacta tipo Excel -->
               <div class="hidden sm:block rounded-xl border-2 border-gray-200 overflow-hidden shadow-inner bg-white min-w-[640px]">
@@ -2935,7 +2969,14 @@
                         <td class="text-right py-2 px-2 sm:px-3 font-medium text-purple-600 tabular-nums">${{ formatMoney(dato.utilidades) }}</td>
                         <td class="text-right py-2 px-2 sm:px-3 font-medium text-teal-600 tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
                         <td class="text-right py-2 px-2 sm:px-3 font-medium text-red-600 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
-                        <td class="text-right py-2 px-2 sm:px-3 font-bold tabular-nums" :class="dato.totalFinal >= 0 ? 'text-green-600' : 'text-red-600'">${{ formatMoney(dato.totalFinal) }}</td>
+                        <td class="text-right py-2 px-2 sm:px-3">
+                          <div class="tabular-nums font-bold" :class="dato.totalFinal >= 0 ? 'text-green-600' : ''">
+                            ${{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
+                          </div>
+                          <div v-if="dato.totalFinal < 0" class="text-xs font-semibold text-red-600 mt-0.5">
+                            Debe: ${{ formatMoney(-dato.totalFinal) }}
+                          </div>
+                        </td>
                         <td class="py-2 px-1 sm:px-2">
                           <div class="flex items-center justify-center gap-0.5">
                             <button
@@ -3062,10 +3103,14 @@
                     </div>
 
                     <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                      <span class="font-bold text-gray-700 text-sm">Total a pagar:</span>
-                      <span class="font-extrabold text-sm" :class="dato.totalFinal >= 0 ? 'text-green-600' : 'text-red-600'">
-                        $ {{ formatMoney(dato.totalFinal) }}
+                      <span class="font-bold text-gray-700 text-sm">A entregar:</span>
+                      <span class="font-extrabold text-sm text-green-600">
+                        $ {{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
                       </span>
+                    </div>
+                    <div v-if="dato.totalFinal < 0" class="flex justify-between items-center mt-1 text-xs">
+                      <span class="font-semibold text-red-600">Debe:</span>
+                      <span class="font-bold text-red-600">$ {{ formatMoney(-dato.totalFinal) }}</span>
                     </div>
                   </div>
                 </div>
@@ -3095,6 +3140,15 @@
               >
                 <ArrowDownTrayIcon class="w-5 h-5" />
                 Exportar comprobante (PDF)
+              </button>
+              <button
+                type="button"
+                @click="exportarCierreAExcel"
+                :disabled="exportandoCierreExcel"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-orange-200 bg-orange-50 text-orange-700 font-semibold hover:bg-orange-100 transition-colors disabled:opacity-50"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5" />
+                {{ exportandoCierreExcel ? 'Exportando...' : 'Exportar a Excel' }}
               </button>
               <button 
                 @click="modalCierreNatillera = false"
@@ -3499,6 +3553,7 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useIsIos } from '../../composables/useIsIos'
 import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
+import * as XLSX from 'xlsx-js-style'
 const props = defineProps({
   id: String
 })
@@ -3526,6 +3581,17 @@ const modalDesgloseUtilidades = ref(false)
 const yaVioDesgloseUtilidades = ref(false)
 const detalleRifasAbierto = ref(false)
 const detalleRifas = ref({ loading: false, porMes: [] })
+const totalesAcumuladosRifas = computed(() => {
+  const porMes = detalleRifas.value?.porMes || []
+  return porMes.reduce(
+    (acc, b) => ({
+      totalRecogido: acc.totalRecogido + (b.totalRecogido || 0),
+      totalPremio: acc.totalPremio + (b.totalPremio || 0),
+      totalUtilidad: acc.totalUtilidad + (b.totalUtilidad || 0)
+    }),
+    { totalRecogido: 0, totalPremio: 0, totalUtilidad: 0 }
+  )
+})
 const rifasDesplegados = ref({})
 const detalleOtrosAbierto = ref(false)
 const detalleOtros = ref({ loading: false, porActividad: [] })
@@ -3609,7 +3675,16 @@ const datosCierreFiltrados = computed(() => {
   }
   return list
 })
+
+// Total a entregar: solo suma lo que se entrega (0 si el socio debe)
+const totalCierreGeneral = computed(() => {
+  return datosCierre.value.reduce((sum, socio) => {
+    const v = parseFloat(socio.totalFinal) || 0
+    return sum + (v > 0 ? v : 0)
+  }, 0)
+})
 const calculandoCierre = ref(false) // Estado de carga de datos de cierre
+const exportandoCierreExcel = ref(false) // Estado de exportación a Excel
 const detalleCierreExpandidoId = ref(null) // id socio_natillera para mostrar desglose utilidades por concepto
 const LABELS_UTILIDAD_CIERRE = {
   prestamos: 'Préstamos',
@@ -5516,7 +5591,7 @@ async function calcularEstadoSocioParaComprobante(sn) {
     }
   })
 
-  // Actividades pendientes solo "a la fecha": periodo (mes/año/quincena) ya vencido o actual; con desglose
+  // Actividades pendientes solo "a la fecha": solo periodos ya vencidos o el periodo actual (nunca futuros)
   let actividadesPendientesTotal = 0
   const actividadesPendientesDesglose = []
   const mesesCortoAct = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
@@ -5528,7 +5603,7 @@ async function calcularEstadoSocioParaComprobante(sn) {
 
     const { data: sociosActividad } = await supabase
       .from('socios_actividad')
-      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion)')
+      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion, fecha_limite_pago)')
       .eq('socio_natillera_id', sn.id)
     if (sociosActividad && sociosActividad.length > 0) {
       sociosActividad.forEach(sa => {
@@ -5539,19 +5614,49 @@ async function calcularEstadoSocioParaComprobante(sn) {
         const mes = sa.mes_pago != null ? Number(sa.mes_pago) : null
         const anio = sa.anio_pago != null ? Number(sa.anio_pago) : null
         const quincena = sa.quincena_pago != null ? Number(sa.quincena_pago) : null
+        // Fecha límite de pago (rifas y actividades con vencimiento): prioridad sobre mes/anio/quincena
+        const fechaLimitePago = sa.actividad?.fecha_limite_pago
 
-        // Incluir solo si el periodo ya pasó o es el actual (a la fecha)
         let esPeriodoALaFecha = false
-        if (anio != null && mes != null) {
-          if (anio < anioActual) esPeriodoALaFecha = true
-          else if (anio === anioActual && mes < mesActual) esPeriodoALaFecha = true
-          else if (anio === anioActual && mes === mesActual) {
-            if (quincena == null || quincena === 0) esPeriodoALaFecha = true
-            else if (quincena <= quincenaActual) esPeriodoALaFecha = true
+
+        if (fechaLimitePago) {
+          // Rifas y actividades con fecha límite: solo mostrar si la fecha actual es SUPERIOR a la fecha límite (ya venció) y está pendiente
+          try {
+            let fechaLimite
+            if (typeof fechaLimitePago === 'string' && fechaLimitePago.includes('-')) {
+              const [y, m, d] = fechaLimitePago.split('-').map(Number)
+              fechaLimite = new Date(y, (m || 1) - 1, d || 1)
+              fechaLimite.setHours(23, 59, 59, 999)
+            } else {
+              fechaLimite = new Date(fechaLimitePago)
+            }
+            const hoyEod = new Date(hoy)
+            hoyEod.setHours(23, 59, 59, 999)
+            esPeriodoALaFecha = hoyEod.getTime() > fechaLimite.getTime()
+          } catch (e) {
+            esPeriodoALaFecha = false
           }
         } else {
-          esPeriodoALaFecha = false
+          // Sin fecha límite: usar periodo mes/anio/quincena (excluir siempre periodos futuros)
+          if (anio == null || mes == null) {
+            esPeriodoALaFecha = false
+          } else {
+            if (anio > anioActual) esPeriodoALaFecha = false
+            else if (anio === anioActual && mes > mesActual) esPeriodoALaFecha = false
+            else if (anio === anioActual && mes === mesActual) {
+              if (quincena == null || quincena === 0) {
+                esPeriodoALaFecha = true
+              } else if (quincena <= quincenaActual) {
+                esPeriodoALaFecha = true
+              } else {
+                esPeriodoALaFecha = false
+              }
+            } else {
+              esPeriodoALaFecha = true
+            }
+          }
         }
+
         if (esPeriodoALaFecha) {
           const valorPendiente = asignado - pagado
           actividadesPendientesTotal += valorPendiente
@@ -5799,10 +5904,19 @@ async function calcularDatosCierre() {
       datosCierre.value = []
       return
     }
-    datosCierre.value = (result.socios || []).map(s => ({
-      ...s,
-      utilidades: s.utilidadesTotal
-    }))
+    datosCierre.value = (result.socios || []).map(s => {
+      // Calcular el total a entregar antes de descuentos
+      const totalAEntregar = (s.ahorro || 0) + (s.utilidadesTotal || 0)
+      // El total final es lo que se entrega menos lo que debe
+      const totalFinal = totalAEntregar - (s.descuentos || 0)
+      
+      return {
+        ...s,
+        utilidades: s.utilidadesTotal,
+        totalAEntregar,
+        totalFinal
+      }
+    })
     // Inicializar todos los socios como seleccionados para exportar a PDF
     sociosSeleccionadosPdf.value = datosCierre.value.map(d => d.socioNatillera?.id || d.socio?.id)
   } catch (error) {
@@ -5829,13 +5943,122 @@ async function confirmarCerrarNatillera() {
   }
 }
 
+async function exportarCierreAExcel() {
+  if (datosCierre.value.length === 0) return
+  exportandoCierreExcel.value = true
+  try {
+    const datosExportar = datosCierre.value.map(d => {
+      const totalFinal = parseFloat(d.totalFinal) || 0
+      const aEntregar = totalFinal >= 0 ? totalFinal : 0
+      const debe = totalFinal < 0 ? -totalFinal : 0
+      return {
+        Socio: d.socio?.nombre || 'Socio',
+        Telefono: d.socio?.telefono || '',
+        Ahorro: parseFloat(d.ahorro) || 0,
+        Utilidades: parseFloat(d.utilidades) || 0,
+        'Total (Antes de desc.)': parseFloat(d.totalAEntregar) || 0,
+        Descuentos: parseFloat(d.descuentos) || 0,
+        'A Entregar': aEntregar,
+        Debe: debe
+      }
+    })
+
+    const wb = XLSX.utils.book_new()
+    const wsData = [
+      [natillera.value?.nombre || 'Natillera'],
+      ['Cierre de Natillera'],
+      ['Exportado:', new Date().toLocaleString('es-CO')],
+      [],
+      ['Socio', 'Teléfono', 'Ahorro', 'Utilidades', 'Total (Antes de desc.)', 'Descuentos', 'A Entregar', 'Debe'],
+      ...datosExportar.map(d => [d.Socio, d.Telefono, d.Ahorro, d.Utilidades, d['Total (Antes de desc.)'], d.Descuentos, d['A Entregar'], d.Debe]),
+      [],
+      ['TOTAL GENERAL', '', '', '', '', '', totalCierreGeneral.value, '']
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: wsData.length - 1, c: 7 } })
+    ws['!freeze'] = { xSplit: 0, ySplit: 5, topLeftCell: 'A6', state: 'frozen' }
+
+    const colorRed = { rgb: 'DC2626' }
+    const colorRedOscuro = { rgb: 'B91C1C' }
+    const colorRojo = { rgb: 'DC2626' }
+
+    ws['A1'].s = { font: { bold: true, sz: 14, color: { rgb: '1F2937' } } }
+    ws['A2'].s = { font: { sz: 12, color: { rgb: '4B5563' } } }
+    ws['A3'].s = { font: { sz: 10, color: { rgb: '6B7280' } } }
+
+    const headerRow = 4
+    for (let col = 0; col < 8; col++) {
+      const cell = XLSX.utils.encode_cell({ r: headerRow, c: col })
+      ws[cell].s = {
+        fill: { fgColor: colorRed, patternType: 'solid' },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        border: { top: { style: 'thin', color: colorRedOscuro }, bottom: { style: 'thin', color: colorRedOscuro }, left: { style: 'thin', color: colorRedOscuro }, right: { style: 'thin', color: colorRedOscuro } }
+      }
+    }
+
+    const dataStartRow = 5
+    const dataEndRow = dataStartRow + datosExportar.length - 1
+    for (let row = dataStartRow; row <= dataEndRow; row++) {
+      const idx = row - dataStartRow
+      const aEntregar = datosExportar[idx]?.['A Entregar'] ?? 0
+      const debe = datosExportar[idx]?.Debe ?? 0
+      for (let col = 0; col < 8; col++) {
+        const cell = XLSX.utils.encode_cell({ r: row, c: col })
+        if (!ws[cell]) continue
+        const isAEntregar = col === 6
+        const isDebe = col === 7
+        const color = isDebe && debe > 0 ? colorRojo : (isAEntregar ? { rgb: '047857' } : { rgb: '1F2937' })
+        ws[cell].s = {
+          fill: { fgColor: { rgb: 'FFFFFF' }, patternType: 'solid' },
+          font: { sz: 10, bold: col === 0, color },
+          alignment: { horizontal: col >= 2 ? 'right' : 'left', vertical: 'center' },
+          border: { top: { style: 'thin', color: { rgb: 'E5E7EB' } }, bottom: { style: 'thin', color: { rgb: 'E5E7EB' } }, left: { style: 'thin', color: { rgb: 'E5E7EB' } }, right: { style: 'thin', color: { rgb: 'E5E7EB' } } }
+        }
+        if (col >= 2) ws[cell].z = (isAEntregar || isDebe) ? '#,##0' : '#,##0'
+      }
+    }
+
+    const totalRow = dataEndRow + 2
+    const cellTotalLabel = XLSX.utils.encode_cell({ r: totalRow, c: 0 })
+    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 6 })
+    ws[cellTotalLabel].s = {
+      fill: { fgColor: { rgb: 'FEE2E2' }, patternType: 'solid' },
+      font: { bold: true, sz: 12, color: { rgb: '991B1B' } },
+      alignment: { horizontal: 'left', vertical: 'center' },
+      border: { top: { style: 'medium', color: colorRedOscuro }, bottom: { style: 'medium', color: colorRedOscuro }, left: { style: 'thin', color: colorRedOscuro }, right: { style: 'thin', color: colorRedOscuro } }
+    }
+    ws[cellTotalVal].s = {
+      fill: { fgColor: { rgb: 'FEE2E2' }, patternType: 'solid' },
+      font: { bold: true, sz: 12, color: { rgb: '991B1B' } },
+      alignment: { horizontal: 'right', vertical: 'center' },
+      border: { top: { style: 'medium', color: colorRedOscuro }, bottom: { style: 'medium', color: colorRedOscuro }, left: { style: 'thin', color: colorRedOscuro }, right: { style: 'thin', color: colorRedOscuro } }
+    }
+    ws[cellTotalVal].z = '#,##0;[Red]-#,##0'
+
+    ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Cierre de Natillera')
+    const nombreArchivo = `Cierre_Natillera_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
+    XLSX.writeFile(wb, nombreArchivo)
+    alert('Exportado a Excel correctamente')
+  } catch (e) {
+    console.error('Error exportando cierre a Excel:', e)
+    alert('Error al exportar: ' + (e.message || 'Error desconocido'))
+  } finally {
+    exportandoCierreExcel.value = false
+  }
+}
+
 const esMobile = computed(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 
 function textoComprobanteSocio(dato) {
   const nombre = dato.socio?.nombre || 'Socio'
   const ahorro = formatMoney(dato.ahorro)
   const utilidades = formatMoney(dato.utilidadesTotal)
-  const total = formatMoney(dato.totalFinal)
+  const totalFinal = parseFloat(dato.totalFinal) || 0
+  const total = formatMoney(totalFinal >= 0 ? totalFinal : 0)
+  const debeTexto = totalFinal < 0 ? `\n⚠️ *DEBE: $${formatMoney(-totalFinal)}*` : ''
   
   let utilidadesDetalle = ''
   if (dato.utilidadesPorConcepto) {
@@ -5861,7 +6084,7 @@ function textoComprobanteSocio(dato) {
     }
   }
 
-  return `*Comprobante de cierre*\n👤 Participante: ${nombre}\n\n💰 Ahorro acumulado: $${ahorro}\n📈 Ganancias: $${utilidades}${utilidadesDetalle}${descuentosDetalle}\n\n💵 *TOTAL A ENTREGAR: $${total}*`
+  return `*Comprobante de cierre*\n👤 Participante: ${nombre}\n\n💰 Ahorro acumulado: $${ahorro}\n📈 Ganancias: $${utilidades}${utilidadesDetalle}${descuentosDetalle}\n\n💵 *TOTAL A ENTREGAR: $${total}*${debeTexto}`
 }
 
 function enlaceWhatsAppComprobante(dato) {
@@ -5979,9 +6202,17 @@ function htmlComprobanteSocio(dato, nombreNatillera) {
           <tr>
             <td style="border: 1px solid #d1d5db; padding: 8px 10px; font-weight: 700; background-color: #e5e7eb; color: #000000; text-transform: uppercase;">Total a entregar</td>
             <td style="border: 1px solid #d1d5db; padding: 8px 10px; text-align: right; background-color: #e5e7eb; color: #000000; font-weight: 800; font-size: 16px;" colspan="3">
-              $${formatMoney(dato.totalFinal)}
+              $${formatMoney((dato.totalFinal || 0) >= 0 ? (dato.totalFinal || 0) : 0)}
             </td>
           </tr>
+          ${(dato.totalFinal || 0) < 0 ? `
+          <tr>
+            <td style="border: 1px solid #d1d5db; padding: 8px 10px; font-weight: 700; background-color: #fef2f2; color: #991b1b; text-transform: uppercase;">Debe</td>
+            <td style="border: 1px solid #d1d5db; padding: 8px 10px; text-align: right; background-color: #fef2f2; color: #991b1b; font-weight: 800; font-size: 16px;" colspan="3">
+              $${formatMoney(-(dato.totalFinal || 0))}
+            </td>
+          </tr>
+          ` : ''}
         </tbody>
       </table>
     </div>

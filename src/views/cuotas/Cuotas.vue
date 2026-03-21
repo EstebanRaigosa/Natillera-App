@@ -3031,8 +3031,14 @@
               </div>
               <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-gray-200">
                 <span class="text-gray-700">Total a pagar</span>
-                <span class="text-natillera-700">${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada))) }}</span>
+                <span class="text-natillera-700">${{ formatMoney(getTotalMostrarResumenModalPago()) }}</span>
               </div>
+              <p
+                v-if="formPago.tipo_pago === 'transferencia'"
+                class="text-[11px] text-blue-700/90 -mt-1"
+              >
+                Incluye 4×1000 sugerido; puedes consignar solo la obligación sin GMF.
+              </p>
             </div>
 
             <!-- Total a pagar, Pagado anteriormente y Total pendiente (solo cuando hay pago parcial) -->
@@ -3056,7 +3062,7 @@
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-gray-600">Total pendiente</p>
                   <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
-                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada))) }}
+                    ${{ formatMoney(getTotalPendienteMostrarModalPago()) }}
                   </p>
                 </div>
               </div>
@@ -3073,7 +3079,7 @@
                 <!-- Opción Efectivo -->
                 <button
                   type="button"
-                  @click="formPago.tipo_pago = 'efectivo'"
+                  @click="alCambiarTipoPagoModal('efectivo')"
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'efectivo'
@@ -3116,7 +3122,7 @@
                 <!-- Opción Transferencia -->
                 <button
                   type="button"
-                  @click="formPago.tipo_pago = 'transferencia'"
+                  @click="alCambiarTipoPagoModal('transferencia')"
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formPago.tipo_pago === 'transferencia'
@@ -3174,7 +3180,7 @@
                 </div>
                 <input 
                   ref="inputValorPagoRef"
-                  :value="formatearValorPago(formPago.valor)"
+                  :value="formatearValorPago(valorMostrarModalRegistroPago())"
                   @input="handleValorPagoInput($event)"
                   @focus="seleccionarValorPago"
                   @click="seleccionarValorPago"
@@ -3182,10 +3188,26 @@
                   type="text"
                   inputmode="decimal"
                   class="w-full pl-12 pr-4 py-3.5 text-lg font-semibold text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-natillera-500 focus:ring-2 focus:ring-natillera-200 transition-all outline-none"
-                  :placeholder="(getTotalActividadesSeleccionadas() > 0 || getTotalCuotasPrestamosSeleccionadas() > 0) ? 'Ingresa el valor total' : `Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`"
+                  :placeholder="(
+                    (getTotalActividadesSeleccionadas() > 0 || getTotalCuotasPrestamosSeleccionadas() > 0)
+                      ? (formPago.tipo_pago === 'transferencia' ? 'Total consignado (obligación + GMF opcional al final)' : 'Ingresa el valor total')
+                      : (formPago.tipo_pago === 'transferencia'
+                        ? `Máx consignar: ${formatMoney(getTotalObligacionNetaPagoActual() + calcularImpuesto4x1000(getTotalObligacionNetaPagoActual()))}`
+                        : `Máx: ${formatMoney(Math.max(0, getTotalAPagar(cuotaSeleccionada)))}`)
+                  )"
                   required
                 />
               </div>
+              <p
+                v-if="formPago.tipo_pago === 'transferencia' && (formPago.valor || 0) > 0"
+                class="mt-2 text-xs text-gray-600 space-y-0.5"
+              >
+                <span class="block">
+                  A obligaciones (cuota, sanción, actividades…): <span class="font-semibold text-gray-800">${{ formatMoney(distribuirBrutoTransferencia(formPago.valor || 0, getTotalObligacionNetaPagoActual()).valorAConceptos) }}</span>
+                  · GMF 4×1000 (opcional, último): <span class="font-semibold text-gray-800">${{ formatMoney(distribuirBrutoTransferencia(formPago.valor || 0, getTotalObligacionNetaPagoActual()).impuestoGmf) }}</span>
+                  · Total consignado: <span class="font-semibold text-gray-800">${{ formatMoney(formPago.valor || 0) }}</span>
+                </span>
+              </p>
             </div>
 
             <!-- Desplegable de Actividades Pendientes -->
@@ -3794,6 +3816,17 @@
             <span class="text-3xl font-bold text-natillera-700">${{ formatMoney(desglosePagoConfirmacion?.total || 0) }}</span>
           </div>
 
+          <div
+            v-if="desglosePagoConfirmacion?.tipoPago === 'transferencia' && (desglosePagoConfirmacion?.valorConsignadoTransferencia || 0) > 0"
+            class="rounded-lg border border-blue-200 bg-blue-50/90 px-3 py-2.5 text-sm text-blue-900"
+          >
+            <p class="font-semibold">Total a consignar por transferencia</p>
+            <p class="text-lg font-bold tabular-nums">${{ formatMoney(desglosePagoConfirmacion.valorConsignadoTransferencia) }}</p>
+            <p class="text-xs text-blue-800/90 mt-1">
+              El GMF 4×1000 se cobra al final; si lo pagas, aparece como concepto en el comprobante. Si solo consignas el valor de obligaciones, el pago puede quedar completo sin GMF.
+            </p>
+          </div>
+
           <!-- Pagado anteriormente (cuando ya hubo pagos parciales) -->
           <div 
             v-if="(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) > 0"
@@ -4190,6 +4223,17 @@
                     <p style="font-size: 13px; font-weight: 700; margin: 0; color: #1e40af;">${{ formatMoney(pagoRegistrado?.valorCuotasPrestamosPagado || 0) }}</p>
                   </div>
                 </template>
+                <!-- 4×1000 GMF: último en cobro; solo si hubo consignación del impuesto (transferencia) -->
+                <div
+                  v-if="(pagoRegistrado?.impuesto4x1000 || 0) > 0 && pagoRegistrado?.tipoPago === 'transferencia'"
+                  style="background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;"
+                >
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">🏦</span>
+                    <p style="color: #0c4a6e; font-size: 11px; margin: 0; font-weight: 600;">4×1000 (GMF)</p>
+                  </div>
+                  <p style="font-size: 13px; font-weight: 700; margin: 0; color: #0369a1;">${{ formatMoney(pagoRegistrado?.impuesto4x1000 || 0) }}</p>
+                </div>
               </div>
             </div>
 
@@ -7247,6 +7291,70 @@ function formatearValorPago(value) {
   return new Intl.NumberFormat('es-CO').format(numero)
 }
 
+/** GMF 4×1000 sobre el monto neto (Colombia). */
+function calcularImpuesto4x1000(neto) {
+  const n = Math.max(0, Math.floor(Number(neto) || 0))
+  if (n === 0) return 0
+  return Math.round((n * 4) / 1000)
+}
+
+/**
+ * Obligación neta total del modal (cuota + sanción + actividades + cuotas préstamo seleccionadas).
+ */
+function getTotalObligacionNetaPagoActual() {
+  if (!cuotaSeleccionada.value) return 0
+  return Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada.value))
+}
+
+/** Bruto sugerido al consignar por transferencia (obligación neta + tope 4×1000). */
+function getBrutoConsignacionSugeridoTransferencia(obligacionNeta) {
+  const O = Math.max(0, Math.floor(Number(obligacionNeta) || 0))
+  return O + calcularImpuesto4x1000(O)
+}
+
+/** Resumen del modal: en transferencia muestra consignación sugerida (incluye 4×1000); en efectivo, solo obligación neta. */
+function getTotalMostrarResumenModalPago() {
+  if (!cuotaSeleccionada.value) return 0
+  const O = Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada.value))
+  if (formPago.tipo_pago === 'transferencia') {
+    return getBrutoConsignacionSugeridoTransferencia(O)
+  }
+  return O
+}
+
+/** Pendiente mostrado en modal con pago parcial: en transferencia, consignación sugerida para cubrir lo pendiente. */
+function getTotalPendienteMostrarModalPago() {
+  if (!cuotaSeleccionada.value) return 0
+  const pendiente = Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada.value))
+  if (formPago.tipo_pago === 'transferencia') {
+    return getBrutoConsignacionSugeridoTransferencia(pendiente)
+  }
+  return pendiente
+}
+
+/**
+ * Transferencia: el bruto consignado cubre primero toda la obligación neta; el remanente (hasta el tope 4×1000 sobre lo aplicado a conceptos) es GMF.
+ * El GMF es opcional: si el bruto = obligación neta, pago completo sin GMF.
+ */
+function distribuirBrutoTransferencia(bruto, obligacionNeta) {
+  const B = Math.max(0, Math.floor(Number(bruto) || 0))
+  const O = Math.max(0, Math.floor(Number(obligacionNeta) || 0))
+  const valorAConceptos = Math.min(B, O)
+  const restante = B - valorAConceptos
+  const topeGmf = calcularImpuesto4x1000(valorAConceptos)
+  const impuestoGmf = Math.min(Math.max(0, restante), topeGmf)
+  return {
+    valorAConceptos,
+    impuestoGmf,
+    brutoConsignado: B
+  }
+}
+
+/** Valor mostrado en el input: bruto consignado en transferencia; neto en efectivo. */
+function valorMostrarModalRegistroPago() {
+  return formPago.valor || 0
+}
+
 // Manejar input del valor del pago
 function handleValorPagoInput(event) {
   const valor = event.target.value.replace(/\./g, '').replace(/[^\d]/g, '')
@@ -7256,7 +7364,12 @@ function handleValorPagoInput(event) {
     const numero = parseInt(valor, 10)
     if (!isNaN(numero) && numero >= 0) {
       const totalActividades = getTotalActividadesSeleccionadas()
-      if (totalActividades > 0) {
+      if (formPago.tipo_pago === 'transferencia') {
+        const O = getTotalObligacionNetaPagoActual()
+        const maxBruto = O + calcularImpuesto4x1000(O)
+        const bruto = totalActividades > 0 ? numero : Math.min(numero, maxBruto)
+        formPago.valor = bruto
+      } else if (totalActividades > 0) {
         formPago.valor = numero
       } else {
         const maxValor = getTotalAPagar(cuotaSeleccionada.value)
@@ -7266,9 +7379,29 @@ function handleValorPagoInput(event) {
   }
 }
 
-// Valor total del pago
+/** Monto neto que se aplica a sanción/actividades/préstamos/cuota (sin GMF). En transferencia, primero se satisface la obligación; el GMF es lo último. */
 function getValorPagoTotal() {
-  return formPago.valor || 0
+  if (!cuotaSeleccionada.value) return 0
+  if (formPago.tipo_pago !== 'transferencia') {
+    return formPago.valor || 0
+  }
+  const O = getTotalObligacionNetaPagoActual()
+  return distribuirBrutoTransferencia(formPago.valor || 0, O).valorAConceptos
+}
+
+function alCambiarTipoPagoModal(tipo) {
+  const prev = formPago.tipo_pago
+  if (prev === tipo) return
+  if (tipo === 'efectivo' && prev === 'transferencia') {
+    const O = getTotalObligacionNetaPagoActual()
+    formPago.valor = distribuirBrutoTransferencia(formPago.valor || 0, O).valorAConceptos
+  }
+  if (tipo === 'transferencia' && prev === 'efectivo') {
+    const O = getTotalObligacionNetaPagoActual()
+    const v = O <= 0 ? 0 : Math.min(formPago.valor || 0, O)
+    formPago.valor = getBrutoConsignacionSugeridoTransferencia(v)
+  }
+  formPago.tipo_pago = tipo
 }
 
 const id = props.id || route.params.id
@@ -9933,8 +10066,11 @@ function actualizarValorPagoConCuotasPrestamos() {
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
   
-  // Actualizar el valor del pago incluyendo todo
-  formPago.valor = totalCuota + totalActividades + totalCuotasPrestamos
+  // Actualizar el valor del pago incluyendo todo (transferencia: bruto sugerido con 4×1000)
+  const O = totalCuota + totalActividades + totalCuotasPrestamos
+  formPago.valor = formPago.tipo_pago === 'transferencia'
+    ? getBrutoConsignacionSugeridoTransferencia(O)
+    : O
 }
 
 // Función para obtener el total a pagar incluyendo actividades y cuotas de préstamos seleccionadas
@@ -9953,12 +10089,19 @@ function actualizarValorPagoConActividades() {
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
   
+  const O = totalCuota + totalActividades + totalCuotasPrestamos
   // Si hay actividades o cuotas de préstamos seleccionadas, actualizar el valor automáticamente
   if (totalActividades > 0 || totalCuotasPrestamos > 0) {
-    formPago.valor = totalCuota + totalActividades + totalCuotasPrestamos
+    formPago.valor = formPago.tipo_pago === 'transferencia'
+      ? getBrutoConsignacionSugeridoTransferencia(O)
+      : O
   } else {
-    // Si no hay actividades ni cuotas de préstamos, mantener el valor actual o el total de la cuota
-    if (formPago.valor > totalCuota) {
+    if (formPago.tipo_pago === 'transferencia') {
+      const maxBruto = getBrutoConsignacionSugeridoTransferencia(totalCuota)
+      if ((formPago.valor || 0) > maxBruto) {
+        formPago.valor = maxBruto
+      }
+    } else if (formPago.valor > totalCuota) {
       formPago.valor = totalCuota
     }
   }
@@ -11258,15 +11401,24 @@ function formatearFechaCorta(dateStr) {
 function mostrarConfirmacionPago() {
   if (!cuotaSeleccionada.value) return
 
-  const valorPagado = getValorPagoTotal()
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
   const sancion = getSancionCuota(cuotaSeleccionada.value)
   const valorCuota = cuotaSeleccionada.value.valor_cuota || 0
   const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
   const valorCuotaPendiente = valorCuota - valorPagadoAnterior
-  
-  // Calcular el desglose según el orden de pago
+  const totalAdeudado = sancion + totalActividades + totalCuotasPrestamos + valorCuotaPendiente
+
+  let valorPagado
+  let distTransferConfirm = null
+  if ((formPago.tipo_pago || 'efectivo') === 'transferencia') {
+    distTransferConfirm = distribuirBrutoTransferencia(formPago.valor || 0, totalAdeudado)
+    valorPagado = distTransferConfirm.valorAConceptos
+  } else {
+    valorPagado = formPago.valor || 0
+  }
+
+  // Calcular el desglose según el orden de pago (solo monto neto a obligaciones; GMF va al final y no afecta parcial/completo)
   let valorRestante = valorPagado
   let valorSancionPagada = 0
   let valorActividadesPagado = 0
@@ -11327,8 +11479,6 @@ function mostrarConfirmacionPago() {
       prestamo_id: cp.prestamo_id
     }))
 
-  // Total adeudado (todo lo que debería pagar para saldar la cuota)
-  const totalAdeudado = sancion + totalActividades + totalCuotasPrestamos + valorCuotaPendiente
   const esParcial = valorPagado < totalAdeudado
   const pendienteDespuesPago = esParcial ? totalAdeudado - valorPagado : 0
 
@@ -11338,9 +11488,13 @@ function mostrarConfirmacionPago() {
     (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0) +
     (getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada.value) || 0)
 
+  const esTransferencia = (formPago.tipo_pago || 'efectivo') === 'transferencia'
+  const impuesto4x1000Confirm = esTransferencia && distTransferConfirm ? distTransferConfirm.impuestoGmf : 0
+  const valorConsignadoTransferencia = esTransferencia && distTransferConfirm ? distTransferConfirm.brutoConsignado : 0
+
   // Preparar el desglose para mostrar en el modal
   desglosePagoConfirmacion.value = {
-    total: valorPagado,
+    total: esTransferencia && valorConsignadoTransferencia > 0 ? valorConsignadoTransferencia : valorPagado,
     cuota: valorCuotaPagado,
     sancion: valorSancionPagada,
     actividades: valorActividadesPagado,
@@ -11351,6 +11505,8 @@ function mostrarConfirmacionPago() {
     tipoPago: formPago.tipo_pago || 'efectivo',
     valorEfectivo: formPago.tipo_pago === 'efectivo' ? valorPagado : 0,
     valorTransferencia: formPago.tipo_pago === 'transferencia' ? valorPagado : 0,
+    impuesto4x1000: impuesto4x1000Confirm,
+    valorConsignadoTransferencia,
     esParcial,
     totalAdeudado,
     pendienteDespuesPago,
@@ -11376,19 +11532,33 @@ async function handleRegistrarPago() {
   // Activar la animación de registro de pago
   mostrandoAnimacionPago.value = true
 
-  const valorPagado = getValorPagoTotal()
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
   const sancion = getSancionCuota(cuotaSeleccionada.value)
   const valorCuota = cuotaSeleccionada.value.valor_cuota || 0
   const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
   const valorCuotaPendiente = valorCuota - valorPagadoAnterior
-  
+  const totalAdeudadoPago = sancion + totalActividades + totalCuotasPrestamos + valorCuotaPendiente
+
+  const esPagoTransferencia = (formPago.tipo_pago || 'efectivo') === 'transferencia'
+  let valorPagado
+  let impuesto4x1000Pago = 0
+  let valorConsignadoTransferenciaPago = 0
+  if (esPagoTransferencia) {
+    const dist = distribuirBrutoTransferencia(formPago.valor || 0, totalAdeudadoPago)
+    valorPagado = dist.valorAConceptos
+    impuesto4x1000Pago = dist.impuestoGmf
+    valorConsignadoTransferenciaPago = dist.brutoConsignado
+  } else {
+    valorPagado = formPago.valor || 0
+  }
+
   // IMPORTANTE: Orden de pago según requerimientos:
   // 1. Primero se paga la sanción
   // 2. Segundo se pagan las actividades
   // 3. Tercero se pagan las cuotas de préstamos
   // 4. Cuarto se paga la cuota
+  // (Transferencia: el GMF 4×1000 se liquida al final y no cuenta para parcial/completo de la obligación)
   
   let valorRestante = valorPagado
   let valorSancionPagada = 0
@@ -11453,7 +11623,7 @@ async function handleRegistrarPago() {
     null, // comprobante
     formPago.tipo_pago,
     totalActividades,
-    { valorEfectivo, valorTransferencia }
+    { valorEfectivo, valorTransferencia, impuesto4x1000: impuesto4x1000Pago }
   )
   
   // Obtener información de actividades pagadas antes de registrar
@@ -11536,8 +11706,9 @@ async function handleRegistrarPago() {
     const valorActividadesPagadoFinal = result.valorActividadesPagado || valorActividadesPagado
     const valorCuotasPrestamosPagadoFinal = valorCuotasPrestamosPagado
     
-    // Total pagado en ESTA transacción (para mostrar en comprobante)
+    // Total pagado en ESTA transacción (conceptos; comprobante suma GMF aparte si aplica)
     const valorPagadoEstaTransaccion = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0) + (valorCuotasPrestamosPagadoFinal || 0)
+    const valorPagadoEstaTransaccionConGmf = valorPagadoEstaTransaccion + (esPagoTransferencia ? impuesto4x1000Pago : 0)
     
     // Total pagado ACUMULADO (cuota actualizada + actividades pagadas antes, ya que están en socios_actividad)
     const actividadesPagadasAcumulado = (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0) + (valorActividadesPagadoFinal || 0)
@@ -11568,7 +11739,7 @@ async function handleRegistrarPago() {
     // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, no mostrar sanción en el comprobante
     // (tieneNoCalcularMulta ya está declarado arriba)
     const actividadesPagadasAntesComprobante = getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0
-    const valorParaComprobante = seCompletoPago ? valorPagadoAcumulado : valorPagadoEstaTransaccion
+    const valorParaComprobante = seCompletoPago ? valorPagadoAcumulado : valorPagadoEstaTransaccionConGmf
     const valorCuotaParaComprobante = seCompletoPago ? valorCuota : valorCuotaPagada
     const valorSancionParaComprobante = tieneNoCalcularMulta ? 0 : (seCompletoPago ? sancionTotal : valorSancionPagadaCalculada)
     // Al completar parcial: incluir actividades del 1er pago + las pagadas en este (para que aparezcan en conceptos)
@@ -11613,7 +11784,7 @@ async function handleRegistrarPago() {
     try {
       const { data: historialRows } = await supabase
         .from('historial_pagos_cuota')
-        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo')
+        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000')
         .eq('cuota_id', cuotaSeleccionada.value.id)
         .order('fecha_pago', { ascending: true })
       if (historialRows && historialRows.length > 0) {
@@ -11623,6 +11794,7 @@ async function handleRegistrarPago() {
           if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
           if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
           if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
+          if ((parseFloat(row.impuesto_4x1000) || 0) > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: parseFloat(row.impuesto_4x1000) || 0 })
           const formaPago = (row.forma_pago || 'efectivo').toLowerCase()
           const formaPagoTexto = formaPago === 'transferencia' ? 'Transferencia' : formaPago === 'tarjeta' ? 'Tarjeta' : 'Efectivo'
           const fecha = row.fecha_pago
@@ -11664,7 +11836,9 @@ async function handleRegistrarPago() {
       tieneSancion: !tieneNoCalcularMulta && sancionTotal > 0, // Indica si hay sanción (verifica no_calcular_multa)
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       valorEfectivo, // Total de esta transacción en efectivo
-      valorTransferencia, // Total de esta transacción en transferencia
+      valorTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : 0, // Bruto consignado (incluye GMF si lo pagó)
+      impuesto4x1000: esPagoTransferencia ? impuesto4x1000Pago : 0,
+      valorConsignadoTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : null,
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
@@ -12253,6 +12427,31 @@ function generarImagenComprobante() {
           
           actividadX += actividadWidth + actividadSpacing
         })
+      }
+
+      // GMF 4×1000 (último en cobro; opcional; solo transferencia)
+      const impuestoGmfCanvas = parseFloat(pagoRegistrado.value?.impuesto4x1000) || 0
+      if (impuestoGmfCanvas > 0 && pagoRegistrado.value?.tipoPago === 'transferencia') {
+        if (actividadX + actividadWidth > cardInnerX + cardInnerWidth - 10) {
+          actividadX = cardInnerX + 10
+          actividadY += actividadHeight + actividadSpacing
+        }
+        ctx.fillStyle = '#f0f9ff'
+        ctx.beginPath()
+        ctx.roundRect(actividadX, actividadY, actividadWidth, actividadHeight, 8)
+        ctx.fill()
+        ctx.strokeStyle = '#7dd3fc'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.roundRect(actividadX, actividadY, actividadWidth, actividadHeight, 8)
+        ctx.stroke()
+        ctx.fillStyle = '#0c4a6e'
+        ctx.font = 'bold 10px Arial'
+        ctx.textAlign = 'left'
+        ctx.fillText('4×1000 (GMF)', actividadX + 8, actividadY + 14)
+        ctx.font = 'bold 12px Arial'
+        ctx.fillText('$' + formatMoney(impuestoGmfCanvas), actividadX + 8, actividadY + 28)
+        actividadX += actividadWidth + actividadSpacing
       }
       
       // Ajustar altura de la sección si hay múltiples filas
@@ -12910,7 +13109,7 @@ async function reenviarComprobante(cuota) {
   // Lanzar historial en paralelo para reducir tiempo total (se espera más abajo)
   const historialPromise = supabase
     .from('historial_pagos_cuota')
-    .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo')
+    .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000')
     .eq('cuota_id', cuota.id)
     .order('fecha_pago', { ascending: true })
 
@@ -13109,7 +13308,7 @@ async function reenviarComprobante(cuota) {
     }
   }
   
-  // Calcular totales considerando sanciones, actividades y cuotas de préstamos pagadas
+  // Calcular totales considerando sanciones, actividades y cuotas de préstamos pagadas (obligación; GMF aparte)
   const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades + totalCuotasPrestamos
   const totalAPagar = valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos
   const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
@@ -13117,6 +13316,7 @@ async function reenviarComprobante(cuota) {
   
   // Historial de pagos para comprobante reenviado: usar siempre historial_pagos_cuota (ya lanzado en paralelo)
   let historialPagosReenvio = []
+  let totalGmfHistorialReenvio = 0
   try {
     const { data: historialRows, error: historialError } = await historialPromise
     // Log para depuración: registros encontrados en historial_pagos_cuota
@@ -13133,12 +13333,14 @@ async function reenviarComprobante(cuota) {
       console.warn('[Reenvío comprobante] 0 filas para cuota_id:', cuota.id, '- Si en Supabase sí ves filas para este cuota_id, aplica la migración fix_historial_pagos_cuota_rls.sql (RLS).')
     }
     if (historialRows && historialRows.length > 0) {
+      totalGmfHistorialReenvio = historialRows.reduce((s, r) => s + (parseFloat(r.impuesto_4x1000) || 0), 0)
       historialPagosReenvio = historialRows.map((row, idx) => {
         const conceptos = []
         if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
         if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
         if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
         if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
+        if ((parseFloat(row.impuesto_4x1000) || 0) > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: parseFloat(row.impuesto_4x1000) || 0 })
         const formaPago = (row.forma_pago || 'efectivo').toLowerCase()
         const formaPagoTexto = formaPago === 'transferencia' ? 'Transferencia' : formaPago === 'tarjeta' ? 'Tarjeta' : 'Efectivo'
         const fecha = row.fecha_pago
@@ -13166,7 +13368,7 @@ async function reenviarComprobante(cuota) {
     cuotaId: cuota.id, // ID de la cuota para auditoría
     socioNombre: cuota.socio_natillera?.socio?.nombre,
     socioTelefono: cuota.socio_natillera?.socio?.telefono,
-    valor: valorPagadoTotal, // Total pagado (cuota + sanciones + actividades)
+    valor: valorPagadoTotal + totalGmfHistorialReenvio, // Obligación + GMF consignado (histórico)
     valorCuota,
     valorPagadoTotal,
     valorPendiente,
@@ -13181,6 +13383,7 @@ async function reenviarComprobante(cuota) {
     tipoPago: cuota.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
     valorEfectivo,
     valorTransferencia,
+    impuesto4x1000: totalGmfHistorialReenvio,
     fecha: cuota.fecha_pago 
       ? (() => {
           const d = new Date(cuota.fecha_pago)

@@ -303,57 +303,86 @@
       </div>
     </div>
 
-    <!-- Modal Nuevo Préstamo -->
+    <!-- Modal Nuevo Préstamo (paso a paso) -->
     <ModalWrapper
       :show="!!modalNuevoPrestamo"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
+      card-class="relative w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
       card-max-width="32rem"
-      @close="modalNuevoPrestamo = false"
+      @close="cerrarModalNuevoPrestamo()"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <!-- Header con botón atrás y título -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-3 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <CurrencyDollarIcon class="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Nuevo Préstamo
-                </h3>
-                <p class="text-white/90 text-xs">Registra un nuevo préstamo para un socio</p>
-              </div>
+          <div class="relative z-10 flex items-center gap-3">
+            <button
+              v-if="pasoNuevoPrestamo > 0 && !prestamoRecienCreado"
+              type="button"
+              @click="pasoNuevoPrestamo--"
+              class="p-2 -ml-2 rounded-xl hover:bg-white/20 transition-colors"
+              aria-label="Atrás"
+            >
+              <ArrowLeftIcon class="w-5 h-5" />
+            </button>
+            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
+              <CurrencyDollarIcon class="w-5 h-5 text-white" />
+            </div>
+            <div class="min-w-0">
+              <h3 class="text-lg sm:text-xl font-display font-bold">Crear Préstamo</h3>
+              <p class="text-white/90 text-xs truncate">{{ ['Monto y socio', 'Plazo e interés', 'Resumen'][pasoNuevoPrestamo] }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Contenido con scroll (min-h-0 evita que el flex se desmaquete al cambiar opciones) -->
-        <div ref="modalNuevoPrestamoScrollRef" class="flex-1 min-h-0 overflow-y-auto">
-          <form @submit.prevent="handleCrearPrestamo" class="p-4 sm:p-6 space-y-4">
+        <!-- Barra de progreso paso a paso -->
+        <div class="px-3 sm:px-5 pt-3 sm:pt-4 pb-2 sm:pb-3 flex-shrink-0 bg-white border-b border-gray-100">
+          <div class="flex gap-0.5 sm:gap-1">
+            <template v-for="(label, idx) in ['Monto', 'Plazo', 'Resumen']" :key="idx">
+              <div class="flex-1 flex flex-col items-center min-w-0">
+                <div
+                  :class="[
+                    'h-1 sm:h-1.5 w-full rounded-full transition-all duration-300',
+                    idx <= pasoNuevoPrestamo ? 'bg-emerald-500' : 'bg-gray-100'
+                  ]"
+                ></div>
+                <span
+                  :class="[
+                    'text-[10px] sm:text-[11px] font-medium mt-1.5 sm:mt-2 truncate w-full text-center',
+                    idx <= pasoNuevoPrestamo ? 'text-gray-800' : 'text-gray-400'
+                  ]"
+                >{{ label }}</span>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Contenido por pasos -->
+        <div ref="modalNuevoPrestamoScrollRef" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/50">
+          <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="p-4 sm:p-6">
+          <!-- Paso 0: Monto y socio -->
+          <div v-show="pasoNuevoPrestamo === 0" class="space-y-4 sm:space-y-5">
           <!-- Selector de Socio -->
           <div class="relative selector-socio-container">
-            <label class="label mb-2">Socio *</label>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Socio</label>
             <div class="relative">
               <button
                 type="button"
                 @click="mostrarSelectorSocio = !mostrarSelectorSocio"
                 :class="[
-                  'w-full flex items-center gap-3 px-4 py-3.5 bg-white border-2 rounded-xl transition-all',
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200 bg-white',
                   formPrestamo.socio_natillera_id 
-                    ? 'border-natillera-300 hover:border-natillera-400' 
-                    : 'border-gray-200 hover:border-gray-300',
-                  mostrarSelectorSocio ? 'border-natillera-500 shadow-lg' : ''
+                    ? 'border-emerald-300 text-gray-800' 
+                    : 'border-gray-200 text-gray-500 hover:border-gray-300',
+                  mostrarSelectorSocio ? 'border-emerald-400 ring-2 ring-emerald-500/20' : ''
                 ]"
               >
                 <div v-if="socioSeleccionado" class="flex items-center gap-3 flex-1 min-w-0">
                   <img 
                     :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)" 
                     :alt="socioSeleccionado.socio?.nombre"
-                    class="w-10 h-10 rounded-xl border-2 border-natillera-200 flex-shrink-0 object-cover"
+                    class="w-10 h-10 rounded-lg border border-gray-200 flex-shrink-0 object-cover"
                   />
                   <div class="flex-1 min-w-0 text-left">
                     <p class="font-semibold text-gray-800 truncate">{{ socioSeleccionado.socio?.nombre }}</p>
@@ -361,7 +390,7 @@
                   </div>
                 </div>
                 <div v-else class="flex items-center gap-3 flex-1 text-gray-500">
-                  <div class="w-10 h-10 rounded-xl bg-gray-100 border-2 border-gray-200 flex items-center justify-center flex-shrink-0">
+                  <div class="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
                     <UserIcon class="w-5 h-5 text-gray-400" />
                   </div>
                   <span>Selecciona un socio...</span>
@@ -378,32 +407,30 @@
               <div 
                 v-if="mostrarSelectorSocio"
                 @click.stop
-                class="absolute z-50 w-full mt-2 bg-white border-2 border-natillera-200 rounded-xl shadow-2xl max-h-80 overflow-hidden"
+                class="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-80 overflow-hidden"
               >
-                <!-- Búsqueda -->
-                <div class="p-3 border-b border-gray-200 sticky top-0 bg-white">
+                <div class="p-2.5 border-b border-gray-100 sticky top-0 bg-white">
                   <input
                     v-model="busquedaSocio"
                     type="text"
                     placeholder="Buscar socio..."
-                    class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-colors"
                     @click.stop
                   />
                 </div>
-                <!-- Lista de socios -->
                 <div class="overflow-y-auto max-h-64">
                   <button
                     v-for="socio in sociosFiltrados"
                     :key="socio.id"
                     type="button"
                     @click="seleccionarSocio(socio)"
-                    class="w-full flex items-center gap-3 px-4 py-3 hover:bg-natillera-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
-                    :class="formPrestamo.socio_natillera_id === socio.id ? 'bg-natillera-50' : ''"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-50 last:border-b-0"
+                    :class="formPrestamo.socio_natillera_id === socio.id ? 'bg-emerald-50/80' : ''"
                   >
                     <img 
                       :src="getAvatarUrl(socio.socio?.nombre || socio.id, socio.socio?.avatar_seed, socio.socio?.avatar_style)" 
                       :alt="socio.socio?.nombre"
-                      class="w-10 h-10 rounded-xl border-2 border-natillera-200 flex-shrink-0 object-cover"
+                      class="w-9 h-9 rounded-lg border border-gray-200 flex-shrink-0 object-cover"
                     />
                     <div class="flex-1 min-w-0">
                       <p class="font-semibold text-gray-800 truncate">{{ socio.socio?.nombre }}</p>
@@ -411,7 +438,7 @@
                       <p v-else-if="socio.socio?.email" class="text-xs text-gray-500 truncate">{{ socio.socio.email }}</p>
                     </div>
                     <div v-if="formPrestamo.socio_natillera_id === socio.id" class="flex-shrink-0">
-                      <div class="w-5 h-5 bg-natillera-500 rounded-full flex items-center justify-center">
+                      <div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
                         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                         </svg>
@@ -428,118 +455,62 @@
 
           <!-- Periodicidad de pago -->
           <div>
-            <label class="label mb-2">Periodicidad de pago *</label>
-            <div class="grid grid-cols-2 gap-3">
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Periodicidad</label>
+            <div class="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 @click="formPrestamo.periodicidad = 'mensual'"
                 :class="[
-                  'relative p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                  'p-3 rounded-xl border text-left transition-all duration-200',
                   formPrestamo.periodicidad === 'mensual'
-                    ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20 ring-2 ring-natillera-200'
-                    : 'border-gray-200 bg-white hover:border-natillera-300 hover:bg-gray-50'
+                    ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/80'
                 ]"
               >
-                <div class="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                  <div 
-                    :class="[
-                      'w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                      formPrestamo.periodicidad === 'mensual'
-                        ? 'bg-gradient-to-br from-natillera-500 to-emerald-600 shadow-lg shadow-natillera-500/30'
-                        : 'bg-gray-100 border-2 border-gray-200'
-                    ]"
-                  >
-                    <span class="text-lg sm:text-xl">📅</span>
+                <div class="flex items-center gap-2">
+                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'mensual' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500']">
+                    <CalendarDaysIcon class="w-5 h-5" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <span 
-                      :class="[
-                        'font-bold text-xs sm:text-sm block',
-                        formPrestamo.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'
-                      ]"
-                    >
-                      Mensual
-                    </span>
+                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'mensual' ? 'text-emerald-800' : 'text-gray-700']">Mensual</span>
+                    <span class="text-xs text-gray-500">Una cuota por mes</span>
                   </div>
-                  <!-- Indicador de selección - mejorado para móvil -->
-                  <div 
-                    v-if="formPrestamo.periodicidad === 'mensual'"
-                    class="w-4 h-4 sm:w-5 sm:h-5 bg-natillera-500 rounded-full flex items-center justify-center flex-shrink-0 ml-auto"
-                  >
-                    <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                  <div v-if="formPrestamo.periodicidad === 'mensual'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                   </div>
                 </div>
-                <p 
-                  :class="[
-                    'text-xs',
-                    formPrestamo.periodicidad === 'mensual' ? 'text-natillera-600' : 'text-gray-500'
-                  ]"
-                >
-                  Una cuota por mes
-                </p>
               </button>
               <button
                 type="button"
                 @click="formPrestamo.periodicidad = 'quincenal'"
                 :class="[
-                  'relative p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 text-left',
+                  'p-3 rounded-xl border text-left transition-all duration-200',
                   formPrestamo.periodicidad === 'quincenal'
-                    ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-lg shadow-purple-500/20 ring-2 ring-purple-200'
-                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-gray-50'
+                    ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/80'
                 ]"
               >
-                <div class="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
-                  <div 
-                    :class="[
-                      'w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                      formPrestamo.periodicidad === 'quincenal'
-                        ? 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/30'
-                        : 'bg-gray-100 border-2 border-gray-200'
-                    ]"
-                  >
-                    <span class="text-lg sm:text-xl">🗓️</span>
+                <div class="flex items-center gap-2">
+                  <div :class="['w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.periodicidad === 'quincenal' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500']">
+                    <ClockIcon class="w-5 h-5" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <span 
-                      :class="[
-                        'font-bold text-xs sm:text-sm block',
-                        formPrestamo.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'
-                      ]"
-                    >
-                      Quincenal
-                    </span>
+                    <span :class="['font-semibold text-sm block', formPrestamo.periodicidad === 'quincenal' ? 'text-emerald-800' : 'text-gray-700']">Quincenal</span>
+                    <span class="text-xs text-gray-500">Dos cuotas por mes</span>
                   </div>
-                  <!-- Indicador de selección - mejorado para móvil -->
-                  <div 
-                    v-if="formPrestamo.periodicidad === 'quincenal'"
-                    class="w-4 h-4 sm:w-5 sm:h-5 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 ml-auto"
-                  >
-                    <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                  <div v-if="formPrestamo.periodicidad === 'quincenal'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                   </div>
                 </div>
-                <p 
-                  :class="[
-                    'text-xs',
-                    formPrestamo.periodicidad === 'quincenal' ? 'text-purple-600' : 'text-gray-500'
-                  ]"
-                >
-                  Dos cuotas por mes
-                </p>
               </button>
             </div>
           </div>
 
           <!-- Monto del préstamo -->
           <div>
-            <label class="label mb-2">Monto del préstamo *</label>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Monto del préstamo</label>
             <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg z-10">
-                $
-              </div>
+              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-lg z-10">$</div>
               <input 
                 :value="montoFormateado"
                 @input="actualizarMonto"
@@ -547,156 +518,64 @@
                 @click="$event.target.select()"
                 type="text" 
                 inputmode="numeric"
-                class="input-field pl-10 text-xl font-semibold"
+                class="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-lg font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
                 placeholder="100.000"
                 required
               />
             </div>
-            <p v-if="formPrestamo.monto >= 10000" class="mt-2 text-sm text-gray-600">
-              <span class="font-semibold text-natillera-600">${{ formatMoney(formPrestamo.monto) }}</span> pesos colombianos
+            <p v-if="formPrestamo.monto >= 10000" class="mt-1.5 text-sm text-gray-500">
+              <span class="font-medium text-emerald-600">${{ formatMoney(formPrestamo.monto) }}</span> pesos colombianos
             </p>
-            <p v-else-if="formPrestamo.monto > 0" class="mt-2 text-sm text-amber-600">
-              El monto mínimo es ${{ formatMoney(10000) }}
+            <p v-else-if="formPrestamo.monto > 0" class="mt-1.5 text-sm text-amber-600">
+              Monto mínimo ${{ formatMoney(10000) }}
             </p>
           </div>
+          </div>
 
+          <!-- Paso 1: Plazo e interés -->
+          <div v-show="pasoNuevoPrestamo === 1" class="space-y-4 sm:space-y-5">
           <!-- Tipo de interés -->
           <div>
-            <label class="label mb-2">Tipo de interés *</label>
-            <div class="grid grid-cols-2 gap-3">
-              <!-- Radio: Interés Simple -->
-              <label 
-                :class="[
-                  'relative flex flex-row items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                  formPrestamo.tipo_interes === 'simple'
-                    ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                    : 'border-gray-200 bg-white hover:border-natillera-300 hover:bg-gray-50'
-                ]"
-              >
-                <input 
-                  type="radio" 
-                  v-model="formPrestamo.tipo_interes" 
-                  value="simple"
-                  class="sr-only"
-                  required
-                />
-                <div 
-                  :class="[
-                    'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                    formPrestamo.tipo_interes === 'simple'
-                      ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30'
-                      : 'bg-gray-100 border-2 border-gray-200'
-                  ]"
-                >
-                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Tipo de interés</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'simple' ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20' : 'border-gray-200 bg-white hover:border-gray-300']">
+                <input type="radio" v-model="formPrestamo.tipo_interes" value="simple" class="sr-only" required />
+                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'simple' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400']">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <span 
-                    :class="[
-                      'font-bold text-xs block',
-                      formPrestamo.tipo_interes === 'simple' ? 'text-natillera-700' : 'text-gray-700'
-                    ]"
-                  >
-                    Interés Simple
-                  </span>
-                  <span 
-                    :class="[
-                      'text-xs block',
-                      formPrestamo.tipo_interes === 'simple' ? 'text-natillera-600' : 'text-gray-500'
-                    ]"
-                  >
-                    Sobre monto inicial
-                  </span>
+                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'simple' ? 'text-emerald-800' : 'text-gray-700']">Simple</span>
+                  <span class="text-xs text-gray-500">Sobre monto inicial</span>
                 </div>
-                <!-- Indicador de selección -->
-                <div 
-                  v-if="formPrestamo.tipo_interes === 'simple'"
-                  class="w-4 h-4 bg-natillera-500 rounded-full flex items-center justify-center flex-shrink-0"
-                >
-                  <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                  </svg>
+                <div v-if="formPrestamo.tipo_interes === 'simple'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </div>
               </label>
-
-              <!-- Radio: Interés Compuesto -->
-              <label 
-                :class="[
-                  'relative flex flex-row items-center gap-2 p-2 rounded-xl border-2 cursor-pointer transition-all duration-200',
-                  formPrestamo.tipo_interes === 'compuesto'
-                    ? 'border-natillera-500 bg-gradient-to-br from-natillera-50 to-emerald-50 shadow-lg shadow-natillera-500/20'
-                    : 'border-gray-200 bg-white hover:border-natillera-300 hover:bg-gray-50'
-                ]"
-              >
-                <input 
-                  type="radio" 
-                  v-model="formPrestamo.tipo_interes" 
-                  value="compuesto"
-                  class="sr-only"
-                  required
-                />
-                <div 
-                  :class="[
-                    'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200',
-                    formPrestamo.tipo_interes === 'compuesto'
-                      ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/30'
-                      : 'bg-gray-100 border-2 border-gray-200'
-                  ]"
-                >
-                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
+              <label :class="['flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all duration-200', formPrestamo.tipo_interes === 'compuesto' ? 'border-emerald-400 bg-emerald-50/80 ring-1 ring-emerald-500/20' : 'border-gray-200 bg-white hover:border-gray-300']">
+                <input type="radio" v-model="formPrestamo.tipo_interes" value="compuesto" class="sr-only" required />
+                <div :class="['w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0', formPrestamo.tipo_interes === 'compuesto' ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400']">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <span 
-                    :class="[
-                      'font-bold text-xs block',
-                      formPrestamo.tipo_interes === 'compuesto' ? 'text-natillera-700' : 'text-gray-700'
-                    ]"
-                  >
-                    Interés Compuesto
-                  </span>
-                  <span 
-                    :class="[
-                      'text-xs block',
-                      formPrestamo.tipo_interes === 'compuesto' ? 'text-natillera-600' : 'text-gray-500'
-                    ]"
-                  >
-                    Se acumula mensualmente
-                  </span>
+                  <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'compuesto' ? 'text-emerald-800' : 'text-gray-700']">Compuesto</span>
+                  <span class="text-xs text-gray-500">Se acumula por periodo</span>
                 </div>
-                <!-- Indicador de selección -->
-                <div 
-                  v-if="formPrestamo.tipo_interes === 'compuesto'"
-                  class="w-4 h-4 bg-natillera-500 rounded-full flex items-center justify-center flex-shrink-0"
-                >
-                  <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                  </svg>
+                <div v-if="formPrestamo.tipo_interes === 'compuesto'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </div>
               </label>
             </div>
-            <p class="mt-2 text-xs text-gray-500 text-center">
-              <span v-if="formPrestamo.tipo_interes === 'simple'">
-                💡 El interés se calcula sobre el monto inicial solamente
-              </span>
-              <span v-else>
-                💡 El interés se acumula {{ formPrestamo.periodicidad === 'quincenal' ? 'quincenalmente' : 'mensualmente' }} sobre el capital + intereses
-              </span>
-            </p>
           </div>
 
           <!-- Número de cuotas e Interés -->
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="label mb-2">Número de cuotas *</label>
+              <label class="block text-sm font-medium text-gray-600 mb-1.5">Nº de cuotas</label>
               <input 
                 v-model.number="formPrestamo.numero_cuotas"
                 type="number" 
-                class="input-field text-center text-lg font-semibold"
-                placeholder="1"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+                placeholder="12"
                 min="1"
                 max="36"
                 @focus="$event.target.select()"
@@ -705,11 +584,11 @@
               />
             </div>
             <div>
-              <label class="label mb-2">Interés mensual (%) *</label>
+              <label class="block text-sm font-medium text-gray-600 mb-1.5">Tasa % (mensual)</label>
               <input 
                 v-model.number="formPrestamo.interes"
                 type="number" 
-                class="input-field text-center text-lg font-semibold"
+                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
                 placeholder="2"
                 min="0"
                 max="100"
@@ -723,183 +602,174 @@
 
           <!-- Fecha de pago (primera cuota) -->
           <div>
-            <label class="label mb-2 flex items-center gap-2">
-              <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Fecha de pago *</span>
-            </label>
-            <div class="relative">
-              <DateInput
-                v-model="formPrestamo.fecha_pago"
-                placeholder="dd/MM/yyyy"
-                input-class="text-base font-semibold"
-                :required="true"
-              />
-            </div>
-            <p class="mt-2 text-xs text-gray-500 flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-natillera-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              <span>Esta será la fecha de la primera cuota. Las siguientes cuotas se generarán {{ formPrestamo.periodicidad === 'quincenal' ? 'cada 15 días' : 'cada mes' }}</span>
-            </p>
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Primera cuota</label>
+            <DateInput
+              v-model="formPrestamo.fecha_pago"
+              placeholder="dd/MM/yyyy"
+              input-class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
+              :required="true"
+            />
+            <p class="mt-1 text-xs text-gray-500">Siguientes cuotas {{ formPrestamo.periodicidad === 'quincenal' ? 'cada 15 días' : 'cada mes' }}.</p>
           </div>
 
-          <!-- Medio de entrega del préstamo (botones en lugar de radio para evitar scroll/focus raro) -->
+          <!-- Medio de entrega -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Medio de entrega del préstamo</label>
-            <div class="flex gap-3">
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Medio de entrega</label>
+            <div class="flex gap-2">
               <button
                 type="button"
                 @click="formPrestamo.medio_entrega = 'efectivo'"
-                class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors select-none"
-                :class="formPrestamo.medio_entrega === 'efectivo' ? 'border-natillera-500 bg-natillera-50 text-natillera-800' : 'border-gray-200 bg-white hover:border-gray-300'"
-              >
-                <span class="font-medium">Efectivo</span>
-              </button>
+                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'efectivo' ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300']"
+              >Efectivo</button>
               <button
                 type="button"
                 @click="formPrestamo.medio_entrega = 'transferencia'"
-                class="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-colors select-none"
-                :class="formPrestamo.medio_entrega === 'transferencia' ? 'border-natillera-500 bg-natillera-50 text-natillera-800' : 'border-gray-200 bg-white hover:border-gray-300'"
-              >
-                <span class="font-medium">Transferencia</span>
-              </button>
+                :class="['flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all', formPrestamo.medio_entrega === 'transferencia' ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300']"
+              >Transferencia</button>
             </div>
-            <p class="text-xs text-gray-500 mt-1.5">Indica cómo se entregará el valor al socio al crear el préstamo.</p>
           </div>
 
-          <!-- Resumen de intereses -->
-          <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas" class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl overflow-hidden">
-            <!-- Tabs para tipo de interés -->
-            <div class="flex gap-2 p-3 border-b border-blue-200 bg-white/50">
-              <button
-                type="button"
-                @click="mostrarInteresAnticipado = false"
-                :class="[
-                  'group relative px-3 py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 overflow-hidden flex-1',
-                  !mostrarInteresAnticipado
-                    ? 'text-white shadow-sm'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                ]"
-              >
-                <div 
-                  v-if="!mostrarInteresAnticipado"
-                  class="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
-                ></div>
-                <span class="relative flex items-center justify-center gap-1.5">
-                  <span>📊</span>
-                  Interés Normal
-                </span>
-              </button>
-              <button
-                type="button"
-                @click="mostrarInteresAnticipado = true"
-                :class="[
-                  'group relative px-3 py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 overflow-hidden flex-1',
-                  mostrarInteresAnticipado
-                    ? 'text-white shadow-sm'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                ]"
-              >
-                <div 
-                  v-if="mostrarInteresAnticipado"
-                  class="absolute inset-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600"
-                ></div>
-                <span class="relative flex items-center justify-center gap-1.5">
-                  <span>💰</span>
-                  Interés Anticipado
-                </span>
-              </button>
-            </div>
+          <!-- Toggle Interés Normal / Anticipado -->
+          <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas" class="rounded-xl border border-gray-200 bg-white p-1.5 flex gap-1">
+            <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50']">Normal</button>
+            <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50']">Anticipado</button>
+          </div>
+          </div>
 
-            <div class="p-3 space-y-2">
-              <!-- Vista Mes Vencido -->
-              <template v-if="!mostrarInteresAnticipado">
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-blue-200/50">
-                  <span class="text-gray-600">Desembolso:</span>
-                  <span class="font-bold text-gray-800">${{ formatMoney(capitalAPrestar) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-blue-200/50">
-                  <span class="text-gray-600">Interés cobrado al inicio:</span>
-                  <span class="font-bold text-gray-500">${{ formatMoney(0) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-blue-200/50">
-                  <span class="text-gray-600">Cuota mensual:</span>
-                  <span class="font-bold text-blue-600">${{ formatMoney(cuotaMensual) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-blue-200/50">
-                  <span class="font-semibold text-blue-800">Valor a entregar al socio:</span>
-                  <span class="font-bold text-base text-blue-700">${{ formatMoney(valorAEntregarAlSocio) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm pt-2">
-                  <span class="font-semibold text-blue-800">Valor total a pagar por el socio:</span>
-                  <span class="font-bold text-base text-blue-700">${{ formatMoney(montoAPagar) }}</span>
-                </div>
-              </template>
-
-              <!-- Vista Anticipado -->
-              <template v-else>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="text-gray-600">Desembolso (lo que recibe el socio):</span>
-                  <span class="font-bold text-gray-800">${{ formatMoney(montoARecibir) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="text-gray-600">Interés cobrado al inicio:</span>
-                  <span class="font-bold text-orange-600">${{ formatMoney(interesTotal) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="text-gray-600">Movimiento fondo al inicio:</span>
-                  <span class="font-bold text-natillera-700">${{ formatMoney(movimientoFondoInicio) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="text-gray-600">Cuota mensual:</span>
-                  <span class="font-bold text-orange-600">${{ formatMoney(cuotaMensual) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm py-1.5 border-b border-orange-200/50">
-                  <span class="font-semibold text-orange-800">Valor a entregar al socio:</span>
-                  <span class="font-bold text-base text-orange-700">${{ formatMoney(valorAEntregarAlSocio) }}</span>
-                </div>
-                <div class="flex justify-between items-center text-sm pt-2">
-                  <span class="font-semibold text-orange-800">Valor total a pagar por el socio:</span>
-                  <span class="font-bold text-base text-orange-700">${{ formatMoney(montoAPagar) }}</span>
-                </div>
-              </template>
-            </div>
-            
-            <!-- Botón Compartir por WhatsApp -->
-            <div v-if="socioSeleccionado" class="pt-3 border-t border-gray-200">
+          <!-- Paso 2: Resumen. Antes de crear: botón WhatsApp antes de Generar. Después de crear: comprobante con Descargar y WhatsApp -->
+          <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
+            <!-- Vista antes de generar: sin comprobante, botones en orden Compartir WhatsApp → Generar préstamo -->
+            <template v-if="!prestamoRecienCreado">
+              <div class="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+                <p class="text-sm font-semibold text-gray-800">Resumen</p>
+                <p class="text-2xl font-bold text-emerald-600">${{ formatMoney(formPrestamo.monto) }}</p>
+                <p class="text-sm text-gray-600">{{ socioSeleccionado?.socio?.nombre }}</p>
+                <p class="text-xs text-gray-500">Cuota: ${{ formatMoney(cuotaMensual) }} · {{ formPrestamo.numero_cuotas }} cuotas</p>
+              </div>
+              <p class="text-xs text-gray-500 text-center">Revisa los datos antes de confirmar.</p>
+              <div class="flex items-center gap-2 text-gray-400 text-xs">
+                <LockClosedIcon class="w-4 h-4 flex-shrink-0" />
+                <span>Transacción segura y encriptada</span>
+              </div>
+              <!-- Primero: Compartir por WhatsApp (vista previa) -->
               <button
+                v-if="socioSeleccionado"
                 type="button"
                 @click="abrirModalCompartirPrestamoWhatsApp"
-                class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/25"
+                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
               >
                 <ChatBubbleLeftIcon class="w-5 h-5" />
-                Compartir información por WhatsApp
+                Compartir por WhatsApp
               </button>
-            </div>
+              <!-- Segundo: Generar préstamo -->
+              <button
+                type="button"
+                @click="handleCrearPrestamo"
+                :disabled="loading || !formPrestamo.socio_natillera_id || formPrestamo.monto < 10000"
+                class="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ loading ? 'Creando...' : 'Confirmar y crear préstamo' }}
+                <ChevronRightIcon class="w-5 h-5 flex-shrink-0" />
+              </button>
+              <button type="button" @click="pasoNuevoPrestamo = 0" class="w-full text-center text-sm font-medium text-gray-500 hover:text-gray-700 py-2 transition-colors">
+                Editar selección
+              </button>
+            </template>
+
+            <!-- Vista después de generar: comprobante con opciones Descargar y Enviar por WhatsApp -->
+            <template v-else>
+              <div v-if="datosComprobanteCreado" ref="resumenPrestamoNuevoRef" class="comprobante-prestamo-nuevo rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm" style="min-width: 280px;">
+                <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
+                  <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
+                    <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px;">Comprobante de Préstamo</h1>
+                  </div>
+                  <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                    <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
+                    <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(datosComprobanteCreado.monto) }}</p>
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
+                    <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.nombreSocio }}</p>
+                  </div>
+                  <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                    <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES DEL PRÉSTAMO</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;">
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERÉS MENSUAL</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.interes }}%</p></div>
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">N° DE CUOTAS</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.numero_cuotas }}</p></div>
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR CUOTA</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(datosComprobanteCreado.cuotaMensual) }}</p></div>
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR A ENTREGAR</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(datosComprobanteCreado.valorAEntregar) }}</p></div>
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERESES GENERADOS</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #ea580c;">${{ formatMoney(datosComprobanteCreado.interesTotal) }}</p></div>
+                    </div>
+                  </div>
+                  <div v-if="datosComprobanteCreado.planPagos?.length > 0" style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                    <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS</p>
+                    <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">Fecha de inicio: {{ formatDate(datosComprobanteCreado.fecha_pago) }}</p>
+                    <div style="overflow-x: auto;">
+                      <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
+                          <tr style="background: #f0fdf4; border-bottom: 2px solid #a7f3d0;">
+                            <th style="text-align: left; padding: 6px 8px; font-weight: 700; color: #065f46;">Nº</th>
+                            <th style="text-align: left; padding: 6px 8px; font-weight: 700; color: #065f46;">Fecha vencimiento</th>
+                            <th style="text-align: right; padding: 6px 8px; font-weight: 700; color: #065f46;">Valor cuota</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(cuota, idx) in datosComprobanteCreado.planPagos" :key="idx" :style="{ background: idx % 2 === 0 ? '#fff' : '#f9fafb' }">
+                            <td style="padding: 5px 8px; color: #374151; font-weight: 600;">{{ cuota.numero_cuota }}</td>
+                            <td style="padding: 5px 8px; color: #374151;">{{ formatDate(cuota.fecha_proyectada) }}</td>
+                            <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #059669;">${{ formatMoney(cuota.valor_cuota) }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 text-center">Préstamo creado. Puedes descargar o compartir el comprobante.</p>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  @click="descargarResumenPrestamoNuevo"
+                  :disabled="generandoResumenPrestamo"
+                  class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-60"
+                >
+                  <ArrowDownTrayIcon class="w-5 h-5" />
+                  {{ generandoResumenPrestamo ? 'Generando...' : 'Descargar' }}
+                </button>
+                <button
+                  type="button"
+                  @click="abrirModalCompartirPrestamoWhatsApp"
+                  class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
+                >
+                  <ChatBubbleLeftIcon class="w-5 h-5" />
+                  Enviar por WhatsApp
+                </button>
+              </div>
+              <button type="button" @click="cerrarModalNuevoPrestamo" class="w-full py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-colors">
+                Cerrar
+              </button>
+            </template>
           </div>
           </form>
         </div>
 
-        <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <div class="flex gap-3">
-            <button 
-              type="button"
-              @click="modalNuevoPrestamo = false"
-              class="btn-secondary flex-1"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="button"
-              @click="handleCrearPrestamo"
-              class="btn-primary flex-1"
-              :disabled="loading || !formPrestamo.socio_natillera_id || formPrestamo.monto < 10000"
-            >
-              {{ loading ? 'Creando...' : 'Crear Préstamo' }}
-            </button>
+        <!-- Footer por paso -->
+        <div class="border-t border-gray-100 bg-white px-4 sm:px-5 pt-3 sm:pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] flex-shrink-0">
+          <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
+            <button type="button" @click="modalNuevoPrestamo = false" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
+            <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+          </div>
+          <div v-else-if="pasoNuevoPrestamo === 1" class="flex gap-2">
+            <button type="button" @click="pasoNuevoPrestamo--" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 transition-colors"><ArrowLeftIcon class="w-4 h-4" /> Atrás</button>
+            <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+          </div>
+          <div v-else-if="!prestamoRecienCreado" class="flex gap-2">
+            <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Editar</button>
+            <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center justify-center transition-colors">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
+          </div>
+          <div v-else class="flex gap-2">
+            <button type="button" @click="cerrarModalNuevoPrestamo" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-colors">Cerrar</button>
           </div>
         </div>
     </ModalWrapper>
@@ -2579,68 +2449,89 @@
 
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
-          <!-- Información del préstamo para compartir -->
-          <div 
+          <!-- Comprobante del préstamo (mismo estilo que comprobante de pago de cuotas) -->
+          <div
             ref="prestamoRef"
-            class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 space-y-4"
+            class="bg-white rounded-2xl overflow-hidden"
+            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 320px;"
           >
-            <div class="text-center mb-4">
-              <h4 class="text-2xl font-bold text-gray-800 mb-2">Información del Préstamo</h4>
-              <p class="text-sm text-gray-600">{{ prestamoDetalle?.socio_natillera?.socio?.nombre }}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Monto del préstamo</p>
-                <p class="font-bold text-lg text-gray-800">${{ formatMoney(prestamoDetalle?.monto) }}</p>
+            <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
+              <!-- Título y ícono -->
+              <div style="text-align: center; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+                  <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                  </div>
+                  <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
+                    Comprobante de Préstamo
+                  </h1>
+                </div>
               </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Interés mensual</p>
-                <p class="font-bold text-lg text-blue-600">{{ prestamoDetalle?.interes }}%</p>
+
+              <!-- Sección 1: Monto y socio -->
+              <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                <div style="text-align: center; margin-bottom: 10px;">
+                  <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MONTO DEL PRÉSTAMO</p>
+                  <p style="font-size: 26px; font-weight: 900; margin: 0 0 4px 0; letter-spacing: -1px; color: #059669;">
+                    ${{ formatMoney(prestamoDetalle?.monto) }}
+                  </p>
+                </div>
+                <div style="margin-top: 8px;">
+                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
+                  <p style="font-weight: 600; font-size: 12px; margin: 0; color: #111827;">{{ prestamoDetalle?.socio_natillera?.socio?.nombre }}</p>
+                </div>
               </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Saldo actual</p>
-                <p class="font-bold text-lg" :class="prestamoDetalle?.saldo_actual > 0 ? 'text-red-600' : 'text-green-600'">
-                  ${{ formatMoney(prestamoDetalle?.saldo_actual) }}
-                </p>
+
+              <!-- Sección 2: Detalles en grid -->
+              <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">DETALLES DEL PRÉSTAMO</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Interés mensual</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ prestamoDetalle?.interes }}%</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Nº de cuotas</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ prestamoDetalle?.numero_cuotas || 1 }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Saldo actual</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0;" :style="{ color: (prestamoDetalle?.saldo_actual || 0) > 0 ? '#dc2626' : '#059669' }">${{ formatMoney(prestamoDetalle?.saldo_actual) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Valor cuota</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #065f46;">${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Interés generado</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #ea580c;">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Monto pagado</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #059669;">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Estado</p>
+                    <span 
+                      :style="{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: '9999px',
+                        display: 'inline-block',
+                        background: prestamoDetalle?.estado === 'pagado' ? '#d1fae5' : prestamoDetalle?.estado === 'activo' ? '#dbeafe' : '#f3f4f6',
+                        color: prestamoDetalle?.estado === 'pagado' ? '#059669' : prestamoDetalle?.estado === 'activo' ? '#2563eb' : '#4b5563'
+                      }"
+                    >{{ prestamoDetalle?.estado }}</span>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha de creación</p>
+                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ formatDate(prestamoDetalle?.created_at) }}</p>
+                  </div>
+                </div>
               </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Número de cuotas</p>
-                <p class="font-bold text-lg text-gray-800">{{ prestamoDetalle?.numero_cuotas || 1 }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Valor de la cuota</p>
-                <p class="font-bold text-lg text-purple-600">${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Interés generado</p>
-                <p class="font-bold text-lg text-orange-600">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Monto pagado</p>
-                <p class="font-bold text-lg text-emerald-600">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</p>
-              </div>
-            </div>
-            
-            <div class="bg-white/70 rounded-lg p-3 border border-blue-200 mt-4">
-              <p class="text-xs text-gray-500 mb-1">Estado</p>
-              <span 
-                :class="[
-                  'inline-block px-3 py-1 rounded-full text-sm font-bold',
-                  prestamoDetalle?.estado === 'pagado' 
-                    ? 'bg-green-100 text-green-700' : 
-                  prestamoDetalle?.estado === 'activo' 
-                    ? 'bg-blue-100 text-blue-700' : 
-                    'bg-gray-100 text-gray-700'
-                ]"
-              >
-                {{ prestamoDetalle?.estado }}
-              </span>
-            </div>
-            
-            <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-              <p class="text-xs text-gray-500 mb-1">Fecha de creación</p>
-              <p class="font-semibold text-gray-700">{{ formatDate(prestamoDetalle?.created_at) }}</p>
             </div>
           </div>
         </div>
@@ -2724,124 +2615,77 @@
 
         <!-- Contenido con scroll -->
         <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          <!-- Información del préstamo para compartir -->
-          <div 
+          <!-- Comprobante del préstamo (diseño según imagen: header verde claro, tarjetas blanco) -->
+          <div
             ref="prestamoNuevoRef"
-            class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 space-y-4"
+            class="comprobante-prestamo-nuevo bg-white rounded-2xl overflow-hidden"
+            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 320px;"
           >
-            <div class="text-center mb-4">
-              <h4 class="text-2xl font-bold text-gray-800 mb-2">Información del Préstamo</h4>
-              <p class="text-sm text-gray-600">{{ socioSeleccionado?.socio?.nombre }}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Monto del préstamo</p>
-                <p class="font-bold text-lg text-gray-800">${{ formatMoney(formPrestamo.monto) }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Interés mensual</p>
-                <p class="font-bold text-lg text-blue-600">{{ formPrestamo.interes }}%</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Número de cuotas</p>
-                <p class="font-bold text-lg text-gray-800">{{ formPrestamo.numero_cuotas || 1 }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Valor de la cuota</p>
-                <p class="font-bold text-lg text-purple-600">${{ formatMoney(cuotaMensual) }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Valor a entregar</p>
-                <p class="font-bold text-lg text-emerald-600">${{ formatMoney(valorAEntregarAlSocio) }}</p>
-              </div>
-              <div class="bg-white/70 rounded-lg p-3 border border-blue-200">
-                <p class="text-xs text-gray-500 mb-1">Valor total a pagar</p>
-                <p class="font-bold text-lg text-orange-600">${{ formatMoney(montoAPagar) }}</p>
-              </div>
-            </div>
-            
-            <div v-if="mostrarInteresAnticipado" class="bg-white/70 rounded-lg p-3 border border-orange-200 mt-4">
-              <p class="text-xs text-gray-500 mb-1">Interés cobrado al inicio</p>
-              <p class="font-bold text-lg text-orange-600">${{ formatMoney(interesTotal) }}</p>
-            </div>
-          </div>
-
-          <!-- Selector de contacto -->
-          <div class="space-y-3">
-            <label class="block text-sm font-semibold text-gray-700">Seleccionar contacto para enviar</label>
-            <div class="space-y-2">
-              <!-- Opción: Socio del préstamo -->
-              <button
-                v-if="socioSeleccionado?.socio?.telefono"
-                type="button"
-                @click="contactoSeleccionadoWhatsApp = { nombre: socioSeleccionado.socio.nombre, telefono: socioSeleccionado.socio.telefono }"
-                :class="[
-                  'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
-                  contactoSeleccionadoWhatsApp?.telefono === socioSeleccionado.socio.telefono
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                ]"
-              >
-                <img 
-                  :src="getAvatarUrl(socioSeleccionado.socio.nombre, socioSeleccionado.socio.avatar_seed, socioSeleccionado.socio.avatar_style)"
-                  :alt="socioSeleccionado.socio.nombre"
-                  class="w-12 h-12 rounded-xl border-2 border-gray-200 flex-shrink-0 object-cover"
-                />
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-gray-800">{{ socioSeleccionado.socio.nombre }}</p>
-                  <p class="text-sm text-gray-500">{{ socioSeleccionado.socio.telefono }}</p>
+            <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
+              <!-- Encabezado: ícono verde + Comprobante de Préstamo (centrado) -->
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
+                <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
-                <div v-if="contactoSeleccionadoWhatsApp?.telefono === socioSeleccionado.socio.telefono" class="flex-shrink-0">
-                  <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-              </button>
+                <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px;">Comprobante de Préstamo</h1>
+              </div>
 
-              <!-- Opción: Otro contacto (input manual) -->
-              <div class="space-y-2">
-                <button
-                  type="button"
-                  @click="contactoSeleccionadoWhatsApp = { nombre: '', telefono: '' }"
-                  :class="[
-                    'w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left',
-                    contactoSeleccionadoWhatsApp && !contactoSeleccionadoWhatsApp.telefono
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
-                  ]"
-                >
-                  <div class="w-12 h-12 rounded-xl bg-gray-100 border-2 border-gray-200 flex items-center justify-center flex-shrink-0">
-                    <UserIcon class="w-6 h-6 text-gray-400" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-semibold text-gray-800">Otro contacto</p>
-                    <p class="text-sm text-gray-500">Ingresar número manualmente</p>
-                  </div>
-                </button>
+              <!-- Tarjeta 1: Monto del préstamo + Socio -->
+              <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
+                <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(formPrestamo.monto) }}</p>
+                <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
+                <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ socioSeleccionado?.socio?.nombre }}</p>
+              </div>
 
-                <!-- Input para otro contacto -->
-                <div v-if="contactoSeleccionadoWhatsApp && !contactoSeleccionadoWhatsApp.telefono" class="space-y-2 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <!-- Tarjeta 2: Detalles del préstamo (grid 2 columnas como en la imagen) -->
+              <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES DEL PRÉSTAMO</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;">
                   <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nombre del contacto</label>
-                    <input
-                      v-model="contactoSeleccionadoWhatsApp.nombre"
-                      type="text"
-                      placeholder="Ej: Juan Pérez"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    />
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERÉS MENSUAL</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ formPrestamo.interes }}%</p>
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Número de teléfono *</label>
-                    <input
-                      v-model="contactoSeleccionadoWhatsApp.telefono"
-                      type="tel"
-                      placeholder="Ej: 3001234567"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    />
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">N° DE CUOTAS</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ formPrestamo.numero_cuotas || 1 }}</p>
                   </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR CUOTA</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(cuotaMensual) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR A ENTREGAR</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(valorAEntregarAlSocio) }}</p>
+                  </div>
+                  <div>
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERESES GENERADOS</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #ea580c;">${{ formatMoney(interesTotal) }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta 3: Plan de pagos (según periodicidad, fechas y valor por cuota) -->
+              <div v-if="planPagosComprobanteNuevo.length > 0" style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS</p>
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">Fecha de inicio de pagos: {{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</p>
+                <div style="overflow-x: auto;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <thead>
+                      <tr style="background: #f0fdf4; border-bottom: 2px solid #a7f3d0;">
+                        <th style="text-align: left; padding: 6px 8px; font-weight: 700; color: #065f46;">Nº</th>
+                        <th style="text-align: left; padding: 6px 8px; font-weight: 700; color: #065f46;">Fecha vencimiento</th>
+                        <th style="text-align: right; padding: 6px 8px; font-weight: 700; color: #065f46;">Valor cuota</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(cuota, idx) in planPagosComprobanteNuevo" :key="idx" :style="{ background: idx % 2 === 0 ? '#fff' : '#f9fafb' }">
+                        <td style="padding: 5px 8px; color: #374151; font-weight: 600;">{{ cuota.numero_cuota }}</td>
+                        <td style="padding: 5px 8px; color: #374151;">{{ formatDate(cuota.fecha_proyectada) }}</td>
+                        <td style="padding: 5px 8px; text-align: right; font-weight: 600; color: #059669;">${{ formatMoney(cuota.valor_cuota) }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -2862,18 +2706,18 @@
 
             <button 
               @click="compartirPrestamoNuevoWhatsApp"
-              :disabled="generandoImagenPrestamoNuevo || !contactoSeleccionadoWhatsApp?.telefono"
+              :disabled="generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono"
               :class="[
                 'w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
-                (generandoImagenPrestamoNuevo || !contactoSeleccionadoWhatsApp?.telefono)
+                (generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono)
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-500 hover:bg-green-600 text-white'
               ]"
-              :title="!contactoSeleccionadoWhatsApp?.telefono ? 'Selecciona o ingresa un número de teléfono' : ''"
+              :title="!socioSeleccionado?.socio?.telefono ? 'El socio no tiene teléfono registrado' : ''"
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
               <span v-if="generandoImagenPrestamoNuevo">Preparando...</span>
-              <span v-else-if="!contactoSeleccionadoWhatsApp?.telefono">📲 Selecciona un contacto</span>
+              <span v-else-if="!socioSeleccionado?.socio?.telefono">📲 Sin teléfono registrado</span>
               <span v-else>📲 Compartir por WhatsApp</span>
             </button>
           </div>
@@ -3081,7 +2925,11 @@ import {
   ChatBubbleLeftIcon,
   PencilIcon,
   CheckCircleIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  CalendarDaysIcon,
+  ClockIcon,
+  ChevronRightIcon,
+  LockClosedIcon
 } from '@heroicons/vue/24/outline'
 import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
@@ -3090,6 +2938,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import { toPng } from 'html-to-image'
 
 /** Devuelve mes (1-12), anio y quincena (1 o 2) desde fecha_proyectada para plan_pagos_prestamo */
 function periodoDesdeFechaProyectada(fechaProyectada) {
@@ -3160,6 +3009,8 @@ const contactoSeleccionadoWhatsApp = ref(null)
 const historialRefinanciaciones = ref([])
 const prestamoRef = ref(null)
 const prestamoNuevoRef = ref(null)
+const resumenPrestamoNuevoRef = ref(null)
+const generandoResumenPrestamo = ref(false)
 const prestamosMoraExpandidos = ref(new Set())
 
 // Bloquear scroll del body cuando las modales están abiertas
@@ -3199,6 +3050,8 @@ const mostrarSelectorSocio = ref(false)
 const busquedaSocio = ref('')
 const mostrarInteresAnticipado = ref(false)
 const modalNuevoPrestamoScrollRef = ref(null)
+const pasoNuevoPrestamo = ref(0) // 0: Monto (socio, periodicidad, monto) | 1: Plazo (interés, cuotas, fecha, medio) | 2: Resumen
+const prestamoRecienCreado = ref(null) // { prestamo, planPagos } después de crear; null antes. Cuando no es null se muestra comprobante con Descargar/WhatsApp
 
 const formAbono = reactive({
   valor: 0,
@@ -3581,9 +3434,10 @@ const movimientoFondoInicio = computed(() => {
   return capitalAPrestar.value
 })
 
-// Valor a entregar al socio (desembolso): con anticipado recibe capital - interés; con normal recibe el capital completo
+// Valor a entregar al socio: siempre es el capital del préstamo (lo que sale de caja hacia el socio).
+// Con interés anticipado: se entrega el capital al socio (ej. 2M) y el valor para intereses (ej. 420k) es aparte; total movimiento = capital + intereses (ej. 2'420.000).
 const valorAEntregarAlSocio = computed(() => {
-  return mostrarInteresAnticipado.value ? montoARecibir.value : capitalAPrestar.value
+  return capitalAPrestar.value
 })
 
 // Valor total a pagar por el socio
@@ -3617,6 +3471,45 @@ function esFechaVencida(fecha) {
 const cuotaMensual = computed(() => {
   // Con interés anticipado o normal, la cuota es el total (capital + intereses) dividido entre las cuotas
   return montoTotal.value / formPrestamo.numero_cuotas
+})
+
+// Plan de pagos de vista previa para el comprobante (préstamo nuevo)
+const planPagosComprobanteNuevo = computed(() => {
+  if (!formPrestamo.monto || !formPrestamo.numero_cuotas) return []
+  const prestamoVirtual = {
+    id: 0,
+    monto: parseFloat(formPrestamo.monto) || 0,
+    numero_cuotas: parseInt(formPrestamo.numero_cuotas) || 1,
+    interes: parseFloat(formPrestamo.interes) || 0,
+    fecha_inicio: formPrestamo.fecha_pago || new Date().toISOString().slice(0, 10),
+    periodicidad: formPrestamo.periodicidad || 'mensual',
+    tipo_interes: formPrestamo.tipo_interes || 'simple',
+    interes_anticipado: mostrarInteresAnticipado.value,
+    interes_total: interesTotal.value
+  }
+  return generarPlanPagos(prestamoVirtual)
+})
+
+// Datos del comprobante cuando el préstamo ya fue creado (para vista después de "Confirmar y crear")
+const datosComprobanteCreado = computed(() => {
+  const p = prestamoRecienCreado.value
+  if (!p?.prestamo) return null
+  const prestamo = p.prestamo
+  const plan = p.planPagos || []
+  const monto = Number(prestamo.monto) || 0
+  const interesTotalVal = Number(prestamo.interes_total) || 0
+  const cuota = plan.length > 0 ? plan[0].valor_cuota : 0
+  return {
+    monto,
+    nombreSocio: prestamo.socio_natillera?.socio?.nombre || 'Socio',
+    interes: prestamo.interes,
+    numero_cuotas: prestamo.numero_cuotas || 1,
+    cuotaMensual: cuota,
+    valorAEntregar: monto,
+    interesTotal: interesTotalVal,
+    planPagos: plan,
+    fecha_pago: plan[0]?.fecha_proyectada || prestamo.created_at
+  }
 })
 
 // Sin scroll automático al cambiar tipo de interés o fecha: evitaba el salto y desmaquetado del modal
@@ -5909,6 +5802,10 @@ async function handleCrearPrestamo() {
   }
 
   // Validar que haya recaudado suficiente según la forma de pago seleccionada
+  // Con interés anticipado el movimiento de caja es capital + intereses; con normal solo capital
+  const montoAfectaFondo = mostrarInteresAnticipado.value
+    ? capital + Math.round(interesTotal.value)
+    : capital
   const natilleraId = id
   if (natilleraId) {
     try {
@@ -5918,20 +5815,20 @@ async function handleCrearPrestamo() {
         const medio = (formPrestamo.medio_entrega || 'efectivo').toLowerCase()
         const disponibleEfectivo = Math.max(0, (stats.totalRecaudadoEfectivo || 0) - (stats.totalDesembolsadoEfectivo || 0))
         const disponibleTransferencia = Math.max(0, (stats.totalRecaudadoTransferencia || 0) - (stats.totalDesembolsadoTransferencia || 0))
-        if (medio === 'efectivo' && capital > disponibleEfectivo) {
+        if (medio === 'efectivo' && montoAfectaFondo > disponibleEfectivo) {
           generandoPrestamo.value = false
           loading.value = false
           notificationStore.warning(
-            `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor a entregar: $${formatMoney(capital)}.`,
+            `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor total del movimiento: $${formatMoney(montoAfectaFondo)}.`,
             'Fondo insuficiente (efectivo)'
           )
           return
         }
-        if (medio === 'transferencia' && capital > disponibleTransferencia) {
+        if (medio === 'transferencia' && montoAfectaFondo > disponibleTransferencia) {
           generandoPrestamo.value = false
           loading.value = false
           notificationStore.warning(
-            `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor a entregar: $${formatMoney(capital)}.`,
+            `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor total del movimiento: $${formatMoney(montoAfectaFondo)}.`,
             'Fondo insuficiente (transferencia)'
           )
           return
@@ -6044,19 +5941,8 @@ async function handleCrearPrestamo() {
     
     // Recargar todos los préstamos para incluir el nuevo con toda su información calculada
     await fetchPrestamos()
-    modalNuevoPrestamo.value = false
-    formPrestamo.socio_natillera_id = ''
-    formPrestamo.monto = 100000
-    formPrestamo.interes = 2
-    formPrestamo.numero_cuotas = 1
-    formPrestamo.tipo_interes = 'simple'
-    formPrestamo.periodicidad = 'mensual'
-    formPrestamo.fecha_pago = getCurrentDateISO()
-    formPrestamo.medio_entrega = 'efectivo'
-    montoFormateado.value = '100.000'
-    mostrarSelectorSocio.value = false
-    busquedaSocio.value = ''
-    mostrarInteresAnticipado.value = false
+    // Mostrar comprobante en el mismo modal con opciones Descargar y WhatsApp (no cerrar aún)
+    prestamoRecienCreado.value = { prestamo: data, planPagos }
     notificationStore.success('Préstamo creado exitosamente', 'Éxito')
   } catch (e) {
     notificationStore.error(e.message || 'Error al crear el préstamo', 'Error')
@@ -6066,11 +5952,36 @@ async function handleCrearPrestamo() {
   }
 }
 
+function cerrarModalNuevoPrestamo() {
+  modalNuevoPrestamo.value = false
+  pasoNuevoPrestamo.value = 0
+  prestamoRecienCreado.value = null
+  formPrestamo.socio_natillera_id = ''
+  formPrestamo.monto = 100000
+  formPrestamo.interes = 2
+  formPrestamo.numero_cuotas = 1
+  formPrestamo.tipo_interes = 'simple'
+  formPrestamo.periodicidad = 'mensual'
+  formPrestamo.fecha_pago = getCurrentDateISO()
+  formPrestamo.medio_entrega = 'efectivo'
+  montoFormateado.value = '100.000'
+  mostrarSelectorSocio.value = false
+  busquedaSocio.value = ''
+  mostrarInteresAnticipado.value = false
+}
+
 function handleClickOutside(event) {
   if (mostrarSelectorSocio.value && !event.target.closest('.selector-socio-container')) {
     cerrarSelectorSocio()
   }
 }
+
+watch(modalNuevoPrestamo, (visible) => {
+  if (visible) {
+    pasoNuevoPrestamo.value = 0
+    prestamoRecienCreado.value = null
+  }
+})
 
 onMounted(() => {
   fetchPrestamos()
@@ -6771,451 +6682,18 @@ async function abrirModalCompartirPrestamo() {
 }
 
 async function generarImagenPrestamo() {
-  return new Promise((resolve) => {
-    try {
-      if (!prestamoDetalle.value) {
-        throw new Error('No hay información del préstamo disponible')
-      }
-
-      const prestamo = prestamoDetalle.value
-      const nombreSocio = prestamo.socio_natillera?.socio?.nombre || 'Socio'
-      const saldoColor = prestamo.saldo_actual > 0 ? '#dc2626' : '#10b981'
-      const estadoColor = prestamo.estado === 'pagado' ? '#10b981' : prestamo.estado === 'activo' ? '#2563eb' : '#64748b'
-      const estadoBg = prestamo.estado === 'pagado' ? '#dcfce7' : prestamo.estado === 'activo' ? '#dbeafe' : '#f1f5f9'
-      const estadoText = prestamo.estado === 'pagado' ? 'PAGADO' : prestamo.estado === 'activo' ? 'ACTIVO' : 'INACTIVO'
-      
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      
-      const width = 480
-      const height = 780
-      const scale = 2
-      
-      canvas.width = width * scale
-      canvas.height = height * scale
-      ctx.scale(scale, scale)
-      
-      // === FONDO DEGRADADO MODERNO (igual que comprobante de pago) ===
-      const bgGradient = ctx.createLinearGradient(0, 0, width, height)
-      bgGradient.addColorStop(0, '#0f172a')
-      bgGradient.addColorStop(0.5, '#1e293b')
-      bgGradient.addColorStop(1, '#0f172a')
-      ctx.fillStyle = bgGradient
-      ctx.fillRect(0, 0, width, height)
-      
-      // === EFECTOS DE LUZ (glassmorphism style) ===
-      const light1 = ctx.createRadialGradient(width - 80, 100, 0, width - 80, 100, 200)
-      light1.addColorStop(0, 'rgba(16, 185, 129, 0.3)')
-      light1.addColorStop(1, 'transparent')
-      ctx.fillStyle = light1
-      ctx.fillRect(0, 0, width, height)
-      
-      const light2 = ctx.createRadialGradient(80, height - 150, 0, 80, height - 150, 180)
-      light2.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
-      light2.addColorStop(1, 'transparent')
-      ctx.fillStyle = light2
-      ctx.fillRect(0, 0, width, height)
-      
-      // === HEADER ===
-      // "Información del Préstamo" a la izquierda
-      ctx.fillStyle = 'rgba(255,255,255,0.95)'
-      ctx.font = 'bold 28px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('Información del Préstamo', 32, 52)
-      
-      // "natillerapp" a la derecha (con contorno negro)
-      ctx.font = '12px Arial'
-      ctx.textAlign = 'right'
-      // Contorno negro
-      ctx.strokeStyle = 'rgba(0,0,0,1)'
-      ctx.lineWidth = 0.7
-      ctx.lineJoin = 'round'
-      ctx.miterLimit = 2
-      ctx.strokeText('natillerapp', width - 32, 52)
-      // Relleno
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
-      ctx.fillText('natillerapp', width - 32, 52)
-      
-      // Línea decorativa con gradiente verde-azul
-      const lineGradient = ctx.createLinearGradient(32, 0, width - 32, 0)
-      lineGradient.addColorStop(0, 'transparent')
-      lineGradient.addColorStop(0.3, '#10b981')
-      lineGradient.addColorStop(0.5, '#06b6d4')
-      lineGradient.addColorStop(0.7, '#10b981')
-      lineGradient.addColorStop(1, 'transparent')
-      ctx.strokeStyle = lineGradient
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(32, 72)
-      ctx.lineTo(width - 32, 72)
-      ctx.stroke()
-      
-      // === TARJETA GLASSMORPHISM ===
-      const cardY = 95
-      const cardHeight = 570
-      const cardMargin = 24
-      
-      // Fondo de la tarjeta blanca
-      ctx.fillStyle = 'rgba(255,255,255,0.98)'
-      ctx.beginPath()
-      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
-      ctx.fill()
-      
-      // Sombra sutil
-      ctx.shadowColor = 'rgba(0,0,0,0.1)'
-      ctx.shadowBlur = 10
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 4
-      ctx.beginPath()
-      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
-      ctx.fill()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      const cardInnerX = cardMargin + 28
-      const cardInnerWidth = width - cardMargin*2 - 56
-      const cardHalfWidth = (cardInnerWidth - 12) / 2 // Ancho para cards de 2 columnas (con gap de 12px)
-      
-      // === MONTO DEL PRÉSTAMO (HERO) - Centrado ===
-      ctx.fillStyle = '#64748b'
-      ctx.font = '13px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('MONTO DEL PRÉSTAMO', width/2, cardY + 50)
-      
-      // Valor grande con gradiente verde
-      const montoText = '$' + formatMoney(prestamo.monto)
-      ctx.font = 'bold 52px Arial'
-      const montoGradient = ctx.createLinearGradient(0, cardY + 55, 0, cardY + 110)
-      montoGradient.addColorStop(0, '#059669')
-      montoGradient.addColorStop(1, '#10b981')
-      ctx.fillStyle = montoGradient
-      ctx.fillText(montoText, width/2, cardY + 105)
-      
-      // Badge de estado centrado
-      const badgeY = cardY + 125
-      ctx.fillStyle = estadoBg
-      ctx.beginPath()
-      ctx.roundRect(width/2 - 50, badgeY, 100, 32, 16)
-      ctx.fill()
-      
-      ctx.fillStyle = estadoColor
-      ctx.font = 'bold 13px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText(estadoText, width/2, badgeY + 21)
-      
-      // === DETALLES EN CARDS ===
-      let detailsY = badgeY + 50
-      
-      // Card: Socio (ancho completo)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('SOCIO', cardInnerX + 18, detailsY + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(nombreSocio, cardInnerX + 18, detailsY + 42)
-      
-      // Fila 1: Interés Mensual y Número de Cuotas (2 columnas)
-      const row1Y = detailsY + 70
-      
-      // Card: Interés Mensual (izquierda)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('INTERÉS', cardInnerX + 14, row1Y + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(prestamo.interes + '%', cardInnerX + 14, row1Y + 42)
-      
-      // Card: Número de Cuotas (derecha)
-      const cuotasX = cardInnerX + cardHalfWidth + 12
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('CUOTAS', cuotasX + 14, row1Y + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText((prestamo.numero_cuotas || 1).toString(), cuotasX + 14, row1Y + 42)
-      
-      // Fila 2: Valor de la Cuota y Saldo Actual (2 columnas)
-      const row2Y = row1Y + 70
-      
-      // Card: Valor de la Cuota (izquierda)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('VALOR CUOTA', cardInnerX + 14, row2Y + 22)
-      
-      ctx.fillStyle = '#9333ea'
-      ctx.font = 'bold 14px Arial'
-      const valorCuotaText = '$' + formatMoney(calcularCuotaMensualDetalle(prestamo))
-      // Ajustar texto si es muy largo
-      const maxWidthCuota = cardHalfWidth - 28
-      if (ctx.measureText(valorCuotaText).width > maxWidthCuota) {
-        ctx.font = 'bold 12px Arial'
-      }
-      ctx.fillText(valorCuotaText, cardInnerX + 14, row2Y + 42)
-      
-      // Card: Interés Generado (derecha)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('INTERÉS GEN.', cuotasX + 14, row2Y + 22)
-      
-      ctx.fillStyle = '#ea580c'
-      ctx.font = 'bold 14px Arial'
-      const interesGeneradoText = '$' + formatMoney(calcularInteresGeneradoDetalle(prestamo))
-      // Ajustar texto si es muy largo
-      const maxWidthInteres = cardHalfWidth - 28
-      if (ctx.measureText(interesGeneradoText).width > maxWidthInteres) {
-        ctx.font = 'bold 12px Arial'
-      }
-      ctx.fillText(interesGeneradoText, cuotasX + 14, row2Y + 42)
-      
-      // Fila 3: Valor Pagado y Fecha de Creación (2 columnas)
-      const row3Y = row2Y + 70
-      
-      // Card: Valor Pagado (izquierda)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row3Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row3Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('VALOR PAGADO', cardInnerX + 14, row3Y + 22)
-      
-      ctx.fillStyle = '#059669'
-      ctx.font = 'bold 14px Arial'
-      const valorPagadoText = '$' + formatMoney(calcularValorPagadoDetalle(prestamo))
-      // Ajustar texto si es muy largo
-      const maxWidth = cardHalfWidth - 28
-      if (ctx.measureText(valorPagadoText).width > maxWidth) {
-        ctx.font = 'bold 12px Arial'
-      }
-      ctx.fillText(valorPagadoText, cardInnerX + 14, row3Y + 42)
-      
-      // Card: Fecha de Creación (derecha)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row3Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row3Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('FECHA', cuotasX + 14, row3Y + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 13px Arial'
-      const fechaText = formatDate(prestamo.created_at) || 'N/A'
-      ctx.fillText(fechaText, cuotasX + 14, row3Y + 42)
-      
-      // Fila 4: Saldo Actual (ancho completo)
-      const row4Y = row3Y + 70
-      
-      // Card: Saldo Actual (ancho completo)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('SALDO ACTUAL', cardInnerX + 18, row4Y + 22)
-      
-      ctx.fillStyle = saldoColor
-      ctx.font = 'bold 16px Arial'
-      const saldoText = '$' + formatMoney(prestamo.saldo_actual)
-      ctx.fillText(saldoText, cardInnerX + 18, row4Y + 42)
-      
-      // === BOTÓN DE CONFIRMACIÓN ===
-      const btnY = cardY + cardHeight + 20
-      
-      // Sombra del botón
-      ctx.fillStyle = 'rgba(5, 150, 105, 0.3)'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX + 2, btnY + 2, cardInnerWidth, 52, 14)
-      ctx.fill()
-      
-      // Botón con gradiente
-      const btnGradient = ctx.createLinearGradient(cardInnerX, btnY, cardInnerX, btnY + 52)
-      btnGradient.addColorStop(0, '#059669')
-      btnGradient.addColorStop(0.5, '#10b981')
-      btnGradient.addColorStop(1, '#047857')
-      ctx.fillStyle = btnGradient
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
-      ctx.fill()
-      
-      // Borde sutil del botón
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
-      ctx.stroke()
-      
-      // Texto del botón
-      ctx.fillStyle = 'rgba(0,0,0,0.1)'
-      ctx.font = 'bold 16px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('PRÉSTAMO REGISTRADO', cardInnerX + cardInnerWidth/2 + 1, btnY + 34)
-      
-      ctx.fillStyle = 'white'
-      ctx.font = 'bold 16px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('PRÉSTAMO REGISTRADO', cardInnerX + cardInnerWidth/2, btnY + 33)
-      
-      resolve(canvas)
-    } catch (e) {
-      console.error('Error generando canvas:', e)
-      resolve(null)
-    }
-  })
+  if (!prestamoDetalle.value || !prestamoRef.value) return null
+  try {
+    await nextTick()
+    return await toPng(prestamoRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      cacheBust: true
+    })
+  } catch (e) {
+    console.error('Error generando imagen préstamo:', e)
+    return null
+  }
 }
 
 async function descargarPrestamo() {
@@ -7232,13 +6710,12 @@ async function descargarPrestamo() {
   generandoImagenPrestamo.value = true
   
   try {
-    const canvas = await generarImagenPrestamo()
+    const dataUrl = await generarImagenPrestamo()
     
-    if (!canvas) {
+    if (!dataUrl) {
       throw new Error('No se pudo generar la imagen')
     }
     
-    const dataUrl = canvas.toDataURL('image/png')
     const link = document.createElement('a')
     link.download = `prestamo-${prestamoDetalle.value?.socio_natillera?.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
     link.href = dataUrl
@@ -7266,13 +6743,10 @@ async function compartirPrestamoWhatsApp() {
   generandoImagenPrestamo.value = true
   
   try {
-    const canvas = await generarImagenPrestamo()
-    if (!canvas) throw new Error('No se pudo generar la imagen')
+    const dataUrl = await generarImagenPrestamo()
+    if (!dataUrl) throw new Error('No se pudo generar la imagen')
     
-    // Convertir canvas a blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-    
-    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
+    const blob = await fetch(dataUrl).then(r => r.blob())
     const nombreSocio = prestamoDetalle.value.socio_natillera?.socio?.nombre || 'prestamo'
     const nombreArchivo = `prestamo-${nombreSocio.replace(/\s+/g, '-')}-${Date.now()}.png`
     const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
@@ -7291,7 +6765,7 @@ async function compartirPrestamoWhatsApp() {
       // Fallback: descargar y abrir WhatsApp con mensaje
       const link = document.createElement('a')
       link.download = `prestamo-${prestamoDetalle.value?.socio_natillera?.socio?.nombre?.replace(/\s+/g, '-')}.png`
-      link.href = canvas.toDataURL('image/png')
+      link.href = dataUrl
       link.click()
       
       // Esperar un poco y abrir WhatsApp
@@ -7340,419 +6814,48 @@ function abrirModalCompartirPrestamoWhatsApp() {
   modalCompartirPrestamoNuevo.value = true
 }
 
-// Función para generar imagen del préstamo nuevo
-function generarImagenPrestamoNuevo() {
-  return new Promise((resolve) => {
-    try {
-      if (!socioSeleccionado.value || !formPrestamo.monto) {
-        resolve(null)
-        return
-      }
+// Función para generar imagen del préstamo nuevo (captura el comprobante del DOM)
+async function generarImagenPrestamoNuevo() {
+  if (!socioSeleccionado.value || !prestamoNuevoRef.value) return null
+  try {
+    await nextTick()
+    return await toPng(prestamoNuevoRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      cacheBust: true
+    })
+  } catch (e) {
+    console.error('Error generando imagen préstamo nuevo:', e)
+    return null
+  }
+}
 
-      const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
-      const montoPrestamo = parseFloat(formPrestamo.monto) || 0
-      const interesMensual = parseFloat(formPrestamo.interes) || 0
-      const numeroCuotas = parseInt(formPrestamo.numero_cuotas) || 1
-      
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      
-      const width = 480
-      const height = 750
-      const scale = 2
-      
-      canvas.width = width * scale
-      canvas.height = height * scale
-      ctx.scale(scale, scale)
-      
-      // Agregar roundRect si no existe
-      if (!ctx.roundRect) {
-        ctx.roundRect = function(x, y, w, h, r) {
-          if (w < 2 * r) r = w / 2
-          if (h < 2 * r) r = h / 2
-          this.beginPath()
-          this.moveTo(x + r, y)
-          this.arcTo(x + w, y, x + w, y + h, r)
-          this.arcTo(x + w, y + h, x, y + h, r)
-          this.arcTo(x, y + h, x, y, r)
-          this.arcTo(x, y, x + w, y, r)
-          this.closePath()
-        }
-      }
-      
-      // === FONDO DEGRADADO MODERNO ===
-      const bgGradient = ctx.createLinearGradient(0, 0, width, height)
-      bgGradient.addColorStop(0, '#0f172a')
-      bgGradient.addColorStop(0.5, '#1e293b')
-      bgGradient.addColorStop(1, '#0f172a')
-      ctx.fillStyle = bgGradient
-      ctx.fillRect(0, 0, width, height)
-      
-      // === EFECTOS DE LUZ ===
-      const light1 = ctx.createRadialGradient(width - 80, 100, 0, width - 80, 100, 200)
-      light1.addColorStop(0, 'rgba(16, 185, 129, 0.3)')
-      light1.addColorStop(1, 'transparent')
-      ctx.fillStyle = light1
-      ctx.fillRect(0, 0, width, height)
-      
-      const light2 = ctx.createRadialGradient(80, height - 150, 0, 80, height - 150, 180)
-      light2.addColorStop(0, 'rgba(6, 182, 212, 0.2)')
-      light2.addColorStop(1, 'transparent')
-      ctx.fillStyle = light2
-      ctx.fillRect(0, 0, width, height)
-      
-      // === HEADER ===
-      ctx.fillStyle = 'rgba(255,255,255,0.95)'
-      ctx.font = 'bold 28px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('Información del Préstamo', 32, 52)
-      
-      ctx.font = '12px Arial'
-      ctx.textAlign = 'right'
-      ctx.strokeStyle = 'rgba(0,0,0,1)'
-      ctx.lineWidth = 0.7
-      ctx.lineJoin = 'round'
-      ctx.miterLimit = 2
-      ctx.strokeText('natillerapp', width - 32, 52)
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'
-      ctx.fillText('natillerapp', width - 32, 52)
-      
-      // Línea decorativa
-      const lineGradient = ctx.createLinearGradient(32, 0, width - 32, 0)
-      lineGradient.addColorStop(0, 'transparent')
-      lineGradient.addColorStop(0.3, '#10b981')
-      lineGradient.addColorStop(0.5, '#06b6d4')
-      lineGradient.addColorStop(0.7, '#10b981')
-      lineGradient.addColorStop(1, 'transparent')
-      ctx.strokeStyle = lineGradient
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(32, 72)
-      ctx.lineTo(width - 32, 72)
-      ctx.stroke()
-      
-      // === TARJETA GLASSMORPHISM ===
-      const cardY = 95
-      const cardHeight = 540
-      const cardMargin = 24
-      
-      ctx.fillStyle = 'rgba(255,255,255,0.98)'
-      ctx.beginPath()
-      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.1)'
-      ctx.shadowBlur = 10
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 4
-      ctx.beginPath()
-      ctx.roundRect(cardMargin, cardY, width - cardMargin*2, cardHeight, 24)
-      ctx.fill()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      const cardInnerX = cardMargin + 28
-      const cardInnerWidth = width - cardMargin*2 - 56
-      const cardHalfWidth = (cardInnerWidth - 12) / 2
-      
-      // === MONTO DEL PRÉSTAMO (HERO) ===
-      ctx.fillStyle = '#64748b'
-      ctx.font = '13px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('MONTO DEL PRÉSTAMO', width/2, cardY + 50)
-      
-      const montoText = '$' + formatMoney(montoPrestamo)
-      ctx.font = 'bold 52px Arial'
-      const montoGradient = ctx.createLinearGradient(0, cardY + 55, 0, cardY + 110)
-      montoGradient.addColorStop(0, '#059669')
-      montoGradient.addColorStop(1, '#10b981')
-      ctx.fillStyle = montoGradient
-      ctx.fillText(montoText, width/2, cardY + 105)
-      
-      // Badge "NUEVO PRÉSTAMO"
-      const badgeY = cardY + 125
-      ctx.fillStyle = '#dbeafe'
-      ctx.beginPath()
-      ctx.roundRect(width/2 - 60, badgeY, 120, 32, 16)
-      ctx.fill()
-      
-      ctx.fillStyle = '#2563eb'
-      ctx.font = 'bold 13px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('NUEVO PRÉSTAMO', width/2, badgeY + 21)
-      
-      // === DETALLES EN CARDS ===
-      let detailsY = badgeY + 50
-      
-      // Card: Socio (ancho completo)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, detailsY, cardInnerWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('SOCIO', cardInnerX + 18, detailsY + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(nombreSocio, cardInnerX + 18, detailsY + 42)
-      
-      // Fila 1: Interés Mensual y Número de Cuotas
-      const row1Y = detailsY + 70
-      
-      // Card: Interés Mensual (izquierda)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row1Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('INTERÉS', cardInnerX + 14, row1Y + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(interesMensual + '%', cardInnerX + 14, row1Y + 42)
-      
-      // Card: Número de Cuotas (derecha)
-      const cuotasX = cardInnerX + cardHalfWidth + 12
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row1Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('CUOTAS', cuotasX + 14, row1Y + 22)
-      
-      ctx.fillStyle = '#1e293b'
-      ctx.font = 'bold 16px Arial'
-      ctx.fillText(numeroCuotas.toString(), cuotasX + 14, row1Y + 42)
-      
-      // Fila 2: Valor de la Cuota y Valor a Entregar
-      const row2Y = row1Y + 70
-      
-      // Card: Valor de la Cuota (izquierda)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row2Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('VALOR CUOTA', cardInnerX + 14, row2Y + 22)
-      
-      ctx.fillStyle = '#9333ea'
-      ctx.font = 'bold 14px Arial'
-      const valorCuotaText = '$' + formatMoney(cuotaMensual.value)
-      const maxWidthCuota = cardHalfWidth - 28
-      if (ctx.measureText(valorCuotaText).width > maxWidthCuota) {
-        ctx.font = 'bold 12px Arial'
-      }
-      ctx.fillText(valorCuotaText, cardInnerX + 14, row2Y + 42)
-      
-      // Card: Valor a Entregar (derecha)
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cuotasX, row2Y, cardHalfWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('A ENTREGAR', cuotasX + 14, row2Y + 22)
-      
-      ctx.fillStyle = '#059669'
-      ctx.font = 'bold 14px Arial'
-      const valorEntregarText = '$' + formatMoney(valorAEntregarAlSocio.value)
-      const maxWidthEntregar = cardHalfWidth - 28
-      if (ctx.measureText(valorEntregarText).width > maxWidthEntregar) {
-        ctx.font = 'bold 12px Arial'
-      }
-      ctx.fillText(valorEntregarText, cuotasX + 14, row2Y + 42)
-      
-      // Fila 3: Valor Total a Pagar (ancho completo)
-      const row3Y = row2Y + 70
-      
-      ctx.fillStyle = '#f8fafc'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row3Y, cardInnerWidth, 58, 14)
-      ctx.fill()
-      
-      ctx.shadowColor = 'rgba(0,0,0,0.05)'
-      ctx.shadowBlur = 4
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 2
-      ctx.strokeStyle = '#e2e8f0'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, row3Y, cardInnerWidth, 58, 14)
-      ctx.stroke()
-      ctx.shadowColor = 'transparent'
-      ctx.shadowBlur = 0
-      ctx.shadowOffsetX = 0
-      ctx.shadowOffsetY = 0
-      
-      ctx.fillStyle = '#10b981'
-      ctx.font = 'bold 10px Arial'
-      ctx.textAlign = 'left'
-      ctx.fillText('VALOR TOTAL A PAGAR', cardInnerX + 18, row3Y + 22)
-      
-      ctx.fillStyle = '#ea580c'
-      ctx.font = 'bold 16px Arial'
-      const valorTotalText = '$' + formatMoney(montoAPagar.value)
-      ctx.fillText(valorTotalText, cardInnerX + 18, row3Y + 42)
-      
-      // Fila 4: Interés Anticipado (si aplica)
-      if (mostrarInteresAnticipado.value) {
-        const row4Y = row3Y + 70
-        
-        ctx.fillStyle = '#f8fafc'
-        ctx.beginPath()
-        ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
-        ctx.fill()
-        
-        ctx.shadowColor = 'rgba(0,0,0,0.05)'
-        ctx.shadowBlur = 4
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 2
-        ctx.strokeStyle = '#e2e8f0'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.roundRect(cardInnerX, row4Y, cardInnerWidth, 58, 14)
-        ctx.stroke()
-        ctx.shadowColor = 'transparent'
-        ctx.shadowBlur = 0
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
-        
-        ctx.fillStyle = '#10b981'
-        ctx.font = 'bold 10px Arial'
-        ctx.textAlign = 'left'
-        ctx.fillText('INTERÉS COBRADO AL INICIO', cardInnerX + 18, row4Y + 22)
-        
-        ctx.fillStyle = '#ea580c'
-        ctx.font = 'bold 16px Arial'
-        const interesAnticipadoText = '$' + formatMoney(interesTotal.value)
-        ctx.fillText(interesAnticipadoText, cardInnerX + 18, row4Y + 42)
-      }
-      
-      // === BOTÓN DE CONFIRMACIÓN ===
-      const btnY = cardY + cardHeight + 20
-      
-      ctx.fillStyle = 'rgba(5, 150, 105, 0.3)'
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX + 2, btnY + 2, cardInnerWidth, 52, 14)
-      ctx.fill()
-      
-      const btnGradient = ctx.createLinearGradient(cardInnerX, btnY, cardInnerX, btnY + 52)
-      btnGradient.addColorStop(0, '#059669')
-      btnGradient.addColorStop(0.5, '#10b981')
-      btnGradient.addColorStop(1, '#047857')
-      ctx.fillStyle = btnGradient
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
-      ctx.fill()
-      
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.roundRect(cardInnerX, btnY, cardInnerWidth, 52, 14)
-      ctx.stroke()
-      
-      ctx.fillStyle = 'rgba(0,0,0,0.1)'
-      ctx.font = 'bold 16px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('INFORMACIÓN DEL PRÉSTAMO', cardInnerX + cardInnerWidth/2 + 1, btnY + 34)
-      
-      ctx.fillStyle = 'white'
-      ctx.font = 'bold 16px Arial'
-      ctx.textAlign = 'center'
-      ctx.fillText('INFORMACIÓN DEL PRÉSTAMO', cardInnerX + cardInnerWidth/2, btnY + 33)
-      
-      resolve(canvas)
-    } catch (e) {
-      console.error('Error generando canvas:', e)
-      resolve(null)
-    }
-  })
+// Descargar resumen del préstamo (paso Resumen del modal Crear Préstamo) como imagen
+async function descargarResumenPrestamoNuevo() {
+  if (!resumenPrestamoNuevoRef.value) return
+  generandoResumenPrestamo.value = true
+  try {
+    await nextTick()
+    const dataUrl = await toPng(resumenPrestamoNuevoRef.value, {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      cacheBust: true
+    })
+    if (!dataUrl) throw new Error('No se pudo generar la imagen')
+    const link = document.createElement('a')
+    const nombre = socioSeleccionado.value?.socio?.nombre?.replace(/\s+/g, '-') || 'resumen-prestamo'
+    link.download = `resumen-prestamo-${nombre}-${Date.now()}.png`
+    link.href = dataUrl
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    notificationStore.success('Resumen descargado', 'Éxito')
+  } catch (e) {
+    console.error('Error al descargar resumen:', e)
+    notificationStore.error(e.message || 'No se pudo descargar el resumen', 'Error')
+  } finally {
+    generandoResumenPrestamo.value = false
+  }
 }
 
 // Función para descargar imagen del préstamo nuevo
@@ -7765,13 +6868,12 @@ async function descargarPrestamoNuevo() {
   generandoImagenPrestamoNuevo.value = true
   
   try {
-    const canvas = await generarImagenPrestamoNuevo()
+    const dataUrl = await generarImagenPrestamoNuevo()
     
-    if (!canvas) {
-      throw new Error('No se pudo generar el canvas')
+    if (!dataUrl) {
+      throw new Error('No se pudo generar la imagen')
     }
     
-    const dataUrl = canvas.toDataURL('image/png')
     const link = document.createElement('a')
     link.download = `prestamo-${socioSeleccionado.value.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
     link.href = dataUrl
@@ -7798,11 +6900,10 @@ async function compartirPrestamoNuevoWhatsApp() {
   generandoImagenPrestamoNuevo.value = true
   
   try {
-    const canvas = await generarImagenPrestamoNuevo()
-    if (!canvas) throw new Error('No se pudo generar la imagen')
+    const dataUrl = await generarImagenPrestamoNuevo()
+    if (!dataUrl) throw new Error('No se pudo generar la imagen')
     
-    // Convertir canvas a blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+    const blob = await fetch(dataUrl).then(r => r.blob())
     
     // Nombre del archivo
     const nombreContacto = contactoSeleccionadoWhatsApp.value.nombre || 'contacto'
@@ -7826,7 +6927,7 @@ async function compartirPrestamoNuevoWhatsApp() {
       // Fallback: descargar y abrir WhatsApp con mensaje
       const link = document.createElement('a')
       link.download = nombreArchivo
-      link.href = canvas.toDataURL('image/png')
+      link.href = dataUrl
       link.click()
       
       // Esperar un poco y abrir WhatsApp

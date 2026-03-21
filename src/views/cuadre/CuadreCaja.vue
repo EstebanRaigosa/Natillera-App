@@ -97,10 +97,8 @@
       <!-- Tarjetas: Total esperado por forma de pago (clic para desglose) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <!-- Efectivo esperado -->
-        <button
-          type="button"
-          @click="modalDesgloseFormaPago = 'efectivo'"
-          class="text-left bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-green-200 shadow-sm hover:shadow-lg hover:border-green-300 transition-all cursor-pointer"
+        <div
+          class="text-left bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-green-200 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
             <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
@@ -108,25 +106,23 @@
             </div>
             <div>
               <p class="text-gray-700 font-semibold">EFECTIVO</p>
-              <p class="text-gray-500 text-xs">Toca para ver desglose</p>
             </div>
           </div>
           <p class="text-green-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
             ${{ formatMoney(totalEsperadoEfectivo) }}
           </p>
           <div class="mt-3 pt-3 border-t border-green-200/60 text-xs text-gray-600 space-y-0.5">
-            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoEfectivo) }}</p>
+            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoEfectivo - utilidadInteresAnticipadoEfectivo) }}</p>
+            <p v-if="utilidadInteresAnticipadoEfectivo > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoEfectivo) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosEfectivo) }}</p>
             <p v-if="premiosEfectivo > 0">• − Premios rifa: ${{ formatMoney(premiosEfectivo) }}</p>
             <p v-if="movimientosEfectivoNeto !== 0">• {{ movimientosEfectivoNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosEfectivoNeto) }}</p>
           </div>
-        </button>
+        </div>
 
         <!-- Transferencia esperada -->
-        <button
-          type="button"
-          @click="modalDesgloseFormaPago = 'transferencia'"
-          class="text-left bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5 sm:p-6 border-2 border-blue-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer"
+        <div
+          class="text-left bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5 sm:p-6 border-2 border-blue-200 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
             <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
@@ -134,19 +130,20 @@
             </div>
             <div>
               <p class="text-gray-700 font-semibold">TRANSFERENCIA</p>
-              <p class="text-gray-500 text-xs">Toca para ver desglose</p>
             </div>
           </div>
           <p class="text-blue-700 text-2xl sm:text-3xl font-extrabold tabular-nums">
             ${{ formatMoney(totalEsperadoTransferencia) }}
           </p>
           <div class="mt-3 pt-3 border-t border-blue-200/60 text-xs text-gray-600 space-y-0.5">
-            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoTransferencia) }}</p>
+            <p>• Cuotas + Cuotas préstamos + Sanciones + Actividades: ${{ formatMoney(recaudadoTransferencia - utilidadInteresAnticipadoTransferencia - recaudadoGmf4x1000) }}</p>
+            <p v-if="recaudadoGmf4x1000 > 0">• GMF 4×1000 (por transferencias): ${{ formatMoney(recaudadoGmf4x1000) }}</p>
+            <p v-if="utilidadInteresAnticipadoTransferencia > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoTransferencia) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosTransferencia) }}</p>
             <p v-if="premiosTransferencia > 0">• − Premios rifa: ${{ formatMoney(premiosTransferencia) }}</p>
             <p v-if="movimientosTransferenciaNeto !== 0">• {{ movimientosTransferenciaNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosTransferenciaNeto) }}</p>
           </div>
-        </button>
+        </div>
 
         <!-- Total general (efectivo + transferencia) -->
         <div class="md:col-span-2 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
@@ -165,33 +162,8 @@
         </div>
       </div>
 
-      <!-- Modal desglose Recaudado vs Utilidad -->
-      <ModalWrapper
-        :show="!!modalDesgloseFormaPago"
-        :z-index="50"
-        align="bottom"
-        overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-        card-class="relative w-full sm:max-w-md max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border"
-        card-max-width="28rem"
-        @close="modalDesgloseFormaPago = null"
-      >
-            <div
-              :class="modalDesgloseFormaPago === 'efectivo' ? 'border-green-200' : 'border-blue-200'"
-            >
-              <div
-                class="p-6 text-white"
-                :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-gradient-to-br from-green-500 to-emerald-600' : 'bg-gradient-to-br from-blue-500 to-cyan-600'"
-              >
-                <div class="flex items-center justify-between">
-                  <h3 class="text-xl font-bold">
-                    {{ modalDesgloseFormaPago === 'efectivo' ? 'EFECTIVO' : 'TRANSFERENCIA' }}
-                  </h3>
-                  <button @click="modalDesgloseFormaPago = null" class="p-2 rounded-lg hover:bg-white/20 transition-colors">
-                    <XMarkIcon class="w-6 h-6" />
-                  </button>
-                </div>
-                <p class="text-white/90 text-sm mt-1">Desglose: Recaudado vs Utilidad</p>
-              </div>
+      <template v-if="false">
+              <!-- Modal desglose efectivo/transferencia eliminado por solicitud -->
               <div class="flex-1 overflow-y-auto p-6 space-y-4">
                 <!-- Recaudado (cuotas ahorro) -->
                 <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'">
@@ -208,6 +180,14 @@
                     ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? recaudadoCuotasPrestamoEfectivo : recaudadoCuotasPrestamoTransferencia) }}
                   </p>
                   <p class="text-xs text-gray-500 mt-0.5">Pagos de cuotas de préstamos según forma de pago</p>
+                </div>
+                <!-- Utilidad por interés anticipado (préstamos) -->
+                <div v-if="(modalDesgloseFormaPago === 'efectivo' ? utilidadInteresAnticipadoEfectivo : utilidadInteresAnticipadoTransferencia) > 0" class="rounded-xl p-4 border-2 bg-amber-50 border-amber-200">
+                  <p class="text-sm font-semibold text-gray-700 mb-1">+ Utilidad por interés anticipado</p>
+                  <p class="text-2xl font-bold tabular-nums text-amber-700">
+                    ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? utilidadInteresAnticipadoEfectivo : utilidadInteresAnticipadoTransferencia) }}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-0.5">Intereses cobrados por adelantado en préstamos (suma a la forma de pago)</p>
                 </div>
                 <!-- Utilidad (sanciones + actividades) -->
                 <div class="rounded-xl p-4 border-2" :class="modalDesgloseFormaPago === 'efectivo' ? 'bg-amber-50 border-amber-200' : 'bg-indigo-50 border-indigo-200'">
@@ -255,8 +235,7 @@
                   Total: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? totalEsperadoEfectivo : totalEsperadoTransferencia) }}
                 </p>
               </div>
-            </div>
-      </ModalWrapper>
+      </template>
 
       <!-- Detalle por concepto: Cuotas, Sanciones, Actividades, Préstamos -->
       <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
@@ -277,7 +256,7 @@
               Detalle por concepto
                 <span class="text-sm font-normal text-gray-500">({{ detalleFiltrado.length }} registros)</span>
             </h2>
-            <p class="text-sm text-gray-500 mt-0.5">Cuotas, sanciones y actividades con socio y forma de pago.</p>
+            <p class="text-sm text-gray-500 mt-0.5">Cuotas, sanciones, actividades, GMF 4×1000 (transferencias) y más, con socio y forma de pago.</p>
             </div>
           </div>
           <button
@@ -952,7 +931,33 @@
             <div v-if="simuladorError" class="text-sm text-red-600 mb-4">{{ simuladorError }}            </div>
           </div>
           <div v-if="simuladorSocios.length > 0" class="space-y-4">
-            <p class="text-sm font-semibold text-gray-700">Resumen por socio ({{ simuladorSocios.length }})</p>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p class="text-sm font-semibold text-gray-700">Resumen por socio ({{ simuladorSocios.length }})</p>
+              <button
+                type="button"
+                @click="exportarSimuladorAExcel"
+                :disabled="exportandoSimulador"
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 text-white font-semibold hover:bg-teal-600 disabled:opacity-50 transition-colors text-sm"
+              >
+                <ArrowDownTrayIcon class="w-4 h-4" />
+                {{ exportandoSimulador ? 'Exportando...' : 'Exportar a Excel' }}
+              </button>
+            </div>
+            
+            <!-- Total General -->
+            <div class="bg-gradient-to-r from-teal-50 to-teal-100 rounded-xl p-4 border-2 border-teal-200 shadow-sm">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-semibold text-teal-800 mb-1">Total a entregar</p>
+                  <p class="text-xs text-teal-600">Dinero total que se debe tener disponible</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-2xl sm:text-3xl font-extrabold text-teal-700 tabular-nums">
+                    ${{ formatMoney(totalSimuladorGeneral) }}
+                  </p>
+                </div>
+              </div>
+            </div>
             
             <!-- Vista Desktop: Tabla -->
             <div class="hidden sm:block overflow-x-auto bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -987,20 +992,38 @@
                       <td class="px-4 py-3 text-right font-medium text-purple-600 tabular-nums">${{ formatMoney(dato.utilidadesTotal) }}</td>
                       <td class="px-4 py-3 text-right font-medium text-gray-600 tabular-nums">${{ formatMoney(dato.totalAEntregar) }}</td>
                       <td class="px-4 py-3 text-right font-medium text-red-600 tabular-nums">${{ formatMoney(dato.descuentos) }}</td>
-                      <td class="px-4 py-3 text-right font-bold tabular-nums" :class="dato.totalFinal >= 0 ? 'text-teal-600' : 'text-red-600'">
-                        ${{ formatMoney(dato.totalFinal) }}
+                      <td class="px-4 py-3 text-right">
+                        <div class="tabular-nums font-bold" :class="dato.totalFinal >= 0 ? 'text-teal-600' : ''">
+                          ${{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
+                        </div>
+                        <div v-if="dato.totalFinal < 0" class="text-xs font-semibold text-red-600 mt-0.5">
+                          Debe: ${{ formatMoney(-dato.totalFinal) }}
+                        </div>
                       </td>
                     </tr>
                     <tr v-show="simuladorDetalleId === (dato.socioNatillera?.id || dato.socio?.id)" class="bg-gray-50/80">
                       <td colspan="6" class="px-4 py-3 border-t border-gray-100/50">
-                        <div class="pl-6 flex items-center gap-4 flex-wrap text-xs">
-                          <span class="font-semibold text-gray-600">Desglose de utilidades:</span>
-                          <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
-                            <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-gray-200">
-                              <span class="text-gray-500">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}:</span>
-                              <span class="font-bold text-gray-800">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                        <div class="pl-6 space-y-3 text-xs">
+                          <div v-if="dato.descuentos > 0 && dato.descuentosDesglose" class="flex flex-wrap items-center gap-4">
+                            <span class="font-semibold text-red-600">Detalle del descuento (sanción):</span>
+                            <span v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded border border-red-200">
+                              <span class="text-red-700">Préstamos pendientes:</span>
+                              <span class="font-bold text-red-800">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
                             </span>
-                          </template>
+                            <span v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="flex items-center gap-1.5 bg-red-50 px-2.5 py-1 rounded border border-red-200">
+                              <span class="text-red-700">Cuotas sin pagar (en mora):</span>
+                              <span class="font-bold text-red-800">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
+                            </span>
+                          </div>
+                          <div class="flex items-center gap-4 flex-wrap">
+                            <span class="font-semibold text-gray-600">Desglose de utilidades:</span>
+                            <template v-for="tipo in TIPOS_UTILIDAD_SIMULADOR" :key="tipo">
+                              <span v-show="(dato.utilidadesPorConcepto[tipo] || 0) > 0" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded border border-gray-200">
+                                <span class="text-gray-500">{{ LABELS_UTILIDAD_SIMULADOR[tipo] || tipo }}:</span>
+                                <span class="font-bold text-gray-800">${{ formatMoney(dato.utilidadesPorConcepto[tipo] || 0) }}</span>
+                              </span>
+                            </template>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1032,8 +1055,11 @@
                   </div>
                   <div class="flex flex-col items-end flex-shrink-0">
                     <span class="text-xs text-gray-500 mb-0.5">A entregar</span>
-                    <span class="font-bold text-[15px]" :class="dato.totalFinal >= 0 ? 'text-teal-600' : 'text-red-600'">
-                      ${{ formatMoney(dato.totalFinal) }}
+                    <span class="font-bold text-[15px]" :class="dato.totalFinal >= 0 ? 'text-teal-600' : ''">
+                      ${{ formatMoney(dato.totalFinal >= 0 ? dato.totalFinal : 0) }}
+                    </span>
+                    <span v-if="dato.totalFinal < 0" class="text-[11px] font-semibold text-red-600 mt-0.5">
+                      Debe: ${{ formatMoney(-dato.totalFinal) }}
                     </span>
                   </div>
                 </button>
@@ -1052,6 +1078,21 @@
                     <div class="bg-red-50 p-2 rounded-lg border border-red-100">
                       <span class="text-red-500/80 block mb-0.5">Descuentos</span>
                       <span class="font-semibold text-red-600">-${{ formatMoney(dato.descuentos) }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Detalle del descuento (sanción) cuando hay descuento -->
+                  <div v-if="dato.descuentos > 0 && dato.descuentosDesglose" class="space-y-2">
+                    <p class="text-[11px] font-bold text-red-600 uppercase tracking-wider">Detalle del descuento (sanción)</p>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div v-if="(dato.descuentosDesglose.prestamosPendientes || 0) > 0" class="bg-red-50 p-2 rounded-lg border border-red-200">
+                        <span class="text-[11px] text-red-700 block mb-0.5">Préstamos pendientes</span>
+                        <span class="font-semibold text-red-800 text-[11px]">${{ formatMoney(dato.descuentosDesglose.prestamosPendientes || 0) }}</span>
+                      </div>
+                      <div v-if="(dato.descuentosDesglose.cuotasSinPagar || 0) > 0" class="bg-red-50 p-2 rounded-lg border border-red-200">
+                        <span class="text-[11px] text-red-700 block mb-0.5">Cuotas sin pagar (en mora)</span>
+                        <span class="font-semibold text-red-800 text-[11px]">${{ formatMoney(dato.descuentosDesglose.cuotasSinPagar || 0) }}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1138,7 +1179,9 @@ const CATEGORIAS_DETALLE = [
   { value: 'cuota_prestamo', label: 'Cuota préstamo' },
   { value: 'sancion', label: 'Sanción' },
   { value: 'actividad', label: 'Actividad' },
+  { value: 'gmf_4x1000', label: '4x1000' },
   { value: 'prestamo', label: 'Préstamo' },
+  { value: 'interes_anticipado', label: 'Utilidad por interés anticipado' },
   { value: 'liquidacion_salida', label: 'Liquidación por salida' },
   { value: 'premio_rifa', label: 'Premio rifa' }
 ]
@@ -1156,8 +1199,7 @@ const OPCIONES_ORDENAR = [
 const efectivoContado = ref(0)
 const transferenciaContada = ref(0)
 
-const modalDesgloseFormaPago = ref(null) // 'efectivo' | 'transferencia' | null
-
+const modalDesgloseFormaPago = ref(null) // ya no se usa; se mantiene por compatibilidad con código residual
 const tabActiva = ref('totales') // 'totales' | 'simulador'
 const simuladorSocios = ref([])
 const simuladorSociosFiltrados = ref([])
@@ -1215,9 +1257,6 @@ async function ejecutarSimulador() {
   }
 }
 
-// Bloquear scroll del body cuando las modales están abiertas
-const modalDesgloseOpen = computed(() => !!modalDesgloseFormaPago.value)
-useBodyScrollLock(modalDesgloseOpen)
 const dropdownCategoriasAbierto = ref(false)
 const dropdownCategoriasRef = ref(null)
 const dropdownOrdenarAbierto = ref(false)
@@ -1227,6 +1266,7 @@ const movimientoAEliminarOpen = computed(() => !!movimientoAEliminar.value)
 useBodyScrollLock(movimientoAEliminarOpen)
 const eliminandoMovimiento = ref(false)
 const exportando = ref(false)
+const exportandoSimulador = ref(false)
 
 // Modal de nuevo movimiento
 const modalMovimientoAbierto = ref(false)
@@ -1272,12 +1312,17 @@ const puedeGestionarCuotas = computed(() => {
 })
 
 // Totales esperados: calculados desde detalleItems (fuente fiable) + movimientos
-// detalleItems incluye: cuotas (valor_cuota), sanciones (valor_pagado_sancion), actividades (socios_actividad), préstamos (negativo)
+// detalleItems incluye: cuotas, sanciones, actividades, GMF 4×1000 (historial transferencias), préstamos (negativo)
 const recaudadoEfectivo = computed(() => {
   return detalleItems.value.filter(i => (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 const recaudadoTransferencia = computed(() => {
   return detalleItems.value.filter(i => (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+})
+const recaudadoGmf4x1000 = computed(() => {
+  return detalleItems.value
+    .filter(i => i.tipo === 'gmf_4x1000' && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0)
+    .reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 // Desglose: Recaudado (cuotas) vs Utilidad (sanciones + actividades)
 const recaudadoCuotasEfectivo = computed(() => {
@@ -1310,6 +1355,13 @@ const prestamosEfectivo = computed(() => {
 })
 const prestamosTransferencia = computed(() => {
   return Math.abs(detalleItems.value.filter(i => i.tipo === 'prestamo' && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) < 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0))
+})
+// Utilidad por interés anticipado (préstamos): suma a la forma de pago correspondiente
+const utilidadInteresAnticipadoEfectivo = computed(() => {
+  return detalleItems.value.filter(i => i.tipo === 'interes_anticipado' && (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+})
+const utilidadInteresAnticipadoTransferencia = computed(() => {
+  return detalleItems.value.filter(i => i.tipo === 'interes_anticipado' && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 // Movimientos sin premios rifa (el premio ya se resta del recaudo vía detalleItems)
 function esPremioRifaMovimiento(m) {
@@ -1395,7 +1447,10 @@ function logCalculoTotalesGenerales() {
   console.log('  + Movimientos de fondo (neto, sin premios):', fmt(movimientosEfectivoNeto.value))
   console.log('  = Total esperado efectivo:', fmt(totalEsperadoEfectivo.value))
   console.log('--- TRANSFERENCIA ---')
-  console.log('  Recaudado (cuotas + cuotas préstamos + sanciones + actividades):', fmt(recaudadoTransferencia.value))
+  console.log('  Recaudado (cuotas + cuotas préstamos + sanciones + actividades + GMF 4×1000):', fmt(recaudadoTransferencia.value))
+  if (recaudadoGmf4x1000.value > 0) {
+    console.log('    de los cuales GMF 4×1000:', fmt(recaudadoGmf4x1000.value))
+  }
   console.log('  − Préstamos entregados:', fmt(prestamosTransferencia.value))
   console.log('  − Premios rifa:', fmt(premiosTransferencia.value))
   console.log('  Recaudado neto:', fmt(Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value)))
@@ -1544,6 +1599,14 @@ watch(mesesEnNatillera, (nuevos) => {
   }
 }, { immediate: true })
 
+// Total a entregar: solo suma lo que se entrega (0 si el socio debe)
+const totalSimuladorGeneral = computed(() => {
+  return simuladorSociosFiltrados.value.reduce((sum, socio) => {
+    const v = parseFloat(socio.totalFinal) || 0
+    return sum + (v > 0 ? v : 0)
+  }, 0)
+})
+
 const etiquetaFiltroCategorias = computed(() => {
   if (filtroDetalleCategorias.value.length === 0) return 'Todas'
   if (filtroDetalleCategorias.value.length === 1) {
@@ -1564,14 +1627,14 @@ function toggleFiltroCategoria(value) {
 }
 
 function getConceptoLabel(tipo) {
-  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', prestamo: 'Préstamo', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa' }
+  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', gmf_4x1000: '4x1000', prestamo: 'Préstamo', interes_anticipado: 'Utilidad por interés anticipado', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa' }
   return map[tipo] || tipo
 }
 function getConceptoClass(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
     return 'bg-orange-100 text-orange-800 border border-orange-300/60'
   }
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800' }
+  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800' }
   return map[tipo] || 'bg-gray-100 text-gray-700'
 }
 function getMesLabel(mes) {
@@ -1886,6 +1949,116 @@ async function exportarAExcel() {
     exportando.value = false
   }
 }
+async function exportarSimuladorAExcel() {
+  if (simuladorSociosFiltrados.value.length === 0) return
+  exportandoSimulador.value = true
+  try {
+    const datosExportar = simuladorSociosFiltrados.value.map(d => {
+      const totalFinal = parseFloat(d.totalFinal) || 0
+      const aEntregar = totalFinal >= 0 ? totalFinal : 0
+      const debe = totalFinal < 0 ? -totalFinal : 0
+      return {
+        Socio: d.socio?.nombre || 'Socio',
+        Telefono: d.socio?.telefono || '',
+        Ahorro: parseFloat(d.ahorro) || 0,
+        Utilidades: parseFloat(d.utilidadesTotal) || 0,
+        'Total (Antes de desc.)': parseFloat(d.totalAEntregar) || 0,
+        Descuentos: parseFloat(d.descuentos) || 0,
+        'A Entregar': aEntregar,
+        Debe: debe
+      }
+    })
+
+    const wb = XLSX.utils.book_new()
+    const wsData = [
+      [natillera.value?.nombre || 'Natillera'],
+      ['Simulador de Cierre'],
+      ['Fecha de corte:', simuladorFechaCorte.value],
+      ['Exportado:', new Date().toLocaleString('es-CO')],
+      [],
+      ['Socio', 'Teléfono', 'Ahorro', 'Utilidades', 'Total (Antes de desc.)', 'Descuentos', 'A Entregar', 'Debe'],
+      ...datosExportar.map(d => [d.Socio, d.Telefono, d.Ahorro, d.Utilidades, d['Total (Antes de desc.)'], d.Descuentos, d['A Entregar'], d.Debe]),
+      [],
+      ['TOTAL GENERAL', '', '', '', '', '', totalSimuladorGeneral.value, '']
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: wsData.length - 1, c: 7 } })
+    ws['!freeze'] = { xSplit: 0, ySplit: 5, topLeftCell: 'A6', state: 'frozen' }
+
+    const colorTeal = { rgb: '14B8A6' }
+    const colorTealOscuro = { rgb: '0D9488' }
+    const colorVerde = { rgb: '10B981' }
+    const colorRojo = { rgb: 'DC2626' }
+
+    ws['A1'].s = { font: { bold: true, sz: 14, color: { rgb: '1F2937' } } }
+    ws['A2'].s = { font: { sz: 12, color: { rgb: '4B5563' } } }
+    ws['A3'].s = { font: { sz: 10, color: { rgb: '6B7280' } } }
+    ws['A4'].s = { font: { sz: 10, color: { rgb: '6B7280' } } }
+
+    const headerRow = 5
+    for (let col = 0; col < 8; col++) {
+      const cell = XLSX.utils.encode_cell({ r: headerRow, c: col })
+      ws[cell].s = {
+        fill: { fgColor: colorTeal, patternType: 'solid' },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+        alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+        border: { top: { style: 'thin', color: colorTealOscuro }, bottom: { style: 'thin', color: colorTealOscuro }, left: { style: 'thin', color: colorTealOscuro }, right: { style: 'thin', color: colorTealOscuro } }
+      }
+    }
+
+    const dataStartRow = 6
+    const dataEndRow = dataStartRow + datosExportar.length - 1
+    for (let row = dataStartRow; row <= dataEndRow; row++) {
+      const idx = row - dataStartRow
+      const aEntregar = datosExportar[idx]?.['A Entregar'] ?? 0
+      const debe = datosExportar[idx]?.Debe ?? 0
+      for (let col = 0; col < 8; col++) {
+        const cell = XLSX.utils.encode_cell({ r: row, c: col })
+        if (!ws[cell]) continue
+        const isAEntregar = col === 6
+        const isDebe = col === 7
+        const color = isDebe && debe > 0 ? colorRojo : (isAEntregar ? { rgb: '047857' } : { rgb: '1F2937' })
+        ws[cell].s = {
+          fill: { fgColor: { rgb: 'FFFFFF' }, patternType: 'solid' },
+          font: { sz: 10, bold: col === 0, color },
+          alignment: { horizontal: col >= 2 ? 'right' : 'left', vertical: 'center' },
+          border: { top: { style: 'thin', color: { rgb: 'E5E7EB' } }, bottom: { style: 'thin', color: { rgb: 'E5E7EB' } }, left: { style: 'thin', color: { rgb: 'E5E7EB' } }, right: { style: 'thin', color: { rgb: 'E5E7EB' } } }
+        }
+        if (col >= 2) ws[cell].z = (isAEntregar || isDebe) ? '#,##0' : '#,##0'
+      }
+    }
+
+    const totalRow = dataEndRow + 2
+    const cellTotalLabel = XLSX.utils.encode_cell({ r: totalRow, c: 0 })
+    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 6 })
+    ws[cellTotalLabel].s = {
+      fill: { fgColor: { rgb: 'CCFBF1' }, patternType: 'solid' },
+      font: { bold: true, sz: 12, color: { rgb: '0F766E' } },
+      alignment: { horizontal: 'left', vertical: 'center' },
+      border: { top: { style: 'medium', color: colorTealOscuro }, bottom: { style: 'medium', color: colorTealOscuro }, left: { style: 'thin', color: colorTealOscuro }, right: { style: 'thin', color: colorTealOscuro } }
+    }
+    ws[cellTotalVal].s = {
+      fill: { fgColor: { rgb: 'CCFBF1' }, patternType: 'solid' },
+      font: { bold: true, sz: 12, color: { rgb: '047857' } },
+      alignment: { horizontal: 'right', vertical: 'center' },
+      border: { top: { style: 'medium', color: colorTealOscuro }, bottom: { style: 'medium', color: colorTealOscuro }, left: { style: 'thin', color: colorTealOscuro }, right: { style: 'thin', color: colorTealOscuro } }
+    }
+    ws[cellTotalVal].z = '#,##0;[Red]-#,##0'
+
+    ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }]
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Simulador de Cierre')
+    const nombreArchivo = `Simulador_Cierre_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
+    XLSX.writeFile(wb, nombreArchivo)
+    notificationStore.success('Exportado a Excel correctamente', 'Éxito')
+  } catch (e) {
+    console.error('Error exportando simulador a Excel:', e)
+    notificationStore.error(e.message || 'Error al exportar', 'Error')
+  } finally {
+    exportandoSimulador.value = false
+  }
+}
+
 function formatDate(str) {
   if (!str) return '—'
   const d = new Date(str)
@@ -1931,7 +2104,7 @@ function obtenerDescripcionLimpia(m) {
   return m.descripcion
 }
 
-function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosData = null, cuotasPrestamoPagadas = []) {
+function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosData = null, cuotasPrestamoPagadas = [], historialImpuesto4x1000 = []) {
   const items = []
   if (!nat) return items
   const sociosMap = {}
@@ -2059,6 +2232,20 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     }
   })
 
+  // Utilidad por interés anticipado: un registro por préstamo en Detalle por concepto (entrada que suma a la forma de pago)
+  ;(prestamosData || []).forEach(p => {
+    if (!p.interes_anticipado || p.interes_total == null) return
+    const interesTotal = parseFloat(p.interes_total) || 0
+    if (interesTotal <= 0) return
+    const socio = sociosMap[p.socio_natillera_id] || '—'
+    const fp = tipoPago(p.medio_entrega)
+    const fechaCreacion = p.created_at ? new Date(p.created_at) : null
+    const mes = fechaCreacion ? fechaCreacion.getMonth() + 1 : undefined
+    const anio = fechaCreacion ? fechaCreacion.getFullYear() : undefined
+    const conceptoPorPrestamo = `Utilidad por interés anticipado — ${socio}`
+    items.push({ tipo: 'interes_anticipado', concepto: conceptoPorPrestamo, socio, forma_pago: fp, monto: interesTotal, mes, anio, socioEsMensual: true })
+  })
+
   // Premios rifa entregados (salidas que se restan del recaudo): desde movimientos_fondo o, si no hay, desde actividades liquidadas (gastos)
   const tipoPagoMov = (t) => (String(t || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo')
   const descripcionMov = (m) => (m && (m.descripcion ?? m.Descripcion ?? '')).toString().toLowerCase().trim()
@@ -2105,8 +2292,34 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     }
   })
 
-  // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, prestamo, liquidacion_salida, premio_rifa)
-  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, actividad: 2, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4 }
+  // GMF 4×1000 por abono en transferencia (desde historial_pagos_cuota; un registro por fila de historial)
+  ;(historialImpuesto4x1000 || []).forEach(h => {
+    const imp = parseFloat(h.impuesto_4x1000) || 0
+    if (imp <= 0) return
+    const fpHist = String(h.forma_pago || '').toLowerCase().trim()
+    if (fpHist !== 'transferencia') return
+    const c = (nat.cuotas || []).find(x => x.id === h.cuota_id)
+    const socio = (h.socio_nombre || '').trim() || (c ? sociosMap[c.socio_natillera_id] : null) || '—'
+    const fechaPago = h.fecha_pago ? new Date(h.fecha_pago) : null
+    const mes = fechaPago && !isNaN(fechaPago.getTime()) ? fechaPago.getMonth() + 1 : undefined
+    const anio = fechaPago && !isNaN(fechaPago.getTime()) ? fechaPago.getFullYear() : undefined
+    const quincena = c && c.quincena != null ? c.quincena : undefined
+    const socioEsMensual = c ? (periodicidadPorSocioId[c.socio_natillera_id] || 'mensual') === 'mensual' : true
+    items.push({
+      tipo: 'gmf_4x1000',
+      concepto: '4x1000',
+      socio,
+      forma_pago: 'transferencia',
+      monto: imp,
+      mes,
+      anio,
+      quincena,
+      socioEsMensual
+    })
+  })
+
+  // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, interes_anticipado, prestamo, liquidacion_salida, premio_rifa)
+  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4 }
   items.sort((a, b) => {
     const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}-${ordenTipo[a.tipo] ?? 4}`
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}-${ordenTipo[b.tipo] ?? 4}`
@@ -2184,8 +2397,23 @@ async function cargarDatos() {
     movimientos.value = movs || []
 
     const prestamoIds = (prestamosData || []).map(p => p.id)
-    const cuotasPrestamoPagadas = await cargarCuotasPrestamoPagadasParaDetalle(prestamoIds)
-    detalleItems.value = buildDetalleItems(nat, prestamosData, sociosActividadData, movs || [], cuotasPrestamoPagadas)
+    const cuotaIdsNat = (nat.cuotas || []).map(c => c.id).filter(Boolean)
+    const [cuotasPrestamoPagadas, historialGmfRes] = await Promise.all([
+      cargarCuotasPrestamoPagadasParaDetalle(prestamoIds),
+      cuotaIdsNat.length === 0
+        ? Promise.resolve({ data: [], error: null })
+        : supabase
+            .from('historial_pagos_cuota')
+            .select('cuota_id, socio_nombre, fecha_pago, forma_pago, impuesto_4x1000')
+            .in('cuota_id', cuotaIdsNat)
+    ])
+    let historialGmfRows = []
+    if (historialGmfRes?.error) {
+      console.warn('Cuadre: historial GMF 4×1000 no cargado (¿columna impuesto_4x1000 o RLS?):', historialGmfRes.error.message)
+    } else {
+      historialGmfRows = (historialGmfRes?.data || []).filter(r => (parseFloat(r.impuesto_4x1000) || 0) > 0)
+    }
+    detalleItems.value = buildDetalleItems(nat, prestamosData, sociosActividadData, movs || [], cuotasPrestamoPagadas, historialGmfRows)
     misPermisos.value = permisos
     await nextTick()
     logCalculoTotalesGenerales()

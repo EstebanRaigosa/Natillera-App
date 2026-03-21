@@ -2387,22 +2387,33 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
         const valorTotalHist = (valorCuotaPagado || 0) + (valorSancionPagadaFinal || 0) + (valorActividadesPagado || 0)
         const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
+        const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
 
-        await supabase
-          .from('historial_pagos_cuota')
-          .insert({
-            cuota_id: cuotaId,
-            fecha_pago: new Date().toISOString(),
-            forma_pago: formaPagoHist,
-            socio_nombre: nombreSocio,
-            natillera_nombre: natilleraNombre,
-            valor_total: valorTotalHist,
-            valor_cuota: valorCuotaPagado || 0,
-            valor_sancion: valorSancionPagadaFinal || 0,
-            valor_actividades: valorActividadesPagado || 0,
-            valor_cuotas_prestamo: 0,
-            valor_pagado_cuota_total: valorPagadoCuotaTotal
-          })
+        const insertHistorial = {
+          cuota_id: cuotaId,
+          fecha_pago: new Date().toISOString(),
+          forma_pago: formaPagoHist,
+          socio_nombre: nombreSocio,
+          natillera_nombre: natilleraNombre,
+          valor_total: valorTotalHist,
+          valor_cuota: valorCuotaPagado || 0,
+          valor_sancion: valorSancionPagadaFinal || 0,
+          valor_actividades: valorActividadesPagado || 0,
+          valor_cuotas_prestamo: 0,
+          valor_pagado_cuota_total: valorPagadoCuotaTotal
+        }
+        if (impuesto4x1000Hist > 0) {
+          insertHistorial.impuesto_4x1000 = impuesto4x1000Hist
+        }
+
+        let histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+        if (histRes.error && String(histRes.error.message || '').includes('impuesto_4x1000')) {
+          delete insertHistorial.impuesto_4x1000
+          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+        }
+        if (histRes.error) {
+          console.warn('No se pudo registrar historial_pagos_cuota:', histRes.error.message)
+        }
       } catch (eHist) {
         // No bloquear el flujo de pago si falla el registro del historial
         console.warn('No se pudo registrar historial_pagos_cuota:', eHist.message)
