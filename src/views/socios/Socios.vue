@@ -2351,7 +2351,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition, TransitionGroup } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition, TransitionGroup, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSociosStore } from '../../stores/socios'
 import { useCuotasStore } from '../../stores/cuotas'
@@ -2361,6 +2361,7 @@ import { useNotificationStore } from '../../stores/notifications'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { shouldShowNatilleraMenuTour, startNatilleraMenuTour } from '../../composables/useNatilleraMenuTour'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -2414,6 +2415,7 @@ const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const notificationStore = useNotificationStore()
 const colaboradoresStore = useColaboradoresStore()
+const dashboardSidebar = inject('dashboardSidebar', null)
 
 const modalAgregar = ref(false)
 const modalDetalle = ref(false)
@@ -3074,6 +3076,21 @@ async function abrirSelectorContactos() {
   }
 }
 
+function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
+  if (!eraListaVaciaAntes || !natilleraId) return
+  if (!shouldShowNatilleraMenuTour(natilleraId)) return
+  if (!dashboardSidebar?.openMobile || !dashboardSidebar?.closeMobile) return
+  nextTick(() => {
+    setTimeout(() => {
+      startNatilleraMenuTour({
+        natilleraId,
+        openSidebar: () => dashboardSidebar.openMobile(),
+        closeSidebar: () => dashboardSidebar.closeMobile()
+      })
+    }, 850)
+  })
+}
+
 async function handleGuardarSocio() {
   errorSocio.value = ''
   errorTelefonoDuplicado.value = false
@@ -3368,6 +3385,8 @@ async function handleGuardarSocio() {
         return
       }
 
+      const eraListaSociosVacia = sociosStore.sociosNatillera.length === 0
+
       const datosSocio = {
         nombre: formSocio.nombre,
         documento: formSocio.documento,
@@ -3502,6 +3521,7 @@ async function handleGuardarSocio() {
         // Esperar 2.5 segundos y cerrar automáticamente
         await new Promise(resolve => setTimeout(resolve, 2500))
         cerrarModalProgreso()
+        programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
 
       } else {
         // Sin cuotas automáticas, crear socio normalmente
@@ -3529,6 +3549,7 @@ async function handleGuardarSocio() {
             3000
           )
           cerrarModal()
+          programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
         } else {
           if (result.error?.includes('unique') || result.error?.includes('duplicate') || result.error?.includes('teléfono')) {
             errorTelefonoDuplicado.value = true

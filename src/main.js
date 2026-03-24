@@ -3,6 +3,7 @@ import { createPinia } from 'pinia'
 import router from './router'
 import App from './App.vue'
 import './style.css'
+import 'driver.js/dist/driver.css'
 
 // Detectar si estamos en modo desarrollo
 const isDev = import.meta.env.DEV

@@ -48,243 +48,203 @@
         </div>
 
         <!-- Navegación -->
-        <nav class="flex-1 p-4 space-y-1 overflow-y-auto pb-24">
-          <router-link 
-            to="/dashboard" 
-            class="nav-link"
-            :class="{ 'nav-link-active': $route.path === '/dashboard' }"
-            @click="cerrarSidebar"
-          >
-            <HomeIcon class="w-5 h-5" />
-            <span>Mis Natilleras</span>
-          </router-link>
-
-          <router-link 
-            to="/auditoria" 
-            class="nav-link"
-            :class="{ 'nav-link-active': $route.path === '/auditoria' }"
-            @click="cerrarSidebar"
-          >
-            <ClipboardDocumentListIcon class="w-5 h-5" />
-            <span>Auditoría</span>
-          </router-link>
-
-          <router-link 
-            v-if="isAdmin"
-            to="/admin/chat" 
-            class="nav-link relative"
-            :class="{ 'nav-link-active': $route.path === '/admin/chat' }"
-            @click="cerrarSidebar; supportStore.resetUnreadCount()"
-          >
-            <ChatBubbleLeftRightIcon class="w-5 h-5" />
-            <span>Soporte</span>
-            <!-- Badge de notificación -->
-            <Transition
-              enter-active-class="transition duration-300 ease-out"
-              enter-from-class="opacity-0 scale-0"
-              enter-to-class="opacity-100 scale-100"
-              leave-active-class="transition duration-200 ease-in"
-              leave-from-class="opacity-100 scale-100"
-              leave-to-class="opacity-0 scale-0"
-              mode="out-in"
+        <nav class="flex-1 p-4 space-y-4 overflow-y-auto pb-24">
+          <!-- Móvil: acceso al listado de natilleras (dashboard); el resto del menú va en la barra inferior -->
+          <div class="sidebar-section lg:hidden">
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.name === 'Dashboard' }"
+              @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
             >
-              <span
-                v-if="supportStore.hasUnreadMessages && $route.path !== '/admin/chat'"
-                :key="`badge-${supportStore.unreadCount}`"
-                class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse"
+              <RectangleStackIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Mis Natilleras</span>
+            </button>
+          </div>
+
+          <!-- Menú (solo escritorio): Mis Natilleras + vistas de la natillera actual -->
+          <div class="sidebar-section hidden lg:block space-y-1">
+            <p class="sidebar-section-heading">Menú</p>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.name === 'Dashboard' }"
+              @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
+            >
+              <RectangleStackIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Mis Natilleras</span>
+            </button>
+            <template v-if="natilleraIdRuta">
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path === '/natilleras/' + natilleraIdRuta }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta)"
               >
-                {{ supportStore.unreadCount > 99 ? '99+' : supportStore.unreadCount }}
+                <HomeIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Inicio</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/socios') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/socios')"
+              >
+                <UsersIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Socios</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/cuotas') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/cuotas')"
+              >
+                <CurrencyDollarIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Cuotas</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/prestamos') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/prestamos')"
+              >
+                <BanknotesIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Préstamos</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/actividades') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/actividades')"
+              >
+                <CalendarIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Actividades</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/cuadre-caja') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/cuadre-caja')"
+              >
+                <CalculatorIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Totales</span>
+              </button>
+            </template>
+          </div>
+
+          <!-- Acciones de la natillera actual (barra lateral; en detalle ya no se muestran) -->
+          <div
+            v-if="natilleraIdRuta"
+            id="tour-acciones-natillera"
+            class="sidebar-section space-y-1"
+          >
+            <p class="sidebar-section-heading">Acciones Natillera</p>
+            <button
+              v-if="puedeAccionSidebar('buscar_comprobante')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              @click="ejecutarAccionNatillera('buscar')"
+            >
+              <MagnifyingGlassIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Buscar Comprobante</span>
+            </button>
+            <button
+              v-if="puedeAccionSidebar('invitar_colaboradores')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              @click="ejecutarAccionNatillera('invitar')"
+            >
+              <UserPlusIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Invitar Colaborador</span>
+            </button>
+            <button
+              v-if="puedeAccionSidebar('configurar')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/configuracion')"
+            >
+              <Cog6ToothIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Configurar</span>
+            </button>
+            <button
+              v-if="puedeAccionSidebar('notificar')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              @click="ejecutarAccionNatillera('notificar')"
+            >
+              <ChatBubbleLeftRightIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Notificar</span>
+            </button>
+            <button
+              v-if="puedeAccionSidebar('cerrar_natillera')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left text-rose-100 hover:text-white"
+              @click="ejecutarAccionNatillera('cerrar')"
+            >
+              <DocumentCheckIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Cerrar Natillera</span>
+            </button>
+          </div>
+
+          <!-- Invitaciones pendientes -->
+          <div v-if="hayInvitacionesPendientes" class="sidebar-section space-y-2">
+            <div class="flex items-center justify-between gap-2 px-1">
+              <p class="sidebar-section-heading !mb-0 !border-0 !pb-0">Invitaciones</p>
+              <span class="rounded-full bg-white/15 px-2 py-0.5 text-xs font-bold text-emerald-50 tabular-nums">
+                {{ colaboradoresStore.misInvitaciones.length }}
               </span>
-            </Transition>
-          </router-link>
-
-          <router-link 
-            v-if="isAdmin"
-            to="/admin/data" 
-            class="nav-link"
-            :class="{ 'nav-link-active': $route.path === '/admin/data' }"
-            @click="cerrarSidebar"
-          >
-            <ClipboardDocumentListIcon class="w-5 h-5" />
-            <span>Datos BD</span>
-          </router-link>
-
-          <div class="pt-4 pb-2">
-            <p class="px-4 text-xs font-semibold text-emerald-100/90 uppercase tracking-wider mb-3">Accesos Rápidos</p>
-            <div class="mx-4 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+            </div>
+            <InvitacionesPendientes omit-outer-heading />
           </div>
 
-          <!-- Natilleras Activas -->
-          <div v-if="natillerasStore.loading" class="px-4 py-2">
-            <p class="text-xs text-gray-400">Cargando...</p>
-          </div>
-          <template v-else-if="todasLasNatillerasActivas.length > 0">
-            <div 
-              v-for="natillera in todasLasNatillerasActivas" 
-              :key="natillera.id"
-              class="space-y-1"
+          <!-- Administrador (solo cuenta principal) -->
+          <div v-if="isSuperAdmin" class="sidebar-section space-y-1">
+            <p class="sidebar-section-heading">Administrador</p>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.path === '/auditoria' }"
+              @click="abrirRutaDesdeSidebar('/auditoria')"
             >
-              <!-- Contenedor principal de la natillera -->
-              <div 
-                class="flex items-center gap-2 pr-1 rounded-xl px-1 py-1 transition-all duration-200 relative"
-                :class="{
-                  'border-2 border-sky-500/85 shadow-lg shadow-sky-600/35 bg-gradient-to-r from-sky-500/6 via-transparent to-sky-500/6': !natillera.es_propia
-                }"
-              >
-                <!-- Indicador decorativo para natilleras compartidas -->
-                <div 
-                  v-if="!natillera.es_propia"
-                  class="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-sky-400 via-sky-500 to-sky-400 rounded-full shadow-md shadow-sky-500/50"
-                ></div>
-                
-                <!-- Link a la vista de detalle con tooltip -->
-                <div 
-                  class="flex-1 min-w-0 relative group"
-                >
-                  <button
-                    @click="navegarANatillera(natillera.id)"
-                    @touchstart.stop="mostrarTooltip(natillera.id, $event)"
-                    class="nav-link w-full min-w-0 text-left"
-                    :class="{
-                      'nav-link-active': $route.params.id === String(natillera.id) && $route.path.startsWith(`/natilleras/${natillera.id}`)
-                    }"
-                  >
-                    <BanknotesIcon class="w-5 h-5 flex-shrink-0" />
-                    <span class="truncate flex-1 text-left">{{ natillera.nombre }}</span>
-                    <UserGroupIcon 
-                      v-if="!natillera.es_propia" 
-                      class="w-4 h-4 flex-shrink-0 ml-1.5 text-sky-400 drop-shadow-sm" 
-                      title="Natillera compartida"
-                    />
-                  </button>
-                  <!-- Tooltip elegante y estilizado -->
-                  <div 
-                    class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2.5 px-5 py-2.5 bg-gradient-to-br from-slate-900/98 via-slate-800/98 to-slate-900/98 text-white text-xs font-semibold tracking-wide rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out whitespace-nowrap z-50 pointer-events-none transform backdrop-blur-lg border border-emerald-500/25"
-                    :class="{
-                      'opacity-0 invisible translate-y-1 scale-[0.98]': tooltipVisible !== natillera.id,
-                      'opacity-100 visible translate-y-0 scale-100': tooltipVisible === natillera.id,
-                      'lg:opacity-0 lg:invisible lg:translate-y-1 lg:scale-[0.98] lg:group-hover:opacity-100 lg:group-hover:visible lg:group-hover:translate-y-0 lg:group-hover:scale-100': true
-                    }"
-                  >
-                    <!-- Efecto de brillo superior elegante -->
-                    <div class="absolute inset-0 rounded-xl bg-gradient-to-b from-white/12 via-white/4 to-transparent pointer-events-none"></div>
-                    <!-- Contenido del tooltip -->
-                    <div class="relative z-10">
-                      <span class="text-emerald-50/95 drop-shadow-sm font-medium">{{ natillera.nombre }}</span>
-                    </div>
-                    <!-- Flecha elegante y precisa -->
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-                      <div class="w-2.5 h-2.5 bg-gradient-to-br from-slate-800/98 to-slate-900/98 rotate-45 border-r border-b border-emerald-500/25 shadow-[0_2px_8px_rgba(0,0,0,0.3)]"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Botón para abrir/cerrar desplegable -->
-                <button
-                  @click.stop="toggleNatillera(natillera.id)"
-                  :class="[
-                    'p-2.5 rounded-xl transition-all duration-300 flex-shrink-0 shadow-lg border-2 relative z-10',
-                    natilleraExpandida === natillera.id
-                      ? 'bg-white/30 text-white hover:bg-white/40 border-white/40 shadow-black/30 backdrop-blur-sm'
-                      : 'bg-white/20 text-emerald-100 hover:bg-white/30 hover:text-white border-white/20 hover:border-white/40 hover:shadow-lg backdrop-blur-sm'
-                  ]"
-                  title="Ver opciones"
-                >
-                  <ChevronDownIcon 
-                    :class="['w-5 h-5 transition-transform duration-300', natilleraExpandida === natillera.id ? 'rotate-180' : '']" 
-                  />
-                </button>
-              </div>
-              
-              <!-- Opciones desplegables -->
+              <ClipboardDocumentListIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Auditoría</span>
+            </button>
+            <button
+              type="button"
+              class="nav-link nav-link-option relative w-full text-left"
+              :class="{ 'nav-link-active': route.path === '/admin/chat' }"
+              @click="supportStore.resetUnreadCount(); abrirRutaDesdeSidebar('/admin/chat')"
+            >
+              <ChatBubbleLeftRightIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Soporte</span>
               <Transition
                 enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 -translate-y-4 max-h-0"
-                enter-to-class="opacity-100 translate-y-0 max-h-96"
+                enter-from-class="opacity-0 scale-0"
+                enter-to-class="opacity-100 scale-100"
                 leave-active-class="transition duration-200 ease-in"
-                leave-from-class="opacity-100 translate-y-0 max-h-96"
-                leave-to-class="opacity-0 -translate-y-4 max-h-0"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-0"
+                mode="out-in"
               >
-                <div 
-                  v-if="natilleraExpandida === natillera.id" 
-                  class="ml-2 mr-2 mt-2 mb-2 p-3 rounded-xl border-2 shadow-lg space-y-1.5 overflow-hidden bg-white/25 backdrop-blur-sm border-white/40"
+                <span
+                  v-if="supportStore.hasUnreadMessages && route.path !== '/admin/chat'"
+                  :key="`badge-${supportStore.unreadCount}`"
+                  class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse"
                 >
-                  <div class="text-xs font-semibold uppercase tracking-wider mb-2 px-2 text-white">
-                    Opciones
-                  </div>
-                  <router-link
-                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
-                    :to="`/natilleras/${natillera.id}/socios`"
-                    class="nav-link-sub"
-                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/socios` }"
-                    @click="cerrarDesplegable"
-                  >
-                    <UsersIcon class="w-5 h-5" />
-                    <span>Socios</span>
-                  </router-link>
-                  <router-link
-                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
-                    :to="`/natilleras/${natillera.id}/cuotas`"
-                    class="nav-link-sub"
-                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/cuotas` }"
-                    @click="cerrarDesplegable"
-                  >
-                    <CurrencyDollarIcon class="w-5 h-5" />
-                    <span>Cuotas</span>
-                  </router-link>
-                  <router-link
-                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
-                    :to="`/natilleras/${natillera.id}/prestamos`"
-                    class="nav-link-sub"
-                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/prestamos` }"
-                    @click="cerrarDesplegable"
-                  >
-                    <BanknotesIcon class="w-5 h-5" />
-                    <span>Préstamos</span>
-                  </router-link>
-                  <router-link
-                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
-                    :to="`/natilleras/${natillera.id}/actividades`"
-                    class="nav-link-sub"
-                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/actividades` }"
-                    @click="cerrarDesplegable"
-                  >
-                    <CalendarIcon class="w-5 h-5" />
-                    <span>Actividades</span>
-                  </router-link>
-                  <router-link
-                    v-if="natillera.id && natillera.id !== 'undefined' && natillera.id !== 'null'"
-                    :to="`/natilleras/${natillera.id}/configuracion`"
-                    class="nav-link-sub"
-                    :class="{ 'nav-link-sub-active': $route.path === `/natilleras/${natillera.id}/configuracion` }"
-                    @click="cerrarDesplegable"
-                  >
-                    <Cog6ToothIcon class="w-5 h-5" />
-                    <span>Configuración</span>
-                  </router-link>
-                </div>
+                  {{ supportStore.unreadCount > 99 ? '99+' : supportStore.unreadCount }}
+                </span>
               </Transition>
-            </div>
-          </template>
-          <div v-else class="px-4 py-2">
-            <p class="text-xs text-emerald-100/70 italic">No hay natilleras activas</p>
+            </button>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.path === '/admin/data' }"
+              @click="abrirRutaDesdeSidebar('/admin/data')"
+            >
+              <CircleStackIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Datos Db</span>
+            </button>
           </div>
-
-          <!-- Nueva Natillera -->
-          <router-link 
-            to="/natilleras/crear" 
-            class="nav-link"
-            @click="cerrarSidebar"
-          >
-            <PlusCircleIcon class="w-5 h-5" />
-            <span>Nueva Natillera</span>
-          </router-link>
-
-          <!-- Invitaciones Pendientes -->
-          <div class="pt-4">
-            <InvitacionesPendientes />
-          </div>
-
         </nav>
 
       </div>
@@ -338,16 +298,6 @@
       </div>
     </div>
 
-    <!-- Overlay móvil (clase sidebar-overlay para iOS: asegurar que el tap cierre el menú) -->
-    <div 
-      v-if="sidebarOpen && !isLgScreen"
-      @click="sidebarOpen = false"
-      class="sidebar-overlay fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-      role="button"
-      tabindex="-1"
-      aria-label="Cerrar menú"
-    ></div>
-
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
     <div 
       class="flex-1 flex flex-col min-w-0 min-h-screen relative"
@@ -359,6 +309,7 @@
         <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
           <div class="flex items-center justify-between">
             <button
+              id="tour-hamburger-btn"
               type="button"
               @click="sidebarOpen = true"
               class="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -383,8 +334,17 @@
       </main>
     </div>
 
-    <!-- Navegación inferior móvil -->
-    <MobileBottomNav />
+    <!-- Overlay móvil: después del contenido para capturar clics fuera (por encima del área principal) -->
+    <div
+      v-if="sidebarOpen && !isLgScreen"
+      class="sidebar-overlay fixed inset-0 z-[45] bg-black/25 backdrop-blur-sm lg:hidden"
+      role="presentation"
+      aria-hidden="true"
+      @click="cerrarSidebar"
+    ></div>
+
+    <!-- Navegación inferior móvil (oculta mientras el cajón lateral está abierto) -->
+    <MobileBottomNav :force-hidden="sidebarOpen && esViewportMovil" />
 
     <!-- Indicador de modo desarrollo -->
     <div 
@@ -404,32 +364,36 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
+import { useColaboradoresStore } from '../stores/colaboradores'
 import { useSupportStore } from '../stores/support'
 import { useNotificationStore } from '../stores/notifications'
 import { isDev, isLocalhost } from '../config/environment'
+import { requestNatilleraSidebarAction } from '../composables/useNatilleraSidebarActions'
 
 // Detectar modo desarrollo
 const isDevMode = isDev || isLocalhost
 import { 
   HomeIcon, 
   BanknotesIcon, 
-  PlusCircleIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   Cog6ToothIcon,
-  ChevronDownIcon,
   ChevronRightIcon,
   UsersIcon,
   CurrencyDollarIcon,
   CalendarIcon,
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
-  UserGroupIcon,
-  ShareIcon
+  CalculatorIcon,
+  MagnifyingGlassIcon,
+  DocumentCheckIcon,
+  UserPlusIcon,
+  CircleStackIcon,
+  RectangleStackIcon
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
@@ -440,41 +404,175 @@ const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
+const colaboradoresStore = useColaboradoresStore()
 const supportStore = useSupportStore()
 const notificationStore = useNotificationStore()
 const sidebarOpen = ref(false)
 const sidebarHover = ref(false) // Para controlar el hover en pantallas lg (1024px)
 const hoverAreaActive = ref(false) // Para mostrar el indicador cuando el mouse está cerca
-const natilleraExpandida = ref(null)
 const previousUnreadCount = ref(0)
-const tooltipVisible = ref(null) // ID de la natillera cuyo tooltip está visible en móvil
 const isLgScreen = ref(false) // Detecta si estamos en breakpoint lg (1024px)
+/** Viewport &lt; 1024px: barra inferior móvil y overlay del menú */
+const esViewportMovil = ref(false)
 let sidebarHoverTimeout = null // Timeout para cerrar el sidebar con delay
 
-// Verificar si el usuario es admin (raigo.16@gmail.com)
-const isAdmin = computed(() => {
-  return authStore.userEmail === 'raigo.16@gmail.com'
+const permisosNatilleraSidebar = ref(null)
+
+const natilleraIdRuta = computed(() => {
+  const id = route.params.id
+  if (!id || id === 'undefined' || id === 'null') return null
+  return String(id)
 })
 
 // Todas las natilleras activas (propias y compartidas) sin duplicados
 const todasLasNatillerasActivas = computed(() => {
-  // Obtener IDs de natilleras compartidas activas para evitar duplicados
   const idsCompartidas = new Set(
     natillerasStore.natillerasCompartidasActivas.map(n => n.id)
   )
-  
-  // Obtener natilleras propias activas que NO estén en compartidas
+
   const propiasSinDuplicar = natillerasStore.natillerasActivas
     .filter(n => !idsCompartidas.has(n.id))
     .map(n => ({ ...n, es_propia: true, mi_rol: 'administrador' }))
-  
-  // Obtener natilleras compartidas activas
+
   const compartidas = natillerasStore.natillerasCompartidasActivas
     .map(n => ({ ...n, es_propia: false }))
-  
-  // Combinar ambas listas (priorizando compartidas si están duplicadas)
+
   return [...compartidas, ...propiasSinDuplicar]
 })
+
+const natilleraEnContexto = computed(() => {
+  const id = natilleraIdRuta.value
+  if (!id) return null
+  return todasLasNatillerasActivas.value.find(n => String(n.id) === id) || null
+})
+
+const isSuperAdmin = computed(() => {
+  return (authStore.userEmail || '').toLowerCase().trim() === 'raigo.16@gmail.com'
+})
+
+const hayInvitacionesPendientes = computed(
+  () => (colaboradoresStore.misInvitaciones?.length || 0) > 0
+)
+
+/**
+ * Permisos para la barra lateral: usa la API y, si aún no hay respuesta,
+ * infiere administrador desde lista local / natillera en store (misma lógica que en vistas).
+ */
+const permisosEfectivosSidebar = computed(() => {
+  const desdeApi = permisosNatilleraSidebar.value
+  if (desdeApi) return desdeApi
+
+  const id = natilleraIdRuta.value
+  if (!id) return null
+
+  const ctx = natilleraEnContexto.value
+  const uid = authStore.user?.id
+  if (!uid) return null
+
+  if (ctx?.es_propia === true) {
+    return {
+      rol: 'administrador',
+      esAdmin: true,
+      permisos: null
+    }
+  }
+
+  const na = natillerasStore.natilleraActual
+  if (na && String(na.id) === id && na.admin_id === uid) {
+    return { rol: 'administrador', esAdmin: true, permisos: null }
+  }
+
+  if (isSuperAdmin.value) {
+    return { rol: 'administrador', esAdmin: true, permisos: null }
+  }
+
+  // Colaborador: permisos en la lista local (fetch compartidas)
+  if (ctx && ctx.es_propia === false && ctx.mis_permisos) {
+    return {
+      rol: ctx.mi_rol || 'colaborador',
+      esAdmin: false,
+      permisos: ctx.mis_permisos
+    }
+  }
+
+  return null
+})
+
+// No usar history.pushState/history.back() con el menú: compiten con Vue Router y pueden
+// deshacer la navegación o dejar la misma URL con un “parpadeo” de recarga.
+
+watch(
+  () => route.fullPath,
+  () => {
+    if (typeof window === 'undefined' || window.innerWidth >= 1024) return
+    if (!sidebarOpen.value) return
+    sidebarOpen.value = false
+  }
+)
+
+watch(
+  () => natilleraIdRuta.value,
+  async (id) => {
+    permisosNatilleraSidebar.value = null
+    if (!id) return
+    try {
+      permisosNatilleraSidebar.value = await colaboradoresStore.obtenerMisPermisos(id)
+    } catch {
+      permisosNatilleraSidebar.value = null
+    }
+  },
+  { immediate: true }
+)
+
+// Cuando cargan las listas del store, reintentar permisos (antes el contexto no existía)
+watch(
+  () => todasLasNatillerasActivas.value.length,
+  async () => {
+    const id = natilleraIdRuta.value
+    if (!id || permisosNatilleraSidebar.value) return
+    try {
+      permisosNatilleraSidebar.value = await colaboradoresStore.obtenerMisPermisos(id)
+    } catch {
+      /* se usa permisosEfectivosSidebar como respaldo */
+    }
+  }
+)
+
+function puedeAccionSidebar(clavePermiso) {
+  const p = permisosEfectivosSidebar.value
+  if (!natilleraIdRuta.value || !p) return false
+  if (p.esAdmin) {
+    if (clavePermiso === 'cerrar_natillera') {
+      const estado =
+        natilleraEnContexto.value?.estado ?? natillerasStore.natilleraActual?.estado
+      return estado === 'activa'
+    }
+    return true
+  }
+  const ok = p.permisos?.[clavePermiso] === true
+  if (!ok) return false
+  if (clavePermiso === 'cerrar_natillera') {
+    const estado =
+      natilleraEnContexto.value?.estado ?? natillerasStore.natilleraActual?.estado
+    return estado === 'activa'
+  }
+  return true
+}
+
+function ejecutarAccionNatillera(tipo) {
+  const id = natilleraIdRuta.value
+  if (!id) return
+  if (tipo === 'cerrar') {
+    router.push(`/natilleras/${id}/cierre`)
+    cerrarSidebar()
+    return
+  }
+  requestNatilleraSidebarAction(tipo, id)
+  if (route.name !== 'NatilleraDetalle') {
+    router.push(`/natilleras/${id}`)
+  }
+  cerrarSidebar()
+}
 
 function getAvatarUrl(seed) {
   const encodedSeed = encodeURIComponent(seed || 'default')
@@ -482,86 +580,34 @@ function getAvatarUrl(seed) {
 }
 
 function cerrarSidebar() {
-  // Solo cerrar en móvil (cuando el sidebar está en modo overlay)
-  if (window.innerWidth < 1024) {
+  if (typeof window === 'undefined' || window.innerWidth >= 1024) return
+  if (!sidebarOpen.value) return
+  sidebarOpen.value = false
+}
+
+function abrirSidebarMobile() {
+  if (typeof window === 'undefined' || window.innerWidth >= 1024) return
+  sidebarOpen.value = true
+}
+
+provide('dashboardSidebar', {
+  openMobile: abrirSidebarMobile,
+  closeMobile: cerrarSidebar
+})
+
+/** Navegación SPA desde el menú lateral: sin depender del `<a>` interno de RouterLink (evita choques con el historial). */
+function abrirRutaDesdeSidebar(to) {
+  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
     sidebarOpen.value = false
   }
+  return router.push(to)
 }
 
-function toggleNatillera(natilleraId) {
-  if (natilleraExpandida.value === natilleraId) {
-    natilleraExpandida.value = null
-  } else {
-    natilleraExpandida.value = natilleraId
+function handleSidebarPopState() {
+  if (typeof window === 'undefined' || window.innerWidth >= 1024) return
+  if (sidebarOpen.value) {
+    sidebarOpen.value = false
   }
-}
-
-function cerrarDesplegable() {
-  natilleraExpandida.value = null
-  cerrarSidebar()
-}
-
-function mostrarTooltip(natilleraId, event) {
-  // Solo mostrar tooltip en móvil (pantallas pequeñas)
-  if (window.innerWidth < 1024) {
-    if (tooltipVisible.value === natilleraId) {
-      // Si ya está visible, cerrarlo (primer tap mostró tooltip, segundo tap lo cierra)
-      tooltipVisible.value = null
-      return
-    }
-    
-    // Cerrar otros tooltips si hay alguno abierto
-    if (tooltipVisible.value !== null) {
-      tooltipVisible.value = null
-    }
-    
-    // Mostrar el nuevo tooltip
-    tooltipVisible.value = natilleraId
-    
-    // Cerrar automáticamente después de 4 segundos
-    setTimeout(() => {
-      if (tooltipVisible.value === natilleraId) {
-        tooltipVisible.value = null
-      }
-    }, 4000)
-  }
-}
-
-function navegarANatillera(natilleraId) {
-  // Validar que el ID sea válido antes de navegar
-  if (!natilleraId || natilleraId === 'undefined' || natilleraId === 'null') {
-    console.warn('ID de natillera inválido, redirigiendo al dashboard', natilleraId)
-    router.push('/dashboard')
-    return
-  }
-  
-  // En móvil: si el tooltip está visible, cerrarlo pero no navegar (el usuario solo quería ver el nombre)
-  if (window.innerWidth < 1024 && tooltipVisible.value === natilleraId) {
-    tooltipVisible.value = null
-    // Esperar un momento antes de permitir navegación para evitar navegación accidental
-    return
-  }
-  
-  // Cerrar tooltip si está visible
-  if (tooltipVisible.value === natilleraId) {
-    tooltipVisible.value = null
-  }
-  
-  const idString = String(natilleraId)
-  const nuevaRuta = `/natilleras/${idString}`
-  const idActual = router.currentRoute.value.params.id
-  
-  // Siempre navegar si el ID es diferente
-  if (idActual !== idString) {
-    router.push(nuevaRuta)
-  } else {
-    // Si ya estás en esa natillera pero en una subruta, navegar a la vista principal
-    const rutaActual = router.currentRoute.value.path
-    if (rutaActual !== nuevaRuta) {
-      router.push(nuevaRuta)
-    }
-  }
-  cerrarSidebar()
 }
 
 async function handleLogout() {
@@ -573,7 +619,7 @@ async function handleLogout() {
 watch(() => supportStore.unreadCount, (newCount, oldCount) => {
   // Solo mostrar notificación si hay nuevos mensajes (aumentó el contador)
   // y no es la primera carga (oldCount > 0)
-  if (newCount > oldCount && oldCount > 0 && isAdmin.value) {
+  if (newCount > oldCount && oldCount > 0 && isSuperAdmin.value) {
     notificationStore.info(
       `Tienes ${newCount} ${newCount === 1 ? 'mensaje' : 'mensajes'} sin responder en soporte`,
       'Nuevos mensajes',
@@ -582,19 +628,6 @@ watch(() => supportStore.unreadCount, (newCount, oldCount) => {
   }
   previousUnreadCount.value = newCount
 })
-
-// Cerrar tooltip al hacer click fuera o al tocar fuera
-function cerrarTooltipSiEsNecesario(event) {
-  // Solo en móvil
-  if (window.innerWidth < 1024 && tooltipVisible.value !== null) {
-    // Si el click/touch no fue dentro de un elemento con tooltip o el botón
-    const target = event.target
-    const tieneTooltip = target.closest('.group') || target.closest('.nav-link')
-    if (!tieneTooltip) {
-      tooltipVisible.value = null
-    }
-  }
-}
 
 function clearSidebarTimeout() {
   if (sidebarHoverTimeout) {
@@ -628,8 +661,11 @@ function handleUserPanelMouseLeave() {
 
 function actualizarTamañoPantalla() {
   const width = window.innerWidth
+  esViewportMovil.value = width < 1024
   isLgScreen.value = width >= 1024 && width < 1280
-  // Si salimos del rango lg, resetear el hover
+  if (width >= 1024) {
+    sidebarOpen.value = false
+  }
   if (!isLgScreen.value) {
     clearSidebarTimeout()
     sidebarHover.value = false
@@ -640,19 +676,15 @@ onMounted(async () => {
   // Detectar tamaño de pantalla inicial
   actualizarTamañoPantalla()
   window.addEventListener('resize', actualizarTamañoPantalla)
+  window.addEventListener('popstate', handleSidebarPopState)
   
   // Cargar todas las natilleras (propias y compartidas)
   await natillerasStore.fetchTodasLasNatilleras()
   
-  // Iniciar verificación de mensajes si es admin
-  if (isAdmin.value) {
+  if (isSuperAdmin.value) {
     supportStore.startChecking()
     previousUnreadCount.value = supportStore.unreadCount
   }
-  
-  // Agregar listener para cerrar tooltip al tocar fuera (móvil)
-  document.addEventListener('touchstart', cerrarTooltipSiEsNecesario)
-  document.addEventListener('click', cerrarTooltipSiEsNecesario)
 })
 
 onUnmounted(() => {
@@ -662,8 +694,7 @@ onUnmounted(() => {
   clearSidebarTimeout()
   // Remover listeners
   window.removeEventListener('resize', actualizarTamañoPantalla)
-  document.removeEventListener('touchstart', cerrarTooltipSiEsNecesario)
-  document.removeEventListener('click', cerrarTooltipSiEsNecesario)
+  window.removeEventListener('popstate', handleSidebarPopState)
 })
 </script>
 
@@ -683,6 +714,26 @@ onUnmounted(() => {
   @apply bg-white/30 text-white shadow-xl shadow-black/30 backdrop-blur-sm border-2 border-white/40 hover:bg-white/35 hover:text-white font-semibold;
 }
 
+.sidebar-section {
+  @apply rounded-xl border border-white/20 bg-black/15 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)];
+}
+
+/* Título de bloque (Menú, Acciones, …): distinto de las etiquetas de cada opción */
+.sidebar-section-heading {
+  @apply mb-3 border-b border-white/30 px-2 pb-2.5 text-[0.7rem] font-extrabold uppercase tracking-[0.2em] text-white drop-shadow-sm;
+}
+
+.sidebar-option-label {
+  @apply text-[0.9375rem] font-medium leading-snug text-emerald-50;
+}
+
+.nav-link-option.nav-link-active .sidebar-option-label {
+  @apply text-white font-semibold;
+}
+
+.nav-link-option {
+  @apply py-2.5;
+}
 
 .nav-link-sub {
   @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-emerald-100 rounded-lg hover:bg-white/10 hover:text-white transition-all duration-200 border border-transparent hover:border-white/20;

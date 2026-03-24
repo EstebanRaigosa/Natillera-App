@@ -1,7 +1,7 @@
 <template>
   <div v-if="invitaciones.length > 0" class="space-y-3">
     <!-- Header -->
-    <div class="flex items-center justify-between px-1">
+    <div v-if="!omitOuterHeading" class="flex items-center justify-between px-1">
       <h3 class="text-sm font-semibold text-gray-700">Invitaciones Pendientes</h3>
       <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
         {{ invitaciones.length }}
@@ -57,6 +57,11 @@ import { useColaboradoresStore } from '../stores/colaboradores'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useNotificationStore } from '../stores/notifications'
 import { getNatilleraAvatarUrl } from '../utils/avatars'
+
+defineProps({
+  /** Oculta el encabezado cuando el título va en la barra lateral */
+  omitOuterHeading: { type: Boolean, default: false }
+})
 
 const colaboradoresStore = useColaboradoresStore()
 const natillerasStore = useNatillerasStore()

@@ -123,6 +123,13 @@ const breadcrumbs = computed(() => {
         to: null
       })
     }
+    // Cierre de natillera
+    else if (path.endsWith('/cierre')) {
+      crumbs.push({
+        label: 'Cierre de natillera',
+        to: null
+      })
+    }
     // Configuración
     else if (path.includes('/configuracion')) {
       crumbs.push({

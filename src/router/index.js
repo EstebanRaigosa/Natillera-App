@@ -13,6 +13,7 @@ import Welcome from '../views/auth/Welcome.vue'
 import ResetPassword from '../views/auth/ResetPassword.vue'
 import Dashboard from '../views/Dashboard.vue'
 import NatilleraDetalle from '../views/natilleras/NatilleraDetalle.vue'
+import NatilleraCierre from '../views/natilleras/NatilleraCierre.vue'
 import NatilleraCrear from '../views/natilleras/NatilleraCrear.vue'
 import Socios from '../views/socios/Socios.vue'
 import Cuotas from '../views/cuotas/Cuotas.vue'
@@ -96,12 +97,13 @@ const routes = [
         meta: { title: 'Crear Natillera' }
       },
       {
-        path: 'natilleras/:id',
-        name: 'NatilleraDetalle',
-        component: NatilleraDetalle,
+        path: 'natilleras/:id/cierre',
+        name: 'NatilleraCierre',
+        component: NatilleraCierre,
         props: true,
-        meta: { title: 'Detalle Natillera' }
+        meta: { title: 'Cierre de Natillera' }
       },
+      // Rutas con más segmentos antes que `natilleras/:id` para un emparejado inequívoco
       {
         path: 'natilleras/:id/socios',
         name: 'Socios',
@@ -150,6 +152,13 @@ const routes = [
         component: NatilleraConfiguracion,
         props: true,
         meta: { title: 'Configuración Natillera' }
+      },
+      {
+        path: 'natilleras/:id',
+        name: 'NatilleraDetalle',
+        component: NatilleraDetalle,
+        props: true,
+        meta: { title: 'Detalle Natillera' }
       },
       {
         path: 'configuracion',

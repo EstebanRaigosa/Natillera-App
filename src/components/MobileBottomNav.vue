@@ -1,7 +1,9 @@
 <template>
   <nav
     v-if="natilleraId"
-    class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-natillera-800 rounded-t-3xl pt-3 overflow-visible shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
+    id="tour-mobile-bottom-nav"
+    class="mobile-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-[49] bg-natillera-800 rounded-t-3xl pt-3 overflow-visible shadow-[0_-4px_24px_rgba(0,0,0,0.12)] transition-transform duration-300 ease-out"
+    :class="forceHidden ? 'translate-y-[110%] pointer-events-none opacity-0' : 'translate-y-0 opacity-100'"
   >
     <div class="flex items-end justify-around gap-0.5 px-1 max-w-screen-sm mx-auto">
       <!-- Inicio / Detalle Natillera -->
@@ -172,6 +174,7 @@
       <!-- Totales generales -->
       <router-link
         v-if="natilleraId"
+        id="tour-bottom-nav-totales"
         :to="`/natilleras/${natilleraId}/cuadre-caja`"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
         :class="isActive(`/natilleras/${natilleraId}/cuadre-caja`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
@@ -261,6 +264,11 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../stores/natilleras'
+
+defineProps({
+  /** Oculta la barra cuando el menú lateral está abierto (móvil) */
+  forceHidden: { type: Boolean, default: false }
+})
 import {
   HomeIcon,
   UsersIcon,
