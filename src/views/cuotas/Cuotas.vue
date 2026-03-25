@@ -7716,7 +7716,8 @@ async function recalcularSancionesMes() {
   
   // IMPORTANTE: Calcular sanciones para TODAS las cuotas en mora, no solo las del mes seleccionado
   // Esto asegura que las sanciones se muestren correctamente sin importar el mes
-  const cuotasEnMora = cuotasStore.cuotas.filter(c => c.estado === 'mora')
+  // Usar calcularEstadoRealCuota para detectar cuotas en mora con pago parcial
+  const cuotasEnMora = cuotasStore.cuotas.filter(c => calcularEstadoRealCuota(c, diasGracia.value) === 'mora')
   
   // También incluir cuotas del mes seleccionado si hay un mes seleccionado
   let cuotasACalcular = [...cuotasEnMora]
@@ -7779,8 +7780,11 @@ function getSancionTotalCuota(cuota) {
   // Si la cuota tiene marcado no_calcular_multa, retornar 0
   if (cuota.no_calcular_multa) return 0
   
+  // Usar el estado real calculado para detectar cuotas en mora (incluyendo parciales en mora)
+  const estadoRealSancion = calcularEstadoRealCuota(cuota, diasGracia.value)
+
   // Para cuotas en mora, usar la sanción calculada dinámicamente
-  if (cuota.estado === 'mora') {
+  if (estadoRealSancion === 'mora') {
     // Si ya está calculada, usarla
     if (sancionesDinamicas.value[cuota.id]) {
       return sancionesDinamicas.value[cuota.id]
