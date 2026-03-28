@@ -422,7 +422,8 @@
           <button 
             v-for="sn in sociosFiltrados" 
             :key="sn.id"
-            @click="generarComprobanteEstadoSocio(sn)"
+            type="button"
+            @click.stop="generarComprobanteEstadoSocio(sn)"
             :disabled="loadingEstadoSocio"
             :class="[
               'w-full flex items-center gap-3 p-3 rounded-xl transition-colors text-left',
@@ -458,12 +459,12 @@
         </button>
     </ModalWrapper>
 
-    <!-- Modal Comprobante de Estado del Socio -->
+    <!-- Modal Comprobante de Estado del Socio (z-index por encima de otras modales z-50) -->
     <ModalWrapper
       :show="!!modalComprobanteEstadoSocio && !!comprobanteEstadoSocio"
-      :z-index="50"
+      :z-index="60"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
       card-class="card relative w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl flex flex-col bg-white shadow-2xl border border-gray-200 p-4 sm:p-6"
       @close="modalComprobanteEstadoSocio = false; comprobanteEstadoSocio = null"
     >
@@ -561,11 +562,18 @@
             </div>
 
 
-            <!-- Aviso 4x1000 (si hay total a pagar) -->
-            <div v-if="(comprobanteEstadoSocio.totalAPagar || 0) > 0 && (comprobanteEstadoSocio.valor4x1000 || 0) > 0" style="margin-top: 12px; background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 10px 12px;">
-              <p style="color: #854d0e; font-size: 10px; font-weight: 700; margin: 0 0 4px 0;">4×1000 (transferencia)</p>
-              <p style="color: #713f12; font-size: 11px; margin: 0 0 4px 0;">Si va a pagar por transferencia, debe incluir el 4×1000:</p>
-              <p style="font-size: 14px; font-weight: 800; color: #a16207; margin: 0;">${{ formatMoney(comprobanteEstadoSocio.valor4x1000) }}</p>
+            <!-- 4×1000: impuesto y total a consignar (siempre si hay total al día; el impuesto puede redondear a $0 en montos muy bajos) -->
+            <div v-if="(comprobanteEstadoSocio.totalAPagar || 0) > 0" style="margin-top: 12px; background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 10px 12px;">
+              <p style="color: #854d0e; font-size: 10px; font-weight: 700; margin: 0 0 6px 0;">4×1000 (transferencia)</p>
+              <p style="color: #713f12; font-size: 11px; margin: 0 0 8px 0;">Si paga por transferencia, tenga en cuenta el impuesto del 4×1000 en el total a consignar</p>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="color: #713f12; font-size: 12px; font-weight: 600;">Impuesto 4×1000</span>
+                <span style="font-size: 14px; font-weight: 800; color: #a16207;">${{ formatMoney(comprobanteEstadoSocio.valor4x1000 || 0) }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px dashed #fde047;">
+                <span style="color: #713f12; font-size: 12px; font-weight: 700;">Total a consignar (incluye 4×1000)</span>
+                <span style="font-size: 16px; font-weight: 900; color: #854d0e;">${{ formatMoney(comprobanteEstadoSocio.totalAPagarCon4x1000 != null ? comprobanteEstadoSocio.totalAPagarCon4x1000 : (comprobanteEstadoSocio.totalAPagar || 0) + (comprobanteEstadoSocio.valor4x1000 || 0)) }}</span>
+              </div>
             </div>
 
             <!-- Footer -->
@@ -3075,6 +3083,8 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalSociosEnMora = ref(false)
+/** Timeout que abre modales automáticos (sin socios, mora, recordatorio) tras cargar; se cancela al abrir comprobante estado socio */
+let postCargaModalesTimeoutId = null
 const modalDesgloseUtilidades = ref(false)
 const yaVioDesgloseUtilidades = ref(false)
 const detalleRifasAbierto = ref(false)
@@ -5144,6 +5154,7 @@ async function calcularEstadoSocioParaComprobante(sn) {
   // Total a pagar (base para 4x1000 si paga por transferencia)
   const totalAPagar = totalPendiente + totalMora + totalSancionesPendientes + actividadesPendientesTotal + totalPrestamosPendiente
   const valor4x1000 = Math.round(totalAPagar * 0.004)
+  const totalAPagarCon4x1000 = totalAPagar + valor4x1000
 
   return {
     socio: sn.socio || { nombre: 'Socio', telefono: sn.socio?.telefono },
@@ -5163,7 +5174,8 @@ async function calcularEstadoSocioParaComprobante(sn) {
     cuotasPrestamosPendientes,
     prestamosPendientesDesglose,
     totalAPagar,
-    valor4x1000
+    valor4x1000,
+    totalAPagarCon4x1000
   }
 }
 
@@ -5189,11 +5201,23 @@ function formatoPeriodoCuotaComprobante(cuota) {
 
 async function generarComprobanteEstadoSocio(sn) {
   if (loadingEstadoSocio.value) return
+  if (postCargaModalesTimeoutId != null) {
+    clearTimeout(postCargaModalesTimeoutId)
+    postCargaModalesTimeoutId = null
+  }
   loadingEstadoSocio.value = true
   try {
     const estado = await calcularEstadoSocioParaComprobante(sn)
     comprobanteEstadoSocio.value = estado
     cerrarModalWhatsApp()
+    modalDetalle.value = false
+    modalConfigMeses.value = false
+    cerrarModalBuscarComprobante()
+    cerrarModalCuotasSocio()
+    modalSociosEnMora.value = false
+    cerrarModalDesglose()
+    modalSinSocios.value = false
+    cerrarRecordatorioModal()
     modalComprobanteEstadoSocio.value = true
     await nextTick()
   } catch (e) {
@@ -5207,14 +5231,14 @@ async function generarComprobanteEstadoSocio(sn) {
 function textoComprobanteEstadoSocio(estado) {
   const total = estado.totalAPagar || 0
   const cuatroPorMil = estado.valor4x1000 || 0
-  const totalCon4x1000 = total + cuatroPorMil
+  const totalCon4x1000 = estado.totalAPagarCon4x1000 != null ? estado.totalAPagarCon4x1000 : total + cuatroPorMil
 
-  let text = '*Valor a pagar para estar al día*\n\n'
+  let text = '*_Abre la imagen para ver toda la información_*\n\n'
+  text += '*Valor a pagar para estar al día*\n\n'
   if (total > 0) {
     text += `💰 $${formatMoney(total)}\n\n`
-    if (cuatroPorMil > 0) {
-      text += `💳 Si paga por transferencia (incluye 4×1000):\n$${formatMoney(totalCon4x1000)}\n`
-    }
+    text += `📋 4×1000 (impuesto): $${formatMoney(cuatroPorMil)}\n`
+    text += `💳 Total a consignar si paga por transferencia (incluye 4×1000): $${formatMoney(totalCon4x1000)}\n`
   } else {
     text += '✅ Al día\n'
   }
@@ -6098,7 +6122,8 @@ onMounted(async () => {
     }, 50)
     
     // Mostrar modales después de un pequeño delay para que la UI se renderice primero
-    setTimeout(async () => {
+    postCargaModalesTimeoutId = setTimeout(async () => {
+      postCargaModalesTimeoutId = null
       // Si no hay socios, mostrar modal para agregar socios
       if (!tieneSocios.value) {
         modalSinSocios.value = true
@@ -6128,6 +6153,10 @@ onMounted(async () => {
   }
 })
 onUnmounted(() => {
+  if (postCargaModalesTimeoutId != null) {
+    clearTimeout(postCargaModalesTimeoutId)
+    postCargaModalesTimeoutId = null
+  }
   // Remover listener del botón atrás
   window.removeEventListener('popstate', handlePopState)
   // Limpiar intervalos y desbloquear scroll

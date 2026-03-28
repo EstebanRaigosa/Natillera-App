@@ -3,6 +3,50 @@ import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 
+/**
+ * Misma lógica que calcularEstadoRealCuota en Cuotas.vue.
+ * Necesaria para que las cuotas con pago parcial (estado BD "parcial") pero ya en mora por fecha
+ * entren en calcularSancionesTotales; antes solo se filtraba c.estado === "mora".
+ */
+function calcularEstadoRealCuotaStore(cuota, diasGraciaVal) {
+  const valorCuota = cuota.valor_cuota || 0
+  const valorPagado = cuota.valor_pagado || 0
+  if (valorPagado >= valorCuota) return 'pagada'
+  if (!cuota.fecha_limite) return cuota.estado || 'programada'
+
+  const fechaActual = new Date()
+  fechaActual.setHours(0, 0, 0, 0)
+
+  let fechaLimite
+  if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
+    const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
+    fechaLimite = new Date(anio, mes - 1, dia)
+  } else {
+    fechaLimite = new Date(cuota.fecha_limite)
+  }
+  fechaLimite.setHours(0, 0, 0, 0)
+
+  let fechaVencimiento
+  if (cuota.fecha_vencimiento) {
+    if (typeof cuota.fecha_vencimiento === 'string' && cuota.fecha_vencimiento.includes('-')) {
+      const [anio, mes, dia] = cuota.fecha_vencimiento.split('-').map(Number)
+      fechaVencimiento = new Date(anio, mes - 1, dia)
+    } else {
+      fechaVencimiento = new Date(cuota.fecha_vencimiento)
+    }
+  } else {
+    const dg = diasGraciaVal !== undefined ? diasGraciaVal : 3
+    fechaVencimiento = new Date(fechaLimite)
+    fechaVencimiento.setDate(fechaVencimiento.getDate() + dg)
+  }
+  fechaVencimiento.setHours(0, 0, 0, 0)
+
+  if (fechaActual < fechaLimite) return 'programada'
+  if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) return 'pendiente'
+  if (fechaActual > fechaVencimiento) return 'mora'
+  return cuota.estado || 'programada'
+}
+
 export const useCuotasStore = defineStore('cuotas', () => {
   const cuotas = ref([])
   const loading = ref(false)
@@ -311,7 +355,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
       })
 
       const lista = cuotasLista || cuotas.value
-      const cuotasMora = lista.filter(c => c.estado === 'mora')
+      const cuotasMora = lista.filter(c =>
+        c.estado === 'mora' || calcularEstadoRealCuotaStore(c, diasGracia) === 'mora'
+      )
       // Excluir cuotas marcadas con no_calcular_multa (no aplicar sanciones a esa cuota)
       const cuotasMoraConMulta = cuotasMora.filter(c => !c.no_calcular_multa)
       const cuotasMoraSinMulta = cuotasMora.filter(c => c.no_calcular_multa)
@@ -1750,13 +1796,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
       const valorActividadesPendientes = parseFloat(valorActividades) || 0
       
-      // IMPORTANTE: Orden de pago según requerimientos:
-      // 1. Primero se paga la sanción
-      // 2. Segundo se pagan las actividades
-      // 3. Tercero se paga la cuota
+      // IMPORTANTE: Orden de pago según requerimientos (alineado con Cuotas.vue):
+      // 1. Sanción 2. Actividades 3. Cuotas de préstamos (options.valorCuotasPrestamos) 4. Cuota natillera
       
       let valorSancionPagada = 0
       let valorActividadesPagado = 0
+      let valorCuotasPrestamosPagado = 0
       let valorCuotaPagado = 0
       let nuevoValorPagado = valorPagadoAnterior
       let sancionQuitada = false
@@ -1790,7 +1835,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
       
-      // Paso 3: Pagar cuota tercero (con lo que reste)
+      // Paso 3: Reservar monto para cuotas de préstamos (antes de la cuota de la natillera)
+      const topePrestamos = Math.max(0, Math.floor(Number(options.valorCuotasPrestamos) || 0))
+      if (topePrestamos > 0 && valorRestante > 0) {
+        valorCuotasPrestamosPagado = Math.min(valorRestante, topePrestamos)
+        valorRestante -= valorCuotasPrestamosPagado
+      }
+      
+      // Paso 4: Pagar cuota de la natillera (con lo que reste)
       if (valorRestante > 0) {
         const valorCuotaPendiente = valorCuota - valorPagadoAnterior
         if (valorRestante >= valorCuotaPendiente) {
@@ -2224,11 +2276,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
             forma_pago: formaPago
           })
           
+          // No usar return aquí: salía de registrarPago entero y omitía historial_pagos_cuota, auditoría y cierre.
           if (montoFinal <= 0) {
-            console.warn('⚠️ [UTILIDADES] No hay monto de sanción para registrar')
-            return { success: true, data }
-          }
-
+            console.warn('⚠️ [UTILIDADES] No hay monto de sanción para registrar (se omite utilidad; el pago sigue válido)')
+          } else {
           // Obtener el registro existente de utilidades_clasificadas para sanciones (misma forma_pago)
           const { data: utilidadExistente, error: errorUtilidadExistente } = await querySanciones(
             supabase.from('utilidades_clasificadas').select('id, monto, detalles')
@@ -2295,6 +2346,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             } else {
               console.log('✅ [UTILIDADES] Utilidad de sanciones creada correctamente:', insertedData)
             }
+          }
           }
         } catch (errorUtilidad) {
           // No fallar el registro de pago si hay error al registrar la utilidad
@@ -2385,7 +2437,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
 
         const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
-        const valorTotalHist = (valorCuotaPagado || 0) + (valorSancionPagadaFinal || 0) + (valorActividadesPagado || 0)
+        const valorTotalHist =
+          (valorCuotaPagado || 0) +
+          (valorSancionPagadaFinal || 0) +
+          (valorActividadesPagado || 0) +
+          (valorCuotasPrestamosPagado || 0)
         const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
         const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
 
@@ -2399,7 +2455,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valor_cuota: valorCuotaPagado || 0,
           valor_sancion: valorSancionPagadaFinal || 0,
           valor_actividades: valorActividadesPagado || 0,
-          valor_cuotas_prestamo: 0,
+          valor_cuotas_prestamo: valorCuotasPrestamosPagado || 0,
           valor_pagado_cuota_total: valorPagadoCuotaTotal
         }
         if (impuesto4x1000Hist > 0) {
@@ -2412,11 +2468,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
           histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
         }
         if (histRes.error) {
-          console.warn('No se pudo registrar historial_pagos_cuota:', histRes.error.message)
+          console.error('historial_pagos_cuota insert falló (revisar RLS/columnas):', histRes.error.message)
         }
       } catch (eHist) {
-        // No bloquear el flujo de pago si falla el registro del historial
-        console.warn('No se pudo registrar historial_pagos_cuota:', eHist.message)
+        console.error('historial_pagos_cuota insert excepción:', eHist.message)
       }
 
       return { 
@@ -2424,6 +2479,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
         data,
         valorSancionPagada: valorSancionPagadaFinal,
         valorActividadesPagado,
+        valorCuotasPrestamosPagado,
         valorCuotaPagado,
         insertedHistorialComprobanteId
       }

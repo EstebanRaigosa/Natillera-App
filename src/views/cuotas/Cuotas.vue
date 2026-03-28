@@ -982,10 +982,16 @@
                       {{ getTextoActividadesGrupo(grupo) }}: ${{ formatMoney(grupo.actividadesPendientes) }}
                     </span>
                     <span 
+                      v-if="grupo.cuotasPrestamosAbonado > 0"
+                      class="text-sm font-semibold text-sky-700"
+                    >
+                      Abonado préstamos: ${{ formatMoney(grupo.cuotasPrestamosAbonado) }}
+                    </span>
+                    <span 
                       v-if="grupo.cuotasPrestamosPendientes > 0"
                       class="text-sm font-semibold text-blue-600"
                     >
-                      Cuotas de préstamos: ${{ formatMoney(grupo.cuotasPrestamosPendientes) }}
+                      Pendiente préstamos: ${{ formatMoney(grupo.cuotasPrestamosPendientes) }}
                     </span>
                     <span 
                       class="text-sm font-bold"
@@ -1098,23 +1104,29 @@
                         </p>
                         <!-- Desglose de lo pagado -->
                         <div class="mt-1 pt-1 border-t border-green-200/50">
-                          <p 
+                          <p
                             v-if="(cuota.valor_pagado || 0) > 0"
                             class="text-xs font-semibold text-green-600"
                           >
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_pagado || 0) }}
                           </p>
-                          <p 
+                          <p
                             v-if="(cuota.valor_pagado_sancion || 0) > 0"
                             class="text-xs font-semibold text-green-600 mt-0.5"
                           >
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}
                           </p>
-                          <p 
+                          <p
                             v-if="getActividadesInfoSocio(cuota).pagadas > 0"
                             class="text-xs font-semibold text-emerald-600 mt-0.5"
                           >
                             <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
+                          </p>
+                          <p
+                            v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0"
+                            class="text-xs font-semibold text-blue-600 mt-0.5"
+                          >
+                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}
                           </p>
                         </div>
                       </template>
@@ -1123,7 +1135,7 @@
                         <template v-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
                           <p class="text-xs text-gray-500 mb-0.5">Total pagado</p>
                           <p class="font-bold text-base sm:text-lg text-green-600">
-                            ${{ formatMoney((cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuota).pagadas + getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}
+                            ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                           </p>
                           <p class="text-xs font-semibold mt-0.5 text-green-600">
                             <span class="inline-block w-2 h-2 bg-green-500 rounded-sm rotate-45 mr-1.5"></span>Cuota ${{ formatMoney(cuota.valor_cuota) }}
@@ -1141,10 +1153,10 @@
                             <span class="inline-block w-2 h-2 bg-teal-500 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}
                           </p>
                           <p 
-                            v-if="getTotalCuotasPrestamosPagadasSocioSync(cuota) > 0"
+                            v-if="(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) > 0"
                             class="text-xs font-semibold mt-0.5 text-blue-600"
                           >
-                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Cuotas de préstamos ${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}
+                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}
                           </p>
                         </template>
                         <!-- Cuota pendiente o mora: total a pagar y desglose -->
@@ -1171,7 +1183,7 @@
                             v-if="getSancionCuota(cuota) > 0" 
                             class="text-xs font-semibold mt-0.5 text-red-600"
                           >
-                            <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción ${{ formatMoney(getSancionCuota(cuota)) }}
+                            <span class="inline-block w-2 h-2 bg-red-600 rounded-full mr-1.5"></span>Sanción pendiente ${{ formatMoney(getSancionCuota(cuota)) }}
                           </p>
                           <p 
                             v-if="getActividadesPendientesSocio(cuota) > 0" 
@@ -1183,7 +1195,13 @@
                             v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" 
                             class="text-xs font-semibold mt-0.5 text-blue-600"
                           >
-                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Cuotas de préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                          </p>
+                          <p 
+                            v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0"
+                            class="text-xs font-semibold mt-0.5 text-blue-700"
+                          >
+                            <span class="inline-block w-2 h-2 bg-sky-500 rounded-full mr-1.5"></span>Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}
                           </p>
                           <p 
                             class="text-xs mt-1"
@@ -1440,7 +1458,7 @@
                     <template v-else-if="(cuota.estadoReal || cuota.estado) === 'pagada'">
                       <p class="text-xs text-gray-500">Total pagado</p>
                       <p class="text-xl sm:text-2xl font-bold text-green-600">
-                        ${{ formatMoney((cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuota).pagadas + getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}
+                        ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                       </p>
                     </template>
                     <!-- Pendiente / programada -->
@@ -1488,6 +1506,8 @@
                   <template v-if="(cuota.estadoReal || cuota.estado) !== 'pagada'">
                     <!-- Si hay pago parcial, mostrar Total a Pagar; si no, mostrar desglose normal -->
                     <template v-if="tienePagoParcialCuota(cuota)">
+                      <!-- Sanción pendiente cuando la cuota está en mora -->
+                      <li v-if="getSancionCuota(cuota) > 0" class="text-red-600 font-medium"><span class="mr-1">●</span> Sanción pendiente ${{ formatMoney(getSancionCuota(cuota)) }}</li>
                       <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
                         Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
                       </li>
@@ -1496,12 +1516,12 @@
                         <li v-if="(cuota.valor_pagado || 0) > 0" class="text-green-600 mt-1"><span class="mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_pagado || 0) }}</li>
                         <li v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-green-600"><span class="mr-1">●</span> Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</li>
                         <li v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-green-600"><span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</li>
-                        <li v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-green-600"><span class="mr-1">●</span> Cuotas de préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</li>
+                        <li v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0" class="text-green-600"><span class="mr-1">●</span> Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}</li>
                       </template>
                     </template>
                     <template v-else>
                       <li class="text-gray-700"><span class="text-gray-500 mr-1">●</span> Cuota ${{ formatMoney(cuota.valor_cuota) }}</li>
-                      <li v-if="getSancionCuota(cuota) > 0" class="text-red-600 font-medium"><span class="mr-1">●</span> Sanción ${{ formatMoney(getSancionCuota(cuota)) }}</li>
+                      <li v-if="getSancionCuota(cuota) > 0" class="text-red-600 font-medium"><span class="mr-1">●</span> Sanción pendiente ${{ formatMoney(getSancionCuota(cuota)) }}</li>
                       <li 
                         v-if="(cuota.valor_rifa || 0) > 0" 
                         class="text-violet-600"
@@ -1518,7 +1538,13 @@
                         v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" 
                         class="text-blue-600 font-medium"
                       >
-                        <span class="mr-1">●</span> Cuotas de préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                        <span class="mr-1">●</span> Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                      </li>
+                      <li 
+                        v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0" 
+                        class="text-sky-700 font-medium"
+                      >
+                        <span class="mr-1">●</span> Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota)) }}
                       </li>
                       <li v-if="getTotalPagadoConActividadesSocio(cuota) > 0" class="text-green-600 font-medium mt-1">
                         Pagado: ${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}
@@ -1531,7 +1557,7 @@
                     <li v-if="(cuota.valor_pagado_sancion || 0) > 0" class="text-green-700"><span class="mr-1">●</span> Multa ${{ formatMoney(cuota.valor_pagado_sancion || 0) }}</li>
                     <li v-if="(cuota.valor_rifa || 0) > 0" class="text-green-700"><span class="mr-1">●</span> Rifa {{ getMesLabel(cuota.mes) }} ${{ formatMoney(cuota.valor_rifa || 0) }}</li>
                     <li v-if="getActividadesInfoSocio(cuota).pagadas > 0" class="text-green-700"><span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesInfoSocio(cuota).pagadas) }}</li>
-                    <li v-if="getTotalCuotasPrestamosPagadasSocioSync(cuota) > 0" class="text-green-700"><span class="mr-1">●</span> Cuotas de préstamos ${{ formatMoney(getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}</li>
+                    <li v-if="(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) > 0" class="text-green-700"><span class="mr-1">●</span> Abonado préstamos ${{ formatMoney(getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota)) }}</li>
                   </template>
                 </ul>
               </div>
@@ -3036,7 +3062,7 @@
             </div>
 
             <!-- Total a pagar, Pagado anteriormente y Total pendiente (solo cuando hay pago parcial) -->
-            <div 
+            <div
               v-if="tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 space-y-2"
             >
@@ -3046,6 +3072,16 @@
                   <p class="font-bold text-gray-800 text-base">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada)) + (cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas) }}
                   </p>
+                </div>
+                <!-- Sanción pendiente cuando la cuota está en mora -->
+                <div
+                  v-if="getSancionCuota(cuotaSeleccionada) > 0"
+                  class="flex items-center justify-between text-sm"
+                >
+                  <span class="text-red-600 flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 bg-red-600 rounded-full"></span>Sanción pendiente
+                  </span>
+                  <span class="font-semibold text-red-600">${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-gray-600">Pagado anteriormente</p>
@@ -3459,9 +3495,19 @@
                             <h4 class="font-semibold text-gray-800 truncate text-sm">
                               Cuota #{{ cuotaPrestamo.numero_cuota }} - {{ formatDate(cuotaPrestamo.fecha_proyectada) }}
                             </h4>
-                            <p class="text-xs font-bold text-blue-600 flex-shrink-0">
-                              ${{ formatMoney(cuotaPrestamo.valor_pendiente || 0) }}
-                            </p>
+                            <!-- Destacado: lo abonado a esta cuota del préstamo (no el saldo pendiente) -->
+                            <div class="text-right flex-shrink-0">
+                              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide leading-tight">Pagado</p>
+                              <p class="text-xs font-bold text-blue-600 leading-tight">
+                                ${{ formatMoney(cuotaPrestamo.valor_pagado || 0) }}
+                              </p>
+                              <p
+                                v-if="(cuotaPrestamo.valor_pendiente || 0) > 0"
+                                class="text-[10px] font-medium text-amber-700 leading-tight mt-0.5"
+                              >
+                                Falta ${{ formatMoney(cuotaPrestamo.valor_pendiente || 0) }}
+                              </p>
+                            </div>
                           </div>
                           <span
                             v-if="cuotasPrestamosDeLaCuotaActual.has(cuotaPrestamo.id)"
@@ -3469,12 +3515,9 @@
                           >
                             Programada para este período (no se puede quitar)
                           </span>
-                          <div class="flex items-center gap-3 text-xs">
+                          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                             <span class="text-gray-500">
                               Valor cuota: <span class="font-semibold text-gray-700">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
-                            </span>
-                            <span v-if="cuotaPrestamo.valor_pagado > 0" class="text-green-600">
-                              Pagado: <span class="font-semibold">${{ formatMoney(cuotaPrestamo.valor_pagado || 0) }}</span>
                             </span>
                           </div>
                         </div>
@@ -4252,11 +4295,14 @@
               </div>
             </div>
 
-            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (varios abonos; en cada fila el 4×1000 si aplica) -->
-            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
+            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (cada abono registrado en historial_pagos_cuota; 4×1000 por fila si aplica) -->
+            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 0" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
               <div class="flex items-center gap-2 mb-3">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600" style="font-size: 11px; font-weight: 800;">📋</span>
-                <p class="m-0 text-xs font-bold uppercase tracking-wider" style="color: #047857; letter-spacing: 0.8px;">Historial de pagos</p>
+                <div class="flex flex-col min-w-0">
+                  <p class="m-0 text-xs font-bold uppercase tracking-wider" style="color: #047857; letter-spacing: 0.8px;">Historial de pagos</p>
+                  <p v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="m-0 text-[10px] font-medium text-emerald-700/90">Varios abonos a esta cuota</p>
+                </div>
               </div>
               <div class="flex flex-col gap-3">
                 <div 
@@ -6338,6 +6384,8 @@ const cuotasPrestamosDeLaCuotaActual = ref(new Set()) // IDs de cuotas de prést
 const cuotasPrestamosPagadasCache = ref(new Map()) // Caché de cuotas de préstamos pagadas por cuotaId
 // Caché de total cuotas de préstamos pendientes por periodo (socio_natillera_id-mes-anio-quincena) para mostrar en tarjetas
 const cuotasPrestamosPendientesPorPeriodo = ref(new Map())
+// Total abonado (valor_pagado en plan_pagos) por el mismo periodo — para "Pagado" en tarjeta socio / totales
+const cuotasPrestamosAbonadoPorPeriodo = ref(new Map())
 // Variables para el modal de editar
 const actividadesPagadasEditar = ref([]) // Actividades pagadas de la cuota que se está editando
 const cuotasPrestamosPagadasEditar = ref([]) // Cuotas de préstamos pagadas de la cuota que se está editando
@@ -6954,13 +7002,14 @@ const cuotasAgrupadasPorSocio = computed(() => {
         pendiente: 0,
         actividadesPendientes: 0, // Total de actividades pendientes
         cuotasPrestamosPendientes: 0, // Total de cuotas de préstamos pendientes
+        cuotasPrestamosAbonado: 0, // Abonos a plan de préstamos en el periodo de cada cuota
         totalAPagar: 0 // Total a pagar (pendiente + actividades pendientes + cuotas préstamos)
       }
     }
     
     grupos[socioId].cuotas.push(cuota)
     grupos[socioId].total += cuota.valor_cuota || 0
-    grupos[socioId].pagado += cuota.valor_pagado || 0
+    grupos[socioId].pagado += getTotalPagadoConActividadesSocio(cuota) || 0
     
     // Calcular pendiente: solo incluir cuotas que NO estén en estado programada
     // Incluir cuotas pendientes, en mora o con pago parcial
@@ -6979,6 +7028,9 @@ const cuotasAgrupadasPorSocio = computed(() => {
     }, 0)
     grupo.cuotasPrestamosPendientes = grupo.cuotas.reduce((sum, cuota) => {
       return sum + (getTotalCuotasPrestamosPendientesSocioSync(cuota) || 0)
+    }, 0)
+    grupo.cuotasPrestamosAbonado = grupo.cuotas.reduce((sum, cuota) => {
+      return sum + (getTotalAbonadoPrestamosCuotaSocioSync(cuota) || 0)
     }, 0)
     grupo.totalAPagar = grupo.pendiente + grupo.actividadesPendientes + grupo.cuotasPrestamosPendientes
   })
@@ -7716,7 +7768,8 @@ async function recalcularSancionesMes() {
   
   // IMPORTANTE: Calcular sanciones para TODAS las cuotas en mora, no solo las del mes seleccionado
   // Esto asegura que las sanciones se muestren correctamente sin importar el mes
-  const cuotasEnMora = cuotasStore.cuotas.filter(c => c.estado === 'mora')
+  // Usar calcularEstadoRealCuota para incluir cuotas en mora por fecha (aunque en BD tengan otro estado, ej. pago parcial)
+  const cuotasEnMora = cuotasStore.cuotas.filter(c => calcularEstadoRealCuota(c, diasGracia.value) === 'mora')
   
   // También incluir cuotas del mes seleccionado si hay un mes seleccionado
   let cuotasACalcular = [...cuotasEnMora]
@@ -7763,11 +7816,23 @@ function getAbonadoACuota(cuota) {
   return cuota ? (cuota.valor_pagado || 0) : 0
 }
 
-// Total pagado incluyendo sanciones y actividades
+// Total pagado incluyendo sanciones, actividades y abonos a préstamos del periodo (no solo cuota natillera en BD)
 function getTotalPagadoConActividadesSocio(cuota) {
   if (!cuota) return 0
   const actividadesInfo = getActividadesInfoSocio(cuota)
-  return (cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + (actividadesInfo.pagadas || 0)
+  const abonadoMap = getTotalAbonadoPrestamosCuotaSocioSync(cuota) || 0
+  const abonadoPrestamo = abonadoMap > 0 ? abonadoMap : (getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)
+  return (cuota.valor_pagado || 0) + (cuota.valor_pagado_sancion || 0) + (actividadesInfo.pagadas || 0) + abonadoPrestamo
+}
+
+// Total de multa desde BD (valor_multa o base + intereses)
+function getValorMultaTotalDesdeCuota(cuota) {
+  if (!cuota) return 0
+  const vm = parseFloat(cuota.valor_multa) || 0
+  if (vm > 0) return vm
+  const base = parseFloat(cuota.valor_multa_base) || 0
+  const intereses = parseFloat(cuota.valor_multa_intereses) || 0
+  return base + intereses
 }
 
 // Obtener la sanción TOTAL de una cuota (sin restar pagos)
@@ -7775,95 +7840,47 @@ function getSancionTotalCuota(cuota) {
   // Si las sanciones no están activadas, retornar 0
   if (!sancionesActivas.value) return 0
   if (!cuota) return 0
-  
+
   // Si la cuota tiene marcado no_calcular_multa, retornar 0
   if (cuota.no_calcular_multa) return 0
-  
+
+  // Usar el estado real calculado para detectar cuotas en mora (incluyendo pago parcial en mora)
+  const estadoRealSancion = calcularEstadoRealCuota(cuota, diasGracia.value)
+
+  const multaBd = getValorMultaTotalDesdeCuota(cuota)
+
   // Para cuotas en mora, usar la sanción calculada dinámicamente
-  if (cuota.estado === 'mora') {
+  if (estadoRealSancion === 'mora') {
     // Si ya está calculada, usarla
     if (sancionesDinamicas.value[cuota.id]) {
       return sancionesDinamicas.value[cuota.id]
     }
-    // Si no está calculada pero hay valor_multa guardado, usarlo
-    if (cuota.valor_multa && cuota.valor_multa > 0) {
-      return cuota.valor_multa
+    // Si no está calculada pero hay multa en BD, usarla
+    if (multaBd > 0) {
+      return multaBd
     }
   }
-  // Para cuotas con pago parcial que tienen valor_multa guardado (sanción pendiente)
-  else if (cuota.valor_multa && cuota.valor_multa > 0) {
-    return cuota.valor_multa
+  // Para cuotas con pago parcial que tienen multa guardada (sanción pendiente)
+  else if (multaBd > 0) {
+    return multaBd
   }
-  
+
   return 0
 }
 
-// Obtener la sanción dinámica de una cuota (calculada en tiempo real)
-// IMPORTANTE: Retorna la sanción PENDIENTE, no la sanción total
-// El orden de pago es: 1. Sanción, 2. Actividades, 3. Cuota
-// valor_pagado en la tabla cuotas solo refleja lo pagado de la cuota
+// Retorna la sanción PENDIENTE (total - valor_pagado_sancion).
+// valor_pagado_sancion es el registro explícito de abono a multa; no inferir desde valor_pagado
+// porque un pago parcial antes de la mora solo reduce la cuota.
 function getSancionCuota(cuota) {
-  // Si las sanciones no están activadas, retornar 0
   if (!sancionesActivas.value) return 0
   if (!cuota) return 0
-  
-  // Si la cuota tiene marcado no_calcular_multa, retornar 0
   if (cuota.no_calcular_multa) return 0
-  
-  // Obtener la sanción total (sin restar pagos)
+
   const sancionTotal = getSancionTotalCuota(cuota)
-  
-  // Si no hay sanción total, retornar 0
   if (sancionTotal <= 0) return 0
 
-  // Si hay pagos registrados de sanción, calcular pendiente con base en eso
   const sancionPagada = parseFloat(cuota.valor_pagado_sancion) || 0
-  if (sancionPagada > 0) {
-    return Math.max(0, sancionTotal - sancionPagada)
-  }
-  
-  // Calcular cuánto se pagó de sanción según el orden de pago:
-  // Orden: 1. Sanción, 2. Actividades, 3. Cuota
-  // IMPORTANTE: valor_pagado solo refleja lo pagado de la cuota
-  const valorCuota = cuota.valor_cuota || 0
-  const valorPagado = cuota.valor_pagado || 0
-  
-  // Obtener actividades totales asignadas y cuánto se pagó de ellas
-  const actividadesInfo = getActividadesInfoSocio(cuota)
-  const actividadesPagadas = actividadesInfo.pagadas
-  
-  // Calcular cuánto se pagó de sanción según el orden de pago:
-  // El orden es: sanción -> actividades -> cuota
-  // El pago total real = sancionPagada + actividadesPagadas + valorPagado (cuota)
-  
-  // Si hay actividades pagadas, entonces se pagó toda la sanción (porque se paga primero)
-  if (actividadesPagadas > 0) {
-    return 0
-  }
-  
-  // Si valor_pagado >= valor_cuota, significa que se pagó toda la cuota
-  // Esto implica que se pagó toda la sanción primero (porque se paga primero)
-  if (valorPagado >= valorCuota) {
-    return 0
-  }
-  
-  // Si valor_pagado < valor_cuota y no hay actividades pagadas,
-  // entonces el pago fue: primero sanción, luego cuota
-  // Calcular cuánto se pagó de sanción:
-  // Si valor_pagado > 0, significa que se pagó al menos parte de la cuota
-  // Esto implica que se pagó toda la sanción primero (porque se paga primero)
-  // Ejemplo: cuota=100, sanción=2, pago=100 -> se pagan 2 de sanción, 98 de cuota
-  // En este caso, valor_pagado = 98, y se pagó toda la sanción (2)
-  if (valorPagado > 0) {
-    // Se pagó al menos parte de la cuota, lo que significa que se pagó toda la sanción primero
-    return 0
-  }
-  
-  // Si valor_pagado = 0, el pago fue solo a la sanción (parcial o completa)
-  // Sin más información, no podemos saber cuánto se pagó exactamente
-  // Por ahora, asumimos que no se pagó nada de sanción
-  // (aunque podría haberse pagado parcialmente)
-  return sancionTotal
+  return Math.max(0, sancionTotal - sancionPagada)
 }
 
 // Función auxiliar para obtener información de actividades (total y pagadas)
@@ -8173,6 +8190,26 @@ async function getTotalCuotasPrestamosPendientesSocio(cuota) {
     console.error('Error obteniendo cuotas de préstamos pendientes:', error)
     return 0
   }
+}
+
+/** Suma valor_pagado del plan de préstamos en el mismo mes/año/quincena que la cuota (abonado; tarjeta socio). */
+function getTotalAbonadoPrestamosCuotaSocioSync(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) return 0
+  const mes = cuota.mes ?? (cuota.fecha_limite ? parseInt(String(cuota.fecha_limite).split('-')[1], 10) : null)
+  const anio = cuota.anio ?? (cuota.fecha_limite ? parseInt(String(cuota.fecha_limite).split('-')[0], 10) : null)
+  const quincena = cuota.quincena ?? 0
+  if (mes != null && anio != null) {
+    const key = `${cuota.socio_natillera_id}-${mes}-${anio}-${quincena}`
+    if (cuotasPrestamosAbonadoPorPeriodo.value.has(key)) {
+      return cuotasPrestamosAbonadoPorPeriodo.value.get(key) || 0
+    }
+  }
+  if (cuotaSeleccionada.value?.id === cuota.id && cuotasPrestamosPendientes.value.length > 0) {
+    return cuotasPrestamosPendientes.value
+      .filter(cp => cp.esta_programada)
+      .reduce((s, cp) => s + (parseFloat(cp.valor_pagado) || 0), 0)
+  }
+  return 0
 }
 
 // Versión síncrona que usa datos en caché si están disponibles
@@ -9688,10 +9725,11 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
   }
 }
 
-// Registrar pagos de cuotas de préstamos seleccionadas
+// Registrar pagos de cuotas de préstamos seleccionadas. Devuelve líneas con monto aplicado por cuota (para comprobante).
 async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago = null) {
-  if (!cuotaSeleccionada.value || cuotasPrestamosSeleccionadas.value.size === 0) return
-  
+  if (!cuotaSeleccionada.value || cuotasPrestamosSeleccionadas.value.size === 0) return []
+
+  const detalleLineasPrestamo = []
   try {
     // Obtener las cuotas de préstamos seleccionadas con sus valores pendientes
     const cuotasPrestamosParaPagar = cuotasPrestamosPendientes.value
@@ -9869,6 +9907,14 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
           console.error(`Error actualizando cuota de préstamo ${cuotaPrestamo.numero_cuota}:`, errorUpdateCuota)
         } else {
           console.log(`✅ Pago ${estaCompleta ? 'completo' : 'parcial'} registrado para cuota de préstamo #${cuotaPrestamo.numero_cuota}`)
+          if (valorAPagarCuota > 0) {
+            detalleLineasPrestamo.push({
+              nombre: `Cuota préstamo #${cuotaPrestamo.numero_cuota}`,
+              valor: valorAPagarCuota,
+              numero_cuota: cuotaPrestamo.numero_cuota,
+              prestamo_id: cuotaPrestamo.prestamo_id
+            })
+          }
         }
         
         valorRestantePrestamo -= valorAPagarCuota
@@ -9879,8 +9925,10 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
     
     // Recargar cuotas de préstamos pendientes para reflejar los cambios
     await cargarCuotasPrestamosPendientes(cuotaSeleccionada.value)
+    return detalleLineasPrestamo
   } catch (error) {
     console.error('Error registrando pagos de cuotas de préstamos:', error)
+    return detalleLineasPrestamo
   }
 }
 
@@ -10033,14 +10081,18 @@ function estaCuotaPrestamoProgramadaParaPeriodo(
 
 // Cargar total de cuotas de préstamos pendientes por periodo para todas las cuotas visibles (tarjetas programadas, pendientes, etc.)
 async function cargarCuotasPrestamosPendientesParaLista() {
+  const vaciarMaps = () => {
+    cuotasPrestamosPendientesPorPeriodo.value = new Map()
+    cuotasPrestamosAbonadoPorPeriodo.value = new Map()
+  }
   const cuotas = cuotasFiltradas.value
   if (!cuotas || cuotas.length === 0) {
-    cuotasPrestamosPendientesPorPeriodo.value = new Map()
+    vaciarMaps()
     return
   }
   const sociosUnicos = [...new Set(cuotas.map(c => c.socio_natillera_id).filter(Boolean))]
   if (sociosUnicos.length === 0) {
-    cuotasPrestamosPendientesPorPeriodo.value = new Map()
+    vaciarMaps()
     return
   }
   try {
@@ -10050,21 +10102,25 @@ async function cargarCuotasPrestamosPendientesParaLista() {
       .in('socio_natillera_id', sociosUnicos)
       .eq('estado', 'activo')
     if (errP || !prestamos?.length) {
-      cuotasPrestamosPendientesPorPeriodo.value = new Map()
+      vaciarMaps()
       return
     }
     const prestamoIds = prestamos.map(p => p.id)
     const prestamosMap = new Map(prestamos.map(p => [p.id, p]))
     const { data: planPagos, error: errPlan } = await supabase
       .from('plan_pagos_prestamo')
-      .select('id, prestamo_id, valor_cuota, valor_pagado, fecha_proyectada')
+      .select('id, prestamo_id, valor_cuota, valor_pagado, fecha_proyectada, pagada')
       .in('prestamo_id', prestamoIds)
-      .eq('pagada', false)
-    if (errPlan || !planPagos?.length) {
-      cuotasPrestamosPendientesPorPeriodo.value = new Map()
+    if (errPlan) {
+      vaciarMaps()
       return
     }
-    const totalesPorPeriodo = new Map()
+    if (!planPagos?.length) {
+      vaciarMaps()
+      return
+    }
+    const totalesPendiente = new Map()
+    const totalesAbonado = new Map()
     for (const cp of planPagos) {
       const prestamo = prestamosMap.get(cp.prestamo_id)
       if (!prestamo) continue
@@ -10076,15 +10132,22 @@ async function cargarCuotasPrestamosPendientesParaLista() {
         const dia = fechaProyectada.getDate()
         quincenaProyectada = dia <= 15 ? 1 : 2
       }
-      const valorPendiente = Math.max(0, (parseFloat(cp.valor_cuota) || 0) - (parseFloat(cp.valor_pagado) || 0))
-      if (valorPendiente <= 0) continue
       const key = `${prestamo.socio_natillera_id}-${mesProyectado}-${anioProyectado}-${quincenaProyectada}`
-      totalesPorPeriodo.set(key, (totalesPorPeriodo.get(key) || 0) + valorPendiente)
+      const valorPagado = parseFloat(cp.valor_pagado) || 0
+      if (valorPagado > 0) {
+        totalesAbonado.set(key, (totalesAbonado.get(key) || 0) + valorPagado)
+      }
+      const valorCuota = parseFloat(cp.valor_cuota) || 0
+      const valorPendiente = Math.max(0, valorCuota - valorPagado)
+      if (valorPendiente > 0) {
+        totalesPendiente.set(key, (totalesPendiente.get(key) || 0) + valorPendiente)
+      }
     }
-    cuotasPrestamosPendientesPorPeriodo.value = totalesPorPeriodo
+    cuotasPrestamosPendientesPorPeriodo.value = totalesPendiente
+    cuotasPrestamosAbonadoPorPeriodo.value = totalesAbonado
   } catch (e) {
     console.error('Error cargando cuotas de préstamos pendientes para lista:', e)
-    cuotasPrestamosPendientesPorPeriodo.value = new Map()
+    vaciarMaps()
   }
 }
 
@@ -11672,7 +11735,12 @@ async function handleRegistrarPago() {
     null, // comprobante
     formPago.tipo_pago,
     totalActividades,
-    { valorEfectivo, valorTransferencia, impuesto4x1000: impuesto4x1000Pago }
+    {
+      valorEfectivo,
+      valorTransferencia,
+      impuesto4x1000: impuesto4x1000Pago,
+      valorCuotasPrestamos: valorCuotasPrestamosPagado
+    }
   )
   
   // Obtener información de actividades pagadas antes de registrar
@@ -11723,8 +11791,13 @@ async function handleRegistrarPago() {
   }
   
   // Si hay cuotas de préstamos seleccionadas y el pago fue exitoso, registrar pagos de cuotas de préstamos
+  let detalleCuotasPrestamosPagadas = []
   if (result.success && totalCuotasPrestamos > 0 && valorCuotasPrestamosPagado > 0) {
-    await registrarPagosCuotasPrestamos(valorCuotasPrestamosPagado, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
+    detalleCuotasPrestamosPagadas = await registrarPagosCuotasPrestamos(
+      valorCuotasPrestamosPagado,
+      formPago.tipo_pago,
+      { valorEfectivo, valorTransferencia, valorPagado }
+    ) || []
   }
 
   if (result.success) {
@@ -11753,7 +11826,8 @@ async function handleRegistrarPago() {
     const valorCuotaPagada = result.valorCuotaPagado || valorCuotaPagado
     const valorSancionPagadaCalculada = tieneNoCalcularMulta ? 0 : (result.valorSancionPagada || valorSancionPagada)
     const valorActividadesPagadoFinal = result.valorActividadesPagado || valorActividadesPagado
-    const valorCuotasPrestamosPagadoFinal = valorCuotasPrestamosPagado
+    const valorCuotasPrestamosPagadoFinal =
+      result.valorCuotasPrestamosPagado != null ? result.valorCuotasPrestamosPagado : valorCuotasPrestamosPagado
     
     // Total pagado en ESTA transacción (conceptos; comprobante suma GMF aparte si aplica)
     const valorPagadoEstaTransaccion = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0) + (valorCuotasPrestamosPagadoFinal || 0)
@@ -11814,18 +11888,22 @@ async function handleRegistrarPago() {
       }
     }
     
-    // Obtener las cuotas de préstamos pagadas para mostrar en conceptos
+    // Cuotas de préstamos: montos reales abonados en esta transacción (desde registrarPagosCuotasPrestamos)
     let cuotasPrestamosParaConceptos = []
     if (valorCuotasPrestamosParaComprobante > 0) {
-      const cuotasPrestamosPagadas = cuotasPrestamosPendientes.value
-        .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
-        .map(cp => ({
-          nombre: `Cuota préstamo #${cp.numero_cuota}`,
-          valor: cp.valor_pendiente || 0,
-          numero_cuota: cp.numero_cuota,
-          prestamo_id: cp.prestamo_id
-        }))
-      cuotasPrestamosParaConceptos = cuotasPrestamosPagadas
+      if (detalleCuotasPrestamosPagadas.length > 0) {
+        cuotasPrestamosParaConceptos = detalleCuotasPrestamosPagadas
+      } else {
+        const cuotasPrestamosPagadas = cuotasPrestamosPendientes.value
+          .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
+          .map(cp => ({
+            nombre: `Cuota préstamo #${cp.numero_cuota}`,
+            valor: cp.valor_pendiente || 0,
+            numero_cuota: cp.numero_cuota,
+            prestamo_id: cp.prestamo_id
+          }))
+        cuotasPrestamosParaConceptos = cuotasPrestamosPagadas
+      }
     }
     
     // Historial de pagos: obtenerlo siempre desde la tabla historial_pagos_cuota (fuente de verdad)
@@ -12019,8 +12097,8 @@ function generarImagenComprobante() {
       if (esParcial) {
         height += 80
       }
-      // Agregar espacio para historial de pagos (solo varios abonos; altura según líneas de conceptos)
-      if (historialPagos.length > 1) {
+      // Agregar espacio para historial de pagos (uno o más abonos; altura según líneas de conceptos)
+      if (historialPagos.length > 0) {
         let histExtra = 22 + 10
         historialPagos.forEach((item) => {
           const n = (item.conceptos || []).length
@@ -12519,8 +12597,8 @@ function generarImagenComprobante() {
       
       currentY = conceptosY + conceptosHeight + 10
       
-      // === SECCIÓN 2B: HISTORIAL DE PAGOS (solo cuando hay más de 1 pago para la cuota) ===
-      if (historialPagos.length > 1) {
+      // === SECCIÓN 2B: HISTORIAL DE PAGOS (abonos registrados en historial_pagos_cuota) ===
+      if (historialPagos.length > 0) {
         const historialY = currentY
         let historialHeight = 22
         historialPagos.forEach((item) => {
@@ -13377,17 +13455,13 @@ async function reenviarComprobante(cuota) {
     }
   }
   
-  // Calcular totales considerando sanciones, actividades y cuotas de préstamos pagadas (obligación; GMF aparte)
-  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades + totalCuotasPrestamos
-  const totalAPagar = valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos
-  const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
-  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
-  
   // Historial de pagos para comprobante reenviado: usar siempre historial_pagos_cuota (ya lanzado en paralelo)
+  let historialRows = null
   let historialPagosReenvio = []
   let totalGmfHistorialReenvio = 0
   try {
-    const { data: historialRows, error: historialError } = await historialPromise
+    const { data, error: historialError } = await historialPromise
+    historialRows = data
     // Log para depuración: registros encontrados en historial_pagos_cuota
     console.log('[Reenvío comprobante] historial_pagos_cuota:', {
       cuota_id: cuota.id,
@@ -13432,6 +13506,31 @@ async function reenviarComprobante(cuota) {
     console.warn('Error construyendo historial de pagos para reenvío desde historial_pagos_cuota:', e)
     historialPagosReenvio = []
   }
+
+  // plan_pagos_prestamo solo incluye filas con pagada=true; abonos parciales al préstamo no aparecen ahí.
+  // Fuente de respaldo para CONCEPTOS PAGADOS: desglose guardado en historial_pagos_cuota.
+  if (historialRows && historialRows.length > 0) {
+    const totalPrestDesdeHistorial = historialRows.reduce(
+      (s, r) => s + (parseFloat(r.valor_cuotas_prestamo) || 0),
+      0
+    )
+    if (totalCuotasPrestamos === 0 && totalPrestDesdeHistorial > 0) {
+      totalCuotasPrestamos = totalPrestDesdeHistorial
+      const filasPrest = historialRows.filter(r => (parseFloat(r.valor_cuotas_prestamo) || 0) > 0)
+      cuotasPrestamosPagadas = filasPrest.map((r, idx) => ({
+        nombre: filasPrest.length > 1 ? `Cuotas de préstamos (${idx + 1})` : 'Cuotas de préstamos',
+        valor: parseFloat(r.valor_cuotas_prestamo) || 0,
+        numero_cuota: null,
+        prestamo_id: null
+      }))
+    }
+  }
+
+  // Totales después de completar préstamos desde historial (si aplica)
+  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades + totalCuotasPrestamos
+  const totalAPagar = valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos
+  const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
+  const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
   
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
