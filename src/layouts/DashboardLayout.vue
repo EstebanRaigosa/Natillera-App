@@ -959,5 +959,20 @@ onUnmounted(() => {
   );
   backdrop-filter: blur(8px);
 }
+
+/* iOS Safari: fondo sólido en el panel de usuario (backdrop-blur-xl se reduce a 4px y queda muy transparente) */
+@supports (-webkit-touch-callout: none) {
+  .user-panel {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: hsl(150 26% 17% / 0.97) !important;
+  }
+
+  .sidebar-hover-tab {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: hsl(152 69% 28% / 0.96);
+  }
+}
 </style>
 

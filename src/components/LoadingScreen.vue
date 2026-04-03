@@ -223,17 +223,18 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* iOS-specific: ensure the loading screen covers the entire viewport including safe areas */
+/* iOS Safari: cubrir viewport real incluyendo safe areas (notch / home indicator) */
 @supports (-webkit-touch-callout: none) {
   .loading-screen {
     min-height: 100vh;
-    min-height: -webkit-fill-available;
+    min-height: 100dvh;
     height: 100vh;
-    height: -webkit-fill-available;
+    height: 100dvh;
     padding-top: env(safe-area-inset-top, 0);
     padding-bottom: env(safe-area-inset-bottom, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
-
 }
 
 /* Reduce animations for users who prefer it */

@@ -1,9 +1,35 @@
 <template>
   <div>
-    <!-- Loading mientras verifica autenticación -->
-    <div v-if="isLoading" class="flex flex-col items-center justify-center py-12">
-      <div class="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-      <p class="mt-4 text-white drop-shadow-lg">{{ loadingMessage }}</p>
+    <!-- Loading mientras verifica autenticación (panel blanco: contraste con verde marca) -->
+    <div
+      v-if="isLoading"
+      class="welcome-oauth-loading flex flex-col items-center justify-center py-10 px-5 rounded-2xl border border-natillera-200/90 bg-gradient-to-b from-natillera-50 via-white to-natillera-50/40 shadow-[0_8px_30px_-12px_rgba(20,83,45,0.12)]"
+      role="status"
+      aria-live="polite"
+      aria-label="Cargando"
+    >
+      <div class="welcome-oauth-loading__logo-wrap">
+        <img
+          :src="logoIconSrc"
+          alt=""
+          class="welcome-oauth-loading__logo"
+          width="120"
+          height="120"
+          decoding="async"
+          draggable="false"
+        />
+      </div>
+      <p class="mt-5 text-center text-[0.9375rem] font-semibold text-natillera-900 tracking-tight">
+        {{ loadingMessage }}
+      </p>
+      <p class="mt-1 text-center text-xs font-medium text-natillera-800/75">
+        Conectando con tu cuenta…
+      </p>
+      <div class="welcome-oauth-loading__progress mt-5 w-full max-w-[200px]">
+        <div class="welcome-oauth-loading__track">
+          <div class="welcome-oauth-loading__bar" />
+        </div>
+      </div>
     </div>
 
     <!-- Vista de error de OAuth (cancelación o error) -->
@@ -19,19 +45,19 @@
           </div>
         </div>
 
-        <!-- Título -->
+        <!-- Título (legible sobre panel blanco) -->
         <div class="text-center">
-          <h2 class="text-3xl font-display font-bold text-white mb-2 drop-shadow-lg">
+          <h2 class="text-3xl font-display font-bold text-natillera-900 mb-2 tracking-tight">
             {{ oauthErrorTitle }}
           </h2>
-          <p class="text-lg text-white/90 drop-shadow-md">
+          <p class="text-lg font-medium text-natillera-800/90">
             {{ oauthErrorMessage }}
           </p>
         </div>
       </div>
 
       <!-- Mensaje informativo -->
-      <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-white/50 shadow-xl">
+      <div class="bg-white rounded-xl p-6 mb-6 border-2 border-natillera-200/80 shadow-[0_4px_24px_-8px_rgba(20,83,45,0.12)]">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
@@ -64,7 +90,7 @@
         <button 
           @click="retryGoogleLogin"
           :disabled="authStore.loading"
-          class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/95 backdrop-blur-sm border-2 border-white/80 rounded-xl font-semibold text-gray-800 hover:bg-white hover:border-white shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-natillera-200 rounded-xl font-semibold text-natillera-900 hover:bg-natillera-50 hover:border-natillera-300 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -92,17 +118,17 @@
 
         <!-- Título -->
         <div class="text-center">
-          <h2 class="text-3xl font-display font-bold text-white mb-2 drop-shadow-lg">
+          <h2 class="text-3xl font-display font-bold text-natillera-900 mb-2 tracking-tight">
             ¡Cuenta confirmada!
           </h2>
-          <p class="text-lg text-white/90 drop-shadow-md">
+          <p class="text-lg font-medium text-natillera-800/90">
             Tu correo electrónico ha sido verificado exitosamente
           </p>
         </div>
       </div>
 
       <!-- Mensaje de bienvenida -->
-      <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 mb-6 border-2 border-white/50 shadow-xl">
+      <div class="bg-white rounded-xl p-6 mb-6 border-2 border-natillera-200/80 shadow-[0_4px_24px_-8px_rgba(20,83,45,0.12)]">
         <div class="flex items-start gap-4">
           <div class="flex-shrink-0">
             <div class="w-10 h-10 bg-natillera-500 rounded-full flex items-center justify-center">
@@ -121,33 +147,33 @@
 
       <!-- Características destacadas -->
       <div class="space-y-3 mb-8">
-        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
-          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm font-medium text-natillera-900">
+          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center border border-natillera-200/80">
+            <svg class="w-4 h-4 text-natillera-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Gestiona múltiples natilleras desde un solo lugar</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
-          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm font-medium text-natillera-900">
+          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center border border-natillera-200/80">
+            <svg class="w-4 h-4 text-natillera-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Controla cuotas personalizadas por socio</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
-          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm font-medium text-natillera-900">
+          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center border border-natillera-200/80">
+            <svg class="w-4 h-4 text-natillera-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
           <span>Administra préstamos y actividades</span>
         </div>
-        <div class="flex items-center gap-3 text-sm text-white drop-shadow-md">
-          <div class="flex-shrink-0 w-6 h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center gap-3 text-sm font-medium text-natillera-900">
+          <div class="flex-shrink-0 w-6 h-6 bg-natillera-100 rounded-full flex items-center justify-center border border-natillera-200/80">
+            <svg class="w-4 h-4 text-natillera-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -167,9 +193,9 @@
       </button>
 
       <!-- Información adicional -->
-      <p class="mt-6 text-center text-xs text-white/80 drop-shadow-md">
-        ¿Ya tienes una cuenta? 
-        <router-link to="/auth/login" class="text-white font-semibold hover:text-white/90 underline underline-offset-2">
+      <p class="mt-6 text-center text-xs text-natillera-800/80">
+        ¿Ya tienes una cuenta?
+        <router-link to="/auth/login" class="font-semibold text-natillera-900 hover:text-natillera-800 underline underline-offset-2">
           Inicia sesión aquí
         </router-link>
       </p>
@@ -184,6 +210,7 @@ import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
 import AppBrand from '../../components/AppBrand.vue'
+import logoIconSrc from '../../../assets/logo_icon.png'
 import { resolvePostLoginLocation } from '../../utils/postLoginRoute'
 
 const router = useRouter()
@@ -363,3 +390,81 @@ function goToLogin() {
   router.replace('/auth/login')
 }
 </script>
+
+<style scoped>
+.welcome-oauth-loading__logo-wrap {
+  position: relative;
+  width: min(38vw, 7.75rem);
+  height: min(38vw, 7.75rem);
+  min-width: 6rem;
+  min-height: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: welcome-oauth-spin 1.1s linear infinite;
+  will-change: transform;
+}
+
+.welcome-oauth-loading__logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: contain;
+  object-position: center;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  pointer-events: none;
+}
+
+@keyframes welcome-oauth-spin {
+  from {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  to {
+    transform: translate3d(0, 0, 0) rotate(360deg);
+  }
+}
+
+.welcome-oauth-loading__track {
+  width: 100%;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(22, 101, 52, 0.15);
+  overflow: hidden;
+}
+
+.welcome-oauth-loading__bar {
+  width: 40%;
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #15803d, #22c55e);
+  animation: welcome-oauth-progress 1.8s ease-in-out infinite;
+}
+
+@keyframes welcome-oauth-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-oauth-loading__logo-wrap {
+    animation: none;
+    will-change: auto;
+  }
+
+  .welcome-oauth-loading__bar {
+    animation: none;
+    width: 55%;
+    transform: none;
+  }
+}
+</style>
