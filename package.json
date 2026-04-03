@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "scrape:loteria": "node scripts/scrape-loteria-catalogo.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

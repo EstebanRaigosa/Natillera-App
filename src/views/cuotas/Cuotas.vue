@@ -1,91 +1,8 @@
 <template>
-  <!-- Pantalla de carga inicial: en iPhone/Safari LoadingScreenIos; en Android la original -->
-  <LoadingScreenIos
-    v-if="inicializando && isIos"
-    :show="true"
-    title="Cargando Cuotas"
-    message="Preparando la información"
+  <LoadingScreen
+    :visible="inicializando"
+    text="Cargando cuotas"
   />
-  <Transition
-    v-else-if="inicializando"
-    enter-active-class="transition duration-500 ease-out"
-    enter-from-class="opacity-0"
-    enter-to-class="opacity-100"
-    leave-active-class="transition duration-300 ease-in"
-    leave-from-class="opacity-100"
-    leave-to-class="opacity-0"
-  >
-    <div class="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden">
-      <!-- Fondo con gradiente animado -->
-      <div class="absolute inset-0 bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50"></div>
-      
-      <!-- Efectos decorativos de fondo -->
-      <div class="absolute inset-0 overflow-hidden">
-        <!-- Círculos grandes animados -->
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-natillera-200/40 to-emerald-200/30 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-200/40 to-natillera-200/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-r from-natillera-100/30 via-emerald-100/20 to-teal-100/30 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
-      </div>
-
-      <!-- Contenido principal -->
-      <div class="relative z-10 flex flex-col items-center justify-center">
-        <!-- Contenedor del spinner -->
-        <div class="relative mb-8">
-          <!-- Círculo exterior con gradiente -->
-          <div class="relative w-32 h-32">
-            <!-- Anillo exterior animado -->
-            <div class="absolute inset-0 rounded-full border-4 border-transparent bg-gradient-to-r from-natillera-200 via-emerald-200 to-teal-200 p-1">
-              <div class="w-full h-full rounded-full bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50"></div>
-            </div>
-            
-            <!-- Anillo medio giratorio -->
-            <div class="absolute inset-2 rounded-full border-4 border-transparent border-t-natillera-500 border-r-emerald-500 animate-spin" style="animation-duration: 1.5s;"></div>
-            
-            <!-- Anillo interior giratorio (dirección opuesta) -->
-            <div class="absolute inset-4 rounded-full border-3 border-transparent border-b-teal-500 border-l-natillera-400 animate-spin" style="animation-duration: 1s; animation-direction: reverse;"></div>
-            
-            <!-- Icono central con efecto de pulso -->
-            <div class="absolute inset-0 flex items-center justify-center">
-              <div class="relative">
-                <!-- Fondo del icono con pulso -->
-                <div class="absolute inset-0 bg-gradient-to-br from-natillera-400/20 to-emerald-400/20 rounded-full blur-xl animate-pulse"></div>
-                <!-- Icono -->
-                <div class="relative bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full p-4 shadow-2xl shadow-natillera-500/50">
-                  <CurrencyDollarIcon class="w-10 h-10 text-white" />
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Partículas decorativas alrededor -->
-          <div class="absolute -top-4 -left-4 w-3 h-3 bg-natillera-400 rounded-full animate-ping" style="animation-delay: 0s;"></div>
-          <div class="absolute -top-2 -right-6 w-2 h-2 bg-emerald-400 rounded-full animate-ping" style="animation-delay: 0.5s;"></div>
-          <div class="absolute -bottom-4 -left-6 w-2.5 h-2.5 bg-teal-400 rounded-full animate-ping" style="animation-delay: 1s;"></div>
-          <div class="absolute -bottom-2 -right-4 w-3 h-3 bg-natillera-300 rounded-full animate-ping" style="animation-delay: 1.5s;"></div>
-        </div>
-
-        <!-- Texto principal -->
-        <div class="text-center space-y-3">
-          <h2 class="text-3xl sm:text-4xl font-display font-bold bg-gradient-to-r from-natillera-700 via-emerald-700 to-teal-700 bg-clip-text text-transparent animate-pulse">
-            Cargando Cuotas
-          </h2>
-          <div class="flex items-center justify-center gap-2">
-            <div class="w-2 h-2 bg-natillera-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
-            <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
-            <div class="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
-          </div>
-          <p class="text-gray-600 text-base sm:text-lg font-medium mt-4">
-            Preparando la información
-          </p>
-        </div>
-
-        <!-- Barra de progreso decorativa -->
-        <div class="mt-8 w-64 h-1.5 bg-gray-200/50 rounded-full overflow-hidden shadow-inner">
-          <div class="h-full bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 rounded-full progress-bar"></div>
-        </div>
-      </div>
-    </div>
-  </Transition>
 
   <!-- Pantalla de carga al reenviar comprobante (elegante, compatible Safari/iPhone) -->
   <Teleport to="body">
@@ -2874,74 +2791,10 @@
         </div>
     </ModalWrapper>
 
-    <!-- Pantalla de carga al abrir registro de pago: en iPhone/Safari LoadingScreenIos; en Android la original -->
-    <LoadingScreenIos
-      v-if="preparandoModalPago && isIos"
-      :show="true"
-      title="Preparando registro de pago"
-      message="Cargando información"
+    <LoadingScreen
+      :visible="preparandoModalPago"
+      text="Preparando registro de pago"
     />
-    <Teleport to="body" v-else-if="preparandoModalPago">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-hidden" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; height: -webkit-fill-available !important; min-height: 100vh !important; min-height: 100dvh !important; min-height: -webkit-fill-available !important; margin: 0 !important; touch-action: none; overscroll-behavior: none;">
-          <!-- Fondo con blur y gradiente suave -->
-          <div class="absolute inset-0 bg-gradient-to-br from-black/60 via-natillera-900/30 to-teal-900/40 backdrop-blur-md" style="position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important;"></div>
-          <!-- Orbes decorativos animados -->
-          <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-natillera-400/20 rounded-full blur-3xl animate-pulse"></div>
-          <div class="absolute bottom-1/4 right-1/4 w-48 h-48 bg-emerald-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s"></div>
-          <div class="absolute top-1/2 left-1/2 w-32 h-32 bg-teal-400/10 rounded-full blur-2xl animate-pulse" style="animation-delay: 1s"></div>
-
-          <!-- Tarjeta con entrada animada -->
-          <Transition
-            enter-active-class="transition duration-400 ease-out"
-            enter-from-class="opacity-0 scale-90 translate-y-4"
-            enter-to-class="opacity-100 scale-100 translate-y-0"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="opacity-100 scale-100"
-            leave-to-class="opacity-0 scale-95"
-          >
-            <div class="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 min-w-[280px] max-w-[90vw] overflow-hidden" style="position: relative !important; z-index: 10 !important; margin: 0 auto !important;">
-              <!-- Borde superior con gradiente animado (shimmer) -->
-              <div class="h-1 bg-gradient-to-r from-natillera-400 via-emerald-400 to-teal-400 preparando-shimmer"></div>
-              <div class="p-8 flex flex-col items-center gap-6">
-                <!-- Contenedor del spinner con anillos -->
-                <div class="relative flex items-center justify-center">
-                  <div class="absolute w-16 h-16 rounded-full border-2 border-natillera-100 animate-spin" style="animation-duration: 1.8s"></div>
-                  <div class="absolute w-12 h-12 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.2s"></div>
-                  <div class="absolute w-8 h-8 rounded-full border-2 border-transparent border-b-teal-500 animate-spin" style="animation-duration: 0.8s"></div>
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-natillera-500 to-teal-500 flex items-center justify-center shadow-lg shadow-natillera-500/30">
-                    <CurrencyDollarIcon class="w-5 h-5 text-white animate-pulse" />
-                  </div>
-                </div>
-                <!-- Textos con aparición escalonada -->
-                <div class="text-center space-y-2">
-                  <p class="text-lg font-bold text-gray-800 dark:text-white preparando-fade-in-up-1">Preparando registro de pago</p>
-                  <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1 preparando-fade-in-up-2">
-                    <span>Cargando información</span>
-                    <span class="inline-flex gap-0.5">
-                      <span class="w-1 h-1 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0s"></span>
-                      <span class="w-1 h-1 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 0.15s"></span>
-                      <span class="w-1 h-1 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 0.3s"></span>
-                    </span>
-                  </p>
-                </div>
-                <!-- Barra de progreso indeterminada -->
-                <div class="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div class="h-full w-1/3 rounded-full bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 preparando-progress-slide"></div>
-                </div>
-              </div>
-            </div>
-          </Transition>
-        </div>
-      </Transition>
-    </Teleport>
 
     <!-- Modal Registrar Pago: en iOS ModalWrapper (vista/scroll correctos); en Android estructura actual -->
     <ModalWrapper
@@ -3070,7 +2923,7 @@
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-gray-600">Total a pagar</p>
                   <p class="font-bold text-gray-800 text-base">
-                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada)) + (cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas) }}
+                    ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada)) + (cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas + (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada) || 0)) }}
                   </p>
                 </div>
                 <!-- Sanción pendiente cuando la cuota está en mora -->
@@ -3086,7 +2939,7 @@
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-gray-600">Pagado anteriormente</p>
                   <p class="font-bold text-green-600 text-base">
-                    ${{ formatMoney((cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas) }}
+                    ${{ formatMoney((cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas + (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada) || 0)) }}
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
@@ -4295,13 +4148,13 @@
               </div>
             </div>
 
-            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (cada abono registrado en historial_pagos_cuota; 4×1000 por fila si aplica) -->
-            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 0" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
+            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (solo si hay más de un registro en historial_pagos_cuota; 4×1000 por fila si aplica) -->
+            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
               <div class="flex items-center gap-2 mb-3">
                 <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600" style="font-size: 11px; font-weight: 800;">📋</span>
                 <div class="flex flex-col min-w-0">
                   <p class="m-0 text-xs font-bold uppercase tracking-wider" style="color: #047857; letter-spacing: 0.8px;">Historial de pagos</p>
-                  <p v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="m-0 text-[10px] font-medium text-emerald-700/90">Varios abonos a esta cuota</p>
+                  <p class="m-0 text-[10px] font-medium text-emerald-700/90">Varios abonos a esta cuota</p>
                 </div>
               </div>
               <div class="flex flex-col gap-3">
@@ -4361,7 +4214,7 @@
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
                 <div>
                   <p style="color: #92400e; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase;">Total a Pagar</p>
-                  <p style="color: #78350f; font-size: 13px; margin: 0; font-weight: 700;">${{ formatMoney((pagoRegistrado?.valorCuota || 0) + (pagoRegistrado?.sancion || 0) + (pagoRegistrado?.valorActividades || 0)) }}</p>
+                  <p style="color: #78350f; font-size: 13px; margin: 0; font-weight: 700;">${{ formatMoney((pagoRegistrado?.valorCuota || 0) + (pagoRegistrado?.sancion || 0) + (pagoRegistrado?.valorActividades || 0) + (pagoRegistrado?.totalCuotasPrestamos || 0)) }}</p>
                 </div>
                 <div>
                   <p style="color: #92400e; font-size: 8px; margin: 0 0 3px 0; font-weight: 600; text-transform: uppercase;">Total Pagado</p>
@@ -4803,7 +4656,7 @@
       align="bottom"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
       card-class="relative max-w-md w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-200 border-b-0 sm:border-b max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 my-0 sm:my-4"
-      @close="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
+      @close="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
     >
         <!-- Header con gradiente (fijo) - tamaño reducido ~20% -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white relative overflow-hidden flex-shrink-0">
@@ -4950,7 +4803,7 @@
                 <!-- Opción Efectivo -->
                 <button
                   type="button"
-                  @click="formEditarCuota.tipo_pago = 'efectivo'"
+                  @click="formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
                   :class="[
                     'relative p-2.5 rounded-xl border-2 transition-all duration-200 transform hover:scale-[1.02]',
                     formEditarCuota.tipo_pago === 'efectivo'
@@ -5063,6 +4916,39 @@
                   placeholder="Ingresa el valor total pagado"
                   required
                 />
+              </div>
+            </div>
+
+            <!-- 4×1000 opcional (solo transferencia): monto neto en el campo; el impuesto se suma si se marca -->
+            <div
+              v-if="formEditarCuota.tipo_pago === 'transferencia'"
+              class="rounded-xl border-2 border-gray-200 bg-gradient-to-br from-slate-50 to-gray-50 p-4 space-y-3 shadow-sm"
+            >
+              <label class="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  v-model="formEditarCuota.aplicaImpuesto4x1000"
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 rounded border-gray-300 text-natillera-600 focus:ring-natillera-500"
+                />
+                <div class="flex-1 min-w-0 flex flex-wrap items-center justify-between gap-2">
+                  <span class="text-sm font-semibold text-gray-800">Aplica 4×1000</span>
+                  <span
+                    v-if="formEditarCuota.aplicaImpuesto4x1000 && (formEditarCuota.valor || 0) > 0"
+                    class="text-sm font-bold text-red-600 tabular-nums"
+                  >
+                    + ${{ formatMoney(calcularImpuesto4x1000(formEditarCuota.valor || 0)) }}
+                  </span>
+                </div>
+              </label>
+              <p
+                v-if="formEditarCuota.aplicaImpuesto4x1000 && (formEditarCuota.valor || 0) > 0"
+                class="text-xs text-gray-600 pl-7"
+              >
+                Se agregará ${{ formatMoney(calcularImpuesto4x1000(formEditarCuota.valor || 0)) }} sobre el valor ingresado
+              </p>
+              <div class="flex items-center justify-between gap-2 pt-2 border-t border-gray-200">
+                <span class="text-sm font-semibold text-gray-700">Total a cobrar</span>
+                <span class="text-xl font-bold text-natillera-700 tabular-nums">${{ formatMoney(getTotalACobrarModalEditar()) }}</span>
               </div>
             </div>
 
@@ -5221,8 +5107,8 @@
           <div class="flex gap-3">
             <button 
               type="button"
-              @click="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
-              @touchstart="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'"
+              @click="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
+              @touchstart="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
               style="pointer-events: auto !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25); min-height: 44px; z-index: 20 !important;"
               >
@@ -6224,11 +6110,10 @@ import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreenIos from '../../components/LoadingScreenIos.vue'
+import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import * as XLSX from 'xlsx-js-style'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
-import { useIsIos } from '../../composables/useIsIos'
 
 const props = defineProps({
   id: String,
@@ -6259,6 +6144,8 @@ const desglosePagoConfirmacion = ref(null) // Desglose del pago para mostrar en 
 const contenidoScrollRef = ref(null) // Referencia al contenedor scrolleable del modal de pago
 const mostrarIndicadorScroll = ref(false) // Indica si se debe mostrar el indicador de scroll
 const modalEditarCuota = ref(false)
+/** Suma de impuesto_4x1000 en historial_pagos_cuota al abrir "Editar pago" (para detectar cambios y sincronizar). */
+const impuesto4x1000AnteriorEditar = ref(0)
 const modalDesgloseRecaudacion = ref(false)
 const exportando = ref(false)
 const cuotaSeleccionada = ref(null)
@@ -6316,7 +6203,6 @@ const desplegableYaAbonadoOpen = ref(false)
 // Ref para bloquear el fondo cuando se está registrando un pago (declarado antes de useBodyScrollLock)
 const bloqueandoRegistroPago = ref(false)
 
-const isIos = useIsIos()
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalGenerarCuotas)
@@ -7351,7 +7237,55 @@ const formPago = reactive({
 const formEditarCuota = reactive({
   valor: 0,
   tipo_pago: 'efectivo',
+  /** Solo transferencia: suma 4×1000 sobre el valor neto del campo (opcional), igual que en registrar pago. */
+  aplicaImpuesto4x1000: false,
 })
+
+function getImpuesto4x1000Editar() {
+  if ((formEditarCuota.tipo_pago || 'efectivo') !== 'transferencia') return 0
+  if (!formEditarCuota.aplicaImpuesto4x1000) return 0
+  const net = Math.max(0, Math.floor(Number(formEditarCuota.valor) || 0))
+  return calcularImpuesto4x1000(net)
+}
+
+function getTotalACobrarModalEditar() {
+  const net = Math.max(0, Math.floor(Number(formEditarCuota.valor) || 0))
+  return net + getImpuesto4x1000Editar()
+}
+
+async function sincronizarImpuesto4x1000HistorialTrasEditar(cuotaId, nuevoImpuestoTotal) {
+  const idStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
+  if (!idStr) return
+  const total = Math.max(0, Math.round(Number(nuevoImpuestoTotal) || 0))
+  try {
+    const { error: zErr } = await supabase
+      .from('historial_pagos_cuota')
+      .update({ impuesto_4x1000: 0 })
+      .eq('cuota_id', idStr)
+    if (zErr && String(zErr.message || '').includes('impuesto_4x1000')) return
+    if (zErr) {
+      console.warn('historial_pagos_cuota: no se pudo reiniciar GMF al editar:', zErr.message)
+      return
+    }
+    if (total <= 0) return
+    const { data: ultimo, error: sErr } = await supabase
+      .from('historial_pagos_cuota')
+      .select('id')
+      .eq('cuota_id', idStr)
+      .order('fecha_pago', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (sErr || !ultimo?.id) return
+    const { error: uErr } = await supabase
+      .from('historial_pagos_cuota')
+      .update({ impuesto_4x1000: total })
+      .eq('id', ultimo.id)
+    if (uErr && String(uErr.message || '').includes('impuesto_4x1000')) return
+    if (uErr) console.warn('historial_pagos_cuota: no se pudo asignar GMF al editar:', uErr.message)
+  } catch (e) {
+    console.warn('sincronizarImpuesto4x1000HistorialTrasEditar:', e?.message || e)
+  }
+}
 
 // Función para formatear el valor del pago con puntos
 function formatearValorPago(value) {
@@ -9810,7 +9744,12 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
       const datosPago = {
         prestamo_id: prestamoId,
         valor: valorAPagarPrestamo,
-        fecha: fechaPago
+        fecha: fechaPago,
+        nombre_socio:
+          cuotaSeleccionada.value?.socio_natillera?.socio?.nombre ||
+          cuotaSeleccionada.value?.socio_natillera?.nombre ||
+          null,
+        nombre_natillera: natilleraNombre.value || null
       }
       
       if (codigoComprobante) {
@@ -10328,7 +10267,23 @@ async function abrirModalEditar(cuota) {
   const valorPagadoTotal = valorCuotaPagado + valorSancionPagado + totalActividadesPagadas + totalCuotasPrestamosPagadas
   
   formEditarCuota.valor = valorPagadoTotal > 0 ? valorPagadoTotal : (cuota.valor_pagado || 0)
-  
+
+  let sumGmfHist = 0
+  try {
+    const { data: histGmf } = await supabase
+      .from('historial_pagos_cuota')
+      .select('impuesto_4x1000')
+      .eq('cuota_id', cuota.id)
+    for (const r of histGmf || []) {
+      sumGmfHist += leerImpuesto4x1000DesdeHistorial(r)
+    }
+  } catch (e) {
+    console.warn('No se pudo leer GMF del historial para editar pago:', e?.message || e)
+  }
+  impuesto4x1000AnteriorEditar.value = sumGmfHist
+  formEditarCuota.aplicaImpuesto4x1000 =
+    (cuota.tipo_pago || 'efectivo') === 'transferencia' && sumGmfHist > 0
+
   modalEditarCuota.value = true
 }
 
@@ -11079,6 +11034,10 @@ async function guardarEdicionCuota() {
   
   try {
     const nuevoValor = formEditarCuota.valor || 0
+    const nuevoImpuestoGmfEditar =
+      (formEditarCuota.tipo_pago || 'efectivo') === 'transferencia' && formEditarCuota.aplicaImpuesto4x1000
+        ? calcularImpuesto4x1000(Math.max(0, Math.floor(Number(nuevoValor) || 0)))
+        : 0
     const valorCuota = cuotaEditando.value.valor_cuota || 0
     const tienePagoParcial = cuotaEditando.value.valor_pagado && cuotaEditando.value.valor_pagado > 0
     const estaPagada = (cuotaEditando.value.estadoReal || cuotaEditando.value.estado) === 'pagada'
@@ -11212,9 +11171,13 @@ async function guardarEdicionCuota() {
       // Verificar si cambió la forma de pago
       const tipoPagoAnterior = cuotaEditando.value.tipo_pago || 'efectivo'
       const tipoPagoCambio = formEditarCuota.tipo_pago !== tipoPagoAnterior
-      // Generar código nuevo si: hay cambio de valor, o si está pagada/tiene pago parcial y hay cualquier cambio (valor o forma de pago)
+      const gmfCambio =
+        Math.round(nuevoImpuestoGmfEditar) !== Math.round(impuesto4x1000AnteriorEditar.value || 0)
+      // Generar código nuevo si: hay cambio de valor, o si está pagada/tiene pago parcial y hay cualquier cambio (valor, forma de pago o 4×1000)
       // Si la cuota está pagada o tiene pago parcial, siempre generar código nuevo al hacer cualquier modificación
-      const debeGenerarCodigo = (valorCambio && nuevoValorPagado > 0) || ((estaPagada || tienePagoParcial) && (valorCambio || tipoPagoCambio))
+      const debeGenerarCodigo =
+        (valorCambio && nuevoValorPagado > 0) ||
+        ((estaPagada || tienePagoParcial) && (valorCambio || tipoPagoCambio || gmfCambio))
       
       if (debeGenerarCodigo) {
         // Generar nuevo código de comprobante cuando se modifica el pago
@@ -11318,6 +11281,9 @@ async function guardarEdicionCuota() {
     const result = await cuotasStore.actualizarCuota(cuotaEditando.value.id, datosActualizar)
     
     if (result.success) {
+      if (tienePagoParcial || estaPagada) {
+        await sincronizarImpuesto4x1000HistorialTrasEditar(cuotaEditando.value.id, nuevoImpuestoGmfEditar)
+      }
       // Si se generó un nuevo código de comprobante, mostrar el comprobante de modificación
       // El código se genera cuando hay cambios (valor o forma de pago), así que si existe, mostrar el comprobante
       if (nuevoCodigoComprobante) {
@@ -11598,7 +11564,7 @@ function mostrarConfirmacionPago() {
   const valorPagadoAnteriorTotal = (cuotaSeleccionada.value.valor_pagado || 0) +
     (parseFloat(cuotaSeleccionada.value?.valor_pagado_sancion) || 0) +
     (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0) +
-    (getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada.value) || 0)
+    (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada.value) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada.value) || 0)
 
   const esTransferencia = (formPago.tipo_pago || 'efectivo') === 'transferencia'
   const impuesto4x1000Confirm = esTransferencia && distTransferConfirm ? distTransferConfirm.impuestoGmf : 0
@@ -11729,6 +11695,26 @@ async function handleRegistrarPago() {
   // Registrar pago de la cuota (incluye distribución automática de sanción, actividades y cuota)
   const valorEfectivo = formPago.tipo_pago === 'efectivo' ? valorPagado : 0
   const valorTransferencia = formPago.tipo_pago === 'transferencia' ? valorPagado : 0
+  const detalleActividades = totalActividades > 0
+    ? actividadesPendientes.value
+        .filter(a => actividadesSeleccionadas.value.has(a.id))
+        .map(a => ({
+          nombre: a.actividad?.descripcion || 'Actividad',
+          tipo: a.actividad?.tipo || 'otro',
+          valor: parseFloat(a.valor_pendiente || 0)
+        }))
+    : []
+  const detalleCuotasPrestamos = totalCuotasPrestamos > 0
+    ? cuotasPrestamosPendientes.value
+        .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
+        .map(cp => ({
+          nombre: `Cuota préstamo #${cp.numero_cuota}`,
+          valor: parseFloat(cp.valor_pendiente || cp.valor_cuota || 0),
+          numero_cuota: cp.numero_cuota,
+          prestamo_id: cp.prestamo_id,
+          pagado: valorCuotasPrestamosPagado > 0
+        }))
+    : []
   const result = await cuotasStore.registrarPago(
     cuotaSeleccionada.value.id,
     valorPagado,
@@ -11739,7 +11725,10 @@ async function handleRegistrarPago() {
       valorEfectivo,
       valorTransferencia,
       impuesto4x1000: impuesto4x1000Pago,
-      valorCuotasPrestamos: valorCuotasPrestamosPagado
+      valorCuotasPrestamos: valorCuotasPrestamosPagado,
+      detalleActividades,
+      totalAPagar: totalAdeudadoPago,
+      detalleCuotasPrestamos
     }
   )
   
@@ -11911,7 +11900,7 @@ async function handleRegistrarPago() {
     try {
       const { data: historialRows } = await supabase
         .from('historial_pagos_cuota')
-        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000')
+        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades')
         .eq('cuota_id', cuotaSeleccionada.value.id)
         .order('fecha_pago', { ascending: true })
       if (historialRows && historialRows.length > 0) {
@@ -11919,7 +11908,14 @@ async function handleRegistrarPago() {
           const conceptos = []
           if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
           if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
-          if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+          if ((row.valor_actividades || 0) > 0) {
+            const detalle = row.detalle_actividades
+            if (Array.isArray(detalle) && detalle.length > 0) {
+              detalle.forEach(a => conceptos.push({ nombre: a.nombre || 'Actividad', valor: a.valor || 0 }))
+            } else {
+              conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+            }
+          }
           if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
           const impH = leerImpuesto4x1000DesdeHistorial(row)
           if (impH > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: impH })
@@ -12002,6 +11998,8 @@ async function handleRegistrarPago() {
       actividadesPagadas: actividadesParaConceptos.length > 0 ? actividadesParaConceptos : actividadesPagadas,
       // Información de cuotas de préstamos pagadas
       tieneCuotasPrestamos: valorCuotasPrestamosParaComprobante > 0,
+      totalCuotasPrestamos: totalCuotasPrestamos || 0,
+      valorCuotasPrestamosPagado: valorCuotasPrestamosParaComprobante,
       cantidadCuotasPrestamos: cuotasPrestamosParaConceptos.length,
       cuotasPrestamosPagadas: cuotasPrestamosParaConceptos,
       // Historial de pagos cuando se completa un parcial (para sección en comprobante)
@@ -12097,8 +12095,8 @@ function generarImagenComprobante() {
       if (esParcial) {
         height += 80
       }
-      // Agregar espacio para historial de pagos (uno o más abonos; altura según líneas de conceptos)
-      if (historialPagos.length > 0) {
+      // Agregar espacio para historial de pagos (más de un abono en historial_pagos_cuota; altura según líneas de conceptos)
+      if (historialPagos.length > 1) {
         let histExtra = 22 + 10
         historialPagos.forEach((item) => {
           const n = (item.conceptos || []).length
@@ -12597,8 +12595,8 @@ function generarImagenComprobante() {
       
       currentY = conceptosY + conceptosHeight + 10
       
-      // === SECCIÓN 2B: HISTORIAL DE PAGOS (abonos registrados en historial_pagos_cuota) ===
-      if (historialPagos.length > 0) {
+      // === SECCIÓN 2B: HISTORIAL DE PAGOS (solo si hay más de un registro en historial_pagos_cuota) ===
+      if (historialPagos.length > 1) {
         const historialY = currentY
         let historialHeight = 22
         historialPagos.forEach((item) => {
@@ -12680,10 +12678,11 @@ function generarImagenComprobante() {
         ctx.textAlign = 'left'
         ctx.fillText('RESUMEN PARCIAL', cardInnerX + 10, infoParcialY + 15)
         
-        // Total a pagar = obligación completa (cuota + sanción + actividades)
+        // Total a pagar = obligación completa (cuota + sanción + actividades + cuotas de préstamos)
         const totalObligacion = (pagoRegistrado.value?.valorCuota || 0) + 
           (tieneSancion ? (pagoRegistrado.value?.sancion || 0) : 0) + 
-          (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0)
+          (tieneActividades ? (pagoRegistrado.value?.valorActividades || 0) : 0) +
+          (pagoRegistrado.value?.totalCuotasPrestamos || 0)
         
         // Grid: Total a Pagar y Total Pagado
         const gridParcialY = infoParcialY + 22
@@ -13256,9 +13255,10 @@ async function reenviarComprobante(cuota) {
   // Lanzar historial en paralelo para reducir tiempo total (se espera más abajo)
   const historialPromise = supabase
     .from('historial_pagos_cuota')
-    .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000')
+    .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades, total_a_pagar, detalle_cuotas_prestamo')
     .eq('cuota_id', cuota.id)
     .order('fecha_pago', { ascending: true })
+    .then(res => res)
 
   try {
   // Usar el campo valor_pagado_sancion de la BD: ahí se guarda lo abonado a sanciones.
@@ -13348,34 +13348,40 @@ async function reenviarComprobante(cuota) {
         
         const sociosActividadData = sociosActividadRes.data
         if (sociosActividadData && sociosActividadData.length > 0) {
-          // Cuota con mes/anio/quincena para actividadCorrespondeACuota (por si no los tenía)
           const cuotaConPeriodo = {
             ...cuota,
             mes: mesCuota ?? cuota.mes,
             anio: anioCuota ?? cuota.anio,
             quincena: quincenaCuota ?? cuota.quincena
           }
-          // Solo incluir actividades que corresponden a ESTA cuota (misma quincena)
-          actividadesPagadas = sociosActividadData
+          // Primero intentar con correspondencia estricta de quincena
+          let actividadesFiltradas = sociosActividadData
             .filter(sa => {
               const actividad = Array.isArray(sa.actividades) ? sa.actividades[0] : sa.actividades
               if (!actividad || sa.valor_pagado <= 0) return false
               return actividadCorrespondeACuota(sa, cuotaConPeriodo, actividad)
             })
-            .map(sa => {
+          // Si no hay resultados pero la cuota tiene valor_pagado_actividades,
+          // incluir TODAS las actividades pagadas del mismo mes/anio (la actividad pudo haberse pagado en otra quincena)
+          if (actividadesFiltradas.length === 0 && valorActividadesPagadoEnCuota > 0) {
+            actividadesFiltradas = sociosActividadData.filter(sa => {
               const actividad = Array.isArray(sa.actividades) ? sa.actividades[0] : sa.actividades
-              return {
-                id: sa.id,
-                descripcion: actividad?.descripcion || 'Actividad',
-                tipo: actividad?.tipo || 'otro',
-                valor_pendiente: sa.valor_pagado, // Para reenvío, mostrar lo que se pagó
-                valor_asignado: sa.valor_asignado,
-                valor_pagado_anterior: 0
-              }
+              return actividad && sa.valor_pagado > 0
             })
+          }
+          actividadesPagadas = actividadesFiltradas.map(sa => {
+            const actividad = Array.isArray(sa.actividades) ? sa.actividades[0] : sa.actividades
+            return {
+              id: sa.id,
+              descripcion: actividad?.descripcion || 'Actividad',
+              tipo: actividad?.tipo || 'otro',
+              valor_pendiente: sa.valor_pagado,
+              valor_asignado: sa.valor_asignado,
+              valor_pagado_anterior: 0
+            }
+          })
           
           const totalDesdeQuery = actividadesPagadas.reduce((sum, a) => sum + (a.valor_pendiente || 0), 0)
-          // Si en esta cuota se pagó más a actividades (ej. actividad de otro periodo), añadir línea genérica
           if (valorActividadesPagadoEnCuota > totalDesdeQuery) {
             const diferencia = valorActividadesPagadoEnCuota - totalDesdeQuery
             actividadesPagadas.push({
@@ -13389,60 +13395,78 @@ async function reenviarComprobante(cuota) {
           }
           totalActividades = valorActividadesPagadoEnCuota
         } else if (valorActividadesPagadoEnCuota > 0) {
-          // Actividad(es) pagada(s) en esta cuota pero de otro periodo: mostrar una línea genérica
-          actividadesPagadas = [{
-            id: null,
-            descripcion: 'Actividades',
-            tipo: 'otro',
-            valor_pendiente: valorActividadesPagadoEnCuota,
-            valor_asignado: valorActividadesPagadoEnCuota,
-            valor_pagado_anterior: 0
-          }]
+          // Intentar obtener nombres desde historial_pagos_cuota.detalle_actividades
+          let usadoHistorial = false
+          try {
+            const { data: histFallback } = await historialPromise
+            if (histFallback && histFallback.length > 0) {
+              const detallesAll = histFallback
+                .flatMap(r => Array.isArray(r.detalle_actividades) ? r.detalle_actividades : [])
+              if (detallesAll.length > 0) {
+                actividadesPagadas = detallesAll.map(a => ({
+                  id: null,
+                  descripcion: a.nombre || 'Actividad',
+                  tipo: a.tipo || 'otro',
+                  valor_pendiente: a.valor || 0,
+                  valor_asignado: a.valor || 0,
+                  valor_pagado_anterior: 0
+                }))
+                usadoHistorial = true
+              }
+            }
+          } catch (eFallback) {
+            console.warn('No se pudo obtener detalle_actividades de historial:', eFallback.message)
+          }
+          if (!usadoHistorial) {
+            actividadesPagadas = [{
+              id: null,
+              descripcion: 'Actividades',
+              tipo: 'otro',
+              valor_pendiente: valorActividadesPagadoEnCuota,
+              valor_asignado: valorActividadesPagadoEnCuota,
+              valor_pagado_anterior: 0
+            }]
+          }
         }
         
-        // Obtener cuotas de préstamos pagadas (prestamos ya cargados en paralelo)
+        // Obtener cuotas de préstamos del período (pagadas y pendientes) para calcular obligación total
         const prestamosSocio = prestamosRes.data
         if (prestamosSocio && prestamosSocio.length > 0) {
           const prestamoIds = prestamosSocio.map(p => p.id)
           
+          // Buscar TODAS las cuotas de préstamos del mismo período (sin filtro pagada=true)
           let cuotasPrestamosData = null
           
-          if (cuota.fecha_pago) {
-            // Si hay fecha_pago, buscar cuotas de préstamos pagadas en la misma fecha o muy cercana (mismo día)
-            const fechaPagoCuota = new Date(cuota.fecha_pago)
-            fechaPagoCuota.setHours(0, 0, 0, 0)
-            const fechaFinDia = new Date(fechaPagoCuota)
-            fechaFinDia.setHours(23, 59, 59, 999)
-            
-            const { data } = await supabase
-              .from('plan_pagos_prestamo')
-              .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago')
-              .in('prestamo_id', prestamoIds)
-              .eq('pagada', true)
-              .gte('fecha_pago', fechaPagoCuota.toISOString())
-              .lte('fecha_pago', fechaFinDia.toISOString())
-            
-            cuotasPrestamosData = data
+          // Primero intentar por cuota_id (las que se pagaron desde esta cuota)
+          const { data: porCuotaId } = await supabase
+            .from('plan_pagos_prestamo')
+            .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago, pagada, mes, anio, quincena')
+            .in('prestamo_id', prestamoIds)
+            .eq('cuota_id', cuota.id)
+          
+          if (porCuotaId && porCuotaId.length > 0) {
+            cuotasPrestamosData = porCuotaId
           } else {
-            // Si no hay fecha_pago, buscar en el mismo periodo
-            const fechaInicioPeriodo = new Date(anioCuota, mesCuota - 1, 1)
-            const fechaFinPeriodo = new Date(anioCuota, mesCuota, 0, 23, 59, 59)
-            
-            const { data } = await supabase
+            // Buscar por periodo (mes/anio/quincena)
+            let query = supabase
               .from('plan_pagos_prestamo')
-              .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago')
+              .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago, pagada, mes, anio, quincena')
               .in('prestamo_id', prestamoIds)
-              .eq('pagada', true)
-              .gte('fecha_pago', fechaInicioPeriodo.toISOString())
-              .lte('fecha_pago', fechaFinPeriodo.toISOString())
-            
+              .eq('mes', mesCuota)
+              .eq('anio', anioCuota)
+            if (quincenaCuota != null) {
+              query = query.eq('quincena', quincenaCuota)
+            }
+            const { data } = await query
             cuotasPrestamosData = data
           }
           
           if (cuotasPrestamosData && cuotasPrestamosData.length > 0) {
             cuotasPrestamosPagadas = cuotasPrestamosData.map(cp => ({
               nombre: `Cuota préstamo #${cp.numero_cuota}`,
-              valor: cp.valor_pagado || cp.valor_cuota || 0,
+              valor: parseFloat(cp.valor_cuota) || 0,
+              valor_pagado: parseFloat(cp.valor_pagado) || 0,
+              pagada: cp.pagada,
               numero_cuota: cp.numero_cuota,
               prestamo_id: cp.prestamo_id
             }))
@@ -13481,7 +13505,14 @@ async function reenviarComprobante(cuota) {
         const conceptos = []
         if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
         if ((row.valor_sancion || 0) > 0 && !tieneNoCalcularMulta) conceptos.push({ nombre: 'Sanción', valor: row.valor_sancion })
-        if ((row.valor_actividades || 0) > 0) conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+        if ((row.valor_actividades || 0) > 0) {
+          const detalle = row.detalle_actividades
+          if (Array.isArray(detalle) && detalle.length > 0) {
+            detalle.forEach(a => conceptos.push({ nombre: a.nombre || 'Actividad', valor: a.valor || 0 }))
+          } else {
+            conceptos.push({ nombre: 'Actividades', valor: row.valor_actividades })
+          }
+        }
         if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
         const impH = leerImpuesto4x1000DesdeHistorial(row)
         if (impH > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: impH })
@@ -13507,28 +13538,71 @@ async function reenviarComprobante(cuota) {
     historialPagosReenvio = []
   }
 
-  // plan_pagos_prestamo solo incluye filas con pagada=true; abonos parciales al préstamo no aparecen ahí.
-  // Fuente de respaldo para CONCEPTOS PAGADOS: desglose guardado en historial_pagos_cuota.
+  // totalCuotasPrestamos ahora incluye la OBLIGACIÓN total (pagada o no) desde plan_pagos_prestamo
+  // Calcular por separado lo efectivamente pagado de préstamos
+  let totalCuotasPrestamosPagado = cuotasPrestamosPagadas
+    .filter(cp => cp.pagada)
+    .reduce((sum, cp) => sum + (cp.valor_pagado || cp.valor || 0), 0)
+
+  // Fuente de respaldo 1: historial_pagos_cuota.detalle_cuotas_prestamo o total_a_pagar
+  let totalAPagarDesdeHistorial = 0
   if (historialRows && historialRows.length > 0) {
-    const totalPrestDesdeHistorial = historialRows.reduce(
-      (s, r) => s + (parseFloat(r.valor_cuotas_prestamo) || 0),
-      0
-    )
-    if (totalCuotasPrestamos === 0 && totalPrestDesdeHistorial > 0) {
-      totalCuotasPrestamos = totalPrestDesdeHistorial
-      const filasPrest = historialRows.filter(r => (parseFloat(r.valor_cuotas_prestamo) || 0) > 0)
-      cuotasPrestamosPagadas = filasPrest.map((r, idx) => ({
-        nombre: filasPrest.length > 1 ? `Cuotas de préstamos (${idx + 1})` : 'Cuotas de préstamos',
-        valor: parseFloat(r.valor_cuotas_prestamo) || 0,
-        numero_cuota: null,
-        prestamo_id: null
-      }))
+    // Usar total_a_pagar del historial como fuente definitiva si existe
+    const primerHistorialConTotal = historialRows.find(r => (parseFloat(r.total_a_pagar) || 0) > 0)
+    if (primerHistorialConTotal) {
+      totalAPagarDesdeHistorial = parseFloat(primerHistorialConTotal.total_a_pagar) || 0
+    }
+
+    // Si no encontramos cuotas de préstamos por periodo pero el historial tiene detalle
+    if (totalCuotasPrestamos === 0) {
+      const detallesPrest = historialRows
+        .flatMap(r => Array.isArray(r.detalle_cuotas_prestamo) ? r.detalle_cuotas_prestamo : [])
+      if (detallesPrest.length > 0) {
+        cuotasPrestamosPagadas = detallesPrest.map(d => ({
+          nombre: d.nombre || `Cuota préstamo #${d.numero_cuota || '?'}`,
+          valor: parseFloat(d.valor) || 0,
+          valor_pagado: d.pagado ? (parseFloat(d.valor) || 0) : 0,
+          pagada: d.pagado || false,
+          numero_cuota: d.numero_cuota,
+          prestamo_id: d.prestamo_id
+        }))
+        totalCuotasPrestamos = cuotasPrestamosPagadas.reduce((sum, cp) => sum + (cp.valor || 0), 0)
+        totalCuotasPrestamosPagado = cuotasPrestamosPagadas
+          .filter(cp => cp.pagada)
+          .reduce((sum, cp) => sum + (cp.valor_pagado || cp.valor || 0), 0)
+      }
+    }
+
+    // Fallback final: si aún no hay datos, usar valor_cuotas_prestamo del historial (solo pagados)
+    if (totalCuotasPrestamos === 0) {
+      const totalPrestDesdeHistorial = historialRows.reduce(
+        (s, r) => s + (parseFloat(r.valor_cuotas_prestamo) || 0), 0)
+      if (totalPrestDesdeHistorial > 0) {
+        totalCuotasPrestamosPagado = totalPrestDesdeHistorial
+        totalCuotasPrestamos = totalPrestDesdeHistorial
+        const filasPrest = historialRows.filter(r => (parseFloat(r.valor_cuotas_prestamo) || 0) > 0)
+        cuotasPrestamosPagadas = filasPrest.map((r, idx) => ({
+          nombre: filasPrest.length > 1 ? `Cuotas de préstamos (${idx + 1})` : 'Cuotas de préstamos',
+          valor: parseFloat(r.valor_cuotas_prestamo) || 0,
+          numero_cuota: null,
+          prestamo_id: null
+        }))
+      }
     }
   }
 
-  // Totales después de completar préstamos desde historial (si aplica)
-  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades + totalCuotasPrestamos
-  const totalAPagar = valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos
+  // Lo efectivamente pagado de préstamos (desde historial si plan_pagos_prestamo no tiene pagadas)
+  if (totalCuotasPrestamosPagado === 0 && historialRows && historialRows.length > 0) {
+    totalCuotasPrestamosPagado = historialRows.reduce(
+      (s, r) => s + (parseFloat(r.valor_cuotas_prestamo) || 0), 0)
+  }
+
+  // Totales: obligación usa totalCuotasPrestamos (completo), pagado usa totalCuotasPrestamosPagado
+  const valorPagadoTotal = valorCuotaPagada + valorSancionPagada + totalActividades + totalCuotasPrestamosPagado
+  // Si el historial tiene total_a_pagar definitivo, usarlo; si no, calcularlo
+  const totalAPagar = totalAPagarDesdeHistorial > 0
+    ? totalAPagarDesdeHistorial
+    : (valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos)
   const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
   const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
   
@@ -13581,9 +13655,10 @@ async function reenviarComprobante(cuota) {
     valorActividadesPagado: totalActividades, // Valor pagado de actividades para mostrar en conceptos
     cantidadActividades: actividadesPagadas.length,
     actividadesPagadas: actividadesPagadas,
-    // Información de cuotas de préstamos pagadas
+    // Información de cuotas de préstamos (obligación completa y pagado)
     tieneCuotasPrestamos: totalCuotasPrestamos > 0,
-    valorCuotasPrestamosPagado: totalCuotasPrestamos,
+    totalCuotasPrestamos: totalCuotasPrestamos || 0,
+    valorCuotasPrestamosPagado: totalCuotasPrestamosPagado || 0,
     cantidadCuotasPrestamos: cuotasPrestamosPagadas.length,
     cuotasPrestamosPagadas: cuotasPrestamosPagadas,
     // Historial de pagos (para mostrar en comprobante reenviado cuando hubo pagos parciales o desglose único)

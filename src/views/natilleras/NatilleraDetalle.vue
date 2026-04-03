@@ -5,78 +5,11 @@
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
-    <!-- Pantalla de carga: en iPhone/Safari se usa LoadingScreenIos (desde cero); en Android la original -->
-    <LoadingScreenIos
-      v-if="cargandoNatillera && isIos"
-      :show="true"
-      :message="mensajeCargaActual"
+    <LoadingScreen
+      :visible="cargandoNatillera"
+      :text="mensajeCargaActual"
     />
-    <Teleport to="body" v-else-if="cargandoNatillera">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-200 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div 
-          key="loading-screen"
-          class="fixed inset-0 z-[9999] flex items-center justify-center bg-gradient-to-br from-white via-green-50/30 to-emerald-50/20 backdrop-blur-md"
-          style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100vw !important; height: 100vh !important; height: 100dvh !important; height: -webkit-fill-available !important; min-height: 100vh !important; min-height: 100dvh !important; min-height: -webkit-fill-available !important; margin: 0 !important; padding: 0 !important; touch-action: none; overscroll-behavior: none; -webkit-overflow-scrolling: touch;"
-          @click.stop.prevent
-          @wheel.stop.prevent
-          @touchmove.stop.prevent
-          @scroll.stop.prevent
-        >
-          <!-- Efectos decorativos de fondo -->
-          <div class="absolute inset-0 overflow-hidden pointer-events-none" style="position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; width: 100% !important; height: 100% !important;">
-            <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 0.5s;"></div>
-          </div>
-          
-          <div class="relative z-10 flex flex-col items-center justify-center" style="position: relative !important; width: 100% !important; max-width: 100% !important; margin: 0 auto !important;">
-            <!-- Spinner moderno con gradientes y múltiples capas -->
-            <div class="relative w-24 h-24 mb-6">
-              <!-- Anillo exterior grande animado -->
-              <div class="absolute inset-0 border-4 border-green-200/50 rounded-full"></div>
-              <div class="absolute inset-0 border-4 border-transparent border-t-green-500 rounded-full animate-spin-smooth"></div>
-              
-              <!-- Anillo medio -->
-              <div class="absolute inset-2 border-4 border-emerald-200/50 rounded-full"></div>
-              <div class="absolute inset-2 border-4 border-transparent border-r-emerald-500 rounded-full animate-spin-reverse"></div>
-              
-              <!-- Anillo interior -->
-              <div class="absolute inset-4 border-4 border-teal-200/50 rounded-full"></div>
-              <div class="absolute inset-4 border-4 border-transparent border-b-teal-500 rounded-full animate-spin-smooth" style="animation-duration: 0.6s;"></div>
-              
-              <!-- Círculo central con gradiente animado -->
-              <div class="absolute inset-6 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/50 animate-glow-pulse">
-                <BanknotesIcon class="w-5 h-5 text-white" />
-              </div>
-              
-              <!-- Partículas flotantes -->
-              <div class="absolute -top-2 left-1/2 w-2 h-2 bg-green-400 rounded-full animate-float-1"></div>
-              <div class="absolute top-1/4 -right-2 w-2 h-2 bg-emerald-400 rounded-full animate-float-2"></div>
-              <div class="absolute -bottom-2 left-1/4 w-2 h-2 bg-teal-400 rounded-full animate-float-3"></div>
-            </div>
-            
-            <!-- Texto de carga con efecto -->
-            <div class="text-center">
-              <p class="text-gray-700 font-semibold text-lg mb-1 animate-fade-in-out">
-                {{ mensajeCargaActual }}
-              </p>
-              <div class="flex gap-1 justify-center mt-2">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
-                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
-                <div class="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style="animation-delay: 0.4s;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
-    <template v-else-if="natillera">
+    <template v-if="natillera && !cargandoNatillera">
       <!-- Breadcrumbs (solo desktop) -->
       <div class="hidden sm:block relative mb-4">
         <Breadcrumbs />
@@ -384,7 +317,7 @@
         </div>
       </div>
     </template>
-    <div v-else class="card text-center py-12">
+    <div v-else-if="!cargandoNatillera" class="card text-center py-12">
       <p class="text-gray-500">No se encontró la natillera</p>
       <router-link to="/natilleras" class="btn-primary mt-4 inline-block">
         Volver a natilleras
@@ -3051,14 +2984,13 @@ import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreenIos from '../../components/LoadingScreenIos.vue'
+import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import {
   pendingNatilleraSidebarAction,
   clearPendingNatilleraSidebarAction
 } from '../../composables/useNatilleraSidebarActions'
-import { useIsIos } from '../../composables/useIsIos'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
 const props = defineProps({
   id: String
@@ -3162,7 +3094,6 @@ let intervaloMensajeCarga = null
 // Variable para mantener el índice anterior fuera del intervalo
 let indiceMensajeAnterior = -1
 // Bloquear scroll del body cuando las modales están abiertas
-const isIos = useIsIos()
 useBodyScrollLock(modalWhatsApp)
 useBodyScrollLock(modalComprobanteEstadoSocio)
 useBodyScrollLock(modalDetalle)

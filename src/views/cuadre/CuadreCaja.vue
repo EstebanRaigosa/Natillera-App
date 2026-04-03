@@ -55,42 +55,10 @@
       </div>
     </div>
 
-    <!-- Pantalla de carga -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-300 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-250 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="loading"
-          class="cuadre-loading-screen"
-          role="status"
-          aria-live="polite"
-          aria-label="Cargando totales generales"
-        >
-          <div class="cuadre-loading-screen__bg">
-            <div class="cuadre-loading-screen__blur cuadre-loading-screen__blur--1"></div>
-            <div class="cuadre-loading-screen__blur cuadre-loading-screen__blur--2"></div>
-            <div class="cuadre-loading-screen__blur cuadre-loading-screen__blur--3"></div>
-          </div>
-          <div class="cuadre-loading-screen__content">
-            <div class="cuadre-loading-screen__icon-wrap">
-              <CalculatorIcon class="cuadre-loading-screen__icon" aria-hidden="true" />
-            </div>
-            <h2 class="cuadre-loading-screen__title">Totales generales</h2>
-            <p class="cuadre-loading-screen__subtitle">Calculando cuadre de caja</p>
-            <div class="cuadre-loading-screen__spinner" aria-hidden="true"></div>
-            <div class="cuadre-loading-screen__dots" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <LoadingScreen
+      :visible="loading"
+      text="Calculando cuadre de caja"
+    />
 
     <template v-if="!loading">
       <div v-show="tabActiva === 'totales'">
@@ -376,15 +344,16 @@
               :class="['px-3 py-1.5 rounded-lg text-sm font-semibold transition-all', filtroDetalleFormaPago === 'transferencia' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200']"
             >Transferencia</button>
           </div>
-          <!-- Ordenar por -->
+          <!-- Ordenar por (varios criterios, prioridad de arriba a abajo en la lista) -->
           <div ref="dropdownOrdenarRef" class="relative flex flex-col gap-2 min-w-0">
             <label class="text-sm font-semibold text-gray-700 shrink-0">Ordenar por:</label>
             <button
               type="button"
               @click="dropdownOrdenarAbierto = !dropdownOrdenarAbierto"
-              class="flex items-center justify-between gap-2 min-w-[8rem] px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
+              class="flex items-center justify-between gap-2 min-w-[10rem] max-w-full px-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm text-left bg-white hover:bg-gray-50 transition-colors"
+              :title="etiquetaOrdenDetalle"
             >
-              <span class="truncate">{{ OPCIONES_ORDENAR.find(o => o.value === ordenarDetallePor)?.label || 'Socio' }}</span>
+              <span class="truncate">{{ etiquetaOrdenDetalle }}</span>
               <ChevronDownIcon :class="['w-5 h-5 text-gray-500 shrink-0 transition-transform', dropdownOrdenarAbierto && 'rotate-180']" />
             </button>
             <Transition
@@ -397,18 +366,55 @@
             >
               <div
                 v-show="dropdownOrdenarAbierto"
-                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[8rem] overflow-hidden"
+                class="absolute top-full left-0 mt-1 z-50 py-2 rounded-xl bg-white border-2 border-gray-200 shadow-xl min-w-[15rem] max-w-[min(100vw-2rem,22rem)] overflow-hidden"
               >
-                <button
+                <p class="px-3 pb-2 text-[11px] text-gray-500 leading-snug">
+                  Marca uno o más criterios. El número indica la prioridad; usa las flechas para cambiar el orden.
+                </p>
+                <div
                   v-for="opt in OPCIONES_ORDENAR"
                   :key="opt.value"
-                  type="button"
-                  @click="ordenarDetallePor = opt.value; dropdownOrdenarAbierto = false"
-                  class="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-teal-50/80 transition-colors text-sm"
-                  :class="ordenarDetallePor === opt.value ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-700'"
+                  class="flex items-stretch gap-1 px-1.5"
                 >
-                  {{ opt.label }}
-                </button>
+                  <button
+                    type="button"
+                    class="flex flex-1 items-center gap-2 min-w-0 text-left text-sm rounded-lg px-2 py-2 transition-colors"
+                    :class="ordenarDetalleCriterios.includes(opt.value) ? 'bg-teal-50 text-teal-800 font-medium' : 'text-gray-700 hover:bg-gray-50'"
+                    @click="toggleCriterioOrden(opt.value)"
+                  >
+                    <span
+                      class="w-5 h-5 rounded border-2 flex items-center justify-center shrink-0"
+                      :class="ordenarDetalleCriterios.includes(opt.value) ? 'border-teal-500 bg-teal-500' : 'border-gray-300'"
+                    >
+                      <CheckIcon v-if="ordenarDetalleCriterios.includes(opt.value)" class="w-3.5 h-3.5 text-white" />
+                    </span>
+                    <span v-if="indiceCriterioOrden(opt.value) >= 0" class="text-xs text-teal-600 font-semibold tabular-nums w-4 shrink-0">{{ indiceCriterioOrden(opt.value) + 1 }}.</span>
+                    <span class="truncate">{{ opt.label }}</span>
+                  </button>
+                  <div
+                    v-if="ordenarDetalleCriterios.includes(opt.value) && ordenarDetalleCriterios.length > 1"
+                    class="flex flex-col justify-center shrink-0 border-l border-gray-100 pl-0.5"
+                  >
+                    <button
+                      type="button"
+                      class="p-0.5 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:pointer-events-none"
+                      :disabled="indiceCriterioOrden(opt.value) <= 0"
+                      aria-label="Subir prioridad"
+                      @click.stop="moverCriterioOrden(opt.value, -1)"
+                    >
+                      <ChevronUpIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      class="p-0.5 rounded hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:pointer-events-none"
+                      :disabled="indiceCriterioOrden(opt.value) >= ordenarDetalleCriterios.length - 1"
+                      aria-label="Bajar prioridad"
+                      @click.stop="moverCriterioOrden(opt.value, 1)"
+                    >
+                      <ChevronDownIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </Transition>
           </div>
@@ -421,11 +427,12 @@
             <div v-else>
               <!-- Desktop: tabla grid -->
               <div class="hidden sm:block overflow-x-auto -mx-1 mb-4">
-                <table class="w-full min-w-[520px] text-sm">
+                <table class="w-full min-w-[640px] text-sm">
                   <thead>
                     <tr class="border-b-2 border-gray-200 text-left text-gray-600 font-semibold">
                       <th class="py-3 px-2">Concepto</th>
                       <th class="py-3 px-2">Socio</th>
+                      <th class="py-3 px-2 whitespace-nowrap">Fecha mov.</th>
                       <th class="py-3 px-2">Forma de pago</th>
                       <th class="py-3 px-2 text-right">Monto</th>
                     </tr>
@@ -443,6 +450,7 @@
                         <span v-if="item.mes" class="text-gray-500 ml-1">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
                       </td>
                       <td class="py-2.5 px-2 font-medium text-gray-800">{{ item.socio || '—' }}</td>
+                      <td class="py-2.5 px-2 text-gray-600 whitespace-nowrap tabular-nums">{{ formatDate(item.fecha_movimiento) }}</td>
                       <td class="py-2.5 px-2">
                         <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
                       </td>
@@ -453,7 +461,7 @@
                   </tbody>
                   <tfoot class="border-t-2 border-gray-200">
                     <tr class="font-bold text-gray-800">
-                      <td colspan="3" class="py-3 px-2">Total (filtrado)</td>
+                      <td colspan="4" class="py-3 px-2">Total (filtrado)</td>
                       <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
                         {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
                       </td>
@@ -477,6 +485,7 @@
                       <span v-if="item.mes" class="text-gray-500 text-xs shrink-0">{{ getMesLabel(item.mes) }} {{ item.anio }}</span>
                     </div>
                     <p class="font-medium text-gray-800 truncate mt-0.5">{{ item.socio || '—' }}</p>
+                    <p class="text-xs text-gray-500 tabular-nums">{{ formatDate(item.fecha_movimiento) }}</p>
                     <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">
                       {{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
                     </p>
@@ -1132,6 +1141,7 @@ import { useNotificationStore } from '../../stores/notifications'
 import BackButton from '../../components/BackButton.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import LoadingScreen from '../../components/LoadingScreen.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_SIMULADOR } from '../../composables/useCierreNatillera'
@@ -1189,13 +1199,60 @@ const filtroDetalleCategorias = ref([]) // Array: vacío = todas, si tiene valor
 const filtroDetalleFormaPago = ref('todos')
 const filtroDetalleBusqueda = ref('')
 const filtroDetalleMes = ref('') // '' = todos los meses; 'YYYY-MM' = mes específico (solo meses en la natillera)
-const ordenarDetallePor = ref('socio') // 'socio' | 'concepto' | 'monto' | 'periodo'
+/** Orden del detalle: array de claves en orden de prioridad (primer criterio desempata primero). */
+const ordenarDetalleCriterios = ref(['socio'])
 const OPCIONES_ORDENAR = [
   { value: 'socio', label: 'Socio' },
   { value: 'concepto', label: 'Concepto' },
   { value: 'monto', label: 'Monto' },
   { value: 'periodo', label: 'Período' }
 ]
+
+const etiquetaOrdenDetalle = computed(() => {
+  const c = ordenarDetalleCriterios.value
+  if (!c.length) return 'Socio'
+  const labels = c.map(v => OPCIONES_ORDENAR.find(o => o.value === v)?.label || v)
+  if (labels.length === 1) return labels[0]
+  return labels.join(' → ')
+})
+
+function indiceCriterioOrden(value) {
+  return ordenarDetalleCriterios.value.indexOf(value)
+}
+
+function toggleCriterioOrden(value) {
+  const arr = [...ordenarDetalleCriterios.value]
+  const idx = arr.indexOf(value)
+  if (idx >= 0) {
+    if (arr.length <= 1) return
+    arr.splice(idx, 1)
+  } else {
+    arr.push(value)
+  }
+  ordenarDetalleCriterios.value = arr
+}
+
+function moverCriterioOrden(value, delta) {
+  const arr = [...ordenarDetalleCriterios.value]
+  const idx = arr.indexOf(value)
+  if (idx < 0) return
+  const ni = idx + delta
+  if (ni < 0 || ni >= arr.length) return
+  ;[arr[idx], arr[ni]] = [arr[ni], arr[idx]]
+  ordenarDetalleCriterios.value = arr
+}
+
+function compararDetallePorCriterio(a, b, criterio) {
+  if (criterio === 'socio') return (a.socio || '—').localeCompare(b.socio || '—', 'es')
+  if (criterio === 'concepto') return (a.concepto || '').localeCompare(b.concepto || '', 'es')
+  if (criterio === 'monto') return (parseFloat(b.monto) || 0) - (parseFloat(a.monto) || 0)
+  if (criterio === 'periodo') {
+    const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}`
+    const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}`
+    return keyB.localeCompare(keyA)
+  }
+  return 0
+}
 const efectivoContado = ref(0)
 const transferenciaContada = ref(0)
 
@@ -1369,8 +1426,14 @@ function esPremioRifaMovimiento(m) {
   const d = (m.descripcion ?? '').toString().toLowerCase().trim()
   return d.includes('premio rifa') || d.includes('rifa liquidada') || (d.includes('premio') && d.includes('rifa'))
 }
+/** Entradas "Recaudo … liquidada" van en detalle por concepto; no duplicar en el neto de movimientos */
+function esEntradaRecaudoLiquidadaEnDetalle(m) {
+  if (m.tipo !== 'entrada') return false
+  const d = (m.descripcion ?? '').toString().toLowerCase().trim()
+  return d.includes('recaudo actividad liquidada') || d.includes('recaudo rifa liquidada')
+}
 const movimientosSinPremios = computed(() => {
-  return movimientos.value.filter(m => !esPremioRifaMovimiento(m))
+  return movimientos.value.filter(m => !esPremioRifaMovimiento(m) && !esEntradaRecaudoLiquidadaEnDetalle(m))
 })
 // Egresos clasificados por origen (solo salidas con origen_egreso definido)
 const egresosRecaudadoEfectivo = computed(() => {
@@ -1551,15 +1614,11 @@ const detalleFiltrado = computed(() => {
       return concepto.includes(busqueda) || socio.includes(busqueda)
     })
   }
-  const orden = ordenarDetallePor.value
+  const criterios = ordenarDetalleCriterios.value.length ? ordenarDetalleCriterios.value : ['socio']
   return [...list].sort((a, b) => {
-    if (orden === 'socio') return (a.socio || '—').localeCompare(b.socio || '—', 'es')
-    if (orden === 'concepto') return (a.concepto || '').localeCompare(b.concepto || '', 'es')
-    if (orden === 'monto') return (parseFloat(b.monto) || 0) - (parseFloat(a.monto) || 0) // mayor primero
-    if (orden === 'periodo') {
-      const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}`
-      const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}`
-      return keyB.localeCompare(keyA) // más reciente primero
+    for (const criterio of criterios) {
+      const cmp = compararDetallePorCriterio(a, b, criterio)
+      if (cmp !== 0) return cmp
     }
     return 0
   })
@@ -1588,9 +1647,9 @@ const detallePaginado = computed(() => {
 })
 
 // Resetear a página 1 cuando cambian los filtros
-watch([filtroDetalleCategorias, filtroDetalleFormaPago, filtroDetalleBusqueda, filtroDetalleMes, ordenarDetallePor], () => {
+watch([filtroDetalleCategorias, filtroDetalleFormaPago, filtroDetalleBusqueda, filtroDetalleMes, ordenarDetalleCriterios], () => {
   paginaActual.value = 1
-})
+}, { deep: true })
 
 // Si el mes seleccionado ya no está en la natillera, quitar filtro
 watch(mesesEnNatillera, (nuevos) => {
@@ -1699,6 +1758,7 @@ async function exportarAExcel() {
         Concepto: i.concepto,
         Clasificación: getConceptoLabel(i.tipo),
         Socio: i.socio || '—',
+        'Fecha mov.': formatDate(i.fecha_movimiento),
         'Forma de pago': i.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo',
         Período: formatPeriodoExport(natillera.value, i),
         Monto: parseFloat(i.monto) || 0
@@ -1745,15 +1805,15 @@ async function exportarAExcel() {
       ['Exportado:', new Date().toLocaleString('es-CO')],
       ['Filtros:', `Categoría: ${filtroDetalleCategorias.value.length === 0 ? 'Todas' : filtroDetalleCategorias.value.map(c => getConceptoLabel(c)).join(', ')} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}${filtroDetalleMes.value ? ` | Mes: ${getMesLabel(Number(filtroDetalleMes.value.split('-')[1]))} ${filtroDetalleMes.value.split('-')[0]}` : ''}`],
       [],
-      ['Socio', 'Concepto', 'Clasificación', 'Forma de pago', 'Período', 'Monto', ''],
-      ...datosExportar.map(d => [d.Socio, d.Concepto, d.Clasificación, d['Forma de pago'], d.Período, d.Monto, '']),
+      ['Socio', 'Concepto', 'Clasificación', 'Fecha mov.', 'Forma de pago', 'Período', 'Monto', ''],
+      ...datosExportar.map(d => [d.Socio, d.Concepto, d.Clasificación, d['Fecha mov.'], d['Forma de pago'], d.Período, d.Monto, '']),
       [],
-      ['TOTAL', '', '', '', '', totalDetalleFiltrado.value, ''],
-      ['Total Efectivo (detalle)', '', '', '', '', 0, ''],
-      ['Total Transferencia (detalle)', '', '', '', '', 0, '']
+      ['TOTAL', '', '', '', '', '', totalDetalleFiltrado.value, ''],
+      ['Total Efectivo (detalle)', '', '', '', '', '', 0, ''],
+      ['Total Transferencia (detalle)', '', '', '', '', '', 0, '']
     ]
     const ws = XLSX.utils.aoa_to_sheet(wsData)
-    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowTotalTransferenciaDetalle, c: 6 } })
+    ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowTotalTransferenciaDetalle, c: 7 } })
     ws['!freeze'] = { xSplit: 0, ySplit: 6, topLeftCell: 'A7', state: 'frozen' }
 
     const colorTeal = { rgb: '14B8A6' }
@@ -1772,7 +1832,7 @@ async function exportarAExcel() {
     ws['A4'].s = { font: { sz: 10, color: { rgb: '6B7280' } } }
 
     const headerRow = 5
-    for (let col = 0; col < 7; col++) {
+    for (let col = 0; col < 8; col++) {
       const cell = XLSX.utils.encode_cell({ r: headerRow, c: col })
       ws[cell].s = {
         fill: { fgColor: colorTeal, patternType: 'solid' },
@@ -1792,7 +1852,7 @@ async function exportarAExcel() {
       const isLastOfSocio = nextSocio === null || nextSocio !== currentSocio
       const blockColor = socioBlockIndex % 2 === 0 ? colorBloqueSocioA : colorBloqueSocioB
       const monto = datosExportar[idx]?.Monto ?? 0
-      for (let col = 0; col < 7; col++) {
+      for (let col = 0; col < 8; col++) {
         const cell = XLSX.utils.encode_cell({ r: row, c: col })
         if (!ws[cell]) continue
         const borderBottom = isLastOfSocio
@@ -1801,8 +1861,8 @@ async function exportarAExcel() {
         const isSocioCol = col === 0
         ws[cell].s = {
           fill: { fgColor: blockColor, patternType: 'solid' },
-          font: { sz: 10, bold: isSocioCol, color: col === 5 ? (monto >= 0 ? { rgb: '047857' } : colorRojo) : { rgb: '1F2937' } },
-          alignment: { horizontal: col === 5 ? 'right' : 'left', vertical: 'center' },
+          font: { sz: 10, bold: isSocioCol, color: col === 6 ? (monto >= 0 ? { rgb: '047857' } : colorRojo) : { rgb: '1F2937' } },
+          alignment: { horizontal: col === 6 ? 'right' : 'left', vertical: 'center' },
           border: {
             top: { style: 'thin', color: { rgb: 'E5E7EB' } },
             bottom: borderBottom,
@@ -1810,12 +1870,12 @@ async function exportarAExcel() {
             right: { style: 'thin', color: { rgb: 'E5E7EB' } }
           }
         }
-        if (col === 5) ws[cell].z = monto >= 0 ? '#,##0' : '#,##0;[Red]-#,##0'
+        if (col === 6) ws[cell].z = monto >= 0 ? '#,##0' : '#,##0;[Red]-#,##0'
       }
     }
 
     const cellTotalLabel = XLSX.utils.encode_cell({ r: totalRow, c: 0 })
-    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 5 })
+    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 6 })
     ws[cellTotalLabel].s = {
       fill: { fgColor: { rgb: 'CCFBF1' }, patternType: 'solid' },
       font: { bold: true, sz: 12, color: { rgb: '0F766E' } },
@@ -1823,8 +1883,8 @@ async function exportarAExcel() {
       border: { top: { style: 'medium', color: colorTealOscuro }, bottom: { style: 'medium', color: colorTealOscuro }, left: { style: 'thin', color: colorTealOscuro }, right: { style: 'thin', color: colorTealOscuro } }
     }
     const formulaTotal = movimientosExport.length > 0
-      ? `=SUM(F${detalleExcelStart}:F${detalleExcelEnd})+SUM('${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUM(F${detalleExcelStart}:F${detalleExcelEnd})`
+      ? `=SUM(G${detalleExcelStart}:G${detalleExcelEnd})+SUM('${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
+      : `=SUM(G${detalleExcelStart}:G${detalleExcelEnd})`
     ws[cellTotalVal].f = formulaTotal
     ws[cellTotalVal].t = 'n'
     if (ws[cellTotalVal].v != null) delete ws[cellTotalVal].v
@@ -1838,15 +1898,15 @@ async function exportarAExcel() {
 
     // Totales por forma de pago en detalle + movimientos de caja (SUMIF detalle + SUMIF movimientos)
     const formulaEfectivoDetalle = movimientosExport.length > 0
-      ? `=SUMIF(D${detalleExcelStart}:D${detalleExcelEnd},"Efectivo",F${detalleExcelStart}:F${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Efectivo",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUMIF(D${detalleExcelStart}:D${detalleExcelEnd},"Efectivo",F${detalleExcelStart}:F${detalleExcelEnd})`
+      ? `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Efectivo",G${detalleExcelStart}:G${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Efectivo",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
+      : `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Efectivo",G${detalleExcelStart}:G${detalleExcelEnd})`
     const formulaTransferenciaDetalle = movimientosExport.length > 0
-      ? `=SUMIF(D${detalleExcelStart}:D${detalleExcelEnd},"Transferencia",F${detalleExcelStart}:F${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Transferencia",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUMIF(D${detalleExcelStart}:D${detalleExcelEnd},"Transferencia",F${detalleExcelStart}:F${detalleExcelEnd})`
+      ? `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Transferencia",G${detalleExcelStart}:G${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Transferencia",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
+      : `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Transferencia",G${detalleExcelStart}:G${detalleExcelEnd})`
     const cellEfectivoDetalleLabel = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 0 })
-    const cellEfectivoDetalleVal = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 5 })
+    const cellEfectivoDetalleVal = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 6 })
     const cellTransferenciaDetalleLabel = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 0 })
-    const cellTransferenciaDetalleVal = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 5 })
+    const cellTransferenciaDetalleVal = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 6 })
     if (!ws[cellEfectivoDetalleLabel]) ws[cellEfectivoDetalleLabel] = { t: 's', v: 'Total Efectivo (detalle)' }
     ws[cellEfectivoDetalleLabel].s = {
       fill: { fgColor: { rgb: 'D1FAE5' }, patternType: 'solid' },
@@ -1884,7 +1944,7 @@ async function exportarAExcel() {
     }
     ws[cellTransferenciaDetalleVal].z = '#,##0;[Red]-#,##0'
 
-    ws['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }]
+    ws['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }]
     ws['!merges'] = []
 
     // Hoja "Movimientos de Caja": entradas/salidas manuales con formato claro
@@ -2113,12 +2173,17 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     sociosMap[sn.id] = sn.socio?.nombre || 'Socio'
     periodicidadPorSocioId[sn.id] = (sn.periodicidad || 'mensual').toLowerCase()
   })
+  const prestamoIdASocioNatilleraId = {}
+  ;(prestamosData || []).forEach(p => {
+    if (p?.id) prestamoIdASocioNatilleraId[p.id] = p.socio_natillera_id
+  })
   // Incluir cuotas pagadas y con pago parcial (valor_pagado > 0)
   const cuotasConPago = (nat.cuotas || []).filter(c => c.estado === 'pagada' || (parseFloat(c.valor_pagado) || 0) > 0)
   const tipoPago = (t) => (String(t || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo')
 
   // Cuotas y sanciones (entradas) - soporte pago mixto con desglose
   cuotasConPago.forEach(c => {
+    const fechaMovimiento = c.fecha_pago || c.updated_at || null
     const socio = sociosMap[c.socio_natillera_id] || '—'
     const vCuota = parseFloat(c.valor_cuota) || 0
     const vPagado = parseFloat(c.valor_pagado) || 0
@@ -2143,13 +2208,14 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
         anio: c.anio,
         quincena: c.quincena != null ? c.quincena : undefined,
         socioEsMensual,
-        esParcial
+        esParcial,
+        fecha_movimiento: fechaMovimiento
       })
     }
     const pushSancion = (forma, monto) => {
       if (monto <= 0) return
       const socioEsMensual = (periodicidadPorSocioId[c.socio_natillera_id] || 'mensual') === 'mensual'
-      items.push({ tipo: 'sancion', concepto: 'Sanción', socio, forma_pago: forma, monto, mes: c.mes, anio: c.anio, quincena: c.quincena != null ? c.quincena : undefined, socioEsMensual })
+      items.push({ tipo: 'sancion', concepto: 'Sanción', socio, forma_pago: forma, monto, mes: c.mes, anio: c.anio, quincena: c.quincena != null ? c.quincena : undefined, socioEsMensual, fecha_movimiento: fechaMovimiento })
     }
     if (tieneDesglose && totalDesglose > 0) {
       const ratioCuota = montoCuota / totalDesglose
@@ -2172,13 +2238,18 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     const monto = montoTotal > 0 ? montoTotal : (parseFloat(pp.valor_pagado) ?? 0)
     if (monto <= 0) return
     const esParcial = pp.pagada === false && monto > 0
-    const socio = (pp.nombre_socio || '').trim() || '—'
+    const snIdCuotaPrestamo = pp.prestamo_id != null ? prestamoIdASocioNatilleraId[pp.prestamo_id] : null
+    const socio =
+      (pp.nombre_socio || pp.socio_nombre || '').trim() ||
+      (snIdCuotaPrestamo != null ? sociosMap[snIdCuotaPrestamo] : '') ||
+      '—'
     const baseConcepto = `Cuota préstamo ${pp.numero_cuota != null ? `#${pp.numero_cuota}` : ''}`.trim()
     const concepto = esParcial ? `${baseConcepto || 'Cuota préstamo'} (Parcial)` : (baseConcepto || 'Cuota préstamo')
     const fechaPago = pp.fecha_pago ? new Date(pp.fecha_pago) : null
     const mes = fechaPago ? fechaPago.getMonth() + 1 : undefined
     const anio = fechaPago ? fechaPago.getFullYear() : undefined
-    const periodoPago = { mes, anio, socioEsMensual: true }
+    const fechaMovPrestamo = pp.fecha_pago || null
+    const periodoPago = { mes, anio, socioEsMensual: true, fecha_movimiento: fechaMovPrestamo }
     if (vEfectivo > 0 && vTransferencia > 0) {
       items.push({ tipo: 'cuota_prestamo', concepto: concepto + ' (Efectivo)', socio, forma_pago: 'efectivo', monto: vEfectivo, esParcial, ...periodoPago })
       items.push({ tipo: 'cuota_prestamo', concepto: concepto + ' (Transfer.)', socio, forma_pago: 'transferencia', monto: vTransferencia, esParcial, ...periodoPago })
@@ -2193,6 +2264,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
 
   // Actividades desglosadas - soporte pago mixto (con período desde socios_actividad o actividad)
   ;(sociosActividadData || []).forEach(sa => {
+    const fechaMovActividad = sa.fecha_pago || sa.updated_at || null
     const socio = sa.socio_natillera?.socio?.nombre || sociosMap[sa.socio_natillera_id] || '—'
     const nombreActividad = sa.actividad?.descripcion || 'Actividad'
     const vEfectivo = parseFloat(sa.valor_pagado_efectivo) || 0
@@ -2203,7 +2275,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     const anio = sa.anio_pago ?? sa.actividad?.anio_pago
     const quincena = sa.quincena_pago ?? sa.actividad?.quincena_pago
     const socioEsMensual = (periodicidadPorSocioId[sa.socio_natillera_id] || 'mensual') === 'mensual'
-    const periodo = { mes, anio, quincena: quincena != null ? quincena : undefined, socioEsMensual }
+    const periodo = { mes, anio, quincena: quincena != null ? quincena : undefined, socioEsMensual, fecha_movimiento: fechaMovActividad }
     if (vEfectivo > 0 && vTransferencia > 0) {
       items.push({ tipo: 'actividad', concepto: nombreActividad + ' (Efectivo)', socio, forma_pago: 'efectivo', monto: vEfectivo, ...periodo })
       items.push({ tipo: 'actividad', concepto: nombreActividad + ' (Transfer.)', socio, forma_pago: 'transferencia', monto: vTransferencia, ...periodo })
@@ -2228,7 +2300,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
       const fechaCreacion = p.created_at ? new Date(p.created_at) : null
       const mes = fechaCreacion ? fechaCreacion.getMonth() + 1 : undefined
       const anio = fechaCreacion ? fechaCreacion.getFullYear() : undefined
-      items.push({ tipo: 'prestamo', concepto: 'Préstamo', socio, forma_pago: fp, monto: -aDescontar, mes, anio, socioEsMensual: true })
+      items.push({ tipo: 'prestamo', concepto: 'Préstamo', socio, forma_pago: fp, monto: -aDescontar, mes, anio, socioEsMensual: true, fecha_movimiento: p.created_at || null })
     }
   })
 
@@ -2243,7 +2315,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     const mes = fechaCreacion ? fechaCreacion.getMonth() + 1 : undefined
     const anio = fechaCreacion ? fechaCreacion.getFullYear() : undefined
     const conceptoPorPrestamo = `Utilidad por interés anticipado — ${socio}`
-    items.push({ tipo: 'interes_anticipado', concepto: conceptoPorPrestamo, socio, forma_pago: fp, monto: interesTotal, mes, anio, socioEsMensual: true })
+    items.push({ tipo: 'interes_anticipado', concepto: conceptoPorPrestamo, socio, forma_pago: fp, monto: interesTotal, mes, anio, socioEsMensual: true, fecha_movimiento: p.created_at || null })
   })
 
   // Premios rifa entregados (salidas que se restan del recaudo): desde movimientos_fondo o, si no hay, desde actividades liquidadas (gastos)
@@ -2260,7 +2332,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     const monto = parseFloat(m.monto ?? m.Monto) || 0
     if (monto > 0) {
       const conceptoDesc = (m.descripcion || m.Descripcion || '').toString().trim() || 'Premio rifa'
-      items.push({ tipo: 'premio_rifa', concepto: conceptoDesc.length > 50 ? 'Premio rifa' : conceptoDesc, socio: '—', forma_pago: fp, monto: -monto })
+      items.push({ tipo: 'premio_rifa', concepto: conceptoDesc.length > 50 ? 'Premio rifa' : conceptoDesc, socio: '—', forma_pago: fp, monto: -monto, fecha_movimiento: m.fecha || null })
     }
   })
   // Si no hubo premios en movimientos_fondo, tomar de actividades liquidadas (gastos = premio entregado)
@@ -2268,7 +2340,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     ;(nat.actividades || []).filter(a => a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0).forEach(a => {
       const monto = parseFloat(a.gastos) || 0
       const concepto = (a.descripcion && a.descripcion.length <= 50) ? `Premio: ${a.descripcion}` : 'Premio rifa'
-      items.push({ tipo: 'premio_rifa', concepto, socio: '—', forma_pago: 'efectivo', monto: -monto })
+      items.push({ tipo: 'premio_rifa', concepto, socio: '—', forma_pago: 'efectivo', monto: -monto, fecha_movimiento: a.updated_at || a.created_at || null })
     })
   }
 
@@ -2288,8 +2360,36 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
       const fechaMov = m.fecha ? new Date(m.fecha) : null
       const anio = fechaMov ? fechaMov.getFullYear() : 0
       const mes = fechaMov ? fechaMov.getMonth() + 1 : 0
-      items.push({ tipo: 'liquidacion_salida', concepto: 'Liquidación por salida', socio: socioDesc, forma_pago: fp, monto: -monto, anio, mes })
+      items.push({ tipo: 'liquidacion_salida', concepto: 'Liquidación por salida', socio: socioDesc, forma_pago: fp, monto: -monto, anio, mes, fecha_movimiento: m.fecha || null })
     }
+  })
+
+  // Recaudo al liquidar actividad (entrada en movimientos_fondo): línea en detalle por concepto (tipo actividad)
+  const esMovEntradaRecaudoLiquidada = (m) => {
+    if (!m || m.tipo !== 'entrada') return false
+    const d = descripcionMov(m)
+    return d.includes('recaudo actividad liquidada') || d.includes('recaudo rifa liquidada')
+  }
+  ;(movimientosData || []).filter(esMovEntradaRecaudoLiquidada).forEach(m => {
+    const fp = tipoPagoMov(m.forma_pago ?? m.Forma_pago)
+    const monto = parseFloat(m.monto ?? m.Monto) || 0
+    if (monto <= 0) return
+    const desc = (m.descripcion || m.Descripcion || '').toString().trim()
+    const concepto = desc.length <= 70 ? desc : `${desc.slice(0, 67)}…`
+    const fechaMov = m.fecha ? new Date(m.fecha) : null
+    const mes = fechaMov && !isNaN(fechaMov.getTime()) ? fechaMov.getMonth() + 1 : undefined
+    const anio = fechaMov && !isNaN(fechaMov.getTime()) ? fechaMov.getFullYear() : undefined
+    items.push({
+      tipo: 'actividad',
+      concepto,
+      socio: '—',
+      forma_pago: fp,
+      monto,
+      mes,
+      anio,
+      socioEsMensual: true,
+      fecha_movimiento: m.fecha || null
+    })
   })
 
   // GMF 4×1000 por abono en transferencia (desde historial_pagos_cuota; un registro por fila de historial)
@@ -2314,7 +2414,8 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
       mes,
       anio,
       quincena,
-      socioEsMensual
+      socioEsMensual,
+      fecha_movimiento: h.fecha_pago || null
     })
   })
 
@@ -2337,7 +2438,7 @@ async function cargarSociosActividadParaDetalle(natilleraId, idsSocioNatillera =
   if (ids.length === 0) return []
   const { data } = await supabase
     .from('socios_actividad')
-    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, forma_pago, socio_natillera_id, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion, mes_pago, anio_pago, quincena_pago)')
+    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, forma_pago, socio_natillera_id, mes_pago, anio_pago, quincena_pago, fecha_pago, updated_at, actividad:actividades(descripcion, mes_pago, anio_pago, quincena_pago)')
     .in('socio_natillera_id', ids)
     .gt('valor_pagado', 0)
   return data || []
@@ -2362,7 +2463,7 @@ async function cargarCuotasPrestamoPagadasParaDetalle(prestamoIds) {
   if (!prestamoIds || prestamoIds.length === 0) return []
   const { data } = await supabase
     .from('plan_pagos_prestamo')
-    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, valor_cuota, forma_pago, nombre_socio, numero_cuota, fecha_pago, pagada')
+    .select('valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia, valor_cuota, forma_pago, nombre_socio, socio_nombre, prestamo_id, numero_cuota, fecha_pago, pagada')
     .in('prestamo_id', prestamoIds)
     .gt('valor_pagado', 0)
   return data || []
@@ -3376,155 +3477,3 @@ function handleClickOutsideDropdowns(e) {
 onMounted(() => document.addEventListener('click', handleClickOutsideDropdowns))
 onUnmounted(() => document.removeEventListener('click', handleClickOutsideDropdowns))
 </script>
-
-<style scoped>
-.cuadre-loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  box-sizing: border-box;
-}
-
-.cuadre-loading-screen__bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 35%, #ccfbf1 70%, #f0fdfa 100%);
-}
-
-.cuadre-loading-screen__blur {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.6;
-  animation: cuadre-loading-float 8s ease-in-out infinite;
-}
-
-.cuadre-loading-screen__blur--1 {
-  width: 320px;
-  height: 320px;
-  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 50%, transparent);
-  top: -80px;
-  right: -80px;
-  animation-delay: 0s;
-}
-
-.cuadre-loading-screen__blur--2 {
-  width: 280px;
-  height: 280px;
-  background: linear-gradient(225deg, #6ee7b7 0%, #34d399 50%, transparent);
-  bottom: -60px;
-  left: -60px;
-  animation-delay: -2.5s;
-}
-
-.cuadre-loading-screen__blur--3 {
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 50%, transparent);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: none;
-}
-
-@keyframes cuadre-loading-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(8px, -8px) scale(1.05); }
-  66% { transform: translate(-6px, 6px) scale(0.98); }
-}
-
-.cuadre-loading-screen__content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  text-align: center;
-}
-
-.cuadre-loading-screen__icon-wrap {
-  width: 80px;
-  height: 80px;
-  border-radius: 24px;
-  background: linear-gradient(145deg, #14b8a6 0%, #0d9488 50%, #0f766e 100%);
-  box-shadow: 0 20px 40px -12px rgba(13, 148, 136, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  animation: cuadre-loading-icon-pulse 2s ease-in-out infinite;
-}
-
-.cuadre-loading-screen__icon {
-  width: 40px;
-  height: 40px;
-  color: white;
-}
-
-@keyframes cuadre-loading-icon-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 20px 40px -12px rgba(13, 148, 136, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) inset; }
-  50% { transform: scale(1.05); box-shadow: 0 24px 48px -12px rgba(13, 148, 136, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.25) inset; }
-}
-
-.cuadre-loading-screen__title {
-  font-family: var(--font-display), sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #134e4a;
-  margin: 0 0 0.25rem 0;
-  letter-spacing: -0.02em;
-}
-
-.cuadre-loading-screen__subtitle {
-  font-size: 0.9375rem;
-  color: #0f766e;
-  margin: 0 0 1.25rem 0;
-  font-weight: 500;
-}
-
-.cuadre-loading-screen__spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(20, 184, 166, 0.25);
-  border-top-color: #0d9488;
-  border-radius: 50%;
-  animation: cuadre-loading-spin 0.85s linear infinite;
-}
-
-@keyframes cuadre-loading-spin {
-  to { transform: rotate(360deg); }
-}
-
-.cuadre-loading-screen__dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.cuadre-loading-screen__dots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #0d9488;
-  animation: cuadre-loading-bounce 1.2s ease-in-out infinite both;
-}
-
-.cuadre-loading-screen__dots span:nth-child(1) { animation-delay: 0s; }
-.cuadre-loading-screen__dots span:nth-child(2) { animation-delay: 0.15s; }
-.cuadre-loading-screen__dots span:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes cuadre-loading-bounce {
-  0%, 80%, 100% { transform: scale(0.85); opacity: 0.6; }
-  40% { transform: scale(1.2); opacity: 1; }
-}
-</style>

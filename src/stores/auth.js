@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { supabase } from '../lib/supabase'
+import { supabase, setAuthStorageMode, clearAuthStorageMode } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { BASE_URL, devLog } from '../config/environment'
 import { enviarOTP, verificarOTP, buscarUsuarioPorTelefono, formatearTelefono } from '../services/twilio'
@@ -68,11 +68,14 @@ export const useAuthStore = defineStore('auth', () => {
     return errorMessage
   }
 
-  async function login(email, password) {
+  async function login(email, password, options = {}) {
     try {
       loading.value = true
       error.value = null
-      
+
+      const rememberMe = options.rememberMe !== false
+      setAuthStorageMode(rememberMe ? 'local' : 'session')
+
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -143,7 +146,8 @@ async function register(email, password, nombre) {
       if (data.user) {
         await supabase.auth.signOut()
       }
-      
+      clearAuthStorageMode()
+
       return { success: true, requiresEmailConfirmation: true }
     } catch (e) {
       error.value = e.message
@@ -319,6 +323,7 @@ async function register(email, password, nombre) {
       
       // Ahora sí cerrar sesión
       await supabase.auth.signOut()
+      clearAuthStorageMode()
       user.value = null
     } catch (e) {
       console.error('Error al cerrar sesión:', e)
@@ -331,7 +336,9 @@ async function register(email, password, nombre) {
     try {
       loading.value = true
       error.value = null
-      
+
+      setAuthStorageMode('local')
+
       // URL de redirección según el entorno (desarrollo o producción)
       // Usamos /auth/welcome para que Welcome.vue maneje tanto éxito como errores
       const redirectUrl = `${BASE_URL}/auth/welcome`
@@ -559,6 +566,8 @@ async function register(email, password, nombre) {
    */
   async function iniciarSesionAdmin() {
     try {
+      setAuthStorageMode('local')
+
       const adminEmail = 'admin@gmail.com'
       const adminPassword = 'admin123*'
 
@@ -868,7 +877,8 @@ async function register(email, password, nombre) {
         })
       }
 
-      // Iniciar sesión automáticamente
+      // Iniciar sesión automáticamente (misma persistencia que “recordarme” activado)
+      setAuthStorageMode('local')
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
         email: emailTemporal,
         password: passwordTemporal

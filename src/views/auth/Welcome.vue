@@ -184,6 +184,7 @@ import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
 import AppBrand from '../../components/AppBrand.vue'
+import { resolvePostLoginLocation } from '../../utils/postLoginRoute'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -314,8 +315,8 @@ onMounted(async () => {
         localStorage.removeItem('telefono_pendiente_registro')
       }
       
-      // Usuario autenticado exitosamente, redirigir al Dashboard
-      router.replace('/dashboard')
+      const loc = await resolvePostLoginLocation(authStore.user)
+      router.replace(loc)
       return
     }
     

@@ -28,3 +28,6 @@ dist-ssr
 supabase.exe
 supabase
 supabase.exe
+
+# Volcados SQL locales (pueden contener datos sensibles)
+backups/*.sql

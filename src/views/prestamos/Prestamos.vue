@@ -630,15 +630,19 @@
           </div>
 
           <!-- Toggle Interés Normal / Anticipado -->
-          <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas" class="rounded-xl border border-gray-200 bg-white p-1.5 flex gap-1">
-            <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50']">Normal</button>
-            <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50']">Anticipado</button>
+          <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas">
+            <label class="block text-sm font-medium text-gray-600 mb-1.5">Cobro del interés</label>
+            <p class="text-xs text-gray-500 mb-1.5">Define si el interés se descuenta al desembolso (anticipado) o se reconoce al pagar cada cuota (normal).</p>
+            <div class="rounded-xl border border-gray-200 bg-white p-1.5 flex gap-1">
+              <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50']">Normal</button>
+              <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50']">Anticipado</button>
+            </div>
           </div>
           </div>
 
           <!-- Paso 2: Resumen. Antes de crear: botón WhatsApp antes de Generar. Después de crear: comprobante con Descargar y WhatsApp -->
           <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
-            <!-- Vista antes de generar: sin comprobante, botones en orden Compartir WhatsApp → Generar préstamo -->
+            <!-- Vista antes de generar: sin comprobante; confirmar desde el footer -->
             <template v-if="!prestamoRecienCreado">
               <div class="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
                 <p class="text-sm font-semibold text-gray-800">Resumen</p>
@@ -660,19 +664,6 @@
               >
                 <ChatBubbleLeftIcon class="w-5 h-5" />
                 Compartir por WhatsApp
-              </button>
-              <!-- Segundo: Generar préstamo -->
-              <button
-                type="button"
-                @click="handleCrearPrestamo"
-                :disabled="loading || !formPrestamo.socio_natillera_id || formPrestamo.monto < 10000"
-                class="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ loading ? 'Creando...' : 'Confirmar y crear préstamo' }}
-                <ChevronRightIcon class="w-5 h-5 flex-shrink-0" />
-              </button>
-              <button type="button" @click="pasoNuevoPrestamo = 0" class="w-full text-center text-sm font-medium text-gray-500 hover:text-gray-700 py-2 transition-colors">
-                Editar selección
               </button>
             </template>
 
@@ -765,7 +756,7 @@
             <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
           </div>
           <div v-else-if="!prestamoRecienCreado" class="flex gap-2">
-            <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Editar</button>
+            <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Cambiar Datos</button>
             <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center justify-center transition-colors">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
           </div>
           <div v-else class="flex gap-2">
@@ -2599,9 +2590,9 @@
               </div>
               <div>
                 <h3 class="text-xl font-display font-bold">
-                  Compartir Información del Préstamo
+                  Compartir proyección (WhatsApp)
                 </h3>
-                <p class="text-white/90 text-xs">{{ socioSeleccionado?.socio?.nombre }}</p>
+                <p class="text-white/90 text-xs">Aún no es un préstamo creado · {{ socioSeleccionado?.socio?.nombre }}</p>
               </div>
             </div>
             <button 
@@ -2622,25 +2613,28 @@
             style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 320px;"
           >
             <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
-              <!-- Encabezado: ícono verde + Comprobante de Préstamo (centrado) -->
-              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
+              <!-- Encabezado: proyección (el préstamo aún no está creado) -->
+              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; padding-bottom: 4px;">
                 <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
-                <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px;">Comprobante de Préstamo</h1>
+                <div style="text-align: center;">
+                  <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px; line-height: 1.2;">Proyección de préstamo</h1>
+                  <p style="font-size: 10px; font-weight: 600; margin: 4px 0 0 0; color: #b45309;">No es comprobante · el préstamo no se ha generado aún</p>
+                </div>
               </div>
 
-              <!-- Tarjeta 1: Monto del préstamo + Socio -->
+              <!-- Tarjeta 1: Monto proyectado + Socio -->
               <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO PROYECTADO</p>
                 <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(formPrestamo.monto) }}</p>
                 <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
                 <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ socioSeleccionado?.socio?.nombre }}</p>
               </div>
 
-              <!-- Tarjeta 2: Detalles del préstamo (grid 2 columnas como en la imagen) -->
+              <!-- Tarjeta 2: Detalles proyectados -->
               <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES DEL PRÉSTAMO</p>
+                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES PROYECTADOS</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;">
                   <div>
                     <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERÉS MENSUAL</p>
@@ -2665,10 +2659,10 @@
                 </div>
               </div>
 
-              <!-- Tarjeta 3: Plan de pagos (según periodicidad, fechas y valor por cuota) -->
+              <!-- Tarjeta 3: Plan de pagos proyectado -->
               <div v-if="planPagosComprobanteNuevo.length > 0" style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS</p>
-                <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">Fecha de inicio de pagos: {{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</p>
+                <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS (PROYECTADO)</p>
+                <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">Fecha estimada de primera cuota: {{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</p>
                 <div style="overflow-x: auto;">
                   <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
                     <thead>
@@ -3490,7 +3484,7 @@ const planPagosComprobanteNuevo = computed(() => {
   return generarPlanPagos(prestamoVirtual)
 })
 
-// Datos del comprobante cuando el préstamo ya fue creado (para vista después de "Confirmar y crear")
+// Datos del comprobante cuando el préstamo ya fue creado (vista después de Confirmar en el footer)
 const datosComprobanteCreado = computed(() => {
   const p = prestamoRecienCreado.value
   if (!p?.prestamo) return null
@@ -5845,6 +5839,11 @@ async function handleCrearPrestamo() {
     const interesTotalCalculado = Math.round(interesTotal.value)
     // El saldo inicial siempre es capital + intereses (total a pagar por el socio)
     const saldoInicial = capital + interesTotalCalculado
+
+    const socioNatReplica = socios.value.find(s => s.id === formPrestamo.socio_natillera_id)
+    const nombreSocioReplica = socioNatReplica?.socio?.nombre || socioNatReplica?.nombre || null
+    const natilleraReplica = await natillerasStore.fetchNatillera(id)
+    const nombreNatilleraReplica = natilleraReplica?.nombre || null
     
     const { data, error } = await supabase
       .from('prestamos')
@@ -5859,7 +5858,9 @@ async function handleCrearPrestamo() {
         interes_total: interesTotalCalculado,
         numero_cuotas: formPrestamo.numero_cuotas,
         periodicidad: formPrestamo.periodicidad,
-        medio_entrega: formPrestamo.medio_entrega || 'efectivo'
+        medio_entrega: formPrestamo.medio_entrega || 'efectivo',
+        nombre_socio: nombreSocioReplica,
+        nombre_natillera: nombreNatilleraReplica
       })
       .select(`
         *,
@@ -6076,13 +6077,19 @@ async function handleRegistrarAbono() {
     
     const fp = (formAbono.tipo_pago || 'efectivo').toLowerCase()
     const v = parseFloat(formAbono.valor)
+    const natilleraAbono = await natillerasStore.fetchNatillera(id)
     const datosPago = {
       prestamo_id: prestamoSeleccionado.value.id,
       valor: v,
       fecha: fechaPago,
       codigo_comprobante: codigoComprobante,
       valor_efectivo: fp === 'transferencia' ? 0 : v,
-      valor_transferencia: fp === 'transferencia' ? v : 0
+      valor_transferencia: fp === 'transferencia' ? v : 0,
+      nombre_socio:
+        prestamoSeleccionado.value?.socio_natillera?.socio?.nombre ||
+        prestamoSeleccionado.value?.socio_natillera?.nombre ||
+        null,
+      nombre_natillera: natilleraAbono?.nombre || null
     }
     
     console.log('💾 Registrando abono con datos:', datosPago)
@@ -6357,6 +6364,11 @@ async function guardarAbonoEditado() {
           
           const prestamoIdHistorial = pagoInfo?.prestamo_id || prestamoId
           const socioNatilleraId = pagoInfo?.prestamo?.socio_natillera_id || prestamoDetalle.value.socio_natillera_id || null
+          const natilleraHistorial = await natillerasStore.fetchNatillera(id)
+          const nombreSocioHistorial =
+            prestamoDetalle.value?.socio_natillera?.socio?.nombre ||
+            prestamoDetalle.value?.socio_natillera?.nombre ||
+            null
           
           const { error: historialError } = await supabase
             .from('historial_comprobantes_prestamo')
@@ -6369,7 +6381,9 @@ async function guardarAbonoEditado() {
               valor_abono_anterior: valorOriginal,
               valor_abono_nuevo: nuevoValor,
               motivo: 'actualizacion_pago',
-              fecha_actualizacion: new Date().toISOString()
+              fecha_actualizacion: new Date().toISOString(),
+              nombre_socio: nombreSocioHistorial,
+              nombre_natillera: natilleraHistorial?.nombre || null
             })
           
           if (historialError) {
@@ -6485,6 +6499,11 @@ async function eliminarAbonoConfirmado() {
         
         const prestamoIdHistorial = pagoInfo?.prestamo_id || prestamoId
         const socioNatilleraId = pagoInfo?.prestamo?.socio_natillera_id || prestamoDetalle.value.socio_natillera_id || null
+        const natilleraElim = await natillerasStore.fetchNatillera(id)
+        const nombreSocioElim =
+          prestamoDetalle.value?.socio_natillera?.socio?.nombre ||
+          prestamoDetalle.value?.socio_natillera?.nombre ||
+          null
         
         // Buscar todos los códigos anteriores en el historial
         const { data: historialesAnteriores } = await supabase
@@ -6525,7 +6544,9 @@ async function eliminarAbonoConfirmado() {
           eliminado_por: user?.id || null,
           eliminado_por_email: userEmail,
           eliminado_el: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
+          fecha_actualizacion: new Date().toISOString(),
+          nombre_socio: nombreSocioElim,
+          nombre_natillera: natilleraElim?.nombre || null
         }))
         
         // Insertar todos los registros
@@ -6875,13 +6896,13 @@ async function descargarPrestamoNuevo() {
     }
     
     const link = document.createElement('a')
-    link.download = `prestamo-${socioSeleccionado.value.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
+    link.download = `proyeccion-prestamo-${socioSeleccionado.value.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
     link.href = dataUrl
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     
-    notificationStore.success('Imagen descargada exitosamente', 'Éxito')
+    notificationStore.success('Imagen de proyección descargada', 'Éxito')
   } catch (e) {
     console.error('Error al generar imagen:', e)
     notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
@@ -6907,22 +6928,22 @@ async function compartirPrestamoNuevoWhatsApp() {
     
     // Nombre del archivo
     const nombreContacto = contactoSeleccionadoWhatsApp.value.nombre || 'contacto'
-    const nombreArchivo = `prestamo-${nombreContacto.replace(/\s+/g, '-')}-${Date.now()}.png`
+    const nombreArchivo = `proyeccion-prestamo-${nombreContacto.replace(/\s+/g, '-')}-${Date.now()}.png`
     const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
     
-    // Crear mensaje personalizado
+    // Crear mensaje personalizado (proyección: el préstamo aún no está creado)
     const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
-    const mensajeCompartir = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío la información del préstamo de ${nombreSocio} en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+    const mensajeCompartir = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera (simulación con los datos actuales). *Aún no está registrado ni generado en el sistema*; al confirmarlo en la app recibirás el comprobante oficial.\n\n¡Gracias por confiar en nosotros! 🙌`
     
     // Verificar si el navegador soporta Web Share API con archivos
     if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
       await navigator.share({
         files: [archivo],
-        title: `Información del Préstamo - ${nombreSocio}`,
+        title: `Proyección de préstamo (no oficial) — ${nombreSocio}`,
         text: mensajeCompartir
       })
       
-      notificationStore.success('Información compartida exitosamente', 'Éxito')
+      notificationStore.success('Proyección compartida', 'Éxito')
     } else {
       // Fallback: descargar y abrir WhatsApp con mensaje
       const link = document.createElement('a')
@@ -6938,7 +6959,7 @@ async function compartirPrestamoNuevoWhatsApp() {
         }
       }, 500)
       
-      notificationStore.info('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.', 'Descargado')
+      notificationStore.info('📱 Imagen de proyección descargada. Adjunta en WhatsApp; aún no es préstamo creado.', 'Descargado')
     }
   } catch (e) {
     if (e.name !== 'AbortError') {
@@ -6947,7 +6968,7 @@ async function compartirPrestamoNuevoWhatsApp() {
       const telefono = contactoSeleccionadoWhatsApp.value.telefono?.replace(/\D/g, '')
       if (telefono) {
         const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
-        const mensaje = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío la información del préstamo de ${nombreSocio} en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+        const mensaje = `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera. *Aún no está generado en el sistema*; el comprobante oficial sale al confirmar en la app.\n\n¡Gracias por confiar en nosotros! 🙌`
         window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
       }
     }

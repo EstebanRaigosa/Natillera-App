@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-03-28T23:29:23-05:00",
+  "supabase_project": {
+    "name": "Administracion de Natilleras",
+    "ref": "vdtjacwpvqfifahkrqxp",
+    "region": "us-east-1",
+    "database_host": "db.vdtjacwpvqfifahkrqxp.supabase.co",
+    "postgres_version": "PostgreSQL 17.6",
+    "database_size": "28 MB"
+  },
+  "migrations_applied": [
+    { "version": "20260321015934", "name": "add_impuesto_4x1000_historial_pagos_cuota" },
+    { "version": "20260323165809", "name": "add_anio_mes_numero_cuota_historial_pagos" },
+    { "version": "20260323165821", "name": "historial_pagos_cuota_trigger_cuota_context" },
+    { "version": "20260323165826", "name": "historial_pagos_cuota_trigger_set_search_path" },
+    { "version": "20260323170220", "name": "historial_pagos_cuota_quincena_replace_numero_cuota" },
+    { "version": "20260328052852", "name": "backfill_historial_pago_segundo_abono_christian_marzo2026_q1" },
+    { "version": "20260328114821", "name": "backfill_historial_segundo_abono_liliam_marzo2026_q1" },
+    { "version": "20260328115458", "name": "ajustar_historial_liliam_transferencia_segundo_abono_78948" },
+    { "version": "20260328115804", "name": "cuotas_liliam_marzo2026_tipo_pago_transferencia" }
+  ],
+  "artifacts": {
+    "schema_typescript": "database.types.ts",
+    "note": "Copia lógica completa (schema + datos) requiere pg_dump o Supabase CLI con contraseña de base de datos; ver documentación de Supabase sobre db dump."
+  }
+}

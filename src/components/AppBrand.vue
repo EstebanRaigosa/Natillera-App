@@ -1,6 +1,6 @@
 <template>
   <span :class="containerClass" class="font-bold">
-    <span :class="firstPartClass">Natiller</span><span :style="{ color: appColor, textShadow: '-0.3px -0.3px 0 #000, 0.3px -0.3px 0 #000, -0.3px 0.3px 0 #000, 0.3px 0.3px 0 #000' }">app</span>
+    <span :class="firstPartClass">Natiller</span><span :style="appSpanStyle">app</span>
   </span>
 </template>
 
@@ -48,8 +48,18 @@ const firstPartClass = computed(() => {
   return 'text-gray-900'
 })
 
-// Color para "app" - verde #09c260 siempre
-const appColor = computed(() => {
-  return '#09c260'
+// "app": verde acento; en fondo oscuro, menta suave sin contorno duro
+const appSpanStyle = computed(() => {
+  if (isWhiteText.value) {
+    return {
+      color: 'hsl(131, 48%, 62%)',
+      textShadow: 'none',
+    }
+  }
+  return {
+    color: '#09c260',
+    textShadow:
+      '-0.3px -0.3px 0 #000, 0.3px -0.3px 0 #000, -0.3px 0.3px 0 #000, 0.3px 0.3px 0 #000',
+  }
 })
 </script>

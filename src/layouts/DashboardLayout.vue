@@ -10,7 +10,7 @@
     >
       <!-- Indicador visual -->
       <div 
-        class="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-28 bg-gradient-to-r from-natillera-500/90 to-emerald-500/90 backdrop-blur-sm rounded-r-xl flex items-center justify-center shadow-xl border-r-2 border-natillera-400/60 transition-all duration-300 group-hover:from-natillera-500 group-hover:to-emerald-500 group-hover:w-6 group-hover:h-32 group-hover:shadow-2xl"
+        class="absolute left-0 top-1/2 -translate-y-1/2 w-5 h-28 rounded-r-xl flex items-center justify-center shadow-xl border-r-2 border-white/25 transition-all duration-300 group-hover:w-6 group-hover:h-32 group-hover:shadow-2xl sidebar-hover-tab"
       >
         <ChevronRightIcon class="w-5 h-5 text-white transition-all duration-300 group-hover:scale-110" :class="hoverAreaActive ? 'animate-pulse' : 'animate-pulse'" />
       </div>
@@ -21,7 +21,7 @@
       @mouseenter="clearSidebarTimeout(); sidebarHover = true; hoverAreaActive = false"
       @mouseleave="startSidebarTimeout()"
       :class="[
-        'fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-br from-natillera-700 via-emerald-700 to-teal-700 backdrop-blur-xl border-r border-emerald-600/30 transform transition-transform duration-300',
+        'fixed inset-y-0 left-0 z-50 w-72 app-shell-nav-bg border-r border-white/10 transform transition-transform duration-300',
         // En pantallas xl (1280px+): siempre visible y estático
         'xl:translate-x-0 xl:static',
         // En lg (1024px-1279px): oculto por defecto, visible con hover
@@ -30,15 +30,19 @@
       ]"
     >
       <div class="flex flex-col h-full">
-        <!-- Logo -->
-        <div class="p-6 border-b border-emerald-600/30">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg shadow-black/20 border border-white/20">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <div>
+        <!-- Logo (mismo asset que el panel de inicio de sesión) -->
+        <div class="px-5 py-5 sm:px-6 sm:py-6 border-b border-white/10">
+          <div class="flex items-center gap-0 min-w-0">
+            <img
+              :src="logoIconSrc"
+              alt="Natillerapp"
+              class="sidebar-brand-logo shrink-0 object-contain select-none"
+              width="80"
+              height="80"
+              decoding="async"
+              draggable="false"
+            />
+            <div class="min-w-0 flex-1">
               <h1 class="font-display font-bold text-xl">
                 <AppBrand class="text-white" />
               </h1>
@@ -48,33 +52,13 @@
         </div>
 
         <!-- Navegación -->
-        <nav class="flex-1 p-4 space-y-4 overflow-y-auto pb-24">
-          <!-- Móvil: acceso al listado de natilleras (dashboard); el resto del menú va en la barra inferior -->
-          <div class="sidebar-section lg:hidden">
-            <button
-              type="button"
-              class="nav-link nav-link-option w-full text-left"
-              :class="{ 'nav-link-active': route.name === 'Dashboard' }"
-              @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
-            >
-              <RectangleStackIcon class="w-5 h-5 shrink-0" />
-              <span class="sidebar-option-label">Mis Natilleras</span>
-            </button>
-          </div>
-
-          <!-- Menú (solo escritorio): Mis Natilleras + vistas de la natillera actual -->
-          <div class="sidebar-section hidden lg:block space-y-1">
+        <nav
+          class="flex-1 p-4 space-y-4 overflow-y-auto"
+          :class="natilleraIdRuta ? 'pb-[8.25rem]' : 'pb-24'"
+        >
+          <!-- Menú (solo escritorio): vistas de la natillera actual; “Cambiar de Natillera” va en el panel inferior -->
+          <div v-if="natilleraIdRuta" class="sidebar-section hidden lg:block space-y-1">
             <p class="sidebar-section-heading">Menú</p>
-            <button
-              type="button"
-              class="nav-link nav-link-option w-full text-left"
-              :class="{ 'nav-link-active': route.name === 'Dashboard' }"
-              @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
-            >
-              <RectangleStackIcon class="w-5 h-5 shrink-0" />
-              <span class="sidebar-option-label">Mis Natilleras</span>
-            </button>
-            <template v-if="natilleraIdRuta">
               <button
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
@@ -129,7 +113,6 @@
                 <CalculatorIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Totales</span>
               </button>
-            </template>
           </div>
 
           <!-- Acciones de la natillera actual (barra lateral; en detalle ya no se muestran) -->
@@ -255,7 +238,7 @@
       @mouseenter="handleUserPanelMouseEnter"
       @mouseleave="handleUserPanelMouseLeave"
       :class="[
-        'fixed bottom-0 left-0 w-72 p-3 z-50 transition-all duration-300',
+        'fixed bottom-0 left-0 w-72 p-2.5 z-50 transition-all duration-300',
         // En xl (1280px+): siempre visible
         'xl:translate-x-0',
         // En lg (1024px-1279px): visible con hover
@@ -263,27 +246,46 @@
         (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <div class="user-panel group">
+      <div class="user-panel group flex flex-col gap-0">
         <!-- Efecto de brillo animado en hover -->
-        <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
-        
-        <div class="relative flex items-center gap-3">
+        <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
+
+        <template v-if="natilleraIdRuta">
+          <button
+            type="button"
+            class="cambiar-natillera-btn relative z-[1] w-full text-left"
+            @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
+          >
+            <span class="cambiar-natillera-btn__icon-wrap" aria-hidden="true">
+              <ArrowsRightLeftIcon class="cambiar-natillera-btn__icon" />
+            </span>
+            <span class="cambiar-natillera-btn__text">
+              <span class="cambiar-natillera-btn__title">Cambiar de Natillera</span>
+              <span class="cambiar-natillera-btn__hint">Ver listado y elegir otra</span>
+            </span>
+            <ChevronRightIcon class="cambiar-natillera-btn__chevron" aria-hidden="true" />
+          </button>
+
+          <div class="user-panel-divider relative z-[1]" role="presentation" />
+        </template>
+
+        <div class="user-panel-row relative z-[1]">
           <!-- Avatar con borde gradiente -->
           <div class="relative">
             <div class="absolute -inset-1 bg-gradient-to-br from-natillera-400 via-natillera-500 to-natillera-600 rounded-full opacity-75 blur-sm group-hover:opacity-100 transition-opacity"></div>
             <img 
               :src="getAvatarUrl(authStore.userEmail || authStore.userName)" 
               :alt="authStore.userName"
-              class="relative w-11 h-11 rounded-full ring-2 ring-white shadow-lg"
+              class="relative w-10 h-10 rounded-full ring-2 ring-white shadow-lg"
             />
             <!-- Indicador de estado online -->
-            <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-lg"></span>
+            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-lg"></span>
           </div>
           
           <!-- Info del usuario -->
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-white truncate text-sm">{{ authStore.userName }}</p>
-            <p class="text-xs text-emerald-100 truncate">{{ authStore.userEmail }}</p>
+            <p class="font-semibold text-white truncate text-[13px] leading-tight">{{ authStore.userName }}</p>
+            <p class="text-[11px] leading-tight text-emerald-100/90 truncate">{{ authStore.userEmail }}</p>
           </div>
           
           <!-- Botón de logout con estilo -->
@@ -292,7 +294,7 @@
             class="logout-btn group/btn"
             title="Cerrar sesión"
           >
-            <ArrowRightOnRectangleIcon class="w-5 h-5 transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+            <ArrowRightOnRectangleIcon class="w-[1.125rem] h-[1.125rem] transition-transform duration-300 group-hover/btn:translate-x-0.5" />
           </button>
         </div>
       </div>
@@ -317,10 +319,21 @@
             >
               <Bars3Icon class="w-6 h-6" />
             </button>
-            <h1 class="font-display font-bold text-lg">
-              <AppBrand />
-            </h1>
-            <div class="w-10"></div>
+            <div class="flex items-center gap-2 min-w-0 justify-center">
+              <img
+                src="/isotipo.png"
+                alt=""
+                class="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0"
+                width="40"
+                height="40"
+                decoding="async"
+                draggable="false"
+              />
+              <h1 class="font-display font-bold text-lg truncate">
+                <AppBrand />
+              </h1>
+            </div>
+            <div class="w-10 shrink-0"></div>
           </div>
         </header>
 
@@ -337,7 +350,7 @@
     <!-- Overlay móvil: después del contenido para capturar clics fuera (por encima del área principal) -->
     <div
       v-if="sidebarOpen && !isLgScreen"
-      class="sidebar-overlay fixed inset-0 z-[45] bg-black/25 backdrop-blur-sm lg:hidden"
+      class="sidebar-overlay fixed inset-0 z-[45] bg-black/50 lg:hidden"
       role="presentation"
       aria-hidden="true"
       @click="cerrarSidebar"
@@ -393,12 +406,13 @@ import {
   DocumentCheckIcon,
   UserPlusIcon,
   CircleStackIcon,
-  RectangleStackIcon
+  ArrowsRightLeftIcon
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import AppBrand from '../components/AppBrand.vue'
+import logoIconSrc from '../../assets/logo_icon.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -673,12 +687,10 @@ function actualizarTamañoPantalla() {
 }
 
 onMounted(async () => {
-  // Detectar tamaño de pantalla inicial
   actualizarTamañoPantalla()
   window.addEventListener('resize', actualizarTamañoPantalla)
   window.addEventListener('popstate', handleSidebarPopState)
   
-  // Cargar todas las natilleras (propias y compartidas)
   await natillerasStore.fetchTodasLasNatilleras()
   
   if (isSuperAdmin.value) {
@@ -701,17 +713,46 @@ onUnmounted(() => {
 <style scoped>
 @reference "../style.css";
 
+/* Isotipo sin caja: legible sobre el degradado del shell */
+.sidebar-brand-logo {
+  width: 4.5rem;
+  height: 4.5rem;
+  filter: drop-shadow(0 2px 8px rgb(0 0 0 / 0.22));
+}
+
+@media (min-width: 640px) {
+  .sidebar-brand-logo {
+    width: 5rem;
+    height: 5rem;
+  }
+}
+
 /* Reservar espacio en la parte inferior para que el contenido termine donde empieza la barra móvil */
 .content-above-bottom-nav {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .nav-link {
-  @apply flex items-center gap-3 px-4 py-3 text-emerald-100 rounded-xl hover:bg-white/15 hover:text-white transition-all duration-200;
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200;
+  color: hsl(152 42% 78% / 0.95);
+}
+
+.nav-link:hover {
+  @apply text-white;
+  background: hsl(var(--primary) / 0.22);
 }
 
 .nav-link-active {
-  @apply bg-white/30 text-white shadow-xl shadow-black/30 backdrop-blur-sm border-2 border-white/40 hover:bg-white/35 hover:text-white font-semibold;
+  @apply text-white font-semibold border-2;
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary) / 0.55);
+  box-shadow: 0 2px 12px hsl(var(--primary) / 0.28);
+}
+
+.nav-link-active:hover {
+  background: hsl(var(--primary));
+  filter: brightness(1.06);
+  box-shadow: 0 4px 16px hsl(var(--primary) / 0.35);
 }
 
 .sidebar-section {
@@ -724,7 +765,8 @@ onUnmounted(() => {
 }
 
 .sidebar-option-label {
-  @apply text-[0.9375rem] font-medium leading-snug text-emerald-50;
+  @apply text-[0.9375rem] font-medium leading-snug;
+  color: inherit;
 }
 
 .nav-link-option.nav-link-active .sidebar-option-label {
@@ -745,23 +787,25 @@ onUnmounted(() => {
 
 /* Panel de usuario fijo */
 .user-panel {
-  @apply relative p-3.5 rounded-2xl overflow-hidden;
-  @apply bg-white/15 backdrop-blur-xl;
-  @apply border border-white/20;
-  @apply shadow-xl shadow-black/30;
+  @apply relative p-2.5 rounded-xl overflow-hidden;
+  @apply bg-white/[0.12] backdrop-blur-xl;
+  @apply border border-white/25;
+  @apply shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.1)];
   @apply transition-all duration-300;
 }
 
 .user-panel:hover {
-  @apply shadow-2xl shadow-black/40;
-  @apply border-white/30;
-  @apply bg-white/20;
-  transform: translateY(-2px);
+  @apply border-white/35 bg-white/[0.16];
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
 }
 
 /* Botón de logout elegante */
 .logout-btn {
-  @apply relative p-2.5 rounded-xl overflow-hidden;
+  @apply relative inline-flex items-center justify-center p-2 rounded-lg overflow-hidden;
+  @apply min-h-9 min-w-9 shrink-0;
   @apply text-emerald-100;
   @apply transition-all duration-300;
   @apply border border-transparent;
@@ -777,6 +821,143 @@ onUnmounted(() => {
 
 .logout-btn:active {
   transform: scale(0.95);
+}
+
+/* Acción principal: cambiar de natillera (tarjeta tipo “list row”) */
+.cambiar-natillera-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  margin: 0;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  color: inherit;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(0, 0, 0, 0.14) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 14px rgba(0, 0, 0, 0.18);
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease,
+    background 0.22s ease;
+}
+
+.cambiar-natillera-btn:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 8px 22px rgba(0, 0, 0, 0.24);
+  transform: translateY(-1px);
+}
+
+.cambiar-natillera-btn:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.cambiar-natillera-btn:active {
+  transform: translateY(0);
+}
+
+.cambiar-natillera-btn__icon-wrap {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.55rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.cambiar-natillera-btn__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.cambiar-natillera-btn__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.05rem;
+  text-align: left;
+}
+
+.cambiar-natillera-btn__title {
+  font-family: var(--font-display, 'Outfit', system-ui, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.cambiar-natillera-btn__hint {
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: hsla(152, 42%, 78%, 0.92);
+}
+
+.cambiar-natillera-btn__chevron {
+  flex-shrink: 0;
+  width: 1.0625rem;
+  height: 1.0625rem;
+  color: rgba(255, 255, 255, 0.42);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.cambiar-natillera-btn:hover .cambiar-natillera-btn__chevron {
+  color: rgba(255, 255, 255, 0.9);
+  transform: translateX(3px);
+}
+
+.user-panel-divider {
+  height: 1px;
+  margin: 0.4rem 0 0.35rem;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 22%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.18) 78%,
+    transparent 100%
+  );
+}
+
+.user-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0;
+}
+
+/* Pestaña para abrir sidebar en lg: acento alineado al botón primario del login */
+.sidebar-hover-tab {
+  background: linear-gradient(
+    90deg,
+    hsl(152 69% 28% / 0.92) 0%,
+    hsl(152 69% 34% / 0.92) 100%
+  );
+  backdrop-filter: blur(8px);
 }
 </style>
 

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@100..900&display=swap');
 
 @import "tailwindcss";
 
@@ -282,479 +282,20 @@
 
 /* Ajustes específicos para pantallas de 1024px (tablets en modo vertical) */
 @media (min-width: 1024px) and (max-width: 1279px) {
-  /* Reducir padding en contenedores principales */
   .max-w-6xl,
   .max-w-7xl {
     padding-left: 1rem;
     padding-right: 1rem;
   }
   
-  /* Ajustar tamaños de fuente para mejor legibilidad */
   h1 {
     font-size: clamp(1.5rem, 2.5vw, 2rem) !important;
   }
   
-  /* Reducir gaps en grids para aprovechar mejor el espacio */
   .grid {
     gap: 0.75rem;
   }
-  
-  /* Desactivar animaciones de carga del formulario */
-  .animate-fade-in-up,
-  .animate-slide-in,
-  .animate-scale-x {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-  
-  /* Desactivar delays de animaciones stagger */
-  .stagger-1,
-  .stagger-2,
-  .stagger-3,
-  .stagger-4,
-  .stagger-5 {
-    animation-delay: 0s !important;
-  }
-  
-  /* Reducir ancho del contenedor del formulario */
-  .max-w-md {
-    max-width: 18rem !important; /* Reducido aún más para evitar cortes */
-  }
-  
-  /* Ajustar altura del formulario de login y eliminar scroll */
-  .login-form-container {
-    max-height: 75vh !important;
-    padding: 0.875rem !important;
-    overflow-y: hidden !important; /* Eliminar scroll vertical */
-    /* Reducir efectos de blur que pueden causar efecto doble */
-    backdrop-filter: none !important;
-    /* Asegurar que el contenido no se desborde */
-    overflow-x: hidden !important;
-  }
-  
-  /* Eliminar blur de las capas de fondo del formulario */
-  .login-form-container .absolute.inset-0 {
-    backdrop-filter: none !important;
-  }
-  
-  /* Reducir tamaño de botones principales en formulario */
-  .login-form-container form button[type="submit"] {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-    font-size: 0.8125rem !important;
-    line-height: 1.3 !important;
-    min-height: 2rem !important;
-    max-height: 2.25rem !important;
-    height: 2.25rem !important;
-    /* Asegurar centrado perfecto */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    /* Simplificar gradiente - usar color sólido */
-    background: #16a34a !important;
-    background-image: none !important;
-    /* Eliminar efectos que causan efecto doble */
-    box-shadow: none !important;
-    text-shadow: none !important;
-    transform: none !important;
-    border: none !important;
-  }
-  
-  /* Eliminar hover effects en botón principal */
-  .login-form-container form button[type="submit"]:hover {
-    transform: none !important;
-    box-shadow: none !important;
-  }
-  
-  /* Eliminar efecto shimmer en botones */
-  .login-form-container form button[type="submit"] .absolute.inset-0 {
-    display: none !important;
-  }
-  
-  /* Eliminar gradiente del botón - usar color sólido */
-  .login-form-container form button[type="submit"].bg-gradient-to-r {
-    background: #16a34a !important;
-    background-image: none !important;
-    background-color: #16a34a !important;
-  }
-  
-  /* Asegurar que no haya elementos superpuestos causando efecto doble */
-  .login-form-container form button[type="submit"] * {
-    position: relative !important;
-    z-index: 1 !important;
-  }
-  
-  /* Reducir tamaño de iconos en botón principal */
-  .login-form-container form button[type="submit"] svg {
-    width: 0.875rem !important;
-    height: 0.875rem !important;
-    transform: none !important;
-  }
-  
-  /* Reducir gap entre elementos en botones */
-  .login-form-container button.flex.items-center.gap-2,
-  .login-form-container button.flex.items-center.gap-1\.5,
-  .login-form-container button.flex.items-center.gap-2\.5 {
-    gap: 0.375rem !important;
-  }
-  
-  /* Ajustar contenedor del selector de método (Email/Teléfono) */
-  .login-form-container .relative.flex.gap-1\.5,
-  .login-form-container .relative.flex.gap-2,
-  .login-form-container .relative.flex.sm\:gap-2,
-  .login-form-container .relative.flex.p-1,
-  .login-form-container .relative.flex.sm\:p-1\.5 {
-    padding: 0.375rem !important;
-    margin-bottom: 0.75rem !important;
-    gap: 0.375rem !important;
-    overflow: visible !important;
-    width: 100% !important;
-    display: flex !important;
-  }
-  
-  /* Reducir tamaño de botones del selector de método (Email/Teléfono) - Regla general */
-  .login-form-container .relative.flex button[type="button"],
-  .login-form-container button[type="button"].relative.z-10,
-  .login-form-container button[type="button"].relative.z-10.sm\:py-3,
-  .login-form-container button[type="button"].relative.z-10.md\:text-base {
-    padding: 0.375rem 0.5rem !important;
-    font-size: 0.6875rem !important;
-    line-height: 1.2 !important;
-    min-height: 1.75rem !important;
-    max-height: 1.75rem !important;
-    height: 1.75rem !important;
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    /* Asegurar centrado perfecto */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    /* Eliminar efectos que causan efecto doble */
-    box-shadow: none !important;
-    text-shadow: none !important;
-    transform: none !important;
-  }
-  
-  /* Regla adicional para sobrescribir cualquier clase de padding de Tailwind */
-  .login-form-container .relative.flex button[type="button"].py-2\.5,
-  .login-form-container .relative.flex button[type="button"].sm\:py-3,
-  .login-form-container .relative.flex button[type="button"][class*="py-"] {
-    padding-top: 0.375rem !important;
-    padding-bottom: 0.375rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-  
-  /* Regla adicional para sobrescribir cualquier clase de texto de Tailwind */
-  .login-form-container .relative.flex button[type="button"].text-xs,
-  .login-form-container .relative.flex button[type="button"].text-sm,
-  .login-form-container .relative.flex button[type="button"].text-base,
-  .login-form-container .relative.flex button[type="button"].sm\:text-sm,
-  .login-form-container .relative.flex button[type="button"].md\:text-base,
-  .login-form-container .relative.flex button[type="button"][class*="text-"] {
-    font-size: 0.6875rem !important;
-  }
-  
-  .login-form-container button[type="button"].relative.z-10:hover,
-  .login-form-container button[type="button"].relative.z-10.sm\:py-3:hover {
-    transform: none !important;
-    box-shadow: none !important;
-    scale: 1 !important;
-  }
-  
-  /* Simplificar el fondo animado del selector - usar color sólido */
-  .login-form-container .relative.flex .absolute.bg-gradient-to-r,
-  .login-form-container .relative.flex .absolute.top-1,
-  .login-form-container .relative.flex .absolute.sm\:top-1\.5,
-  .login-form-container .relative.flex .absolute.bottom-1,
-  .login-form-container .relative.flex .absolute.sm\:bottom-1\.5 {
-    background: #16a34a !important;
-    background-image: none !important;
-    background-color: #16a34a !important;
-    box-shadow: none !important;
-    top: 0.375rem !important;
-    bottom: 0.375rem !important;
-  }
-  
-  /* Reducir tamaño de iconos en botones del selector */
-  .login-form-container button[type="button"].relative.z-10 svg,
-  .login-form-container button[type="button"].relative.z-10 .w-4,
-  .login-form-container button[type="button"].relative.z-10 .w-5,
-  .login-form-container button[type="button"].relative.z-10 .h-4,
-  .login-form-container button[type="button"].relative.z-10 .h-5,
-  .login-form-container button[type="button"].relative.z-10 .sm\:w-5,
-  .login-form-container button[type="button"].relative.z-10 .sm\:h-5 {
-    width: 0.75rem !important;
-    height: 0.75rem !important;
-    transform: none !important;
-    flex-shrink: 0 !important;
-  }
-  
-  /* Asegurar centrado del contenido interno de los botones Email/Teléfono */
-  .login-form-container button[type="button"].relative.z-10 span {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    line-height: 1.3 !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-  }
-  
-  /* Centrar icono y texto juntos en botones Email/Teléfono */
-  .login-form-container button[type="button"].relative.z-10.flex.items-center,
-  .login-form-container button[type="button"].relative.z-10.gap-1\.5,
-  .login-form-container button[type="button"].relative.z-10.gap-2,
-  .login-form-container button[type="button"].relative.z-10.sm\:gap-2 {
-    justify-content: center !important;
-    gap: 0.25rem !important;
-  }
-  
-  /* Sobrescribir específicamente el texto dentro de los botones */
-  .login-form-container button[type="button"].relative.z-10 span,
-  .login-form-container button[type="button"].relative.z-10 .text-xs,
-  .login-form-container button[type="button"].relative.z-10 .text-sm,
-  .login-form-container button[type="button"].relative.z-10 .text-base,
-  .login-form-container button[type="button"].relative.z-10 .sm\:text-sm,
-  .login-form-container button[type="button"].relative.z-10 .md\:text-base {
-    font-size: 0.6875rem !important;
-    line-height: 1.2 !important;
-  }
-  
-  /* Reducir tamaño de botón de Google */
-  .login-form-container button.border-2 {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    font-size: 0.75rem !important;
-    min-height: 2rem !important;
-    max-height: 2.25rem !important;
-    height: 2.25rem !important;
-    /* Eliminar efectos que causan efecto doble */
-    box-shadow: none !important;
-    transform: none !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  
-  .login-form-container button.border-2:hover {
-    transform: none !important;
-    box-shadow: none !important;
-  }
-  
-  /* Reducir tamaño de icono de Google */
-  .login-form-container button.border-2 svg {
-    width: 1rem !important;
-    height: 1rem !important;
-  }
-  
-  /* Reducir tamaño de campos de entrada */
-  .login-form-container input[type="email"],
-  .login-form-container input[type="password"],
-  .login-form-container input[type="text"],
-  .login-form-container input[type="tel"] {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    font-size: 0.875rem !important;
-  }
-  
-  /* Reducir tamaño de labels */
-  .login-form-container label.block {
-    font-size: 0.8125rem !important;
-    margin-bottom: 0.375rem !important;
-  }
-  
-  /* Reducir tamaño de iconos en labels */
-  .login-form-container label.block svg {
-    width: 0.875rem !important;
-    height: 0.875rem !important;
-  }
-  
-  /* Reducir tamaño del botón de mostrar/ocultar contraseña */
-  .login-form-container .relative button[type="button"].absolute {
-    padding: 0.375rem !important;
-  }
-  
-  .login-form-container .relative button[type="button"].absolute svg {
-    width: 0.875rem !important;
-    height: 0.875rem !important;
-  }
-  
-  /* Reducir espacios entre elementos del formulario */
-  .login-form-container form.space-y-4,
-  .login-form-container form.space-y-3 {
-    gap: 0.5rem !important;
-  }
-  
-  /* Reducir margen inferior de los grupos de campos */
-  .login-form-container .group {
-    margin-bottom: 0.25rem !important;
-  }
-  
-  /* Reducir tamaño del título del formulario "Iniciar Sesión" */
-  .login-form-container h2 {
-    font-size: 1.125rem !important;
-    margin-bottom: 0.25rem !important;
-    /* Eliminar blur y sombras que causan efecto doble */
-    filter: none !important;
-    text-shadow: none !important;
-  }
-  
-  /* Eliminar sombras del contenedor del selector de método */
-  .login-form-container .relative.flex.gap-1\.5 .absolute,
-  .login-form-container .relative.flex.gap-2 .absolute {
-    box-shadow: none !important;
-  }
-  
-  /* Asegurar que no haya elementos superpuestos en botones Email/Teléfono */
-  .login-form-container button[type="button"].relative.z-10 * {
-    position: relative !important;
-    z-index: 1 !important;
-  }
-  
-  /* Eliminar efectos shimmer de todos los botones */
-  .login-form-container button .absolute.inset-0 {
-    display: none !important;
-  }
-  
-  /* Reducir tamaño del badge "Versión Beta" */
-  .login-form-container .inline-flex.items-center {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-  }
-  
-  .login-form-container .inline-flex.items-center span {
-    font-size: 0.625rem !important;
-  }
-  
-  /* Reducir padding del header del formulario */
-  .login-form-container .flex.flex-col.items-center {
-    margin-bottom: 0.5rem !important;
-    gap: 0.25rem !important;
-  }
-  
-  /* Reducir tamaño de los iconos SVG en el header */
-  .login-form-container .flex.flex-col.items-center svg {
-    width: 0.5rem !important;
-    height: 0.5rem !important;
-  }
-  
-  /* Reducir márgenes del separador */
-  .login-form-container .relative.my-2\.5,
-  .login-form-container .relative.my-3 {
-    margin-top: 0.375rem !important;
-    margin-bottom: 0.375rem !important;
-  }
-  
-  /* Reducir márgenes del botón de envío */
-  .login-form-container button[type="submit"] {
-    margin-top: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
-  }
-  
-  /* Asegurar centrado perfecto del contenido interno del botón */
-  .login-form-container button[type="submit"] .relative {
-    line-height: 1.3 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-  }
-  
-  .login-form-container button[type="submit"] .relative.flex {
-    line-height: 1.3 !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-  }
-  
-  /* Asegurar que el texto esté perfectamente centrado */
-  .login-form-container button[type="submit"] span {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    line-height: 1.3 !important;
-    width: 100% !important;
-    margin: 0 auto !important;
-    text-align: center !important;
-  }
-  
-  /* Centrar el icono y texto juntos */
-  .login-form-container button[type="submit"] .relative.flex.items-center {
-    justify-content: center !important;
-    gap: 0.375rem !important;
-    width: 100% !important;
-  }
-  
-  
-  /* Reducir padding del contenedor principal del layout de auth */
-  .h-screen.flex.items-center {
-    padding: 0.5rem !important;
-  }
-  
-  /* Reducir tamaño del logo y título en AuthLayout */
-  .h-screen .w-12.h-12,
-  .h-screen .w-16.h-16 {
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-  }
-  
-  .h-screen h1.text-2xl,
-  .h-screen h1.text-3xl,
-  .h-screen h1.text-4xl {
-    font-size: 1.5rem !important;
-  }
-  
-  /* Reducir margen inferior del header en AuthLayout */
-  .h-screen .mb-3 {
-    margin-bottom: 0.75rem !important;
-  }
-  
-  /* Reducir padding del contenedor del formulario en AuthLayout */
-  .h-screen .p-2,
-  .h-screen .p-4,
-  .h-screen .p-7 {
-    padding: 0.5rem !important;
-  }
-  
-  /* Reducir tamaño del texto del enlace "¿Olvidaste tu contraseña?" */
-  .login-form-container button[type="button"].text-xs,
-  .login-form-container button[type="button"].text-sm {
-    font-size: 0.6875rem !important;
-    margin-top: 0.25rem !important;
-  }
-  
-  /* Reducir tamaño del texto del separador "O continúa con" */
-  .login-form-container .px-5.py-1\.5 {
-    padding-top: 0.25rem !important;
-    padding-bottom: 0.25rem !important;
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    font-size: 0.6875rem !important;
-  }
-  
-  /* Reducir tamaño del texto del enlace de registro */
-  .login-form-container ~ div .text-xs,
-  .login-form-container ~ div .text-sm {
-    font-size: 0.6875rem !important;
-    margin-top: 0.5rem !important;
-  }
-  
-  /* Ocultar textos descriptivos de las opciones en NatilleraDetalle - solo mostrar títulos */
-  /* Ocultar textos descriptivos de las tarjetas de opciones (Socios, Cuotas, Préstamos, Actividades) */
-  /* Estos textos tienen clase "hidden sm:block" que los muestra desde 640px, pero los ocultamos en 1024px */
+
   p.hidden.sm\\:block.text-sm.text-gray-600.leading-relaxed,
   p.hidden.sm\\:block.text-sm.text-gray-600,
   .relative.z-10 p.hidden.sm\\:block,
@@ -765,6 +306,16 @@
   .group.relative.flex.flex-col.items-center.sm\\:items-start p.hidden.sm\\:block {
     display: none !important;
   }
+}
+
+/* Login inputs: prevenir zoom en iOS */
+.login-input {
+  font-size: 16px !important;
+}
+
+/* Auth brand panel: smooth transition for responsive */
+.auth-brand-panel {
+  transition: all 0.3s ease;
 }
 
 /* Custom scrollbar */
@@ -838,6 +389,14 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .animate-slide-in {
@@ -2497,6 +2056,32 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     pointer-events: auto !important;
   }
 
+  /* Sidebar overlay: desactivar backdrop-filter y composición agresiva que bloquea el sidebar en Safari iOS */
+  .sidebar-overlay {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    will-change: auto !important;
+    isolation: auto !important;
+  }
+
+  /* Sidebar <aside>: garantizar interactividad por encima del overlay en iOS */
+  aside.fixed[class*="inset-y"] {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 50 !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  aside.fixed[class*="inset-y"] button,
+  aside.fixed[class*="inset-y"] a {
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25) !important;
+    min-height: 44px;
+  }
+
   /* Botones de cerrar en modales: asegurar que sean fácilmente clickeables en iOS */
   .fixed.inset-0 button[class*="btn"],
   .fixed.inset-0 button[type="button"],
@@ -2634,4 +2219,456 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
       position: relative;
     }
   }
+}
+
+/* Nova Design System — tokens globales (NOVA_DESIGN_SYSTEM.md §3–§7)
+   Tema forest en :root para que hsl(var(--*)) siempre resuelva (evita texto/fondo “invisible”). */
+:root {
+  --radius: 0.625rem;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Forest — primary = mismo verde que el CTA del login (152 69% 28%) */
+  --background: 152 26% 96%;
+  --foreground: 152 32% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 152 32% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 152 32% 12%;
+  --primary: 152 69% 28%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 152 18% 91%;
+  --secondary-foreground: 152 30% 18%;
+  --muted: 152 22% 93%;
+  --muted-foreground: 152 11% 38%;
+  --accent: 152 28% 90%;
+  --accent-foreground: 152 35% 16%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 152 13% 87%;
+  --input: 152 13% 87%;
+  --ring: 152 69% 28%;
+  --surface-glow: 152 42% 36%;
+  /* Mismo verde profundo que el panel de marca en login (AuthLayout) */
+  --app-shell-nav-gradient: linear-gradient(
+    160deg,
+    hsl(150 40% 8%) 0%,
+    hsl(152 35% 12%) 30%,
+    hsl(152 38% 10%) 60%,
+    hsl(155 42% 7%) 100%
+  );
+}
+
+.app-shell-nav-bg {
+  background: var(--app-shell-nav-gradient);
+}
+
+html[data-theme='forest'] body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.dashboard-nova {
+  font-family: var(--font-sans);
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Formularios y tarjetas Nova también en /auth/* */
+.auth-nova {
+  font-family: var(--font-sans);
+  color: hsl(var(--card-foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-section-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: hsl(var(--foreground));
+}
+
+@media (min-width: 640px) {
+  :is(.dashboard-nova, .auth-nova) .nova-section-title {
+    font-size: 2rem;
+  }
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-section-desc {
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.55;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (min-width: 640px) {
+  :is(.dashboard-nova, .auth-nova) .nova-section-desc {
+    font-size: 1rem;
+  }
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-filter-label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-card-surface,
+:is(.dashboard-nova, .auth-nova).nova-card-surface {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 2px 10px hsl(var(--surface-glow) / 0.22);
+  transition:
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pill:hover {
+  border-color: hsl(var(--primary) / 0.35);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pill--active {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pill--active:hover {
+  border-color: hsl(var(--primary));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.625rem 2rem;
+  border-radius: 9999px;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.875rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 4px 16px hsl(var(--primary) / 0.28);
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+@media (min-width: 640px) {
+  :is(.dashboard-nova, .auth-nova) .nova-btn-primary {
+    font-size: 1rem;
+  }
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-primary:hover {
+  filter: brightness(0.94);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-primary:active {
+  transform: scale(0.98);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-divider {
+  border-color: hsl(var(--border));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-como-title {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--foreground) / 0.72);
+}
+
+/* Tarjeta natillera — tokens Nova */
+:is(.dashboard-nova, .auth-nova) .nova-natillera-card {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: 0 2px 10px hsl(var(--surface-glow) / 0.2);
+  transition:
+    box-shadow var(--transition-base),
+    transform var(--transition-base),
+    border-color var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-natillera-card--pinned {
+  border-left-width: 3px;
+  border-left-color: hsl(var(--primary));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: hsl(var(--foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-badge-muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-avatar-ring {
+  border: 1px dashed hsl(var(--primary) / 0.45);
+  background: hsl(var(--primary) / 0.06);
+}
+
+:is(.dashboard-nova, .auth-nova) .progress {
+  overflow: hidden;
+  border-radius: 9999px;
+  background: hsl(var(--muted));
+}
+
+:is(.dashboard-nova, .auth-nova) .progress-fill {
+  border-radius: 9999px;
+  background: hsl(var(--primary));
+  transition: width var(--transition-slow) cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .card-nova-hover:hover {
+    box-shadow: 0 6px 20px hsl(var(--surface-glow) / 0.28);
+  }
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-tipo-mia {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-tipo-comp {
+  background: hsl(217 91% 60% / 0.12);
+  color: hsl(217 91% 38%);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-tipo-socio {
+  background: hsl(38 92% 50% / 0.14);
+  color: hsl(32 88% 34%);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: calc(var(--radius) - 2px);
+  transition:
+    transform var(--transition-fast),
+    background var(--transition-base),
+    color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn:hover {
+  transform: scale(1.05);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn:active {
+  transform: scale(0.95);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn--off {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn--off:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-pin-btn--on {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.32);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-trash-btn {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-trash-btn:hover {
+  filter: brightness(0.94);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-trash-btn:active {
+  transform: scale(0.95);
+}
+
+/* Inputs y enlaces Nova (auth + formularios) */
+:is(.dashboard-nova, .auth-nova) .nova-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.375rem;
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-size: 1rem;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-input:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-input-shell {
+  display: flex;
+  align-items: stretch;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid hsl(var(--input));
+  background: hsl(var(--card));
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-input-shell:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-link {
+  color: hsl(var(--primary));
+  font-weight: 600;
+  text-underline-offset: 2px;
+  transition: opacity var(--transition-fast);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-link:hover {
+  opacity: 0.88;
+  text-decoration: underline;
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-alert--error {
+  background: hsl(var(--destructive) / 0.08);
+  border-color: hsl(var(--destructive) / 0.35);
+  color: hsl(var(--destructive));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-alert--info {
+  background: hsl(217 91% 60% / 0.1);
+  border-color: hsl(217 91% 60% / 0.28);
+  color: hsl(217 91% 30%);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.625rem 1.25rem;
+  border-radius: calc(var(--radius) - 2px);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: 2px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base),
+    transform var(--transition-fast);
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-outline:hover:not(:disabled) {
+  border-color: hsl(var(--primary) / 0.45);
+  background: hsl(var(--muted));
+}
+
+:is(.dashboard-nova, .auth-nova) .nova-btn-outline:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.auth-modal-header {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }

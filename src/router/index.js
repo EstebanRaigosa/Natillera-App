@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { isDev, isLocalhost, devLog } from '../config/environment'
+import { resolvePostLoginLocation } from '../utils/postLoginRoute'
+import { setLastNatilleraId } from '../utils/lastNatillera'
 
 // Layouts
 import AuthLayout from '../layouts/AuthLayout.vue'
@@ -258,11 +260,12 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Si ya está autenticado y va a login/register/welcome, redirigir al dashboard
+  // Si ya está autenticado y va a login/register/welcome, ir al detalle de la última natillera o al dashboard
   // ResetPassword es una excepción ya que puede estar autenticado temporalmente con token de recuperación
   if (to.name === 'Login' || to.name === 'Register' || to.name === 'Welcome') {
     if (authStore.isAuthenticated) {
-      next({ name: 'Dashboard' })
+      const loc = await resolvePostLoginLocation(authStore.user)
+      next(loc)
       return
     }
   }
@@ -278,6 +281,16 @@ router.afterEach((to, from) => {
     document.title = `${title} | Natillerapp`
   } else {
     document.title = 'Natillerapp'
+  }
+
+  const authStore = useAuthStore()
+  const uid = authStore.user?.id
+  const rawId = to.params?.id
+  const idParam = Array.isArray(rawId) ? rawId[0] : rawId
+  if (uid && idParam && idParam !== 'undefined' && idParam !== 'null' && idParam !== '') {
+    if (to.path.startsWith(`/natilleras/${idParam}`)) {
+      setLastNatilleraId(uid, String(idParam))
+    }
   }
 
   // No hacer scroll si es la misma ruta (solo cambio de query params)

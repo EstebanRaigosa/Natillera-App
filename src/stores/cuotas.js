@@ -1844,18 +1844,25 @@ export const useCuotasStore = defineStore('cuotas', () => {
       
       // Paso 4: Pagar cuota de la natillera (con lo que reste)
       if (valorRestante > 0) {
-        const valorCuotaPendiente = valorCuota - valorPagadoAnterior
-        if (valorRestante >= valorCuotaPendiente) {
-          // El pago cubre la cuota completa
-          valorCuotaPagado = valorCuotaPendiente
-          valorRestante -= valorCuotaPendiente
-        } else {
-          // El pago NO cubre la cuota completa (pago parcial)
-          valorCuotaPagado = valorRestante
-          valorRestante = 0
+        const valorCuotaPendiente = Math.max(0, valorCuota - valorPagadoAnterior)
+        if (valorCuotaPendiente > 0) {
+          if (valorRestante >= valorCuotaPendiente) {
+            valorCuotaPagado = valorCuotaPendiente
+            valorRestante -= valorCuotaPendiente
+          } else {
+            valorCuotaPagado = valorRestante
+            valorRestante = 0
+          }
         }
       }
-      
+      // Si la cuota natillera ya estaba cubierta en BD pero aún hay remanente (p. ej. segundo abono
+      // hacia actividades cuando el parámetro valorActividades vino 0 por desincronización del UI),
+      // aplicarlo a actividades para no perder el desglose ni la fila en historial_pagos_cuota.
+      if (valorRestante > 0 && Math.max(0, valorCuota - valorPagadoAnterior) <= 0) {
+        valorActividadesPagado += valorRestante
+        valorRestante = 0
+      }
+
       // Actualizar el valor pagado total (solo cuota, no incluye sanción ni actividades)
       nuevoValorPagado = valorPagadoAnterior + valorCuotaPagado
       
@@ -2437,11 +2444,21 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
 
         const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
-        const valorTotalHist =
+        const valorPagadoNum = Number(valorPagado) || 0
+        let valorTotalHist =
           (valorCuotaPagado || 0) +
           (valorSancionPagadaFinal || 0) +
           (valorActividadesPagado || 0) +
           (valorCuotasPrestamosPagado || 0)
+        let valorCuotaHist = valorCuotaPagado || 0
+        let valorActividadesHist = valorActividadesPagado || 0
+        // Último recurso: si hubo abono pero el desglose quedó en 0 (casos límite de redondeo u orden),
+        // registrar el monto del abono para no omitir la fila en historial_pagos_cuota.
+        if (valorTotalHist <= 0 && valorPagadoNum > 0) {
+          valorTotalHist = valorPagadoNum
+          valorCuotaHist = valorPagadoNum
+          valorActividadesHist = 0
+        }
         const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
         const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
 
@@ -2452,19 +2469,37 @@ export const useCuotasStore = defineStore('cuotas', () => {
           socio_nombre: nombreSocio,
           natillera_nombre: natilleraNombre,
           valor_total: valorTotalHist,
-          valor_cuota: valorCuotaPagado || 0,
+          valor_cuota: valorCuotaHist,
           valor_sancion: valorSancionPagadaFinal || 0,
-          valor_actividades: valorActividadesPagado || 0,
+          valor_actividades: valorActividadesHist,
           valor_cuotas_prestamo: valorCuotasPrestamosPagado || 0,
           valor_pagado_cuota_total: valorPagadoCuotaTotal
         }
         if (impuesto4x1000Hist > 0) {
           insertHistorial.impuesto_4x1000 = impuesto4x1000Hist
         }
+        if (Array.isArray(options.detalleActividades) && options.detalleActividades.length > 0) {
+          insertHistorial.detalle_actividades = options.detalleActividades
+        }
+        if (options.totalAPagar > 0) {
+          insertHistorial.total_a_pagar = options.totalAPagar
+        }
+        if (Array.isArray(options.detalleCuotasPrestamos) && options.detalleCuotasPrestamos.length > 0) {
+          insertHistorial.detalle_cuotas_prestamo = options.detalleCuotasPrestamos
+        }
 
         let histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
         if (histRes.error && String(histRes.error.message || '').includes('impuesto_4x1000')) {
           delete insertHistorial.impuesto_4x1000
+          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+        }
+        if (histRes.error && String(histRes.error.message || '').includes('detalle_actividades')) {
+          delete insertHistorial.detalle_actividades
+          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+        }
+        if (histRes.error && (String(histRes.error.message || '').includes('total_a_pagar') || String(histRes.error.message || '').includes('detalle_cuotas_prestamo'))) {
+          delete insertHistorial.total_a_pagar
+          delete insertHistorial.detalle_cuotas_prestamo
           histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
         }
         if (histRes.error) {

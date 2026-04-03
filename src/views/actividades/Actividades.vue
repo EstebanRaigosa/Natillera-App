@@ -2968,6 +2968,13 @@ import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
 import { formatDate, parseDateLocal } from '../../utils/formatDate.js'
+import {
+  buscarSorteoPorFecha,
+  extraerPremioMayor,
+  consultarHtmlSorteo,
+  ultimasDosCifras,
+  fechaEsPosteriorAlUltimoSorteoCatalogo,
+} from '../../utils/loteriaMedellin.js'
 import { getAvatarUrl } from '../../utils/avatars.js'
 import { toPng } from 'html-to-image'
 
@@ -4398,42 +4405,51 @@ async function abrirModalLiquidar() {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return
 
   loadingNumeroGanador.value = true
-  const TIMEOUT_MS = 4000 // 4 segundos máximo
+  const TIMEOUT_MS = 15000
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
-    const nextDay = new Date(dateStr + 'T12:00:00Z')
-    nextDay.setUTCDate(nextDay.getUTCDate() + 1)
-    const nextDayStr = nextDay.toISOString().slice(0, 10)
-    const whereClause = `fecha >= '${dateStr}T00:00:00.000' AND fecha < '${nextDayStr}T00:00:00.000'`
-    const urlDatos = `https://www.datos.gov.co/resource/4w3i-wxax.json?${new URLSearchParams({ $where: whereClause, $limit: '1' }).toString()}`
-    const resDatos = await fetch(urlDatos, { signal: controller.signal })
-    clearTimeout(timeoutId)
-    const dataDatos = await resDatos.json()
-    let ultimasDos = ''
-    if (Array.isArray(dataDatos) && dataDatos.length > 0) {
-      const row = dataDatos[0]
-      const numero = row.n_mero ?? row.numero ?? row.número
-      if (numero != null && String(numero).trim() !== '') {
-        const s = String(numero).trim()
-        ultimasDos = s.slice(-2).replace(/\D/g, '').slice(0, 2) || s.slice(-2)
+    const sorteoEntry = buscarSorteoPorFecha(dateStr)
+    if (!sorteoEntry) {
+      if (fechaEsPosteriorAlUltimoSorteoCatalogo(dateStr)) {
+        notificationStore.error(
+          'No hay sorteo de Lotería de Medellín para esta fecha: el sorteo aún no está en el catálogo o la fecha es posterior al último publicado. Cuando exista el resultado, ejecuta npm run scrape:loteria para actualizar el catálogo o ingresa el número ganador manualmente.',
+          'Sin sorteo para esta fecha'
+        )
+      } else {
+        notificationStore.error(
+          'No hay sorteo de Lotería de Medellín en el catálogo para esta fecha. Ejecuta npm run scrape:loteria con red o ingresa el número manualmente.',
+          'Catálogo no disponible'
+        )
       }
-      // Guardar resultado completo del sorteo para mostrarlo en el modal del ganador
-      resultadoSorteoMedellinRef.value = {
-        sorteo: row.sorteo != null ? String(row.sorteo).trim() : null,
-        numero: numero != null ? String(numero).trim() : null,
-        serie: row.serie != null ? String(row.serie).trim() : null,
-        fecha: row.fecha != null ? String(row.fecha).slice(0, 10) : dateStr
-      }
+      return
     }
-    if (ultimasDos) formLiquidar.numeroGanador = ultimasDos
-    else
+
+    const html = await consultarHtmlSorteo(sorteoEntry.drawId, controller.signal)
+    const premio = extraerPremioMayor(html)
+    if (!premio) {
       notificationStore.error(
-        'No hay resultado de Lotería de Medellín para esta fecha. Ingresa el número ganador manualmente.',
+        'No se pudo leer el premio mayor del resultado oficial. Ingresa el número ganador manualmente.',
         'Resultado no disponible'
       )
+      return
+    }
+
+    resultadoSorteoMedellinRef.value = {
+      sorteo: sorteoEntry.sorteoNum != null ? String(sorteoEntry.sorteoNum).trim() : null,
+      numero: premio.numero,
+      serie: premio.serie,
+      fecha: sorteoEntry.fechaResuelta || dateStr,
+    }
+    formLiquidar.numeroGanador = ultimasDosCifras(premio.numero)
+
+    if (!sorteoEntry.exacta) {
+      notificationStore.warning(
+        'No hay sorteo exacto para esa fecha; se usó el sorteo más cercano del calendario. Revisa el número si hace falta.',
+        'Fecha aproximada'
+      )
+    }
   } catch (e) {
-    clearTimeout(timeoutId)
     if (e?.name === 'AbortError')
       notificationStore.error(
         'La consulta tardó demasiado. Ingresa el número ganador manualmente.',
@@ -4445,6 +4461,7 @@ async function abrirModalLiquidar() {
         'Resultado no disponible'
       )
   } finally {
+    clearTimeout(timeoutId)
     loadingNumeroGanador.value = false
   }
 }
@@ -5707,6 +5724,21 @@ async function handleCrearActividad() {
               console.warn('Error registrando utilidad de actividad en utilidades_clasificadas:', eUtil)
             }
           }
+          if (formActividad.tipoProceso === 'liquidar' && formActividad.tipo !== 'rifa' && (actFallback.ingresos || 0) > 0) {
+            try {
+              await supabase.from('movimientos_fondo').insert({
+                natillera_id: id,
+                tipo: 'entrada',
+                monto: actFallback.ingresos,
+                forma_pago: 'efectivo',
+                destino_ingreso: 'recaudado',
+                descripcion: `Recaudo actividad liquidada: ${descripcionActividad}`,
+                fecha: new Date().toISOString().slice(0, 10)
+              })
+            } catch (eMov) {
+              console.warn('Error registrando recaudo de actividad liquidada en movimientos_fondo:', eMov)
+            }
+          }
         } else {
           throw errorActividad
         }
@@ -5727,6 +5759,21 @@ async function handleCrearActividad() {
             })
           } catch (eUtil) {
             console.warn('Error registrando utilidad de actividad en utilidades_clasificadas:', eUtil)
+          }
+        }
+        if (formActividad.tipoProceso === 'liquidar' && formActividad.tipo !== 'rifa' && (actividad.ingresos || 0) > 0) {
+          try {
+            await supabase.from('movimientos_fondo').insert({
+              natillera_id: id,
+              tipo: 'entrada',
+              monto: actividad.ingresos,
+              forma_pago: 'efectivo',
+              destino_ingreso: 'recaudado',
+              descripcion: `Recaudo actividad liquidada: ${descripcionActividad}`,
+              fecha: new Date().toISOString().slice(0, 10)
+            })
+          } catch (eMov) {
+            console.warn('Error registrando recaudo de actividad liquidada en movimientos_fondo:', eMov)
           }
         }
       }
@@ -6329,6 +6376,11 @@ async function eliminarActividadConfirmado() {
   const actividadId = actividadAEliminar.value.id
   const descripcionActividad = actividadAEliminar.value.descripcion
   try {
+    const { error: errUtil } = await supabase
+      .from('utilidades_clasificadas')
+      .delete()
+      .eq('id_actividad', actividadId)
+    if (errUtil) throw errUtil
     // Eliminar la actividad (los registros relacionados en socios_actividad se eliminarán automáticamente por CASCADE)
     const { error } = await supabase
       .from('actividades')
@@ -6371,6 +6423,11 @@ async function eliminarGrupoConfirmado() {
   const cantidadActividades = grupo.actividades.length
   const idsActividades = grupo.actividades.map(a => a.id)
   try {
+    const { error: errUtil } = await supabase
+      .from('utilidades_clasificadas')
+      .delete()
+      .in('id_actividad', idsActividades)
+    if (errUtil) throw errUtil
     // Eliminar todas las actividades del grupo
     // Los registros relacionados en socios_actividad se eliminarán automáticamente por CASCADE
     const { error } = await supabase

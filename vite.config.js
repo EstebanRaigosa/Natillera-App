@@ -13,6 +13,14 @@ export default defineConfig({
     port: 5174,
     allowedHosts: [
       '.ngrok-free.dev'   // acepta cualquier subdominio de ngrok
-    ]
+    ],
+    proxy: {
+      // Lotería de Medellín admin-ajax: el navegador no puede POST cross-origin sin CORS
+      '/api-loteria-medellin-ajax': {
+        target: 'https://loteriademedellin.com.co',
+        changeOrigin: true,
+        rewrite: () => '/wp-admin/admin-ajax.php',
+      },
+    },
   }
 })
