@@ -319,13 +319,13 @@
             >
               <Bars3Icon class="w-6 h-6" />
             </button>
-            <div class="flex items-center gap-2 min-w-0 justify-center">
+            <div class="flex items-center gap-0 min-w-0 justify-center">
               <img
                 src="/isotipo.png"
                 alt=""
-                class="w-9 h-9 sm:w-10 sm:h-10 object-contain shrink-0"
-                width="40"
-                height="40"
+                class="h-9 w-9 object-contain shrink-0 sm:h-10 sm:w-10"
+                width="36"
+                height="36"
                 decoding="async"
                 draggable="false"
               />
@@ -333,7 +333,7 @@
                 <AppBrand />
               </h1>
             </div>
-            <div class="w-10 shrink-0"></div>
+            <div class="w-10 shrink-0" aria-hidden="true"></div>
           </div>
         </header>
 

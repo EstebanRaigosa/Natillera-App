@@ -93,20 +93,20 @@
           <div class="auth-disc auth-disc--m1"></div>
           <div class="auth-disc auth-disc--m2"></div>
         </div>
-        <div class="relative z-10 flex flex-col items-center gap-2 py-6 px-4">
+        <div class="relative z-10 flex flex-col items-center gap-1 py-5 px-4 sm:py-6 sm:gap-1.5">
           <div class="auth-brand-row auth-brand-row--mobile">
-            <div class="auth-isotipo-ring auth-isotipo-ring--sm">
+            <div class="auth-isotipo-ring auth-isotipo-ring--mobile">
               <img
                 :src="logoIconSrc"
                 alt="Natillerapp"
                 class="auth-isotipo-img"
-                width="64"
-                height="64"
+                width="104"
+                height="104"
                 decoding="async"
                 draggable="false"
               />
             </div>
-            <h1 class="text-2xl font-bold tracking-tight">
+            <h1 class="auth-brand-title--mobile">
               <AppBrand class="text-white" />
             </h1>
           </div>
@@ -363,10 +363,19 @@ const currentYear = computed(() => new Date().getFullYear())
   pointer-events: none;
 }
 
-.auth-isotipo-ring--sm {
-  width: 4rem;
-  height: 4rem;
-  margin-inline-end: -0.25rem;
+/* Cabecera auth (móvil / tablet apilada): logo más legible en pantallas táctiles */
+.auth-isotipo-ring--mobile {
+  width: 6.5rem;
+  height: 6.5rem;
+  margin-inline-end: -0.3rem;
+}
+
+@media (min-width: 640px) {
+  .auth-isotipo-ring--mobile {
+    width: 7rem;
+    height: 7rem;
+    margin-inline-end: -0.35rem;
+  }
 }
 
 .auth-isotipo-img {
@@ -390,6 +399,21 @@ const currentYear = computed(() => new Date().getFullYear())
   line-height: 1.08;
 }
 
+.auth-brand-title--mobile {
+  margin: 0;
+  padding: 0;
+  font-size: clamp(1.875rem, 5.5vw, 2.375rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+@media (min-width: 640px) {
+  .auth-brand-title--mobile {
+    font-size: clamp(2.125rem, 4.2vw, 2.625rem);
+  }
+}
+
 /* ── "AHORRO COMUNITARIO" ── */
 .auth-subtitle {
   margin-top: 0;
@@ -401,10 +425,17 @@ const currentYear = computed(() => new Date().getFullYear())
 }
 
 .auth-subtitle--sm {
-  margin-top: 0.25rem;
-  font-size: 0.5625rem;
-  letter-spacing: 0.28em;
+  margin-top: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.27em;
   color: hsl(131 26% 72%);
+}
+
+@media (min-width: 640px) {
+  .auth-subtitle--sm {
+    font-size: 0.65rem;
+    letter-spacing: 0.28em;
+  }
 }
 
 /* ── Descripción ── */
@@ -504,7 +535,13 @@ const currentYear = computed(() => new Date().getFullYear())
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
-  min-height: 10.5rem;
+  min-height: 11rem;
+}
+
+@media (min-width: 640px) {
+  .auth-mobile-header {
+    min-height: 12rem;
+  }
 }
 
 .auth-mobile-form {

@@ -261,7 +261,7 @@
     <!-- Sección de Natilleras -->
     <div class="relative animate-fade-in-up stagger-5">
       <!-- Pestañas de navegación móvil -->
-      <div class="sm:hidden mb-4">
+      <div v-if="todasLasNatilleras.length > 0" class="sm:hidden mb-4">
         <div class="bg-gray-100 rounded-xl p-1 flex gap-1 mb-4">
           <button
             @click="vistaActiva = 'todas'"
@@ -321,7 +321,7 @@
         </div>
 
         <!-- Barra de Filtro Principal (Tipo) -->
-        <div class="flex flex-wrap gap-2">
+        <div v-if="todasLasNatilleras.length > 0" class="flex flex-wrap gap-2">
           <button
             @click="vistaActiva = 'todas'"
             :class="[
@@ -378,7 +378,7 @@
         <h2 class="text-xl font-display font-bold text-gray-800">
           Tus Natilleras
         </h2>
-        <div class="flex items-center gap-2">
+        <div v-if="todasLasNatilleras.length > 0" class="flex items-center gap-2">
           <button 
             @click="filtro = 'activa'"
             :class="[
@@ -401,14 +401,14 @@
           >
             Cerradas
           </button>
-          <button class="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
+          <button type="button" class="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">
             <FunnelIcon class="w-4 h-4" />
           </button>
         </div>
       </div>
 
       <!-- Barra de Filtro Secundaria (Estado) desktop -->
-      <div class="hidden sm:flex items-center gap-3 mb-6">
+      <div v-if="todasLasNatilleras.length > 0" class="hidden sm:flex items-center gap-3 mb-6">
         <span class="text-sm font-semibold text-gray-700">ESTADO:</span>
         <div class="flex gap-2">
           <button 
@@ -455,25 +455,22 @@
 
       <!-- Vista: Todas (Propias + Compartidas) -->
       <template v-else-if="vistaActiva === 'todas'">
-        <div v-if="todasLasNatillerasFiltradas.length === 0" class="relative bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/20 rounded-3xl p-8 sm:p-12 border border-purple-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-          <!-- Círculos decorativos -->
-          <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-purple-400/10 to-indigo-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-indigo-400/10 to-purple-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-          
-          <div class="relative z-10">
-            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-              <Squares2X2Icon class="w-10 h-10 text-white" />
-            </div>
-            <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
-              {{ filtro === 'todas' ? 'No tienes natilleras aún' : `No hay natilleras ${filtro}s` }}
-            </h3>
-            <p class="text-gray-600 mb-8 text-sm sm:text-base">
-              Crea tu primera natillera y comienza a ahorrar con tu comunidad
+        <div v-if="todasLasNatillerasFiltradas.length === 0" class="w-full flex justify-center">
+          <DashboardEmptySinNatilleras v-if="todasLasNatilleras.length === 0" />
+          <div
+            v-else
+            class="w-full max-w-md rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center shadow-sm"
+          >
+            <p class="text-gray-800 font-semibold">
+              {{ filtro === 'activa' ? 'No hay natilleras activas' : 'No hay natilleras cerradas' }} con el filtro actual.
             </p>
-            <router-link to="/natilleras/crear" class="btn-primary inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
-              <PlusIcon class="w-5 h-5" />
-              Crear Primera Natillera
-            </router-link>
+            <button
+              type="button"
+              class="mt-4 text-sm font-semibold text-green-700 underline decoration-green-600/40 underline-offset-2 hover:text-green-800"
+              @click="filtro = 'todas'"
+            >
+              Ver todas
+            </button>
           </div>
         </div>
 
@@ -655,25 +652,22 @@
 
       <!-- Vista: Mis Natilleras (propias) -->
       <template v-else-if="vistaActiva === 'propias'">
-        <div v-if="natillerasFiltradas.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-          <!-- Círculos decorativos -->
-          <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-          <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-          
-          <div class="relative z-10">
-            <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
-              <BanknotesIcon class="w-10 h-10 text-white" />
-            </div>
-            <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
-              {{ filtro === 'todas' ? 'No tienes natilleras aún' : `No hay natilleras ${filtro}s` }}
-            </h3>
-            <p class="text-gray-600 mb-8 text-sm sm:text-base">
-              Crea tu primera natillera y comienza a ahorrar con tu comunidad
+        <div v-if="natillerasFiltradas.length === 0" class="w-full flex justify-center">
+          <DashboardEmptySinNatilleras v-if="cantidadNatillerasPropiasUsuario === 0" />
+          <div
+            v-else
+            class="w-full max-w-md rounded-2xl border border-gray-200 bg-white px-6 py-10 text-center shadow-sm"
+          >
+            <p class="text-gray-800 font-semibold">
+              {{ filtro === 'activa' ? 'No hay natilleras activas' : 'No hay natilleras cerradas' }} en tus natilleras.
             </p>
-            <router-link to="/natilleras/crear" class="btn-primary inline-flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
-              <PlusIcon class="w-5 h-5" />
-              Crear Primera Natillera
-            </router-link>
+            <button
+              type="button"
+              class="mt-4 text-sm font-semibold text-green-700 underline decoration-green-600/40 underline-offset-2 hover:text-green-800"
+              @click="filtro = 'todas'"
+            >
+              Ver todas
+            </button>
           </div>
         </div>
 
@@ -983,18 +977,22 @@
 
       <!-- Vista: Como socio -->
       <template v-else-if="vistaActiva === 'socio'">
-        <div class="relative bg-gradient-to-br from-white via-orange-50/30 to-amber-50/20 rounded-3xl p-8 sm:p-12 border border-orange-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-          <div class="relative z-10">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 mb-6">
-              <UserIcon class="w-10 h-10 text-orange-600" />
-            </div>
-            <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-3">
-              Natilleras como socio
-            </h3>
-            <p class="text-gray-600 mt-2 text-base">
-              Esta funcionalidad está en desarrollo. Aquí aparecerán las natilleras donde participas como socio.
-            </p>
+        <div v-if="!esSocioEnAlgunaNatillera" class="w-full flex justify-center">
+          <DashboardEmptySinNatilleras />
+        </div>
+        <div
+          v-else
+          class="relative rounded-2xl border border-orange-200/70 bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 p-8 sm:p-10 text-center shadow-sm"
+        >
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 mb-4">
+            <UserIcon class="w-8 h-8 text-orange-600" />
           </div>
+          <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-2">
+            Natilleras como socio
+          </h3>
+          <p class="text-gray-600 text-sm sm:text-base max-w-md mx-auto">
+            Pronto verás aquí las natilleras en las que participas como socio. Mientras tanto, revisa la pestaña «Todas» si te han compartido alguna.
+          </p>
         </div>
       </template>
     </div>
@@ -1107,7 +1105,7 @@
         ></div>
         
         <!-- Modal con animación -->
-        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 border border-gray-200 overflow-hidden transform transition-all duration-700">
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-gray-200 overflow-hidden transform transition-all duration-700">
           <!-- Efectos decorativos de fondo -->
           <div class="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
           <div class="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 animate-pulse" style="animation-delay: 0.5s"></div>
@@ -1115,14 +1113,13 @@
           <div class="relative z-10">
             <!-- Mensaje de Bienvenida -->
             <div class="text-center mb-8 animate-fade-in-up">
-              <!-- Icono animado -->
-              <div class="relative w-20 h-20 mx-auto mb-4">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/50 animate-bounce">
-                  <BanknotesIcon class="w-10 h-10 text-white" />
+              <!-- Icono: círculo mismo tono que el botón principal -->
+              <div class="relative w-[5.25rem] h-[5.25rem] mx-auto mb-4 flex items-center justify-center">
+                <div
+                  class="flex h-full w-full items-center justify-center rounded-full bg-[hsl(152_55%_24%)] text-white shadow-[0_6px_20px_hsla(152,45%,18%,0.28)]"
+                >
+                  <PiggyBankIcon class="w-10 h-10 shrink-0" />
                 </div>
-                <!-- Anillos pulsantes -->
-                <div class="absolute inset-0 rounded-2xl border-4 border-green-400 animate-ping opacity-75"></div>
-                <div class="absolute inset-0 rounded-2xl border-4 border-green-300 animate-ping opacity-50" style="animation-delay: 0.3s"></div>
               </div>
               
               <h2 class="text-2xl font-display font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">
@@ -1136,41 +1133,54 @@
               </p>
             </div>
 
-            <!-- Explicación breve -->
-            <div class="bg-green-50 rounded-xl p-4 mb-6 border border-green-200/50">
-              <p class="text-sm text-gray-700 text-center leading-relaxed">
-                Una natillera te permite gestionar ahorros grupales de forma organizada, llevar control de cuotas, préstamos y actividades con tu comunidad de manera sencilla y eficiente.
-              </p>
-            </div>
+            <div class="h-px w-full max-w-sm mx-auto mb-5 bg-[hsl(120_8%_88%)]" role="presentation" />
 
-            <!-- Botones -->
-            <div class="flex flex-col gap-3">
-              <!-- Botón principal con animación muy visible -->
+            <section
+              class="text-left max-w-sm mx-auto mb-8"
+              aria-labelledby="modal-bienvenida-como-funciona"
+            >
+              <h3
+                id="modal-bienvenida-como-funciona"
+                class="text-[0.6875rem] font-semibold tracking-[0.2em] uppercase text-[hsl(215_18%_38%)] mb-4"
+              >
+                Como funciona
+              </h3>
+              <ul class="m-0 p-0 list-none flex flex-col gap-4">
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
+                  <BanknotesIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                  <span>La natillera te permite realizar ahorro colectivo</span>
+                </li>
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
+                  <UserPlusIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                  <span>Invita a los socios de tu grupo para que se unan</span>
+                </li>
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
+                  <CalendarIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                  <span>Define la cuota y la periodicidad de los pagos</span>
+                </li>
+                <li class="flex gap-3 items-start text-sm font-medium text-[hsl(220_12%_26%)] leading-snug">
+                  <PresentationChartLineIcon class="w-[1.375rem] h-[1.375rem] shrink-0 text-[hsl(152_52%_32%)] mt-0.5" aria-hidden="true" />
+                  <span>Lleva el control de pagos, multas y sorteos</span>
+                </li>
+              </ul>
+            </section>
+
+            <!-- Botones (misma forma píldora que tarjeta vacía; colores distintos) -->
+            <div class="flex flex-col gap-3 max-w-sm mx-auto w-full">
               <router-link
                 :to="esSocioEnAlgunaNatillera ? '/dashboard' : '/natilleras/crear'"
                 @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
-                class="relative w-full px-6 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-2xl hover:shadow-green-500/50 transform hover:scale-[1.03] active:scale-[0.97] flex items-center justify-center gap-2 text-lg overflow-hidden group animate-pulse-button"
-                style="animation: pulse-glow 2s ease-in-out infinite, scale-bounce 1.5s ease-in-out infinite;"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-white bg-[hsl(152_55%_24%)] hover:bg-[hsl(152_58%_20%)] shadow-[0_6px_20px_hsla(152,45%,18%,0.28)] hover:shadow-[0_8px_24px_hsla(152,45%,16%,0.32)] transition-[background,box-shadow,transform] active:scale-[0.98]"
               >
-                <!-- Efecto de brillo animado continuo -->
-                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" style="animation: shimmer 2s linear infinite;"></div>
-                <!-- Anillos de pulso múltiples -->
-                <div class="absolute inset-0 rounded-xl bg-green-400 opacity-0 animate-ping-ring" style="animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-                <div class="absolute inset-0 rounded-xl bg-green-300 opacity-0 animate-ping-ring" style="animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite 0.5s;"></div>
-                <!-- Borde brillante animado -->
-                <div class="absolute inset-0 rounded-xl border-2 border-white/50 animate-border-pulse" style="animation: border-pulse 1.5s ease-in-out infinite;"></div>
-                <!-- Contenido del botón -->
-                <div class="relative z-10 flex items-center gap-2 animate-content-bounce" style="animation: content-bounce 2s ease-in-out infinite;">
-                  <PlusIcon v-if="!esSocioEnAlgunaNatillera" class="w-6 h-6 animate-spin-slow" style="animation: spin-slow 3s linear infinite;" />
-                  <ArrowRightIcon v-else class="w-6 h-6 animate-bounce" style="animation: bounce 1s ease-in-out infinite;" />
-                  <span class="font-bold">{{ esSocioEnAlgunaNatillera ? 'Navegar como socio' : 'Crear nueva natillera' }}</span>
-                </div>
+                <span v-if="!esSocioEnAlgunaNatillera" class="text-xl font-semibold leading-none" aria-hidden="true">+</span>
+                <ArrowRightIcon v-else class="w-5 h-5 shrink-0" aria-hidden="true" />
+                <span>{{ esSocioEnAlgunaNatillera ? 'Navegar como socio' : 'Crear mi primera natillera' }}</span>
               </router-link>
 
-              <!-- Botón para crear más tarde -->
               <button
+                type="button"
                 @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
-                class="w-full px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-50 hover:from-gray-200 hover:to-gray-100 text-gray-700 font-semibold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98]"
+                class="inline-flex w-full items-center justify-center rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-[hsl(220_12%_26%)] bg-[hsl(120_12%_97%)] border border-[hsl(120_8%_88%)] hover:bg-[hsl(120_10%_94%)] hover:border-[hsl(120_8%_82%)] shadow-[0_4px_14px_hsla(152,20%,12%,0.08)] transition-[background,border-color,box-shadow,transform] active:scale-[0.98]"
               >
                 Crear más tarde
               </button>
@@ -1194,6 +1204,8 @@ import { getNatilleraAvatarUrl, getAvatarUrl } from '../utils/avatars'
 import { formatDate } from '../utils/formatDate'
 import LoadingScreen from '../components/LoadingScreen.vue'
 import ModalWrapper from '../components/ModalWrapper.vue'
+import DashboardEmptySinNatilleras from '../components/DashboardEmptySinNatilleras.vue'
+import PiggyBankIcon from '../components/icons/PiggyBankIcon.vue'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { 
   BanknotesIcon, 
@@ -1216,7 +1228,9 @@ import {
   FunnelIcon,
   ChevronUpIcon,
   CalendarIcon,
-  MapPinIcon
+  MapPinIcon,
+  UserPlusIcon,
+  PresentationChartLineIcon
 } from '@heroicons/vue/24/outline'
 import { MapPinIcon as MapPinIconSolid } from '@heroicons/vue/24/solid'
 
@@ -1417,6 +1431,13 @@ const natillerasCompartidasFiltradas = computed(() => {
     ? natillerasStore.natillerasCompartidas
     : natillerasStore.natillerasCompartidas.filter(n => n.estado === filtro.value)
   return ordenarPineadasPrimero(list)
+})
+
+/** Natilleras creadas por el usuario (admin), para vacíos en pestaña «Mis natilleras». */
+const cantidadNatillerasPropiasUsuario = computed(() => {
+  const uid = usuarioAutenticado.value?.id
+  if (!uid) return 0
+  return natillerasStore.natilleras.filter((n) => n.admin_id === uid).length
 })
 
 // Combinar natilleras propias y compartidas con flag de diferenciación

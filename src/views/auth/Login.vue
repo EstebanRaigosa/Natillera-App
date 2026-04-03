@@ -90,8 +90,8 @@
         </Transition>
 
         <!-- Login button -->
-        <button type="submit" class="login-btn-primary w-full" :disabled="authStore.loading">
-          <span v-if="authStore.loading" class="animate-spin inline-flex">
+        <button type="submit" class="login-btn-primary w-full" :disabled="cargaAuthVisible">
+          <span v-if="cargaAuthVisible" class="animate-spin inline-flex">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -177,10 +177,10 @@
           <button
             type="button"
             @click="handleVerificarOTP"
-            :disabled="authStore.loading || codigoOTP.length !== 6"
+            :disabled="cargaAuthVisible || codigoOTP.length !== 6"
             class="login-btn-primary w-full"
           >
-            <span v-if="authStore.loading" class="animate-spin inline-flex">
+            <span v-if="cargaAuthVisible" class="animate-spin inline-flex">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -218,7 +218,7 @@
         v-if="loginMethod === 'email'"
         type="button"
         @click="handleGoogleLogin"
-        :disabled="authStore.loading"
+        :disabled="cargaAuthVisible"
         class="login-btn-google"
       >
         <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -405,7 +405,7 @@
           <button
             type="button"
             @click="handleGoogleLoginFromModal"
-            :disabled="authStore.loading"
+            :disabled="cargaAuthVisible"
             class="login-btn-google"
           >
             <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -423,7 +423,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
@@ -434,6 +434,10 @@ import { resolvePostLoginLocation } from '../../utils/postLoginRoute'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+/** Cubre credenciales + resolvePostLoginLocation + navegación (evita “hueco” sin feedback tras signIn). */
+const sesionEnProceso = ref(false)
+const cargaAuthVisible = computed(() => authStore.loading || sesionEnProceso.value)
 
 const isDevMode = isDev || isLocalhost
 
@@ -464,9 +468,14 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   if (isAuthenticated && showRegistroModal.value) {
     if (authStore.userEmail && authStore.userEmail !== 'admin@gmail.com') {
       showRegistroModal.value = false
+      sesionEnProceso.value = true
       setTimeout(async () => {
-        const loc = await resolvePostLoginLocation(authStore.user)
-        router.push(loc)
+        try {
+          const loc = await resolvePostLoginLocation(authStore.user)
+          await router.push(loc)
+        } finally {
+          sesionEnProceso.value = false
+        }
       }, 300)
     }
   }
@@ -559,14 +568,20 @@ async function handleForgotPassword() {
 
 async function handleLogin() {
   errorMessage.value = ''
-  const result = await authStore.login(email.value, password.value, {
-    rememberMe: rememberMe.value,
-  })
-  if (result.success) {
-    const loc = await resolvePostLoginLocation(authStore.user)
-    router.push(loc)
-  } else {
-    errorMessage.value = result.error
+  sesionEnProceso.value = true
+  await nextTick()
+  try {
+    const result = await authStore.login(email.value, password.value, {
+      rememberMe: rememberMe.value,
+    })
+    if (result.success) {
+      const loc = await resolvePostLoginLocation(authStore.user)
+      await router.push(loc)
+    } else {
+      errorMessage.value = result.error
+    }
+  } finally {
+    sesionEnProceso.value = false
   }
 }
 
@@ -635,8 +650,14 @@ async function handleVerificarOTP() {
     if (result.requiereRegistro) {
       showRegistroModal.value = true
     } else {
-      const loc = await resolvePostLoginLocation(authStore.user)
-      router.push(loc)
+      sesionEnProceso.value = true
+      await nextTick()
+      try {
+        const loc = await resolvePostLoginLocation(authStore.user)
+        await router.push(loc)
+      } finally {
+        sesionEnProceso.value = false
+      }
     }
   } else {
     errorMessageOTP.value = result.error || 'Código OTP inválido. Por favor verifica el código e inténtalo nuevamente.'
@@ -649,16 +670,22 @@ async function handleCrearCuenta() {
     errorMessageOTP.value = 'Por favor ingresa tu nombre completo'
     return
   }
-  const result = await authStore.loginConTelefono(
-    telefono.value.trim(),
-    codigoOTP.value,
-    nombreUsuario.value.trim()
-  )
-  if (result.success) {
-    const loc = await resolvePostLoginLocation(authStore.user)
-    router.push(loc)
-  } else {
-    errorMessageOTP.value = result.error || 'Error al crear la cuenta'
+  sesionEnProceso.value = true
+  await nextTick()
+  try {
+    const result = await authStore.loginConTelefono(
+      telefono.value.trim(),
+      codigoOTP.value,
+      nombreUsuario.value.trim()
+    )
+    if (result.success) {
+      const loc = await resolvePostLoginLocation(authStore.user)
+      await router.push(loc)
+    } else {
+      errorMessageOTP.value = result.error || 'Error al crear la cuenta'
+    }
+  } finally {
+    sesionEnProceso.value = false
   }
 }
 
@@ -731,19 +758,27 @@ function resetearEstadoTelefono() {
   display: block;
   min-height: 3.25rem;
   overflow: hidden;
-  border: 1.5px solid hsl(var(--border));
+  border: 1.5px solid hsl(152 22% 86%);
+  border-left: 3px solid hsl(152 50% 34%);
   border-radius: 0.75rem;
-  background: hsl(152 18% 99%);
-  box-shadow: inset 0 1px 2px hsl(152 15% 20% / 0.04);
+  background: linear-gradient(
+    to right,
+    hsl(152 35% 97% / 0.9) 0,
+    hsl(152 18% 99%) 0.65rem
+  );
+  box-shadow:
+    inset 0 1px 2px hsl(152 20% 25% / 0.05),
+    0 1px 0 hsl(152 40% 98%);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .login-input-wrapper:focus-within {
-  border-color: hsl(var(--primary));
+  border-color: hsl(152 45% 42%);
+  border-left-color: hsl(152 55% 28%);
   background: #fff;
   box-shadow:
     inset 0 1px 2px hsl(152 15% 20% / 0.03),
-    0 0 0 3px hsl(var(--primary) / 0.12);
+    0 0 0 3px hsl(152 55% 40% / 0.14);
 }
 
 /* Fila: input flexible + botón ojo (sin position absolute → no se cae debajo) */
@@ -784,16 +819,16 @@ function resetearEstadoTelefono() {
   margin: 0;
   padding: 0;
   border: none;
-  border-left: 1px solid hsl(var(--border) / 0.65);
-  background: hsl(152 12% 96% / 0.85);
-  color: hsl(var(--muted-foreground));
+  border-left: 1px solid hsl(152 28% 82%);
+  background: hsl(152 22% 95% / 0.95);
+  color: hsl(152 22% 38%);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .login-input-toggle:hover {
-  background: hsl(152 18% 92% / 0.95);
-  color: hsl(var(--foreground));
+  background: hsl(152 28% 90% / 0.98);
+  color: hsl(152 50% 26%);
 }
 
 .login-input-toggle:focus-visible {
@@ -808,11 +843,13 @@ function resetearEstadoTelefono() {
 }
 
 .login-input-wrapper--password:focus-within .login-input-toggle {
-  border-left-color: hsl(var(--primary) / 0.25);
+  border-left-color: hsl(152 45% 70%);
+  background: hsl(152 30% 97%);
+  color: hsl(152 48% 30%);
 }
 
 .login-input::placeholder {
-  color: hsl(var(--muted-foreground));
+  color: hsl(152 14% 48% / 0.72);
   font-weight: 400;
 }
 
