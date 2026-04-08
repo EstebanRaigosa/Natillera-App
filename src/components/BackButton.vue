@@ -15,8 +15,10 @@
 </template>
 
 <script setup>
+import { inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import { NATILLERAPP_MODAL_STACK_KEY } from '../composables/useModalStack'
 
 const props = defineProps({
   to: {
@@ -31,8 +33,14 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const modalStack = inject(NATILLERAPP_MODAL_STACK_KEY, null)
 
 function volverAtras() {
+  // Mientras haya modal registrada en la vista, solo cerrar capas — no navegar con router.
+  if (modalStack?.hasOpenModal?.value) {
+    modalStack.requestCloseTop()
+    return
+  }
   if (props.to) {
     // Validar que la ruta no contenga "undefined" o "null"
     if (props.to.includes('undefined') || props.to.includes('null')) {

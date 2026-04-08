@@ -318,18 +318,22 @@
   transition: all 0.3s ease;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — paleta natillera (@theme), alineado con CTAs y superficies */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded-full;
+  @apply rounded-full bg-natillera-100/90;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-natillera-300 rounded-full hover:bg-natillera-400 transition-colors;
+  @apply rounded-full bg-natillera-500 transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-natillera-600;
 }
 
 /* Hide scrollbar but allow scrolling */
@@ -342,26 +346,67 @@
   display: none;
 }
 
-/* Subtle scrollbar for horizontal scrolling */
+/* Scrollbar fina (modales, listas): mismos tokens que la barra global */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #86efac #f3f4f6;
+  scrollbar-color: var(--color-natillera-500) var(--color-natillera-100);
 }
 
 .scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
   height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  @apply bg-gray-100 rounded-full;
+  @apply rounded-full bg-natillera-100/90;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  @apply bg-natillera-300 rounded-full transition-colors;
+  @apply rounded-full bg-natillera-500 transition-colors;
 }
 
-.scrollbar-thin:hover::-webkit-scrollbar-thumb {
-  @apply bg-natillera-400;
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-natillera-600;
+}
+
+/* Hint «Desliza para ver más» (modales con scroll) — pastilla marca #1B5E37, animación suave */
+.desliza-modal-hint {
+  animation: desliza-modal-hint-float 2.6s ease-in-out infinite;
+}
+
+.desliza-modal-hint__chevron {
+  animation: desliza-modal-hint-chevron 1.5s ease-in-out infinite;
+}
+
+@keyframes desliza-modal-hint-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 10px 28px -8px rgba(27, 94, 55, 0.45);
+  }
+  50% {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 32px -6px rgba(27, 94, 55, 0.55);
+  }
+}
+
+@keyframes desliza-modal-hint-chevron {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.88;
+  }
+  50% {
+    transform: translateY(5px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desliza-modal-hint,
+  .desliza-modal-hint__chevron {
+    animation: none;
+  }
 }
 
 /* Animations */

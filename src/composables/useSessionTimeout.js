@@ -1,41 +1,55 @@
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { useAuditoria, registrarAuditoriaEnSegundoPlano } from './useAuditoria'
+import { supabase } from '../lib/supabase'
 
 /**
  * Composable para manejar el timeout de sesión por inactividad
- * @param {number} timeoutMinutes - Minutos de inactividad antes de cerrar sesión (default: 10)
+ * @param {number} timeoutMinutes - Minutos de inactividad antes de cerrar sesión (default: 15)
  */
-export function useSessionTimeout(timeoutMinutes = 10) {
-  const router = useRouter()
+export function useSessionTimeout(timeoutMinutes = 15) {
   const authStore = useAuthStore()
   const timeoutId = ref(null)
-  const backgroundTimeoutId = ref(null) // Timer para cuando la página está en background
-  const warningShown = ref(false)
+  const backgroundTimeoutId = ref(null)
   const listenersActive = ref(false)
   
-  // Clave para guardar el timestamp de cuando la página pasó a background
   const BACKGROUND_TIMESTAMP_KEY = 'natillera_background_timestamp'
   
-  // Convertir minutos a milisegundos
   const timeoutMs = timeoutMinutes * 60 * 1000
-  // 5 minutos en milisegundos para el timeout de background
-  const backgroundTimeoutMs = 5 * 60 * 1000
+  // 10 minutos para el timeout de background
+  const backgroundTimeoutMs = 10 * 60 * 1000
+
+  // Throttle: intervalo mínimo entre resets del timer (evita llamadas excesivas por mousemove, etc.)
+  let lastActivityTime = 0
+  const ACTIVITY_THROTTLE_MS = 30 * 1000 // 30 segundos
+
+  // Validación periódica del token contra el servidor
+  let lastSessionCheck = Date.now()
+  const SESSION_CHECK_INTERVAL_MS = 4 * 60 * 1000 // cada 4 minutos de actividad
+
+  /** Errores de Supabase que indican sesión realmente inválida (no fallo de red al reanudar) */
+  function isDefinitiveAuthFailure(error) {
+    if (!error) return false
+    const code = String(error.code || '')
+    const msg = String(error.message || error).toLowerCase()
+    if (code === 'session_not_found' || code === 'refresh_token_not_found') return true
+    if (msg.includes('invalid jwt') || msg.includes('jwt expired')) return true
+    if (msg.includes('session') && (msg.includes('missing') || msg.includes('not found'))) return true
+    return false
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
   
   /**
    * Reinicia el timer de inactividad
    */
   function resetTimer() {
-    // Limpiar timer anterior
     if (timeoutId.value) {
       clearTimeout(timeoutId.value)
       timeoutId.value = null
     }
     
-    warningShown.value = false
-    
-    // Solo establecer el timer si el usuario está autenticado
     if (authStore.isAuthenticated) {
       timeoutId.value = setTimeout(() => {
         handleTimeout()
@@ -47,48 +61,85 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    * Maneja el timeout cuando se completa el período de inactividad
    */
   async function handleTimeout() {
-    // Verificar nuevamente si está autenticado antes de cerrar
     if (authStore.isAuthenticated) {
-      // NO registrar auditoría aquí porque logout() ya lo hace
-      // Además, si lo hacemos aquí con registrarAuditoriaEnSegundoPlano,
-      // puede ejecutarse después de que auth.uid() sea NULL
-      
-      // Cerrar sesión (logout() ya registra la auditoría antes de cerrar)
       await authStore.logout()
-      
-      // Recargar la página para garantizar que se cierre todo lo que el usuario tenía abierto
       window.location.reload()
     }
   }
+
+  /**
+   * Valida la sesión contra el servidor. En móvil, al volver de otra app la red
+   * suele fallar transitoriamente: reintentamos y solo cerramos sesión ante fallo
+   * de autenticación claro, no ante errores de red.
+   */
+  async function validateSession() {
+    if (!authStore.isAuthenticated) return
+
+    const delays = [0, 400, 1200]
+    let lastError = null
+
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i] > 0) await sleep(delays[i])
+
+      try {
+        const { data, error } = await supabase.auth.getUser()
+        lastError = error
+
+        if (!error && data?.user) return
+
+        if (error && isDefinitiveAuthFailure(error)) {
+          await authStore.logout()
+          window.location.reload()
+          return
+        }
+
+        // Sin usuario pero sin error explícito (raro): no forzar logout en primer intento
+        if (!data?.user && !error) continue
+      } catch (e) {
+        lastError = e
+      }
+    }
+
+    // Tras reintentos: solo cerrar si el último error sigue siendo fallo de auth
+    if (lastError && isDefinitiveAuthFailure(lastError)) {
+      await authStore.logout()
+      window.location.reload()
+    }
+    // Red / timeout: no cerrar; Supabase autoRefresh y próxima validación lo resolverán
+  }
   
   /**
-   * Maneja los eventos de actividad del usuario
+   * Maneja los eventos de actividad del usuario (throttled)
    */
   function handleActivity() {
-    // Solo resetear si el usuario está autenticado
-    if (authStore.isAuthenticated) {
-      resetTimer()
+    if (!authStore.isAuthenticated) return
+
+    const now = Date.now()
+
+    if (now - lastActivityTime < ACTIVITY_THROTTLE_MS) return
+    lastActivityTime = now
+    
+    resetTimer()
+
+    // Cada SESSION_CHECK_INTERVAL_MS de uso activo, validar el token con el servidor
+    if (now - lastSessionCheck >= SESSION_CHECK_INTERVAL_MS) {
+      lastSessionCheck = now
+      validateSession()
     }
   }
   
   /**
-   * Verifica si pasaron más de 5 minutos desde que la página pasó a background
+   * Verifica si pasaron más de 10 minutos desde que la página pasó a background
    */
   function checkBackgroundTimeout() {
     try {
       const storedTimestamp = localStorage.getItem(BACKGROUND_TIMESTAMP_KEY)
-      if (!storedTimestamp) {
-        return false
-      }
+      if (!storedTimestamp) return false
 
       const backgroundTime = parseInt(storedTimestamp, 10)
       const now = Date.now()
-      const timeElapsed = now - backgroundTime
-
-      // Si pasaron más de 5 minutos, cerrar sesión
-      return timeElapsed >= backgroundTimeoutMs
-    } catch (error) {
-      console.error('Error verificando timeout de background:', error)
+      return (now - backgroundTime) >= backgroundTimeoutMs
+    } catch {
       return false
     }
   }
@@ -97,21 +148,15 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    * Maneja el cierre de sesión cuando la página está en background por mucho tiempo
    */
   async function handleBackgroundTimeout() {
-    // Verificar nuevamente si está autenticado antes de cerrar
     if (authStore.isAuthenticated) {
-      // Limpiar el timestamp guardado
       localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
-      
-      // Cerrar sesión (logout() ya registra la auditoría antes de cerrar)
       await authStore.logout()
-      
-      // Recargar la página para garantizar que se cierre todo lo que el usuario tenía abierto
       window.location.reload()
     }
   }
 
   /**
-   * Marca que la página pasó a background
+   * Marca que la página pasó a background (solo visibilitychange)
    */
   function markAsBackground() {
     if (!authStore.isAuthenticated) {
@@ -119,16 +164,14 @@ export function useSessionTimeout(timeoutMinutes = 10) {
       return
     }
 
-    // Guardar timestamp actual
-    const now = Date.now()
-    localStorage.setItem(BACKGROUND_TIMESTAMP_KEY, now.toString())
+    localStorage.setItem(BACKGROUND_TIMESTAMP_KEY, Date.now().toString())
     
-    // También iniciar timer como respaldo (por si el navegador no se suspende)
     if (backgroundTimeoutId.value) {
       clearTimeout(backgroundTimeoutId.value)
       backgroundTimeoutId.value = null
     }
     
+    // Timer de respaldo por si el navegador no suspende JS en background
     backgroundTimeoutId.value = setTimeout(() => {
       handleBackgroundTimeout()
     }, backgroundTimeoutMs)
@@ -143,30 +186,29 @@ export function useSessionTimeout(timeoutMinutes = 10) {
       return
     }
 
-    // Verificar cuánto tiempo pasó
     const shouldLogout = checkBackgroundTimeout()
     
-    // Limpiar el timestamp guardado
     localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
     
-    // Cancelar el timer de background
     if (backgroundTimeoutId.value) {
       clearTimeout(backgroundTimeoutId.value)
       backgroundTimeoutId.value = null
     }
     
-    // Si pasaron más de 5 minutos, cerrar sesión
     if (shouldLogout) {
       handleBackgroundTimeout()
       return
     }
-    
-    // Reiniciar el timer normal de inactividad
+
+    // No llamar getUser() aquí: en móvil al volver de otra app la red aún no está
+    // lista y un falso negativo provocaba logout + reload constante.
+    // La sesión se valida en uso activo (intervalo) y Supabase refresca el token solo.
+
     resetTimer()
   }
 
   /**
-   * Maneja el cambio de visibilidad de la página
+   * visibilitychange — principal para mobile y desktop
    */
   function handleVisibilityChange() {
     if (document.hidden) {
@@ -177,35 +219,18 @@ export function useSessionTimeout(timeoutMinutes = 10) {
   }
 
   /**
-   * Maneja cuando la ventana pierde el foco (evento blur)
-   */
-  function handleWindowBlur() {
-    markAsBackground()
-  }
-
-  /**
-   * Maneja cuando la ventana recupera el foco (evento focus)
-   */
-  function handleWindowFocus() {
-    handleReturnToForeground()
-  }
-
-  /**
-   * Maneja cuando la página se oculta (evento pagehide)
+   * pagehide — solo para BFCache (event.persisted)
    */
   function handlePageHide(event) {
-    // Si la página se está descargando (navegando a otra página), no hacer nada
-    // Solo marcar como background si es persistente
     if (event.persisted) {
       markAsBackground()
     }
   }
 
   /**
-   * Maneja cuando la página se muestra (evento pageshow)
+   * pageshow — solo para BFCache (event.persisted)
    */
   function handlePageShow(event) {
-    // Si la página se cargó desde cache, verificar timeout
     if (event.persisted) {
       handleReturnToForeground()
     }
@@ -215,16 +240,12 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    * Inicializa los listeners de eventos
    */
   function setupEventListeners() {
-    // Evitar agregar listeners duplicados
-    if (listenersActive.value) {
-      return
-    }
+    if (listenersActive.value) return
     
-    // Eventos que indican actividad del usuario
     const events = [
       'mousedown',
       'mousemove',
-      'keypress',
+      'keydown',
       'scroll',
       'touchstart',
       'click'
@@ -234,17 +255,14 @@ export function useSessionTimeout(timeoutMinutes = 10) {
       document.addEventListener(event, handleActivity, { passive: true })
     })
     
-    // Detectar cambios de visibilidad de la página (principal - funciona mejor en móviles)
+    // visibilitychange — funciona en mobile y desktop para detectar
+    // cambio de pestaña, minimizar ventana, bloqueo de pantalla, cambio de app
     document.addEventListener('visibilitychange', handleVisibilityChange)
     
-    // Detectar cuando la ventana pierde/recupera el foco (respaldo - funciona mejor en desktop)
-    window.addEventListener('blur', handleWindowBlur)
-    window.addEventListener('focus', handleWindowFocus)
-    
-    // También detectar cuando la ventana recupera el foco para resetear timer de actividad
+    // focus solo como indicador de actividad (NO dispara background timeout)
     window.addEventListener('focus', handleActivity)
     
-    // Detectar cuando la página se oculta/muestra (respaldo adicional)
+    // BFCache
     window.addEventListener('pagehide', handlePageHide)
     window.addEventListener('pageshow', handlePageShow)
     
@@ -255,14 +273,12 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    * Limpia los listeners de eventos
    */
   function cleanupEventListeners() {
-    if (!listenersActive.value) {
-      return
-    }
+    if (!listenersActive.value) return
     
     const events = [
       'mousedown',
       'mousemove',
-      'keypress',
+      'keydown',
       'scroll',
       'touchstart',
       'click'
@@ -274,8 +290,6 @@ export function useSessionTimeout(timeoutMinutes = 10) {
     
     window.removeEventListener('focus', handleActivity)
     document.removeEventListener('visibilitychange', handleVisibilityChange)
-    window.removeEventListener('blur', handleWindowBlur)
-    window.removeEventListener('focus', handleWindowFocus)
     window.removeEventListener('pagehide', handlePageHide)
     window.removeEventListener('pageshow', handlePageShow)
     
@@ -287,16 +301,13 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    */
   function checkOnStart() {
     if (!authStore.isAuthenticated) {
-      // Limpiar timestamp si no está autenticado
       localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
       return
     }
 
-    // Verificar si hay un timestamp guardado y si pasaron más de 5 minutos
     if (checkBackgroundTimeout()) {
       handleBackgroundTimeout()
     } else {
-      // Limpiar el timestamp si aún no pasaron 5 minutos
       localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
     }
   }
@@ -306,9 +317,9 @@ export function useSessionTimeout(timeoutMinutes = 10) {
    */
   function start() {
     if (authStore.isAuthenticated) {
-      // Primero verificar si debe cerrarse por timeout de background
       checkOnStart()
-      
+      lastActivityTime = Date.now()
+      lastSessionCheck = Date.now()
       resetTimer()
       setupEventListeners()
     }
@@ -326,12 +337,10 @@ export function useSessionTimeout(timeoutMinutes = 10) {
       clearTimeout(backgroundTimeoutId.value)
       backgroundTimeoutId.value = null
     }
-    // Limpiar timestamp al detener
     localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
     cleanupEventListeners()
   }
   
-  // Escuchar cambios de autenticación para iniciar/detener el timer
   function onAuthStateChange() {
     if (authStore.isAuthenticated) {
       start()
@@ -347,4 +356,3 @@ export function useSessionTimeout(timeoutMinutes = 10) {
     onAuthStateChange
   }
 }
-

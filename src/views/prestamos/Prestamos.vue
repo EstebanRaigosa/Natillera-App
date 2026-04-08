@@ -303,36 +303,58 @@
       </div>
     </div>
 
-    <!-- Modal Nuevo Préstamo (paso a paso) -->
+    <!-- Modal Nuevo Préstamo (paso a paso) — patrón ModalWrapper / skill modales -->
     <ModalWrapper
       :show="!!modalNuevoPrestamo"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      card-class="relative w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
-      card-max-width="32rem"
-      @close="cerrarModalNuevoPrestamo()"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white min-h-0"
+      card-max-width="28rem"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con botón atrás y título -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-3 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center gap-3">
+        <!-- Cabecera marca compacta (móvil: flex para X siempre a la derecha; sm+: absoluta sobre bloque centrado) -->
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div
+            class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
+                <CurrencyDollarIcon class="w-5 h-5 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Crear Préstamo</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">{{ ['Monto y socio', 'Plazo e interés', 'Resumen'][pasoNuevoPrestamo] }}</p>
+              </div>
+            </div>
             <button
-              v-if="pasoNuevoPrestamo > 0 && !prestamoRecienCreado"
               type="button"
-              @click="pasoNuevoPrestamo--"
-              class="p-2 -ml-2 rounded-xl hover:bg-white/20 transition-colors"
-              aria-label="Atrás"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 disabled:opacity-50"
+              aria-label="Cerrar"
+              :disabled="loading"
+              @click="requestCloseTopModal"
             >
-              <ArrowLeftIcon class="w-5 h-5" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
-            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-              <CurrencyDollarIcon class="w-5 h-5 text-white" />
+          </div>
+          <div class="relative z-10 hidden w-full text-center px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-5 sm:block sm:pr-14">
+            <button
+              type="button"
+              class="absolute z-20 top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 h-11 w-11 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 disabled:opacity-50"
+              aria-label="Cerrar"
+              :disabled="loading"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+            <div class="w-[3.2rem] h-[3.2rem] mx-auto bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
+              <CurrencyDollarIcon class="w-6 h-6 text-white" />
             </div>
-            <div class="min-w-0">
-              <h3 class="text-lg sm:text-xl font-display font-bold">Crear Préstamo</h3>
-              <p class="text-white/90 text-xs truncate">{{ ['Monto y socio', 'Plazo e interés', 'Resumen'][pasoNuevoPrestamo] }}</p>
-            </div>
+            <h3 class="text-lg font-display font-bold mt-3">Crear Préstamo</h3>
+            <p class="text-white/90 text-xs mt-1">{{ ['Monto y socio', 'Plazo e interés', 'Resumen'][pasoNuevoPrestamo] }}</p>
           </div>
         </div>
 
@@ -358,9 +380,14 @@
           </div>
         </div>
 
-        <!-- Contenido por pasos -->
-        <div ref="modalNuevoPrestamoScrollRef" class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gray-50/50">
-          <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="p-4 sm:p-6">
+        <!-- Contenido por pasos: envoltorio ancla el hint al viewport del cuerpo (evita píldora a mitad en Safari/WebKit) -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="modalNuevoPrestamoScrollRef"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="actualizarIndicadorScrollModalNuevoPrestamo"
+        >
+          <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0">
           <!-- Paso 0: Monto y socio -->
           <div v-show="pasoNuevoPrestamo === 0" class="space-y-4 sm:space-y-5">
           <!-- Selector de Socio -->
@@ -449,6 +476,25 @@
                     No se encontraron socios
                   </div>
                 </div>
+              </div>
+            </div>
+            <div
+              v-if="formPrestamo.socio_natillera_id && !cargandoTotalAhorradoSocio && totalAhorradoInformativoSocio !== null"
+              class="mt-3.5 rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-base font-semibold text-gray-700">Total ahorrado por el socio</span>
+                <span class="text-lg font-bold tabular-nums text-emerald-800 shrink-0">${{ formatMoney(totalAhorradoInformativoSocio) }}</span>
+              </div>
+            </div>
+            <div
+              v-else-if="formPrestamo.socio_natillera_id && cargandoTotalAhorradoSocio"
+              class="mt-3.5 rounded-xl border border-emerald-200 bg-emerald-50/90 px-4 py-3.5 shadow-sm ring-1 ring-emerald-500/15 sm:px-5 sm:py-4"
+              aria-busy="true"
+            >
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-base font-semibold text-gray-700">Total ahorrado por el socio</span>
+                <span class="h-6 w-28 rounded-md bg-emerald-200/70 animate-pulse shrink-0" aria-hidden="true" />
               </div>
             </div>
           </div>
@@ -575,11 +621,12 @@
                 v-model.number="formPrestamo.numero_cuotas"
                 type="number" 
                 class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
-                placeholder="12"
+                :placeholder="String(plazoMaximoCuotasCrear)"
                 min="1"
-                max="36"
+                :max="plazoMaximoCuotasCrear"
                 @focus="$event.target.select()"
                 @click="$event.target.select()"
+                @blur="limitarNumeroCuotasCrearPrestamo"
                 required
               />
             </div>
@@ -589,7 +636,7 @@
                 v-model.number="formPrestamo.interes"
                 type="number" 
                 class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 text-center font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
-                placeholder="2"
+                :placeholder="String(reglasInteresNatillera.porcentaje)"
                 min="0"
                 max="100"
                 step="0.5"
@@ -599,6 +646,12 @@
               />
             </div>
           </div>
+          <p
+            v-if="Number(formPrestamo.numero_cuotas) > plazoMaximoCuotasCrear"
+            class="text-xs text-red-600 font-medium mt-1.5"
+          >
+            El plazo máximo permitido es {{ plazoMaximoCuotasCrear }} cuotas según la configuración de la natillera. Reduce el número de cuotas.
+          </p>
 
           <!-- Fecha de pago (primera cuota) -->
           <div>
@@ -644,11 +697,36 @@
           <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
             <!-- Vista antes de generar: sin comprobante; confirmar desde el footer -->
             <template v-if="!prestamoRecienCreado">
-              <div class="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
+              <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
                 <p class="text-sm font-semibold text-gray-800">Resumen</p>
-                <p class="text-2xl font-bold text-emerald-600">${{ formatMoney(formPrestamo.monto) }}</p>
-                <p class="text-sm text-gray-600">{{ socioSeleccionado?.socio?.nombre }}</p>
-                <p class="text-xs text-gray-500">Cuota: ${{ formatMoney(cuotaMensual) }} · {{ formPrestamo.numero_cuotas }} cuotas</p>
+                <p class="text-lg font-bold text-gray-900 leading-tight">{{ socioSeleccionado?.socio?.nombre || 'Socio' }}</p>
+                <dl class="space-y-2 text-sm text-gray-700">
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-600">Valor del préstamo</dt>
+                    <dd class="font-semibold text-gray-900 tabular-nums">${{ formatMoney(formPrestamo.monto) }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-600">Intereses (total)</dt>
+                    <dd class="font-semibold text-amber-800 tabular-nums">${{ formatMoney(Math.round(interesTotal)) }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-600">Tasa mensual</dt>
+                    <dd class="font-semibold text-gray-900">{{ formPrestamo.interes }}%</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-600">Nº cuotas</dt>
+                    <dd class="font-semibold text-gray-900">{{ formPrestamo.numero_cuotas }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3 border-t border-emerald-200/80 pt-2 mt-1">
+                    <dt class="text-gray-800 font-medium">Total a pagar</dt>
+                    <dd class="font-bold text-emerald-700 tabular-nums">${{ formatMoney(Math.round(montoTotal)) }}</dd>
+                  </div>
+                  <div class="flex justify-between gap-3">
+                    <dt class="text-gray-600">Primera cuota</dt>
+                    <dd class="font-medium text-gray-900">{{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</dd>
+                  </div>
+                </dl>
+                <p class="text-xs text-gray-500">Cuota estimada: ${{ formatMoney(cuotaMensual) }}</p>
               </div>
               <p class="text-xs text-gray-500 text-center">Revisa los datos antes de confirmar.</p>
               <div class="flex items-center gap-2 text-gray-400 text-xs">
@@ -680,8 +758,15 @@
                   <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
                     <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
                     <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(datosComprobanteCreado.monto) }}</p>
-                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
-                    <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.nombreSocio }}</p>
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                      <div style="min-width: 0; flex: 1;">
+                        <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
+                        <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.nombreSocio }}</p>
+                      </div>
+                      <span
+                        style="flex-shrink: 0; align-self: flex-start; font-size: 9px; font-weight: 700; padding: 4px 8px; border-radius: 9999px; white-space: nowrap; line-height: 1.25; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;"
+                      >Al día</span>
+                    </div>
                   </div>
                   <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
                     <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES DEL PRÉSTAMO</p>
@@ -689,7 +774,7 @@
                       <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERÉS MENSUAL</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.interes }}%</p></div>
                       <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">N° DE CUOTAS</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #1f2937;">{{ datosComprobanteCreado.numero_cuotas }}</p></div>
                       <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR CUOTA</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(datosComprobanteCreado.cuotaMensual) }}</p></div>
-                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR A ENTREGAR</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(datosComprobanteCreado.valorAEntregar) }}</p></div>
+                      <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">TOTAL A PAGAR</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(datosComprobanteCreado.totalAPagar) }}</p></div>
                       <div><p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERESES GENERADOS</p><p style="font-weight: 700; font-size: 12px; margin: 0; color: #ea580c;">${{ formatMoney(datosComprobanteCreado.interesTotal) }}</p></div>
                     </div>
                   </div>
@@ -718,257 +803,294 @@
                 </div>
               </div>
               <p class="text-xs text-gray-500 text-center">Préstamo creado. Puedes descargar o compartir el comprobante.</p>
-              <div class="flex flex-col sm:flex-row gap-2">
+              <div class="flex flex-col gap-3 sm:flex-row sm:gap-3">
                 <button
                   type="button"
                   @click="descargarResumenPrestamoNuevo"
                   :disabled="generandoResumenPrestamo"
-                  class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-60"
+                  class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-emerald-500/80 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50/90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-55"
                 >
-                  <ArrowDownTrayIcon class="w-5 h-5" />
-                  {{ generandoResumenPrestamo ? 'Generando...' : 'Descargar' }}
+                  <ArrowDownTrayIcon class="w-5 h-5 text-emerald-600 shrink-0" />
+                  {{ generandoResumenPrestamo ? 'Generando…' : 'Descargar' }}
                 </button>
                 <button
                   type="button"
                   @click="abrirModalCompartirPrestamoWhatsApp"
-                  class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
+                  class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1B5E37] to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-600/25 transition-all hover:from-[#164a2c] hover:to-emerald-700 active:scale-[0.99]"
                 >
-                  <ChatBubbleLeftIcon class="w-5 h-5" />
+                  <ChatBubbleLeftIcon class="w-5 h-5 shrink-0 opacity-95" />
                   Enviar por WhatsApp
                 </button>
               </div>
-              <button type="button" @click="cerrarModalNuevoPrestamo" class="w-full py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-colors">
-                Cerrar
-              </button>
             </template>
+          </div>
+
+          <!-- Acciones por paso (dentro del scroll; pie fijo eliminado) -->
+          <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+            <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
+              <button type="button" @click="requestCloseTopModal" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
+              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+            </div>
+            <div v-else-if="pasoNuevoPrestamo === 1" class="flex gap-2">
+              <button type="button" @click="pasoNuevoPrestamo--" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 transition-colors"><ArrowLeftIcon class="w-4 h-4" /> Atrás</button>
+              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null || formPrestamo.numero_cuotas < 1 || formPrestamo.numero_cuotas > plazoMaximoCuotasCrear" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+            </div>
+            <div v-else-if="!prestamoRecienCreado" class="flex gap-2">
+              <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">Cambiar datos</button>
+              <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center justify-center transition-colors">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
+            </div>
+            <div v-else class="flex gap-2">
+              <button type="button" @click="requestCloseTopModal" class="flex-1 min-h-[48px] py-3 rounded-full bg-gray-100 text-gray-800 font-semibold text-sm hover:bg-gray-200 transition-colors">Cerrar</button>
+            </div>
           </div>
           </form>
         </div>
 
-        <!-- Footer por paso -->
-        <div class="border-t border-gray-100 bg-white px-4 sm:px-5 pt-3 sm:pt-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] flex-shrink-0">
-          <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
-            <button type="button" @click="modalNuevoPrestamo = false" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
-            <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
-          </div>
-          <div v-else-if="pasoNuevoPrestamo === 1" class="flex gap-2">
-            <button type="button" @click="pasoNuevoPrestamo--" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 transition-colors"><ArrowLeftIcon class="w-4 h-4" /> Atrás</button>
-            <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
-          </div>
-          <div v-else-if="!prestamoRecienCreado" class="flex gap-2">
-            <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors">Cambiar Datos</button>
-            <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center justify-center transition-colors">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
-          </div>
-          <div v-else class="flex gap-2">
-            <button type="button" @click="cerrarModalNuevoPrestamo" class="flex-1 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-colors">Cerrar</button>
+          <div
+            v-show="hayMasContenidoAbajoModalNuevoPrestamo"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
+          >
+            <!-- Sombrita / velo inferior: detrás del hint (z-0) -->
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <!-- Pastilla siempre por encima de la sombra -->
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+            >
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
           </div>
         </div>
     </ModalWrapper>
 
-    <!-- Modal Abono -->
+    <!-- Modal Abono — patrón ModalWrapper / Crear préstamo (skill modales) -->
     <ModalWrapper
       :show="!!modalAbono"
       :z-index="60"
-      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white min-h-0"
       card-max-width="28rem"
-      @close="cerrarModalAbono"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div
+            class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
                 <CurrencyDollarIcon class="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Registrar Abono
-                </h3>
-                <p class="text-white/90 text-xs">Registra un pago al préstamo</p>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Registrar abono</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Pago al préstamo</p>
               </div>
             </div>
-            <button 
-              @click="cerrarModalAbono"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 disabled:opacity-50"
+              aria-label="Cerrar"
+              :disabled="loading"
+              @click="requestCloseTopModal"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
+          </div>
+          <div class="relative z-10 hidden w-full text-center px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-5 sm:block sm:pr-14">
+            <button
+              type="button"
+              class="absolute z-20 top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 h-11 w-11 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 disabled:opacity-50"
+              aria-label="Cerrar"
+              :disabled="loading"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+            <div class="w-[3.2rem] h-[3.2rem] mx-auto bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
+              <CurrencyDollarIcon class="w-6 h-6 text-white" />
+            </div>
+            <h3 class="text-lg font-display font-bold mt-3">Registrar abono</h3>
+            <p class="text-white/90 text-xs mt-1">Pago al préstamo</p>
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-white">
-          <form @submit.prevent="handleRegistrarAbono" class="p-4 sm:p-6 space-y-6">
-            <!-- Información del socio y saldo -->
-            <div class="relative bg-gradient-to-br from-natillera-50 via-emerald-50 to-teal-50 border-2 border-natillera-200 rounded-xl p-4 overflow-hidden">
-              <div class="absolute top-0 right-0 w-20 h-20 bg-natillera-200/30 rounded-full -mr-10 -mt-10 blur-xl"></div>
-              <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-3">
-                  <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                    <UserIcon class="w-6 h-6 text-white" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-bold text-gray-800 text-lg truncate">{{ prestamoSeleccionado?.socio_natillera?.socio?.nombre }}</p>
-                    <p class="text-xs text-gray-600">Socio del préstamo</p>
-                  </div>
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="modalAbonoScrollRef"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="actualizarIndicadorScrollModalAbono"
+        >
+          <form @submit.prevent="handleRegistrarAbono" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0 space-y-4 sm:space-y-5">
+            <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <UserIcon class="w-5 h-5 text-white" />
                 </div>
-                <div class="mt-4 pt-4 border-t-2 border-natillera-200/50 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-700">Saldo actual:</span>
-                    <span class="text-2xl font-bold text-natillera-700">${{ formatMoney(prestamoSeleccionado?.saldo_actual) }}</span>
-                  </div>
-                  <div class="grid grid-cols-2 gap-3 pt-3 border-t border-natillera-200/50">
-                    <div class="bg-white/60 rounded-lg p-3 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Valor de la cuota</p>
-                      <p class="text-lg font-bold text-blue-700">${{ formatMoney(calcularCuotaMensualDetalle(prestamoSeleccionado)) }}</p>
-                    </div>
-                    <div class="bg-white/60 rounded-lg p-3 backdrop-blur-sm">
-                      <p class="text-xs text-gray-500 font-medium mb-1">Cuotas restantes</p>
-                      <p class="text-lg font-bold text-purple-700">{{ calcularCuotasRestantes(prestamoSeleccionado) }}</p>
-                    </div>
-                  </div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-gray-800 truncate">{{ prestamoSeleccionado?.socio_natillera?.socio?.nombre }}</p>
+                  <p class="text-xs text-gray-600">Socio</p>
                 </div>
               </div>
+              <dl class="space-y-2 text-sm text-gray-700 border-t border-emerald-200/70 pt-3">
+                <div class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Saldo actual</dt>
+                  <dd class="font-bold text-emerald-800 tabular-nums">${{ formatMoney(prestamoSeleccionado?.saldo_actual) }}</dd>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                  <div class="rounded-lg border border-white/80 bg-white/70 px-3 py-2">
+                    <p class="text-[10px] font-medium uppercase tracking-wide text-gray-500">Cuota</p>
+                    <p class="text-sm font-bold text-gray-900 tabular-nums">${{ formatMoney(calcularCuotaMensualDetalle(prestamoSeleccionado)) }}</p>
+                  </div>
+                  <div class="rounded-lg border border-white/80 bg-white/70 px-3 py-2">
+                    <p class="text-[10px] font-medium uppercase tracking-wide text-gray-500">Restantes</p>
+                    <p class="text-sm font-bold text-gray-900">{{ calcularCuotasRestantes(prestamoSeleccionado) }}</p>
+                  </div>
+                </div>
+              </dl>
             </div>
 
-            <!-- Campo de valor del abono -->
             <div>
-              <label class="label mb-2 flex items-center gap-2">
-                <CurrencyDollarIcon class="w-5 h-5 text-natillera-600" />
-                <span>Valor del abono *</span>
-                <span class="text-xs text-gray-500 font-normal">(Puedes modificar este valor)</span>
-              </label>
+              <label class="block text-sm font-medium text-gray-600 mb-1.5">Valor del abono *</label>
               <div class="relative group">
-                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-natillera-600 font-bold text-xl z-10 pointer-events-none">
-                  $
-                </div>
-                <input 
+                <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-lg z-10 pointer-events-none">$</div>
+                <input
                   ref="inputValorAbonoRef"
                   :value="valorAbonoFormateado"
                   @input="actualizarValorAbono"
                   @focus="$event.target.select()"
-                  type="text" 
+                  type="text"
                   inputmode="numeric"
-                  class="input-field pl-12 pr-4 text-2xl font-bold text-natillera-700 focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 border-2 border-natillera-200 bg-white hover:border-natillera-300 transition-all cursor-text"
+                  class="w-full pl-9 pr-11 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-lg font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
                   placeholder="0"
                   required
                 />
                 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <PencilIcon class="w-5 h-5 text-gray-400 group-hover:text-natillera-500 transition-colors" />
+                  <PencilIcon class="w-5 h-5 text-gray-400 group-hover:text-emerald-600 transition-colors" />
                 </div>
               </div>
-              <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Puedes escribir o modificar el valor directamente
-              </p>
-              
-              <!-- Información del saldo restante -->
-              <div v-if="prestamoSeleccionado?.saldo_actual && formAbono.valor" class="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
-                <div class="flex items-center justify-between">
-                  <span class="text-sm font-semibold text-gray-700">Saldo restante después del abono:</span>
-                  <span class="text-xl font-bold text-green-700">
+              <p class="mt-1.5 text-xs text-gray-500">Puedes modificar el valor a mano.</p>
+
+              <div
+                v-if="prestamoSeleccionado?.saldo_actual && formAbono.valor"
+                class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-sm font-medium text-gray-700">Saldo después del abono</span>
+                  <span class="text-base font-bold tabular-nums text-emerald-800">
                     ${{ formatMoney(Math.max(0, (prestamoSeleccionado?.saldo_actual || 0) - (formAbono.valor || 0))) }}
                   </span>
                 </div>
-                <div v-if="(prestamoSeleccionado?.saldo_actual || 0) - (formAbono.valor || 0) <= 0" class="mt-2 pt-2 border-t border-green-200">
-                  <p class="text-xs font-semibold text-green-700 flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                    </svg>
-                    El préstamo quedará completamente pagado
+                <div v-if="(prestamoSeleccionado?.saldo_actual || 0) - (formAbono.valor || 0) <= 0" class="mt-2 pt-2 border-t border-emerald-200/80">
+                  <p class="text-xs font-semibold text-emerald-800 flex items-center gap-1">
+                    <CheckCircleIcon class="w-4 h-4 flex-shrink-0" />
+                    El préstamo quedará pagado
                   </p>
                 </div>
               </div>
-              
-              <!-- Validaciones -->
+
               <div v-if="formAbono.valor && formAbono.valor < 1000" class="mt-2 text-xs text-amber-600 font-medium">
-                ⚠️ El valor mínimo del abono es $1.000
+                El valor mínimo del abono es $1.000
               </div>
               <div v-if="formAbono.valor && prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual)" class="mt-2 text-xs text-red-600 font-medium">
-                ⚠️ El abono no puede ser mayor al saldo actual (máximo: ${{ formatMoney(prestamoSeleccionado?.saldo_actual || 0) }})
+                El abono no puede superar el saldo (máx. ${{ formatMoney(prestamoSeleccionado?.saldo_actual || 0) }})
               </div>
             </div>
 
-            <!-- Forma de pago del abono -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">Forma de pago</label>
-              <div class="grid grid-cols-2 gap-2">
+              <label class="block text-sm font-medium text-gray-600 mb-1.5">Forma de pago</label>
+              <div class="flex gap-2">
                 <button
                   type="button"
                   @click="formAbono.tipo_pago = 'efectivo'"
                   :class="[
-                    'p-3 rounded-xl border-2 transition-all',
+                    'flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all',
                     formAbono.tipo_pago === 'efectivo'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   ]"
-                >
-                  <span class="font-semibold text-sm" :class="formAbono.tipo_pago === 'efectivo' ? 'text-green-700' : 'text-gray-600'">Efectivo</span>
-                </button>
+                >Efectivo</button>
                 <button
                   type="button"
                   @click="formAbono.tipo_pago = 'transferencia'"
                   :class="[
-                    'p-3 rounded-xl border-2 transition-all',
+                    'flex-1 py-2.5 rounded-xl border text-sm font-medium transition-all',
                     formAbono.tipo_pago === 'transferencia'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      ? 'border-emerald-400 bg-emerald-50/80 text-emerald-800'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                   ]"
-                >
-                  <span class="font-semibold text-sm" :class="formAbono.tipo_pago === 'transferencia' ? 'text-blue-700' : 'text-gray-600'">Transferencia</span>
-                </button>
+                >Transferencia</button>
               </div>
             </div>
 
-            <!-- Campo de fecha de pago -->
             <div>
-              <label class="label mb-2 flex items-center gap-2">
-                <svg class="w-5 h-5 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Fecha de pago *</span>
-              </label>
+              <label class="block text-sm font-medium text-gray-600 mb-1.5">Fecha de pago *</label>
               <DateInput
                 v-model="formAbono.fecha_pago"
                 placeholder="dd/MM/yyyy"
-                input-class="text-base font-semibold"
+                input-class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
                 :required="true"
               />
-              <p class="mt-2 text-xs text-gray-500 flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Selecciona la fecha en que se realizó el pago (formato: dd/MM/yyyy)
-              </p>
+              <p class="mt-1 text-xs text-gray-500">Fecha en que se hizo el pago.</p>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  @click="requestCloseTopModal"
+                  class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  @click="handleRegistrarAbono"
+                  class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 transition-colors"
+                  :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || (prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual))"
+                >
+                  <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <CurrencyDollarIcon v-else class="w-5 h-5" />
+                  {{ loading ? 'Registrando…' : 'Registrar abono' }}
+                </button>
+              </div>
             </div>
           </form>
         </div>
 
-        <!-- Footer fijo -->
-        <div class="border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-white p-4 flex-shrink-0">
-          <div class="flex gap-3">
-            <button 
-              type="button"
-              @click="cerrarModalAbono"
-              class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
+          <div
+            v-show="hayMasContenidoAbajoModalAbono"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
+          >
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
             >
-              Cancelar
-            </button>
-            <button 
-              type="button"
-              @click="handleRegistrarAbono" 
-              class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg flex items-center justify-center gap-2"
-              :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || (prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual))"
-            >
-              <CurrencyDollarIcon v-if="!loading" class="w-5 h-5" />
-              <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              <span>{{ loading ? 'Registrando...' : 'Registrar Abono' }}</span>
-            </button>
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
           </div>
         </div>
     </ModalWrapper>
@@ -980,29 +1102,31 @@
       overlay-class="fixed inset-0 z-[70] flex items-center justify-center p-4"
       card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
       card-max-width="28rem"
-      @close="modalComprobanteAbono = false"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <!-- Header con gradiente (X siempre arriba-derecha en desktop) -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative w-full overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+          <div class="relative z-10 flex w-full min-w-0 items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-center gap-3 pr-2">
+              <div class="w-10 h-10 shrink-0 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
                 <CheckCircleIcon class="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
+              <div class="min-w-0 text-left">
+                <h3 class="text-xl font-display font-bold leading-tight">
                   Comprobante de Abono
                 </h3>
-                <p class="text-white/90 text-xs">Abono registrado exitosamente</p>
+                <p class="text-white/90 text-xs mt-0.5">Abono registrado exitosamente</p>
               </div>
             </div>
-            <button 
-              @click="modalComprobanteAbono = false"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              @click="requestCloseTopModal"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
+              aria-label="Cerrar"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -1132,7 +1256,7 @@
           </p>
 
           <button 
-            @click="modalComprobanteAbono = false"
+            @click="requestCloseTopModal"
             class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
             Cerrar
@@ -1147,27 +1271,29 @@
       overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
       card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
       card-max-width="32rem"
-      @close="modalEditarAbono = false; abonoAEditar = null"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-5 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
+        <!-- Header con gradiente (X siempre arriba-derecha en desktop) -->
+        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-5 sm:p-6 text-white relative w-full overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full -ml-16 -mb-16 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
+          <div class="relative z-10 flex w-full min-w-0 items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-center gap-4 pr-2">
+              <div class="w-12 h-12 shrink-0 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
                 <PencilIcon class="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h3 class="text-2xl font-display font-bold">
+              <div class="min-w-0 text-left">
+                <h3 class="text-2xl font-display font-bold leading-tight">
                   Editar Abono
                 </h3>
                 <p class="text-white/90 text-sm mt-0.5">Modifica el valor del abono registrado</p>
               </div>
             </div>
-            <button 
-              @click="modalEditarAbono = false; abonoAEditar = null"
-              class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              @click="requestCloseTopModal"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
+              aria-label="Cerrar"
             >
               <XMarkIcon class="w-6 h-6" />
             </button>
@@ -1268,7 +1394,7 @@
           <div class="flex gap-3">
             <button 
               type="button"
-              @click="modalEditarAbono = false; abonoAEditar = null"
+              @click="requestCloseTopModal"
               class="flex-1 px-5 py-3.5 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancelar
@@ -1294,24 +1420,32 @@
       overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
       card-class="relative max-w-lg w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
       card-max-width="32rem"
-      @close="cerrarModalRefinanciar"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
+        <!-- Header con gradiente (X siempre arriba-derecha en desktop) -->
+        <div class="bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 p-4 sm:p-5 text-white relative w-full overflow-hidden flex-shrink-0">
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+          <div class="relative z-10 flex w-full min-w-0 items-start justify-between gap-3">
+            <div class="flex min-w-0 flex-1 items-center gap-3 pr-2">
+              <div class="w-10 h-10 shrink-0 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
                 <ArrowPathIcon class="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
+              <div class="min-w-0 text-left">
+                <h3 class="text-xl font-display font-bold leading-tight">
                   Refinanciar Préstamo
                 </h3>
-                <p class="text-white/90 text-xs">Actualiza la fecha de pago y recalcula los intereses</p>
+                <p class="text-white/90 text-xs mt-0.5">Actualiza la fecha de pago y recalcula los intereses</p>
               </div>
             </div>
+            <button
+              type="button"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
           </div>
         </div>
 
@@ -1560,7 +1694,7 @@
           <div class="flex gap-3">
             <button 
               type="button"
-              @click="cerrarModalRefinanciar"
+              @click="requestCloseTopModal"
               class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancelar
@@ -1579,57 +1713,119 @@
         </div>
     </ModalWrapper>
 
-    <!-- Modal Detalle Préstamo -->
+    <!-- Modal Detalle Préstamo — patrón ModalWrapper / skill modales -->
     <ModalWrapper
       :show="!!modalDetalle"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-3xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-3xl max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white min-h-0"
       card-max-width="48rem"
-      @close="modalDetalle = false"
+      @close="requestCloseTopModal"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div
+            class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
                 <BanknotesIcon class="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Detalle del Préstamo
-                </h3>
-                <p class="text-white/90 text-xs">{{ prestamoDetalle?.socio_natillera?.socio?.nombre }}</p>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Detalle del préstamo</h3>
               </div>
             </div>
-            <button 
-              @click="modalDetalle = false"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
+          </div>
+          <div class="relative z-10 hidden w-full text-center px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-5 sm:block sm:pr-14">
+            <button
+              type="button"
+              class="absolute z-20 top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 h-11 w-11 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+            <div class="w-[3.2rem] h-[3.2rem] mx-auto bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
+              <BanknotesIcon class="w-6 h-6 text-white" />
+            </div>
+            <h3 class="text-lg font-display font-bold mt-3">Detalle del préstamo</h3>
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto">
-          <div class="p-4 sm:p-6 space-y-6">
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="modalDetalleScrollRef"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="actualizarIndicadorScrollModalDetalle"
+        >
+          <div class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0 space-y-5 sm:space-y-6">
+            <!-- Socio titular (avatar + nombre) -->
+            <div
+              v-if="prestamoDetalle"
+              class="flex flex-col gap-3 rounded-xl border border-emerald-100/90 bg-gradient-to-br from-emerald-50/80 via-white to-white p-3.5 shadow-sm sm:flex-row sm:items-center sm:gap-4 sm:p-4"
+            >
+              <div class="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
+                <img
+                  :src="getAvatarUrl(
+                    prestamoDetalle.socio_natillera?.socio?.nombre || prestamoDetalle.socio_natillera?.id,
+                    prestamoDetalle.socio_natillera?.socio?.avatar_seed,
+                    prestamoDetalle.socio_natillera?.socio?.avatar_style
+                  )"
+                  :alt="prestamoDetalle.socio_natillera?.socio?.nombre || 'Socio'"
+                  class="h-14 w-14 shrink-0 rounded-2xl border-2 border-white object-cover shadow-md ring-2 ring-emerald-100 sm:h-16 sm:w-16"
+                />
+                <div class="min-w-0 flex-1">
+                  <p class="text-[0.6875rem] font-semibold uppercase tracking-wide text-emerald-800/90">
+                    Socio titular
+                  </p>
+                  <p class="font-display text-base font-bold leading-tight text-gray-900 sm:text-lg">
+                    {{ prestamoDetalle.socio_natillera?.socio?.nombre || '—' }}
+                  </p>
+                  <p
+                    v-if="prestamoDetalle.socio_natillera?.socio?.telefono"
+                    class="mt-0.5 truncate text-xs text-gray-500"
+                  >
+                    {{ prestamoDetalle.socio_natillera.socio.telefono }}
+                  </p>
+                </div>
+              </div>
+              <button
+                v-if="planPagosPrestamo.length > 0"
+                type="button"
+                class="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-200/90 bg-white px-4 py-2.5 text-sm font-semibold text-[#1B5E37] shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50/90 sm:w-auto sm:self-center sm:px-3 sm:py-2"
+                @click="abrirPlanPagosYDesplazarDetalle"
+              >
+                <CalendarDaysIcon class="h-5 w-5 shrink-0" />
+                <span>Ver plan de pagos</span>
+              </button>
+            </div>
+
             <!-- Información del préstamo -->
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+            <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
               <div class="flex items-center justify-between mb-4 gap-3">
-                <h4 class="font-semibold text-gray-800 flex items-center gap-2 flex-1 min-w-0">
-                  <CurrencyDollarIcon class="w-5 h-5 text-blue-600 flex-shrink-0" />
-                  <span class="truncate">Información del Préstamo</span>
+                <h4 class="text-sm font-semibold text-gray-800 flex items-center gap-2 flex-1 min-w-0">
+                  <CurrencyDollarIcon class="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                  <span class="truncate">Información del préstamo</span>
                 </h4>
                 <button
+                  type="button"
                   @click.stop="abrirModalCompartirPrestamo"
-                  class="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-3 sm:py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex-shrink-0"
-                  title="Enviar información del préstamo por WhatsApp"
+                  class="inline-flex items-center justify-center gap-1.5 min-h-[40px] px-3 py-2 rounded-full bg-gradient-to-r from-[#1B5E37] to-emerald-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-emerald-600/20 transition-all hover:from-[#164a2c] hover:to-emerald-700 flex-shrink-0"
+                  title="Enviar por WhatsApp"
                 >
                   <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                  <span class="hidden lg:inline ml-1.5">Enviar por WhatsApp</span>
+                  <span class="hidden sm:inline">WhatsApp</span>
                 </button>
               </div>
               <div class="grid grid-cols-2 gap-6">
@@ -1696,10 +1892,10 @@
             </div>
 
             <!-- Resumen de pagos -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
-              <h4 class="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <BanknotesIcon class="w-5 h-5 text-green-600" />
-                Resumen de Pagos
+            <div class="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
+              <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <BanknotesIcon class="w-5 h-5 text-emerald-600" />
+                Resumen de pagos
               </h4>
               <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
@@ -1720,7 +1916,12 @@
             </div>
 
             <!-- Plan de Pagos -->
-            <div v-if="planPagosPrestamo.length > 0">
+            <div
+              v-if="planPagosPrestamo.length > 0"
+              ref="modalDetallePlanPagosSectionRef"
+              class="scroll-mt-4"
+              tabindex="-1"
+            >
               <!-- Si solo hay 1 cuota, mostrarla directamente -->
               <div v-if="planPagosPrestamo.length === 1" class="mb-4">
                 <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -2379,260 +2580,400 @@
                 </div>
               </div>
             </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+              <div class="flex flex-col-reverse gap-2 sm:flex-row sm:gap-2">
+                <button
+                  type="button"
+                  @click="requestCloseTopModal"
+                  class="w-full sm:flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Cerrar
+                </button>
+                <button
+                  v-if="prestamoDetalle?.estado === 'activo'"
+                  type="button"
+                  @click="abrirModalAbono(prestamoDetalle)"
+                  class="w-full sm:flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                >
+                  Registrar abono
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <div class="flex gap-3">
-            <button 
-              type="button"
-              @click="modalDetalle = false"
-              class="btn-secondary flex-1"
+          <div
+            v-show="hayMasContenidoAbajoModalDetalle"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
+          >
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
             >
-              Cerrar
-            </button>
-            <button 
-              v-if="prestamoDetalle?.estado === 'activo'"
-              type="button"
-              @click="abrirModalAbono(prestamoDetalle)"
-              class="btn-primary flex-1"
-            >
-              Registrar Abono
-            </button>
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
           </div>
         </div>
     </ModalWrapper>
 
-    <!-- Modal Compartir Préstamo por WhatsApp -->
+    <!-- Modal información del préstamo / WhatsApp — patrón ModalWrapper (skill modales) -->
     <ModalWrapper
       :show="!!modalCompartirPrestamo"
-      :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      :z-index="60"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white min-h-0"
       card-max-width="28rem"
-      @close="modalCompartirPrestamo = false"
+      @close="requestCloseTopModal"
     >
-        <!-- Header -->
-        <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <ChatBubbleLeftIcon class="w-5 h-5 text-white" />
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div
+            class="sm:hidden flex min-h-[4rem] items-start justify-between gap-2 pb-4 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white/15">
+                <ChatBubbleLeftIcon class="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Información del Préstamo
-                </h3>
-                <p class="text-white/90 text-xs">{{ prestamoDetalle?.socio_natillera?.socio?.nombre }}</p>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Información del préstamo</h3>
+                <p class="mt-0.5 text-[0.6875rem] text-white/80">Descargar o compartir por WhatsApp</p>
               </div>
             </div>
-            <button 
-              @click="modalCompartirPrestamo = false"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="h-6 w-6" />
             </button>
+          </div>
+          <div class="relative z-10 hidden w-full text-center px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-5 sm:block sm:pr-14">
+            <button
+              type="button"
+              class="absolute z-20 top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 h-11 w-11 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+            <div class="mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white/15">
+              <ChatBubbleLeftIcon class="h-5 w-5 text-white" />
+            </div>
+            <h3 class="text-lg font-display font-bold mt-3">Información del préstamo</h3>
+            <p class="text-white/90 text-xs mt-1">Descargar o compartir por WhatsApp</p>
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6">
-          <!-- Comprobante del préstamo (mismo estilo que comprobante de pago de cuotas) -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           <div
-            ref="prestamoRef"
-            class="bg-white rounded-2xl overflow-hidden"
-            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 320px;"
+            ref="modalCompartirPrestamoScrollRef"
+            class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
+            @scroll.passive="onScrollModalCompartirPrestamo"
           >
-            <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
-              <!-- Título y ícono -->
-              <div style="text-align: center; margin-bottom: 16px;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-                  <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-                    </svg>
+            <div
+              ref="prestamoRef"
+              class="comprobante-prestamo-existente bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm"
+              style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 280px;"
+            >
+              <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px; padding-bottom: 4px;">
+                  <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   </div>
-                  <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
-                    Comprobante de Préstamo
-                  </h1>
+                  <h1 style="font-size: 22px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px; line-height: 1.2;">Comprobante de préstamo</h1>
                 </div>
-              </div>
 
-              <!-- Sección 1: Monto y socio -->
-              <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <div style="text-align: center; margin-bottom: 10px;">
-                  <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">MONTO DEL PRÉSTAMO</p>
-                  <p style="font-size: 26px; font-weight: 900; margin: 0 0 4px 0; letter-spacing: -1px; color: #059669;">
+                <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                  <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO DEL PRÉSTAMO</p>
+                  <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">
                     ${{ formatMoney(prestamoDetalle?.monto) }}
                   </p>
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px;">
+                    <div style="min-width: 0; flex: 1 1 12rem;">
+                      <p style="color: #9ca3af; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">SOCIO</p>
+                      <p style="font-weight: 800; font-size: 18px; margin: 0; color: #111827; line-height: 1.25; letter-spacing: -0.02em;">
+                        {{ prestamoDetalle?.socio_natillera?.socio?.nombre }}
+                      </p>
+                    </div>
+                    <span :style="estiloAvisoMoraComprobanteExistente">{{ resumenMoraComprobanteExistente.texto }}</span>
+                  </div>
                 </div>
-                <div style="margin-top: 8px;">
-                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
-                  <p style="font-weight: 600; font-size: 12px; margin: 0; color: #111827;">{{ prestamoDetalle?.socio_natillera?.socio?.nombre }}</p>
-                </div>
-              </div>
 
-              <!-- Sección 2: Detalles en grid -->
-              <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">DETALLES DEL PRÉSTAMO</p>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Interés mensual</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ prestamoDetalle?.interes }}%</p>
+                <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                  <p style="color: #1f2937; font-size: 11px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: 0.02em;">DETALLES DEL PRÉSTAMO</p>
+
+                  <!-- Bloque destacado: pagado a la fecha y saldo pendiente -->
+                  <div
+                    style="background: linear-gradient(145deg, #ecfdf5 0%, #d1fae5 55%, #ecfdf5 100%); border: 1px solid #6ee7b7; border-radius: 10px; padding: 12px 10px; margin-bottom: 12px;"
+                  >
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px;">
+                      <div style="text-align: center;">
+                        <p style="color: #047857; font-size: 9px; margin: 0 0 6px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">
+                          Pagado a la fecha
+                        </p>
+                        <p style="font-size: 20px; font-weight: 900; margin: 0; color: #059669; letter-spacing: -0.04em; line-height: 1.1;">
+                          ${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}
+                        </p>
+                      </div>
+                      <div style="text-align: center;">
+                        <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;">
+                          Saldo pendiente
+                        </p>
+                        <p
+                          style="font-size: 20px; font-weight: 900; margin: 0; letter-spacing: -0.04em; line-height: 1.1;"
+                          :style="{ color: (prestamoDetalle?.saldo_actual || 0) > 0 ? '#dc2626' : '#059669' }"
+                        >
+                          ${{ formatMoney(prestamoDetalle?.saldo_actual) }}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Nº de cuotas</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ prestamoDetalle?.numero_cuotas || 1 }}</p>
+
+                  <!-- Resto de la información (menor jerarquía visual) -->
+                  <p style="color: #9ca3af; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 8px 0;">
+                    Información del préstamo
+                  </p>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px;">
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Interés mensual</p>
+                      <p style="font-weight: 600; font-size: 11px; margin: 0; color: #374151;">{{ prestamoDetalle?.interes }}%</p>
+                    </div>
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">N° de cuotas</p>
+                      <p style="font-weight: 600; font-size: 11px; margin: 0; color: #374151;">{{ prestamoDetalle?.numero_cuotas || 1 }}</p>
+                    </div>
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Valor cuota</p>
+                      <p style="font-weight: 600; font-size: 11px; margin: 0; color: #059669;">${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}</p>
+                    </div>
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Interés generado</p>
+                      <p style="font-weight: 600; font-size: 11px; margin: 0; color: #ea580c;">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</p>
+                    </div>
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Estado</p>
+                      <span
+                        :style="{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: '9999px',
+                          display: 'inline-block',
+                          background: prestamoDetalle?.estado === 'pagado' ? '#d1fae5' : prestamoDetalle?.estado === 'activo' ? '#dbeafe' : '#f3f4f6',
+                          color: prestamoDetalle?.estado === 'pagado' ? '#059669' : prestamoDetalle?.estado === 'activo' ? '#2563eb' : '#4b5563'
+                        }"
+                      >{{ prestamoDetalle?.estado }}</span>
+                    </div>
+                    <div>
+                      <p style="color: #9ca3af; font-size: 8px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">Fecha de creación</p>
+                      <p style="font-weight: 600; font-size: 11px; margin: 0; color: #374151;">{{ formatDate(prestamoDetalle?.created_at) }}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Saldo actual</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0;" :style="{ color: (prestamoDetalle?.saldo_actual || 0) > 0 ? '#dc2626' : '#059669' }">${{ formatMoney(prestamoDetalle?.saldo_actual) }}</p>
-                  </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Valor cuota</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #065f46;">${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}</p>
-                  </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Interés generado</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #ea580c;">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</p>
-                  </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Monto pagado</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #059669;">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</p>
-                  </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Estado</p>
-                    <span 
-                      :style="{
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '2px 8px',
-                        borderRadius: '9999px',
-                        display: 'inline-block',
-                        background: prestamoDetalle?.estado === 'pagado' ? '#d1fae5' : prestamoDetalle?.estado === 'activo' ? '#dbeafe' : '#f3f4f6',
-                        color: prestamoDetalle?.estado === 'pagado' ? '#059669' : prestamoDetalle?.estado === 'activo' ? '#2563eb' : '#4b5563'
-                      }"
-                    >{{ prestamoDetalle?.estado }}</span>
-                  </div>
-                  <div>
-                    <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha de creación</p>
-                    <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827;">{{ formatDate(prestamoDetalle?.created_at) }}</p>
+                </div>
+
+                <div v-if="planPagosComprobanteExistente.length > 0" style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
+                  <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS</p>
+                  <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">
+                    Fecha de primera cuota: {{ planPagosComprobanteExistente[0]?.fecha_proyectada ? formatDate(planPagosComprobanteExistente[0].fecha_proyectada) : '—' }}
+                  </p>
+                  <div style="overflow-x: auto;">
+                    <table style="width: 100%; min-width: 260px; border-collapse: collapse; font-size: 9px;">
+                      <thead>
+                        <tr style="background: #f0fdf4; border-bottom: 2px solid #a7f3d0;">
+                          <th style="text-align: left; padding: 5px 4px; font-weight: 700; color: #065f46;">Nº</th>
+                          <th style="text-align: left; padding: 5px 4px; font-weight: 700; color: #065f46;">Vencimiento</th>
+                          <th style="text-align: right; padding: 5px 4px; font-weight: 700; color: #065f46;">Cuota</th>
+                          <th style="text-align: right; padding: 5px 4px; font-weight: 700; color: #065f46;">Abonado</th>
+                          <th style="text-align: center; padding: 5px 4px; font-weight: 700; color: #065f46;">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(cuota, idx) in planPagosComprobanteExistente"
+                          :key="cuota.id ?? idx"
+                          :style="{ background: idx % 2 === 0 ? '#fff' : '#f9fafb' }"
+                        >
+                          <td style="padding: 4px; color: #374151; font-weight: 600;">{{ cuota.numero_cuota }}</td>
+                          <td style="padding: 4px; color: #374151;">{{ formatDate(cuota.fecha_proyectada) }}</td>
+                          <td style="padding: 4px; text-align: right; font-weight: 600; color: #059669;">${{ formatMoney(cuota.valor_cuota) }}</td>
+                          <td
+                            style="padding: 4px; text-align: right; font-weight: 600;"
+                            :style="{ color: parseFloat(cuota.valor_pagado || 0) > 0 ? '#059669' : '#9ca3af' }"
+                          >
+                            ${{ formatMoney(cuota.valor_pagado || 0) }}
+                          </td>
+                          <td style="padding: 4px; text-align: center; vertical-align: middle;">
+                            <span :style="estiloBadgeEstadoCuotaComprobante(cuota)">{{ etiquetaEstadoCuotaComprobante(cuota) }}</span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             </div>
+
+            <div class="space-y-3 border-t border-gray-200 pt-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+              <button
+                type="button"
+                @click="descargarPrestamo"
+                :disabled="generandoImagenPrestamo"
+                class="w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5" />
+                {{ generandoImagenPrestamo ? 'Generando…' : 'Descargar imagen' }}
+              </button>
+              <button
+                type="button"
+                @click="compartirPrestamoWhatsApp"
+                :disabled="generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono"
+                :class="[
+                  'w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-all',
+                  (generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                ]"
+                :title="!prestamoDetalle?.socio_natillera?.socio?.telefono ? 'No hay teléfono registrado para este socio' : ''"
+              >
+                <ChatBubbleLeftIcon class="w-5 h-5" />
+                <span v-if="generandoImagenPrestamo">Preparando…</span>
+                <span v-else-if="!prestamoDetalle?.socio_natillera?.socio?.telefono">Sin teléfono registrado</span>
+                <span v-else>Compartir por WhatsApp</span>
+              </button>
+              <p class="text-center text-xs text-gray-500">
+                En celular puedes enviar la imagen directamente desde el menú compartir.
+              </p>
+              <button
+                type="button"
+                @click="requestCloseTopModal"
+                class="w-full min-h-[48px] px-4 py-3 rounded-full border border-gray-200 bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Footer fijo con botones -->
-        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
-          <div class="space-y-3">
-            <button 
-              @click="descargarPrestamo"
-              :disabled="generandoImagenPrestamo"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowDownTrayIcon class="w-5 h-5" />
-              {{ generandoImagenPrestamo ? 'Generando...' : 'Descargar Imagen' }}
-            </button>
-
-            <button 
-              @click="compartirPrestamoWhatsApp"
-              :disabled="generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono"
-              :class="[
-                'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
-                (generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono)
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              ]"
-              :title="!prestamoDetalle?.socio_natillera?.socio?.telefono ? 'No hay teléfono registrado para este socio' : ''"
-            >
-              <ChatBubbleLeftIcon class="w-5 h-5" />
-              <span v-if="generandoImagenPrestamo">Preparando...</span>
-              <span v-else-if="!prestamoDetalle?.socio_natillera?.socio?.telefono">📲 Sin teléfono registrado</span>
-              <span v-else>📲 Compartir por WhatsApp</span>
-            </button>
-          </div>
-
-          <p class="text-xs text-gray-400 text-center">
-            💡 En celular podrás enviar la imagen directamente a WhatsApp
-          </p>
-
-          <button 
-            @click="modalCompartirPrestamo = false"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          <div
+            v-show="hayNatiscrollModalCompartirPrestamo"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
           >
-            Cerrar
-          </button>
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+            >
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
+          </div>
         </div>
     </ModalWrapper>
 
-    <!-- Modal Compartir Préstamo Nuevo por WhatsApp -->
+    <!-- Modal Compartir Préstamo Nuevo por WhatsApp — mismo patrón que crear préstamo -->
     <ModalWrapper
       :show="!!modalCompartirPrestamoNuevo"
       :z-index="60"
-      overlay-class="fixed inset-0 z-[60] flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white min-h-0"
       card-max-width="28rem"
-      @close="modalCompartirPrestamoNuevo = false"
+      @close="requestCloseTopModal"
     >
-        <!-- Header -->
-        <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <ChatBubbleLeftIcon class="w-5 h-5 text-white" />
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div
+            class="sm:hidden flex min-h-[4rem] items-start justify-between gap-2 pb-4 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]"
+          >
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white/15">
+                <ChatBubbleLeftIcon class="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h3 class="text-xl font-display font-bold">
-                  Compartir proyección (WhatsApp)
-                </h3>
-                <p class="text-white/90 text-xs">Aún no es un préstamo creado · {{ socioSeleccionado?.socio?.nombre }}</p>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Compartir proyección</h3>
+                <p class="mt-0.5 text-[0.6875rem] text-white/80">Vista previa para WhatsApp</p>
               </div>
             </div>
-            <button 
-              @click="modalCompartirPrestamoNuevo = false"
-              class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+            <button
+              type="button"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <XMarkIcon class="h-6 w-6" />
             </button>
+          </div>
+          <div class="relative z-10 hidden w-full text-center px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-5 sm:block sm:pr-14">
+            <button
+              type="button"
+              class="absolute z-20 top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 h-11 w-11 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15"
+              aria-label="Cerrar"
+              @click="requestCloseTopModal"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+            <div class="mx-auto flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl border border-white/25 bg-white/15">
+              <ChatBubbleLeftIcon class="h-5 w-5 text-white" />
+            </div>
+            <h3 class="text-lg font-display font-bold mt-3">Compartir proyección</h3>
+            <p class="text-white/90 text-xs mt-1">Vista previa para WhatsApp</p>
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          <!-- Comprobante del préstamo (diseño según imagen: header verde claro, tarjetas blanco) -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="modalCompartirPrestamoNuevoScrollRef"
+          class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5"
+          @scroll.passive="onScrollModalCompartirPrestamoNuevo"
+        >
           <div
             ref="prestamoNuevoRef"
             class="comprobante-prestamo-nuevo bg-white rounded-2xl overflow-hidden"
-            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 320px;"
+            style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); min-width: 280px;"
           >
             <div class="comprobante-content" style="background: #ecfdf5; padding: 14px 12px; color: #1f2937;">
-              <!-- Encabezado: proyección (el préstamo aún no está creado) -->
               <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; padding-bottom: 4px;">
                 <div style="width: 44px; height: 44px; background: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
                 <div style="text-align: center;">
                   <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #374151; letter-spacing: -0.5px; line-height: 1.2;">Proyección de préstamo</h1>
-                  <p style="font-size: 10px; font-weight: 600; margin: 4px 0 0 0; color: #b45309;">No es comprobante · el préstamo no se ha generado aún</p>
                 </div>
               </div>
 
-              <!-- Tarjeta 1: Monto proyectado + Socio -->
               <div style="background: white; padding: 14px 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">MONTO PROYECTADO</p>
+                <p style="color: #6b7280; font-size: 10px; margin: 0 0 4px 0; font-weight: 600; letter-spacing: 0.02em; text-align: center;">Monto del préstamo</p>
                 <p style="font-size: 24px; font-weight: 900; margin: 0 0 12px 0; letter-spacing: -0.5px; color: #059669; text-align: center;">${{ formatMoney(formPrestamo.monto) }}</p>
-                <p style="color: #9ca3af; font-size: 9px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">SOCIO</p>
-                <p style="font-weight: 700; font-size: 13px; margin: 0; color: #1f2937;">{{ socioSeleccionado?.socio?.nombre }}</p>
+                <p style="color: #9ca3af; font-size: 10px; margin: 0 0 3px 0; font-weight: 600;">Socio</p>
+                <p style="font-weight: 700; font-size: 16px; margin: 0; color: #1f2937;">{{ socioSeleccionado?.socio?.nombre }}</p>
               </div>
 
-              <!-- Tarjeta 2: Detalles proyectados -->
               <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
                 <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 10px 0;">DETALLES PROYECTADOS</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px;">
@@ -2649,8 +2990,8 @@
                     <p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(cuotaMensual) }}</p>
                   </div>
                   <div>
-                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">VALOR A ENTREGAR</p>
-                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(valorAEntregarAlSocio) }}</p>
+                    <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">TOTAL A PAGAR</p>
+                    <p style="font-weight: 700; font-size: 12px; margin: 0; color: #059669;">${{ formatMoney(Math.round(montoTotal)) }}</p>
                   </div>
                   <div>
                     <p style="color: #9ca3af; font-size: 9px; margin: 0 0 2px 0; font-weight: 700; text-transform: uppercase;">INTERESES GENERADOS</p>
@@ -2659,7 +3000,6 @@
                 </div>
               </div>
 
-              <!-- Tarjeta 3: Plan de pagos proyectado -->
               <div v-if="planPagosComprobanteNuevo.length > 0" style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
                 <p style="color: #1f2937; font-size: 11px; font-weight: 700; margin: 0 0 8px 0;">PLAN DE PAGOS (PROYECTADO)</p>
                 <p style="color: #6b7280; font-size: 9px; margin: 0 0 6px 0;">Fecha estimada de primera cuota: {{ formPrestamo.fecha_pago ? formatDate(formPrestamo.fecha_pago) : '—' }}</p>
@@ -2684,25 +3024,23 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Footer fijo con botones -->
-        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
-          <div class="space-y-3">
-            <button 
+          <div class="space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-1">
+            <button
+              type="button"
               @click="descargarPrestamoNuevo"
               :disabled="generandoImagenPrestamoNuevo"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowDownTrayIcon class="w-5 h-5" />
-              {{ generandoImagenPrestamoNuevo ? 'Generando...' : 'Descargar Imagen' }}
+              {{ generandoImagenPrestamoNuevo ? 'Generando...' : 'Descargar imagen' }}
             </button>
-
-            <button 
+            <button
+              type="button"
               @click="compartirPrestamoNuevoWhatsApp"
               :disabled="generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono"
               :class="[
-                'w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
+                'w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-all',
                 (generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono)
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-500 hover:bg-green-600 text-white'
@@ -2711,17 +3049,42 @@
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
               <span v-if="generandoImagenPrestamoNuevo">Preparando...</span>
-              <span v-else-if="!socioSeleccionado?.socio?.telefono">📲 Sin teléfono registrado</span>
-              <span v-else>📲 Compartir por WhatsApp</span>
+              <span v-else-if="!socioSeleccionado?.socio?.telefono">Sin teléfono registrado</span>
+              <span v-else>Compartir por WhatsApp</span>
+            </button>
+            <button
+              type="button"
+              @click="requestCloseTopModal"
+              class="w-full min-h-[48px] px-4 py-3 rounded-full border border-gray-200 bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 transition-colors"
+            >
+              Cerrar
             </button>
           </div>
+        </div>
 
-          <button 
-            @click="modalCompartirPrestamoNuevo = false"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+          <!-- Natiscroll: velo + «Desliza para ver más» (mismo patrón que crear préstamo) -->
+          <div
+            v-show="hayNatiscrollModalProyeccion"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
           >
-            Cerrar
-          </button>
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+            >
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
+          </div>
         </div>
       </ModalWrapper>
 
@@ -2732,18 +3095,27 @@
       overlay-class="fixed inset-0 z-[70] flex items-center justify-center p-4"
       card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
       card-max-width="28rem"
-      @close="abonoAEliminar = null"
+      @close="requestCloseTopModal"
     >
         <!-- Efectos decorativos -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-amber-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-amber-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
+
+        <button
+          type="button"
+          class="absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 sm:right-4 sm:top-4"
+          aria-label="Cerrar"
+          @click="requestCloseTopModal"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
         
-        <div class="relative z-10">
+        <div class="relative z-10 pr-10 sm:pr-12">
           <div class="flex items-center gap-4 mb-4">
             <div class="w-14 h-14 bg-gradient-to-br from-amber-100 to-orange-200 rounded-2xl flex items-center justify-center shadow-lg">
               <TrashIcon class="w-7 h-7 text-amber-600" />
             </div>
-            <div>
+            <div class="min-w-0">
               <h3 class="text-xl font-display font-bold text-gray-800">Eliminar Abono</h3>
               <p class="text-sm text-gray-600">Esta acción actualizará el saldo del préstamo</p>
             </div>
@@ -2781,7 +3153,7 @@
 
           <div class="flex gap-3">
             <button
-              @click="abonoAEliminar = null"
+              @click="requestCloseTopModal"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancelar
@@ -2806,18 +3178,27 @@
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
       card-class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 overflow-hidden"
       card-max-width="28rem"
-      @close="prestamoAEliminar = null"
+      @close="requestCloseTopModal"
     >
         <!-- Efectos decorativos -->
         <div class="absolute top-0 right-0 w-32 h-32 bg-red-100/30 rounded-full -mr-16 -mt-16 blur-2xl"></div>
         <div class="absolute bottom-0 left-0 w-24 h-24 bg-red-100/30 rounded-full -ml-12 -mb-12 blur-xl"></div>
+
+        <button
+          type="button"
+          class="absolute right-3 top-3 z-30 flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-gray-100 sm:right-4 sm:top-4"
+          aria-label="Cerrar"
+          @click="requestCloseTopModal"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
         
-        <div class="relative z-10">
+        <div class="relative z-10 pr-10 sm:pr-12">
           <div class="flex items-center gap-4 mb-4">
             <div class="w-14 h-14 bg-gradient-to-br from-red-100 to-red-200 rounded-2xl flex items-center justify-center shadow-lg">
               <TrashIcon class="w-7 h-7 text-red-600" />
             </div>
-            <div>
+            <div class="min-w-0">
               <h3 class="text-xl font-display font-bold text-gray-800">Eliminar Préstamo</h3>
               <p class="text-sm text-gray-600">Esta acción no se puede deshacer</p>
             </div>
@@ -2858,7 +3239,7 @@
 
           <div class="flex gap-3">
             <button
-              @click="prestamoAEliminar = null"
+              @click="requestCloseTopModal"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancelar
@@ -2905,6 +3286,7 @@ import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { useNatillerasStore } from '../../stores/natilleras'
+import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { 
   ArrowLeftIcon,
@@ -2931,6 +3313,8 @@ import DateInput from '../../components/DateInput.vue'
 import Breadcrumbs from '../../components/Breadcrumbs.vue'
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useSessionDraftPersistence } from '../../composables/useSessionDraftPersistence'
+import { useModalStack, __modalStackSync } from '../../composables/useModalStack'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { toPng } from 'html-to-image'
 
@@ -2966,6 +3350,7 @@ function fechaProyectadaMensual(fechaInicio, numeroCuota) {
 
 const notificationStore = useNotificationStore()
 const natillerasStore = useNatillerasStore()
+const authStore = useAuthStore()
 const auditoria = useAuditoria()
 
 const props = defineProps({
@@ -3019,6 +3404,74 @@ useBodyScrollLock(modalComprobanteAbono)
 useBodyScrollLock(computed(() => !!prestamoAEliminar.value))
 useBodyScrollLock(computed(() => !!abonoAEliminar.value))
 
+const modalDetalleScrollRef = ref(null)
+const modalDetallePlanPagosSectionRef = ref(null)
+const hayMasContenidoAbajoModalDetalle = ref(false)
+let rafIndicadorScrollModalDetalle = null
+function actualizarIndicadorScrollModalDetalle() {
+  const el = modalDetalleScrollRef.value
+  if (!el) {
+    hayMasContenidoAbajoModalDetalle.value = false
+    return
+  }
+  const umbral = 10
+  hayMasContenidoAbajoModalDetalle.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarActualizarIndicadorScrollModalDetalle() {
+  if (rafIndicadorScrollModalDetalle != null) cancelAnimationFrame(rafIndicadorScrollModalDetalle)
+  rafIndicadorScrollModalDetalle = requestAnimationFrame(() => {
+    rafIndicadorScrollModalDetalle = null
+    actualizarIndicadorScrollModalDetalle()
+  })
+}
+
+/** Expande el plan si hay varias cuotas y desplaza el scroll del modal hasta la tabla/grid. */
+async function abrirPlanPagosYDesplazarDetalle() {
+  if (!planPagosPrestamo.value.length) return
+  const variasCuotas = planPagosPrestamo.value.length > 1
+  if (variasCuotas) {
+    planPagosExpandido.value = true
+  }
+  await nextTick()
+  await nextTick()
+  const ejecutarScroll = () => {
+    const el = modalDetallePlanPagosSectionRef.value
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el?.focus({ preventScroll: true })
+    programarActualizarIndicadorScrollModalDetalle()
+  }
+  if (variasCuotas) {
+    window.setTimeout(ejecutarScroll, 340)
+  } else {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(ejecutarScroll)
+    })
+  }
+}
+
+watch(
+  [
+    modalDetalle,
+    planPagosExpandido,
+    () => pagosPrestamo.value.length,
+    () => planPagosPrestamo.value.length,
+    () => historialRefinanciaciones.value.length
+  ],
+  () => programarActualizarIndicadorScrollModalDetalle(),
+  { flush: 'post' }
+)
+
+watch(modalDetalle, async (abierto) => {
+  if (!abierto) {
+    hayMasContenidoAbajoModalDetalle.value = false
+    return
+  }
+  await nextTick()
+  await nextTick()
+  programarActualizarIndicadorScrollModalDetalle()
+})
+
 // Función para toggle del desplegable de información de mora
 const toggleMoraInfo = (prestamoId) => {
   if (prestamosMoraExpandidos.value.has(prestamoId)) {
@@ -3028,11 +3481,51 @@ const toggleMoraInfo = (prestamoId) => {
   }
 }
 
+function parseReglasInteresPrestamo(raw) {
+  const fallback = { activo: false, porcentaje: 2, plazo_maximo: 36 }
+  if (!raw || typeof raw !== 'object') return { ...fallback }
+  const plazo = Number(raw.plazo_maximo)
+  const pct = Number(raw.porcentaje)
+  return {
+    activo: raw.activo !== false,
+    porcentaje: Number.isFinite(pct) && pct >= 0 ? pct : fallback.porcentaje,
+    plazo_maximo: Number.isFinite(plazo) && plazo >= 1 ? Math.floor(plazo) : fallback.plazo_maximo
+  }
+}
+
+const reglasInteresNatillera = ref(parseReglasInteresPrestamo(null))
+
+const plazoMaximoCuotasCrear = computed(() => reglasInteresNatillera.value.plazo_maximo)
+
+async function cargarReglasPrestamoNatillera() {
+  try {
+    const n = await natillerasStore.fetchNatillera(id)
+    reglasInteresNatillera.value = parseReglasInteresPrestamo(n?.reglas_interes)
+  } catch (e) {
+    console.warn('No se cargaron reglas de préstamo de la natillera:', e)
+    reglasInteresNatillera.value = parseReglasInteresPrestamo(null)
+  }
+}
+
+function aplicarDefaultsFormularioCrearPrestamo() {
+  const r = reglasInteresNatillera.value
+  formPrestamo.interes = r.porcentaje
+  formPrestamo.numero_cuotas = r.plazo_maximo
+}
+
+function limitarNumeroCuotasCrearPrestamo() {
+  const max = reglasInteresNatillera.value.plazo_maximo
+  const n = Number(formPrestamo.numero_cuotas)
+  if (!Number.isFinite(n)) return
+  if (n < 1) formPrestamo.numero_cuotas = 1
+  else if (n > max) formPrestamo.numero_cuotas = max
+}
+
 const formPrestamo = reactive({
   socio_natillera_id: '',
   monto: 100000,
-  interes: 2,
-  numero_cuotas: 1,
+  interes: reglasInteresNatillera.value.porcentaje,
+  numero_cuotas: reglasInteresNatillera.value.plazo_maximo,
   tipo_interes: 'simple', // 'simple' o 'compuesto'
   periodicidad: 'mensual', // 'mensual' o 'quincenal'
   fecha_pago: getCurrentDateISO(), // Fecha de pago de la primera cuota
@@ -3044,8 +3537,134 @@ const mostrarSelectorSocio = ref(false)
 const busquedaSocio = ref('')
 const mostrarInteresAnticipado = ref(false)
 const modalNuevoPrestamoScrollRef = ref(null)
+const modalCompartirPrestamoNuevoScrollRef = ref(null)
+const hayMasContenidoAbajoModalNuevoPrestamo = ref(false)
+/** Natiscroll — modal compartir proyección (WhatsApp) */
+const hayNatiscrollModalProyeccion = ref(false)
+
+let rafIndicadorScrollModalNuevoPrestamo = null
+function actualizarIndicadorScrollModalNuevoPrestamo() {
+  const el = modalNuevoPrestamoScrollRef.value
+  if (!el) {
+    hayMasContenidoAbajoModalNuevoPrestamo.value = false
+    return
+  }
+  const umbral = 10
+  hayMasContenidoAbajoModalNuevoPrestamo.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarActualizarIndicadorScrollModalNuevoPrestamo() {
+  if (rafIndicadorScrollModalNuevoPrestamo != null) cancelAnimationFrame(rafIndicadorScrollModalNuevoPrestamo)
+  rafIndicadorScrollModalNuevoPrestamo = requestAnimationFrame(() => {
+    rafIndicadorScrollModalNuevoPrestamo = null
+    actualizarIndicadorScrollModalNuevoPrestamo()
+  })
+}
+
+let rafNatiscrollModalProyeccion = null
+function actualizarNatiscrollModalProyeccion() {
+  const el = modalCompartirPrestamoNuevoScrollRef.value
+  if (!el) {
+    hayNatiscrollModalProyeccion.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalProyeccion.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalProyeccion() {
+  if (rafNatiscrollModalProyeccion != null) cancelAnimationFrame(rafNatiscrollModalProyeccion)
+  rafNatiscrollModalProyeccion = requestAnimationFrame(() => {
+    rafNatiscrollModalProyeccion = null
+    actualizarNatiscrollModalProyeccion()
+  })
+}
+
+function onScrollModalCompartirPrestamoNuevo() {
+  programarNatiscrollModalProyeccion()
+}
+
+const modalCompartirPrestamoScrollRef = ref(null)
+const hayNatiscrollModalCompartirPrestamo = ref(false)
+
+let rafNatiscrollModalCompartirPrestamo = null
+function actualizarNatiscrollModalCompartirPrestamo() {
+  const el = modalCompartirPrestamoScrollRef.value
+  if (!el) {
+    hayNatiscrollModalCompartirPrestamo.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalCompartirPrestamo.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalCompartirPrestamo() {
+  if (rafNatiscrollModalCompartirPrestamo != null) cancelAnimationFrame(rafNatiscrollModalCompartirPrestamo)
+  rafNatiscrollModalCompartirPrestamo = requestAnimationFrame(() => {
+    rafNatiscrollModalCompartirPrestamo = null
+    actualizarNatiscrollModalCompartirPrestamo()
+  })
+}
+
+function onScrollModalCompartirPrestamo() {
+  programarNatiscrollModalCompartirPrestamo()
+}
+
+watch(modalCompartirPrestamo, async (abierto) => {
+  if (!abierto) {
+    hayNatiscrollModalCompartirPrestamo.value = false
+    return
+  }
+  await nextTick()
+  await nextTick()
+  programarNatiscrollModalCompartirPrestamo()
+})
+
+watch(
+  [
+    modalCompartirPrestamo,
+    () => planPagosPrestamo.value.length,
+    () => todosLosPlanesPagos.value.length,
+    () => prestamoDetalle.value?.id
+  ],
+  () => {
+    if (modalCompartirPrestamo.value) programarNatiscrollModalCompartirPrestamo()
+  },
+  { flush: 'post' }
+)
+
 const pasoNuevoPrestamo = ref(0) // 0: Monto (socio, periodicidad, monto) | 1: Plazo (interés, cuotas, fecha, medio) | 2: Resumen
 const prestamoRecienCreado = ref(null) // { prestamo, planPagos } después de crear; null antes. Cuando no es null se muestra comprobante con Descargar/WhatsApp
+
+watch(
+  [modalNuevoPrestamo, pasoNuevoPrestamo, prestamoRecienCreado, mostrarInteresAnticipado],
+  () => programarActualizarIndicadorScrollModalNuevoPrestamo(),
+  { flush: 'post' }
+)
+
+watch(modalNuevoPrestamo, async (abierto) => {
+  if (!abierto) {
+    hayMasContenidoAbajoModalNuevoPrestamo.value = false
+    return
+  }
+  pasoNuevoPrestamo.value = 0
+  prestamoRecienCreado.value = null
+  await cargarReglasPrestamoNatillera()
+  aplicarDefaultsFormularioCrearPrestamo()
+  await nextTick()
+  await nextTick()
+  programarActualizarIndicadorScrollModalNuevoPrestamo()
+})
+
+watch(modalCompartirPrestamoNuevo, async (abierto) => {
+  if (!abierto) {
+    hayNatiscrollModalProyeccion.value = false
+    return
+  }
+  await nextTick()
+  await nextTick()
+  programarNatiscrollModalProyeccion()
+})
 
 const formAbono = reactive({
   valor: 0,
@@ -3053,6 +3672,51 @@ const formAbono = reactive({
   tipo_pago: 'efectivo', // efectivo | transferencia
   valor_efectivo: 0,
   valor_transferencia: 0
+})
+
+const modalAbonoScrollRef = ref(null)
+const hayMasContenidoAbajoModalAbono = ref(false)
+let rafIndicadorScrollModalAbono = null
+function actualizarIndicadorScrollModalAbono() {
+  const el = modalAbonoScrollRef.value
+  if (!el) {
+    hayMasContenidoAbajoModalAbono.value = false
+    return
+  }
+  const umbral = 10
+  hayMasContenidoAbajoModalAbono.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarActualizarIndicadorScrollModalAbono() {
+  if (rafIndicadorScrollModalAbono != null) cancelAnimationFrame(rafIndicadorScrollModalAbono)
+  rafIndicadorScrollModalAbono = requestAnimationFrame(() => {
+    rafIndicadorScrollModalAbono = null
+    actualizarIndicadorScrollModalAbono()
+  })
+}
+
+watch(
+  [modalAbono, loading],
+  () => programarActualizarIndicadorScrollModalAbono(),
+  { flush: 'post' }
+)
+
+watch(
+  () => formAbono.valor,
+  () => {
+    if (modalAbono.value) programarActualizarIndicadorScrollModalAbono()
+  },
+  { flush: 'post' }
+)
+
+watch(modalAbono, async (abierto) => {
+  if (!abierto) {
+    hayMasContenidoAbajoModalAbono.value = false
+    return
+  }
+  await nextTick()
+  await nextTick()
+  programarActualizarIndicadorScrollModalAbono()
 })
 
 const formRefinanciar = reactive({
@@ -3068,6 +3732,128 @@ const inputValorAbonoRef = ref(null)
 const comprobanteAbono = ref(null)
 const generandoImagenComprobante = ref(false)
 const comprobanteRef = ref(null)
+
+/** Borrador en sessionStorage si el navegador recarga al volver de otra app (móvil). */
+function prestamosWorkDraftKey() {
+  const uid = authStore.user?.id || 'anon'
+  return `natillerapp:prestamos-work:${uid}:${id}`
+}
+
+function clearPrestamosWorkDraft() {
+  try {
+    sessionStorage.removeItem(prestamosWorkDraftKey())
+  } catch {
+    /* ignore */
+  }
+}
+
+function getPrestamosWorkDraftPayload() {
+  const natilleraId = String(id)
+  if (modalComprobanteAbono.value && comprobanteAbono.value) {
+    const c = comprobanteAbono.value
+    return {
+      kind: 'comprobante',
+      natilleraId,
+      comprobante: {
+        pagoPrestamoId: c.pagoPrestamoId,
+        prestamoId: c.prestamoId,
+        valor: c.valor,
+        codigoComprobante: c.codigoComprobante,
+        socioNombre: c.socioNombre,
+        socioTelefono: c.socioTelefono,
+        fecha: c.fecha,
+        saldoAnterior: c.saldoAnterior,
+        saldoNuevo: c.saldoNuevo
+      }
+    }
+  }
+  if (modalAbono.value && prestamoSeleccionado.value?.id) {
+    return {
+      kind: 'abono',
+      natilleraId,
+      prestamoId: prestamoSeleccionado.value.id,
+      formAbono: {
+        valor: formAbono.valor,
+        fecha_pago: formAbono.fecha_pago,
+        tipo_pago: formAbono.tipo_pago,
+        valor_efectivo: formAbono.valor_efectivo,
+        valor_transferencia: formAbono.valor_transferencia
+      },
+      valorAbonoFormateado: valorAbonoFormateado.value || ''
+    }
+  }
+  return null
+}
+
+useSessionDraftPersistence(prestamosWorkDraftKey, getPrestamosWorkDraftPayload)
+
+function tryRestorePrestamosWorkDraft() {
+  try {
+    const raw = sessionStorage.getItem(prestamosWorkDraftKey())
+    if (!raw) return
+    const data = JSON.parse(raw)
+    if (data.v !== 1 || String(data.natilleraId) !== String(id)) return
+    const maxAge = 48 * 60 * 60 * 1000
+    if (data.savedAt && Date.now() - data.savedAt > maxAge) {
+      clearPrestamosWorkDraft()
+      return
+    }
+
+    if (data.kind === 'abono' && data.prestamoId) {
+      const p = prestamos.value.find((x) => x.id === data.prestamoId)
+      if (!p) {
+        clearPrestamosWorkDraft()
+        return
+      }
+      prestamoSeleccionado.value = p
+      if (data.formAbono) {
+        Object.assign(formAbono, {
+          valor: data.formAbono.valor ?? 0,
+          fecha_pago: data.formAbono.fecha_pago || getCurrentDateISO(),
+          tipo_pago: data.formAbono.tipo_pago || 'efectivo',
+          valor_efectivo: data.formAbono.valor_efectivo ?? 0,
+          valor_transferencia: data.formAbono.valor_transferencia ?? 0
+        })
+      }
+      valorAbonoFormateado.value =
+        data.valorAbonoFormateado || formatMoney(formAbono.valor || 0)
+      modalAbono.value = true
+      nextTick(() => {
+        notificationStore.info(
+          'Se recuperó el abono que estabas registrando. Revisa los datos y confirma.',
+          'Borrador guardado'
+        )
+      })
+      return
+    }
+
+    if (data.kind === 'comprobante' && data.comprobante) {
+      const c = data.comprobante
+      const prestamoFromList =
+        c.prestamoId && prestamos.value.find((x) => x.id === c.prestamoId)
+      comprobanteAbono.value = {
+        ...c,
+        prestamo: prestamoFromList || null
+      }
+      modalComprobanteAbono.value = true
+      nextTick(() => {
+        notificationStore.info(
+          'Se recuperó el comprobante de abono. Puedes compartirlo o descargarlo.',
+          'Borrador guardado'
+        )
+      })
+    }
+  } catch {
+    clearPrestamosWorkDraft()
+  }
+}
+
+watch(modalComprobanteAbono, (open, wasOpen) => {
+  if (wasOpen && !open) {
+    clearPrestamosWorkDraft()
+    comprobanteAbono.value = null
+  }
+})
 
 const totalPrestado = computed(() => 
   prestamos.value.reduce((sum, p) => sum + p.monto, 0)
@@ -3340,6 +4126,40 @@ const socioSeleccionado = computed(() => {
   return socios.value.find(s => s.id === formPrestamo.socio_natillera_id)
 })
 
+/** Suma valor_cuota de cuotas pagadas (misma base que el resto de la app; solo informativo) */
+const totalAhorradoInformativoSocio = ref(null)
+const cargandoTotalAhorradoSocio = ref(false)
+
+async function cargarTotalAhorradoInformativoSocio(socioNatilleraId) {
+  totalAhorradoInformativoSocio.value = null
+  if (!socioNatilleraId) return
+  cargandoTotalAhorradoSocio.value = true
+  try {
+    const { data: cuotas, error } = await supabase
+      .from('cuotas')
+      .select('estado, valor_cuota')
+      .eq('socio_natillera_id', socioNatilleraId)
+    if (error) throw error
+    const total = (cuotas || [])
+      .filter((c) => c.estado === 'pagada')
+      .reduce((sum, c) => sum + (Number(c.valor_cuota) || 0), 0)
+    totalAhorradoInformativoSocio.value = total
+  } catch (e) {
+    console.error('Error cargando total ahorrado del socio:', e)
+    totalAhorradoInformativoSocio.value = null
+  } finally {
+    cargandoTotalAhorradoSocio.value = false
+  }
+}
+
+watch(
+  () => formPrestamo.socio_natillera_id,
+  (sid) => {
+    void cargarTotalAhorradoInformativoSocio(sid)
+  },
+  { immediate: true }
+)
+
 const sociosFiltrados = computed(() => {
   if (!busquedaSocio.value) return socios.value
   const busqueda = busquedaSocio.value.toLowerCase()
@@ -3428,12 +4248,6 @@ const movimientoFondoInicio = computed(() => {
   return capitalAPrestar.value
 })
 
-// Valor a entregar al socio: siempre es el capital del préstamo (lo que sale de caja hacia el socio).
-// Con interés anticipado: se entrega el capital al socio (ej. 2M) y el valor para intereses (ej. 420k) es aparte; total movimiento = capital + intereses (ej. 2'420.000).
-const valorAEntregarAlSocio = computed(() => {
-  return capitalAPrestar.value
-})
-
 // Valor total a pagar por el socio
 const montoAPagar = computed(() => {
   // Con interés anticipado, el socio debe pagar capital + intereses
@@ -3462,6 +4276,106 @@ function esFechaVencida(fecha) {
   return fechaParsed < hoy
 }
 
+function cuotaPagadaCompletaComprobante(cuota) {
+  if (!cuota) return false
+  if (cuota.pagada === true) return true
+  const vc = parseFloat(cuota.valor_cuota || 0)
+  const vp = parseFloat(cuota.valor_pagado || 0)
+  if (vc <= 0) return false
+  return vp >= vc - 0.009
+}
+
+function etiquetaEstadoCuotaComprobante(cuota) {
+  if (cuotaPagadaCompletaComprobante(cuota)) return 'Pagada'
+  const vp = parseFloat(cuota.valor_pagado || 0)
+  if (vp > 0) return 'Parcial'
+  if (esFechaVencida(cuota.fecha_proyectada)) return 'Vencida'
+  return 'Pendiente'
+}
+
+function estiloBadgeEstadoCuotaComprobante(cuota) {
+  const e = etiquetaEstadoCuotaComprobante(cuota)
+  const base = {
+    fontSize: '9px',
+    fontWeight: 700,
+    padding: '2px 6px',
+    borderRadius: '9999px',
+    display: 'inline-block',
+    whiteSpace: 'nowrap'
+  }
+  if (e === 'Pagada') return { ...base, background: '#d1fae5', color: '#059669' }
+  if (e === 'Parcial') return { ...base, background: '#dbeafe', color: '#1d4ed8' }
+  if (e === 'Vencida') return { ...base, background: '#fef3c7', color: '#b45309' }
+  return { ...base, background: '#f3f4f6', color: '#4b5563' }
+}
+
+/** Plan para el comprobante de préstamo existente: detalle cargado o fallback del listado global. */
+const planPagosComprobanteExistente = computed(() => {
+  const pid = prestamoDetalle.value?.id
+  if (!pid) return []
+  let rows =
+    planPagosPrestamo.value.length > 0
+      ? [...planPagosPrestamo.value]
+      : todosLosPlanesPagos.value.filter((c) => c.prestamo_id === pid)
+  return rows.sort((a, b) => (Number(a.numero_cuota) || 0) - (Number(b.numero_cuota) || 0))
+})
+
+/** Al día / en mora (N cuotas) junto al socio en el comprobante; si no hay plan, usa cuotasVencidas del listado. */
+const resumenMoraComprobanteExistente = computed(() => {
+  if (prestamoDetalle.value?.estado === 'pagado') {
+    return { tipo: 'pagado', texto: 'Pagado' }
+  }
+  const plan = planPagosComprobanteExistente.value
+  let cuotasMora = 0
+  if (plan.length > 0) {
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    cuotasMora = plan.filter((cuota) => {
+      if (cuotaPagadaCompletaComprobante(cuota)) return false
+      const fv = parseDateLocal(cuota.fecha_proyectada)
+      if (isNaN(fv.getTime())) return false
+      fv.setHours(0, 0, 0, 0)
+      return fv < hoy
+    }).length
+  } else {
+    const pid = prestamoDetalle.value?.id
+    const fila = prestamos.value.find((p) => p.id === pid)
+    cuotasMora = Number(fila?.cuotasVencidas) || 0
+  }
+  if (cuotasMora > 0) {
+    return {
+      tipo: 'mora',
+      texto: cuotasMora === 1 ? 'En mora · 1 cuota' : `En mora · ${cuotasMora} cuotas`,
+      cuotasMora
+    }
+  }
+  return { tipo: 'aldia', texto: 'Al día', cuotasMora: 0 }
+})
+
+const estiloAvisoMoraComprobanteExistente = computed(() => {
+  const t = resumenMoraComprobanteExistente.value.tipo
+  const base = {
+    flexShrink: 0,
+    alignSelf: 'center',
+    fontSize: '12px',
+    fontWeight: 800,
+    padding: '7px 12px',
+    borderRadius: '9999px',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.2,
+    maxWidth: '16rem',
+    textAlign: 'center',
+    letterSpacing: '0.02em'
+  }
+  if (t === 'mora') {
+    return { ...base, background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' }
+  }
+  if (t === 'pagado') {
+    return { ...base, background: '#d1fae5', color: '#047857', border: '1px solid #6ee7b7' }
+  }
+  return { ...base, background: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0' }
+})
+
 const cuotaMensual = computed(() => {
   // Con interés anticipado o normal, la cuota es el total (capital + intereses) dividido entre las cuotas
   return montoTotal.value / formPrestamo.numero_cuotas
@@ -3484,6 +4398,10 @@ const planPagosComprobanteNuevo = computed(() => {
   return generarPlanPagos(prestamoVirtual)
 })
 
+watch(planPagosComprobanteNuevo, () => {
+  if (modalCompartirPrestamoNuevo.value) programarNatiscrollModalProyeccion()
+}, { flush: 'post' })
+
 // Datos del comprobante cuando el préstamo ya fue creado (vista después de Confirmar en el footer)
 const datosComprobanteCreado = computed(() => {
   const p = prestamoRecienCreado.value
@@ -3493,13 +4411,14 @@ const datosComprobanteCreado = computed(() => {
   const monto = Number(prestamo.monto) || 0
   const interesTotalVal = Number(prestamo.interes_total) || 0
   const cuota = plan.length > 0 ? plan[0].valor_cuota : 0
+  const totalAPagar = Math.round(monto + interesTotalVal)
   return {
     monto,
     nombreSocio: prestamo.socio_natillera?.socio?.nombre || 'Socio',
     interes: prestamo.interes,
     numero_cuotas: prestamo.numero_cuotas || 1,
     cuotaMensual: cuota,
-    valorAEntregar: monto,
+    totalAPagar,
     interesTotal: interesTotalVal,
     planPagos: plan,
     fecha_pago: plan[0]?.fecha_proyectada || prestamo.created_at
@@ -4020,6 +4939,8 @@ function cerrarModalAbono() {
   formAbono.valor_transferencia = 0
   valorAbonoFormateado.value = ''
   prestamoSeleccionado.value = null
+  clearPrestamosWorkDraft()
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 async function abrirModalRefinanciar(prestamo) {
@@ -4074,6 +4995,7 @@ function cerrarModalRefinanciar() {
   formRefinanciar.interes_nuevo = null
   formRefinanciar.tabActual = 'refinanciar'
   prestamoSeleccionado.value = null
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 function generarImagenComprobanteAbono() {
@@ -5776,6 +6698,19 @@ async function handleCrearPrestamo() {
     return
   }
 
+  const maxCuotasPermitidas = reglasInteresNatillera.value.plazo_maximo
+  limitarNumeroCuotasCrearPrestamo()
+  const cuotasVal = Number(formPrestamo.numero_cuotas)
+  if (!Number.isFinite(cuotasVal) || cuotasVal < 1 || cuotasVal > maxCuotasPermitidas) {
+    generandoPrestamo.value = false
+    loading.value = false
+    notificationStore.warning(
+      `El número de cuotas debe estar entre 1 y ${maxCuotasPermitidas}, según el plazo máximo configurado en la natillera.`,
+      'Plazo no válido'
+    )
+    return
+  }
+
   // Validar interés anticipado: d = interes × meses debe ser < 1
   if (mostrarInteresAnticipado.value) {
     const tasaMensual = formPrestamo.interes / 100
@@ -5959,8 +6894,7 @@ function cerrarModalNuevoPrestamo() {
   prestamoRecienCreado.value = null
   formPrestamo.socio_natillera_id = ''
   formPrestamo.monto = 100000
-  formPrestamo.interes = 2
-  formPrestamo.numero_cuotas = 1
+  aplicarDefaultsFormularioCrearPrestamo()
   formPrestamo.tipo_interes = 'simple'
   formPrestamo.periodicidad = 'mensual'
   formPrestamo.fecha_pago = getCurrentDateISO()
@@ -5969,7 +6903,143 @@ function cerrarModalNuevoPrestamo() {
   mostrarSelectorSocio.value = false
   busquedaSocio.value = ''
   mostrarInteresAnticipado.value = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
+
+let stashAbonoEliminar = null
+let stashPrestamoEliminar = null
+
+const { requestCloseTop: requestCloseTopModal } = useModalStack({
+  nuevoPrestamo: {
+    isOpen: computed(() => !!modalNuevoPrestamo.value),
+    hide: () => {
+      modalNuevoPrestamo.value = false
+    },
+    show: () => {
+      modalNuevoPrestamo.value = true
+    },
+    dismiss: cerrarModalNuevoPrestamo
+  },
+  abono: {
+    isOpen: computed(() => !!modalAbono.value),
+    hide: () => {
+      modalAbono.value = false
+    },
+    show: () => {
+      modalAbono.value = true
+    },
+    dismiss: cerrarModalAbono
+  },
+  comprobanteAbono: {
+    isOpen: computed(() => !!(modalComprobanteAbono.value && comprobanteAbono.value)),
+    hide: () => {
+      modalComprobanteAbono.value = false
+    },
+    show: () => {
+      modalComprobanteAbono.value = true
+    },
+    dismiss: () => {
+      modalComprobanteAbono.value = false
+    }
+  },
+  editarAbono: {
+    isOpen: computed(() => !!(modalEditarAbono.value && abonoAEditar.value)),
+    hide: () => {
+      modalEditarAbono.value = false
+    },
+    show: () => {
+      modalEditarAbono.value = true
+    },
+    dismiss: () => {
+      modalEditarAbono.value = false
+      abonoAEditar.value = null
+    }
+  },
+  refinanciar: {
+    isOpen: computed(() => !!modalRefinanciar.value),
+    hide: () => {
+      modalRefinanciar.value = false
+    },
+    show: () => {
+      modalRefinanciar.value = true
+    },
+    dismiss: cerrarModalRefinanciar
+  },
+  detalle: {
+    isOpen: computed(() => !!modalDetalle.value),
+    hide: () => {
+      modalDetalle.value = false
+    },
+    show: () => {
+      modalDetalle.value = true
+    },
+    dismiss: () => {
+      modalDetalle.value = false
+    }
+  },
+  compartirPrestamo: {
+    isOpen: computed(() => !!modalCompartirPrestamo.value),
+    hide: () => {
+      modalCompartirPrestamo.value = false
+    },
+    show: () => {
+      modalCompartirPrestamo.value = true
+    },
+    dismiss: () => {
+      modalCompartirPrestamo.value = false
+    }
+  },
+  compartirPrestamoNuevo: {
+    isOpen: computed(() => !!modalCompartirPrestamoNuevo.value),
+    hide: () => {
+      modalCompartirPrestamoNuevo.value = false
+    },
+    show: () => {
+      modalCompartirPrestamoNuevo.value = true
+    },
+    dismiss: () => {
+      modalCompartirPrestamoNuevo.value = false
+    }
+  },
+  eliminarAbono: {
+    isOpen: computed(() => !!abonoAEliminar.value),
+    hide: () => {
+      if (abonoAEliminar.value) {
+        stashAbonoEliminar = abonoAEliminar.value
+        abonoAEliminar.value = null
+      }
+    },
+    show: () => {
+      if (stashAbonoEliminar) {
+        abonoAEliminar.value = stashAbonoEliminar
+        stashAbonoEliminar = null
+      }
+    },
+    dismiss: () => {
+      stashAbonoEliminar = null
+      abonoAEliminar.value = null
+    }
+  },
+  eliminarPrestamo: {
+    isOpen: computed(() => !!prestamoAEliminar.value),
+    hide: () => {
+      if (prestamoAEliminar.value) {
+        stashPrestamoEliminar = prestamoAEliminar.value
+        prestamoAEliminar.value = null
+      }
+    },
+    show: () => {
+      if (stashPrestamoEliminar) {
+        prestamoAEliminar.value = stashPrestamoEliminar
+        stashPrestamoEliminar = null
+      }
+    },
+    dismiss: () => {
+      stashPrestamoEliminar = null
+      prestamoAEliminar.value = null
+    }
+  }
+})
 
 function handleClickOutside(event) {
   if (mostrarSelectorSocio.value && !event.target.closest('.selector-socio-container')) {
@@ -5977,17 +7047,12 @@ function handleClickOutside(event) {
   }
 }
 
-watch(modalNuevoPrestamo, (visible) => {
-  if (visible) {
-    pasoNuevoPrestamo.value = 0
-    prestamoRecienCreado.value = null
-  }
-})
-
-onMounted(() => {
-  fetchPrestamos()
-  fetchSocios()
+onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  await fetchPrestamos()
+  fetchSocios()
+  void cargarReglasPrestamoNatillera()
+  tryRestorePrestamosWorkDraft()
 })
 
 onUnmounted(() => {
@@ -6235,11 +7300,7 @@ async function handleRegistrarAbono() {
       prestamo: prestamoSeleccionado.value
     }
     
-    modalAbono.value = false
-    formAbono.valor = 0
-    formAbono.tipo_pago = 'efectivo'
-    valorAbonoFormateado.value = ''
-    prestamoSeleccionado.value = null
+    cerrarModalAbono()
     
     // Abrir modal de comprobante
     modalComprobanteAbono.value = true
@@ -6450,6 +7511,7 @@ async function guardarAbonoEditado() {
     
     modalEditarAbono.value = false
     abonoAEditar.value = null
+    if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     notificationStore.success('Abono actualizado correctamente', 'Éxito')
   } catch (e) {
     console.error('Error actualizando abono:', e)
@@ -6605,6 +7667,7 @@ async function eliminarAbonoConfirmado() {
     }
     
     abonoAEliminar.value = null
+    if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     notificationStore.success('Abono eliminado correctamente', 'Éxito')
   } catch (e) {
     console.error('Error eliminando abono:', e)
@@ -6681,6 +7744,7 @@ async function eliminarPrestamoConfirmado() {
     )
 
     prestamoAEliminar.value = null
+    if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     
     // Recargar todos los préstamos y planes de pago para actualizar los indicadores
     await fetchPrestamos()
@@ -6696,10 +7760,11 @@ async function eliminarPrestamoConfirmado() {
 async function abrirModalCompartirPrestamo() {
   if (!prestamoDetalle.value) return
   modalCompartirPrestamo.value = true
-  // Esperar a que el modal se renderice completamente
+  await fetchPlanPagosPrestamo(prestamoDetalle.value.id)
   await nextTick()
-  // Dar un pequeño tiempo adicional para que el DOM se estabilice
-  await new Promise(resolve => setTimeout(resolve, 100))
+  await nextTick()
+  programarNatiscrollModalCompartirPrestamo()
+  await new Promise((resolve) => setTimeout(resolve, 80))
 }
 
 async function generarImagenPrestamo() {

@@ -6,13 +6,13 @@
         v-if="isIos"
         :class="['modal-wrapper-ios', align === 'bottom' ? 'modal-wrapper-ios--bottom' : '']"
         :style="{ zIndex: zIndex }"
-        @click.self="$emit('close')"
+        @click.self="onBackdropClick"
       >
         <div
-          class="modal-wrapper-ios__backdrop"
+          :class="['modal-wrapper-ios__backdrop', iosSoftBackdrop ? 'modal-wrapper-ios__backdrop--sage' : '']"
           aria-hidden="true"
-          @click="$emit('close')"
-          @touchstart.passive="$emit('close')"
+          @click="onBackdropClick"
+          @touchstart.passive="onBackdropClick"
         />
         <div
           class="modal-wrapper-ios__card"
@@ -26,14 +26,14 @@
       <div
         v-else
         :class="overlayClass"
-        @click.self="$emit('close')"
+        @click.self="onBackdropClick"
       >
         <div
-          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          :class="backdropClassComputed"
           style="pointer-events: auto !important; touch-action: manipulation !important; cursor: pointer !important; -webkit-tap-highlight-color: transparent; z-index: 0 !important;"
           aria-hidden="true"
-          @click="$emit('close')"
-          @touchstart="$emit('close')"
+          @click="onBackdropClick"
+          @touchstart="onBackdropClick"
         />
         <div
           :class="cardClass"
@@ -48,13 +48,20 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useIsIos } from '../composables/useIsIos'
 
-defineProps({
+const props = defineProps({
   show: { type: Boolean, default: false },
   zIndex: { type: Number, default: 50 },
   /** iOS: 'center' | 'bottom' (bottom = tipo bottom sheet en móvil) */
   align: { type: String, default: 'center' },
+  /** No cerrar al tocar fuera (onboarding / flujos que exigen CTA explícita) */
+  persistent: { type: Boolean, default: false },
+  /** iOS: velo salvia al 70 % (skill modales Natillerapp) */
+  iosSoftBackdrop: { type: Boolean, default: false },
+  /** Android/desktop: clases Tailwind del velo (sustituye el negro por defecto si se pasa) */
+  backdropClass: { type: String, default: '' },
   /** Android: clases del overlay (fixed inset-0 flex ...) */
   overlayClass: { type: String, default: 'fixed inset-0 z-50 flex items-center justify-center p-4' },
   /** Android: clases de la card (relative max-w-md ...) */
@@ -63,9 +70,20 @@ defineProps({
   cardMaxWidth: { type: String, default: '' }
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const isIos = useIsIos()
+
+const backdropClassComputed = computed(() =>
+  props.backdropClass?.trim()
+    ? props.backdropClass
+    : 'absolute inset-0 bg-black/50 backdrop-blur-sm'
+)
+
+function onBackdropClick() {
+  if (props.persistent) return
+  emit('close')
+}
 </script>
 
 <style scoped>
@@ -123,6 +141,12 @@ const isIos = useIsIos()
   z-index: 0 !important;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+.modal-wrapper-ios__backdrop--sage {
+  background: rgba(200, 217, 200, 0.7) !important;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
 
 .modal-wrapper-ios__card {

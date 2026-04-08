@@ -23,8 +23,8 @@ const route = useRoute()
 const authStore = useAuthStore()
 const showUsernameModal = ref(false)
 
-// Configurar timeout de sesión por inactividad (10 minutos)
-const sessionTimeout = useSessionTimeout(10)
+// Configurar timeout de sesión por inactividad (15 minutos)
+const sessionTimeout = useSessionTimeout(15)
 
 // Función para ocultar el teclado al presionar Enter
 function handleEnterKey(event) {
@@ -90,8 +90,7 @@ onUnmounted(() => {
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   sessionTimeout.onAuthStateChange()
   
-  // Si el usuario se desautentica mientras el modal está abierto, redirigir al login
-  if (!isAuthenticated && showUsernameModal.value) {
+  if (!isAuthenticated) {
     showUsernameModal.value = false
     if (!route.path.startsWith('/auth/')) {
       router.push({ name: 'Login' })
