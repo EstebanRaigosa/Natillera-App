@@ -7,8 +7,7 @@
     </div>
 
     <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-3">
@@ -3282,9 +3281,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -3310,7 +3310,7 @@ import {
 import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
 import DateInput from '../../components/DateInput.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useSessionDraftPersistence } from '../../composables/useSessionDraftPersistence'
@@ -3358,6 +3358,7 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const router = useRouter()
 const id = props.id || route.params.id
 
 const prestamos = ref([])
@@ -3501,9 +3502,11 @@ async function cargarReglasPrestamoNatillera() {
   try {
     const n = await natillerasStore.fetchNatillera(id)
     reglasInteresNatillera.value = parseReglasInteresPrestamo(n?.reglas_interes)
+    return n
   } catch (e) {
     console.warn('No se cargaron reglas de préstamo de la natillera:', e)
     reglasInteresNatillera.value = parseReglasInteresPrestamo(null)
+    return null
   }
 }
 
@@ -7049,9 +7052,14 @@ function handleClickOutside(event) {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  const nNat = await cargarReglasPrestamoNatillera()
+  if (nNat && natilleraPrestamosDeshabilitados(nNat)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    router.replace(`/natilleras/${id}`)
+    return
+  }
   await fetchPrestamos()
   fetchSocios()
-  void cargarReglasPrestamoNatillera()
   tryRestorePrestamosWorkDraft()
 })
 

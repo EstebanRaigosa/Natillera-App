@@ -1,0 +1,12 @@
+---
+description: >-
+  Al crear, modificar o editar modales: aplicar la skill natillerapp-modals
+  (ModalWrapper + patrón «Sin Socios»).
+alwaysApply: true
+---
+
+# Modales Natillerapp
+
+- **Al crear, modificar o editar** cualquier modal, diálogo u overlay equivalente, es **obligatorio** **leer y seguir** la skill del proyecto en `.cursor/skills/natillerapp-modals/SKILL.md` (patrón basado en el modal «Sin Socios» de `NatilleraDetalle.vue`: `ModalWrapper`, cabecera marca **compacta (~20 % menos que la referencia clásica en título/iconos)**, **móvil = fila** (icono + títulos + X en la misma línea), **desktop = icono arriba y textos centrados debajo** con X en flex (sin `absolute` en iOS), **un solo scroll** que incluye el contenido y **las acciones al final** (no pie fijo salvo excepción), safe-area en el bloque de acciones, `useBodyScrollLock`, props `align` / `persistent` / `ios-soft-backdrop` según corresponda).
+- **No** sustituir `ModalWrapper` por un `div` fijo genérico sin justificación en comentario y sin cubrir iOS (la regla `ios-safari-compat` sigue aplicando).
+- Si el agente no tiene cargada la skill en el panel de Skills, abrir el archivo `.cursor/skills/natillerapp-modals/SKILL.md` del workspace y aplicar su checklist.

@@ -1,0 +1,37 @@
+---
+description: Todo cambio debe ser compatible con iPhone/Safari sin romper Android
+alwaysApply: true
+---
+
+# Compatibilidad iOS / Safari obligatoria
+
+Todo componente, vista, modal, overlay, pantalla de carga o CSS que se cree o modifique **debe funcionar correctamente en iPhone y Safari** sin romper el comportamiento existente en Android.
+
+## Reglas rápidas
+
+1. **Viewport**: usar `100dvh` con fallback `100vh` y `-webkit-fill-available` en alturas full-screen.
+2. **Safe-area**: respetar `env(safe-area-inset-*)` en bordes pegados a pantalla (bottom nav, footers de modales, headers sticky).
+3. **Modales**: preferir `<ModalWrapper>` — ya tiene ruta iOS dedicada con safe-area, scroll táctil y renderizado correcto. Si un caso legítimo no puede usar ModalWrapper (e.g. overlay custom, dropdown teleportado), documentar el porqué en un comentario y aplicar manualmente las reglas de la skill (translate3d, safe-area, touch, dvh).
+4. **Inputs**: `font-size` >= 16px para evitar zoom en iOS. No aplicar `appearance: none` a `<select>` globalmente.
+5. **Touch**: `touch-action: manipulation` en botones; handlers `@touchstart` con `.passive` si no usan `preventDefault()`.
+6. **Botones**: área táctil mínima 44×44px.
+7. **Scroll lock**: usar `useBodyScrollLock(refBoolean)` en modales.
+8. **CSS iOS**: acotar con `@supports (-webkit-touch-callout: none)`. No usar `opacity: 1 !important` ni `display: block !important` en reglas genéricas (rompe transiciones Vue y layouts flex).
+9. **Backdrop-filter**: en iOS, reducir blur o reemplazar con fondo sólido.
+10. **Animaciones**: prefijo `-webkit-` en keyframes que usen transform; usar `translate3d(0,0,0)` para forzar GPU.
+
+## Checklist antes de dar por terminado un cambio
+
+- [ ] ¿Alturas full-screen usan `dvh` / `-webkit-fill-available`?
+- [ ] ¿Bordes pegados a pantalla respetan safe-area?
+- [ ] ¿Modales usan `<ModalWrapper>`? Si no, ¿hay comentario justificando y se aplicaron las reglas manuales?
+- [ ] ¿Inputs con `font-size >= 16px`?
+- [ ] ¿Botones con min 44px de área táctil?
+- [ ] ¿Touch handlers con `.passive` cuando no necesitan `preventDefault`?
+- [ ] ¿Backdrop-filter con fallback sólido para iOS?
+- [ ] ¿Sin `opacity: 1 !important` ni `display: block !important` en CSS genérico?
+- [ ] ¿Funciona en Android igual que antes?
+
+## Referencia técnica
+
+Para patrones detallados y arquitectura del proyecto → **leer la skill `ios-safari-compat`** (`~/.cursor/skills/ios-safari-compat/SKILL.md`).

@@ -65,13 +65,13 @@ function handleInputFocus(event) {
 }
 
 onMounted(() => {
-  authStore.checkAuth()
-  // Agregar listener global para Enter
+  // No llamar checkAuth(): onAuthStateChange (INITIAL_SESSION) ya restaura
+  // la sesión desde storage sin round-trip extra a Supabase.
+  // El router guard espera initialSessionReady antes de decidir.
+
   document.addEventListener('keydown', handleEnterKey)
-  // Agregar listener para hacer scroll cuando un input recibe focus (móvil)
   document.addEventListener('focusin', handleInputFocus)
   
-  // Iniciar el sistema de timeout de sesión si el usuario está autenticado
   if (authStore.isAuthenticated) {
     sessionTimeout.start()
   }

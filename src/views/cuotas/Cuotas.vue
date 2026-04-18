@@ -4,53 +4,13 @@
     text="Cargando cuotas"
   />
 
-  <!-- Pantalla de carga al reenviar comprobante (elegante, compatible Safari/iPhone) -->
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-400 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-300 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div
-        v-if="cargandoComprobanteReenvio"
-        class="cargando-comprobante-reenvio"
-        role="status"
-        aria-live="polite"
-        aria-label="Preparando comprobante"
-      >
-        <!-- Fondo suave con orbes decorativos -->
-        <div class="cargando-comprobante-reenvio__bg">
-          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--1"></div>
-          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--2"></div>
-          <div class="cargando-comprobante-reenvio__orb cargando-comprobante-reenvio__orb--3"></div>
-        </div>
-
-        <div class="cargando-comprobante-reenvio__inner">
-          <!-- Spinner doble anillo + icono central -->
-          <div class="cargando-comprobante-reenvio__spinner-wrap">
-            <div class="cargando-comprobante-reenvio__ring cargando-comprobante-reenvio__ring--outer"></div>
-            <div class="cargando-comprobante-reenvio__ring cargando-comprobante-reenvio__ring--mid"></div>
-            <div class="cargando-comprobante-reenvio__icon-wrap">
-              <svg class="cargando-comprobante-reenvio__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </div>
-
-          <p class="cargando-comprobante-reenvio__title">Preparando comprobante</p>
-          <p class="cargando-comprobante-reenvio__message">Listo en un momento</p>
-
-          <!-- Barra de progreso sutil -->
-          <div class="cargando-comprobante-reenvio__bar-wrap">
-            <div class="cargando-comprobante-reenvio__bar"></div>
-          </div>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
+  <!-- Reenvío de comprobante o registro de pago (mismo LoadingBox lg) -->
+  <LoadingBox
+    :visible="mostrarLoadingBoxCarga"
+    size="lg"
+    :text="textoLoadingBoxCarga"
+    :aria-label="ariaLoadingBoxCarga"
+  />
 
   <div v-if="!inicializando" class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
     <!-- Efectos decorativos de fondo -->
@@ -60,8 +20,7 @@
     </div>
 
     <!-- Header unificado - Desktop -->
-    <div class="relative hidden md:block">
-      <Breadcrumbs />
+    <div class="hidden md:block">
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -75,13 +34,21 @@
                   <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Cuotas y Pagos</h1>
                   <p class="text-gray-500 mt-0.5 text-sm">Gestiona las cuotas del mes seleccionado</p>
                 </div>
-                <div v-if="mesSeleccionado" class="flex items-center gap-2 px-3 py-2 bg-white/80 rounded-xl border border-gray-200/80">
-                  <span class="text-2xl">{{ getMesEmoji(mesSeleccionado) }}</span>
-                  <div>
-                    <p class="text-sm font-bold text-gray-800 leading-tight">{{ mesSeleccionadoLabel }}</p>
-                    <p class="text-xs text-gray-500">{{ anioMesSeleccionado }}</p>
+              </div>
+              <div class="hidden md:flex items-center gap-2 mt-3 flex-wrap">
+                <p class="text-xs text-gray-500 font-medium shrink-0">PERIODO</p>
+                <button
+                  id="tour-cuotas-periodo-selector-desktop"
+                  type="button"
+                  @click="abrirSelectorMes"
+                  class="flex items-center gap-2 px-3 py-2 bg-white/90 rounded-xl border border-gray-200/80 text-left min-w-0 max-w-sm hover:bg-white transition-colors"
+                >
+                  <span v-if="mesSeleccionado" class="text-xl flex-shrink-0">{{ getMesEmoji(mesSeleccionado) }}</span>
+                  <div class="min-w-0">
+                    <p class="text-sm font-bold text-gray-800 truncate">{{ mesSeleccionadoLabel || 'Seleccionar mes' }}</p>
+                    <p v-if="mesSeleccionado" class="text-xs text-gray-500">{{ anioMesSeleccionado }}</p>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
           </div>
@@ -89,6 +56,15 @@
             <button v-if="!esVisor && esUsuarioAdmin" @click="abrirModalGenerarCuotas" class="btn-primary inline-flex items-center justify-center gap-2 text-sm sm:text-base">
               <PlusIcon class="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Generar Cuotas</span>
+            </button>
+            <button
+              v-if="!esVisor && mostrarBotonRegistrarPago"
+              type="button"
+              @click="abrirModalRegistrarPagoSelector"
+              class="inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-600 to-emerald-600 hover:from-natillera-700 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-md text-sm sm:text-base transition-all"
+            >
+              <BanknotesIcon class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span>Registrar Pago</span>
             </button>
             <button
               v-if="!esVisor && esUsuarioAdmin && mesSeleccionado && cuotasPendientesMes.length > 0"
@@ -119,6 +95,8 @@
         <div class="flex items-center gap-2">
           <p class="text-xs text-gray-500 font-medium">PERIODO</p>
           <button
+            id="tour-cuotas-periodo-selector-mobile"
+            type="button"
             @click="abrirSelectorMes"
             class="flex items-center gap-2 px-3 py-2.5 bg-white rounded-xl border border-gray-200/80 text-left flex-1 min-w-0"
           >
@@ -129,6 +107,15 @@
             </div>
           </button>
         </div>
+        <button
+          v-if="!esVisor && mostrarBotonRegistrarPago"
+          type="button"
+          @click="abrirModalRegistrarPagoSelector"
+          class="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-natillera-600 to-emerald-600 active:from-natillera-700 active:to-emerald-700 text-white font-semibold rounded-xl shadow-md text-sm transition-all touch-manipulation"
+        >
+          <BanknotesIcon class="w-4 h-4 flex-shrink-0" />
+          <span>Registrar Pago</span>
+        </button>
       </div>
     </div>
 
@@ -1264,6 +1251,7 @@
           <div 
             v-for="cuota in cuotasFiltradas" 
             :key="cuota.id"
+            :id="esPrimerFlujoSocioCuota(cuota) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalDetalleCuota(cuota)"
             class="relative overflow-hidden rounded-2xl p-4 sm:p-5 transition-all duration-200 cursor-pointer"
             :class="[
@@ -1486,6 +1474,7 @@
                     <div class="flex flex-col gap-2 w-full">
                       <button 
                         v-if="!esVisor"
+                        :id="esPrimerFlujoSocioCuota(cuota) ? 'tour-primer-flujo-btn-pagar' : undefined"
                         @click="abrirModalPago(cuota)"
                         class="w-full min-w-0 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                       >
@@ -1516,6 +1505,7 @@
                   <template v-else-if="(cuota.estadoReal || cuota.estado) !== 'pagada'">
                     <button 
                       v-if="!esVisor"
+                      :id="esPrimerFlujoSocioCuota(cuota) ? 'tour-primer-flujo-btn-pagar' : undefined"
                       @click="abrirModalPago(cuota)"
                       class="w-full px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
                     >
@@ -2791,51 +2781,363 @@
         </div>
     </ModalWrapper>
 
-    <LoadingScreen
+    <!-- Modal selector: socio → cuota del mes → abre modal registrar pago -->
+    <ModalWrapper
+      :show="!!modalRegistrarPagoSelector"
+      :z-index="55"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      card-max-width="28rem"
+      @close="cerrarModalRegistrarPagoSelector"
+    >
+      <!-- Móvil: una fila — ← | icono | títulos | X (skill natillerapp-modals) -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <button
+            v-if="pasoRegistrarPagoSelector === 'cuotas'"
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Volver a socios"
+            @click="volverPasoSociosRegistrarPago"
+          >
+            <ChevronLeftIcon class="w-6 h-6" />
+          </button>
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+            <CurrencyDollarIcon class="w-5 h-5 text-[#1B5E37]" />
+          </div>
+          <div class="flex-1 min-w-0 text-left">
+            <h3 class="text-base font-display font-bold leading-tight text-white">
+              {{ pasoRegistrarPagoSelector === 'socio' ? 'Registrar pago' : 'Cuotas del mes' }}
+            </h3>
+            <p class="text-white/90 text-[0.6875rem] leading-snug mt-0.5 truncate">
+              <template v-if="pasoRegistrarPagoSelector === 'socio'">
+                {{ mesSeleccionadoLabel }} {{ anioMesSeleccionado }} — elige un socio
+              </template>
+              <template v-else>
+                {{ socioNatilleraRegistrarPago?.socio?.nombre || 'Socio' }}
+              </template>
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarModalRegistrarPagoSelector"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+      <!-- Desktop: icono arriba + textos centrados abajo; X a la derecha (sin absolute, iOS-safe) -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start gap-1 pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-3">
+          <div class="w-11 flex-shrink-0 flex justify-start">
+            <button
+              v-if="pasoRegistrarPagoSelector === 'cuotas'"
+              type="button"
+              class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+              aria-label="Volver a socios"
+              @click="volverPasoSociosRegistrarPago"
+            >
+              <ChevronLeftIcon class="w-6 h-6" />
+            </button>
+          </div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center px-2">
+            <div class="w-11 h-11 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <CurrencyDollarIcon class="w-6 h-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="text-lg font-display font-bold text-white mt-2 leading-tight">
+              {{ pasoRegistrarPagoSelector === 'socio' ? 'Registrar pago' : 'Cuotas del mes' }}
+            </h3>
+            <p class="text-white/90 text-xs mt-1 leading-snug max-w-full break-words">
+              <template v-if="pasoRegistrarPagoSelector === 'socio'">
+                {{ mesSeleccionadoLabel }} {{ anioMesSeleccionado }} — elige un socio
+              </template>
+              <template v-else>
+                {{ socioNatilleraRegistrarPago?.socio?.nombre || 'Socio' }}
+              </template>
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarModalRegistrarPagoSelector"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref="contenidoScrollRegistrarPagoSelectorRef"
+        class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-0 space-y-4 bg-white [-webkit-overflow-scrolling:touch]"
+      >
+        <template v-if="pasoRegistrarPagoSelector === 'socio'">
+          <div class="flex items-center gap-0 border-2 border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all">
+            <span class="pl-3 flex-shrink-0 text-gray-400 pointer-events-none">
+              <MagnifyingGlassIcon class="w-5 h-5" />
+            </span>
+            <input
+              ref="inputBusquedaRegistrarPagoRef"
+              v-model="busquedaRegistrarPagoSocio"
+              type="search"
+              enterkeyhint="search"
+              autocomplete="off"
+              placeholder="Buscar por nombre..."
+              class="flex-1 min-w-0 py-3 px-2 bg-transparent text-sm outline-none border-none focus:ring-0"
+            />
+            <button
+              v-if="busquedaRegistrarPagoSocio.trim()"
+              type="button"
+              class="pr-3 flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600"
+              aria-label="Limpiar búsqueda"
+              @click="busquedaRegistrarPagoSocio = ''"
+            >
+              <XMarkIcon class="w-4 h-4" />
+            </button>
+          </div>
+          <div class="flex items-center justify-between gap-3 min-h-[48px] py-1">
+            <span class="text-sm font-medium text-gray-800 leading-snug">Solo pendientes o en mora</span>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0 touch-manipulation">
+              <input
+                v-model="soloPendientesOMoraRegistrarPago"
+                type="checkbox"
+                class="sr-only peer"
+              />
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-natillera-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-600"
+              />
+            </label>
+          </div>
+          <div v-if="sociosFiltradosRegistrarPago.length === 0" class="text-center py-10 px-2">
+            <UsersIcon class="w-12 h-12 mx-auto text-gray-300 mb-3" />
+            <p class="text-gray-600 font-medium">
+              <template v-if="sociosParaRegistrarPago.length === 0">No hay socios con cuotas en este mes</template>
+              <template v-else-if="sociosRegistrarPagoTrasFiltroEstado.length === 0">
+                Ningún socio está en pendiente o en mora en este período.
+              </template>
+              <template v-else>No se encontraron socios</template>
+            </p>
+            <p
+              v-if="sociosParaRegistrarPago.length > 0 && sociosFiltradosRegistrarPago.length === 0 && sociosRegistrarPagoTrasFiltroEstado.length > 0 && busquedaRegistrarPagoSocio.trim()"
+              class="text-xs text-gray-500 mt-1"
+            >
+              Prueba con otro término
+            </p>
+          </div>
+          <div v-else class="space-y-2">
+            <button
+              v-for="item in sociosFiltradosRegistrarPago"
+              :key="item.socio_natillera_id"
+              type="button"
+              class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-transparent bg-gray-50 hover:bg-gray-100 hover:border-natillera-200 text-left transition-all"
+              @click="seleccionarSocioRegistrarPago(item.socio_natillera_id)"
+            >
+              <img
+                :src="getAvatarUrl(item.socio_natillera?.socio?.nombre || item.socio_natillera_id, item.socio_natillera?.socio?.avatar_seed, item.socio_natillera?.socio?.avatar_style)"
+                :alt="item.socio_natillera?.socio?.nombre"
+                class="w-12 h-12 rounded-xl border-2 border-gray-200 object-cover flex-shrink-0"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-gray-900 truncate">{{ item.socio_natillera?.socio?.nombre || 'Socio' }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  {{ item.socio_natillera?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+                </p>
+              </div>
+              <ChevronRightIcon class="w-5 h-5 text-gray-400 flex-shrink-0" />
+            </button>
+          </div>
+        </template>
+
+        <template v-else>
+          <p class="text-sm text-gray-600">
+            Selecciona la cuota para abrir el registro de pago.
+          </p>
+          <div v-if="cuotasRegistrarPagoDelSocio.length === 0" class="text-center py-10">
+            <p class="text-gray-600 font-medium">Este socio no tiene cuotas en este período</p>
+            <button
+              type="button"
+              class="mt-4 text-sm font-semibold text-natillera-700 hover:text-natillera-800"
+              @click="volverPasoSociosRegistrarPago"
+            >
+              ← Volver a socios
+            </button>
+          </div>
+          <div v-else class="space-y-2">
+            <button
+              v-for="cuota in cuotasRegistrarPagoDelSocio"
+              :key="cuota.id"
+              type="button"
+              class="w-full flex flex-col gap-2 p-3 rounded-xl border-2 border-gray-200 border-l-2 border-l-natillera-600 bg-white hover:border-natillera-400 hover:border-l-natillera-700 hover:shadow-md text-left transition-all"
+              @click="seleccionarCuotaYAbrirModalPago(cuota)"
+            >
+              <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-gray-900">{{ getDescripcionLista(cuota) }}</p>
+                  <span
+                    :class="[
+                      'inline-flex mt-1 text-xs font-bold px-2 py-0.5 rounded-lg',
+                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-100 text-green-800' :
+                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-100 text-red-800' :
+                      (cuota.estadoReal || cuota.estado) === 'programada' ? 'bg-slate-100 text-slate-700' :
+                      tienePagoParcialCuota(cuota) ? 'bg-amber-100 text-amber-800' :
+                      'bg-gray-100 text-gray-800'
+                    ]"
+                  >
+                    {{ (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : (cuota.estadoReal || cuota.estado) === 'parcial' ? 'Pago parcial' : (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' : (cuota.estadoReal || cuota.estado) === 'mora' ? 'En mora' : tienePagoParcialCuota(cuota) ? 'Pago parcial' : 'Pendiente' }}
+                  </span>
+                </div>
+                <div
+                  v-if="!tienePagoParcialCuota(cuota)"
+                  class="text-left sm:text-right flex-shrink-0 w-full sm:w-auto"
+                >
+                  <p class="text-xs text-gray-500">Total a pagar</p>
+                  <p class="text-lg font-bold text-natillera-700">${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</p>
+                </div>
+              </div>
+              <div
+                v-if="tienePagoParcialCuota(cuota)"
+                class="rounded-lg bg-amber-50/90 border border-amber-200 px-2.5 py-2 space-y-1.5 w-full"
+              >
+                <p class="text-[10px] font-semibold text-amber-800/90 uppercase tracking-wide">Resumen</p>
+                <div class="flex justify-between gap-2 text-xs">
+                  <span class="text-gray-600">Total a pagar</span>
+                  <span class="font-bold text-gray-900 tabular-nums">${{ formatMoney(getTotalObligacionRegistrarPagoSelector(cuota)) }}</span>
+                </div>
+                <div class="flex justify-between gap-2 text-xs">
+                  <span class="text-gray-600">Pagado anteriormente</span>
+                  <span class="font-bold text-green-700 tabular-nums">${{ formatMoney(getPagadoAnteriormenteRegistrarPagoSelector(cuota)) }}</span>
+                </div>
+                <div class="flex justify-between gap-2 text-xs">
+                  <span class="text-gray-600">Pago pendiente</span>
+                  <span class="font-bold text-amber-800 tabular-nums">${{ formatMoney(getPagoPendienteRegistrarPagoSelector(cuota)) }}</span>
+                </div>
+              </div>
+              <div
+                v-if="getLineasDesgloseConceptosCuota(cuota).length > 0"
+                class="rounded-lg bg-gray-50 border border-gray-100 px-2.5 py-2 space-y-1"
+              >
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Conceptos</p>
+                <ul class="space-y-0.5">
+                  <li
+                    v-for="(ln, idx) in getLineasDesgloseConceptosCuota(cuota)"
+                    :key="idx"
+                    class="flex justify-between gap-3 text-xs text-gray-700"
+                  >
+                    <span class="truncate min-w-0">{{ ln.label }}</span>
+                    <span class="tabular-nums font-medium text-gray-900 flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
+                  </li>
+                </ul>
+              </div>
+            </button>
+          </div>
+        </template>
+
+        <div class="pt-4 border-t border-gray-200 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            class="w-full min-h-[48px] px-4 py-3 rounded-full border-2 border-gray-300 bg-white text-gray-800 font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
+            @click="cerrarModalRegistrarPagoSelector"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </ModalWrapper>
+
+    <LoadingBox
       :visible="preparandoModalPago"
+      size="md"
       text="Preparando registro de pago"
+      aria-label="Preparando registro de pago"
     />
 
-    <!-- Modal Registrar Pago: en iOS ModalWrapper (vista/scroll correctos); en Android estructura actual -->
+    <!-- Modal Registrar Pago: patrón natillerapp-modals (ModalWrapper, cabecera #1B5E37, cuerpo scroll, pie safe-area) -->
     <ModalWrapper
       :show="!!modalPago"
       :z-index="60"
       align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      card-class="relative max-w-md w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-gray-200 border-b-0 sm:border-b max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 my-0 sm:my-4"
-      @close="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; formPago.aplicaImpuesto4x1000 = false; mostrandoAnimacionPago.value = false"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      card-max-width="28rem"
+      @close="cerrarModalPago"
     >
-        <!-- Header con gradiente (fijo) - tamaño reducido ~20% -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white relative overflow-hidden flex-shrink-0">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -ml-10 -mb-10 blur-xl"></div>
-          
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-1">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30">
-                <CurrencyDollarIcon class="w-5 h-5 text-white" />
-              </div>
-              <h3 class="text-xl font-display font-bold">
+        <!-- Móvil: fila — icono | títulos | X (sin absolute, iOS-safe) -->
+        <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+          <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+              <CurrencyDollarIcon class="w-5 h-5 text-[#1B5E37]" />
+            </div>
+            <div class="flex-1 min-w-0 text-left">
+              <h3 class="text-base font-display font-bold leading-tight text-white">
                 Registrar Pago
               </h3>
+              <p class="text-white/90 text-[0.6875rem] leading-snug mt-0.5">
+                <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
+                  Agrega el saldo pendiente al pago parcial
+                </span>
+                <span v-else>
+                  Registra el pago de la cuota del socio
+                </span>
+              </p>
             </div>
-            <p class="text-white/90 text-xs">
-              <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
-                Agrega el saldo pendiente al pago parcial
-              </span>
-              <span v-else>
-                Registra el pago de la cuota del socio
-              </span>
-            </p>
+            <button
+              type="button"
+              class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors disabled:opacity-50 touch-manipulation"
+              aria-label="Cerrar"
+              :disabled="cuotasStore.loading"
+              @click="cerrarModalPago"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        <!-- Desktop: icono arriba, textos abajo centrados; columna izquierda reserva simetría; X a la derecha -->
+        <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+          <div class="flex items-start pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-4">
+            <div class="w-11 flex-shrink-0" aria-hidden="true" />
+            <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+              <div class="w-[3.2rem] h-[3.2rem] rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <CurrencyDollarIcon class="w-6 h-6 text-[#1B5E37]" />
+              </div>
+              <h3 class="text-lg font-display font-bold text-white mt-2.5 leading-tight">
+                Registrar Pago
+              </h3>
+              <p class="text-white/90 text-xs mt-1 leading-snug px-1">
+                <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
+                  Agrega el saldo pendiente al pago parcial
+                </span>
+                <span v-else>
+                  Registra el pago de la cuota del socio
+                </span>
+              </p>
+            </div>
+            <button
+              type="button"
+              class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors disabled:opacity-50 touch-manipulation"
+              aria-label="Cerrar"
+              :disabled="cuotasStore.loading"
+              @click="cerrarModalPago"
+            >
+              <XMarkIcon class="w-6 h-6" />
+            </button>
           </div>
         </div>
 
-        <!-- Contenido con scroll (min-h-0 permite que flex reduzca y active overflow-y-auto) -->
+        <!-- Cuerpo scrolleable + natiscroll (velo + hint; patrón Préstamos / skill modales) -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div 
           ref="contenidoScrollRef"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain relative"
-          @scroll="handleScrollModalPago"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-0 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalPago"
         >
           <!-- Card de información del socio -->
           <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
@@ -2878,35 +3180,19 @@
               </div>
             </div>
 
-            <!-- Cuota, Sanción y Actividades (solo cuando NO hay pago parcial) -->
+            <!-- Desglose de conceptos pendientes (solo cuando NO hay pago parcial) -->
             <div
               v-if="!tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 p-3 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5"
             >
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-gray-600">Cuota</span>
-                <span class="font-semibold text-gray-800">${{ formatMoney(cuotaSeleccionada?.valor_cuota || 0) }}</span>
-              </div>
+              <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Conceptos</p>
               <div
-                v-if="(getSancionTotalCuota(cuotaSeleccionada) || 0) > 0 || (cuotaSeleccionada?.valor_pagado_sancion || 0) > 0"
-                class="flex items-center justify-between text-sm"
+                v-for="(ln, idx) in lineasDesgloseModalPago"
+                :key="'dl-' + idx"
+                class="flex items-center justify-between text-sm gap-2"
               >
-                <span class="text-gray-600">Sanción</span>
-                <span class="font-semibold text-red-600">${{ formatMoney(getSancionTotalCuota(cuotaSeleccionada) || cuotaSeleccionada?.valor_pagado_sancion || 0) }}</span>
-              </div>
-              <div
-                v-if="actividadesSeleccionadas.size > 0"
-                class="flex items-center justify-between text-sm"
-              >
-                <span class="text-gray-600">{{ getTextoActividadesSocio(cuotaSeleccionada) || 'Actividades' }}</span>
-                <span class="font-semibold text-purple-600">${{ formatMoney(getTotalActividadesSeleccionadas()) }}</span>
-              </div>
-              <div
-                v-if="cuotasPrestamosSeleccionadas.size > 0"
-                class="flex items-center justify-between text-sm"
-              >
-                <span class="text-gray-600">Cuotas de préstamos</span>
-                <span class="font-semibold text-blue-600">${{ formatMoney(getTotalCuotasPrestamosSeleccionadas()) }}</span>
+                <span class="text-gray-600 truncate min-w-0">{{ ln.label }}</span>
+                <span class="font-semibold text-gray-800 tabular-nums flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
               </div>
               <div class="flex items-center justify-between text-base font-bold pt-2 mt-2 border-t border-gray-200">
                 <span class="text-gray-700">Total a pagar</span>
@@ -2914,7 +3200,7 @@
               </div>
             </div>
 
-            <!-- Total a pagar, Pagado anteriormente y Total pendiente (solo cuando hay pago parcial) -->
+            <!-- Pago parcial: Total a pagar → Pagado anteriormente → Pago pendiente -->
             <div
               v-if="tienePagoParcialCuota(cuotaSeleccionada)"
               class="mb-3 space-y-2"
@@ -2926,16 +3212,6 @@
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaSeleccionada)) + (cuotaSeleccionada?.valor_pagado || 0) + (cuotaSeleccionada?.valor_pagado_sancion || 0) + getActividadesInfoSocio(cuotaSeleccionada).pagadas + (getTotalAbonadoPrestamosCuotaSocioSync(cuotaSeleccionada) || getTotalCuotasPrestamosPagadasSocioSync(cuotaSeleccionada) || 0)) }}
                   </p>
                 </div>
-                <!-- Sanción pendiente cuando la cuota está en mora -->
-                <div
-                  v-if="getSancionCuota(cuotaSeleccionada) > 0"
-                  class="flex items-center justify-between text-sm"
-                >
-                  <span class="text-red-600 flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 bg-red-600 rounded-full"></span>Sanción pendiente
-                  </span>
-                  <span class="font-semibold text-red-600">${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}</span>
-                </div>
                 <div class="flex items-center justify-between">
                   <p class="text-xs text-gray-600">Pagado anteriormente</p>
                   <p class="font-bold text-green-600 text-base">
@@ -2943,10 +3219,34 @@
                   </p>
                 </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Total pendiente</p>
+                  <p class="text-xs text-gray-600">Pago pendiente</p>
                   <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
                     ${{ formatMoney(getTotalPendienteMostrarModalPago()) }}
                   </p>
+                </div>
+                <!-- Detalle: sanción pendiente (mora) -->
+                <div
+                  v-if="getSancionCuota(cuotaSeleccionada) > 0"
+                  class="flex items-center justify-between text-sm pt-1 border-t border-gray-200/80"
+                >
+                  <span class="text-red-600 flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 bg-red-600 rounded-full"></span>Sanción pendiente
+                  </span>
+                  <span class="font-semibold text-red-600">${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}</span>
+                </div>
+                <div
+                  v-if="lineasDesgloseModalPago.length > 0"
+                  class="mt-2 pt-2 border-t border-gray-200 space-y-1"
+                >
+                  <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Desglose del pendiente</p>
+                  <div
+                    v-for="(ln, idx) in lineasDesgloseModalPago"
+                    :key="'dlp-' + idx"
+                    class="flex justify-between text-xs text-gray-600 gap-2"
+                  >
+                    <span class="truncate min-w-0">{{ ln.label }}</span>
+                    <span class="tabular-nums font-medium text-gray-800 flex-shrink-0">${{ formatMoney(ln.valor) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3382,157 +3682,54 @@
               </template>
             </div>
           </div>
+
+          <div class="pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-white space-y-3">
+            <div class="flex gap-3">
+              <button 
+                type="button"
+                class="flex-1 min-h-[48px] px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-full hover:bg-gray-50 transition-colors touch-manipulation"
+                style="-webkit-tap-highlight-color: rgba(27, 94, 55, 0.15);"
+                @click="cerrarModalPago"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button"
+                class="flex-1 min-h-[48px] px-4 py-3 bg-[#1B5E37] hover:bg-[#155a32] active:bg-[#134d2b] text-white font-semibold rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-md shadow-[#1B5E37]/20"
+                :disabled="cuotasStore.loading || getValorPagoTotal() <= 0"
+                @click="mostrarConfirmacionPago"
+              >
+                {{ cuotasStore.loading ? 'Registrando...' : 'Registrar Pago' }}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Indicador de scroll en el borde inferior de toda la modal (visible para el usuario) -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 translate-y-1"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-1"
-        >
-          <div 
-            v-if="mostrarIndicadorScroll"
-            class="flex-shrink-0 w-full py-2 px-4 pointer-events-none flex justify-center items-center gap-2 bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-500 border-t border-natillera-600/30"
+          <!-- Natiscroll: velo + «Desliza para ver más» (mismo patrón que Préstamos) -->
+          <div
+            v-show="hayNatiscrollModalPago"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
           >
-            <span class="text-xs font-semibold text-white">Desliza para ver más</span>
-            <ChevronDownIcon class="w-4 h-4 text-white flex-shrink-0" style="animation: bounce-subtle 1.5s ease-in-out infinite;" />
-          </div>
-        </Transition>
-
-        <!-- Footer con botones (fijo, pegados al fondo del modal) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-          <div class="flex gap-3">
-            <button 
-              type="button"
-              @click="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; formPago.aplicaImpuesto4x1000 = false; mostrandoAnimacionPago.value = false"
-              @touchstart="modalPago = false; formPago.valor = 0; formPago.tipo_pago = 'efectivo'; formPago.aplicaImpuesto4x1000 = false; mostrandoAnimacionPago.value = false"
-              class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all border border-gray-200"
-              style="pointer-events: auto !important; touch-action: manipulation !important; -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25); min-height: 44px; z-index: 20 !important;"
+            <div
+              class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+              aria-hidden="true"
+            />
+            <div
+              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
             >
-              Cancelar
-            </button>
-            <button 
-              type="button"
-              @click="mostrarConfirmacionPago"
-              class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="cuotasStore.loading || getValorPagoTotal() <= 0"
-            >
-              {{ cuotasStore.loading ? 'Registrando...' : 'Registrar Pago' }}
-            </button>
+              <div
+                class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+              >
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
           </div>
         </div>
     </ModalWrapper>
-
-    <!-- Animación de registro de pago (Teleport + z-[70] para quedar por encima del modal de pago z-[60]) -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-150 ease-out"
-        enter-from-class="opacity-0 scale-95"
-        enter-to-class="opacity-100 scale-100"
-        leave-active-class="transition duration-100 ease-in"
-        leave-from-class="opacity-100 scale-100"
-        leave-to-class="opacity-0 scale-95"
-      >
-        <div v-if="mostrandoAnimacionPago" class="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden" style="will-change: opacity, transform; touch-action: none; overscroll-behavior: none;">
-        <!-- Fondo con blur y gradiente animado que bloquea interacciones -->
-        <div 
-          class="absolute inset-0 bg-gradient-to-br from-natillera-500/90 via-emerald-500/90 to-teal-600/90 backdrop-blur-sm" 
-          @click.stop.prevent 
-          @mousedown.stop.prevent 
-          @touchstart.stop.prevent
-          @wheel.stop.prevent
-          @scroll.stop.prevent
-          style="touch-action: none; overscroll-behavior: none;"
-        ></div>
-        
-        <!-- Efectos decorativos de fondo animados -->
-        <div class="absolute inset-0 overflow-hidden">
-          <!-- Círculos grandes animados -->
-          <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse-fast" style="will-change: opacity;"></div>
-          <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse-fast" style="animation-delay: 0.5s; will-change: opacity;"></div>
-          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl animate-pulse-fast" style="animation-delay: 0.25s; will-change: opacity;"></div>
-        </div>
-
-        <!-- Contenido principal de la animación -->
-        <div class="relative z-10 flex flex-col items-center justify-center">
-          <!-- Contenedor del spinner principal -->
-          <div class="relative mb-8">
-            <!-- Anillo exterior con gradiente giratorio -->
-            <div class="relative w-40 h-40" style="will-change: transform;">
-              <!-- Anillo exterior grande -->
-              <div class="absolute inset-0 rounded-full border-4 border-transparent bg-gradient-to-r from-white/30 via-white/50 to-white/30 p-1 animate-spin-fast" style="will-change: transform;">
-                <div class="w-full h-full rounded-full bg-gradient-to-br from-natillera-500/90 via-emerald-500/90 to-teal-600/90"></div>
-              </div>
-              
-              <!-- Anillo medio giratorio -->
-              <div class="absolute inset-4 rounded-full border-4 border-transparent border-t-white border-r-white/80 animate-spin-fast-reverse" style="will-change: transform;"></div>
-              
-              <!-- Anillo interior giratorio (dirección opuesta) -->
-              <div class="absolute inset-8 rounded-full border-3 border-transparent border-b-white/60 border-l-white/40 animate-spin-fast" style="will-change: transform;"></div>
-              
-              <!-- Icono central con efecto de pulso -->
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="relative">
-                  <!-- Fondo del icono con pulso -->
-                  <div class="absolute inset-0 bg-white/30 rounded-full blur-2xl animate-pulse-fast" style="will-change: opacity;"></div>
-                  <!-- Icono de dinero -->
-                  <div class="relative bg-white rounded-full p-6 shadow-2xl animate-bounce-fast" style="will-change: transform;">
-                    <CurrencyDollarIcon class="w-12 h-12 text-natillera-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Partículas decorativas alrededor (reducidas para mejor rendimiento) -->
-            <div class="absolute -top-6 -left-6 w-4 h-4 bg-white rounded-full animate-ping-fast" style="animation-delay: 0s; will-change: transform, opacity;"></div>
-            <div class="absolute -top-4 -right-8 w-3 h-3 bg-emerald-200 rounded-full animate-ping-fast" style="animation-delay: 0.3s; will-change: transform, opacity;"></div>
-            <div class="absolute -bottom-6 -left-8 w-3.5 h-3.5 bg-teal-200 rounded-full animate-ping-fast" style="animation-delay: 0.6s; will-change: transform, opacity;"></div>
-            <div class="absolute -bottom-4 -right-6 w-4 h-4 bg-natillera-200 rounded-full animate-ping-fast" style="animation-delay: 0.9s; will-change: transform, opacity;"></div>
-          </div>
-
-          <!-- Texto principal -->
-          <div class="text-center space-y-4">
-            <h2 class="text-4xl sm:text-5xl font-display font-bold text-white drop-shadow-lg">
-              Registrando Pago
-            </h2>
-            <div class="flex items-center justify-center gap-2">
-              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0s; will-change: transform;"></div>
-              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0.15s; will-change: transform;"></div>
-              <div class="w-3 h-3 bg-white rounded-full animate-bounce-fast" style="animation-delay: 0.3s; will-change: transform;"></div>
-            </div>
-            <p class="text-white/90 text-lg sm:text-xl font-medium mt-4">
-              Por favor espera un momento...
-            </p>
-          </div>
-
-          <!-- Barra de progreso decorativa -->
-          <div class="mt-10 w-72 h-2 bg-white/20 rounded-full overflow-hidden shadow-inner">
-            <div class="h-full bg-gradient-to-r from-white via-white/80 to-white rounded-full progress-bar-animated-fast"></div>
-          </div>
-
-          <!-- Efectos de partículas flotantes -->
-          <div class="absolute inset-0 overflow-hidden pointer-events-none" style="pointer-events: none;">
-            <!-- Partículas de dinero flotantes -->
-            <div class="absolute top-1/4 left-1/4 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0s; will-change: transform, opacity;">
-              💰
-            </div>
-            <div class="absolute top-1/3 right-1/4 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.25s; will-change: transform, opacity;">
-              💵
-            </div>
-            <div class="absolute bottom-1/4 left-1/3 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.5s; will-change: transform, opacity;">
-              💴
-            </div>
-            <div class="absolute bottom-1/3 right-1/3 text-white/40 text-2xl animate-float-fast" style="animation-delay: 0.75s; will-change: transform, opacity;">
-              💶
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
-    </Teleport>
 
     <!-- Modal Historial de Ajustes: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
@@ -3786,7 +3983,7 @@
           </div>
         </div>
 
-        <!-- Pago parcial: lo que queda pendiente -->
+        <!-- Pago parcial: pago pendiente tras este registro -->
         <div v-if="desglosePagoConfirmacion?.esParcial && (desglosePagoConfirmacion?.pendienteDespuesPago || 0) > 0" class="rounded-xl p-4 border-2 border-amber-200 bg-amber-50/80">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
@@ -3794,7 +3991,7 @@
                 <span class="text-amber-600 text-lg">⏳</span>
               </div>
               <div>
-                <p class="text-sm font-semibold text-amber-800">Queda pendiente</p>
+                <p class="text-sm font-semibold text-amber-800">Pago pendiente</p>
                 <p class="text-xs text-amber-600">Después de este pago</p>
               </div>
             </div>
@@ -4136,14 +4333,14 @@
                 </template>
                 <!-- 4×1000 (GMF): total acumulado; con varios abonos también en Historial por fila -->
                 <div
-                  v-if="(pagoRegistrado?.impuesto4x1000 || 0) > 0"
+                  v-if="impuesto4x1000Comprobante > 0"
                   style="background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;"
                 >
                   <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 14px;">🏦</span>
                     <p style="color: #0c4a6e; font-size: 11px; margin: 0; font-weight: 600;">4×1000 (GMF)</p>
                   </div>
-                  <p style="font-size: 13px; font-weight: 700; margin: 0; color: #0369a1;">${{ formatMoney(pagoRegistrado?.impuesto4x1000 || 0) }}</p>
+                  <p style="font-size: 13px; font-weight: 700; margin: 0; color: #0369a1;">${{ formatMoney(impuesto4x1000Comprobante) }}</p>
                 </div>
               </div>
             </div>
@@ -4765,8 +4962,8 @@
               </div>
             </div>
 
-            <!-- Total a pagar, Abonado, Total pendiente y Ya abonado desplegable (solo cuando hay pago parcial) -->
-            <div 
+            <!-- Pago parcial: Total a pagar, Pagado anteriormente, Pago pendiente -->
+            <div
               v-if="tienePagoParcialCuota(cuotaEditando)"
               class="mb-3 space-y-2"
             >
@@ -4775,16 +4972,16 @@
                   <p class="text-xs text-gray-600">Total a pagar</p>
                   <p class="font-bold text-gray-800 text-base">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando)) + (cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
-                </p>
-              </div>
+                  </p>
+                </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Abonado</p>
+                  <p class="text-xs text-gray-600">Pagado anteriormente</p>
                   <p class="font-bold text-green-600 text-base">
                     ${{ formatMoney((cuotaEditando?.valor_pagado || 0) + (cuotaEditando?.valor_pagado_sancion || 0) + getTotalActividadesPagadasEditar() + getTotalCuotasPrestamosPagadasEditar()) }}
-                </p>
-              </div>
+                  </p>
+                </div>
                 <div class="flex items-center justify-between">
-                  <p class="text-xs text-gray-600">Total pendiente</p>
+                  <p class="text-xs text-gray-600">Pago pendiente</p>
                   <p :class="['font-bold text-base', cuotaEditando?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
                     ${{ formatMoney(Math.max(0, getTotalAPagarConActividades(cuotaEditando))) }}
                   </p>
@@ -5878,14 +6075,17 @@
   <!-- Modal Selector de Mes: en iOS ModalWrapper; en Android estructura actual -->
   <ModalWrapper
     :show="!!modalSelectorMes"
-    :z-index="50"
+    :z-index="zIndexModalSelectorMes"
     align="bottom"
-    overlay-class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4"
+    :overlay-class="overlayClassModalSelectorMes"
     card-class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden"
     @close="modalSelectorMes = false"
   >
       <Transition name="modal-scale" appear>
-        <div class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden">
+        <div
+          id="tour-modal-selector-mes"
+          class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden"
+        >
           <div class="p-6">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-xl font-bold text-gray-800">Seleccionar Mes</h3>
@@ -5900,7 +6100,8 @@
               <button
                 v-for="mes in mesesNatillera"
                 :key="mes.value"
-                @click="mesSeleccionado = mes.value; modalSelectorMes = false"
+                type="button"
+                @click="seleccionarMesDesdeModal(mes)"
                 class="p-4 rounded-xl border-2 transition-all text-center"
                 :class="mesSeleccionado === mes.value 
                   ? 'bg-green-500 text-white border-green-600 shadow-lg' 
@@ -6054,7 +6255,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -6108,19 +6309,35 @@ import {
 } from '@heroicons/vue/24/outline'
 import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
+import LoadingBox from '../../components/LoadingBox.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import { TOURS_ENABLED } from '../../config/toursEnabled'
 import * as XLSX from 'xlsx-js-style'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
-
+import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
+import {
+  peekPendingCuotasDetalleTour,
+  clearPendingCuotasDetalleTour,
+  consumePendingCuotasDetalleTour,
+  shouldShowPrimerCuotasDetalleSocioTour,
+  getPrimerFlujoSocioNatilleraId,
+  startPrimerCuotasDetalleSocioTour,
+  markPrimerCuotasDetalleSocioTourDone,
+  clearPrimerFlujoSocioNatilleraId,
+  notifyPrimerCuotasDetalleModalMesAbierto,
+  notifyPrimerCuotasDetalleMesElegidoEnModal,
+  notifyPrimerCuotasDetalleModalCerradoSinElegirMes
+} from '../../composables/usePrimerSocioCuotasMesTour'
 const props = defineProps({
   id: String,
   mes: String // Parámetro de ruta natilleras/:id/cuotas/:mes
 })
 
 const route = useRoute()
+const router = useRouter()
 const cuotasStore = useCuotasStore()
 const sociosStore = useSociosStore()
 const natillerasStore = useNatillerasStore()
@@ -6142,17 +6359,71 @@ const modalExportar = ref(false)
 const modalConfirmarPago = ref(false) // Modal de confirmación antes de registrar el pago
 const desglosePagoConfirmacion = ref(null) // Desglose del pago para mostrar en confirmación
 const contenidoScrollRef = ref(null) // Referencia al contenedor scrolleable del modal de pago
-const mostrarIndicadorScroll = ref(false) // Indica si se debe mostrar el indicador de scroll
+/** Natiscroll — modal registrar pago (velo + «Desliza para ver más») */
+const hayNatiscrollModalPago = ref(false)
+let rafNatiscrollModalPago = null
+function actualizarNatiscrollModalPago() {
+  const el = contenidoScrollRef.value
+  if (!el) {
+    hayNatiscrollModalPago.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalPago.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalPago() {
+  if (rafNatiscrollModalPago != null) cancelAnimationFrame(rafNatiscrollModalPago)
+  rafNatiscrollModalPago = requestAnimationFrame(() => {
+    rafNatiscrollModalPago = null
+    actualizarNatiscrollModalPago()
+  })
+}
+const mostrarIndicadorScroll = ref(false) // Indicador de scroll del modal comprobante (¡Pago registrado!)
 const modalEditarCuota = ref(false)
 /** Suma de impuesto_4x1000 en historial_pagos_cuota al abrir "Editar pago" (para detectar cambios y sincronizar). */
 const impuesto4x1000AnteriorEditar = ref(0)
 const modalDesgloseRecaudacion = ref(false)
 const exportando = ref(false)
 const cuotaSeleccionada = ref(null)
+/** Desglose de conceptos en la modal de registro de pago (sincronizado con selección y cargas). */
+const lineasDesgloseModalPago = computed(() => getLineasDesgloseModalPago())
 const cuotaEditando = ref(null)
 const pagoRegistrado = ref(null)
+/** GMF a mostrar en el comprobante: campo guardado, conceptos del historial o bruto−neto (transferencia). */
+const impuesto4x1000Comprobante = computed(() => {
+  const r = pagoRegistrado.value
+  if (!r) return 0
+  let n = Number(r.impuesto4x1000) || 0
+  if (n > 0) return n
+  const fromHp = sumarGmfEnConceptosHistorialPagos(r.historialPagos || [])
+  if (fromHp > 0) return fromHp
+  const neto = Number(r.valorPagadoTotal) || 0
+  const total = Number(r.valor) || 0
+  const tp = (r.tipoPago || '').toLowerCase()
+  const esTr =
+    tp === 'transferencia' || tp === 'mixto' || (Number(r.valorTransferencia) || 0) > 0
+  if (esTr && total > neto) {
+    const d = Math.round(total - neto)
+    const tope = calcularImpuesto4x1000(neto)
+    if (d > 0 && d <= tope + 1) return Math.min(d, tope)
+  }
+  return 0
+})
 const modificacionRegistrada = ref(null)
 const modalModificacion = ref(false)
+/** Flujo «Registrar pago»: elegir socio y cuota del mes antes de abrir el modal de pago. */
+const modalRegistrarPagoSelector = ref(false)
+const pasoRegistrarPagoSelector = ref('socio')
+const busquedaRegistrarPagoSocio = ref('')
+const soloPendientesOMoraRegistrarPago = ref(false)
+const socioNatilleraIdRegistrarPago = ref(null)
+const contenidoScrollRegistrarPagoSelectorRef = ref(null)
+const inputBusquedaRegistrarPagoRef = ref(null)
+const { tieneScroll: tieneScrollRegistrarPagoSelector } = useModalBodyScrollOverflow(
+  modalRegistrarPagoSelector,
+  contenidoScrollRegistrarPagoSelectorRef
+)
 const comprobanteModificacionRef = ref(null)
 const generandoImagenModificacion = ref(false)
 const modalDetalleCuota = ref(false)
@@ -6198,6 +6469,9 @@ const scrollMainAntesModal = ref(0)
 const scrollWindowAntesModal = ref(0)
 const modalProgreso = ref(false)
 const modalSelectorMes = ref(false)
+/** Tour detalle primer socio: elevar z-index del modal selector para que quede sobre el overlay de driver.js */
+const tourGuiadoCuotasDetalleActivo = ref(false)
+const mesAlAbrirModalSelector = ref(null)
 const desplegableYaAbonadoOpen = ref(false)
 
 // Ref para bloquear el fondo cuando se está registrando un pago (declarado antes de useBodyScrollLock)
@@ -6222,6 +6496,22 @@ useBodyScrollLock(modalEditarSocio)
 useBodyScrollLock(modalProgreso)
 useBodyScrollLock(modalSelectorMes)
 useBodyScrollLock(modalModificacion)
+useBodyScrollLock(modalRegistrarPagoSelector)
+
+watch([modalRegistrarPagoSelector, pasoRegistrarPagoSelector], ([abierta, paso]) => {
+  if (!abierta || paso !== 'socio') return
+  const enfocar = () => {
+    const el = inputBusquedaRegistrarPagoRef.value
+    if (el && document.contains(el)) {
+      el.focus({ preventScroll: true })
+    }
+  }
+  nextTick(() => {
+    enfocar()
+    requestAnimationFrame(enfocar)
+    setTimeout(enfocar, 100)
+  })
+})
 
 // Bloquear scroll cuando se está registrando un pago
 useBodyScrollLock(bloqueandoRegistroPago)
@@ -6260,8 +6550,7 @@ const cargandoActividades = ref(false) // Estado de carga de actividades
 const actividadesSeleccionadas = ref(new Set()) // IDs de actividades seleccionadas
 const actividadesDeLaCuotaActual = ref(new Set()) // IDs de actividades que corresponden al periodo de la cuota actual (no se pueden deseleccionar)
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
-const mostrandoAnimacionPago = ref(false) // Controla la animación de registro de pago
-useBodyScrollLock(mostrandoAnimacionPago) // Bloquear scroll durante la animación de pago
+const mostrandoAnimacionPago = ref(false) // Activo mientras se procesa el pago (LoadingBox + bloqueandoRegistroPago)
 const cuotasPrestamosPendientes = ref([]) // Cuotas de préstamos pendientes del socio
 const cuotasPrestamosDesplegableAbierto = ref(false) // Estado del desplegable de cuotas de préstamos
 const cargandoCuotasPrestamos = ref(false) // Estado de carga de cuotas de préstamos
@@ -6286,6 +6575,17 @@ watch([mostrandoAnimacionPago, loadingPago, modalPago], ([animacion, loading, mo
   bloqueandoRegistroPago.value = animacion || (loading && modal)
 }, { immediate: true })
 
+const mostrarLoadingBoxCarga = computed(
+  () => cargandoComprobanteReenvio.value || bloqueandoRegistroPago.value
+)
+
+const textoLoadingBoxCarga = computed(() => {
+  if (cargandoComprobanteReenvio.value) return 'Preparando comprobante de pago'
+  return 'Registrando pago'
+})
+
+const ariaLoadingBoxCarga = computed(() => textoLoadingBoxCarga.value)
+
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
 const mesFin = ref(11)
@@ -6303,6 +6603,8 @@ const inputValorPagoRef = ref(null)
 const vistaExcel = ref(false) // false = vista tarjetas, true = vista Excel
 const vistaAgrupada = ref(false) // true = vista agrupada por socio
 const vistaLista = ref(false) // true = vista lista simple
+/** Tour guiado: resalta la tarjeta del primer socio creado (id en sessionStorage). */
+const primerFlujoSocioNatilleraId = ref(null)
 // IDs de filas expandidas en la vista lista móvil (lista expandible)
 const listaExpandidos = ref(new Set())
 function toggleListaExpandida(cuotaId) {
@@ -6728,6 +7030,16 @@ const mesesNatillera = computed(() => {
   return meses
 })
 
+const zIndexModalSelectorMes = computed(() =>
+  tourGuiadoCuotasDetalleActivo.value ? 1000000003 : 50
+)
+
+const overlayClassModalSelectorMes = computed(() =>
+  tourGuiadoCuotasDetalleActivo.value
+    ? 'fixed inset-0 z-[1000000003] flex items-end md:items-center justify-center p-4'
+    : 'fixed inset-0 z-50 flex items-end md:items-center justify-center p-4'
+)
+
 // Label del mes seleccionado
 const mesSeleccionadoLabel = computed(() => {
   return todosMeses.find(m => m.value === mesSeleccionado.value)?.label || ''
@@ -6861,6 +7173,76 @@ const cuotasFiltradas = computed(() => {
   })
 
   return filtradas
+})
+
+// Socios únicos con al menos una cuota en el mes (misma exclusión que la lista principal)
+const sociosParaRegistrarPago = computed(() => {
+  const seen = new Map()
+  for (const c of cuotasMesActual.value) {
+    const sid = c.socio_natillera_id
+    if (!sid || sociosInactivosSinPagoCompletoIds.value.has(sid)) continue
+    if (!seen.has(sid)) {
+      seen.set(sid, {
+        socio_natillera_id: sid,
+        socio_natillera: c.socio_natillera
+      })
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => {
+    const na = (a.socio_natillera?.socio?.nombre || '').toLowerCase()
+    const nb = (b.socio_natillera?.socio?.nombre || '').toLowerCase()
+    return na.localeCompare(nb, 'es', { sensitivity: 'base' })
+  })
+})
+
+const sociosRegistrarPagoTrasFiltroEstado = computed(() => {
+  if (!soloPendientesOMoraRegistrarPago.value) return sociosParaRegistrarPago.value
+  return sociosParaRegistrarPago.value.filter((item) =>
+    socioTieneCuotaPendienteOMoraRegistrarPago(item.socio_natillera_id)
+  )
+})
+
+const sociosFiltradosRegistrarPago = computed(() => {
+  const q = busquedaRegistrarPagoSocio.value.toLowerCase().trim()
+  const base = sociosRegistrarPagoTrasFiltroEstado.value
+  if (!q) return base
+  return base.filter((item) => {
+    const n = item.socio_natillera?.socio?.nombre?.toLowerCase() || ''
+    const doc = item.socio_natillera?.socio?.documento?.toLowerCase() || ''
+    const tel = item.socio_natillera?.socio?.telefono?.toLowerCase() || ''
+    return n.includes(q) || doc.includes(q) || tel.includes(q)
+  })
+})
+
+const socioNatilleraRegistrarPago = computed(() => {
+  const id = socioNatilleraIdRegistrarPago.value
+  if (!id) return null
+  const found = sociosParaRegistrarPago.value.find((s) => s.socio_natillera_id === id)
+  return found?.socio_natillera || null
+})
+
+const cuotasRegistrarPagoDelSocio = computed(() => {
+  const id = socioNatilleraIdRegistrarPago.value
+  if (!id) return []
+  const list = cuotasMesActual.value
+    .filter(
+      (c) =>
+        c.socio_natillera_id === id &&
+        !sociosInactivosSinPagoCompletoIds.value.has(c.socio_natillera_id)
+    )
+    .map((c) => ({
+      ...c,
+      estadoReal: calcularEstadoRealCuota(c, diasGracia.value)
+    }))
+  list.sort((a, b) => {
+    const aq = a.quincena === 1 || a.quincena === 2
+    const bq = b.quincena === 1 || b.quincena === 2
+    if (aq && bq) return a.quincena - b.quincena
+    if (aq && !bq) return -1
+    if (!aq && bq) return 1
+    return 0
+  })
+  return list
 })
 
 // Cuotas agrupadas por socio
@@ -7234,6 +7616,14 @@ const formPago = reactive({
   aplicaImpuesto4x1000: false,
 })
 
+function cerrarModalPago() {
+  modalPago.value = false
+  formPago.valor = 0
+  formPago.tipo_pago = 'efectivo'
+  formPago.aplicaImpuesto4x1000 = false
+  mostrandoAnimacionPago.value = false
+}
+
 const formEditarCuota = reactive({
   valor: 0,
   tipo_pago: 'efectivo',
@@ -7304,11 +7694,87 @@ function calcularImpuesto4x1000(neto) {
 /** Valor guardado en historial_pagos_cuota (numeric/string/null). */
 function leerImpuesto4x1000DesdeHistorial(row) {
   if (!row) return 0
-  const raw = row.impuesto_4x1000 ?? row.impuesto4x1000
+  let raw = row.impuesto_4x1000 ?? row.impuesto4x1000
+  if ((raw == null || raw === '') && typeof row === 'object') {
+    const k = Object.keys(row).find(key => /^impuesto/i.test(key) && /4|1000|gmf/i.test(key))
+    if (k) raw = row[k]
+  }
   if (raw == null || raw === '') return 0
-  const n = typeof raw === 'number' ? raw : Number(String(raw).replace(',', '.'))
+  const s = typeof raw === 'string' ? raw.trim().replace(/\s/g, '').replace(',', '.') : raw
+  const n = typeof s === 'number' ? s : Number(s)
   if (!Number.isFinite(n)) return 0
   return Math.max(0, Math.round(n))
+}
+
+function esNombreConceptoGmfComprobante(nombre) {
+  const s = String(nombre || '').toLowerCase()
+  return (
+    s.includes('1000') ||
+    s.includes('gmf') ||
+    s.includes('4×') ||
+    s.includes('4x') ||
+    s.includes('cuatro') ||
+    s.includes('por mil')
+  )
+}
+
+/** Suma montos de líneas 4×1000 / GMF en un arreglo tipo historialPagos del comprobante. */
+function sumarGmfEnConceptosHistorialPagos(items) {
+  if (!Array.isArray(items)) return 0
+  let sum = 0
+  for (const item of items) {
+    for (const c of item.conceptos || []) {
+      if (esNombreConceptoGmfComprobante(c.nombre)) sum += parseFloat(c.valor) || 0
+    }
+  }
+  return Math.max(0, Math.round(sum))
+}
+
+/**
+ * Si el GMF no quedó en historial_pagos_cuota (columna omitida en su momento), el desglose puede estar
+ * en historial_comprobantes.historial_pagos (snapshot al completar parcial, etc.).
+ */
+async function obtenerRespaldoGmfDesdeHistorialComprobantes(cuotaId) {
+  if (!cuotaId) return { totalGmf: 0, historialPagos: null }
+  try {
+    const { data, error } = await supabase
+      .from('historial_comprobantes')
+      .select('historial_pagos, created_at')
+      .eq('cuota_id', cuotaId)
+      .not('historial_pagos', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    if (error || !data?.length) return { totalGmf: 0, historialPagos: null }
+    let bestGmf = 0
+    let bestHp = null
+    for (const row of data) {
+      const hp = row.historial_pagos
+      if (!Array.isArray(hp) || hp.length === 0) continue
+      const gmf = sumarGmfEnConceptosHistorialPagos(hp)
+      if (gmf > bestGmf) {
+        bestGmf = gmf
+        bestHp = hp
+      }
+    }
+    return { totalGmf: bestGmf, historialPagos: bestHp }
+  } catch (e) {
+    console.warn('obtenerRespaldoGmfDesdeHistorialComprobantes:', e?.message || e)
+    return { totalGmf: 0, historialPagos: null }
+  }
+}
+
+/** Si hay total GMF pero ningún ítem listó el concepto (p. ej. respaldo sin snapshot), inyectar una línea coherente. */
+function asegurarLineaGmfEnHistorialReenvio(items, totalGmf) {
+  if (!totalGmf || totalGmf <= 0 || !Array.isArray(items) || items.length === 0) return items
+  const yaHay = items.some(it => (it.conceptos || []).some(c => esNombreConceptoGmfComprobante(c.nombre)))
+  if (yaHay) return items
+  if (items.length !== 1) return items
+  const it = items[0]
+  const fp = (it.formaPago || 'efectivo').toLowerCase()
+  if (fp !== 'transferencia' && fp !== 'mixto') return items
+  const conceptos = [...(it.conceptos || []), { nombre: '4×1000 (GMF)', valor: totalGmf }]
+  const total = conceptos.reduce((s, c) => s + (parseFloat(c.valor) || 0), 0)
+  return [{ ...it, conceptos, total }]
 }
 
 /**
@@ -7522,6 +7988,25 @@ function tienePagoParcialCuota(cuota) {
   return totalPagado > 0 && pendiente > 0
 }
 
+/** Cuota que cuenta como pendiente / en mora / con saldo (actividades o préstamos) para el selector registrar pago. */
+function cuotaEntraEnFiltroPendientesMoraRegistrarPago(cuota) {
+  if (!cuota) return false
+  const er = calcularEstadoRealCuota(cuota, diasGracia.value)
+  if (er === 'mora' || er === 'pendiente') return true
+  if (tienePagoParcialCuota(cuota)) return true
+  return getTotalAPagarConActividadesSocio(cuota) > 0
+}
+
+function socioTieneCuotaPendienteOMoraRegistrarPago(socioNatilleraId) {
+  if (!socioNatilleraId) return false
+  for (const c of cuotasMesActual.value) {
+    if (c.socio_natillera_id !== socioNatilleraId) continue
+    if (sociosInactivosSinPagoCompletoIds.value.has(c.socio_natillera_id)) continue
+    if (cuotaEntraEnFiltroPendientesMoraRegistrarPago(c)) return true
+  }
+  return false
+}
+
 const mesParam = computed(() => {
   const mes = route.params.mes
   return mes ? parseInt(mes, 10) : null
@@ -7534,6 +8019,15 @@ const esVisor = computed(() => {
   return miRol.value === 'visor'
 })
 
+const mostrarBotonRegistrarPago = computed(() => {
+  return (
+    !esVisor.value &&
+    !!mesSeleccionado.value &&
+    cuotasMesActual.value.length > 0 &&
+    !inicializando.value
+  )
+})
+
 // Verificar si el usuario es admin
 const esAdmin = computed(() => {
   const natillera = natillerasStore.natilleraActual
@@ -7543,37 +8037,15 @@ const esAdmin = computed(() => {
 
 // Cuando cambia el mes seleccionado (por interacción del usuario, NO durante inicialización)
 // Watcher para desactivar la animación cuando se cierre el modal de pago
-// Función para verificar si hay contenido scrolleable y mostrar/ocultar el indicador
-function verificarScrollDisponible() {
-  if (!contenidoScrollRef.value) {
-    mostrarIndicadorScroll.value = false
-    return
-  }
-  
-  const elemento = contenidoScrollRef.value
-  const tieneScroll = elemento.scrollHeight > elemento.clientHeight
-  const estaEnTop = elemento.scrollTop < 10
-  
-  // Mostrar indicador solo si hay scroll disponible y no está al final
-  mostrarIndicadorScroll.value = tieneScroll && elemento.scrollTop + elemento.clientHeight < elemento.scrollHeight - 10
-}
-
-// Función para manejar el scroll del modal de pago
-function handleScrollModalPago() {
-  verificarScrollDisponible()
-}
-
 watch(modalPago, async (isOpen) => {
   if (isOpen) {
-    // Esperar un momento para que el DOM se renderice completamente
     await nextTick()
     setTimeout(() => {
-      verificarScrollDisponible()
+      programarNatiscrollModalPago()
     }, 300)
   } else {
-    // Si el modal se cierra, desactivar la animación y ocultar el indicador
     mostrandoAnimacionPago.value = false
-    mostrarIndicadorScroll.value = false
+    hayNatiscrollModalPago.value = false
   }
 })
 
@@ -7587,23 +8059,24 @@ watch(inicializando, (val) => {
   }
 })
 
-// Watch para actualizar el indicador de scroll cuando cambie el contenido del modal
+// Watch para actualizar natiscroll del modal registrar pago cuando cambie el contenido
 watch([actividadesPendientes, cuotasPrestamosPendientes, modalPago], async () => {
   if (modalPago.value) {
     await nextTick()
     setTimeout(() => {
-      verificarScrollDisponible()
+      programarNatiscrollModalPago()
     }, 100)
   }
 }, { deep: true })
 
 // Watch para cargar actividades pendientes y cuotas de préstamos pendientes cuando cambien las cuotas filtradas
 watch(cuotasFiltradas, async () => {
-  // Cargar actividades pendientes tanto en vista agrupada como en tarjetas individuales
-  await cargarActividadesPendientesPorSocio()
-  // Cargar total de cuotas de préstamos pendientes por periodo para mostrar en tarjetas (programadas, pendientes, etc.)
-  await cargarCuotasPrestamosPendientesParaLista()
-}, { immediate: true })
+  if (inicializando.value) return
+  await Promise.all([
+    cargarActividadesPendientesPorSocio(),
+    cargarCuotasPrestamosPendientesParaLista()
+  ])
+})
 
 // Watch para cargar actividades cuando se cambie a vista agrupada
 watch(vistaAgrupada, async (nuevaVista) => {
@@ -7618,7 +8091,11 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
     console.log('⏭️ Watch ignorado - inicialización en curso')
     return
   }
-  
+
+  if (modalRegistrarPagoSelector.value) {
+    cerrarModalRegistrarPagoSelector()
+  }
+
   if (nuevoMes && nuevoMes !== mesAnterior) {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
@@ -7645,10 +8122,10 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
       const faltanCuotas = verificarCuotasFaltantes(cuotasActuales, nuevoMes, anioCorrecto)
       
       if (faltanCuotas) {
-        const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioCorrecto)
+        const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioCorrecto, {
+          configNatilleraCache: natilleraConfigCache
+        })
         if (result.success && result.cuotasGeneradas > 0) {
-          console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente para el mes ${nuevoMes}`)
-          // Recargar cuotas (skip mora porque son cuotas nuevas)
           await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
         }
       }
@@ -7736,8 +8213,7 @@ async function recalcularSancionesMes() {
   
   if (cuotasACalcular.length === 0) return
   
-  // Recalcular sanciones dinámicas para todas las cuotas (en mora + mes seleccionado)
-  const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasACalcular)
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotasACalcular, natilleraConfigCache)
   if (resultSanciones.success && resultSanciones.sanciones && Object.keys(resultSanciones.sanciones).length > 0) {
     // Reemplazar el objeto para que Vue detecte el cambio y se muestren base + intereses por día
     sancionesDinamicas.value = { ...sancionesDinamicas.value, ...resultSanciones.sanciones }
@@ -8342,6 +8818,127 @@ function getTotalAPagarConActividadesSocio(cuota) {
   return totalCuota + actividadesPendientes + cuotasPrestamosPendientes
 }
 
+/** Pagos ya registrados (cuota, sanción, actividades, préstamos) — mismo criterio que la modal de pago parcial. */
+function getPagadoAnteriormenteRegistrarPagoSelector(cuota) {
+  if (!cuota) return 0
+  return (
+    (parseFloat(cuota.valor_pagado) || 0) +
+    (parseFloat(cuota.valor_pagado_sancion) || 0) +
+    (getActividadesInfoSocio(cuota).pagadas || 0) +
+    (getTotalAbonadoPrestamosCuotaSocioSync(cuota) || getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)
+  )
+}
+
+/** Pendiente total en el selector (actividades/préstamos vía caché de la vista). */
+function getPagoPendienteRegistrarPagoSelector(cuota) {
+  if (!cuota) return 0
+  return Math.max(0, getTotalAPagarConActividadesSocio(cuota))
+}
+
+/** Obligación completa = lo abonado + lo pendiente (tarjeta cuota en selector). */
+function getTotalObligacionRegistrarPagoSelector(cuota) {
+  return getPagadoAnteriormenteRegistrarPagoSelector(cuota) + getPagoPendienteRegistrarPagoSelector(cuota)
+}
+
+/** Líneas de desglose: cuota y sanción pendientes (evita sumas incoherentes si hubo abonos atípicos). */
+function pushLineasCuotaYSancionPendiente(cuota, lines) {
+  if (!cuota) return
+  const pCuota = Math.max(0, (parseFloat(cuota.valor_cuota) || 0) - (parseFloat(cuota.valor_pagado) || 0))
+  const pSan = getSancionCuota(cuota)
+  const totalCuotaPart = getTotalAPagar(cuota)
+  const splitSum = pCuota + pSan
+  if (pSan > 0 && Math.abs(splitSum - totalCuotaPart) < 0.02) {
+    if (pCuota > 0) lines.push({ label: 'Cuota', valor: pCuota })
+    if (pSan > 0) lines.push({ label: 'Sanción', valor: pSan })
+  } else if (totalCuotaPart > 0) {
+    lines.push({ label: 'Cuota y sanción (pendiente)', valor: totalCuotaPart })
+  }
+}
+
+/**
+ * Desglose de conceptos pendientes para listas (selector registrar pago, etc.).
+ * Usa caché de actividades/préstamos de la vista.
+ */
+function getLineasDesgloseConceptosCuota(cuota) {
+  const lines = []
+  if (!cuota) return lines
+  pushLineasCuotaYSancionPendiente(cuota, lines)
+  const datos = actividadesPendientesPorSocio.value[cuota.id]
+  if (datos && typeof datos !== 'number' && Array.isArray(datos.actividades)) {
+    datos.actividades.forEach((act) => {
+      const v = parseFloat(act.valor_pendiente) || 0
+      if (v > 0) {
+        lines.push({
+          label: limpiarDescripcionActividad(act.descripcion || 'Actividad'),
+          valor: v
+        })
+      }
+    })
+  } else {
+    const ap = typeof datos === 'number' ? datos : getActividadesPendientesSocio(cuota)
+    if (ap > 0) lines.push({ label: 'Actividades', valor: ap })
+  }
+  const pr = getTotalCuotasPrestamosPendientesSocioSync(cuota)
+  if (pr > 0) lines.push({ label: 'Cuotas de préstamos', valor: pr })
+  return lines
+}
+
+/**
+ * Desglose en la modal de registro de pago: alinea con selección cuando ya cargaron listas;
+ * si no, usa la misma caché que el selector.
+ */
+function getLineasDesgloseModalPago() {
+  const c = cuotaSeleccionada.value
+  if (!c) return []
+  const lines = []
+  pushLineasCuotaYSancionPendiente(c, lines)
+
+  if (actividadesPendientes.value.length > 0) {
+    actividadesPendientes.value.forEach((a) => {
+      if (!actividadesSeleccionadas.value.has(a.id)) return
+      const v = parseFloat(a.valor_pendiente) || 0
+      if (v <= 0) return
+      lines.push({
+        label: limpiarDescripcionActividad(a.actividad?.descripcion || 'Actividad'),
+        valor: v
+      })
+    })
+  } else {
+    const datos = actividadesPendientesPorSocio.value[c.id]
+    if (datos && typeof datos !== 'number' && Array.isArray(datos.actividades)) {
+      datos.actividades.forEach((act) => {
+        const v = parseFloat(act.valor_pendiente) || 0
+        if (v > 0) {
+          lines.push({
+            label: limpiarDescripcionActividad(act.descripcion || 'Actividad'),
+            valor: v
+          })
+        }
+      })
+    } else {
+      const ap = typeof datos === 'number' ? datos : getActividadesPendientesSocio(c)
+      if (ap > 0) lines.push({ label: 'Actividades', valor: ap })
+    }
+  }
+
+  if (cuotasPrestamosPendientes.value.length > 0) {
+    cuotasPrestamosPendientes.value.forEach((cp) => {
+      if (!cuotasPrestamosSeleccionadas.value.has(cp.id)) return
+      const v = parseFloat(cp.valor_pendiente) || 0
+      if (v <= 0) return
+      lines.push({
+        label: `Préstamo · Cuota #${cp.numero_cuota}`,
+        valor: v
+      })
+    })
+  } else {
+    const pr = getTotalCuotasPrestamosPendientesSocioSync(c)
+    if (pr > 0) lines.push({ label: 'Cuotas de préstamos', valor: pr })
+  }
+
+  return lines
+}
+
 // Calcular días en mora desde la fecha de vencimiento (primer día en mora = día siguiente al vencimiento)
 // Función para verificar si una cuota tiene una anotación de ajuste
 function tieneAjuste(cuota) {
@@ -8723,54 +9320,36 @@ async function cargarActividadesPendientesPorSocio() {
     const mesActual = mesSeleccionado.value
     const anioActual = anioMesSeleccionado.value
 
-    // Construir consultas para filtrar por periodo actual
-    // Hacemos dos consultas: una para actividades con mes_pago/anio_pago y otra para compatibilidad
     let sociosActividadData = []
     
     if (mesActual && anioActual) {
-      // Consulta 1: Actividades con mes_pago y anio_pago que coinciden con el periodo actual (pendientes y pagadas)
-      const { data: actividadesConPeriodo, error: error1 } = await supabase
+      // Una sola query: actividades del periodo actual + actividades sin periodo (datos antiguos)
+      const { data, error: err } = await supabase
         .from('socios_actividad')
-        .select('*')
+        .select('id, actividad_id, socio_natillera_id, estado, valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago')
         .in('socio_natillera_id', socioNatilleraIds)
         .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
-        .eq('mes_pago', mesActual)
-        .eq('anio_pago', anioActual)
+        .or(`and(mes_pago.eq.${mesActual},anio_pago.eq.${anioActual}),mes_pago.is.null,anio_pago.is.null`)
 
-      if (error1) {
-        console.error('❌ Error cargando actividades con periodo:', error1)
-      } else if (actividadesConPeriodo) {
-        sociosActividadData.push(...actividadesConPeriodo)
-      }
-
-      // Consulta 2: Actividades sin mes_pago/anio_pago (datos antiguos - compatibilidad)
-      const { data: actividadesSinPeriodo, error: error2 } = await supabase
-        .from('socios_actividad')
-        .select('*')
-        .in('socio_natillera_id', socioNatilleraIds)
-        .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
-        .or('mes_pago.is.null,anio_pago.is.null')
-
-      if (error2) {
-        console.error('❌ Error cargando actividades sin periodo:', error2)
-      } else if (actividadesSinPeriodo) {
-        sociosActividadData.push(...actividadesSinPeriodo)
+      if (err) {
+        console.error('Error cargando actividades:', err)
+      } else {
+        sociosActividadData = data || []
       }
     } else {
-      // Si no hay mes seleccionado, cargar todas las actividades (pendientes y pagadas)
-      const { data: todasActividades, error: errorSociosActividad } = await supabase
+      const { data, error: err } = await supabase
         .from('socios_actividad')
-        .select('*')
+        .select('id, actividad_id, socio_natillera_id, estado, valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago')
         .in('socio_natillera_id', socioNatilleraIds)
         .in('estado', ['pendiente', 'parcial', 'mora', 'pagada', 'pagado'])
 
-      if (errorSociosActividad) {
-        console.error('❌ Error cargando actividades pendientes por socio:', errorSociosActividad)
+      if (err) {
+        console.error('Error cargando actividades pendientes por socio:', err)
         actividadesPendientesPorSocio.value = {}
         return
       }
       
-      sociosActividadData = todasActividades || []
+      sociosActividadData = data || []
     }
 
     if (!sociosActividadData || sociosActividadData.length === 0) {
@@ -8799,54 +9378,25 @@ async function cargarActividadesPendientesPorSocio() {
     // Estructura: { cuotaId: { total: number, actividades: [{ descripcion, valor_pendiente }] } }
     const totalesPorCuota = {}
     
-    console.log('🔍 Cargando actividades pendientes por cuota...')
-    console.log('📊 Actividades encontradas en socios_actividad:', sociosActividadData.length)
-    console.log('📊 Cuotas filtradas:', cuotasFiltradas.value.length)
-    console.log('📅 Periodo actual:', { mes: mesActual, anio: anioActual })
-    
     // Inicializar todas las cuotas con estructura vacía (total = pendiente, totalPagado = actividades ya pagadas)
     cuotasFiltradas.value.forEach(cuota => {
       if (!cuota.socio_natillera_id || !cuota.id) return
       totalesPorCuota[cuota.id] = { total: 0, totalPagado: 0, actividades: [] }
     })
     
-    // Iterar sobre las actividades y asignarlas a las cuotas según quincena_pago
-    let actividadesProcesadas = 0
-    let actividadesAsignadas = 0
-    
     sociosActividadData.forEach(sa => {
       const actividad = actividadesMap.get(sa.actividad_id)
       
-      // Verificar que la actividad exista
-      if (!actividad) {
-        console.log('⚠️ Actividad no encontrada para socios_actividad:', sa.id, 'actividad_id:', sa.actividad_id)
-        return
-      }
+      if (!actividad) return
       
-      // Solo procesar actividades en curso (o ya pagadas, para mostrar en desglose; BD usa 'pagado')
       if (actividad.estado && actividad.estado !== 'en_curso' && sa.estado !== 'pagada' && sa.estado !== 'pagado') {
-        console.log('⚠️ Actividad no está en curso:', actividad.id, 'estado:', actividad.estado)
         return
       }
+
+      if (!sa.mes_pago || !sa.anio_pago) return
       
-      actividadesProcesadas++
-      
-      // Verificar que tenga mes_pago y anio_pago (periodo actual)
-      if (!sa.mes_pago || !sa.anio_pago) {
-        console.log('⚠️ Actividad sin periodo:', sa.id, 'mes_pago:', sa.mes_pago, 'anio_pago:', sa.anio_pago)
-        return
-      }
-      
-      // Verificar que coincida con el periodo actual
       if (mesActual && anioActual) {
-        // Si hay mes y año seleccionados, verificar que coincidan
-        if (sa.mes_pago !== mesActual || sa.anio_pago !== anioActual) {
-          console.log('⚠️ Actividad no coincide con periodo actual:', {
-            actividad: { mes: sa.mes_pago, anio: sa.anio_pago },
-            periodo: { mes: mesActual, anio: anioActual }
-          })
-          return
-        }
+        if (sa.mes_pago !== mesActual || sa.anio_pago !== anioActual) return
       }
       
       // Calcular el valor pendiente y pagado de la actividad
@@ -8872,19 +9422,9 @@ async function cargarActividadesPendientesPorSocio() {
         // Si existe una cuota mensual, la actividad debería tener quincena_pago = 0
         // Esto aplica tanto si la natillera es mensual como si es quincenal pero el socio es mensual
         if (cuotaMensual) {
-          console.log('⚠️ Corrigiendo quincena_pago de', quincenaPago, 'a 0 para actividad de socio mensual:', sa.id)
           quincenaPago = 0
         }
       }
-      
-      console.log('🔍 Buscando cuota para actividad:', {
-        socio_natillera_id: sa.socio_natillera_id,
-        mes_pago: sa.mes_pago,
-        anio_pago: sa.anio_pago,
-        quincena_pago_original: sa.quincena_pago,
-        quincena_pago_corregida: quincenaPago,
-        valor_pendiente: valorPendiente
-      })
       
       // Buscar la cuota correspondiente según quincena_pago
       // Regla: la actividad va SOLO en una quincena. Si la cuota de esa quincena ya está pagada y la actividad sigue sin pagar, se muestra en la siguiente quincena.
@@ -8928,58 +9468,22 @@ async function cargarActividadesPendientesPorSocio() {
           valor_pagado: valorPagado,
           valor_asignado: valorAsignado
         })
-        actividadesAsignadas++
-        if (valorPendiente > 0) {
-          console.log('✅ Actividad asignada a cuota:', {
-            actividad_id: sa.id,
-            cuota_id: cuotaId,
-            valor_pendiente: valorPendiente,
-            total_cuota: totalesPorCuota[cuotaId].total,
-            descripcion: actividad.descripcion
-          })
-        } else if (valorPagado > 0) {
-          console.log('✅ Actividad pagada asignada a cuota (desglose):', {
-            actividad_id: sa.id,
-            cuota_id: cuotaId,
-            valor_pagado: valorPagado,
-            descripcion: actividad.descripcion
-          })
-        }
-      } else {
-        console.log('❌ No se encontró cuota correspondiente para actividad:', {
-          socio_natillera_id: sa.socio_natillera_id,
-          mes_pago: sa.mes_pago,
-          anio_pago: sa.anio_pago,
-          quincena_pago: quincenaPago,
-          cuotas_disponibles: cuotasFiltradas.value
-            .filter(c => c.socio_natillera_id === sa.socio_natillera_id)
-            .map(c => ({ id: c.id, mes: c.mes, anio: c.anio, quincena: c.quincena }))
-        })
       }
     })
 
-    console.log('📊 Resumen:', {
-      actividades_procesadas: actividadesProcesadas,
-      actividades_asignadas: actividadesAsignadas,
-      totales_por_cuota: totalesPorCuota
-    })
-
-    // Cambiar la estructura para usar cuotaId como clave
     actividadesPendientesPorSocio.value = totalesPorCuota
   } catch (e) {
-    console.error('❌ Error cargando actividades pendientes por socio:', e)
+    console.error('Error cargando actividades pendientes por socio:', e)
     actividadesPendientesPorSocio.value = {}
   }
 }
 
 async function cargarActividadesPendientes(cuota) {
   if (!cuota || !cuota.socio_natillera_id) {
-    console.log('❌ cargarActividadesPendientes: No hay cuota o socio_natillera_id')
     actividadesPendientes.value = []
     return false
   }
 
-  console.log('🔍 cargarActividadesPendientes: socio_natillera_id =', cuota.socio_natillera_id, 'cuota:', { mes: cuota.mes, anio: cuota.anio, quincena: cuota.quincena })
   cargandoActividades.value = true
   try {
     // Obtener actividades pendientes del socio
@@ -8991,13 +9495,7 @@ async function cargarActividadesPendientes(cuota) {
       .in('estado', ['pendiente', 'parcial', 'mora'])
       .order('created_at', { ascending: false })
 
-    if (errorSociosActividad) {
-      console.error('❌ Error en consulta socios_actividad:', errorSociosActividad)
-      throw errorSociosActividad
-    }
-
-    console.log('📊 Resultado de consulta socios_actividad:', sociosActividadData)
-    console.log('📊 Cantidad de registros encontrados:', sociosActividadData?.length || 0)
+    if (errorSociosActividad) throw errorSociosActividad
 
     if (!sociosActividadData || sociosActividadData.length === 0) {
       actividadesPendientes.value = []
@@ -9029,8 +9527,6 @@ async function cargarActividadesPendientes(cuota) {
       return false
     })
 
-    console.log('📊 Actividades con periodo <= periodo actual:', actividadesConPeriodo.length)
-
     if (actividadesConPeriodo.length === 0) {
       actividadesPendientes.value = []
       return
@@ -9046,10 +9542,7 @@ async function cargarActividadesPendientes(cuota) {
       .select('id, tipo, descripcion, fecha_limite_pago, estado')
       .in('id', actividadIds)
 
-    if (errorActividades) {
-      console.error('❌ Error en consulta actividades:', errorActividades)
-      throw errorActividades
-    }
+    if (errorActividades) throw errorActividades
 
     // Crear un mapa de actividades por ID para acceso rápido
     const actividadesMap = new Map((actividadesData || []).map(a => [a.id, a]))
@@ -9059,10 +9552,7 @@ async function cargarActividadesPendientes(cuota) {
     const actividadesConValorPendiente = actividadesConPeriodo
       .map(sa => {
         const actividad = actividadesMap.get(sa.actividad_id)
-        if (!actividad) {
-          console.log('⚠️ Registro sin actividad relacionada:', sa.id)
-          return null
-        }
+        if (!actividad) return null
         
         // Calcular el valor pendiente
         const valorAsignado = parseFloat(sa.valor_asignado || 0)
@@ -9081,37 +9571,13 @@ async function cargarActividadesPendientes(cuota) {
         return sa !== null && sa.valor_pendiente > 0
       })
 
-    console.log('📊 Actividades filtradas (con valor pendiente y periodo <= periodo actual):', actividadesConValorPendiente.length)
-
-    // Asignar las actividades pendientes
     actividadesPendientes.value = actividadesConValorPendiente
-
-    console.log('✅ Actividades pendientes finales:', actividadesPendientes.value.length)
-    if (actividadesPendientes.value.length > 0) {
-      console.log('📋 Actividades pendientes (incluye liquidadas con deuda):', actividadesPendientes.value.map(a => ({
-        descripcion: a.actividad?.descripcion,
-        tipo: a.actividad?.tipo,
-        estado_actividad: a.actividad?.estado,
-        valor_asignado: a.valor_asignado,
-        valor_pagado: a.valor_pagado,
-        valor_pendiente: a.valor_pendiente,
-        mes_pago: a.mes_pago,
-        anio_pago: a.anio_pago,
-        quincena_pago: a.quincena_pago,
-        estado: a.estado
-      })))
-    }
 
     // Obtener la periodicidad del socio para normalización
     // IMPORTANTE: Si no está disponible en socio_natillera, inferirla de la quincena de la cuota
     let periodicidadSocio = cuota.socio_natillera?.periodicidad
     if (!periodicidadSocio) {
-      // Fallback: inferir de la quincena de la cuota
       periodicidadSocio = (cuota.quincena === 0 || cuota.quincena === null || cuota.quincena === undefined) ? 'mensual' : 'quincenal'
-      console.log('⚠️ Periodicidad no encontrada en socio_natillera, inferida de quincena:', {
-        quincena: cuota.quincena,
-        periodicidadInferida: periodicidadSocio
-      })
     }
     
     // Para mensuales: normalizar (0, null, undefined → 0)
@@ -9127,26 +9593,6 @@ async function cargarActividadesPendientes(cuota) {
     // Primero intentar encontrar actividades del periodo EXACTO (mes y año coinciden)
     const actividadesPeriodoExacto = actividadesPendientes.value.filter(actividad => {
       return actividad.mes_pago === cuota.mes && actividad.anio_pago === cuota.anio
-    })
-    
-    console.log('🔍 Buscando actividades coincidentes:', {
-      cuota: { 
-        mes: cuota.mes, 
-        anio: cuota.anio, 
-        quincena: cuota.quincena, 
-        quincenaNormalizada: quincenaCuota 
-      },
-      periodicidadSocio,
-      periodicidadDesdeSocio: cuota.socio_natillera?.periodicidad,
-      socio_natillera_id: cuota.socio_natillera_id,
-      actividadesPeriodoExacto: actividadesPeriodoExacto.length,
-      totalActividades: actividadesPendientes.value.length,
-      actividadesPeriodoExactoDetalle: actividadesPeriodoExacto.map(a => ({
-        id: a.id,
-        quincena_pago: a.quincena_pago,
-        mes_pago: a.mes_pago,
-        anio_pago: a.anio_pago
-      }))
     })
     
     // Buscar en las actividades del periodo exacto (todas las que coincidan en mes, año y quincena)
@@ -9176,38 +9622,10 @@ async function cargarActividadesPendientes(cuota) {
         }
       }
       
-      // Comparar quincenas
-      // Para mensuales: ambas deben ser 0 (normalizadas)
-      // Para quincenales: deben coincidir exactamente (1 === 1 o 2 === 2)
-      console.log('🔍 Comparando quincenas:', {
-        actividad_id: actividad.id,
-        quincena_actividad_original: actividad.quincena_pago,
-        quincena_actividad_normalizada: quincenaActividad,
-        quincena_cuota_original: cuota.quincena,
-        quincena_cuota_normalizada: quincenaCuota,
-        periodicidadSocio,
-        coincide: quincenaCuota === quincenaActividad
-      })
-      
       if (quincenaCuota === quincenaActividad) {
         actividadesCoincidentes.push(actividad)
-      } else {
-        console.log('❌ Quincenas no coinciden:', {
-          quincena_cuota: quincenaCuota,
-          quincena_actividad: quincenaActividad
-        })
       }
     }
-    if (actividadesCoincidentes.length > 0) {
-      console.log('✅ Actividades encontradas por búsqueda optimizada:', actividadesCoincidentes.map(a => ({
-        id: a.id,
-        descripcion: a.actividad?.descripcion,
-        quincena_actividad: a.quincena_pago,
-        quincena_cuota: cuota.quincena,
-        periodicidadSocio
-      })))
-    }
-
     // Si no hay coincidencia y la cuota es Q2: considerar actividades "movidas" (programadas en Q1, no pagadas, y cuota Q1 ya pagada)
     if (actividadesCoincidentes.length === 0 && periodicidadSocio === 'quincenal' && cuota.quincena === 2) {
       const cuotaQ1 = cuotasFiltradas.value.find(c =>
@@ -9224,7 +9642,6 @@ async function cargarActividadesPendientes(cuota) {
         )
         if (actividadesMovidas.length > 0) {
           actividadesCoincidentes = actividadesMovidas
-          console.log('✅ Actividades movidas de Q1 a Q2 (Q1 pagada, sin pagar):', actividadesMovidas.map(a => ({ id: a.id, descripcion: a.actividad?.descripcion })))
         }
       }
     }
@@ -9241,32 +9658,14 @@ async function cargarActividadesPendientes(cuota) {
 
     // Marcar automáticamente todas las actividades coincidentes
     if (actividadesCoincidentes.length > 0) {
-      console.log('✅ Actividades coincidentes marcadas automáticamente:', actividadesCoincidentes.map(a => ({
-        id: a.id,
-        descripcion: a.actividad?.descripcion,
-        mes_pago: a.mes_pago,
-        anio_pago: a.anio_pago,
-        quincena_pago: a.quincena_pago,
-        quincena_pago_normalizada: normalizarQuincena(a.quincena_pago),
-        cuota_quincena: quincenaCuota,
-        periodicidad_socio: periodicidadSocio
-      })))
       actividadesCoincidentes.forEach(a => actividadesSeleccionadas.value.add(a.id))
       return true
     } else {
-      console.log('ℹ️ No se encontró actividad coincidente para el periodo de la cuota:', {
-        cuota: { mes: cuota.mes, anio: cuota.anio, quincena: cuota.quincena },
-        actividades_disponibles: actividadesPendientes.value.map(a => ({
-          mes: a.mes_pago,
-          anio: a.anio_pago,
-          quincena: a.quincena_pago
-        }))
-      })
       actividadesDeLaCuotaActual.value = new Set()
       return false
     }
   } catch (e) {
-    console.error('❌ Error cargando actividades pendientes:', e)
+    console.error('Error cargando actividades pendientes:', e)
     actividadesPendientes.value = []
     actividadesDeLaCuotaActual.value = new Set()
     return false
@@ -9275,13 +9674,45 @@ async function cargarActividadesPendientes(cuota) {
   }
 }
 
+function cerrarModalRegistrarPagoSelector() {
+  modalRegistrarPagoSelector.value = false
+  pasoRegistrarPagoSelector.value = 'socio'
+  busquedaRegistrarPagoSocio.value = ''
+  soloPendientesOMoraRegistrarPago.value = false
+  socioNatilleraIdRegistrarPago.value = null
+}
+
+function abrirModalRegistrarPagoSelector() {
+  pasoRegistrarPagoSelector.value = 'socio'
+  busquedaRegistrarPagoSocio.value = ''
+  socioNatilleraIdRegistrarPago.value = null
+  modalRegistrarPagoSelector.value = true
+}
+
+function seleccionarSocioRegistrarPago(socioNatilleraId) {
+  socioNatilleraIdRegistrarPago.value = socioNatilleraId
+  pasoRegistrarPagoSelector.value = 'cuotas'
+}
+
+function volverPasoSociosRegistrarPago() {
+  pasoRegistrarPagoSelector.value = 'socio'
+  socioNatilleraIdRegistrarPago.value = null
+}
+
+async function seleccionarCuotaYAbrirModalPago(cuota) {
+  cerrarModalRegistrarPagoSelector()
+  await nextTick()
+  abrirModalPago(cuota)
+}
+
 async function abrirModalPago(cuota) {
-  preparandoModalPago.value = true
-  
+  guardarScrollMain() // mismo instante que el clic, antes de reactividad / useBodyScrollLock
   cuotaSeleccionada.value = cuota
   desplegableYaAbonadoOpen.value = tienePagoParcialCuota(cuota)
-  const totalAPagar = getTotalAPagar(cuota)
-    formPago.valor = totalAPagar > 0 ? totalAPagar : 0
+  // Valor inicial: solo cuota base (valor_cuota + sanción − ya pagado).
+  // Actividades y préstamos se suman después de la carga real.
+  const baseCuota = getTotalAPagar(cuota)
+  formPago.valor = Math.max(0, baseCuota)
   formPago.tipo_pago = 'efectivo'
   formPago.aplicaImpuesto4x1000 = false
   actividadesDesplegableAbierto.value = false
@@ -9291,21 +9722,30 @@ async function abrirModalPago(cuota) {
   cuotasPrestamosSeleccionadas.value.clear()
   cuotasPrestamosDeLaCuotaActual.value = new Set()
 
+  // Abrir modal de inmediato; las secciones internas ya muestran skeleton via cargandoActividades / cargandoCuotasPrestamos
+  asignarScrollAntesDeAbrirModal() // que applyLock use la posición guardada al hacer clic (evita salto al abrir)
+  modalPago.value = true
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const main = document.querySelector('main')
+      if (main && scrollMainAntesModal.value > 0) main.scrollTop = scrollMainAntesModal.value
+    })
+  })
+
   try {
-    const actividadMarcada = await cargarActividadesPendientes(cuota)
-    if (actividadMarcada && actividadesSeleccionadas.value.size > 0) {
-      await nextTick()
-      actualizarValorPagoConActividades()
-      console.log('✅ Valor del pago actualizado con actividades seleccionadas automáticamente')
-    }
-    
-    // Cargar cuotas de préstamos pendientes
-    await cargarCuotasPrestamosPendientes(cuota)
+    // Paralelizar cargas independientes
+    await Promise.all([
+      cargarActividadesPendientes(cuota),
+      cargarCuotasPrestamosPendientes(cuota),
+    ])
+    // Recálculo definitivo: usa las selecciones reales, no la caché.
+    await nextTick()
+    const totalCuota = getTotalAPagar(cuotaSeleccionada.value)
+    const totalActividades = getTotalActividadesSeleccionadas()
+    const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
+    formPago.valor = totalCuota + totalActividades + totalCuotasPrestamos
   } catch (error) {
-    console.error('❌ Error al cargar actividades pendientes:', error)
-  } finally {
-    preparandoModalPago.value = false
-    modalPago.value = true
+    console.error('Error al cargar datos del modal de pago:', error)
   }
 }
 
@@ -9390,50 +9830,16 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
     // Array para rastrear los pagos por tipo de actividad para utilidades
     const pagosPorTipoUtilidad = {} // { tipo: { liquidada: valor, en_curso: valor } }
     
+    // Preparar updates de todas las actividades (sin loops de unicidad)
+    const updatesActividades = []
+    
     if (valorRestante >= totalActividades) {
-      // Pagar todas las actividades completamente
       for (const actividad of actividadesParaPagar) {
         const nuevoValorPagado = actividad.valor_asignado
-        const valorPagadoEnEstaTransaccion = actividad.valor_pendiente // Lo que se paga ahora
+        const valorPagadoEnEstaTransaccion = actividad.valor_pendiente
+        const codigoComprobante = generarCodigoComprobante()
         
-        // Generar código de comprobante único para la actividad
-        let codigoComprobante = null
-        try {
-          let intentos = 0
-          let codigoUnico = false
-          while (!codigoUnico && intentos < 5) {
-            codigoComprobante = generarCodigoComprobante()
-            // Verificar que el código no exista en socios_actividad
-            const { data: codigoExistente, error: codigoError } = await supabase
-              .from('socios_actividad')
-              .select('id')
-              .eq('codigo_comprobante', codigoComprobante)
-              .limit(1)
-            
-            if (codigoError) {
-              console.warn('Error verificando código de comprobante:', codigoError)
-              codigoUnico = true // Continuar de todos modos
-            } else if (!codigoExistente || codigoExistente.length === 0) {
-              codigoUnico = true
-            } else {
-              codigoComprobante = null
-            }
-            intentos++
-          }
-        } catch (e) {
-          console.warn('No se pudo generar código de comprobante para actividad:', e.message)
-          codigoComprobante = null
-        }
-        
-        const datosActualizar = {
-          valor_pagado: nuevoValorPagado
-        }
-        
-        // Solo agregar código si se generó exitosamente
-        if (codigoComprobante) {
-          datosActualizar.codigo_comprobante = codigoComprobante
-        }
-        
+        const datosActualizar = { valor_pagado: nuevoValorPagado, codigo_comprobante: codigoComprobante }
         if (formaPagoAct != null) datosActualizar.forma_pago = formaPagoAct
         if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
           const ratioEf = (options.valorEfectivo || 0) / options.valorPagado
@@ -9441,86 +9847,18 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
           datosActualizar.valor_pagado_transferencia = valorPagadoEnEstaTransaccion - datosActualizar.valor_pagado_efectivo
         }
         
-        const { error } = await supabase
-          .from('socios_actividad')
-          .update(datosActualizar)
-          .eq('id', actividad.id)
-        
-        if (error) {
-          console.error(`Error actualizando actividad ${actividad.id}:`, error)
-        } else {
-          console.log(`✅ Pago completo registrado para actividad ${actividad.id}${codigoComprobante ? ` con código ${codigoComprobante}` : ''}`)
-          
-          // Rastrear el pago para utilidades según el estado de la actividad
-          if (actividad.actividad) {
-            const estadoActividad = actividad.actividad.estado
-            const tipoActividad = actividad.actividad.tipo || 'otro'
-            const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
-            
-            if (!pagosPorTipoUtilidad[tipoUtilidad]) {
-              pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
-            }
-            
-            if (estadoActividad === 'liquidada') {
-              pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorPagadoEnEstaTransaccion
-            } else {
-              pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
-            }
-          }
-        }
+        updatesActividades.push({ actividad, datosActualizar, valorPagadoEnEstaTransaccion })
       }
     } else {
-      // Distribuir proporcionalmente
       for (const actividad of actividadesParaPagar) {
         if (valorRestante <= 0) break
-        
-        // Calcular cuánto pagar de esta actividad (proporcional)
         const porcentaje = actividad.valor_pendiente / totalActividades
         const valorAPagar = Math.min(valorRestante, Math.round(actividad.valor_pendiente * porcentaje))
-        
-        // Calcular nuevo valor pagado
         const nuevoValorPagado = actividad.valor_pagado_actual + valorAPagar
+        const codigoComprobante = nuevoValorPagado >= actividad.valor_asignado ? generarCodigoComprobante() : null
         
-        // Solo generar código de comprobante si se paga completamente
-        let codigoComprobante = null
-        if (nuevoValorPagado >= actividad.valor_asignado) {
-          try {
-            let intentos = 0
-            let codigoUnico = false
-            while (!codigoUnico && intentos < 5) {
-              codigoComprobante = generarCodigoComprobante()
-              // Verificar que el código no exista en socios_actividad
-              const { data: codigoExistente, error: codigoError } = await supabase
-                .from('socios_actividad')
-                .select('id')
-                .eq('codigo_comprobante', codigoComprobante)
-                .limit(1)
-              
-              if (codigoError) {
-                console.warn('Error verificando código de comprobante:', codigoError)
-                codigoUnico = true // Continuar de todos modos
-              } else if (!codigoExistente || codigoExistente.length === 0) {
-                codigoUnico = true
-              } else {
-                codigoComprobante = null
-              }
-              intentos++
-            }
-          } catch (e) {
-            console.warn('No se pudo generar código de comprobante para actividad:', e.message)
-            codigoComprobante = null
-          }
-        }
-        
-        const datosActualizar = {
-          valor_pagado: nuevoValorPagado
-        }
-        
-        // Solo agregar código si se generó exitosamente y se pagó completamente
-        if (codigoComprobante) {
-          datosActualizar.codigo_comprobante = codigoComprobante
-        }
-        
+        const datosActualizar = { valor_pagado: nuevoValorPagado }
+        if (codigoComprobante) datosActualizar.codigo_comprobante = codigoComprobante
         if (formaPagoAct != null) datosActualizar.forma_pago = formaPagoAct
         if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
           const ratioEf = (options.valorEfectivo || 0) / options.valorPagado
@@ -9528,132 +9866,94 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
           datosActualizar.valor_pagado_transferencia = valorAPagar - (datosActualizar.valor_pagado_efectivo || 0)
         }
         
-        // Actualizar la actividad en la base de datos
-        const { error } = await supabase
-          .from('socios_actividad')
-          .update(datosActualizar)
-          .eq('id', actividad.id)
-        
-        if (error) {
-          console.error(`Error actualizando actividad ${actividad.id}:`, error)
-        } else {
-          console.log(`✅ Pago parcial registrado para actividad ${actividad.id}: $${valorAPagar}${codigoComprobante ? ` con código ${codigoComprobante}` : ''}`)
-          
-          // Rastrear el pago para utilidades según el estado de la actividad
-          if (actividad.actividad) {
-            const estadoActividad = actividad.actividad.estado
-            const tipoActividad = actividad.actividad.tipo || 'otro'
-            const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
-            
-            if (!pagosPorTipoUtilidad[tipoUtilidad]) {
-              pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
-            }
-            
-            if (estadoActividad === 'liquidada') {
-              pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorAPagar
-            } else {
-              // Las rifas en curso no se guardan en utilidades_clasificadas hasta que se liquide la actividad
-              if (tipoUtilidad !== 'rifas') {
-                pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorAPagar
-              }
-            }
-          }
-          
-          valorRestante -= valorAPagar
-        }
+        updatesActividades.push({ actividad, datosActualizar, valorPagadoEnEstaTransaccion: valorAPagar })
+        valorRestante -= valorAPagar
       }
     }
     
-    // Registrar utilidades según el estado de las actividades pagadas
+    // Ejecutar TODOS los updates de actividades en paralelo
+    const resultados = await Promise.allSettled(
+      updatesActividades.map(({ actividad, datosActualizar }) =>
+        supabase.from('socios_actividad').update(datosActualizar).eq('id', actividad.id)
+      )
+    )
+    
+    // Rastrear resultados para utilidades
+    resultados.forEach((res, idx) => {
+      const { actividad, valorPagadoEnEstaTransaccion } = updatesActividades[idx]
+      if (res.status === 'rejected' || res.value?.error) {
+        console.error(`Error actualizando actividad ${actividad.id}:`, res.value?.error || res.reason)
+        return
+      }
+      if (actividad.actividad) {
+        const estadoActividad = actividad.actividad.estado
+        const tipoActividad = actividad.actividad.tipo || 'otro'
+        const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
+        if (!pagosPorTipoUtilidad[tipoUtilidad]) pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
+        if (estadoActividad === 'liquidada') {
+          pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorPagadoEnEstaTransaccion
+        } else if (tipoUtilidad !== 'rifas') {
+          pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
+        }
+      }
+    })
+    
+    // Fire-and-forget: registrar utilidades en background (no bloquea el retorno)
     if (natilleraId && Object.keys(pagosPorTipoUtilidad).length > 0) {
-      for (const [tipoUtilidad, pagos] of Object.entries(pagosPorTipoUtilidad)) {
-        // Las rifas solo se registran en utilidades_clasificadas cuando se liquida la actividad desde el módulo Actividades, no al pagar la cuota
-        if (tipoUtilidad === 'rifas') continue
+      ;(async () => {
+        for (const [tipoUtilidad, pagos] of Object.entries(pagosPorTipoUtilidad)) {
+          if (tipoUtilidad === 'rifas') continue
 
-        // Registrar pagos de actividades liquidadas directamente en utilidades del tipo correspondiente
-        if (pagos.liquidada > 0) {
-          try {
-            const queryLiquidada = (q) => {
-              let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
-              if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
-              else chain = chain.is('forma_pago', null)
-              return chain
-            }
-            const { data: existLiquidada } = await queryLiquidada(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
-            const montoAnteriorLiquidada = parseFloat(existLiquidada?.monto) || 0
-            const montoFinalLiquidada = montoAnteriorLiquidada + pagos.liquidada
-            
-            if (existLiquidada) {
-              await supabase
-                .from('utilidades_clasificadas')
-                .update({
-                  monto: montoFinalLiquidada,
-                  descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', existLiquidada.id)
-            } else {
-              const insertLiquidada = {
-                natillera_id: natilleraId,
-                tipo: tipoUtilidad,
-                monto: montoFinalLiquidada,
-                fecha_cierre: null,
-                descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`,
-                detalles: {}
+          if (pagos.liquidada > 0) {
+            try {
+              const queryLiquidada = (q) => {
+                let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
+                if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
+                else chain = chain.is('forma_pago', null)
+                return chain
               }
-              if (formaPagoAct != null) insertLiquidada.forma_pago = formaPagoAct
-              await supabase.from('utilidades_clasificadas').insert(insertLiquidada)
+              const { data: existLiquidada } = await queryLiquidada(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
+              const montoFinalLiquidada = (parseFloat(existLiquidada?.monto) || 0) + pagos.liquidada
+              if (existLiquidada) {
+                await supabase.from('utilidades_clasificadas')
+                  .update({ monto: montoFinalLiquidada, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`, updated_at: new Date().toISOString() })
+                  .eq('id', existLiquidada.id)
+              } else {
+                const insertLiquidada = { natillera_id: natilleraId, tipo: tipoUtilidad, monto: montoFinalLiquidada, fecha_cierre: null, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`, detalles: {} }
+                if (formaPagoAct != null) insertLiquidada.forma_pago = formaPagoAct
+                await supabase.from('utilidades_clasificadas').insert(insertLiquidada)
+              }
+            } catch (errLiquidada) {
+              console.error(`Error registrando utilidad de ${tipoUtilidad} (liquidada):`, errLiquidada)
             }
-            console.log(`✅ Utilidad registrada para ${tipoUtilidad} (liquidada): $${pagos.liquidada}`)
-          } catch (errLiquidada) {
-            console.error(`❌ Error registrando utilidad de ${tipoUtilidad} (liquidada):`, errLiquidada)
+          }
+
+          if (pagos.en_curso > 0) {
+            try {
+              const queryEnCurso = (q) => {
+                let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
+                if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
+                else chain = chain.is('forma_pago', null)
+                return chain
+              }
+              const { data: existEnCurso } = await queryEnCurso(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
+              const montoFinalEnCurso = (parseFloat(existEnCurso?.monto) || 0) + pagos.en_curso
+              if (existEnCurso) {
+                await supabase.from('utilidades_clasificadas')
+                  .update({ monto: montoFinalEnCurso, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`, updated_at: new Date().toISOString() })
+                  .eq('id', existEnCurso.id)
+              } else {
+                const insertEnCurso = { natillera_id: natilleraId, tipo: tipoUtilidad, monto: montoFinalEnCurso, fecha_cierre: null, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`, detalles: {} }
+                if (formaPagoAct != null) insertEnCurso.forma_pago = formaPagoAct
+                await supabase.from('utilidades_clasificadas').insert(insertEnCurso)
+              }
+            } catch (errEnCurso) {
+              console.error(`Error registrando utilidad de ${tipoUtilidad} (en curso):`, errEnCurso)
+            }
           }
         }
-        
-        // Registrar pagos de actividades en curso con su tipo real (evento, otro, bingo, venta; rifas se excluyen arriba)
-        if (pagos.en_curso > 0) {
-          try {
-            const queryEnCurso = (q) => {
-              let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
-              if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
-              else chain = chain.is('forma_pago', null)
-              return chain
-            }
-            const { data: existEnCurso } = await queryEnCurso(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
-            const montoAnteriorEnCurso = parseFloat(existEnCurso?.monto) || 0
-            const montoFinalEnCurso = montoAnteriorEnCurso + pagos.en_curso
-            
-            if (existEnCurso) {
-              await supabase
-                .from('utilidades_clasificadas')
-                .update({
-                  monto: montoFinalEnCurso,
-                  descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', existEnCurso.id)
-            } else {
-              const insertEnCurso = {
-                natillera_id: natilleraId,
-                tipo: tipoUtilidad,
-                monto: montoFinalEnCurso,
-                fecha_cierre: null,
-                descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`,
-                detalles: {}
-              }
-              if (formaPagoAct != null) insertEnCurso.forma_pago = formaPagoAct
-              await supabase.from('utilidades_clasificadas').insert(insertEnCurso)
-            }
-            console.log(`✅ Utilidad registrada para ${tipoUtilidad} (en curso): $${pagos.en_curso}`)
-          } catch (errEnCurso) {
-            console.error(`❌ Error registrando utilidad de ${tipoUtilidad} (en curso):`, errEnCurso)
-          }
-        }
-      }
+      })()
     }
-    
-    // Recargar actividades pendientes para reflejar los cambios
-    await cargarActividadesPendientes(cuotaSeleccionada.value)
   } catch (error) {
     console.error('Error registrando pagos de actividades:', error)
   }
@@ -9699,134 +9999,67 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
     let valorRestante = valorTotalCuotasPrestamos
     const fechaPago = new Date().toISOString()
     
-    // Función para generar código de comprobante único
-    function generarCodigoComprobante() {
-      const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-      let codigo = ''
-      for (let i = 0; i < 8; i++) {
-        codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length))
-      }
-      return codigo
-    }
+    // Procesar todos los préstamos en paralelo
+    const prestamoIds = Object.keys(pagosPorPrestamo)
     
-    // Procesar cada préstamo
-    for (const prestamoId in pagosPorPrestamo) {
+    // Pre-obtener saldos de todos los préstamos en una sola query
+    const { data: prestamosData } = await supabase
+      .from('prestamos')
+      .select('id, saldo_actual, estado')
+      .in('id', prestamoIds)
+    const prestamosMap = new Map((prestamosData || []).map(p => [p.id, p]))
+    
+    const promesasPrestamos = prestamoIds.map(async (prestamoId) => {
       const infoPrestamo = pagosPorPrestamo[prestamoId]
       const cuotasDelPrestamo = infoPrestamo.cuotas
-      
-      // Calcular cuánto se pagará de este préstamo (proporcional al total)
       const proporcionPrestamo = infoPrestamo.valorTotal / totalCuotasPrestamos
       const valorAPagarPrestamo = Math.min(valorRestante, valorTotalCuotasPrestamos * proporcionPrestamo)
       
-      if (valorAPagarPrestamo <= 0) continue
+      if (valorAPagarPrestamo <= 0) return
       
-      // Generar código de comprobante único para el pago del préstamo
-      let codigoComprobante = null
-      let intentos = 0
-      let codigoUnico = false
-      while (!codigoUnico && intentos < 5) {
-        codigoComprobante = generarCodigoComprobante()
-        const { data: codigoExistente } = await supabase
-          .from('pagos_prestamo')
-          .select('id')
-          .eq('codigo_comprobante', codigoComprobante)
-          .limit(1)
-        
-        if (!codigoExistente || codigoExistente.length === 0) {
-          codigoUnico = true
-        } else {
-          codigoComprobante = null
-        }
-        intentos++
-      }
+      const codigoComprobante = generarCodigoComprobante()
       
-      // Registrar el pago en la tabla pagos_prestamo
       const datosPago = {
         prestamo_id: prestamoId,
         valor: valorAPagarPrestamo,
         fecha: fechaPago,
-        nombre_socio:
-          cuotaSeleccionada.value?.socio_natillera?.socio?.nombre ||
-          cuotaSeleccionada.value?.socio_natillera?.nombre ||
-          null,
-        nombre_natillera: natilleraNombre.value || null
+        nombre_socio: cuotaSeleccionada.value?.socio_natillera?.socio?.nombre || cuotaSeleccionada.value?.socio_natillera?.nombre || null,
+        nombre_natillera: natilleraNombre.value || null,
+        codigo_comprobante: codigoComprobante
       }
       
-      if (codigoComprobante) {
-        datosPago.codigo_comprobante = codigoComprobante
-      }
-      
-      const { data: pagoInsertado, error: errorPago } = await supabase
-        .from('pagos_prestamo')
-        .insert(datosPago)
-        .select()
-        .single()
-      
-      if (errorPago) {
-        console.error(`Error insertando pago de préstamo ${prestamoId}:`, errorPago)
-        continue
-      }
-      
-      console.log(`✅ Pago registrado en pagos_prestamo para préstamo ${prestamoId}: $${valorAPagarPrestamo}`)
-      
-      // Obtener información del préstamo
-      const { data: prestamo, error: errorPrestamo } = await supabase
-        .from('prestamos')
-        .select('saldo_actual, estado')
-        .eq('id', prestamoId)
-        .single()
-      
-      if (errorPrestamo) {
-        console.error(`Error obteniendo préstamo ${prestamoId}:`, errorPrestamo)
-        continue
-      }
-      
-      // Calcular nuevo saldo
-      const saldoAnterior = parseFloat(prestamo.saldo_actual || 0)
+      // Insertar pago + actualizar préstamo en paralelo
+      const prestamo = prestamosMap.get(prestamoId)
+      const saldoAnterior = parseFloat(prestamo?.saldo_actual || 0)
       const nuevoSaldo = Math.max(0, saldoAnterior - valorAPagarPrestamo)
+      let nuevoEstado = prestamo?.estado || 'activo'
+      if (nuevoSaldo <= 0 && nuevoEstado === 'activo') nuevoEstado = 'pagado'
       
-      // Determinar nuevo estado
-      let nuevoEstado = prestamo.estado
-      if (nuevoSaldo <= 0 && prestamo.estado === 'activo') {
-        nuevoEstado = 'pagado'
+      const [pagoRes] = await Promise.all([
+        supabase.from('pagos_prestamo').insert(datosPago).select().single(),
+        supabase.from('prestamos').update({ saldo_actual: nuevoSaldo, estado: nuevoEstado }).eq('id', prestamoId)
+      ])
+      
+      if (pagoRes.error) {
+        console.error(`Error insertando pago de préstamo ${prestamoId}:`, pagoRes.error)
+        return
       }
       
-      // Actualizar el préstamo
-      const { error: errorUpdatePrestamo } = await supabase
-        .from('prestamos')
-        .update({
-          saldo_actual: nuevoSaldo,
-          estado: nuevoEstado
-        })
-        .eq('id', prestamoId)
-      
-      if (errorUpdatePrestamo) {
-        console.error(`Error actualizando préstamo ${prestamoId}:`, errorUpdatePrestamo)
-      } else {
-        console.log(`✅ Préstamo ${prestamoId} actualizado. Saldo: $${saldoAnterior} → $${nuevoSaldo}`)
-      }
-      
-      // Distribuir el pago entre las cuotas del préstamo
+      // Distribuir pago entre cuotas del préstamo (paralelo)
       let valorRestantePrestamo = valorAPagarPrestamo
-      
-      // Ordenar cuotas por número
       const cuotasOrdenadas = [...cuotasDelPrestamo].sort((a, b) => a.numero_cuota - b.numero_cuota)
       
+      const updatesCuotas = []
       for (const cuotaPrestamo of cuotasOrdenadas) {
         if (valorRestantePrestamo <= 0) break
-        
         const valorAPagarCuota = Math.min(valorRestantePrestamo, cuotaPrestamo.valor_pendiente)
         const nuevoValorPagado = cuotaPrestamo.valor_pagado_actual + valorAPagarCuota
         const estaCompleta = nuevoValorPagado >= cuotaPrestamo.valor_cuota
         
-        const datosActualizar = {
-          valor_pagado: nuevoValorPagado
-        }
-        
+        const datosActualizar = { valor_pagado: nuevoValorPagado }
         if (estaCompleta) {
           datosActualizar.pagada = true
           datosActualizar.fecha_pago = fechaPago
-          // Periodo de vencimiento según fecha_proyectada (para que aparezca en la quincena correcta)
           if (cuotaPrestamo.fecha_proyectada) {
             const d = new Date(cuotaPrestamo.fecha_proyectada)
             if (!isNaN(d.getTime())) {
@@ -9837,33 +10070,28 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
           }
         }
         
-        const { error: errorUpdateCuota } = await supabase
-          .from('plan_pagos_prestamo')
-          .update(datosActualizar)
-          .eq('id', cuotaPrestamo.id)
-        
-        if (errorUpdateCuota) {
-          console.error(`Error actualizando cuota de préstamo ${cuotaPrestamo.numero_cuota}:`, errorUpdateCuota)
-        } else {
-          console.log(`✅ Pago ${estaCompleta ? 'completo' : 'parcial'} registrado para cuota de préstamo #${cuotaPrestamo.numero_cuota}`)
-          if (valorAPagarCuota > 0) {
-            detalleLineasPrestamo.push({
-              nombre: `Cuota préstamo #${cuotaPrestamo.numero_cuota}`,
-              valor: valorAPagarCuota,
-              numero_cuota: cuotaPrestamo.numero_cuota,
-              prestamo_id: cuotaPrestamo.prestamo_id
+        updatesCuotas.push(
+          supabase.from('plan_pagos_prestamo').update(datosActualizar).eq('id', cuotaPrestamo.id)
+            .then(res => {
+              if (!res.error && valorAPagarCuota > 0) {
+                detalleLineasPrestamo.push({
+                  nombre: `Cuota préstamo #${cuotaPrestamo.numero_cuota}`,
+                  valor: valorAPagarCuota,
+                  numero_cuota: cuotaPrestamo.numero_cuota,
+                  prestamo_id: cuotaPrestamo.prestamo_id
+                })
+              }
             })
-          }
-        }
-        
+        )
         valorRestantePrestamo -= valorAPagarCuota
       }
       
+      await Promise.allSettled(updatesCuotas)
       valorRestante -= valorAPagarPrestamo
-    }
+    })
     
-    // Recargar cuotas de préstamos pendientes para reflejar los cambios
-    await cargarCuotasPrestamosPendientes(cuotaSeleccionada.value)
+    await Promise.allSettled(promesasPrestamos)
+    
     return detalleLineasPrestamo
   } catch (error) {
     console.error('Error registrando pagos de cuotas de préstamos:', error)
@@ -9874,7 +10102,6 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
 // Función para cargar cuotas de préstamos pendientes del socio
 async function cargarCuotasPrestamosPendientes(cuota) {
   if (!cuota || !cuota.socio_natillera_id) {
-    console.log('❌ cargarCuotasPrestamosPendientes: No hay cuota o socio_natillera_id')
     cuotasPrestamosPendientes.value = []
     return
   }
@@ -9903,13 +10130,12 @@ async function cargarCuotasPrestamosPendientes(cuota) {
     const prestamoIds = prestamos.map(p => p.id)
     const { data: planPagos, error: errorPlanPagos } = await supabase
       .from('plan_pagos_prestamo')
-      .select('*')
+      .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_proyectada')
       .in('prestamo_id', prestamoIds)
       .eq('pagada', false)
       .order('fecha_proyectada', { ascending: true })
 
     if (errorPlanPagos) {
-      console.error('❌ Error cargando plan de pagos:', errorPlanPagos)
       cuotasPrestamosPendientes.value = []
       return
     }
@@ -9981,8 +10207,7 @@ async function cargarCuotasPrestamosPendientes(cuota) {
       await nextTick()
       actualizarValorPagoConCuotasPrestamos()
     }
-  } catch (error) {
-    console.error('❌ Error cargando cuotas de préstamos:', error)
+  } catch {
     cuotasPrestamosPendientes.value = []
   } finally {
     cargandoCuotasPrestamos.value = false
@@ -11728,11 +11953,17 @@ async function handleRegistrarPago() {
       valorCuotasPrestamos: valorCuotasPrestamosPagado,
       detalleActividades,
       totalAPagar: totalAdeudadoPago,
-      detalleCuotasPrestamos
+      detalleCuotasPrestamos,
+      _socioNombre: socioNombre,
+      _natilleraNombre: natilleraNombre.value || null,
+      _natilleraConfig: natilleraConfigCache || null,
+      _socioNatilleraId: cuotaSeleccionada.value.socio_natillera_id,
+      _natilleraId: id,
+      _periodicidadSocio: cuotaSeleccionada.value.socio_natillera?.periodicidad
     }
   )
   
-  // Obtener información de actividades pagadas antes de registrar
+  // Snapshot de actividades pagadas antes de registrar (para comprobante)
   let actividadesPagadas = totalActividades > 0 
     ? actividadesPendientes.value
         .filter(a => actividadesSeleccionadas.value.has(a.id))
@@ -11746,47 +11977,57 @@ async function handleRegistrarPago() {
         }))
     : []
   
-  // Si hay actividades seleccionadas y el pago fue exitoso, registrar pagos de actividades
-  // Usar el valor calculado en registrarPago para asegurar consistencia
   const valorActividadesPagadoReal = result.valorActividadesPagado || valorActividadesPagado
+  
+  // Lanzar actividades y préstamos EN PARALELO (son independientes)
+  const promesasConceptos = []
+  
   if (result.success && totalActividades > 0 && valorActividadesPagadoReal > 0) {
-    await registrarPagosActividades(valorActividadesPagadoReal, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
-    
-    // Recargar las actividades pagadas con sus códigos de comprobante actualizados
-    if (actividadesPagadas.length > 0) {
-      try {
-        const actividadIds = actividadesPagadas.map(a => a.id)
-        const { data: actividadesActualizadas, error: errorActividades } = await supabase
-          .from('socios_actividad')
-          .select('id, codigo_comprobante, valor_pagado')
-          .in('id', actividadIds)
-        
-        if (!errorActividades && actividadesActualizadas) {
-          // Crear un mapa de códigos por ID
-          const codigosMap = new Map(
-            actividadesActualizadas.map(a => [a.id, a.codigo_comprobante])
-          )
-          
-          // Actualizar actividades pagadas con los códigos de comprobante
-          actividadesPagadas = actividadesPagadas.map(a => ({
-            ...a,
-            codigo_comprobante: codigosMap.get(a.id) || null
-          }))
-        }
-      } catch (e) {
-        console.warn('Error recargando códigos de comprobante de actividades:', e)
-      }
-    }
+    promesasConceptos.push(
+      registrarPagosActividades(valorActividadesPagadoReal, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
+        .then(async () => {
+          if (actividadesPagadas.length > 0) {
+            try {
+              const actividadIds = actividadesPagadas.map(a => a.id)
+              const { data: actividadesActualizadas, error: errorActividades } = await supabase
+                .from('socios_actividad')
+                .select('id, codigo_comprobante, valor_pagado')
+                .in('id', actividadIds)
+              if (!errorActividades && actividadesActualizadas) {
+                const codigosMap = new Map(actividadesActualizadas.map(a => [a.id, a.codigo_comprobante]))
+                actividadesPagadas = actividadesPagadas.map(a => ({
+                  ...a,
+                  codigo_comprobante: codigosMap.get(a.id) || null
+                }))
+              }
+            } catch (e) {
+              console.warn('Error recargando códigos de comprobante de actividades:', e)
+            }
+          }
+        })
+    )
   }
   
-  // Si hay cuotas de préstamos seleccionadas y el pago fue exitoso, registrar pagos de cuotas de préstamos
   let detalleCuotasPrestamosPagadas = []
   if (result.success && totalCuotasPrestamos > 0 && valorCuotasPrestamosPagado > 0) {
-    detalleCuotasPrestamosPagadas = await registrarPagosCuotasPrestamos(
-      valorCuotasPrestamosPagado,
-      formPago.tipo_pago,
-      { valorEfectivo, valorTransferencia, valorPagado }
-    ) || []
+    promesasConceptos.push(
+      registrarPagosCuotasPrestamos(valorCuotasPrestamosPagado, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
+        .then(res => { detalleCuotasPrestamosPagadas = res || [] })
+    )
+  }
+  
+  // Lanzar query de historial EN PARALELO con conceptos (no esperar secuencialmente)
+  const historialPromise = result.success
+    ? supabase
+        .from('historial_pagos_cuota')
+        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades')
+        .eq('cuota_id', cuotaSeleccionada.value.id)
+        .order('fecha_pago', { ascending: true })
+    : null
+
+  // Esperar conceptos en paralelo
+  if (promesasConceptos.length > 0) {
+    await Promise.allSettled(promesasConceptos)
   }
 
   if (result.success) {
@@ -11820,7 +12061,16 @@ async function handleRegistrarPago() {
     
     // Total pagado en ESTA transacción (conceptos; comprobante suma GMF aparte si aplica)
     const valorPagadoEstaTransaccion = (valorCuotaPagada || 0) + (valorSancionPagadaCalculada || 0) + (valorActividadesPagadoFinal || 0) + (valorCuotasPrestamosPagadoFinal || 0)
-    const valorPagadoEstaTransaccionConGmf = valorPagadoEstaTransaccion + (esPagoTransferencia ? impuesto4x1000Pago : 0)
+    // GMF: distribución puede devolver 0 por redondeo; respaldo = bruto consignado − neto a conceptos (nunca > tope 4×1000 sobre neto)
+    const topeGmfEstaTx = esPagoTransferencia ? calcularImpuesto4x1000(valorPagadoEstaTransaccion) : 0
+    const gmfDesdeBruto =
+      esPagoTransferencia && valorConsignadoTransferenciaPago > 0
+        ? Math.max(0, Math.round(valorConsignadoTransferenciaPago - valorPagadoEstaTransaccion))
+        : 0
+    const impuesto4x1000Final = esPagoTransferencia
+      ? Math.max(impuesto4x1000Pago || 0, Math.min(gmfDesdeBruto, topeGmfEstaTx))
+      : 0
+    const valorPagadoEstaTransaccionConGmf = valorPagadoEstaTransaccion + (esPagoTransferencia ? impuesto4x1000Final : 0)
     
     // Total pagado ACUMULADO (cuota actualizada + actividades pagadas antes, ya que están en socios_actividad)
     const actividadesPagadasAcumulado = (getActividadesInfoSocio(cuotaSeleccionada.value).pagadas || 0) + (valorActividadesPagadoFinal || 0)
@@ -11895,14 +12145,11 @@ async function handleRegistrarPago() {
       }
     }
     
-    // Historial de pagos: obtenerlo siempre desde la tabla historial_pagos_cuota (fuente de verdad)
+    // Historial de pagos: usar la promesa lanzada en paralelo con los conceptos
     let historialPagos = []
     try {
-      const { data: historialRows } = await supabase
-        .from('historial_pagos_cuota')
-        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades')
-        .eq('cuota_id', cuotaSeleccionada.value.id)
-        .order('fecha_pago', { ascending: true })
+      const historialResult = historialPromise ? await historialPromise : { data: null }
+      const historialRows = historialResult.data
       if (historialRows && historialRows.length > 0) {
         historialPagos = historialRows.map((row, idx) => {
           const conceptos = []
@@ -11961,7 +12208,7 @@ async function handleRegistrarPago() {
       tipoPago: formPago.tipo_pago || 'efectivo', // Tipo de pago (efectivo o transferencia)
       valorEfectivo, // Total de esta transacción en efectivo
       valorTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : 0, // Bruto consignado (incluye GMF si lo pagó)
-      impuesto4x1000: esPagoTransferencia ? impuesto4x1000Pago : 0,
+      impuesto4x1000: impuesto4x1000Final,
       valorConsignadoTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : null,
       fecha: new Date().toLocaleDateString('es-CO', {
         year: 'numeric',
@@ -12006,64 +12253,56 @@ async function handleRegistrarPago() {
       historialPagos
     }
     
-    console.log('pagoRegistrado.value completo:', pagoRegistrado.value)
-    
-    // Persistir el desglose real del historial para que al reenviar se muestren los valores correctos (no proporciones)
-    if (seCompletoPago && historialPagos.length >= 2) {
-      const historialId = result.insertedHistorialComprobanteId
-      if (historialId) {
-        try {
-          await supabase
-            .from('historial_comprobantes')
-            .update({ historial_pagos: historialPagos })
-            .eq('id', historialId)
-        } catch (e) {
-          console.warn('No se pudo guardar desglose del historial de pagos:', e)
-        }
-      } else {
-        try {
-          const cuotaIdGuardar = cuotaSeleccionada.value.id
-          const { data: ultimoHistorial, error: errSel } = await supabase
-            .from('historial_comprobantes')
-            .select('id')
-            .eq('cuota_id', cuotaIdGuardar)
-            .eq('motivo', 'completar_pago_parcial')
-            .order('fecha_actualizacion', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-          if (!errSel && ultimoHistorial?.id) {
-            await supabase
-              .from('historial_comprobantes')
-              .update({ historial_pagos: historialPagos })
-              .eq('id', ultimoHistorial.id)
-          }
-        } catch (e) {
-          console.warn('No se pudo guardar desglose del historial de pagos:', e)
-        }
-      }
-    }
-    
-    // Cerrar modal de pago y desactivar animación
+    // Cerrar modal de pago y mostrar comprobante INMEDIATAMENTE (UI optimista)
     modalPago.value = false
     mostrandoAnimacionPago.value = false
     modalConfirmacion.value = true
+    
+    // Capturar ID antes de limpiar cuotaSeleccionada (necesario para background tasks)
+    const cuotaIdParaBg = cuotaSeleccionada.value?.id
     cuotaSeleccionada.value = null
-    // Reiniciar formulario y limpiar selección de actividades
     formPago.valor = 0
     formPago.tipo_pago = 'efectivo'
     formPago.aplicaImpuesto4x1000 = false
     actividadesSeleccionadas.value.clear()
     
-    // Recargar cuotas para actualizar el resumen
-    await cuotasStore.fetchCuotasNatillera(id)
-    
-    // Recalcular sanciones dinámicas después de registrar el pago
-    await recalcularSancionesMes()
-    
-    // Recargar actividades pendientes por socio si está en vista agrupada
-    if (vistaAgrupada.value) {
-      await cargarActividadesPendientesPorSocio()
-    }
+    // Fire-and-forget: persistir historial en comprobantes + recargar datos
+    // Todas estas operaciones se completan en background sin bloquear la UI
+    ;(async () => {
+      try {
+        // Esperar a que las tareas secundarias del store terminen (historial_comprobantes insert)
+        if (result._bgPromise) await result._bgPromise
+        
+        if (seCompletoPago && historialPagos.length >= 2) {
+          const historialId = result.insertedHistorialComprobanteId
+          if (historialId) {
+            await supabase.from('historial_comprobantes')
+              .update({ historial_pagos: historialPagos }).eq('id', historialId)
+          } else if (cuotaIdParaBg) {
+            const { data: ultimoHistorial } = await supabase
+              .from('historial_comprobantes').select('id')
+              .eq('cuota_id', cuotaIdParaBg).eq('motivo', 'completar_pago_parcial')
+              .order('fecha_actualizacion', { ascending: false }).limit(1).maybeSingle()
+            if (ultimoHistorial?.id) {
+              await supabase.from('historial_comprobantes')
+                .update({ historial_pagos: historialPagos }).eq('id', ultimoHistorial.id)
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo guardar desglose del historial de pagos:', e)
+      }
+      
+      // Recargar datos en paralelo en background
+      const recargasFinales = [
+        cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true }),
+        recalcularSancionesMes()
+      ]
+      if (vistaAgrupada.value) {
+        recargasFinales.push(cargarActividadesPendientesPorSocio())
+      }
+      Promise.allSettled(recargasFinales)
+    })()
   } else {
     // Si hay error, desactivar la animación
     mostrandoAnimacionPago.value = false
@@ -12346,7 +12585,7 @@ function generarImagenComprobante() {
       
       // === SECCIÓN 2: CONCEPTOS PAGADOS ===
       const conceptosY = currentY
-      const conceptosHeight = 60
+      let conceptosHeight = 60
       
       // Fondo de la sección
       ctx.fillStyle = '#ffffff'
@@ -12562,7 +12801,7 @@ function generarImagenComprobante() {
       }
 
       // GMF 4×1000: total en CONCEPTOS (misma lógica que el modal); con varios abonos el detalle sigue en Historial
-      const impuestoGmfCanvas = parseFloat(pagoRegistrado.value?.impuesto4x1000) || 0
+      const impuestoGmfCanvas = impuesto4x1000Comprobante.value || 0
       const mostrarGmfEnBloqueConceptos = impuestoGmfCanvas > 0
       if (mostrarGmfEnBloqueConceptos) {
         if (actividadX + actividadWidth > cardInnerX + cardInnerWidth - 10) {
@@ -13289,63 +13528,69 @@ async function reenviarComprobante(cuota) {
   // Fuente de verdad: lo abonado a actividades EN ESTA CUOTA (valor_pagado_actividades).
   // Así se incluyen actividades pagadas en esta cuota aunque pertenezcan a otro periodo.
   const valorActividadesPagadoEnCuota = parseFloat(cuota.valor_pagado_actividades) || 0
-  
+
+  // Periodo de la cuota (necesario para actividades/préstamos; se calcula una vez)
+  let mesCuota = cuota.mes
+  let anioCuota = cuota.anio
+  const quincenaCuota = cuota.quincena
+  if ((mesCuota == null || anioCuota == null) && cuota.fecha_limite) {
+    const partes = String(cuota.fecha_limite).split('-')
+    if (partes.length >= 2) {
+      const anio = parseInt(partes[0], 10)
+      const mes = parseInt(partes[1], 10)
+      if (!Number.isNaN(mes) && !Number.isNaN(anio)) {
+        mesCuota = mes
+        anioCuota = anio
+      }
+    }
+  }
+
   // Buscar actividades pagadas que corresponden al mismo periodo y quincena que esta cuota
   // (para desglose por nombre cuando aplica)
   let actividadesPagadas = []
   let totalActividades = valorActividadesPagadoEnCuota
   let cuotasPrestamosPagadas = []
   let totalCuotasPrestamos = 0
-  
-  if (cuota.socio_natillera_id) {
-    try {
-      // Asegurar mes/anio/quincena de la cuota (por si no vienen en el objeto)
-      let mesCuota = cuota.mes
-      let anioCuota = cuota.anio
-      const quincenaCuota = cuota.quincena
-      if ((mesCuota == null || anioCuota == null) && cuota.fecha_limite) {
-        const partes = String(cuota.fecha_limite).split('-')
-        if (partes.length >= 2) {
-          const anio = parseInt(partes[0], 10)
-          const mes = parseInt(partes[1], 10)
-          if (!Number.isNaN(mes) && !Number.isNaN(anio)) {
-            mesCuota = mes
-            anioCuota = anio
-          }
-        }
-      }
-      
-      // Solo consultar si tenemos periodo válido (mes y año)
-      if (mesCuota != null && anioCuota != null) {
-        const tieneAlgunPago = (valorCuotaPagada + valorSancionPagada + valorActividadesPagadoEnCuota) > 0
-        // Optimizar: solo consultar socios_actividad si realmente hay valor_pagado_actividades en esta cuota
-        const promSociosActividad = valorActividadesPagadoEnCuota > 0
-          ? supabase
-              .from('socios_actividad')
-              .select(`
-                *,
-                actividades(
-                  id,
-                  tipo,
-                  descripcion
-                )
-              `)
-              .eq('socio_natillera_id', cuota.socio_natillera_id)
-              .eq('mes_pago', mesCuota)
-              .eq('anio_pago', anioCuota)
-              .in('estado', ['pagado', 'parcial'])
-          : Promise.resolve({ data: [] })
-        const promPrestamos = supabase
+
+  /** Historial de pagos: en paralelo con socios_actividad y préstamos (antes se esperaba al final). */
+  const promSociosActividad =
+    cuota.socio_natillera_id && mesCuota != null && anioCuota != null && valorActividadesPagadoEnCuota > 0
+      ? supabase
+          .from('socios_actividad')
+          .select(`
+            *,
+            actividades(
+              id,
+              tipo,
+              descripcion
+            )
+          `)
+          .eq('socio_natillera_id', cuota.socio_natillera_id)
+          .eq('mes_pago', mesCuota)
+          .eq('anio_pago', anioCuota)
+          .in('estado', ['pagado', 'parcial'])
+      : Promise.resolve({ data: [] })
+  const promPrestamos =
+    cuota.socio_natillera_id && mesCuota != null && anioCuota != null
+      ? supabase
           .from('prestamos')
           .select('id')
           .eq('socio_natillera_id', cuota.socio_natillera_id)
           .in('estado', ['activo', 'pagado'])
+      : Promise.resolve({ data: [] })
 
-        const [sociosActividadRes, prestamosRes] = await Promise.all([
-          promSociosActividad,
-          promPrestamos
-        ])
-        
+  const [historialRes, sociosActividadRes, prestamosRes] = await Promise.all([
+    historialPromise,
+    promSociosActividad,
+    promPrestamos
+  ])
+  let historialRows = historialRes.data
+  const historialErrorPrimera = historialRes.error
+
+  if (cuota.socio_natillera_id) {
+    try {
+      // Solo consultar si tenemos periodo válido (mes y año)
+      if (mesCuota != null && anioCuota != null) {
         const sociosActividadData = sociosActividadRes.data
         if (sociosActividadData && sociosActividadData.length > 0) {
           const cuotaConPeriodo = {
@@ -13398,7 +13643,7 @@ async function reenviarComprobante(cuota) {
           // Intentar obtener nombres desde historial_pagos_cuota.detalle_actividades
           let usadoHistorial = false
           try {
-            const { data: histFallback } = await historialPromise
+            const histFallback = historialRows
             if (histFallback && histFallback.length > 0) {
               const detallesAll = histFallback
                 .flatMap(r => Array.isArray(r.detalle_actividades) ? r.detalle_actividades : [])
@@ -13479,20 +13724,18 @@ async function reenviarComprobante(cuota) {
     }
   }
   
-  // Historial de pagos para comprobante reenviado: usar siempre historial_pagos_cuota (ya lanzado en paralelo)
-  let historialRows = null
+  // Historial de pagos para comprobante reenviado (mismos datos que ya vinieron en Promise.all con socios/préstamos)
   let historialPagosReenvio = []
   let totalGmfHistorialReenvio = 0
   try {
-    const { data, error: historialError } = await historialPromise
-    historialRows = data
-    // Log para depuración: registros encontrados en historial_pagos_cuota
-    console.log('[Reenvío comprobante] historial_pagos_cuota:', {
-      cuota_id: cuota.id,
-      cantidad_registros: historialRows?.length ?? 0,
-      error: historialError ? { message: historialError.message, code: historialError.code } : null,
-      registros_raw: historialRows ?? []
-    })
+    const historialError = historialErrorPrimera
+    if (import.meta.env.DEV) {
+      console.log('[Reenvío comprobante] historial_pagos_cuota:', {
+        cuota_id: cuota.id,
+        cantidad_registros: historialRows?.length ?? 0,
+        error: historialError ? { message: historialError.message, code: historialError.code } : null
+      })
+    }
     if (historialError) {
       console.warn('[Reenvío comprobante] Error al consultar historial_pagos_cuota:', historialError.message)
     }
@@ -13500,7 +13743,20 @@ async function reenviarComprobante(cuota) {
       console.warn('[Reenvío comprobante] 0 filas para cuota_id:', cuota.id, '- Si en Supabase sí ves filas para este cuota_id, aplica la migración fix_historial_pagos_cuota_rls.sql (RLS).')
     }
     if (historialRows && historialRows.length > 0) {
-      totalGmfHistorialReenvio = historialRows.reduce((s, r) => s + leerImpuesto4x1000DesdeHistorial(r), 0)
+      // Si suma(impuesto en BD)=0 pero el socio pagó 4×1000 (comprobante en su momento), inferir por fila
+      // (transferencia/mixto) como 4‰ sobre valor_total del abono. Incluye varios abonos y pago mixto.
+      const sumImpuestoLeido = historialRows.reduce((s, r) => s + leerImpuesto4x1000DesdeHistorial(r), 0)
+      const inferirGmfPorFila = sumImpuestoLeido <= 0
+      const gmfMostrarFilaReenvio = (row) => {
+        const leido = leerImpuesto4x1000DesdeHistorial(row)
+        if (leido > 0) return leido
+        if (!inferirGmfPorFila) return 0
+        const fp = (row.forma_pago || 'efectivo').toLowerCase()
+        if (fp !== 'transferencia' && fp !== 'mixto') return 0
+        const net = Math.round(parseFloat(row.valor_total) || 0)
+        return net > 0 ? calcularImpuesto4x1000(net) : 0
+      }
+      totalGmfHistorialReenvio = historialRows.reduce((s, r) => s + gmfMostrarFilaReenvio(r), 0)
       historialPagosReenvio = historialRows.map((row, idx) => {
         const conceptos = []
         if ((row.valor_cuota || 0) > 0) conceptos.push({ nombre: 'Cuota', valor: row.valor_cuota })
@@ -13514,10 +13770,17 @@ async function reenviarComprobante(cuota) {
           }
         }
         if ((row.valor_cuotas_prestamo || 0) > 0) conceptos.push({ nombre: 'Cuotas de préstamos', valor: row.valor_cuotas_prestamo })
-        const impH = leerImpuesto4x1000DesdeHistorial(row)
-        if (impH > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: impH })
+        const impMostrar = gmfMostrarFilaReenvio(row)
+        if (impMostrar > 0) conceptos.push({ nombre: '4×1000 (GMF)', valor: impMostrar })
         const formaPago = (row.forma_pago || 'efectivo').toLowerCase()
-        const formaPagoTexto = formaPago === 'transferencia' ? 'Transferencia' : formaPago === 'tarjeta' ? 'Tarjeta' : 'Efectivo'
+        const formaPagoTexto =
+          formaPago === 'transferencia'
+            ? 'Transferencia'
+            : formaPago === 'tarjeta'
+              ? 'Tarjeta'
+              : formaPago === 'mixto'
+                ? 'Mixto'
+                : 'Efectivo'
         const fecha = row.fecha_pago
           ? new Date(row.fecha_pago).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
           : 'N/A'
@@ -13531,12 +13794,26 @@ async function reenviarComprobante(cuota) {
           formaPagoTexto
         }
       })
-      console.log('[Reenvío comprobante] historialPagosReenvio construido (Historial UI si length > 1):', historialPagosReenvio)
+      if (import.meta.env.DEV) {
+        console.log('[Reenvío comprobante] historialPagosReenvio construido:', historialPagosReenvio?.length ?? 0, 'ítems')
+      }
     }
   } catch (e) {
     console.warn('Error construyendo historial de pagos para reenvío desde historial_pagos_cuota:', e)
     historialPagosReenvio = []
   }
+
+  // GMF a veces no quedó en historial_pagos_cuota pero sí en el snapshot de historial_comprobantes
+  if (totalGmfHistorialReenvio <= 0 && cuota.id) {
+    const respaldo = await obtenerRespaldoGmfDesdeHistorialComprobantes(cuota.id)
+    if (respaldo.totalGmf > 0) {
+      totalGmfHistorialReenvio = respaldo.totalGmf
+      if (respaldo.historialPagos && Array.isArray(respaldo.historialPagos) && respaldo.historialPagos.length > 0) {
+        historialPagosReenvio = respaldo.historialPagos
+      }
+    }
+  }
+  historialPagosReenvio = asegurarLineaGmfEnHistorialReenvio(historialPagosReenvio, totalGmfHistorialReenvio)
 
   // totalCuotasPrestamos ahora incluye la OBLIGACIÓN total (pagada o no) desde plan_pagos_prestamo
   // Calcular por separado lo efectivamente pagado de préstamos
@@ -13605,7 +13882,15 @@ async function reenviarComprobante(cuota) {
     : (valorCuota + sancionTotal + totalActividades + totalCuotasPrestamos)
   const valorPendiente = Math.max(0, totalAPagar - valorPagadoTotal)
   const esParcial = valorPagadoTotal > 0 && valorPagadoTotal < totalAPagar
-  
+
+  // Sin filas en historial_pagos_cuota (p. ej. RLS) pero cuota pagó por transferencia/mixto: mismo criterio 4‰ sobre neto
+  if (totalGmfHistorialReenvio <= 0 && (!historialRows || historialRows.length === 0)) {
+    const tp = (cuota.tipo_pago || '').toLowerCase()
+    if ((tp === 'transferencia' || tp === 'mixto') && valorPagadoTotal > 0) {
+      totalGmfHistorialReenvio = calcularImpuesto4x1000(Math.round(valorPagadoTotal))
+    }
+  }
+
   // Preparar datos del pago para mostrar el comprobante
   pagoRegistrado.value = {
     cuotaId: cuota.id, // ID de la cuota para auditoría
@@ -14187,46 +14472,116 @@ function handleClickOutside(event) {
   }
 }
 
+function esPrimerFlujoSocioCuota(cuota) {
+  const target = primerFlujoSocioNatilleraId.value
+  if (!target || !cuota) return false
+  return (
+    String(cuota.socio_natillera_id) === String(target) ||
+    String(cuota.socio_natillera?.id) === String(target)
+  )
+}
+
+function seleccionarMesDesdeModal(mes) {
+  mesSeleccionado.value = mes.value
+  formCuotas.mes = mes.value
+  modalSelectorMes.value = false
+  router.push(`/natilleras/${id}/cuotas/${mes.value}`)
+}
+
+function schedulePrimerCuotasDetalleSocioTour() {
+  if (!id) return
+  if (!TOURS_ENABLED) return
+  if (!peekPendingCuotasDetalleTour(id)) return
+  if (!shouldShowPrimerCuotasDetalleSocioTour(id)) {
+    clearPendingCuotasDetalleTour(id)
+    return
+  }
+  if (!consumePendingCuotasDetalleTour(id)) return
+  const socioId = getPrimerFlujoSocioNatilleraId(id)
+  if (!socioId) {
+    markPrimerCuotasDetalleSocioTourDone(id)
+    return
+  }
+  primerFlujoSocioNatilleraId.value = socioId
+  filtroEstado.value = 'todos'
+  busquedaCuotas.value = ''
+  vistaExcel.value = false
+  vistaAgrupada.value = false
+  vistaLista.value = false
+  tourGuiadoCuotasDetalleActivo.value = true
+  nextTick(() => {
+    setTimeout(() => {
+      startPrimerCuotasDetalleSocioTour({
+        natilleraId: id,
+        puedeDemoCambioMes: mesesNatillera.value.length > 1,
+        onDone: () => {
+          tourGuiadoCuotasDetalleActivo.value = false
+          markPrimerCuotasDetalleSocioTourDone(id)
+          clearPrimerFlujoSocioNatilleraId(id)
+          primerFlujoSocioNatilleraId.value = null
+        }
+      })
+    }, 450)
+  })
+}
+
+watch(modalSelectorMes, (open, wasOpen) => {
+  if (open) {
+    mesAlAbrirModalSelector.value = mesSeleccionado.value
+    notifyPrimerCuotasDetalleModalMesAbierto()
+    return
+  }
+  if (!wasOpen) return
+  const anterior = mesAlAbrirModalSelector.value
+  mesAlAbrirModalSelector.value = null
+  if (!tourGuiadoCuotasDetalleActivo.value) return
+  if (anterior !== null && anterior !== undefined && mesSeleccionado.value !== anterior) {
+    notifyPrimerCuotasDetalleMesElegidoEnModal()
+  } else {
+    notifyPrimerCuotasDetalleModalCerradoSinElegirMes()
+  }
+})
+
 onMounted(async () => {
-  // Obtener usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = authStore.user
   usuarioAutenticado.value = user
   
-  // Marcar que estamos inicializando para evitar que el watch se dispare
   inicializando.value = true
   const tiempoInicio = performance.now()
   
   try {
-    // 1. Cargar natillera, cuotas Y conteo de socios EN PARALELO (operaciones independientes)
+    // ── FASE 1: Cargar natillera + cuotas ──
+    // Si el store ya tiene las cuotas de esta natillera (ej: viene de CuotasMeses),
+    // reutilizar los datos en lugar de volver a consultar la BD.
+    const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
+
     const [natilleraData, cuotasCargadas] = await Promise.all([
       cargarNatillera(),
-      cuotasStore.fetchCuotasNatillera(id),
-      cargarConteoSocios() // Importante: cargar conteo de socios para verificar si faltan cuotas
+      storeYaTieneDatos
+        ? Promise.resolve(cuotasStore.cuotas)
+        : cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
     ])
     
-    // Obtener el rol del usuario en la natillera
-    await nextTick()
+    const sociosDelStore = cuotasStore.sociosNatillera
+    if (sociosDelStore && sociosDelStore.length > 0) {
+      const activos = sociosDelStore.filter(s => s.estado === 'activo')
+      conteoSociosMensuales.value = activos.filter(s => s.periodicidad !== 'quincenal').length
+      conteoSociosQuincenales.value = activos.filter(s => s.periodicidad === 'quincenal').length
+    }
+    
+    // Obtener rol en background (no bloquea la UI)
     const natillera = natillerasStore.natilleraActual
     if (natillera) {
-      if (!esAdmin.value) {
-        try {
-          const rol = await colaboradoresStore.obtenerMiRol(id)
-          miRol.value = rol
-        } catch (err) {
-          console.warn('Error obteniendo rol del usuario:', err)
-          miRol.value = null
-        }
-      } else {
-        // Si es admin, no necesita verificar rol
+      if (esAdmin.value) {
         miRol.value = 'administrador'
+      } else {
+        colaboradoresStore.obtenerMiRol(id)
+          .then(rol => { miRol.value = rol })
+          .catch(() => { miRol.value = null })
       }
     }
     
-    // Los datos de días de gracia y sanciones ya están cargados en cargarNatillera()
-    console.log('📅 Días de gracia:', diasGracia.value, '| Sanciones activas:', sancionesActivas.value)
-    console.log('👥 Socios: Mensuales:', conteoSociosMensuales.value, '| Quincenales:', conteoSociosQuincenales.value)
-    
-    // 2. Verificar si faltan cuotas USANDO LOS DATOS YA CARGADOS (sin nueva consulta)
+    // ── FASE 2: Verificar cuotas faltantes (datos locales, sin query extra) ──
     if (mesSeleccionado.value) {
       const anioCorrecto = calcularAnioMes(
         mesSeleccionado.value,
@@ -14235,16 +14590,17 @@ onMounted(async () => {
         anioNatillera.value
       )
       
-      // Verificar con datos locales si faltan cuotas
       const faltanCuotas = verificarCuotasFaltantes(cuotasCargadas, mesSeleccionado.value, anioCorrecto)
       
       if (faltanCuotas) {
         try {
           generandoCuotas.value = true
-          const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioCorrecto)
+          const sociosActivos = cuotasStore.sociosNatillera.filter(s => s.estado === 'activo')
+          const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioCorrecto, {
+            configNatilleraCache: natilleraConfigCache,
+            sociosCargados: sociosActivos.length > 0 ? sociosActivos : null
+          })
           if (result.success && result.cuotasGeneradas > 0) {
-            console.log(`✅ ${result.cuotasGeneradas} cuotas generadas automáticamente`)
-            // Recargar solo si se generaron nuevas (skip mora)
             await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
           }
         } catch (error) {
@@ -14255,23 +14611,31 @@ onMounted(async () => {
       }
     }
     
-    // 3. Calcular sanciones para todas las cuotas en mora (en segundo plano si no es crítico)
-    if (sancionesActivas.value) {
-      // Ejecutar sin await para no bloquear la UI
-      // Usar recalcularSancionesMes que ahora calcula para todas las cuotas en mora
-      recalcularSancionesMes()
-    } else {
-      sancionesDinamicas.value = {}
-    }
-    
-    // 4. Cargar actividades pendientes por socio (en segundo plano)
-    cargarActividadesPendientesPorSocio()
-    
     const tiempoFin = performance.now()
-    console.log(`✅ Inicialización completada en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
+    console.log(`✅ Cuotas visibles en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
+    
   } finally {
     inicializando.value = false
   }
+
+  // ── FASE 3: Background — mora, sanciones, actividades, préstamos ──
+  cuotasStore.actualizarEstadoMoraAutomatico(cuotasStore.cuotas, id, natilleraConfigCache).catch(err =>
+    console.error('Error actualizando mora:', err)
+  )
+
+  if (sancionesActivas.value) {
+    recalcularSancionesMes()
+  } else {
+    sancionesDinamicas.value = {}
+  }
+
+  Promise.all([
+    cargarActividadesPendientesPorSocio(),
+    cargarCuotasPrestamosPendientesParaLista()
+  ]).catch(err => console.error('Error cargando datos secundarios:', err))
+
+  await nextTick()
+  schedulePrimerCuotasDetalleSocioTour()
   
   document.addEventListener('click', handleClickOutside)
 })
@@ -14544,242 +14908,6 @@ onUnmounted(() => {
     border-radius: 20px !important;
     gap: 6px !important;
   }
-}
-
-/* Pantalla de carga al reenviar comprobante (elegante, compatible Safari/iPhone) */
-.cargando-comprobante-reenvio {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
-  min-height: -webkit-fill-available !important;
-  height: 100vh !important;
-  height: 100dvh !important;
-  height: -webkit-fill-available !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ecfdf5 35%, #d1fae5 70%, #ccfbf1 100%);
-  touch-action: none;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
-  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
-  box-sizing: border-box;
-  -webkit-transform: translate3d(0, 0, 0);
-  transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-}
-
-.cargando-comprobante-reenvio__bg {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.cargando-comprobante-reenvio__orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(60px);
-  -webkit-filter: blur(60px);
-  opacity: 0.5;
-  -webkit-animation: cargando-comprobante-float 6s ease-in-out infinite;
-  animation: cargando-comprobante-float 6s ease-in-out infinite;
-}
-
-.cargando-comprobante-reenvio__orb--1 {
-  width: 280px;
-  height: 280px;
-  background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
-  top: 10%;
-  left: 15%;
-  -webkit-animation-delay: 0s;
-  animation-delay: 0s;
-}
-
-.cargando-comprobante-reenvio__orb--2 {
-  width: 240px;
-  height: 240px;
-  background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%);
-  bottom: 20%;
-  right: 10%;
-  -webkit-animation-delay: 2s;
-  animation-delay: 2s;
-}
-
-.cargando-comprobante-reenvio__orb--3 {
-  width: 200px;
-  height: 200px;
-  background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%);
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  -webkit-animation-delay: 4s;
-  animation-delay: 4s;
-}
-
-@-webkit-keyframes cargando-comprobante-float {
-  0%, 100% { -webkit-transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
-  50% { -webkit-transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
-}
-
-@keyframes cargando-comprobante-float {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
-  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
-}
-
-.cargando-comprobante-reenvio__orb--1,
-.cargando-comprobante-reenvio__orb--2 {
-  -webkit-animation-name: cargando-comprobante-float-alt;
-  animation-name: cargando-comprobante-float-alt;
-}
-
-@-webkit-keyframes cargando-comprobante-float-alt {
-  0%, 100% { -webkit-transform: translate(0, 0) scale(1); opacity: 0.45; }
-  50% { -webkit-transform: translate(10px, -10px) scale(1.08); opacity: 0.55; }
-}
-
-@keyframes cargando-comprobante-float-alt {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.45; }
-  50% { transform: translate(10px, -10px) scale(1.08); opacity: 0.55; }
-}
-
-.cargando-comprobante-reenvio__inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 2.5rem;
-  max-width: 90%;
-  background: rgba(255, 255, 255, 0.85);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border-radius: 28px;
-  box-shadow: 0 32px 64px -12px rgba(5, 150, 105, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-  border: 1px solid rgba(16, 185, 129, 0.12);
-}
-
-.cargando-comprobante-reenvio__spinner-wrap {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  margin-bottom: 1.5rem;
-}
-
-.cargando-comprobante-reenvio__ring {
-  position: absolute;
-  border-radius: 50%;
-  border-style: solid;
-  border-color: transparent;
-}
-
-.cargando-comprobante-reenvio__ring--outer {
-  inset: 0;
-  border-width: 3px;
-  border-top-color: #10b981;
-  border-right-color: #34d399;
-  -webkit-animation: cargando-comprobante-spin 1.2s linear infinite;
-  animation: cargando-comprobante-spin 1.2s linear infinite;
-}
-
-.cargando-comprobante-reenvio__ring--mid {
-  inset: 10px;
-  border-width: 2px;
-  border-bottom-color: #059669;
-  border-left-color: #6ee7b7;
-  -webkit-animation: cargando-comprobante-spin 0.9s linear infinite reverse;
-  animation: cargando-comprobante-spin 0.9s linear infinite reverse;
-}
-
-@-webkit-keyframes cargando-comprobante-spin {
-  to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
-}
-
-@keyframes cargando-comprobante-spin {
-  to { transform: rotate(360deg); }
-}
-
-.cargando-comprobante-reenvio__icon-wrap {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cargando-comprobante-reenvio__icon {
-  width: 28px;
-  height: 28px;
-  color: #059669;
-  -webkit-animation: cargando-comprobante-pulse 2s ease-in-out infinite;
-  animation: cargando-comprobante-pulse 2s ease-in-out infinite;
-}
-
-@-webkit-keyframes cargando-comprobante-pulse {
-  0%, 100% { opacity: 0.85; -webkit-transform: scale(1); transform: scale(1); }
-  50% { opacity: 1; -webkit-transform: scale(1.05); transform: scale(1.05); }
-}
-
-@keyframes cargando-comprobante-pulse {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
-.cargando-comprobante-reenvio__title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #065f46;
-  margin: 0 0 0.35rem 0;
-  text-align: center;
-  letter-spacing: -0.02em;
-}
-
-.cargando-comprobante-reenvio__message {
-  font-size: 0.9375rem;
-  color: #047857;
-  margin: 0;
-  text-align: center;
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-.cargando-comprobante-reenvio__bar-wrap {
-  width: 120px;
-  height: 4px;
-  margin-top: 1.25rem;
-  background: rgba(16, 185, 129, 0.2);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.cargando-comprobante-reenvio__bar {
-  height: 100%;
-  width: 40%;
-  background: linear-gradient(90deg, #10b981, #34d399);
-  border-radius: 999px;
-  -webkit-animation: cargando-comprobante-bar 1.4s ease-in-out infinite;
-  animation: cargando-comprobante-bar 1.4s ease-in-out infinite;
-}
-
-@-webkit-keyframes cargando-comprobante-bar {
-  0% { -webkit-transform: translateX(-100%); transform: translateX(-100%); }
-  100% { -webkit-transform: translateX(350%); transform: translateX(350%); }
-}
-
-@keyframes cargando-comprobante-bar {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(350%); }
 }
 
 </style>

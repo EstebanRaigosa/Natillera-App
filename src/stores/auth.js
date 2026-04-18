@@ -9,7 +9,19 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const loading = ref(false)
   const error = ref(null)
-  const lastLoginAudit = ref(null) // Para evitar duplicados
+  const lastLoginAudit = ref(null)
+  const loginEnCurso = ref(false)
+
+  /**
+   * Indica si la hidratación inicial de sesión (onAuthStateChange INITIAL_SESSION) ya finalizó.
+   * Mientras sea false, el router guard debe esperar antes de decidir si redirigir al login.
+   */
+  const initialSessionResolved = ref(false)
+  /** Promesa que se resuelve una sola vez cuando INITIAL_SESSION llega. */
+  let _initialSessionResolve = null
+  const initialSessionReady = new Promise((resolve) => {
+    _initialSessionResolve = resolve
+  })
 
   const isEmailConfirmed = computed(() => {
     if (!user.value) return false
@@ -23,13 +35,13 @@ export const useAuthStore = defineStore('auth', () => {
   const userEmail = computed(() => user.value?.email || '')
   const userName = computed(() => user.value?.user_metadata?.nombre || user.value?.email?.split('@')[0] || 'Usuario')
   
-  // Verificar si el usuario necesita agregar un nombre de usuario
   const needsUsername = computed(() => {
     if (!user.value || !user.value.email_confirmed_at) return false
     return !user.value.user_metadata?.nombre || user.value.user_metadata.nombre.trim() === ''
   })
 
   async function checkAuth() {
+    if (user.value) return
     try {
       loading.value = true
       const { data: { session } } = await supabase.auth.getSession()
@@ -83,6 +95,12 @@ export const useAuthStore = defineStore('auth', () => {
       
       if (authError) throw authError
       
+      // Limpiar timestamp de background de sesiones anteriores para evitar
+      // que checkOnStart() dispare logout+reload inmediato tras un login válido.
+      // DEBE ejecutarse ANTES de setear user.value, porque el watcher de
+      // isAuthenticated se dispara sincrónicamente y llama checkOnStart().
+      try { localStorage.removeItem('natillera_background_timestamp') } catch { /* noop */ }
+
       user.value = data.user
       
       // Verificar si el email está confirmado
@@ -581,6 +599,7 @@ async function register(email, password, nombre) {
         throw new Error('Error al iniciar sesión con el usuario administrador')
       }
 
+      try { localStorage.removeItem('natillera_background_timestamp') } catch { /* noop */ }
       user.value = loginData.user
 
       return { 
@@ -917,12 +936,32 @@ async function register(email, password, nombre) {
   // Escuchar cambios de autenticación
   supabase.auth.onAuthStateChange(async (event, session) => {
     const previousUser = user.value
-    user.value = session?.user || null
-    
-    // Registrar eventos de autenticación en auditoría
-    // Solo registrar SIGNED_IN si es un nuevo usuario (no una actualización de sesión)
+
     if (event === 'SIGNED_IN' && session?.user) {
-      // Evitar duplicados: solo registrar si el usuario cambió o si no se ha registrado en los últimos 5 segundos
+      try { localStorage.removeItem('natillera_background_timestamp') } catch { /* noop */ }
+    }
+
+    user.value = session?.user || null
+
+    // Marcar la hidratación inicial como resuelta (solo la primera vez)
+    if (event === 'INITIAL_SESSION') {
+      initialSessionResolved.value = true
+      if (_initialSessionResolve) {
+        _initialSessionResolve()
+        _initialSessionResolve = null
+      }
+    }
+    
+    if (event === 'SIGNED_IN' && session?.user) {
+      // Marcar resuelta también en SIGNED_IN (por si INITIAL_SESSION no llegó antes)
+      if (!initialSessionResolved.value) {
+        initialSessionResolved.value = true
+        if (_initialSessionResolve) {
+          _initialSessionResolve()
+          _initialSessionResolve = null
+        }
+      }
+
       const now = Date.now()
       const shouldAudit = 
         previousUser?.id !== session.user.id || 
@@ -946,11 +985,6 @@ async function register(email, password, nombre) {
         )
       }
     } else if (event === 'SIGNED_OUT' && previousUser) {
-      // NO registrar auditoría aquí porque:
-      // 1. Si fue logout manual, ya se registró en la función logout() antes de signOut()
-      // 2. Si fue timeout, ya se registró en useSessionTimeout.js antes de logout()
-      // 3. Si intentamos registrar aquí, auth.uid() ya es NULL y falla la política RLS
-      // Solo resetear el contador de login
       lastLoginAudit.value = null
     }
   })
@@ -964,6 +998,8 @@ async function register(email, password, nombre) {
     userEmail,
     userName,
     needsUsername,
+    initialSessionResolved,
+    initialSessionReady,
     checkAuth,
     login,
     register,
@@ -972,6 +1008,7 @@ async function register(email, password, nombre) {
     updateDisplayName,
     logout,
     loginWithGoogle,
+    loginEnCurso,
     enviarOTPTelefono,
     verificarOTPTelefono,
     loginConTelefono,

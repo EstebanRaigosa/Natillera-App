@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@100..900&display=swap');
 
 @import "tailwindcss";
 
@@ -27,12 +27,20 @@
 
   --font-display: 'Outfit', sans-serif;
   --font-body: 'DM Sans', sans-serif;
+  /* Manual de marca: DM Mono para etiquetas técnicas / overlines */
+  --font-brand-mono: 'DM Mono', ui-monospace, monospace;
   
   /* Custom breakpoint for extra small devices */
   --breakpoint-xs: 375px;
   
   /* Custom breakpoint for medium-large screens (1024px tablets) */
   --breakpoint-mlg: 1200px;
+}
+
+@layer utilities {
+  .font-brand-mono {
+    font-family: var(--font-brand-mono), ui-monospace, monospace;
+  }
 }
 
 /* Tour menu natillera (driver.js): estilo acorde a la app */
@@ -189,7 +197,8 @@
   
   body {
     font-family: var(--font-body);
-    @apply text-gray-800 bg-gradient-to-br from-slate-300 via-gray-200 to-emerald-200/60 min-h-screen;
+    @apply text-gray-800 min-h-screen;
+    background: var(--app-canvas-surface);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -1548,54 +1557,26 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   
   /* Optimización de botones para mejor respuesta táctil en iOS */
   button,
-  a,
-  a.router-link-active,
   [role="button"],
   .btn-primary,
   .btn-secondary,
   .btn-accent,
   input[type="button"],
   input[type="submit"] {
-    /* Eliminar delay de 300ms en iOS */
     touch-action: manipulation;
-    /* Mejorar feedback visual al tocar (evita highlight azul por defecto) */
     -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
-    /* Optimizar renderizado sin will-change excesivo */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    /* Prevenir selección de texto accidental */
     -webkit-user-select: none;
     user-select: none;
-    /* Asegurar que los botones siempre sean clickeables */
-    pointer-events: auto !important;
     cursor: pointer;
-    /* Apariencia nativa desactivada para evitar estilos raros en iOS */
     -webkit-appearance: none;
     appearance: none;
-    /* Asegurar que estén por encima de otros elementos */
-    position: relative;
-    z-index: 1;
   }
-  
-  /* Elementos hijos no deben capturar el tap (el tap va al botón) */
-  button *,
-  [role="button"] * {
-    pointer-events: none;
-  }
-  
-  button svg,
-  button img,
-  [role="button"] svg,
-  [role="button"] img {
-    pointer-events: none;
-  }
-  
-  /* router-link se renderiza como <a>; asegurar mismo comportamiento en iOS */
-  a[href].nav-item,
-  a[href].nav-link {
-    pointer-events: auto !important;
-    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
+
+  /* Links: solo touch-action y tap-highlight; NO forzar position/z-index
+     (crea stacking contexts en grids que confunden el hit-testing de WebKit) */
+  a {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
   }
   
   /* Optimización específica para botones con gradientes */
@@ -1624,14 +1605,16 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   
   /* Optimización de inputs para iOS */
   input,
-  textarea,
-  select {
-    /* Mejorar renderizado */
+  textarea {
     -webkit-appearance: none;
     appearance: none;
-    /* Mejorar calidad de texto */
     -webkit-font-smoothing: antialiased;
-    /* Prevenir zoom en focus (iOS Safari) */
+    font-size: 16px;
+  }
+
+  /* Selects: mantener apariencia nativa (picker wheel) en iOS; solo forzar 16px para prevenir zoom */
+  select {
+    -webkit-font-smoothing: antialiased;
     font-size: 16px;
   }
   
@@ -1789,10 +1772,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: 44px;
   }
   
-  /* Optimizar scroll (mejora de rendimiento universal) */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
+  /* -webkit-overflow-scrolling: touch ya es el comportamiento por defecto desde iOS 13 */
 }
 
 /* Estilos específicos para dispositivos iOS detectados por JavaScript */
@@ -1802,42 +1782,25 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 }
 
 .ios-device button,
-.ios-device a,
 .ios-device [role="button"] {
-  /* Mejorar respuesta táctil en iOS */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  /* Asegurar que los botones siempre sean clickeables */
-  pointer-events: auto !important;
   cursor: pointer;
-  /* Mejorar área táctil */
-  position: relative;
-  z-index: 1;
 }
 
-/* Feedback visual cuando se toca un botón en iOS */
-.ios-device button.touch-active,
-.ios-device [role="button"].touch-active {
-  opacity: 0.8;
-  transform: scale(0.98);
-  transition: opacity 0.1s, transform 0.1s;
+.ios-device a {
+  -webkit-touch-callout: none;
 }
+
 
 /* Optimizaciones para dispositivos táctiles en general */
 .touch-device button,
-.touch-device a,
 .touch-device [role="button"] {
-  /* Área táctil mínima mejorada */
   min-height: 44px;
   min-width: 44px;
-  /* Mejor feedback visual */
   -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
-  /* Asegurar que siempre sean clickeables */
-  pointer-events: auto !important;
   cursor: pointer;
-  position: relative;
-  z-index: 1;
 }
 
 /* Optimizaciones para dispositivos lentos */
@@ -1889,6 +1852,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     padding-right: env(safe-area-inset-right, 0);
     /* Corregir bug de 100vh en iOS Safari (barra de direcciones) */
     min-height: 100vh;
+    min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
 
@@ -1944,6 +1908,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   .h-screen,
   [class~="h-screen"] {
     min-height: 100vh;
+    min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
   
@@ -1962,34 +1927,20 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     touch-action: manipulation;
-    /* Forzar renderizado correcto en iOS */
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    /* Asegurar que las modales se rendericen por encima de todo */
-    will-change: transform;
-    /* Forzar nueva capa de composición en iOS */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    /* Asegurar que el contenido sea visible */
-    opacity: 1 !important;
-    visibility: visible !important;
-    /* Asegurar que la modal esté por encima de todo en iPhone */
     position: fixed !important;
-    /* Forzar renderizado en nueva capa de composición */
     isolation: isolate;
   }
   
   /* Contenedores de modales en iOS: asegurar renderizado correcto */
   [class*="fixed"].inset-0 > * {
-    /* Asegurar que el contenido de la modal se renderice */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     position: relative;
     z-index: 1;
-    /* Forzar renderizado del contenido */
-    opacity: 1 !important;
-    visibility: visible !important;
-    /* Asegurar que el contenido sea clickeable */
     pointer-events: auto !important;
   }
   
@@ -1998,23 +1949,16 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"],
   .fixed.inset-0 > .absolute.inset-0[class*="bg-black"],
   .fixed.inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
-  /* Regla general para cualquier overlay de fondo dentro de un contenedor fixed */
   .fixed.inset-0 > .absolute.inset-0,
   [class*="fixed"].inset-0 > .absolute.inset-0,
   .fixed.inset-0 > [class*="absolute"].inset-0 {
-    /* Asegurar que el overlay esté por debajo del contenido */
     z-index: 0 !important;
-    /* Forzar renderizado */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
-    /* Asegurar que el overlay sea visible y clickeable */
-    opacity: 1 !important;
-    visibility: visible !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
     cursor: pointer !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* Asegurar que cubra toda la pantalla */
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -2045,22 +1989,13 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   [class*="fixed"].inset-0 > .relative,
   [class*="fixed"].inset-0 > [class*="max-w"],
   [class*="fixed"].inset-0 > div:not([class*="absolute"]) {
-    /* Forzar renderizado del contenido de la modal */
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    /* Asegurar que esté por encima del overlay */
     position: relative;
     z-index: 10 !important;
-    /* Asegurar visibilidad */
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-    /* Asegurar que sea clickeable */
     pointer-events: auto !important;
-    /* Forzar nueva capa de composición */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    will-change: transform;
   }
 
   /* Modales en Safari: que se vean completas en pantalla y el scroll funcione */
@@ -2194,32 +2129,17 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Contenedor principal de la modal (excluir sidebar-overlay para que el menú lateral quede encima) */
     [class*="fixed"].inset-0[class*="z-"]:not(.sidebar-overlay),
     .fixed.inset-0[class*="z-"]:not(.sidebar-overlay) {
-      /* Crear nuevo contexto de apilamiento */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Asegurar que esté por encima de todo */
-      z-index: 9999 !important;
-      /* Forzar renderizado */
-      display: flex !important;
-      opacity: 1 !important;
-      visibility: visible !important;
-      /* Asegurar que el contenido sea interactivo */
       pointer-events: auto !important;
     }
     
     /* Overlay de fondo: debe estar visible pero por debajo del contenido */
     [class*="fixed"].inset-0 > [class*="absolute"].inset-0,
     [class*="fixed"].inset-0 > .absolute.inset-0 {
-      /* Asegurar renderizado del overlay */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Estar por debajo del contenido */
       z-index: 0 !important;
-      /* Asegurar visibilidad */
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-      /* Asegurar que sea clickeable */
       pointer-events: auto !important;
     }
     
@@ -2229,22 +2149,13 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     [class*="fixed"].inset-0 > [class*="max-w"]:not([class*="absolute"]),
     [class*="fixed"].inset-0 > div.relative,
     [class*="fixed"].inset-0 > div[class*="bg-white"]:not([class*="absolute"]) {
-      /* Forzar renderizado del contenido */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Estar por encima del overlay */
       position: relative !important;
       z-index: 10 !important;
-      /* Asegurar visibilidad */
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-      /* Asegurar que sea clickeable */
       pointer-events: auto !important;
-      /* Forzar nueva capa de composición */
       -webkit-backface-visibility: hidden !important;
       backface-visibility: hidden !important;
-      will-change: transform !important;
     }
     
     /* Botones dentro de modales: asegurar que sean clickeables */
@@ -2297,18 +2208,18 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   --input: 152 13% 87%;
   --ring: 152 69% 28%;
   --surface-glow: 152 42% 36%;
-  /* Shell lateral + barra inferior: verde bosque (tono un poco más claro) */
-  --app-shell-nav-gradient: linear-gradient(
-    160deg,
-    hsl(151 36% 15%) 0%,
-    hsl(152 32% 19%) 30%,
-    hsl(152 34% 17%) 60%,
-    hsl(155 36% 14%) 100%
-  );
+  /* Shell lateral + barra inferior: ~2 tonos más oscuro que el verde primario (#166534) */
+  --app-shell-nav-solid: #0f3d22;
+  /* Lienzo del panel: gris neutro (tarjetas blancas “flotan” con sombra/borde) */
+  --app-canvas-surface: hsl(220 13% 92%);
 }
 
 .app-shell-nav-bg {
-  background: var(--app-shell-nav-gradient);
+  background: var(--app-shell-nav-solid);
+}
+
+.app-canvas-bg {
+  background: var(--app-canvas-surface);
 }
 
 html[data-theme='forest'] body {

@@ -4,32 +4,34 @@ import { isDev, isLocalhost, devLog } from '../config/environment'
 import { resolvePostLoginLocation } from '../utils/postLoginRoute'
 import { setLastNatilleraId } from '../utils/lastNatillera'
 
-// Layouts
+// Layouts: estáticos (se usan inmediatamente)
 import AuthLayout from '../layouts/AuthLayout.vue'
 import DashboardLayout from '../layouts/DashboardLayout.vue'
 
-// Views
+// Auth views: estáticas (primer paint)
 import Login from '../views/auth/Login.vue'
-import Register from '../views/auth/Register.vue'
-import Welcome from '../views/auth/Welcome.vue'
-import ResetPassword from '../views/auth/ResetPassword.vue'
-import Dashboard from '../views/Dashboard.vue'
-import NatilleraDetalle from '../views/natilleras/NatilleraDetalle.vue'
-import NatilleraCierre from '../views/natilleras/NatilleraCierre.vue'
-import NatilleraCrear from '../views/natilleras/NatilleraCrear.vue'
-import Socios from '../views/socios/Socios.vue'
-import Cuotas from '../views/cuotas/Cuotas.vue'
-import CuotasMeses from '../views/cuotas/CuotasMeses.vue'
-import Prestamos from '../views/prestamos/Prestamos.vue'
-import Actividades from '../views/actividades/Actividades.vue'
-import CuadreCaja from '../views/cuadre/CuadreCaja.vue'
-import NatilleraConfiguracion from '../views/natilleras/NatilleraConfiguracion.vue'
-import Configuracion from '../views/configuracion/Configuracion.vue'
-import Auditoria from '../views/auditoria/Auditoria.vue'
-import ChatAdmin from '../views/admin/ChatAdmin.vue'
-import DataAdmin from '../views/admin/DataAdmin.vue'
-import AceptarInvitacion from '../views/invitaciones/AceptarInvitacion.vue'
-import QueEsNatillerapp from '../views/auth/QueEsNatillerapp.vue'
+
+// Todas las demás vistas: carga diferida para reducir bundle inicial
+const Register = () => import('../views/auth/Register.vue')
+const Welcome = () => import('../views/auth/Welcome.vue')
+const ResetPassword = () => import('../views/auth/ResetPassword.vue')
+const QueEsNatillerapp = () => import('../views/auth/QueEsNatillerapp.vue')
+const Dashboard = () => import('../views/Dashboard.vue')
+const NatilleraDetalle = () => import('../views/natilleras/NatilleraDetalle.vue')
+const NatilleraCierre = () => import('../views/natilleras/NatilleraCierre.vue')
+const NatilleraCrear = () => import('../views/natilleras/NatilleraCrear.vue')
+const Socios = () => import('../views/socios/Socios.vue')
+const Cuotas = () => import('../views/cuotas/Cuotas.vue')
+const CuotasMeses = () => import('../views/cuotas/CuotasMeses.vue')
+const Prestamos = () => import('../views/prestamos/Prestamos.vue')
+const Actividades = () => import('../views/actividades/Actividades.vue')
+const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
+const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
+const Configuracion = () => import('../views/configuracion/Configuracion.vue')
+const Auditoria = () => import('../views/auditoria/Auditoria.vue')
+const ChatAdmin = () => import('../views/admin/ChatAdmin.vue')
+const DataAdmin = () => import('../views/admin/DataAdmin.vue')
+const AceptarInvitacion = () => import('../views/invitaciones/AceptarInvitacion.vue')
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -232,8 +234,6 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
-  // Validar parámetros de ruta para evitar URLs con "undefined"
-  // Verificar si hay parámetros inválidos (undefined, null, o string "undefined")
   const params = to.params || {}
   const hasInvalidParams = Object.keys(params).some(key => {
     const value = params[key]
@@ -241,17 +241,21 @@ router.beforeEach(async (to, from, next) => {
   })
   
   if (hasInvalidParams) {
-    // Si hay parámetros inválidos, redirigir al dashboard
     console.warn('Parámetros de ruta inválidos detectados, redirigiendo al dashboard', params)
     next({ name: 'Dashboard' })
     return
   }
   
-  // Verificar si la ruta requiere autenticación
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!authStore.isAuthenticated) {
-      // Intentar recuperar sesión
-      await authStore.checkAuth()
+      // Esperar a que onAuthStateChange resuelva la sesión inicial (sin round-trip extra).
+      // Timeout de seguridad: si INITIAL_SESSION no llega en 3s, asumir no autenticado.
+      if (!authStore.initialSessionResolved) {
+        await Promise.race([
+          authStore.initialSessionReady,
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ])
+      }
       
       if (!authStore.isAuthenticated) {
         next({ name: 'Login' })
@@ -260,10 +264,15 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   
-  // Si ya está autenticado y va a login/register/welcome, ir al detalle de la última natillera o al dashboard
-  // ResetPassword es una excepción ya que puede estar autenticado temporalmente con token de recuperación
   if (to.name === 'Login' || to.name === 'Register' || to.name === 'Welcome') {
-    if (authStore.isAuthenticated) {
+    // Esperar hidratación antes de redirigir (evita flash al login cuando hay sesión válida)
+    if (!authStore.initialSessionResolved) {
+      await Promise.race([
+        authStore.initialSessionReady,
+        new Promise(resolve => setTimeout(resolve, 3000))
+      ])
+    }
+    if (authStore.isAuthenticated && !authStore.loginEnCurso) {
       const loc = await resolvePostLoginLocation(authStore.user)
       next(loc)
       return
@@ -303,7 +312,11 @@ router.afterEach((to, from) => {
     return
   }
 
-  // Hacer scroll al inicio para todas las demás rutas
+  // Hacer scroll al inicio: en DashboardLayout el scroll vive en <main>, no en window
+  const dashboardMain = document.querySelector('main.overflow-y-auto')
+  if (dashboardMain) {
+    dashboardMain.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }
   window.scrollTo({
     top: 0,
     left: 0,

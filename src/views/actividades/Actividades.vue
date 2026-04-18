@@ -6,8 +6,7 @@
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
     <!-- Header en tarjeta: título arriba; en móvil botón abajo dentro de la tarjeta, en desktop botón a la derecha -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
@@ -2964,7 +2963,7 @@ import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import ModalWrapper from '../../components/ModalWrapper.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
 import { formatDate, parseDateLocal } from '../../utils/formatDate.js'
@@ -2974,6 +2973,8 @@ import {
   consultarHtmlSorteo,
   ultimasDosCifras,
   fechaEsPosteriorAlUltimoSorteoCatalogo,
+  getUltimaFechaCatalogo,
+  obtenerCatalogoLoteria,
 } from '../../utils/loteriaMedellin.js'
 import { getAvatarUrl } from '../../utils/avatars.js'
 import { toPng } from 'html-to-image'
@@ -4404,26 +4405,48 @@ async function abrirModalLiquidar() {
   else if (fechaJuego && typeof fechaJuego === 'object' && fechaJuego.toISOString) dateStr = fechaJuego.toISOString().slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return
 
+  console.log('[Lotería Medellín] Liquidar actividad — fecha de juego', {
+    actividadId: actividadSeleccionada.value?.id,
+    fecha_juego_rifa_raw: actividadSeleccionada.value?.fecha_juego_rifa,
+    dateStr,
+  })
+
   loadingNumeroGanador.value = true
   const TIMEOUT_MS = 15000
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
   try {
-    const sorteoEntry = buscarSorteoPorFecha(dateStr)
+    const catalogo = await obtenerCatalogoLoteria(controller.signal)
+    const sorteoEntry = buscarSorteoPorFecha(dateStr, catalogo)
     if (!sorteoEntry) {
-      if (fechaEsPosteriorAlUltimoSorteoCatalogo(dateStr)) {
+      const ultimaEnCatalogo = getUltimaFechaCatalogo(catalogo)
+      const posteriorAlCatalogo = fechaEsPosteriorAlUltimoSorteoCatalogo(dateStr, catalogo)
+      console.log('[Lotería Medellín] Sin entrada en catálogo para dateStr', {
+        dateStr,
+        ultimaFechaEnCatalogo: ultimaEnCatalogo,
+        fechaPosteriorAlUltimoSorteoCatalogo: posteriorAlCatalogo,
+      })
+      if (posteriorAlCatalogo) {
         notificationStore.error(
-          'No hay sorteo de Lotería de Medellín para esta fecha: el sorteo aún no está en el catálogo o la fecha es posterior al último publicado. Cuando exista el resultado, ejecuta npm run scrape:loteria para actualizar el catálogo o ingresa el número ganador manualmente.',
+          'No hay sorteo de Lotería de Medellín para esta fecha en el listado oficial (aún no publicado o posterior al último sorteo). Ingresa el número ganador manualmente si ya existe en la página.',
           'Sin sorteo para esta fecha'
         )
       } else {
         notificationStore.error(
-          'No hay sorteo de Lotería de Medellín en el catálogo para esta fecha. Ejecuta npm run scrape:loteria con red o ingresa el número manualmente.',
+          'No hay sorteo en el catálogo para esta fecha. Ingresa el número ganador manualmente.',
           'Catálogo no disponible'
         )
       }
       return
     }
+
+    console.log('[Lotería Medellín] Catálogo resolvió sorteo', {
+      dateStrPedida: dateStr,
+      drawId: sorteoEntry.drawId,
+      fechaResuelta: sorteoEntry.fechaResuelta,
+      exacta: sorteoEntry.exacta,
+      sorteoNum: sorteoEntry.sorteoNum,
+    })
 
     const html = await consultarHtmlSorteo(sorteoEntry.drawId, controller.signal)
     const premio = extraerPremioMayor(html)

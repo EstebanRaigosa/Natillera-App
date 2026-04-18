@@ -3,7 +3,6 @@
     <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
       <!-- Header flat -->
       <div>
-        <Breadcrumbs />
         <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
           <div class="flex items-center gap-3">
             <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -25,21 +24,19 @@
       <!-- Grid de meses - diseño flat -->
       <div v-if="mesesNatillera.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <router-link
-          v-for="mes in mesesNatillera"
+          v-for="(mes, idx) in mesesNatillera"
           :key="mes.value"
+          :id="idx === 0 ? 'tour-cuotas-meses-primer-mes' : undefined"
           :to="`/natilleras/${id}/cuotas/${mes.value}`"
-          class="flex flex-col items-center justify-center rounded-2xl bg-white border border-gray-200/80 shadow-sm py-6 px-4 min-h-[140px] sm:min-h-[160px] hover:bg-gray-50/80 active:bg-gray-100 transition-colors cursor-pointer"
+          class="mes-card flex flex-col items-center justify-center rounded-2xl bg-white border border-gray-200/80 shadow-sm py-6 px-4 min-h-[140px] sm:min-h-[160px] hover:bg-gray-50/80 active:bg-gray-100 transition-colors cursor-pointer"
         >
-          <!-- Emoji del mes -->
-          <span class="text-4xl sm:text-5xl mb-2 block">
+          <span class="text-4xl sm:text-5xl mb-2 block pointer-events-none select-none">
             {{ getMesEmoji(mes.value) }}
           </span>
-          <!-- Nombre del mes -->
-          <span class="text-base sm:text-lg font-bold text-gray-800 leading-tight text-center">
+          <span class="text-base sm:text-lg font-bold text-gray-800 leading-tight text-center pointer-events-none">
             {{ mes.label }}
           </span>
-          <!-- Badges flat: rojo (mora) y verde (pagadas) -->
-          <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
+          <div class="mt-3 flex items-center justify-center gap-2 flex-wrap pointer-events-none">
             <span
               v-if="getResumenMes(mes.value).enMora > 0"
               class="flex items-center justify-center min-w-[26px] h-6 px-2 rounded-full text-xs font-semibold bg-red-500 text-white"
@@ -82,7 +79,7 @@
         <button
           v-if="mostrarBotonArriba"
           @click="scrollToTop"
-          class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 bg-gray-700 rounded-full shadow-md hover:bg-gray-800 flex items-center justify-center text-white touch-manipulation transition-colors"
+          class="fixed z-50 w-12 h-12 sm:w-14 sm:h-14 bg-gray-700 rounded-full shadow-md hover:bg-gray-800 flex items-center justify-center text-white touch-manipulation transition-colors bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:right-[max(1.5rem,env(safe-area-inset-right,0px))]"
           title="Volver arriba"
         >
           <ArrowUpIcon class="w-5 h-5 sm:w-6 sm:h-6" />
@@ -93,28 +90,34 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { useCuotasStore } from '../../stores/cuotas'
+import { ref, computed, onMounted, onUnmounted, inject, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { CurrencyDollarIcon, CalendarDaysIcon, ArrowUpIcon } from '@heroicons/vue/24/outline'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
+import { TOURS_ENABLED } from '../../config/toursEnabled'
+import {
+  consumePendingPrimerSocioCuotasMesTour,
+  shouldShowPrimerSocioCuotasMesTour,
+  startPrimerSocioCuotasMesTour
+} from '../../composables/usePrimerSocioCuotasMesTour'
 
 const props = defineProps({
   id: String
 })
 
 const route = useRoute()
-const cuotasStore = useCuotasStore()
+const router = useRouter()
+const dashboardSidebar = inject('dashboardSidebar', null)
 const id = props.id || route.params.id
 
 const mesInicio = ref(1)
 const mesFin = ref(11)
 const anioNatillera = ref(new Date().getFullYear())
 const mostrarBotonArriba = ref(false)
+const resumenRpc = ref({})
 
-// Lista de todos los meses
 const todosMeses = [
   { value: 1, label: 'Enero' },
   { value: 2, label: 'Febrero' },
@@ -130,7 +133,6 @@ const todosMeses = [
   { value: 12, label: 'Diciembre' }
 ]
 
-// Meses configurados para esta natillera
 const mesesNatillera = computed(() => {
   const meses = []
   let inicio = mesInicio.value
@@ -141,7 +143,6 @@ const mesesNatillera = computed(() => {
       meses.push(todosMeses[i - 1])
     }
   } else {
-    // Caso donde el período cruza el año (ej: Octubre a Febrero)
     for (let i = inicio; i <= 12; i++) {
       meses.push(todosMeses[i - 1])
     }
@@ -153,78 +154,44 @@ const mesesNatillera = computed(() => {
   return meses
 })
 
-// Emoji representativo de cada mes
 function getMesEmoji(mes) {
   const emojis = {
-    1: '❄️',   // Enero - invierno/nuevo año
-    2: '💝',   // Febrero - amor
-    3: '🌸',   // Marzo - primavera
-    4: '🌧️',   // Abril - lluvias
-    5: '🌺',   // Mayo - flores
-    6: '☀️',   // Junio - sol
-    7: '🏖️',   // Julio - vacaciones
-    8: '🌴',   // Agosto - verano
-    9: '🍂',   // Septiembre - otoño
-    10: '🎃',  // Octubre - halloween
-    11: '🦃',  // Noviembre - acción de gracias
-    12: '🎄'   // Diciembre - navidad
+    1: '❄️', 2: '💝', 3: '🌸', 4: '🌧️', 5: '🌺', 6: '☀️',
+    7: '🏖️', 8: '🌴', 9: '🍂', 10: '🎃', 11: '🦃', 12: '🎄'
   }
   return emojis[mes] || '📅'
 }
 
-// Función para calcular el año correcto de un mes basándose en el período de la natillera
-// Por ejemplo: si mes_inicio=12 (dic), mes_fin=11 (nov), anio_inicio=2025
-//   - Diciembre (12) → 2025
-//   - Enero-Nov (1-11) → 2026
 function calcularAnioMes(mes, mesInicioNatillera, mesFinNatillera, anioInicioNatillera) {
-  // Si el período cruza el año (mes_inicio > mes_fin, ej: dic a nov)
   if (mesInicioNatillera > mesFinNatillera) {
-    // Si el mes está en la primera parte del período (mes_inicio a diciembre)
-    if (mes >= mesInicioNatillera) {
-      return anioInicioNatillera
-    }
-    // Si el mes está en la segunda parte del período (enero a mes_fin)
-    if (mes <= mesFinNatillera) {
-      return anioInicioNatillera + 1
-    }
+    if (mes >= mesInicioNatillera) return anioInicioNatillera
+    if (mes <= mesFinNatillera) return anioInicioNatillera + 1
   } else {
-    // Si el período no cruza el año (mes_inicio <= mes_fin, ej: ene a nov)
     return anioInicioNatillera
   }
-  
-  // Por defecto, devolver el año inicial
   return anioInicioNatillera
 }
 
-// Función para obtener resumen de un mes específico
 function getResumenMes(mes) {
-  // Calcular el año correcto para este mes basándose en el período de la natillera
-  const anioCorrecto = calcularAnioMes(
-    mes,
-    mesInicio.value,
-    mesFin.value,
-    anioNatillera.value
-  )
-  return cuotasStore.getResumenPorMes(mes, anioCorrecto)
+  const anio = calcularAnioMes(mes, mesInicio.value, mesFin.value, anioNatillera.value)
+  const key = `${mes}-${anio}`
+  return resumenRpc.value[key] || { enMora: 0, pendientes: 0, pagadas: 0 }
 }
 
-// Cargar información de la natillera
 async function cargarNatillera() {
-  // OPTIMIZADO: Cargar natillera Y cuotas EN PARALELO
-  const [natilleraResult] = await Promise.all([
+  const [natilleraResult, resumenResult] = await Promise.all([
     supabase
       .from('natilleras')
       .select('nombre, mes_inicio, mes_fin, anio, anio_inicio')
       .eq('id', id)
       .single(),
-    cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true }) // Skip mora para esta vista resumen
+    supabase.rpc('get_resumen_cuotas_meses', { p_natillera_id: id })
   ])
   
   const data = natilleraResult.data
   if (data) {
     mesInicio.value = data.mes_inicio || 1
     mesFin.value = data.mes_fin || 11
-    // Usar anio_inicio como año base
     if (data.anio_inicio !== null && data.anio_inicio !== undefined && data.anio_inicio !== '') {
       anioNatillera.value = Number(data.anio_inicio)
     } else if (data.anio !== null && data.anio !== undefined && data.anio !== '') {
@@ -233,28 +200,109 @@ async function cargarNatillera() {
       anioNatillera.value = new Date().getFullYear()
     }
   }
+
+  if (resumenResult.data) {
+    const map = {}
+    for (const row of resumenResult.data) {
+      map[`${row.mes}-${row.anio}`] = {
+        pagadas: Number(row.pagadas) || 0,
+        pendientes: Number(row.pendientes) || 0,
+        enMora: Number(row.en_mora) || 0
+      }
+    }
+    resumenRpc.value = map
+  }
 }
 
-// Función para manejar el scroll y mostrar/ocultar el botón
+// Scroll: en DashboardLayout el desplazamiento vive en <main>, no en window (móvil y muchos desktop)
+let scrollRafId = 0
+let scrollParentEl = null
+
+function resolveDashboardMain() {
+  return document.querySelector('main.overflow-y-auto')
+}
+
+function getScrollTop() {
+  const el = scrollParentEl || resolveDashboardMain()
+  if (el) return el.scrollTop
+  return window.scrollY || document.documentElement.scrollTop
+}
+
+// Scroll handler throttled con rAF para no disparar re-renders en cada píxel
 function handleScroll() {
-  mostrarBotonArriba.value = window.scrollY > 300
+  if (scrollRafId) return
+  scrollRafId = requestAnimationFrame(() => {
+    scrollRafId = 0
+    mostrarBotonArriba.value = getScrollTop() > 300
+  })
 }
 
 // Función para hacer scroll hacia arriba
 function scrollToTop() {
+  const el = scrollParentEl || resolveDashboardMain()
+  if (el) {
+    el.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   })
 }
 
-onMounted(() => {
-  cargarNatillera()
-  window.addEventListener('scroll', handleScroll)
+function schedulePrimerCuotasMesesTour() {
+  if (!id) return
+  if (!TOURS_ENABLED) return
+  if (!consumePendingPrimerSocioCuotasMesTour(id)) return
+  if (!shouldShowPrimerSocioCuotasMesTour(id)) return
+  const first = mesesNatillera.value[0]
+  const firstLabel = first?.label || 'Enero'
+  const firstMonthValue = first?.value
+  nextTick(() => {
+    setTimeout(() => {
+      startPrimerSocioCuotasMesTour({
+        natilleraId: id,
+        firstMonthLabel: firstLabel,
+        firstMonthValue,
+        prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+        clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
+        onMesesGridTourFinished: ({ natilleraId: nid, firstMonthValue: mes }) => {
+          if (mes != null && mes !== '') {
+            router.push(`/natilleras/${nid}/cuotas/${mes}`)
+          }
+        }
+      })
+    }, 450)
+  })
+}
+
+onMounted(async () => {
+  await cargarNatillera()
+  await nextTick()
+  scrollParentEl = resolveDashboardMain()
+  if (scrollParentEl) {
+    scrollParentEl.addEventListener('scroll', handleScroll, { passive: true })
+  }
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  handleScroll()
+  schedulePrimerCuotasMesesTour()
 })
 
 onUnmounted(() => {
+  if (scrollParentEl) {
+    scrollParentEl.removeEventListener('scroll', handleScroll)
+  }
   window.removeEventListener('scroll', handleScroll)
+  if (scrollRafId) cancelAnimationFrame(scrollRafId)
 })
 </script>
+
+<style scoped>
+.mes-card {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(34, 197, 94, 0.15);
+  -webkit-user-select: none;
+  user-select: none;
+}
+</style>
 

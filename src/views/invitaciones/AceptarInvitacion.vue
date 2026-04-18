@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+  <div class="min-h-screen min-h-[100dvh] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
     <div class="w-full max-w-md">
       <!-- Logo o Header -->
       <div class="text-center mb-8">
@@ -85,7 +85,8 @@
           <!-- Botones -->
           <div class="flex gap-3">
             <button
-              @click="rechazar"
+              type="button"
+              @click="abrirModalRechazar"
               :disabled="procesando"
               class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors disabled:opacity-50"
             >
@@ -119,6 +120,13 @@
         </router-link>
       </div>
     </div>
+
+    <RechazarInvitacionConfirmModal
+      :invitacion="mostrarModalRechazo ? invitacion : null"
+      :loading="procesando"
+      @close="mostrarModalRechazo = false"
+      @confirm="ejecutarRechazar"
+    />
   </div>
 </template>
 
@@ -128,6 +136,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
+import RechazarInvitacionConfirmModal from '../../components/RechazarInvitacionConfirmModal.vue'
 import {
   UserGroupIcon,
   CheckCircleIcon,
@@ -145,6 +154,7 @@ const exito = ref(false)
 const resultado = ref(null)
 const invitacion = ref(null)
 const procesando = ref(false)
+const mostrarModalRechazo = ref(false)
 
 const token = route.params.token
 
@@ -248,17 +258,18 @@ async function aceptar() {
   }
 }
 
-async function rechazar() {
-  if (!confirm('¿Estás seguro de que deseas rechazar esta invitación?')) {
-    return
-  }
+function abrirModalRechazar() {
+  mostrarModalRechazo.value = true
+}
 
+async function ejecutarRechazar() {
   try {
     procesando.value = true
-    
+
     const res = await colaboradoresStore.rechazarInvitacion(token)
-    
+
     if (res.success) {
+      mostrarModalRechazo.value = false
       router.push('/dashboard')
     } else {
       error.value = res.error

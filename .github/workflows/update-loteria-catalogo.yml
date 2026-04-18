@@ -1,0 +1,41 @@
+# Actualiza src/data/loteriaMedellinCatalogo.json desde el sitio oficial.
+# Requiere permisos de escritura en el repo para hacer push del commit.
+name: Actualizar catálogo Lotería Medellín
+
+on:
+  schedule:
+    # Lunes 07:00 UTC (~2 AM Colombia); ajusta si quieres otra hora
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Scrape catálogo
+        run: npm run scrape:loteria
+
+      - name: Commit y push si hubo cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/loteriaMedellinCatalogo.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios en el catálogo"
+          else
+            git commit -m "chore: actualizar catálogo Lotería Medellín"
+            git push
+          fi

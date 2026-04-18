@@ -2,54 +2,50 @@
   <ModalWrapper
     :show="show"
     :z-index="10000"
-    overlay-class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-    card-class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+    align="bottom"
+    :ios-soft-backdrop="true"
+    :persistent="true"
+    overlay-class="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4"
+    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
     card-max-width="28rem"
   >
-    <!-- Header -->
-    <div class="bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-600 p-5 text-white">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-            </svg>
-          </div>
-          <div>
-            <h3 class="font-bold text-lg">Completa tu perfil</h3>
-            <p class="text-sm text-white/90">Agrega un nombre de usuario</p>
-          </div>
-        </div>
+    <!-- Misma línea visual que modal «Crear primer socio» (NatilleraDetalle): bosque #1B5E37 + cuerpo blanco + CTA redondo -->
+    <div class="relative flex-shrink-0 bg-[#1B5E37] px-6 pt-[max(2rem,env(safe-area-inset-top))] pb-7 text-center">
+      <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+        <UserIcon class="w-8 h-8 text-[#1B5E37]" />
       </div>
+      <h3 class="font-display font-bold text-white text-xl sm:text-2xl mb-1.5">
+        Completa tu perfil
+      </h3>
+      <p class="text-sm sm:text-base text-white/85 font-normal leading-snug max-w-sm mx-auto">
+        Agrega un nombre de usuario para continuar
+      </p>
     </div>
 
-    <!-- Contenido -->
-    <div class="p-5 space-y-4">
-      <div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200">
-        <div class="flex items-start gap-3">
-          <div class="flex-shrink-0">
-            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <p class="text-sm text-amber-800">
-            Para continuar, necesitamos que agregues un nombre de usuario. Este nombre se mostrará en tu perfil y en las actividades de la natillera.
-          </p>
+    <div class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]">
+      <div class="rounded-xl bg-[#E8F5E9] px-4 py-3.5 flex gap-3 items-start">
+        <InformationCircleIcon class="w-5 h-5 text-[#1B5E37] flex-shrink-0 mt-0.5" />
+        <div class="text-left text-sm text-gray-800 leading-relaxed">
+          <span class="font-semibold text-[#1B5E37]">Importante</span>
+          <span class="text-gray-700">
+            Este nombre se mostrará en tu perfil y en las actividades de la natillera.
+          </span>
         </div>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
+          <label class="block text-sm font-semibold text-gray-800 mb-2">
             Nombre de usuario <span class="text-red-500">*</span>
           </label>
           <input
             v-model="username"
             type="text"
             placeholder="Tu nombre completo"
-            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500 outline-none text-sm transition-all"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 text-base outline-none transition-all placeholder:text-gray-400 focus:ring-2 focus:ring-[#1B5E37]/35 focus:border-[#1B5E37]"
             :class="{
-              'border-red-300 focus:border-red-500 focus:ring-red-500': error
+              'border-red-300 focus:border-red-500 focus:ring-red-500/30': error
             }"
             :disabled="loading"
             required
@@ -57,23 +53,24 @@
             minlength="2"
             maxlength="100"
           />
-          <p v-if="error" class="mt-1 text-xs text-red-600">{{ error }}</p>
-          <p v-else class="mt-1 text-xs text-gray-500">
-            Este será tu nombre de usuario en la plataforma
+          <p v-if="error" class="mt-1.5 text-xs text-red-600">{{ error }}</p>
+          <p v-else class="mt-1.5 text-xs text-gray-500">
+            Será tu nombre visible en la plataforma
           </p>
         </div>
-
-        <div class="pt-2">
-          <button
-            type="submit"
-            :disabled="loading || !username.trim() || username.trim().length < 2"
-            class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-          >
-            <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span v-else>Guardar</span>
-          </button>
-        </div>
       </form>
+    </div>
+
+    <div class="flex-shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 bg-white border-t border-gray-100/90">
+      <button
+        type="button"
+        :disabled="loading || !username.trim() || username.trim().length < 2"
+        class="w-full min-h-[48px] px-5 py-3.5 rounded-full bg-[#1B5E37] hover:bg-[#154a2d] active:bg-[#124228] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm [-webkit-tap-highlight-color:transparent] touch-manipulation"
+        @click="handleSubmit"
+      >
+        <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <span v-else>Guardar</span>
+      </button>
     </div>
   </ModalWrapper>
 </template>
@@ -82,6 +79,7 @@
 import { ref, watch, onMounted, onUnmounted, toRef } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
+import { UserIcon, InformationCircleIcon } from '@heroicons/vue/24/outline'
 import ModalWrapper from './ModalWrapper.vue'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 
@@ -94,7 +92,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'saved'])
 
-// Bloquear scroll del body cuando el modal está abierto
 const showRef = toRef(props, 'show')
 useBodyScrollLock(showRef)
 
@@ -104,12 +101,10 @@ const username = ref('')
 const loading = ref(false)
 const error = ref('')
 
-// Prevenir que se cierre con ESC
 function handleKeydown(event) {
   if (event.key === 'Escape' && props.show) {
     event.preventDefault()
     event.stopPropagation()
-    // No hacer nada, el modal no debe cerrarse con ESC
   }
 }
 
@@ -121,19 +116,16 @@ onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
 })
 
-// Limpiar formulario cuando se abre el modal
 watch(() => props.show, (newValue) => {
   if (newValue) {
-    // Verificar si hay usuario autenticado
     if (!authStore.isAuthenticated || !authStore.user) {
       emit('close')
       router.push({ name: 'Login' })
       return
     }
-    
+
     username.value = ''
     error.value = ''
-    // Intentar prellenar con el email si no hay nombre
     if (authStore.user?.email && !authStore.user?.user_metadata?.nombre) {
       const emailName = authStore.user.email.split('@')[0]
       username.value = emailName
@@ -141,7 +133,6 @@ watch(() => props.show, (newValue) => {
   }
 })
 
-// Observar cambios en la autenticación mientras el modal está abierto
 watch(() => authStore.isAuthenticated, (isAuthenticated) => {
   if (props.show && !isAuthenticated) {
     emit('close')
@@ -150,13 +141,12 @@ watch(() => authStore.isAuthenticated, (isAuthenticated) => {
 })
 
 async function handleSubmit() {
-  // Verificar autenticación antes de guardar
   if (!authStore.isAuthenticated || !authStore.user) {
     emit('close')
     router.push({ name: 'Login' })
     return
   }
-  
+
   if (!username.value.trim() || username.value.trim().length < 2) {
     error.value = 'El nombre debe tener al menos 2 caracteres'
     return
@@ -167,7 +157,7 @@ async function handleSubmit() {
 
   try {
     const result = await authStore.updateDisplayName(username.value.trim())
-    
+
     if (result.success) {
       emit('saved')
       emit('close')

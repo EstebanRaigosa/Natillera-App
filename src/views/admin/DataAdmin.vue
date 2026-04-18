@@ -23,11 +23,10 @@
   <!-- Contenido principal -->
   <div v-else class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto p-4 sm:p-6">
     <!-- Header unificado -->
-    <div class="relative mb-6">
-      <Breadcrumbs />
+    <div class="mb-6">
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex items-center gap-3">
-          <BackButton :inline="true" />
+          <BackButton to="/dashboard" :inline="true" />
           <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
             <CircleStackIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
@@ -685,7 +684,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { supabase } from '../../lib/supabase'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import { 
   XMarkIcon,

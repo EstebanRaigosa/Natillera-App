@@ -279,7 +279,7 @@
           <button
             type="button"
             @click="closeForgotPasswordModal"
-            class="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center hover:bg-white/15 transition-colors"
+            class="h-11 w-11 min-h-[44px] min-w-[44px] shrink-0 rounded-lg flex items-center justify-center hover:bg-white/15 transition-colors touch-manipulation"
             aria-label="Cerrar"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -426,6 +426,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useNatillerasStore } from '../../stores/natilleras'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { isDev, isLocalhost } from '../../config/environment'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -434,6 +435,11 @@ import { resolvePostLoginLocation } from '../../utils/postLoginRoute'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const natillerasStore = useNatillerasStore()
+
+// Precargar el chunk de Dashboard mientras el usuario ve la pantalla de login.
+// Segunda visita: el modulo ya esta en cache y esto es no-op instantaneo.
+import('../../views/Dashboard.vue')
 
 /** Cubre credenciales + resolvePostLoginLocation + navegación (evita “hueco” sin feedback tras signIn). */
 const sesionEnProceso = ref(false)
@@ -464,19 +470,17 @@ function actualizarInfoPantalla() {
   console.log(`%cNavegador: %c${browser}`, 'color: #86efac; font-weight: bold;', 'color: #ffffff;')
 }
 
-watch(() => authStore.isAuthenticated, (isAuthenticated) => {
+watch(() => authStore.isAuthenticated, async (isAuthenticated) => {
   if (isAuthenticated && showRegistroModal.value) {
     if (authStore.userEmail && authStore.userEmail !== 'admin@gmail.com') {
       showRegistroModal.value = false
       sesionEnProceso.value = true
-      setTimeout(async () => {
-        try {
-          const loc = await resolvePostLoginLocation(authStore.user)
-          await router.push(loc)
-        } finally {
-          sesionEnProceso.value = false
-        }
-      }, 300)
+      try {
+        const loc = await resolvePostLoginLocation(authStore.user)
+        await router.push(loc)
+      } finally {
+        sesionEnProceso.value = false
+      }
     }
   }
 })
@@ -569,19 +573,23 @@ async function handleForgotPassword() {
 async function handleLogin() {
   errorMessage.value = ''
   sesionEnProceso.value = true
-  await nextTick()
+  authStore.loginEnCurso = true
   try {
     const result = await authStore.login(email.value, password.value, {
       rememberMe: rememberMe.value,
     })
     if (result.success) {
-      const loc = await resolvePostLoginLocation(authStore.user)
+      const [loc] = await Promise.all([
+        resolvePostLoginLocation(authStore.user),
+        natillerasStore.fetchTodasLasNatilleras({ user: authStore.user }).catch(() => {})
+      ])
       await router.push(loc)
     } else {
       errorMessage.value = result.error
     }
   } finally {
     sesionEnProceso.value = false
+    authStore.loginEnCurso = false
   }
 }
 
@@ -651,12 +659,16 @@ async function handleVerificarOTP() {
       showRegistroModal.value = true
     } else {
       sesionEnProceso.value = true
-      await nextTick()
+      authStore.loginEnCurso = true
       try {
-        const loc = await resolvePostLoginLocation(authStore.user)
+        const [loc] = await Promise.all([
+          resolvePostLoginLocation(authStore.user),
+          natillerasStore.fetchTodasLasNatilleras({ user: authStore.user }).catch(() => {})
+        ])
         await router.push(loc)
       } finally {
         sesionEnProceso.value = false
+        authStore.loginEnCurso = false
       }
     }
   } else {
@@ -671,7 +683,7 @@ async function handleCrearCuenta() {
     return
   }
   sesionEnProceso.value = true
-  await nextTick()
+  authStore.loginEnCurso = true
   try {
     const result = await authStore.loginConTelefono(
       telefono.value.trim(),
@@ -686,6 +698,7 @@ async function handleCrearCuenta() {
     }
   } finally {
     sesionEnProceso.value = false
+    authStore.loginEnCurso = false
   }
 }
 
@@ -864,7 +877,7 @@ function resetearEstadoTelefono() {
   cursor: pointer;
 }
 
-/* Primary button - green with rounded corners */
+/* Primary button — mismo perfil redondeado (píldora) que el botón de Google */
 .login-btn-primary {
   display: inline-flex;
   align-items: center;
@@ -873,7 +886,7 @@ function resetearEstadoTelefono() {
   width: 100%;
   min-height: 52px;
   padding: 0.75rem 2rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   border: none;
   font-family: var(--font-sans);
   font-weight: 700;

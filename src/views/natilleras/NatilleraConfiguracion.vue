@@ -1,8 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex items-center gap-3">
           <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -1687,7 +1686,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useCuotasStore } from '../../stores/cuotas'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'

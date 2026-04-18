@@ -7,8 +7,7 @@
     </div>
 
     <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
@@ -63,22 +62,22 @@
       <p class="text-gray-400 mt-4">Cargando socios...</p>
     </div>
 
-    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-      <!-- Círculos decorativos -->
-      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-      <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-      
-      <div class="relative z-10">
-        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
-          <UsersIcon class="w-10 h-10 text-white" />
+    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length === 0" class="max-w-md mx-auto rounded-2xl shadow-xl overflow-hidden border border-gray-200/60">
+      <!-- Header verde -->
+      <div class="bg-gradient-to-br from-natillera-700 to-natillera-800 px-8 pt-10 pb-8 text-center">
+        <div class="w-16 h-16 mx-auto mb-5 bg-white/15 backdrop-blur-sm rounded-full flex items-center justify-center ring-4 ring-white/10">
+          <UsersIcon class="w-8 h-8 text-white" />
         </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
+        <h3 class="font-display font-bold text-white text-xl sm:text-2xl mb-1.5">
           No hay socios registrados
         </h3>
-        <p class="text-gray-500 mb-8 text-sm sm:text-base">
+        <p class="text-natillera-200 text-sm sm:text-base">
           Agrega el primer socio para comenzar a gestionar las cuotas
         </p>
-        <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
+      </div>
+      <!-- Cuerpo blanco -->
+      <div class="bg-white px-8 py-8 text-center">
+        <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary w-full inline-flex items-center justify-center gap-2">
           <PlusIcon class="w-5 h-5" />
           Agregar Primer Socio
         </button>
@@ -350,6 +349,63 @@
             </div>
           </div>
 
+          <!-- Sección: Cuotas pagadas (tabla + total) -->
+          <div class="border border-gray-200 rounded-xl overflow-hidden">
+            <button 
+              type="button"
+              @click="toggleSeccion('cuotasPagadas')"
+              class="w-full flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-green-50 hover:from-emerald-100 hover:to-green-100 transition-colors text-left"
+            >
+              <span class="font-semibold text-gray-800 flex items-center gap-2">
+                <CalendarDaysIcon class="w-5 h-5 text-emerald-600" />
+                Cuotas pagadas
+              </span>
+              <ChevronDownIcon 
+                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'cuotasPagadas' ? 'rotate-180' : '']" 
+              />
+            </button>
+            <div v-show="seccionActiva === 'cuotasPagadas'" class="p-4 border-t border-gray-100 bg-white">
+              <div v-if="loadingDetalle" class="text-center py-8 text-gray-500 text-sm">
+                Cargando cuotas pagadas…
+              </div>
+              <div v-else-if="cuotasPagadasDetalleSocio.length === 0" class="text-center py-8 text-gray-400 text-sm">
+                No hay cuotas pagadas registradas
+              </div>
+              <div 
+                v-else 
+                class="overflow-x-auto max-h-[min(320px,45vh)] overflow-y-auto rounded-lg border border-emerald-100/80 shadow-sm"
+              >
+                <table class="w-full min-w-[280px] text-sm text-left border-collapse">
+                  <thead class="sticky top-0 z-[1] bg-emerald-50 border-b border-emerald-100">
+                    <tr>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-gray-700">Cuota</th>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-gray-700 text-right whitespace-nowrap">Valor</th>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-gray-700 whitespace-nowrap">Fecha pago</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 bg-white">
+                    <tr 
+                      v-for="item in cuotasPagadasDetalleSocio" 
+                      :key="item.id" 
+                      class="hover:bg-emerald-50/50 transition-colors"
+                    >
+                      <td class="px-3 py-2 text-gray-800 align-top">{{ item.cuotaLabel }}</td>
+                      <td class="px-3 py-2 text-right font-medium text-emerald-800 whitespace-nowrap align-top">${{ formatMoney(item.valorPagado) }}</td>
+                      <td class="px-3 py-2 text-gray-600 whitespace-nowrap align-top">{{ item.fechaPago ? formatDate(item.fechaPago) : '—' }}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-emerald-100/90 border-t-2 border-emerald-200">
+                    <tr>
+                      <th scope="row" class="px-3 py-2.5 text-left font-bold text-gray-900">Total</th>
+                      <td class="px-3 py-2.5 text-right font-bold text-emerald-900 whitespace-nowrap">${{ formatMoney(totalValorCuotasPagadasDetalleSocio) }}</td>
+                      <td class="px-3 py-2.5"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <!-- Sección: Información de Contacto -->
           <div class="border border-gray-200 rounded-xl overflow-hidden">
             <button 
@@ -579,20 +635,89 @@
         </div>
     </ModalWrapper>
 
-    <!-- Modal Agregar Socio -->
+    <!-- Modal Agregar Socio: cabecera compacta (~30 % menos alto); formulario + CTAs en un solo scroll -->
     <ModalWrapper
       :show="!!modalAgregar"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="card relative max-w-md w-full max-h-[90vh] overflow-y-auto"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
       @close="cerrarModal"
     >
-        <h3 class="text-xl font-display font-bold text-gray-800 mb-6">
-          {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
-        </h3>
+      <div class="flex-shrink-0 bg-[#1B5E37]">
+        <!-- Móvil: X superpuesta (absolute); fila solo icono + títulos -->
+        <div class="sm:hidden relative overflow-hidden">
+          <button
+            v-if="modalAgregarTieneScroll"
+            type="button"
+            class="absolute top-[max(0.5rem,env(safe-area-inset-top))] right-3 z-20 flex h-11 w-11 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Cerrar"
+            :disabled="guardando"
+            @click="cerrarModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+          <div
+            :class="[
+              'flex items-center gap-3 pl-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[5.25rem]',
+              modalAgregarTieneScroll ? 'pr-14' : 'pr-4'
+            ]"
+          >
+            <div class="w-12 h-12 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+              <PencilIcon v-if="socioEditando" class="w-6 h-6 text-[#1B5E37]" />
+              <UserPlusIcon v-else class="w-6 h-6 text-[#1B5E37]" />
+            </div>
+            <div class="min-w-0 flex-1 text-left py-0.5 pr-2">
+              <h3 class="font-display font-bold text-white text-xl leading-tight mb-1">
+                {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
+              </h3>
+              <p class="text-xs text-white/85 font-normal leading-relaxed">
+                {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar un nuevo socio' }}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <form @submit.prevent="handleGuardarSocio" class="space-y-4">
+        <!-- sm+: cabecera centrada; X en esquina (absolute), sin fila extra -->
+        <div class="hidden sm:block relative overflow-hidden text-center">
+          <button
+            v-if="modalAgregarTieneScroll"
+            type="button"
+            class="absolute top-[max(0.5rem,env(safe-area-inset-top))] right-4 sm:right-5 z-20 flex h-11 w-11 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Cerrar"
+            :disabled="guardando"
+            @click="cerrarModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+          <div
+            class="px-6 pb-4 sm:pb-5 pt-[max(1rem,env(safe-area-inset-top))]"
+          >
+            <div class="w-[2.8rem] h-[2.8rem] mx-auto mb-2 sm:mb-3 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <PencilIcon v-if="socioEditando" class="w-6 h-6 text-[#1B5E37]" />
+              <UserPlusIcon v-else class="w-6 h-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg sm:text-xl mb-1">
+              {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
+            </h3>
+            <p class="text-xs sm:text-sm text-white/85 font-normal leading-snug max-w-sm mx-auto">
+              {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar un nuevo socio' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalAgregarSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalAgregarSocio"
+        >
+        <form id="form-agregar-socio" @submit.prevent="handleGuardarSocio" class="space-y-4 px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <!-- Selector de Avatar -->
           <div>
             <label class="label">Selecciona un avatar</label>
@@ -643,6 +768,7 @@
               Nombre completo <span class="text-red-500">*</span>
             </label>
             <input 
+              ref="inputNombreSocio"
               v-model="formSocio.nombre"
               type="text" 
               class="input-field"
@@ -869,25 +995,17 @@
             {{ errorSocio }}
           </div>
 
-          <div class="flex gap-3 pt-4">
-            <button 
-              type="button"
-              @click="cerrarModal"
-              class="btn-secondary flex-1"
-              :disabled="guardando"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              class="btn-primary flex-1 relative overflow-hidden"
+          <div class="space-y-3 pt-2">
+            <button
+              type="submit"
+              class="w-full min-h-[48px] px-5 py-3.5 rounded-full bg-[#1B5E37] hover:bg-[#154a2d] active:bg-[#124228] text-white font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm [-webkit-tap-highlight-color:transparent] touch-manipulation relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="guardando"
             >
               <span :class="['flex items-center justify-center gap-2 transition-opacity', guardando ? 'opacity-0' : 'opacity-100']">
                 {{ socioEditando ? 'Guardar Cambios' : 'Agregar Socio' }}
               </span>
-              <span 
-                v-if="guardando" 
+              <span
+                v-if="guardando"
                 class="absolute inset-0 flex items-center justify-center gap-2"
               >
                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -897,722 +1015,233 @@
                 <span>Guardando...</span>
               </span>
             </button>
+            <button
+              type="button"
+              class="w-full min-h-[48px] px-5 py-3 rounded-full text-sm font-semibold text-gray-600 border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-50"
+              :disabled="guardando"
+              @click="cerrarModal"
+            >
+              Cancelar
+            </button>
           </div>
         </form>
+        </div>
+
+        <div
+          v-show="hayNatiscrollModalAgregarSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+          >
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal Cuotas del Socio por Mes -->
+    <!-- Modal Cuotas del Socio: patrón modales + natiscroll; lista compacta en rejilla -->
     <ModalWrapper
       :show="!!modalCuotasSocio"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="42rem"
       @close="cerrarModalCuotasSocio"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0 z-10">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 flex items-center justify-between gap-3 sm:gap-4">
-            <div class="flex items-center gap-3 min-w-0 flex-1 pr-2">
-              <img 
-                v-if="socioParaCuotas"
-                :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)" 
-                :alt="socioParaCuotas.socio?.nombre"
-                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-white/30 shadow-md object-cover flex-shrink-0"
-              />
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0" v-else>
-                <CalendarDaysIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <h3 class="text-lg sm:text-xl font-display font-bold truncate">
-                  Cuotas de {{ socioParaCuotas?.socio?.nombre }}
-                </h3>
-                <p class="text-white/90 text-xs sm:text-sm truncate mt-0.5">
-                  Historial de cuotas por mes
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-              <!-- Toggle Vista Simplificada -->
-              <button 
-                @click="vistaSimplificadaCuotas = !vistaSimplificadaCuotas"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                :title="vistaSimplificadaCuotas ? 'Vista completa' : 'Vista simplificada'"
-              >
-                <Squares2X2Icon v-if="!vistaSimplificadaCuotas" class="w-5 h-5" />
-                <Bars3Icon v-else class="w-5 h-5" />
-              </button>
-              <button 
-                @click="cerrarModalCuotasSocio"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-              >
-                <XMarkIcon class="w-5 h-5" />
-              </button>
-            </div>
+      <!-- Cabecera marca — móvil: fila -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img
+              v-if="socioParaCuotas"
+              :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
+              :alt="socioParaCuotas.socio?.nombre"
+              class="h-full w-full object-cover"
+            />
+            <CalendarDaysIcon v-else class="w-5 h-5 text-[#1B5E37]" />
           </div>
-        </div>
-
-        <!-- Contenido -->
-        <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
-          <!-- Estado de carga -->
-          <div v-if="loadingCuotasSocio" class="text-center py-12">
-            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-gray-500 text-sm">Cargando cuotas...</p>
+          <div class="flex-1 min-w-0 text-left">
+            <h3 class="text-base font-display font-bold leading-tight text-white truncate">
+              Cuotas del socio
+            </h3>
+            <p class="text-white/90 text-[0.6875rem] leading-snug mt-0.5 truncate">
+              {{ socioParaCuotas?.socio?.nombre || 'Socio' }}
+            </p>
           </div>
-          
-          <!-- Sin cuotas -->
-          <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-12">
-            <p class="text-gray-400 text-base sm:text-lg">No hay cuotas registradas</p>
-          </div>
-          
-          <!-- Lista de cuotas agrupadas por mes -->
-          <div v-else-if="!loadingCuotasSocio" class="space-y-4">
-            <!-- Vista Completa -->
-            <template v-if="!vistaSimplificadaCuotas">
-              <!-- Iterar sobre grupos de meses -->
-              <div
-                v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
-                :key="`${grupoMes.anio}-${grupoMes.mes}`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
-              >
-                <!-- Encabezado del mes -->
-                <div 
-                  v-if="!esVisor"
-                  @click.stop="navegarACuotasMes(grupoMes.mes)"
-                  class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm cursor-pointer hover:from-natillera-300 hover:via-natillera-200 hover:to-emerald-300 transition-all duration-200 active:scale-[0.98]"
-                  title="Haz clic para ver las cuotas de este mes"
-                >
-                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-pink-300 flex items-center justify-center text-4xl sm:text-5xl shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-xl sm:text-2xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-base text-gray-700 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0">
-                    <ArrowRightIcon class="w-5 h-5 sm:w-6 sm:h-6 text-natillera-600" />
-                  </div>
-                </div>
-                <div 
-                  v-else
-                  class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm"
-                >
-                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-pink-300 flex items-center justify-center text-4xl sm:text-5xl shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-xl sm:text-2xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-base text-gray-700 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- Contenedor de cuotas del mes -->
-                <div class="p-3 sm:p-4 space-y-3">
-                <!-- Cuotas del mes -->
-              <div
-                v-for="(cuotaData, index) in grupoMes.cuotas"
-                :key="`${cuotaData.id}-${index}`"
-                class="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in-up"
-                :style="{ animationDelay: `${index * 0.05}s` }"
-                :class="[
-                  cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
-                  cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
-                  cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
-                  (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota)
-                    ? 'bg-orange-50/90 border-[2.5px] border-orange-300/80 shadow-md shadow-orange-100/50 ring-1 ring-orange-200/40' :
-                  cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
-                ]"
-              >
-              <!-- Efecto de resaltado para cuotas en mora -->
-              <div 
-                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
-              ></div>
-              <!-- Borde pulsante para cuotas en mora -->
-              <div 
-                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                class="absolute inset-0 border-2 border-red-500 rounded-xl animate-pulse pointer-events-none z-0"
-                style="animation-duration: 1.5s;"
-              ></div>
-              <div class="p-4 sm:p-4 relative">
-                <!-- Móvil: Layout estilo imagen -->
-                <div class="sm:hidden flex flex-col gap-3">
-                  <!-- Layout principal: izquierda (botones y fechas) y derecha (montos) -->
-                  <div class="flex items-start justify-between gap-4">
-                    <!-- Lado izquierdo: Botones y fechas -->
-                    <div class="flex flex-col gap-2 flex-1 min-w-0">
-                      <!-- Botón de quincena -->
-                      <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center shadow-sm">
-                        {{ cuotaData.quincena === 1 ? '1ER' : '2DO' }} QUINCENA
-                      </div>
-                      
-                      <!-- Badge de ajuste -->
-                      <div 
-                        v-if="tieneAjuste(cuotaData)"
-                        class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
-                        :title="getTextoAjuste(cuotaData)"
-                      >
-                        <InformationCircleIcon class="w-3.5 h-3.5" />
-                      </div>
-                      
-                      <!-- Badge de estado -->
-                      <div class="self-start">
-                        <!-- Pago parcial tiene prioridad sobre estado pagada -->
-                        <span 
-                          v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
-                        >
-                          PAGO PARCIAL
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
-                        >
-                          PAGADA
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
-                        >
-                          EN MORA
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                            ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                          </span>
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
-                        >
-                          PENDIENTE
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
-                        >
-                          PROGRAMADA
-                        </span>
-                      </div>
-
-                      <!-- Fecha de vencimiento -->
-                      <div class="flex items-center gap-2 mt-1">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-xs text-gray-600">
-                          Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <!-- Lado derecho: Montos -->
-                    <div class="flex flex-col items-end text-right flex-shrink-0">
-                      <!-- Etiqueta según estado -->
-                      <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
-                        TOTAL PAGADO
-                      </p>
-                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-amber-600 mb-1">
-                        PENDIENTE
-                      </p>
-                      <p v-else class="text-xs font-medium text-gray-500 mb-1">
-                        MONTO CUOTA
-                      </p>
-                      
-                      <!-- Monto principal -->
-                      <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
-                        <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                          <!-- Pago parcial: mostrar restante -->
-                          ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
-                        </template>
-                        <template v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                          <!-- Total pagado -->
-                          ${{ formatMoney(cuotaData.valorPagado) }}
-                        </template>
-                        <template v-else>
-                          <!-- Monto a pagar -->
-                          ${{ formatMoney(cuotaData.valorCuota + (cuotaData.sancion || 0)) }}
-                        </template>
-                      </p>
-                      
-                      <!-- Detalles de la cuota -->
-                      <div class="flex flex-col items-end gap-0.5">
-                        <p class="text-xs text-gray-500">
-                          Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                        </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
-                          Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                        </p>
-                        <!-- En pago parcial: mostrar lo pagado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
-                          Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                  <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                    <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span class="text-xs text-green-600 font-medium">
-                      Pagado el: {{ formatDate(cuotaData.fechaPago) }}
-                    </span>
-                  </div>
-
-                  <!-- Botón WhatsApp (si aplica) -->
-                  <button
-                    v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                    @click="enviarWhatsAppCuota(cuotaData)"
-                    class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
-                    title="Enviar recordatorio por WhatsApp"
-                  >
-                    <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="text-sm font-semibold">Recordar cuota</span>
-                  </button>
-                </div>
-
-                <!-- Desktop: Layout horizontal original -->
-                <div class="hidden sm:flex sm:flex-col sm:gap-3">
-                  <!-- Fila superior: Badges y botones -->
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <!-- Badge de quincena -->
-                      <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-purple-700 shadow-md">
-                        {{ cuotaData.quincena === 1 ? '1er' : '2da' }} Quincena
-                      </div>
-                      <!-- Badge de ajuste -->
-                      <div 
-                        v-if="tieneAjuste(cuotaData)"
-                        class="px-3 py-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-blue-700 shadow-md"
-                        :title="getTextoAjuste(cuotaData)"
-                      >
-                        <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mr-1" />
-                        Ajuste
-                      </div>
-                      <!-- Badge de estado -->
-                      <span 
-                        v-if="cuotaData.estado === 'pagada'"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
-                      >
-                        pagada
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'mora'"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
-                      >
-                        en mora
-                        <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                          ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                        </span>
-                      </span>
-                      <!-- Badge pago parcial -->
-                      <span 
-                        v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
-                      >
-                        pago parcial
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
-                      >
-                        pendiente
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
-                      >
-                        programada
-                      </span>
-                    </div>
-                    <!-- Botón WhatsApp -->
-                    <button
-                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                      @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
-                      title="Enviar recordatorio por WhatsApp"
-                    >
-                      <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
-                    </button>
-                  </div>
-
-                  <!-- Fila media: Monto principal -->
-                  <div class="flex items-baseline justify-between gap-3">
-                    <div class="flex-1">
-                      <div class="flex items-baseline gap-2">
-                        <span v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota" class="text-base font-semibold text-orange-600">Pendiente:</span>
-                        <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota) ? 'text-orange-600' : 'text-gray-800'">
-                          ${{ formatMoney(cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota ? cuotaData.valorCuota - cuotaData.valorPagado : (cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota)) }}
-                        </p>
-                      </div>
-                      <div class="flex items-center gap-2 mt-1 flex-wrap">
-                        <p class="text-sm text-gray-600 font-medium">
-                          Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                        </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
-                          + Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Fila inferior: Detalles adicionales -->
-                  <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
-                    <div class="flex items-center gap-1.5">
-                      <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                      <span class="text-sm text-gray-600">
-                        Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                      </span>
-                    </div>
-                    <div v-if="cuotaData.estado === 'pagada' && cuotaData.fechaPago" class="flex items-center gap-1.5">
-                      <CalendarDaysIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span class="text-sm text-green-600 font-semibold">
-                        Pagado: {{ formatDate(cuotaData.fechaPago) }}
-                      </span>
-                    </div>
-                    <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
-                      Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              </div>
-              <!-- Fin del contenedor de cuotas del mes -->
-                </div>
-              <!-- Fin del grupo de mes -->
-            </div>
-            </template>
-            
-            <!-- Vista Simplificada -->
-            <template v-else>
-              <!-- Iterar sobre grupos de meses -->
-              <div
-                v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
-                :key="`${grupoMes.anio}-${grupoMes.mes}-simplificado`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
-              >
-                <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm">
-                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-base sm:text-xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-xs sm:text-sm text-emerald-600 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- Contenedor de cuotas del mes -->
-                <div class="p-3 sm:p-4 space-y-3">
-                <!-- Cuotas del mes -->
-              <div
-                v-for="(cuotaData, index) in grupoMes.cuotas"
-                :key="`${cuotaData.id}-${index}`"
-                class="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in-up"
-                :style="{ animationDelay: `${index * 0.03}s` }"
-                :class="[
-                  cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
-                  cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
-                  cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
-                  cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
-                ]"
-              >
-                <!-- Efecto de resaltado para cuotas en mora -->
-                <div 
-                  v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                  class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
-                ></div>
-                <div class="p-4 sm:p-4 relative z-10">
-                  <!-- Móvil: Layout estilo imagen -->
-                  <div class="sm:hidden flex flex-col gap-3">
-                    <!-- Layout principal: izquierda (botones y fechas) y derecha (montos) -->
-                    <div class="flex items-start justify-between gap-4">
-                      <!-- Lado izquierdo: Botones y fechas -->
-                      <div class="flex flex-col gap-2 flex-1 min-w-0">
-                        <!-- Botón de quincena -->
-                        <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center shadow-sm">
-                          {{ cuotaData.quincena === 1 ? '1ER' : '2DO' }} QUINCENA
-                        </div>
-                        
-                        <!-- Badge de ajuste -->
-                        <div 
-                          v-if="tieneAjuste(cuotaData)"
-                          class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
-                          :title="getTextoAjuste(cuotaData)"
-                        >
-                          <InformationCircleIcon class="w-3.5 h-3.5" />
-                        </div>
-                        
-                        <!-- Badge de estado -->
-                        <div class="self-start">
-                          <!-- Pago parcial tiene prioridad sobre estado pagada -->
-                          <span 
-                            v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
-                          >
-                            PAGO PARCIAL
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
-                          >
-                            PAGADA
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'mora'"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
-                          >
-                            EN MORA
-                            <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                              ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                            </span>
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
-                          >
-                            PENDIENTE
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
-                          >
-                            PROGRAMADA
-                          </span>
-                        </div>
-
-                        <!-- Fecha de vencimiento -->
-                        <div class="flex items-center gap-2 mt-1">
-                          <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <span class="text-xs text-gray-600">
-                            Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                          </span>
-                        </div>
-                      </div>
-
-                      <!-- Lado derecho: Montos -->
-                      <div class="flex flex-col items-end text-right flex-shrink-0">
-                        <!-- Etiqueta según estado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
-                          TOTAL PAGADO
-                        </p>
-                        <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-orange-600 mb-1">
-                          PAGO PARCIAL
-                        </p>
-                        <p v-else class="text-xs font-medium text-gray-500 mb-1">
-                          MONTO CUOTA
-                        </p>
-                        
-                        <!-- Monto principal -->
-                        <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
-                          <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                            <!-- Pago parcial: mostrar restante -->
-                            ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
-                          </template>
-                          <template v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                            <!-- Total pagado -->
-                            ${{ formatMoney(cuotaData.valorPagado) }}
-                          </template>
-                          <template v-else>
-                            <!-- Monto a pagar -->
-                            ${{ formatMoney(cuotaData.valorCuota + (cuotaData.sancion || 0)) }}
-                          </template>
-                        </p>
-                        
-                        <!-- Detalles de la cuota -->
-                        <div class="flex flex-col items-end gap-0.5">
-                          <p class="text-xs text-gray-500">
-                            Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                          </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
-                            Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                          </p>
-                          <!-- En pago parcial: mostrar lo pagado -->
-                          <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
-                            Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                    <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                      <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span class="text-xs text-green-600 font-medium">
-                        Pagado el: {{ formatDate(cuotaData.fechaPago) }}
-                      </span>
-                    </div>
-
-                    <!-- Botón WhatsApp (si aplica) -->
-                    <button
-                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                      @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
-                      title="Enviar recordatorio por WhatsApp"
-                    >
-                      <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                      <span class="text-sm font-semibold">Recordar cuota</span>
-                    </button>
-                  </div>
-
-                  <!-- Desktop: Layout horizontal original -->
-                  <div class="hidden sm:flex sm:flex-col sm:gap-3">
-                    <!-- Fila superior: Badges y botones -->
-                    <div class="flex items-center justify-between gap-2">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <!-- Badge de quincena -->
-                        <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-purple-700 shadow-md">
-                          {{ cuotaData.quincena === 1 ? '1er' : '2da' }} Quincena
-                        </div>
-                        <!-- Badge de ajuste -->
-                        <div 
-                          v-if="tieneAjuste(cuotaData)"
-                          class="px-3 py-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-blue-700 shadow-md"
-                          :title="getTextoAjuste(cuotaData)"
-                        >
-                          <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mr-1" />
-                          Ajuste
-                        </div>
-                        <!-- Badge de estado -->
-                        <span 
-                          v-if="cuotaData.estado === 'pagada'"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
-                        >
-                          pagada
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
-                        >
-                          en mora
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                            ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                          </span>
-                        </span>
-                        <!-- Badge pago parcial -->
-                        <span 
-                          v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
-                        >
-                          pago parcial
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
-                        >
-                          pendiente
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
-                        >
-                          programada
-                        </span>
-                        <!-- Badge de periodicidad -->
-                        <span 
-                          :class="[
-                            'inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border',
-                            cuotaData.periodicidad === 'quincenal' 
-                              ? 'bg-purple-100 text-purple-700 border-purple-200'
-                              : 'bg-blue-100 text-blue-700 border-blue-200'
-                          ]"
-                        >
-                          <CalendarDaysIcon class="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>{{ cuotaData.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}</span>
-                        </span>
-                      </div>
-                      <!-- Botón WhatsApp -->
-                      <button
-                        v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                        @click="enviarWhatsAppCuota(cuotaData)"
-                        class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
-                        title="Enviar recordatorio por WhatsApp"
-                      >
-                        <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
-                      </button>
-                    </div>
-
-                    <!-- Fila media: Monto principal -->
-                    <div class="flex items-baseline justify-between gap-3">
-                      <div class="flex-1">
-                        <div class="flex items-baseline gap-2">
-                          <span v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota" class="text-base font-semibold text-orange-600">Pendiente:</span>
-                          <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota) ? 'text-orange-600' : 'text-gray-800'">
-                            ${{ formatMoney(cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota ? cuotaData.valorCuota - cuotaData.valorPagado : (cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota)) }}
-                          </p>
-                        </div>
-                        <div class="flex items-center gap-2 mt-1 flex-wrap">
-                          <p class="text-sm text-gray-600 font-medium">
-                            Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                          </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
-                            + Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Fila inferior: Detalles adicionales -->
-                    <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
-                      <div class="flex items-center gap-1.5">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-sm text-gray-600">
-                          Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                        </span>
-                      </div>
-                      <div v-if="cuotaData.estado === 'pagada' && cuotaData.fechaPago" class="flex items-center gap-1.5">
-                        <CalendarDaysIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                        <span class="text-sm text-green-600 font-semibold">
-                          Pagado: {{ formatDate(cuotaData.fechaPago) }}
-                        </span>
-                      </div>
-                      <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
-                        Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Fin del contenedor de cuotas del mes -->
-                </div>
-              <!-- Fin del grupo de mes simplificado -->
-            </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <button 
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
             @click="cerrarModalCuotasSocio"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all text-sm sm:text-base"
           >
-            Cerrar
+            <XMarkIcon class="w-6 h-6" />
           </button>
         </div>
+      </div>
+      <!-- Cabecera marca — desktop -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-4">
+          <div class="w-11 flex-shrink-0" aria-hidden="true" />
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-[3.2rem] h-[3.2rem] rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+              <img
+                v-if="socioParaCuotas"
+                :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
+                :alt="socioParaCuotas.socio?.nombre"
+                class="h-full w-full object-cover"
+              />
+              <CalendarDaysIcon v-else class="w-6 h-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="text-lg font-display font-bold text-white mt-2.5 leading-tight">
+              Cuotas del socio
+            </h3>
+            <p class="text-white/90 text-xs mt-1 leading-snug px-1">
+              {{ socioParaCuotas?.socio?.nombre || 'Socio' }} · historial por mes
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarModalCuotasSocio"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalCuotasSocio"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-4 pb-0 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalCuotasSocio"
+        >
+          <div v-if="loadingCuotasSocio" class="text-center py-10">
+            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+            <p class="text-gray-500 text-sm">Cargando cuotas…</p>
+          </div>
+
+          <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-10 px-2">
+            <p class="text-gray-500 text-sm">No hay cuotas registradas</p>
+          </div>
+
+          <div v-else class="rounded-xl border border-gray-200/90 bg-white overflow-hidden shadow-sm pb-2">
+            <div
+              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 px-2 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
+              role="row"
+            >
+              <span>Mes</span>
+              <span>Cuota</span>
+              <span class="text-right tabular-nums">Valor a pagar</span>
+              <span class="text-right">Estado</span>
+              <span class="text-center" aria-hidden="true" />
+            </div>
+            <div class="divide-y divide-gray-100">
+              <div
+                v-for="(cuotaData, idx) in cuotasSocioPorMes"
+                :key="`${cuotaData.id}-${idx}`"
+                role="row"
+                class="grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 items-center px-2 py-2 text-[11px] sm:text-sm outline-none focus-visible:ring-2 focus-visible:ring-natillera-500/40 focus-visible:ring-inset"
+                :class="[
+                  !esVisor ? 'cursor-pointer hover:bg-emerald-50/40 active:bg-emerald-50/60' : '',
+                  cuotaData.estado === 'mora' && animacionesCuotasMora ? 'bg-red-50/50' : '',
+                  cuotaData.estado === 'pagada' || (cuotaData.valorPagado || 0) >= totalObligacionCuotaSocioModal(cuotaData) ? 'bg-green-50/25' : ''
+                ]"
+                :tabindex="!esVisor ? 0 : -1"
+                @click="handleClickFilaCuotaSocioModal(cuotaData)"
+                @keydown.enter.prevent="handleClickFilaCuotaSocioModal(cuotaData)"
+              >
+                <div class="text-gray-800 font-semibold leading-tight min-w-0">
+                  <span class="block truncate" :title="etiquetaMesAnioCuotaSocioModal(cuotaData)">
+                    {{ etiquetaMesAnioCuotaSocioModal(cuotaData) }}
+                  </span>
+                </div>
+                <div class="text-gray-800 font-semibold tabular-nums leading-tight">
+                  {{ etiquetaPeriodoCuotaSocioModal(cuotaData) }}
+                </div>
+                <div class="text-right min-w-0">
+                  <p class="font-bold tabular-nums text-gray-900 leading-tight">
+                    ${{ formatMoney(getMontoValorCuotaSocioModal(cuotaData)) }}
+                  </p>
+                  <p class="text-[9px] sm:text-[10px] text-gray-500 leading-tight mt-0.5 truncate">
+                    {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
+                  </p>
+                </div>
+                <div class="flex flex-col items-end gap-0.5 min-w-0 justify-self-end">
+                  <span
+                    class="inline-flex max-w-full items-center justify-center rounded-md border px-1 py-0.5 text-[9px] sm:text-[11px] font-bold leading-tight"
+                    :class="clasesEstadoCuotaSocioModal(cuotaData).badge"
+                  >
+                    {{ etiquetaEstadoCuotaSocioModal(cuotaData) }}
+                  </span>
+                </div>
+                <div class="flex justify-center" @click.stop>
+                  <button
+                    v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                    type="button"
+                    class="h-9 w-9 rounded-lg bg-green-500 hover:bg-green-600 text-white flex items-center justify-center touch-manipulation shadow-sm"
+                    title="WhatsApp"
+                    aria-label="Enviar recordatorio por WhatsApp"
+                    @click="enviarWhatsAppCuota(cuotaData)"
+                  >
+                    <ChatBubbleLeftIcon class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-gray-200 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              class="w-full min-h-[48px] px-4 py-3 rounded-full border-2 border-gray-300 bg-white text-gray-800 font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
+              @click="cerrarModalCuotasSocio"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-show="hayNatiscrollModalCuotasSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+          >
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
+      </div>
     </ModalWrapper>
 
     <!-- Modal de confirmación para eliminar socio -->
@@ -2358,18 +1987,29 @@ import { useCuotasStore } from '../../stores/cuotas'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
+import { TOURS_ENABLED } from '../../config/toursEnabled'
 import { shouldShowNatilleraMenuTour, startNatilleraMenuTour } from '../../composables/useNatilleraMenuTour'
+import {
+  shouldShowPrimerSocioSociosNavTour,
+  startPrimerSocioSociosNavTour,
+  consumePendingPrimerSocioNavTour
+} from '../../composables/usePrimerSocioSociosNavTour'
+import {
+  setPendingPrimerSocioCuotasMesTour,
+  setPrimerFlujoSocioNatilleraId
+} from '../../composables/usePrimerSocioCuotasMesTour'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import { 
   ArrowLeftIcon,
-  ArrowRightIcon,
   PlusIcon,
   UsersIcon,
   PhoneIcon,
@@ -2381,6 +2021,7 @@ import {
   BanknotesIcon,
   ClockIcon,
   UserIcon,
+  UserPlusIcon,
   EnvelopeIcon,
   IdentificationIcon,
   CurrencyDollarIcon,
@@ -2395,8 +2036,6 @@ import {
   CalendarIcon,
   CalendarDaysIcon,
   ChatBubbleLeftIcon,
-  Squares2X2Icon,
-  Bars3Icon,
   TrashIcon,
   SparklesIcon,
   CheckIcon,
@@ -2418,6 +2057,34 @@ const colaboradoresStore = useColaboradoresStore()
 const dashboardSidebar = inject('dashboardSidebar', null)
 
 const modalAgregar = ref(false)
+const scrollAreaModalAgregarSocio = ref(null)
+const { tieneScroll: modalAgregarTieneScroll } = useModalBodyScrollOverflow(
+  modalAgregar,
+  scrollAreaModalAgregarSocio
+)
+const hayNatiscrollModalAgregarSocio = ref(false)
+let rafNatiscrollModalAgregarSocio = null
+
+function actualizarNatiscrollModalAgregarSocio() {
+  const el = scrollAreaModalAgregarSocio.value
+  if (!el || !modalAgregar.value) {
+    hayNatiscrollModalAgregarSocio.value = false
+    return
+  }
+  hayNatiscrollModalAgregarSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalAgregarSocio() {
+  if (rafNatiscrollModalAgregarSocio != null) cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
+  rafNatiscrollModalAgregarSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalAgregarSocio = null
+    actualizarNatiscrollModalAgregarSocio()
+  })
+}
+
+const inputNombreSocio = ref(null)
 const modalDetalle = ref(false)
 const modalImportar = ref(false)
 const modalCuotasSocio = ref(false)
@@ -2426,17 +2093,71 @@ const modalProgreso = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalAgregar)
+watch(modalAgregar, (open) => {
+  if (!open) {
+    hayNatiscrollModalAgregarSocio.value = false
+    return
+  }
+  nextTick(() => {
+    programarNatiscrollModalAgregarSocio()
+    requestAnimationFrame(() => {
+      const el = inputNombreSocio.value
+      if (el && typeof el.focus === 'function') {
+        try {
+          el.focus({ preventScroll: true })
+        } catch {
+          el.focus()
+        }
+      }
+    })
+  })
+})
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalImportar)
 useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalProgreso)
 
 const loadingCuotasSocio = ref(false)
-const vistaSimplificadaCuotas = ref(false)
 const socioEditando = ref(null)
 const socioSeleccionado = ref(null)
 const socioParaCuotas = ref(null)
 const cuotasSocioPorMes = ref([])
+
+const scrollAreaModalCuotasSocio = ref(null)
+const hayNatiscrollModalCuotasSocio = ref(false)
+let rafNatiscrollModalCuotasSocio = null
+
+function actualizarNatiscrollModalCuotasSocio() {
+  const el = scrollAreaModalCuotasSocio.value
+  if (!el || !modalCuotasSocio.value) {
+    hayNatiscrollModalCuotasSocio.value = false
+    return
+  }
+  hayNatiscrollModalCuotasSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalCuotasSocio() {
+  if (rafNatiscrollModalCuotasSocio != null) cancelAnimationFrame(rafNatiscrollModalCuotasSocio)
+  rafNatiscrollModalCuotasSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalCuotasSocio = null
+    actualizarNatiscrollModalCuotasSocio()
+  })
+}
+
+watch(
+  [modalCuotasSocio, loadingCuotasSocio, () => cuotasSocioPorMes.value.length],
+  () => {
+    if (modalCuotasSocio.value) {
+      nextTick(() => programarNatiscrollModalCuotasSocio())
+    } else {
+      hayNatiscrollModalCuotasSocio.value = false
+    }
+  },
+  { flush: 'post' }
+)
+
 const errorSocio = ref('')
 const errorTelefonoDuplicado = ref(false)
 const mostrarContacto = ref(false)
@@ -2506,7 +2227,7 @@ const exitoImportar = ref('')
 const importando = ref(false)
 
 // Sección activa del modal de detalle (solo una a la vez)
-const seccionActiva = ref('finanzas')  // 'finanzas', 'contacto', 'config' o null
+const seccionActiva = ref('finanzas')  // 'finanzas', 'cuotasPagadas', 'contacto', 'config' o null
 
 // Socios filtrados por búsqueda
 const sociosFiltrados = computed(() => {
@@ -2519,43 +2240,6 @@ const sociosFiltrados = computed(() => {
     sn.socio?.documento?.toLowerCase().includes(termino) ||
     sn.socio?.telefono?.includes(termino)
   )
-})
-
-// Cuotas agrupadas por mes y año
-const cuotasAgrupadasPorMes = computed(() => {
-  if (!cuotasSocioPorMes.value || cuotasSocioPorMes.value.length === 0) return []
-  
-  const agrupadas = {}
-  
-  cuotasSocioPorMes.value.forEach(cuota => {
-    const key = `${cuota.anio}-${cuota.mes}`
-    if (!agrupadas[key]) {
-      agrupadas[key] = {
-        mes: cuota.mes,
-        anio: cuota.anio,
-        cuotas: []
-      }
-    }
-    agrupadas[key].cuotas.push(cuota)
-  })
-  
-  // Ordenar las cuotas dentro de cada grupo por quincena (si existe) o por fecha
-  Object.keys(agrupadas).forEach(key => {
-    agrupadas[key].cuotas.sort((a, b) => {
-      if (a.quincena && b.quincena) {
-        return a.quincena - b.quincena
-      }
-      if (a.quincena && !b.quincena) return -1
-      if (!a.quincena && b.quincena) return 1
-      return new Date(a.fechaVencimiento) - new Date(b.fechaVencimiento)
-    })
-  })
-  
-  // Convertir a array y ordenar por año y mes (más antiguo primero)
-  return Object.values(agrupadas).sort((a, b) => {
-    if (a.anio !== b.anio) return a.anio - b.anio
-    return a.mes - b.mes
-  })
 })
 
 function toggleSeccion(seccion) {
@@ -2574,6 +2258,16 @@ const formSocio = reactive({
 })
 
 const mostrarAvatares = ref(false)
+
+watch(
+  [mostrarContacto, mostrarAvatares, socioEditando],
+  () => {
+    if (modalAgregar.value) {
+      nextTick(() => programarNatiscrollModalAgregarSocio())
+    }
+  },
+  { flush: 'post' }
+)
 
 // Verificar si la Contact Picker API está disponible
 const contactPickerDisponible = ref(false)
@@ -3077,7 +2771,28 @@ async function abrirSelectorContactos() {
 }
 
 function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
+  if (!TOURS_ENABLED) return
   if (!eraListaVaciaAntes || !natilleraId) return
+
+  const veniaDeModalSinSocios = consumePendingPrimerSocioNavTour(natilleraId)
+  if (veniaDeModalSinSocios && shouldShowPrimerSocioSociosNavTour(natilleraId)) {
+    nextTick(() => {
+      setTimeout(() => {
+        startPrimerSocioSociosNavTour({
+          natilleraId,
+          prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+          clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
+          onSociosTourClosed: (nid) => {
+            setPendingPrimerSocioCuotasMesTour(nid)
+            // Vista de selección de mes (CuotasMeses); el tour guiado continúa ahí.
+            router.push(`/natilleras/${nid}/cuotas`)
+          }
+        })
+      }, 900)
+    })
+    return
+  }
+
   if (!shouldShowNatilleraMenuTour(natilleraId)) return
   if (!dashboardSidebar?.openMobile || !dashboardSidebar?.closeMobile) return
   nextTick(() => {
@@ -3521,6 +3236,9 @@ async function handleGuardarSocio() {
         // Esperar 2.5 segundos y cerrar automáticamente
         await new Promise(resolve => setTimeout(resolve, 2500))
         cerrarModalProgreso()
+        if (eraListaSociosVacia && socioNatilleraId) {
+          setPrimerFlujoSocioNatilleraId(id, socioNatilleraId)
+        }
         programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
 
       } else {
@@ -3549,6 +3267,9 @@ async function handleGuardarSocio() {
             3000
           )
           cerrarModal()
+          if (eraListaSociosVacia && result.data?.id) {
+            setPrimerFlujoSocioNatilleraId(id, result.data.id)
+          }
           programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
         } else {
           if (result.error?.includes('unique') || result.error?.includes('duplicate') || result.error?.includes('teléfono')) {
@@ -4053,6 +3774,58 @@ function getMesLabel(mes) {
   return mesObj ? mesObj.label : `Mes ${mes}`
 }
 
+/** Cuotas con estado pagada para el modal de detalle: etiqueta tipo "1.ª de Marzo 2026", valor y fecha (orden reciente primero). */
+const cuotasPagadasDetalleSocio = computed(() => {
+  const list = (cuotasSocio.value || []).filter((c) => c.estado === 'pagada')
+  const items = list.map((c) => {
+    let mes = c.mes
+    let anio = c.anio
+    if (c.fecha_limite && typeof c.fecha_limite === 'string' && c.fecha_limite.includes('-')) {
+      const [y, m] = c.fecha_limite.split('-').map(Number)
+      if (anio == null) anio = y
+      if (mes == null) mes = m
+    }
+    const nombreMes = mes != null ? getMesLabel(mes) : null
+    let cuotaLabel = 'Cuota'
+    if (c.quincena === 1 && nombreMes != null && anio != null) {
+      cuotaLabel = `1.ª de ${nombreMes} ${anio}`
+    } else if (c.quincena === 2 && nombreMes != null && anio != null) {
+      cuotaLabel = `2.ª de ${nombreMes} ${anio}`
+    } else if (nombreMes != null && anio != null) {
+      cuotaLabel = `${nombreMes} ${anio}`
+    } else if (anio != null) {
+      cuotaLabel = c.quincena === 1 ? `1.ª quincena ${anio}` : c.quincena === 2 ? `2.ª quincena ${anio}` : `${anio}`
+    } else if (c.quincena === 1) {
+      cuotaLabel = '1.ª quincena'
+    } else if (c.quincena === 2) {
+      cuotaLabel = '2.ª quincena'
+    }
+
+    const fechaPagoMs = c.fecha_pago ? new Date(c.fecha_pago).getTime() : 0
+    let fechaLimiteMs = 0
+    if (c.fecha_limite) {
+      fechaLimiteMs = new Date(c.fecha_limite).getTime()
+    }
+
+    return {
+      id: c.id,
+      cuotaLabel,
+      fechaPago: c.fecha_pago,
+      valorPagado: c.valor_pagado || 0,
+      fechaPagoMs,
+      fechaLimiteMs
+    }
+  })
+  return items.sort(
+    (a, b) =>
+      (b.fechaPagoMs || b.fechaLimiteMs) - (a.fechaPagoMs || a.fechaLimiteMs)
+  )
+})
+
+const totalValorCuotasPagadasDetalleSocio = computed(() =>
+  cuotasPagadasDetalleSocio.value.reduce((s, i) => s + (i.valorPagado || 0), 0)
+)
+
 // Función para obtener el emoji del mes
 function getMesEmoji(mes) {
   const emojis = {
@@ -4160,6 +3933,78 @@ function tienePagoParcial(cuota) {
   return valorPagado > 0 && valorPagado < totalAPagar
 }
 
+function totalObligacionCuotaSocioModal(c) {
+  return (c.valorCuota || 0) + (c.sancion || 0)
+}
+
+function etiquetaMesAnioCuotaSocioModal(c) {
+  if (c.mes == null) {
+    return c.anio != null ? String(c.anio) : '—'
+  }
+  const anio = c.anio != null ? c.anio : ''
+  return `${getMesLabel(c.mes)}${anio !== '' ? ` ${anio}` : ''}`.trim()
+}
+
+function handleClickFilaCuotaSocioModal(c) {
+  if (esVisor.value) return
+  if (c.mes == null) return
+  navegarACuotasMes(c.mes)
+}
+
+function etiquetaPeriodoCuotaSocioModal(c) {
+  if (c.quincena === 1) return '1.ª Q'
+  if (c.quincena === 2) return '2.ª Q'
+  return 'Mes'
+}
+
+function getMontoValorCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado >= total) return pagado
+  if (pagado > 0 && pagado < total) return total - pagado
+  return total
+}
+
+function subetiquetaValorCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado >= total) return 'Liquidado'
+  if (pagado > 0 && pagado < total) return `Pagado $${formatMoney(pagado)}`
+  return 'Pendiente de pago'
+}
+
+function etiquetaEstadoCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado > 0 && pagado < total) return 'Parcial'
+  if (c.estado === 'pagada' || pagado >= total) return 'Pagada'
+  if (c.estado === 'mora') return c.diasMora > 0 ? `Mora ${c.diasMora}d` : 'Mora'
+  if (c.estado === 'pendiente') return 'Pend.'
+  if (c.estado === 'programada') return 'Prog.'
+  return '—'
+}
+
+function clasesEstadoCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado > 0 && pagado < total) {
+    return { badge: 'bg-orange-100 text-orange-900 border-orange-200' }
+  }
+  if (c.estado === 'pagada' || pagado >= total) {
+    return { badge: 'bg-green-100 text-green-900 border-green-200' }
+  }
+  if (c.estado === 'mora') {
+    return { badge: 'bg-red-100 text-red-900 border-red-200' }
+  }
+  if (c.estado === 'pendiente') {
+    return { badge: 'bg-amber-100 text-amber-900 border-amber-200' }
+  }
+  if (c.estado === 'programada') {
+    return { badge: 'bg-slate-100 text-slate-700 border-slate-200' }
+  }
+  return { badge: 'bg-gray-100 text-gray-800 border-gray-200' }
+}
+
 // Función para abrir el modal de cuotas del socio
 async function verCuotasSocio(sn) {
   // Desactivar animaciones de cuotas en mora al hacer clic en "ver cuotas"
@@ -4177,10 +4022,9 @@ async function verCuotasSocio(sn) {
     const resumen = await sociosStore.obtenerResumenSocio(sn.id)
     const cuotas = resumen?.cuotas || []
     
-    // Obtener días de gracia de la natillera
-    await natillerasStore.fetchNatillera(id)
+    // Obtener días de gracia de la natillera (ya cargada en onMounted)
     const natillera = natillerasStore.natilleraActual
-    const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+    const diasGracia = natillera?.reglas_multas?.dias_gracia ?? 3
     
     // Calcular sanciones dinámicas para las cuotas del socio
     const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotas)
@@ -4322,6 +4166,7 @@ async function verCuotasSocio(sn) {
     alert(`Error al cargar las cuotas: ${error?.message || 'Error desconocido'}`)
   } finally {
     loadingCuotasSocio.value = false
+    nextTick(() => programarNatiscrollModalCuotasSocio())
   }
 }
 
@@ -4784,100 +4629,60 @@ watch(() => props.id || route.params.id, async (newId) => {
 async function fetchPrestamosEnMora() {
   loadingPrestamos.value = true
   try {
-    // Obtener los IDs de socios_natillera de esta natillera
-    const { data: sociosNatillera } = await supabase
-      .from('socios_natillera')
-      .select('id, socio:socios(*)')
-      .eq('natillera_id', id)
-
-    if (!sociosNatillera || sociosNatillera.length === 0) {
+    // Reusar socios ya cargados por sociosStore en lugar de un fetch extra
+    const sociosNatilleraData = sociosStore.sociosNatillera
+    if (!sociosNatilleraData || sociosNatilleraData.length === 0) {
       prestamosEnMora.value = []
       return
     }
 
-    const socioNatilleraIds = sociosNatillera.map(s => s.id)
+    const socioNatilleraIds = sociosNatilleraData.map(s => s.id)
 
-    // Obtener préstamos activos
-    const { data: prestamos, error } = await supabase
+    // Un solo request con nested select (antes: 3 queries secuenciales)
+    const { data: prestamos, error: prestamosErr } = await supabase
       .from('prestamos')
-      .select('*')
+      .select('*, plan_pagos_prestamo(prestamo_id, fecha_proyectada, pagada, valor_cuota)')
       .in('socio_natillera_id', socioNatilleraIds)
       .eq('estado', 'activo')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (prestamosErr) throw prestamosErr
 
     if (!prestamos || prestamos.length === 0) {
       prestamosEnMora.value = []
       return
     }
 
-    // Obtener IDs de préstamos para cargar el plan de pagos
-    const prestamoIds = prestamos.map(p => p.id)
-
-    // Cargar el plan de pagos para todos los préstamos
-    const { data: planPagos, error: planError } = await supabase
-      .from('plan_pagos_prestamo')
-      .select('*')
-      .in('prestamo_id', prestamoIds)
-
-    if (planError) throw planError
-
-    // Crear un mapa por prestamo_id
-    const planPagosMap = (planPagos || []).reduce((acc, cuota) => {
-      if (!acc[cuota.prestamo_id]) {
-        acc[cuota.prestamo_id] = []
-      }
-      acc[cuota.prestamo_id].push(cuota)
-      return acc
-    }, {})
-
-    // Fecha actual para calcular vencimientos
     const fechaActual = new Date()
     fechaActual.setHours(0, 0, 0, 0)
 
-    // Filtrar préstamos con cuotas vencidas
     const prestamosConMora = prestamos.map(prestamo => {
-      const socioNatillera = sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
-      const planPagosPrestamo = planPagosMap[prestamo.id] || []
+      const socioNat = sociosNatilleraData.find(s => s.id === prestamo.socio_natillera_id)
+      const planPagosPrestamo = prestamo.plan_pagos_prestamo || []
 
-      // Filtrar cuotas vencidas (no pagadas y con fecha anterior a hoy)
       const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
-        const fechaVencimiento = new Date(cuota.fecha_proyectada)
-        fechaVencimiento.setHours(0, 0, 0, 0)
-        return !cuota.pagada && fechaVencimiento < fechaActual
+        if (cuota.pagada) return false
+        const fv = new Date(cuota.fecha_proyectada)
+        fv.setHours(0, 0, 0, 0)
+        return fv < fechaActual
       })
 
-      const tieneCuotasVencidas = cuotasVencidasArray.length > 0
-      const cuotasVencidas = cuotasVencidasArray.length
+      if (cuotasVencidasArray.length === 0) return null
 
-      // Calcular días de mora y valor en deuda
-      let diasMora = 0
-      let valorCuotasEnDeuda = 0
+      cuotasVencidasArray.sort((a, b) => new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada))
 
-      if (cuotasVencidasArray.length > 0) {
-        const cuotaMasAntigua = cuotasVencidasArray.sort((a, b) =>
-          new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada)
-        )[0]
-
-        const fechaVencimientoMasAntigua = new Date(cuotaMasAntigua.fecha_proyectada)
-        fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
-
-        const diffTime = fechaActual - fechaVencimientoMasAntigua
-        diasMora = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-        valorCuotasEnDeuda = cuotasVencidasArray.reduce((sum, cuota) => sum + (cuota.valor_cuota || 0), 0)
-      }
+      const fechaVencMasAntigua = new Date(cuotasVencidasArray[0].fecha_proyectada)
+      fechaVencMasAntigua.setHours(0, 0, 0, 0)
 
       return {
         ...prestamo,
-        socio_natillera: socioNatillera,
-        tieneCuotasVencidas,
-        cuotasVencidas,
-        diasMora,
-        valorCuotasEnDeuda
+        socio_natillera: socioNat,
+        tieneCuotasVencidas: true,
+        cuotasVencidas: cuotasVencidasArray.length,
+        diasMora: Math.floor((fechaActual - fechaVencMasAntigua) / 86400000),
+        valorCuotasEnDeuda: cuotasVencidasArray.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
       }
-    }).filter(p => p.tieneCuotasVencidas)
+    }).filter(Boolean)
 
     prestamosEnMora.value = prestamosConMora
   } catch (e) {
@@ -5005,6 +4810,11 @@ function irAPrestamos() {
     router.push('/dashboard')
     return
   }
+  const n = natillerasStore.natilleraActual
+  if (n && String(n.id) === String(id) && natilleraPrestamosDeshabilitados(n)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    return
+  }
   router.push(`/natilleras/${id}/prestamos`)
 }
 
@@ -5020,62 +4830,80 @@ function irACuotas() {
 }
 
 onMounted(async () => {
-  // Obtener usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser()
+  // ── Phase 1: Cargas críticas en PARALELO ──
+  // Antes: 6 awaits secuenciales (~6 round-trips).
+  // Ahora: 3 fetches en paralelo (~1 round-trip) para mostrar la lista de socios lo antes posible.
+  const needsNatillera = !natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id
+
+  const [userResult] = await Promise.all([
+    supabase.auth.getUser(),
+    needsNatillera
+      ? supabase.from('natilleras').select('*').eq('id', id).maybeSingle().then(({ data }) => {
+          if (data) natillerasStore.natilleraActual = data
+        })
+      : Promise.resolve(),
+    sociosStore.fetchSociosNatillera(id)
+  ])
+
+  const user = userResult.data.user
   usuarioAutenticado.value = user
-  
-  // Cargar natillera actual para obtener su periodicidad
-  if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
-    await natillerasStore.fetchNatillera(id)
+  cargaInicial.value = false
+
+  // ── Phase 2: Poblar cuotas store sin re-fetch (datos ya en sociosStore) ──
+  const sociosNat = sociosStore.sociosNatillera
+  if (sociosNat.length > 0) {
+    const allCuotas = sociosNat.flatMap(sn =>
+      (sn.cuotas || []).map(c => ({ ...c, socio_natillera_id: sn.id }))
+    )
+    cuotasStore.aplicarCuotasDesdeCargaNatillera(
+      sociosNat.map(sn => ({
+        id: sn.id,
+        valor_cuota_individual: sn.valor_cuota_individual,
+        periodicidad: sn.periodicidad,
+        estado: sn.estado,
+        socio: sn.socio
+      })),
+      allCuotas
+    )
   }
-  
-  // Obtener el rol del usuario en la natillera
-  await nextTick()
+
+  // ── Phase 3: Trabajo secundario NO bloqueante ──
   const natillera = natillerasStore.natilleraActual
-  if (natillera) {
-    if (!esAdmin.value) {
-      try {
-        const rol = await colaboradoresStore.obtenerMiRol(id)
-        miRol.value = rol
-      } catch (err) {
-        console.warn('Error obteniendo rol del usuario:', err)
-        miRol.value = null
-      }
-    } else {
-      // Si es admin, no necesita verificar rol
+  if (natillera && user) {
+    if (natillera.admin_id === user.id) {
       miRol.value = 'administrador'
+    } else {
+      colaboradoresStore.obtenerMiRol(id)
+        .then(rol => { miRol.value = rol })
+        .catch(() => { miRol.value = null })
     }
   }
-  
-  // Cargar socios y marcar carga inicial como completada
-  await sociosStore.fetchSociosNatillera(id)
-  cargaInicial.value = false
-  
+
   fetchPrestamosEnMora()
-  // Cargar cuotas para mostrar socios con cuotas en mora
+
   loadingCuotas.value = true
-  try {
-    await cuotasStore.fetchCuotasNatillera(id)
-  } finally {
-    loadingCuotas.value = false
-  }
-  
-  // Agregar listener para el botón atrás
+  cuotasStore.fetchCuotasNatillera(id).finally(() => { loadingCuotas.value = false })
+
   window.addEventListener('popstate', handlePopState)
-  
-  // Si viene con query parameter agregar=true, abrir el modal automáticamente
+
   if (route.query.agregar === 'true') {
-    // Esperar un momento para asegurar que todo esté cargado
     await nextTick()
     setTimeout(() => {
       abrirModalAgregar()
-      // Limpiar el query parameter de la URL sin recargar la página
       router.replace({ query: {} })
     }, 300)
   }
 })
 
 onUnmounted(() => {
+  if (rafNatiscrollModalAgregarSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
+    rafNatiscrollModalAgregarSocio = null
+  }
+  if (rafNatiscrollModalCuotasSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalCuotasSocio)
+    rafNatiscrollModalCuotasSocio = null
+  }
   // Limpiar listener al desmontar
   if (clickOutsideListener) {
     document.removeEventListener('click', clickOutsideListener)

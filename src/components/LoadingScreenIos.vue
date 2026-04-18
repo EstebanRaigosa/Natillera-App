@@ -4,9 +4,9 @@
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="opacity-0"
       enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
+      leave-active-class="transition duration-200 ease-in pointer-events-none"
       leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
+      leave-to-class="opacity-0 pointer-events-none"
     >
       <div
         v-if="show"
@@ -57,7 +57,6 @@ defineProps({
   height: 100dvh !important;
   height: -webkit-fill-available !important;
   margin: 0 !important;
-  padding: 0 !important;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -66,11 +65,10 @@ defineProps({
   touch-action: none;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  /* Safe area para notch y home indicator */
-  padding-left: env(safe-area-inset-left, 0);
-  padding-right: env(safe-area-inset-right, 0);
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  padding-top: env(safe-area-inset-top, 0);
+  padding-top: env(safe-area-inset-top, 0) !important;
+  padding-right: env(safe-area-inset-right, 0) !important;
+  padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  padding-left: env(safe-area-inset-left, 0) !important;
   box-sizing: border-box;
   -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);

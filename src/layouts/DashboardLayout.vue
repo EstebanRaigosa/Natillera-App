@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex">
+  <div class="min-h-screen flex max-lg:h-[100dvh] max-lg:max-h-[100dvh] max-lg:overflow-hidden">
     <!-- Área de activación hover (solo en lg, 1024px-1279px) -->
     <div 
       v-if="isLgScreen && !sidebarHover"
@@ -129,7 +129,7 @@
               @click="ejecutarAccionNatillera('buscar')"
             >
               <MagnifyingGlassIcon class="w-5 h-5 shrink-0" />
-              <span class="sidebar-option-label">Buscar Comprobante</span>
+              <span class="sidebar-option-label">Buscar comprobante</span>
             </button>
             <button
               v-if="puedeAccionSidebar('invitar_colaboradores')"
@@ -260,41 +260,45 @@
               <ArrowsRightLeftIcon class="cambiar-natillera-btn__icon" />
             </span>
             <span class="cambiar-natillera-btn__text">
-              <span class="cambiar-natillera-btn__title">Cambiar de Natillera</span>
-              <span class="cambiar-natillera-btn__hint">Ver listado y elegir otra</span>
+              <span class="cambiar-natillera-btn__title">Cambiar natillera</span>
+              <span
+                class="cambiar-natillera-btn__hint w-full min-w-0 truncate"
+                :title="textoActualNatilleraSidebar"
+              >
+                {{ textoActualNatilleraSidebar }}
+              </span>
             </span>
-            <ChevronRightIcon class="cambiar-natillera-btn__chevron" aria-hidden="true" />
           </button>
 
           <div class="user-panel-divider relative z-[1]" role="presentation" />
         </template>
 
         <div class="user-panel-row relative z-[1]">
-          <!-- Avatar con borde gradiente -->
-          <div class="relative">
-            <div class="absolute -inset-1 bg-gradient-to-br from-natillera-400 via-natillera-500 to-natillera-600 rounded-full opacity-75 blur-sm group-hover:opacity-100 transition-opacity"></div>
-            <img 
-              :src="getAvatarUrl(authStore.userEmail || authStore.userName)" 
-              :alt="authStore.userName"
-              class="relative w-10 h-10 rounded-full ring-2 ring-white shadow-lg"
+          <div class="user-panel-avatar-wrap shrink-0">
+            <img
+              :src="getAvatarUrl(authStore.userEmail || authStore.userName)"
+              :alt="authStore.userName || ''"
+              class="user-panel-avatar-img"
+              width="40"
+              height="40"
+              decoding="async"
+              draggable="false"
             />
-            <!-- Indicador de estado online -->
-            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-lg"></span>
           </div>
-          
-          <!-- Info del usuario -->
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-white truncate text-[13px] leading-tight">{{ authStore.userName }}</p>
-            <p class="text-[11px] leading-tight text-emerald-100/90 truncate">{{ authStore.userEmail }}</p>
+
+          <div class="user-panel-user-text">
+            <p class="user-panel-user-name">{{ authStore.userName }}</p>
+            <p class="user-panel-user-email">{{ authStore.userEmail }}</p>
           </div>
-          
-          <!-- Botón de logout con estilo -->
-          <button 
-            @click="handleLogout"
+
+          <button
+            type="button"
             class="logout-btn group/btn"
             title="Cerrar sesión"
+            aria-label="Cerrar sesión"
+            @click="handleLogout"
           >
-            <ArrowRightOnRectangleIcon class="w-[1.125rem] h-[1.125rem] transition-transform duration-300 group-hover/btn:translate-x-0.5" />
+            <ArrowRightOnRectangleIcon class="logout-btn__icon" />
           </button>
         </div>
       </div>
@@ -302,13 +306,18 @@
 
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
     <div 
-      class="flex-1 flex flex-col min-w-0 min-h-screen relative"
+      class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen relative"
       :class="{ 'z-50': isBodyScrollLocked }"
     >
-      <!-- Contenido principal -->
-      <main class="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden overflow-y-auto">
+      <!-- Contenido principal: en <lg el scroll es interno para que el header sticky quede fijo al hacer scroll -->
+      <main
+        class="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden overflow-y-auto lg:min-h-screen"
+        :class="sidebarOpen && esViewportMovil ? 'max-lg:!overflow-y-hidden max-lg:touch-none' : ''"
+      >
         <!-- Header móvil -->
-        <header class="lg:hidden sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 py-3 flex-shrink-0">
+        <header
+          class="lg:hidden sticky top-0 z-30 shrink-0 border-b border-gray-100 bg-white/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
+        >
           <div class="flex items-center justify-between">
             <button
               id="tour-hamburger-btn"
@@ -337,9 +346,10 @@
           </div>
         </header>
 
-        <!-- Contenido de la página: reservar espacio hasta donde empieza la barra inferior en móvil -->
+        <!-- Contenido de la página: reservar espacio hasta donde empieza la barra inferior en móvil.
+             En <lg, flex-none para que la altura siga al contenido y el scroll de main incluya el padding inferior. -->
         <div 
-          class="flex-1 p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
+          class="flex-1 max-lg:flex-none p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
           :class="route.params.id ? 'content-above-bottom-nav lg:pb-3' : 'pb-3'"
         >
           <router-view />
@@ -350,10 +360,11 @@
     <!-- Overlay móvil: después del contenido para capturar clics fuera (por encima del área principal) -->
     <div
       v-if="sidebarOpen && !isLgScreen"
-      class="sidebar-overlay fixed inset-0 z-[45] bg-black/50 lg:hidden"
+      class="sidebar-overlay fixed inset-0 z-[45] bg-black/50 lg:hidden touch-none"
       role="presentation"
       aria-hidden="true"
       @click="cerrarSidebar"
+      @touchmove.prevent
     ></div>
 
     <!-- Navegación inferior móvil (oculta mientras el cajón lateral está abierto) -->
@@ -384,6 +395,7 @@ import { useNatillerasStore } from '../stores/natilleras'
 import { useColaboradoresStore } from '../stores/colaboradores'
 import { useSupportStore } from '../stores/support'
 import { useNotificationStore } from '../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { isDev, isLocalhost } from '../config/environment'
 import { requestNatilleraSidebarAction } from '../composables/useNatilleraSidebarActions'
 
@@ -458,6 +470,18 @@ const natilleraEnContexto = computed(() => {
   const id = natilleraIdRuta.value
   if (!id) return null
   return todasLasNatillerasActivas.value.find(n => String(n.id) === id) || null
+})
+
+/** Subtítulo del botón «Cambiar natillera»: muestra el nombre de la natillera en ruta. */
+const textoActualNatilleraSidebar = computed(() => {
+  const id = natilleraIdRuta.value
+  const desdeLista = natilleraEnContexto.value?.nombre?.trim()
+  if (desdeLista) return `Actual: ${desdeLista}`
+  const na = natillerasStore.natilleraActual
+  if (id && na && String(na.id) === id && na.nombre?.trim()) {
+    return `Actual: ${na.nombre.trim()}`
+  }
+  return 'Actual: …'
 })
 
 const isSuperAdmin = computed(() => {
@@ -614,6 +638,24 @@ function abrirRutaDesdeSidebar(to) {
   if (typeof window !== 'undefined' && window.innerWidth < 1024) {
     sidebarOpen.value = false
   }
+  if (typeof to === 'string') {
+    const m = to.match(/^\/natilleras\/([^/]+)\/prestamos\/?$/)
+    if (m) {
+      const idRuta = m[1]
+      let n =
+        natilleraEnContexto.value && String(natilleraEnContexto.value.id) === idRuta
+          ? natilleraEnContexto.value
+          : todasLasNatillerasActivas.value.find((x) => String(x.id) === idRuta)
+      if (!n) {
+        const na = natillerasStore.natilleraActual
+        if (na && String(na.id) === idRuta) n = na
+      }
+      if (n && natilleraPrestamosDeshabilitados(n)) {
+        notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+        return
+      }
+    }
+  }
   return router.push(to)
 }
 
@@ -691,7 +733,10 @@ onMounted(async () => {
   window.addEventListener('resize', actualizarTamañoPantalla)
   window.addEventListener('popstate', handleSidebarPopState)
   
-  await natillerasStore.fetchTodasLasNatilleras()
+  // Las vistas hijas (Dashboard, NatilleraDetalle) cargan natilleras.
+  // fetchTodasLasNatilleras tiene deduplicación interna (5s cooldown + promesa en vuelo),
+  // así que si el login ya precargó o la vista hija llama primero, este no-op.
+  natillerasStore.fetchTodasLasNatilleras()
   
   if (isSuperAdmin.value) {
     supportStore.startChecking()
@@ -727,9 +772,9 @@ onUnmounted(() => {
   }
 }
 
-/* Reservar espacio en la parte inferior para que el contenido termine donde empieza la barra móvil */
+/* Reservar espacio bajo la barra inferior fija (ítems ~44px en iOS + sombra/pill activo + safe area) */
 .content-above-bottom-nav {
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .nav-link {
@@ -802,61 +847,55 @@ onUnmounted(() => {
   transform: translateY(-1px);
 }
 
-/* Botón de logout elegante */
+/* Cerrar sesión: discreto al lado del bloque usuario (referencia: fila limpia) */
 .logout-btn {
-  @apply relative inline-flex items-center justify-center p-2 rounded-lg overflow-hidden;
-  @apply min-h-9 min-w-9 shrink-0;
-  @apply text-emerald-100;
-  @apply transition-all duration-300;
-  @apply border border-transparent;
+  @apply relative inline-flex shrink-0 items-center justify-center rounded-lg;
+  @apply min-h-10 min-w-10 p-2;
+  @apply text-emerald-100/90;
+  @apply border border-white/15 bg-white/5;
+  @apply transition-colors duration-200;
 }
 
 .logout-btn:hover {
-  @apply text-white;
-  @apply bg-gradient-to-br from-rose-500 to-red-600;
-  @apply border-rose-400/50;
-  @apply shadow-lg shadow-rose-500/30;
-  transform: scale(1.05);
+  @apply text-white border-white/25 bg-white/10;
 }
 
-.logout-btn:active {
-  transform: scale(0.95);
+.logout-btn:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
 }
 
-/* Acción principal: cambiar de natillera (tarjeta tipo “list row”) */
+.logout-btn__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: transform 0.2s ease;
+}
+
+.logout-btn:hover .logout-btn__icon {
+  transform: translateX(2px);
+}
+
+/* Cambiar natillera: fila tipo referencia (icono gris + título + subtítulo) */
 .cambiar-natillera-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
   width: 100%;
-  padding: 0.45rem 0.5rem;
+  padding: 0.35rem 0.15rem;
   margin: 0;
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   color: inherit;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.16) 0%,
-    rgba(255, 255, 255, 0.06) 45%,
-    rgba(0, 0, 0, 0.14) 100%
-  );
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 4px 14px rgba(0, 0, 0, 0.18);
+  background: transparent;
+  border: 1px solid transparent;
   transition:
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    transform 0.18s ease,
-    background 0.22s ease;
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .cambiar-natillera-btn:hover {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 8px 22px rgba(0, 0, 0, 0.24);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .cambiar-natillera-btn:focus-visible {
@@ -864,29 +903,23 @@ onUnmounted(() => {
   outline-offset: 2px;
 }
 
-.cambiar-natillera-btn:active {
-  transform: translateY(0);
-}
-
 .cambiar-natillera-btn__icon-wrap {
   flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 0.55rem;
+  border-radius: 0.45rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(155deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 2px 8px rgba(0, 0, 0, 0.12);
+  background: hsl(215 14% 22%);
+  border: 1px solid hsl(215 12% 16%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .cambiar-natillera-btn__icon {
   width: 1.125rem;
   height: 1.125rem;
-  color: rgba(255, 255, 255, 0.96);
+  color: #fff;
 }
 
 .cambiar-natillera-btn__text {
@@ -917,19 +950,6 @@ onUnmounted(() => {
   color: hsla(152, 42%, 78%, 0.92);
 }
 
-.cambiar-natillera-btn__chevron {
-  flex-shrink: 0;
-  width: 1.0625rem;
-  height: 1.0625rem;
-  color: rgba(255, 255, 255, 0.42);
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.cambiar-natillera-btn:hover .cambiar-natillera-btn__chevron {
-  color: rgba(255, 255, 255, 0.9);
-  transform: translateX(3px);
-}
-
 .user-panel-divider {
   height: 1px;
   margin: 0.4rem 0 0.35rem;
@@ -946,8 +966,62 @@ onUnmounted(() => {
 .user-panel-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding-top: 0;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
+}
+
+.user-panel-avatar-wrap {
+  position: relative;
+}
+
+.user-panel-avatar-img {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.user-panel-user-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  text-align: left;
+}
+
+.user-panel-user-name {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-display, 'Outfit', system-ui, sans-serif);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-panel-user-email {
+  margin: 0;
+  width: 100%;
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  color: hsla(152, 42%, 78%, 0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Pestaña para abrir sidebar en lg: acento alineado al botón primario del login */

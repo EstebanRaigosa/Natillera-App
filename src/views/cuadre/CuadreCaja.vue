@@ -7,8 +7,7 @@
     </div>
 
     <!-- Header -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
@@ -1139,7 +1138,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notifications'
 import BackButton from '../../components/BackButton.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'

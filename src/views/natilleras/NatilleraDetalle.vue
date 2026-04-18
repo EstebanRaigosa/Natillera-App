@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 overflow-x-hidden relative">
+  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-3 sm:space-y-5 lg:space-y-6 overflow-x-hidden relative">
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
@@ -10,312 +10,604 @@
       :text="mensajeCargaActual"
     />
     <template v-if="natillera && !cargandoNatillera">
-      <!-- Breadcrumbs (solo desktop) -->
-      <div class="hidden sm:block relative mb-4">
-        <Breadcrumbs />
+      <!-- ─── Header: Saludo + Natillera + Estado ─── -->
+      <header class="mb-1 sm:mb-2">
+        <div class="flex items-center gap-2">
+          <BackButton to="/dashboard" :inline="true" />
+          <h1 class="min-w-0 flex-1 text-[clamp(1.25rem,3.6vw,1.75rem)] font-bold text-gray-900 leading-tight truncate">
+            Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>
+          </h1>
+          <button
+            v-if="puedeUsarRecordatorio"
+            type="button"
+            @click="abrirModalRecordatorio"
+            class="ml-auto flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-white bg-[#166534] hover:bg-[#145a2d] active:bg-[#124d26] shadow-sm transition-colors touch-manipulation"
+            title="Recordatorios"
+            aria-label="Recordatorios"
+          >
+            <BellAlertIcon class="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span class="text-xs font-semibold hidden sm:inline">Recordatorio</span>
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 mt-0.5">
+          <p class="text-sm sm:text-base font-semibold text-gray-700 truncate">{{ nombreNatilleraPascalCase }}</p>
+          <span
+            :class="[
+              'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold',
+              natillera.estado === 'activa'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-amber-100 text-amber-700'
+            ]"
+          >
+            <span
+              :class="['w-1.5 h-1.5 rounded-full', natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500']"
+            ></span>
+            {{ natillera.estado === 'activa' ? 'Activa' : 'Cerrada' }}
+          </span>
+        </div>
+      </header>
+
+      <!-- ─── Indicadores (paleta: #2D2D2D · #E91E63 · #F58231 · #90D15B · #2EBA74) ─── -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <!-- Socios -->
+        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2D2D2D]/10 text-[#2D2D2D]">
+            <UsersIcon class="h-6 w-6" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Socios</p>
+            <p class="text-base sm:text-lg font-bold text-[#2D2D2D] tabular-nums leading-tight mt-0">{{ estadisticas.totalSocios }}</p>
+          </div>
+        </div>
+        <!-- Recaudado -->
+        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2EBA74]/18 text-[#1f9a5c]">
+            <BanknotesIcon class="h-6 w-6" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Recaudado</p>
+            <p class="text-base sm:text-lg font-bold text-[#188a52] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(fondoTotalIndicador) }}</p>
+          </div>
+        </div>
+        <!-- Pendiente -->
+        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F58231]/16 text-[#F58231]">
+            <ClipboardDocumentListIcon class="h-6 w-6" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Pendiente</p>
+            <p class="text-base sm:text-lg font-bold text-[#d46a28] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(estadisticas.totalPendiente) }}</p>
+          </div>
+        </div>
+        <!-- Utilidad -->
+        <div
+          @click="abrirModalDesgloseUtilidades"
+          class="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 transition-colors hover:bg-[#90D15B]/14 sm:px-3 sm:py-2 shadow-sm"
+        >
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#90D15B]/35 text-[#3d6b28]">
+            <SparklesIcon class="h-6 w-6" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs font-medium text-gray-500 leading-tight">Utilidad</p>
+            <p class="text-base sm:text-lg font-bold text-[#C2185B] tabular-nums leading-tight mt-0 break-words">${{ formatMoney(utilidadNetoIndicador) }}</p>
+          </div>
+        </div>
       </div>
-      <!-- Tarjeta superior - encabezado unificado (diseño móvil según referencia) -->
-      <div class="bg-gray-100 rounded-2xl sm:rounded-2xl p-4 sm:p-6 sm:bg-gradient-to-br sm:from-white sm:via-emerald-50/50 sm:to-teal-100/70 border border-gray-200/80 shadow-sm mb-4 sm:mb-6">
-        <div>
-          <!-- Fila: botón volver + icono + título + estado -->
-          <div class="flex flex-wrap items-center gap-3 mb-1">
-            <BackButton inline />
-            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-teal-500 rounded-full sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div class="flex-1 min-w-0 flex items-center gap-2 sm:gap-3 flex-wrap">
-              <h1 class="text-xl sm:text-2xl font-bold text-gray-800 break-words">
-                {{ nombreNatilleraPascalCase }}
-              </h1>
-              <div class="flex items-center gap-1.5 flex-shrink-0">
-                <div 
-                  :class="[
-                    'w-2 h-2 rounded-full',
-                    natillera.estado === 'activa' ? 'bg-green-500' : 'bg-amber-500'
-                  ]"
-                ></div>
-                <span 
-                  :class="[
-                    'text-xs sm:text-sm font-bold uppercase tracking-wide',
-                    natillera.estado === 'activa' ? 'text-green-600' : 'text-amber-600'
-                  ]"
-                >
-                  {{ natillera.estado === 'activa' ? 'ACTIVA' : 'CERRADA' }}
-                </span>
-              </div>
-            </div>
-            <!-- Recordatorio personal (solo raigo.16@gmail.com): en móvil icono circular, en desktop pill con texto -->
+
+      <!-- ─── Configuración de la natillera (plegable en todos los tamaños; título corto en móvil) ─── -->
+      <div class="mt-2 sm:mt-3">
+        <div class="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-4 lg:px-4 lg:py-3">
+          <div
+            class="flex items-center justify-between gap-3 lg:!mb-2"
+            :class="datosNatilleraConfigPanelAbierto ? 'mb-5' : 'mb-0'"
+          >
             <button
-              v-if="puedeUsarRecordatorio"
               type="button"
-              @click="abrirModalRecordatorio"
-              class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-amber-700 bg-amber-100 hover:bg-amber-200 active:bg-amber-300 border border-amber-200 transition-colors touch-manipulation"
-              title="Recordatorios"
-              aria-label="Recordatorios"
+              class="-my-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pl-0 pr-1 text-left transition-colors hover:bg-gray-50 active:bg-gray-50 sm:my-0 sm:py-0 sm:pr-0"
+              :aria-expanded="datosNatilleraConfigPanelAbierto"
+              aria-controls="panel-datos-natillera"
+              @click="toggleDatosNatilleraConfigPanel"
             >
-              <BellAlertIcon class="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span class="text-xs font-semibold hidden sm:inline">Recordatorio</span>
-            </button>
-          </div>
-          <p class="text-gray-500 text-sm mb-4 mt-1 sm:mb-5">
-            {{ rangoMesesCorto }}
-            <span class="text-gray-400 mx-1">·</span>
-            {{ fechaInicioCorta }}
-          </p>
-          
-          <!-- Métricas 2x2 en móvil (tarjetas pastel individuales), 4 cols en desktop -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-5">
-            <!-- Socios - fondo blanco -->
-            <div class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-white sm:bg-transparent shadow-sm sm:shadow-none border border-gray-200/80 sm:border-0">
-              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-gray-100 flex items-center justify-center mb-1 sm:mb-2 text-gray-600">
-                <UsersIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-              </div>
-              <p class="text-gray-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Socios</p>
-              <p class="text-gray-800 text-base sm:text-xl font-bold leading-tight">{{ estadisticas.totalSocios }}</p>
-            </div>
-            
-            <!-- Recaudado - fondo verde pálido -->
-            <div
-              class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#eafaf1] sm:bg-transparent text-left shadow-sm sm:shadow-none border border-green-200/50 sm:border-0"
-            >
-              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-green-100 flex items-center justify-center mb-1 sm:mb-2 text-green-600">
-                <BanknotesIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-              </div>
-              <p class="text-green-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Recaudado</p>
-              <p class="text-green-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(Math.max(0, (estadisticas.totalRecaudadoNetoInclParciales ?? estadisticas.totalRecaudadoNeto ?? estadisticas.totalAportado) - (estadisticas.egresosRecaudado ?? 0) + (estadisticas.ingresosRecaudado ?? 0))) }}</p>
-            </div>
-            
-            <!-- Pendiente - fondo naranja pálido -->
-            <div class="flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#fff8ed] sm:bg-transparent shadow-sm sm:shadow-none border border-amber-200/60 sm:border-0">
-              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-amber-100 flex items-center justify-center mb-1 sm:mb-2 text-amber-600">
-                <ClipboardDocumentListIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-              </div>
-              <p class="text-amber-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Pendiente</p>
-              <p class="text-amber-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(estadisticas.totalPendiente) }}</p>
-            </div>
-            
-            <!-- Utilidad - fondo morado pálido (toca para ver desglose) -->
-            <div
-              @click="abrirModalDesgloseUtilidades"
-              class="utilidad-card-tap-hint flex flex-col p-2 sm:p-0 rounded-xl sm:rounded-none bg-[#fbf0ff] sm:bg-transparent text-left shadow-sm sm:shadow-none border border-violet-200/50 sm:border-0 cursor-pointer hover:bg-violet-50/80 sm:hover:bg-violet-50/50 transition-colors relative overflow-visible"
-              :class="{ 'animate-tap-hint-utilidades': !yaVioDesgloseUtilidades }"
-            >
-              <div class="w-7 h-7 sm:w-10 sm:h-10 lg:w-14 lg:h-14 rounded-lg bg-violet-100 flex items-center justify-center mb-1 sm:mb-2 text-violet-600">
-                <SparklesIcon class="w-4 h-4 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
-              </div>
-              <p class="text-violet-600 text-[10px] sm:text-xs font-semibold uppercase tracking-wide mb-0">Utilidad</p>
-              <p class="text-violet-600 text-base sm:text-xl font-bold break-words leading-tight">${{ formatMoney(Math.max(0, (estadisticas.utilidadesRecogidas || 0) - (estadisticas.egresosUtilidades ?? 0) + (estadisticas.ingresosUtilidades ?? 0))) }}</p>
-              <!-- Hint móvil: indicar que se puede tocar para ver desglose -->
-              <p
-                v-if="!yaVioDesgloseUtilidades"
-                class="sm:hidden mt-1 text-[10px] font-medium text-violet-500 flex items-center gap-1 animate-tap-hint-badge"
+              <InformationCircleIcon
+                class="h-5 w-5 shrink-0 text-gray-800 lg:h-4 lg:w-4"
+                stroke-width="1.75"
+                aria-hidden="true"
+              />
+              <h3
+                id="heading-datos-natillera"
+                class="min-w-0 flex-1 text-sm font-bold text-gray-900 max-sm:normal-case max-sm:tracking-tight sm:uppercase sm:tracking-wide"
               >
-                <ChevronDownIcon class="w-3 h-3" />
-                Toca para ver desglose
+                <span class="max-sm:inline sm:hidden">Conf. de la natillera</span>
+                <span class="hidden sm:inline">Configuración de la Natillera</span>
+              </h3>
+              <ChevronDownIcon
+                class="h-5 w-5 shrink-0 text-gray-500 transition-transform duration-200"
+                :class="datosNatilleraConfigPanelAbierto ? 'rotate-180' : ''"
+                aria-hidden="true"
+              />
+            </button>
+            <router-link
+              v-if="puedeConfigurar && id"
+              :to="`/natilleras/${id}/configuracion`"
+              class="inline-flex h-11 w-11 shrink-0 items-center justify-center self-center rounded-full text-[#166534] transition hover:bg-gray-100 active:bg-gray-200 [-webkit-tap-highlight-color:transparent] touch-manipulation lg:h-10 lg:w-10"
+              aria-label="Editar configuración de la natillera"
+              title="Editar configuración"
+              @click.stop
+            >
+              <Cog6ToothIcon class="h-5 w-5 shrink-0 lg:h-6 lg:w-6" aria-hidden="true" />
+            </router-link>
+          </div>
+          <div
+            id="panel-datos-natillera"
+            role="region"
+            aria-labelledby="heading-datos-natillera"
+            class="grid grid-cols-2 gap-x-4 gap-y-5 text-sm sm:gap-x-6 sm:gap-y-4 lg:gap-x-5 lg:gap-y-2"
+            :class="{ hidden: !datosNatilleraConfigPanelAbierto }"
+          >
+            <div class="min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Periodicidad
+              </p>
+              <p class="mt-1 text-sm font-bold capitalize text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+                {{ natillera.periodicidad || '—' }}
+              </p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Días de gracia
+              </p>
+              <p class="mt-1 text-sm font-bold tabular-nums text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+                {{ natillera.reglas_multas?.dias_gracia ?? '—' }}
+              </p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Fecha inicio
+              </p>
+              <p class="mt-1 text-sm font-bold text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+                {{ formatFechaCorta(natillera.fecha_inicio) }}
+              </p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Fecha final
+              </p>
+              <p class="mt-1 text-sm font-bold text-gray-900 sm:text-base lg:mt-0.5 lg:text-sm">
+                {{ fechaFinConfiguracionTexto }}
+              </p>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Préstamos
+              </p>
+              <p
+                v-if="natilleraPrestamosDeshabilitados(natillera)"
+                class="mt-1 text-sm font-bold text-gray-700 sm:text-base lg:mt-0.5 lg:text-sm"
+              >
+                No permitidos
+              </p>
+              <p v-else class="mt-1 text-sm font-bold text-[#166534] sm:text-base lg:mt-0.5 lg:text-sm">Permitidos</p>
+            </div>
+            <div class="col-span-2 min-w-0 sm:col-span-2">
+              <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
+                Sanciones
+              </p>
+              <template
+                v-if="natillera.reglas_multas?.sanciones?.activa || natillera.reglas_multas?.activa"
+              >
+                <p class="mt-1 text-base font-bold text-[#166534] sm:text-lg lg:mt-0.5 lg:text-sm">
+                  Activas
+                </p>
+                <p class="mt-2 text-sm font-normal leading-snug text-gray-900 lg:mt-1 lg:text-xs lg:leading-tight">
+                  Tipo:
+                  <span class="font-semibold">{{ etiquetaTipoSancionesNatillera }}</span>
+                </p>
+                <p class="mt-1 text-sm font-normal leading-snug text-gray-900 lg:mt-0.5 lg:text-xs lg:leading-tight">
+                  Sanciones adicionales:
+                  <span
+                    :class="
+                      sancionesAdicionalesNatilleraResumen.activas
+                        ? 'font-semibold text-amber-800'
+                        : 'font-semibold text-gray-800'
+                    "
+                  >
+                    {{ sancionesAdicionalesNatilleraResumen.activas ? 'Sí' : 'No'
+                    }}<template v-if="sancionesAdicionalesNatilleraResumen.activas">
+                      — {{ sancionesAdicionalesNatilleraResumen.texto }}</template>
+                  </span>
+                </p>
+              </template>
+              <p v-else class="mt-1 text-sm font-bold text-gray-700 sm:text-base lg:mt-0.5 lg:text-sm">
+                Desactivadas
               </p>
             </div>
           </div>
         </div>
       </div>
-      <!-- BANNER DE ALERTA DE MORA - Click para abrir modal -->
-      <div 
-        ref="bannerSociosEnMoraRef"
-        v-if="sociosEnMora.length > 0"
-        @click="modalSociosEnMora = true"
-        class="relative rounded-2xl p-4 sm:p-5 border-2 shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 group animate-fade-in-alerta"
-        :class="[
-          sociosEnMora.length >= 3 
-            ? 'bg-gradient-to-br from-red-50 via-red-100/80 to-rose-100 border-red-400 shadow-red-500/30 hover:border-red-500 hover:-translate-y-0.5' 
-            : 'bg-gradient-to-br from-amber-50 via-orange-50/80 to-yellow-50 border-amber-400 shadow-amber-500/30 hover:border-amber-500 hover:-translate-y-0.5'
-        ]"
+
+      <!-- ─── Invitaciones colaborador (notificación compacta) ─── -->
+      <div
+        v-if="misInvitacionesPendientesDetalle.length > 0"
+        class="mt-3 space-y-2"
+        role="status"
+        aria-live="polite"
       >
-        <!-- Efecto de barrido automático -->
-        <div 
-          :class="[
-            'absolute inset-0 rounded-2xl animate-sweep-hover pointer-events-none',
-            sociosEnMora.length >= 3 
-              ? 'bg-gradient-to-r from-transparent via-red-300/70 to-transparent' 
-              : 'bg-gradient-to-r from-transparent via-amber-300/70 to-transparent'
-          ]"
-        ></div>
-        
-        <div class="relative z-10 flex items-center justify-between gap-4">
-          <div class="flex items-center gap-3 sm:gap-4 flex-1">
-            <div :class="['w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-lg animate-bounce-slow', sociosEnMora.length >= 3 ? 'bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/50' : 'bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/50']">
-              <ExclamationTriangleIcon :class="['w-6 h-6 sm:w-7 sm:h-7 text-white']" />
+        <div
+          v-for="inv in misInvitacionesPendientesDetalle"
+          :key="inv.id"
+          class="invitacion-notify-card group relative overflow-hidden rounded-xl border border-emerald-400/45 bg-gradient-to-br from-emerald-50/95 via-white to-teal-50/90 pl-[3px] shadow-md shadow-emerald-700/10 ring-1 ring-emerald-500/25 animate-fade-in-invite"
+        >
+          <div
+            class="pointer-events-none absolute inset-y-0 left-0 w-[3px] rounded-l-[10px] bg-gradient-to-b from-emerald-400 via-emerald-600 to-teal-600 shadow-[0_0_12px_rgba(16,185,129,0.55)]"
+            aria-hidden="true"
+          />
+          <div
+            class="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-emerald-200/35 to-transparent animate-sweep-invite"
+            aria-hidden="true"
+          />
+          <div class="relative flex flex-wrap items-stretch gap-2 px-2 py-1.5 pl-3 sm:gap-3 sm:px-3 sm:py-2">
+            <div
+              class="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-900/25 ring-2 ring-white/80 sm:h-10 sm:w-10"
+              aria-hidden="true"
+            >
+              <BellAlertIcon class="h-4 w-4 sm:h-5 sm:w-5 animate-bounce-slow-invite" />
+              <span
+                class="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold leading-none text-white shadow-md ring-2 ring-white"
+                aria-hidden="true"
+              >1</span>
             </div>
-            <div class="flex-1 min-w-0">
-              <h2 :class="['text-lg sm:text-xl font-display font-bold mb-0.5', sociosEnMora.length >= 3 ? 'text-red-800' : 'text-amber-800']">
-                Hay {{ sociosEnMora.length }} {{ sociosEnMora.length === 1 ? 'socio' : 'socios' }} en mora
-              </h2>
-              <p :class="['text-sm font-medium', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']">
-                {{ totalCuotasMora }} {{ totalCuotasMora === 1 ? 'cuota' : 'cuotas' }} en mora
-                <span v-if="totalPrestamosVencidos > 0" class="ml-1.5">
-                  • {{ totalPrestamosVencidos }} {{ totalPrestamosVencidos === 1 ? 'préstamo' : 'préstamos' }} vencido{{ totalPrestamosVencidos > 1 ? 's' : '' }}
+            <div class="min-w-0 flex-1 basis-[min(100%,10rem)] self-center">
+              <div class="mb-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                <span class="text-[10px] font-bold leading-snug text-emerald-900 sm:text-[11px]">
+                  Te invitaron a participar en una natillera
                 </span>
-                <span class="block sm:inline sm:ml-1.5 mt-0.5 sm:mt-0">
-                  • Total: ${{ formatMoneyShort(totalDeudaMora + totalDeudaPrestamosVencidos) }}
+                <span
+                  v-if="esInvitacionDeNatilleraActual(inv)"
+                  class="inline-flex items-center rounded-full bg-emerald-700 px-1.5 py-px text-[8px] font-bold uppercase tracking-wide text-white shadow-sm ring-1 ring-emerald-500/40 sm:text-[9px]"
+                >
+                  Esta natillera
                 </span>
+              </div>
+              <p class="min-w-0 truncate text-[10px] leading-snug text-slate-800 sm:text-[11px]">
+                <span class="font-semibold text-emerald-900">{{ inv.natillera_nombre || 'Natillera' }}</span>
+                <span class="text-emerald-700/90"> · {{ formatearRolColaboradorInvitacion(inv.rol) }}</span>
+                <span class="text-slate-500"> · </span>
+                <span class="text-slate-600">{{ emailInvitadorDestacado(inv) }}</span>
               </p>
             </div>
-          </div>
-          <div class="flex-shrink-0">
-            <ChevronRightIcon :class="['w-6 h-6 transition-transform duration-300 group-hover:translate-x-1', sociosEnMora.length >= 3 ? 'text-red-600' : 'text-amber-600']" />
+            <div class="flex w-full shrink-0 items-center justify-end gap-1.5 sm:ml-auto sm:w-auto sm:justify-center sm:self-center">
+              <button
+                type="button"
+                @click="aceptarInvitacionCompacta(inv)"
+                :disabled="procesandoInvitacionCompacta === inv.id"
+                class="inline-flex h-8 min-w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-b from-emerald-600 to-emerald-800 px-3 text-[10px] font-bold text-white shadow-md shadow-emerald-900/30 ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50 sm:h-7 sm:min-w-[4.25rem] sm:px-2.5"
+              >
+                <span v-if="procesandoInvitacionCompacta !== inv.id">Aceptar</span>
+                <span v-else class="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                @click="abrirModalRechazarInvitacionCompacta(inv)"
+                :disabled="procesandoInvitacionCompacta === inv.id"
+                class="inline-flex h-8 min-w-[4.5rem] items-center justify-center rounded-full border border-slate-300/90 bg-white/90 px-3 text-[10px] font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 sm:h-7 sm:min-w-[4.25rem] sm:px-2.5"
+              >
+                Rechazar
+              </button>
+            </div>
           </div>
         </div>
       </div>
-      <!-- Menú Principal -->
-      <div class="relative bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-gray-200 overflow-hidden">
-        <div class="relative z-10">
-          <!-- Título del menú -->
-          <div class="flex items-center justify-between mb-4 sm:mb-6">
-            <div>
-              <h2 class="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-gray-900 mb-1">
-                Menú Principal
-              </h2>
-              <p class="hidden sm:block text-sm sm:text-base text-gray-600">
-                Gestiona los módulos centrales de tu círculo de ahorro
-              </p>
+
+      <!-- ─── Empty state: sin alertas, sin movimientos, sin utilidades ─── -->
+      <div
+        v-if="sinActividadEnNatillera"
+        class="natillera-empty mt-6 sm:mt-8 animate-fade-in-up"
+      >
+        <div class="natillera-empty__grid">
+          <div class="natillera-empty__lead">
+            <div class="natillera-empty__illustration" aria-hidden="true">
+              <div class="natillera-empty__ring-outer">
+                <div class="natillera-empty__ring-inner">
+                  <CheckBadgeIcon class="natillera-empty__icon" />
+                </div>
+              </div>
+              <div class="natillera-empty__badge">
+                <PiggyBankIcon class="natillera-empty__badge-icon" />
+              </div>
             </div>
-            <div class="hidden sm:flex items-center gap-2 text-xs text-gray-500">
-              <Squares2X2Icon class="w-4 h-4" />
-              <span>NAVEGACIÓN</span>
-            </div>
+
+            <h3 class="natillera-empty__title">Aún no hay movimientos</h3>
+            <p class="natillera-empty__desc">
+              No hay alertas, movimientos ni utilidades registradas aún.
+              Cuando los socios empiecen a aportar, aquí verás toda la actividad.
+            </p>
           </div>
-          
-          <!-- Grid de opciones: 2 columnas en móvil, 4 en desktop -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <router-link 
-              v-if="puedeVerSocios"
-              :to="`/natilleras/${id}/socios`"
-              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-indigo-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-blue-200/60 group-hover:to-indigo-200/40 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-100/30 to-blue-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Ícono con fondo colorido -->
-              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <UsersIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                </div>
-              </div>
-              
-              <!-- Título y descripción -->
-              <div class="relative z-10 text-center sm:text-left">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-blue-700 transition-colors">
-                  Socios
-                </h3>
-                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
-                  Administración de miembros y roles del grupo.
-                </p>
-              </div>
-            </router-link>
-            
-            <router-link 
-              v-if="puedeVerCuotas"
-              :to="`/natilleras/${id}/cuotas`"
-              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100/50 to-emerald-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-green-200/60 group-hover:to-emerald-200/40 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-emerald-100/30 to-green-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Ícono con fondo colorido -->
-              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <CurrencyDollarIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                </div>
-              </div>
-              
-              <!-- Título y descripción -->
-              <div class="relative z-10 text-center sm:text-left">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-green-700 transition-colors">
-                  Cuotas
-                </h3>
-                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
-                  Registro y control de aportes periódicos.
-                </p>
-              </div>
-            </router-link>
-            
-            <router-link 
-              v-if="puedeVerPrestamos"
-              :to="`/natilleras/${id}/prestamos`"
-              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-100/50 to-orange-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-amber-200/60 group-hover:to-orange-200/40 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-orange-100/30 to-amber-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Ícono con fondo colorido -->
-              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <BanknotesIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                </div>
-              </div>
-              
-              <!-- Título y descripción -->
-              <div class="relative z-10 text-center sm:text-left">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-amber-700 transition-colors">
-                  Préstamos
-                </h3>
-                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
-                  Solicitudes, desembolsos y tabla de amortización.
-                </p>
-              </div>
-            </router-link>
-            
-            <router-link 
-              v-if="puedeVerActividades"
-              :to="`/natilleras/${id}/actividades`"
-              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <!-- Efectos decorativos de fondo -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100/50 to-indigo-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-purple-200/60 group-hover:to-indigo-200/40 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-indigo-100/30 to-purple-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              
-              <!-- Ícono con fondo colorido -->
-              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <CalendarIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                </div>
-              </div>
-              
-              <!-- Título y descripción -->
-              <div class="relative z-10 text-center sm:text-left">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-purple-700 transition-colors">
-                  Actividades
-                </h3>
-                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
-                  Eventos, rifas y fondos extraordinarios.
-                </p>
-              </div>
-            </router-link>
-            <router-link 
-              v-if="puedeVerCuotas"
-              :to="`/natilleras/${id}/cuadre-caja`"
-              class="group relative flex flex-col items-center sm:items-start p-5 sm:p-6 bg-white rounded-3xl border-2 border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden"
-            >
-              <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-teal-100/50 to-cyan-100/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:from-teal-200/60 group-hover:to-cyan-200/40 transition-all duration-300"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-cyan-100/30 to-teal-100/20 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-              <div class="relative z-10 mb-4 flex justify-center sm:justify-start">
-                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <CalculatorIcon class="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-                </div>
-              </div>
-              <div class="relative z-10 text-center sm:text-left">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-2 group-hover:text-teal-700 transition-colors">
-                  Totales generales
-                </h3>
-                <p class="hidden sm:block text-sm text-gray-600 leading-relaxed">
-                  Cuenta el dinero y contrasta con lo que debería haber.
-                </p>
-              </div>
-            </router-link>
-          </div>
+
+          <div class="natillera-empty__divider" role="presentation" />
+
+          <section
+            class="natillera-empty__hints"
+            aria-labelledby="natillera-empty-hints-heading"
+          >
+            <h4 id="natillera-empty-hints-heading" class="natillera-empty__hints-title">
+              ¿Qué puedes hacer?
+            </h4>
+            <ul class="natillera-empty__hints-list">
+              <li class="natillera-empty__hints-item">
+                <UsersIcon class="natillera-empty__hints-icon" aria-hidden="true" />
+                <span>Agrega socios desde la pestaña <strong>Socios</strong></span>
+              </li>
+              <li class="natillera-empty__hints-item">
+                <BanknotesIcon class="natillera-empty__hints-icon" aria-hidden="true" />
+                <span>Registra los pagos en la pestaña <strong>Cuotas</strong></span>
+              </li>
+              <li class="natillera-empty__hints-item">
+                <CalendarIcon class="natillera-empty__hints-icon" aria-hidden="true" />
+                <span>Revisa las actividades en la pestaña <strong>Actividades</strong></span>
+              </li>
+            </ul>
+          </section>
         </div>
       </div>
+
+      <!-- ─── Alertas recientes + Últimos movimientos (2 cols en desktop) ─── -->
+      <div
+        v-if="!sinActividadEnNatillera && (sociosEnMora.length > 0 || ultimosMovimientos.length > 0)"
+        class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6"
+      >
+        <!-- Alertas recientes -->
+        <section
+          v-if="sociosEnMora.length > 0"
+          class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+        >
+          <div class="px-5 pt-5 pb-3">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900">Alertas</h2>
+          </div>
+          <div class="px-3 pb-4 space-y-4">
+            <!-- Cuotas en mora -->
+            <div v-if="previewCuotasCount > 0">
+              <div class="flex items-center gap-2 px-2 mb-2">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-white" aria-hidden="true">
+                  <ExclamationTriangleIconSolid class="h-3 w-3" />
+                </span>
+                <span class="text-xs font-bold text-red-700 uppercase tracking-wide">Cuotas en mora</span>
+                <span class="text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none">{{ cantidadCuotasEnMoraAlertas }}</span>
+              </div>
+              <div class="space-y-0.5">
+                <div
+                  v-for="socioMora in sociosCuotasMoraLista.slice(0, previewCuotasCount)"
+                  :key="'cm-' + socioMora.id"
+                  class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-red-50/40 transition-colors"
+                >
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-500" aria-hidden="true">
+                    <ExclamationTriangleIconSolid class="h-3 w-3" />
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[13px] font-semibold text-gray-900 truncate leading-tight">{{ socioMora.nombre }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                      {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
+                      · {{ socioMora.diasMora }}d
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 pl-2 text-right tabular-nums leading-tight">
+                    <p class="text-sm font-bold text-red-600">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
+                    <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-gray-400 mt-1">
+                      cuota <span class="text-gray-500">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
+                      + multa <span class="text-amber-600">${{ formatMoney(socioMora.totalSanciones) }}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Separador si hay ambos tipos -->
+            <div v-if="previewCuotasCount > 0 && previewPrestamosCount > 0" class="border-t border-gray-100 mx-2"></div>
+
+            <!-- Préstamos en mora -->
+            <div v-if="previewPrestamosCount > 0">
+              <div class="flex items-center gap-2 px-2 mb-2">
+                <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white" aria-hidden="true">
+                  <BanknotesIconSolid class="h-3 w-3" />
+                </span>
+                <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Préstamos en mora</span>
+                <span class="text-[10px] font-bold text-white bg-violet-500 rounded-full px-1.5 py-0.5 leading-none">{{ prestamosEnMoraLista.length }}</span>
+              </div>
+              <div class="space-y-1">
+                <button
+                  v-for="p in prestamosEnMoraLista.slice(0, previewPrestamosCount)"
+                  :key="'pm-' + p.prestamoId"
+                  type="button"
+                  class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60"
+                  @click="verPrestamoEnMora(p)"
+                >
+                  <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 text-violet-500" aria-hidden="true">
+                    <BanknotesIconSolid class="h-3 w-3" />
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[13px] font-semibold text-gray-900 truncate leading-tight">{{ p.nombreSocio }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                      {{ p.cuotasVencidas }} {{ p.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
+                      · {{ p.diasMoraPrestamo }}d
+                    </p>
+                  </div>
+                  <div class="text-right flex-shrink-0 pl-2">
+                    <p class="text-[13px] font-bold text-violet-600 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Ver todos -->
+            <div v-if="hayMasAlertasRecientes" class="pt-1 text-center">
+              <button
+                type="button"
+                class="text-sm font-semibold text-[#166534] underline decoration-[#166534]/40 underline-offset-2 transition hover:text-[#145a2d] hover:decoration-[#145a2d]/50 active:opacity-90 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                @click="modalTodasLasAlertas = true"
+              >
+                Ver todos
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Últimos movimientos -->
+        <section
+          v-if="ultimosMovimientos.length > 0"
+          class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+        >
+          <div class="px-5 pt-5 pb-3">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900">Últimos movimientos</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-gray-100">
+                  <th class="px-5 pb-2.5 font-semibold text-gray-600 text-xs">Socio</th>
+                  <th class="px-3 pb-2.5 font-semibold text-gray-600 text-xs hidden sm:table-cell">Detalle</th>
+                  <th class="px-3 pb-2.5 font-semibold text-gray-600 text-xs text-right">Monto</th>
+                  <th class="pl-2 pr-3 sm:px-5 pb-2.5 font-semibold text-gray-600 text-xs text-right">Tipo</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-50">
+                <tr
+                  v-for="mov in ultimosMovimientos"
+                  :key="mov.id"
+                  class="hover:bg-gray-50/60 transition-colors"
+                >
+                  <td class="px-5 py-3 min-w-0 max-w-[11rem] sm:max-w-[10rem]">
+                    <p class="font-medium text-gray-800 truncate">{{ mov.nombre }}</p>
+                    <p class="sm:hidden text-xs text-gray-500 truncate mt-0.5">{{ mov.periodo }}</p>
+                  </td>
+                  <td class="px-3 py-3 text-gray-600 hidden sm:table-cell text-sm leading-snug min-w-0 max-w-[14rem]">{{ mov.periodo }}</td>
+                  <td
+                    class="px-3 py-3 font-semibold tabular-nums text-right whitespace-nowrap"
+                    :class="Number(mov.monto) < 0 ? 'text-rose-700' : 'text-gray-800'"
+                  >${{ formatMoney(mov.monto) }}</td>
+                  <td class="pl-2 pr-3 sm:px-5 py-3 text-right align-middle min-w-0">
+                    <span
+                      :class="clasesBadgeUltimoMov(mov.estado)"
+                      :title="tooltipTextoUltimoMovimiento(mov)"
+                    >{{ mov.estadoEtiqueta }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ─── Utilidades por categoría (gráfico) ─── -->
+      <section
+        v-if="utilidadesCategoriaGrafico.segments.length > 0"
+        class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-2">
+          <div class="min-w-0">
+            <h2 class="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+              <ChartPieIcon class="h-5 w-5 shrink-0 text-[#73AA73]" aria-hidden="true" />
+              Utilidades por categoría
+            </h2>
+          </div>
+          <button
+            type="button"
+            @click="abrirModalDesgloseUtilidades"
+            class="shrink-0 text-xs sm:text-sm font-semibold text-natillera-500 hover:text-natillera-600 active:text-natillera-700 underline underline-offset-2 decoration-natillera-400 hover:decoration-natillera-500"
+          >
+            Ver desglose completo
+          </button>
+        </div>
+        <div class="px-5 pb-5 sm:pb-6 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10">
+          <div
+            class="flex justify-center lg:justify-start shrink-0"
+            role="img"
+            :aria-label="'Utilidades recogidas por categoría, total ' + formatMoney(utilidadesCategoriaGrafico.total)"
+          >
+            <div
+              class="relative h-[11rem] w-[11rem] sm:h-[12.5rem] sm:w-[12.5rem] rounded-full shadow-[inset_0_2px_8px_rgba(0,0,0,0.06)]"
+              :style="{ background: utilidadesCategoriaGrafico.conicGradient }"
+            >
+              <div
+                class="absolute inset-[26%] rounded-full bg-white flex flex-col items-center justify-center px-2 text-center shadow-sm border border-[#73AA73]/28"
+              >
+                <span class="text-[10px] font-bold uppercase tracking-wide text-gray-400 leading-tight">Recogidas</span>
+                <span class="text-lg sm:text-xl font-bold text-[#2EBA74] tabular-nums leading-tight mt-0.5">
+                  ${{ formatMoney(utilidadesCategoriaGrafico.total) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <ul class="flex-1 min-w-0 space-y-3 sm:space-y-3.5 list-none m-0 p-0" role="list">
+            <li
+              v-for="seg in utilidadesCategoriaGrafico.segments"
+              :key="seg.id"
+              class="min-w-0"
+            >
+              <div class="flex items-center gap-2 mb-1">
+                <span
+                  class="h-2.5 w-2.5 rounded-full shrink-0 ring-1 ring-black/5"
+                  :style="{ backgroundColor: seg.color }"
+                  aria-hidden="true"
+                />
+                <span class="text-sm font-semibold text-gray-800 truncate flex-1">{{ seg.label }}</span>
+                <span class="text-sm font-bold text-gray-900 tabular-nums shrink-0">${{ formatMoney(seg.value) }}</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  class="h-full rounded-full min-w-px transition-[width] duration-500 ease-out"
+                  :style="{ width: seg.pct + '%', backgroundColor: seg.color }"
+                />
+              </div>
+              <p class="text-[11px] text-gray-500 mt-0.5 tabular-nums">{{ seg.pct.toFixed(1) }}% del total recogido</p>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Puente visual: recogidas − egresos + ingresos = neto (no forma parte del donut; el donut sigue siendo 100% recogidas) -->
+        <div class="px-5 pb-5 sm:pb-6">
+          <div
+            v-if="ajustesUtilidadesGrafico.tieneAjustes"
+            class="rounded-xl border border-gray-200/90 bg-gradient-to-b from-natillera-50/50 to-white px-4 py-3.5 shadow-sm"
+          >
+            <p class="text-[11px] font-bold uppercase tracking-wide text-gray-500 mb-3">
+              De lo recogido al neto en utilidades
+            </p>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-gray-600">Recogidas</span>
+                <span class="font-bold tabular-nums text-gray-900">${{ formatMoney(ajustesUtilidadesGrafico.recogidas) }}</span>
+              </div>
+              <div
+                v-if="ajustesUtilidadesGrafico.egresos > 0"
+                class="flex items-center justify-between gap-3"
+              >
+                <span class="text-red-700">Egresos de utilidades</span>
+                <span class="font-bold tabular-nums text-red-600">− ${{ formatMoney(ajustesUtilidadesGrafico.egresos) }}</span>
+              </div>
+              <div
+                v-if="ajustesUtilidadesGrafico.ingresos > 0"
+                class="flex items-center justify-between gap-3"
+              >
+                <span class="text-natillera-800">Ingresos a utilidades</span>
+                <span class="font-bold tabular-nums text-natillera-600">+ ${{ formatMoney(ajustesUtilidadesGrafico.ingresos) }}</span>
+              </div>
+              <div
+                class="flex items-center justify-between gap-3 border-t border-gray-200 pt-2.5 mt-2"
+              >
+                <span class="font-semibold text-natillera-900">Neto</span>
+                <span class="text-base font-bold tabular-nums text-natillera-700">${{ formatMoney(ajustesUtilidadesGrafico.neto) }}</span>
+              </div>
+            </div>
+          </div>
+          <p
+            v-else
+            class="rounded-lg border border-dashed border-gray-200 bg-gray-50/80 px-3 py-2.5 text-center text-xs text-gray-600"
+          >
+            No hay egresos ni ingresos en el rubro utilidades: el <span class="font-semibold text-gray-800">neto</span> coincide con lo
+            <span class="font-semibold text-gray-800">recogido</span>.
+          </p>
+        </div>
+      </section>
+
     </template>
     <div v-else-if="!cargandoNatillera" class="card text-center py-12">
       <p class="text-gray-500">No se encontró la natillera</p>
@@ -672,92 +964,136 @@
           </button>
         </div>
     </ModalWrapper>
-    <!-- Modal Buscar Comprobante: en iOS ModalWrapper; en Android estructura actual -->
+    <!-- Modal Buscar comprobante (patrón natillerapp-modals: velo 70 %, cabecera #1B5E37, cuerpo scroll, acciones al final) -->
     <ModalWrapper
       :show="!!modalBuscarComprobante"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      card-max-width="28rem"
       @close="cerrarModalBuscarComprobante"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <MagnifyingGlassIcon class="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 class="text-2xl font-display font-bold">
-                  Buscar Comprobante
-                </h3>
-                <p class="text-white/90 text-sm">
-                  Ingresa el código del comprobante
-                </p>
-              </div>
+      <!-- Móvil: fila — icono | títulos | X (sin absolute, iOS-safe) -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <MagnifyingGlassIcon class="h-5 w-5 text-[#1B5E37]" />
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display text-base font-bold leading-tight text-white">
+              Buscar comprobante
+            </h3>
+            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
+              Ingresa el código del comprobante
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+            aria-label="Cerrar"
+            @click="cerrarModalBuscarComprobante"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+      <!-- Desktop: icono arriba, textos centrados; X a la derecha -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div class="w-11 flex-shrink-0" aria-hidden="true" />
+          <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+            <div class="flex h-[3.2rem] w-[3.2rem] flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <MagnifyingGlassIcon class="h-6 w-6 text-[#1B5E37]" />
             </div>
-            <button 
-              @click="cerrarModalBuscarComprobante"
-              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+            <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
+              Buscar comprobante
+            </h3>
+            <p class="mt-1 px-1 text-xs leading-snug text-white/90">
+              Ingresa el código del comprobante
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+            aria-label="Cerrar"
+            @click="cerrarModalBuscarComprobante"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Cuerpo scrolleable: formulario, resultados y CTA al final (skill modales) -->
+      <div
+        class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-white px-6 pb-0 pt-5 [-webkit-overflow-scrolling:touch] space-y-5"
+      >
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-gray-800">Código del comprobante</label>
+          <div
+            class="flex items-center gap-0 rounded-xl border-2 border-gray-200 bg-white focus-within:border-[#1B5E37] focus-within:ring-2 focus-within:ring-[#1B5E37]/40"
+          >
+            <span class="pointer-events-none flex shrink-0 items-center pl-3 text-gray-400">
+              <MagnifyingGlassIcon class="h-5 w-5" />
+            </span>
+            <input
+              ref="inputBusquedaRef"
+              v-model="codigoBusqueda"
+              type="text"
+              placeholder="Ej: ABC12345"
+              class="min-w-0 flex-1 border-0 bg-transparent px-3 py-3 font-mono text-sm uppercase outline-none focus:ring-0"
+              maxlength="20"
+              :disabled="buscandoComprobante"
+              @keydown.enter.prevent="buscarComprobante"
+            />
+            <button
+              type="button"
+              class="m-1.5 shrink-0 rounded-lg bg-[#1B5E37] p-2.5 text-white shadow-sm transition-all hover:bg-[#155a32] disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+              :disabled="!codigoBusqueda.trim() || buscandoComprobante"
+              @click="buscarComprobante"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <MagnifyingGlassIcon v-if="!buscandoComprobante" class="h-5 w-5" />
+              <svg
+                v-else
+                class="h-5 w-5 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
             </button>
           </div>
         </div>
-        <!-- Contenido -->
-        <div class="overflow-y-auto flex-1 p-6 space-y-6">
-          <!-- Campo de búsqueda -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Código del Comprobante</label>
-            <div class="flex items-center gap-0 border border-gray-300 rounded-xl overflow-hidden bg-white focus-within:ring-2 focus-within:ring-natillera-500 focus-within:border-natillera-500">
-              <span class="pl-3 flex items-center shrink-0 pointer-events-none text-gray-400">
-                <MagnifyingGlassIcon class="w-5 h-5" />
-              </span>
-              <input 
-                ref="inputBusquedaRef"
-                v-model="codigoBusqueda"
-                type="text"
-                placeholder="Ej: ABC12345"
-                class="flex-1 min-w-0 py-3 px-3 border-0 focus:ring-0 focus:outline-none uppercase font-mono text-sm bg-transparent"
-                @keydown.enter.prevent="buscarComprobante"
-                maxlength="20"
-                :disabled="buscandoComprobante"
-              />
-              <button
-                @click="buscarComprobante"
-                :disabled="!codigoBusqueda.trim() || buscandoComprobante"
-                class="shrink-0 m-1.5 p-2.5 bg-natillera-600 text-white rounded-lg hover:bg-natillera-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
-              >
-                <MagnifyingGlassIcon v-if="!buscandoComprobante" class="w-5 h-5" />
-                <svg v-else class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <!-- Resultado de la búsqueda -->
-          <div v-if="comprobanteEncontrado" class="space-y-4">
+
+        <!-- Resultado de la búsqueda -->
+        <div v-if="comprobanteEncontrado" class="space-y-4">
             <!-- Alerta si es un comprobante antiguo -->
-            <div v-if="infoComprobanteAntiguo" class="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-5 shadow-sm">
-              <div class="flex items-start gap-3 mb-4">
-                <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ExclamationCircleIcon class="w-6 h-6 text-white" />
+            <div
+              v-if="infoComprobanteAntiguo"
+              class="rounded-xl border-2 border-amber-200 bg-amber-50/90 p-4 shadow-sm"
+            >
+              <div class="mb-4 flex items-start gap-3">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500">
+                  <ExclamationCircleIcon class="h-6 w-6 text-white" />
                 </div>
                 <div class="flex-1">
-                  <h4 class="font-bold text-amber-900 mb-1">⚠️ Comprobante Actualizado</h4>
-                  <p class="text-sm text-amber-700">
+                  <h4 class="mb-1 font-display font-bold text-amber-900">Comprobante actualizado</h4>
+                  <p class="text-sm text-amber-800/90">
                     Este código corresponde a un comprobante antiguo que fue actualizado.
                   </p>
                 </div>
               </div>
-              
-              <div class="bg-white rounded-lg p-4 border border-amber-200 space-y-3 mb-4">
+
+              <div class="mb-4 space-y-3 rounded-lg border border-amber-200 bg-white p-4">
                 <div class="flex items-center justify-between py-2 border-b border-amber-100">
                   <span class="text-sm text-amber-700 font-medium">Código Anterior:</span>
                   <span class="font-mono font-bold text-amber-900 text-lg">{{ infoComprobanteAntiguo.codigoAnterior }}</span>
@@ -771,44 +1107,56 @@
                 </div>
               </div>
               
-              <!-- Botón para buscar el nuevo código -->
               <button
+                type="button"
+                class="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-full bg-[#1B5E37] px-4 py-3 font-semibold text-white shadow-sm transition-colors hover:bg-[#155a32] active:bg-[#134d2b] touch-manipulation [-webkit-tap-highlight-color:transparent]"
                 @click="buscarPorCodigoNuevo"
-                class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <MagnifyingGlassIcon class="w-5 h-5" />
-                Consultar Comprobante Actual
+                <MagnifyingGlassIcon class="h-5 w-5 shrink-0" />
+                Consultar comprobante actual
               </button>
             </div>
             
             <!-- Card de información del comprobante -->
-            <div :class="[
-              'border-2 rounded-xl p-5 shadow-sm',
-              comprobanteEncontrado.tipo === 'abono_prestamo' 
-                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200' 
-                : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-            ]">
-              <div class="flex items-center gap-2 mb-4">
-                <div :class="[
-                  'w-10 h-10 rounded-lg flex items-center justify-center',
-                  comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-500' : 'bg-green-500'
-                ]">
-                  <CheckCircleIcon class="w-6 h-6 text-white" />
+            <div
+              :class="[
+                'rounded-xl border-2 p-4 shadow-sm sm:p-5',
+                comprobanteEncontrado.tipo === 'abono_prestamo'
+                  ? 'border-amber-200 bg-amber-50/80'
+                  : 'border-emerald-200 bg-[#E8F5E9]/80',
+              ]"
+            >
+              <div class="mb-4 flex items-center gap-2">
+                <div
+                  :class="[
+                    'flex h-10 w-10 items-center justify-center rounded-lg',
+                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'bg-amber-500' : 'bg-[#1B5E37]',
+                  ]"
+                >
+                  <CheckCircleIcon class="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h4 :class="[
-                    'font-bold text-lg',
-                    comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-800' : 'text-green-800'
-                  ]">
-                    Comprobante Encontrado
+                  <h4
+                    :class="[
+                      'font-display text-lg font-bold',
+                      comprobanteEncontrado.tipo === 'abono_prestamo' ? 'text-amber-900' : 'text-[#14532d]',
+                    ]"
+                  >
+                    Comprobante encontrado
                   </h4>
-                  <p v-if="comprobanteEncontrado.tipo === 'abono_prestamo'" class="text-xs text-amber-700 font-semibold mt-0.5">
-                    Abono a Préstamo
+                  <p
+                    v-if="comprobanteEncontrado.tipo === 'abono_prestamo'"
+                    class="mt-0.5 text-xs font-semibold text-amber-800"
+                  >
+                    Abono a préstamo
                   </p>
                 </div>
               </div>
-              
-              <div class="bg-white rounded-lg p-5 space-y-4 border" :class="comprobanteEncontrado.tipo === 'abono_prestamo' ? 'border-amber-200' : 'border-green-200'">
+
+              <div
+                class="space-y-4 rounded-lg border bg-white p-4 sm:p-5"
+                :class="comprobanteEncontrado.tipo === 'abono_prestamo' ? 'border-amber-200' : 'border-emerald-200'"
+              >
                 <div class="pb-3 border-b border-gray-100">
                   <p class="text-xs text-gray-500 mb-1 uppercase tracking-wide font-semibold">Código {{ infoComprobanteAntiguo ? 'Actual' : 'del Comprobante' }}</p>
                   <p class="font-mono font-bold text-xl text-gray-800">{{ comprobanteEncontrado.codigo_comprobante }}</p>
@@ -833,7 +1181,7 @@
                       <ExclamationCircleIcon class="w-5 h-5 text-white" />
                     </div>
                     <div class="flex-1">
-                      <p class="font-bold text-red-800 mb-2">⚠️ COMPROBANTE ELIMINADO</p>
+                      <p class="mb-2 font-display font-bold text-red-800">Comprobante eliminado</p>
                       <div class="space-y-1 text-sm">
                         <p class="text-red-700">
                           <span class="font-semibold">Eliminado por:</span> {{ comprobanteEncontrado.eliminado_por }}
@@ -852,7 +1200,7 @@
                       <ExclamationTriangleIcon class="w-6 h-6 text-white" />
                     </div>
                     <div class="flex-1">
-                      <p class="font-bold text-red-800 mb-2 text-lg">⚠️ COMPROBANTE NO VÁLIDO</p>
+                      <p class="mb-2 font-display text-lg font-bold text-red-800">Comprobante no válido</p>
                       <p class="text-sm text-red-700 mb-2 font-semibold">
                         Este comprobante fue actualizado y <span class="text-red-900 font-bold">ya no es válido</span>.
                       </p>
@@ -864,10 +1212,11 @@
                           {{ comprobanteEncontrado.codigo_nuevo }}
                         </span>
                         <button
+                          type="button"
+                          class="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#1B5E37] px-4 py-2.5 font-semibold text-white shadow-sm transition-colors hover:bg-[#155a32] active:bg-[#134d2b] touch-manipulation [-webkit-tap-highlight-color:transparent]"
                           @click="codigoBusqueda = comprobanteEncontrado.codigo_nuevo; buscarComprobante()"
-                          class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-lg transition-all shadow-md hover:shadow-lg"
                         >
-                          <ArrowRightIcon class="w-4 h-4" />
+                          <ArrowRightIcon class="h-4 w-4 shrink-0" />
                           Ver comprobante válido
                         </button>
                       </div>
@@ -1112,24 +1461,25 @@
             </div>
           </div>
           <!-- Error -->
-          <div v-if="errorBusqueda" class="bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-300 rounded-xl p-5 shadow-sm">
+          <div v-if="errorBusqueda" class="rounded-xl border-2 border-red-200 bg-red-50/90 p-4 shadow-sm">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                <ExclamationCircleIcon class="w-6 h-6 text-white" />
+              <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-500">
+                <ExclamationCircleIcon class="h-6 w-6 text-white" />
               </div>
-              <p class="text-red-800 font-semibold">{{ errorBusqueda }}</p>
+              <p class="font-semibold text-red-800">{{ errorBusqueda }}</p>
             </div>
           </div>
-        </div>
-        <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <button 
+
+        <div class="border-t border-gray-200 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            class="min-h-[48px] w-full rounded-full border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-800 transition-colors hover:bg-gray-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
             @click="cerrarModalBuscarComprobante"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
           >
             Cerrar
           </button>
         </div>
+      </div>
     </ModalWrapper>
     <!-- Modal Cuotas del Socio por Mes: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
@@ -2325,62 +2675,101 @@
           </div>
         </div>
       </ModalWrapper>
-    <!-- Modal Desglose de Utilidades -->
+    <!-- Modal Desglose de Utilidades (patrón natillerapp-modals: velo salvia, cabecera #1B5E37, scroll único) -->
     <ModalWrapper
       :show="!!modalDesgloseUtilidades"
       :z-index="50"
       align="bottom"
+      :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-lg max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="32rem"
       @close="cerrarModalDesglose"
     >
-      <div class="bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-700 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        <div class="relative z-10 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm border border-white/30">
-              <SparklesIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-base sm:text-xl font-display font-bold">Desglose de utilidades</h3>
-              <p class="text-white/90 text-xs sm:text-sm mt-0.5">Por tipo de actividad</p>
-            </div>
+      <!-- Móvil: fila icono + títulos + X (flex, sin absolute) -->
+      <div class="sm:hidden flex-shrink-0 bg-[#1B5E37]">
+        <div
+          class="flex items-center gap-3 pl-4 pr-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[4.2rem]"
+        >
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <SparklesIcon class="h-5 w-5 text-[#1B5E37]" />
+          </div>
+          <div class="min-w-0 flex-1 py-0.5 pr-1 text-left">
+            <h3 class="font-display text-base font-bold leading-tight text-white">
+              Desglose de utilidades
+            </h3>
+            <p class="mt-0.5 text-[0.6875rem] font-normal leading-snug text-white/85">
+              Por tipo de actividad
+            </p>
           </div>
           <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/95 transition-colors hover:bg-white/15 active:bg-white/25 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
             @click="cerrarModalDesglose"
-            class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 flex items-center justify-center transition-all"
           >
-            <XMarkIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
       </div>
-      <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <!-- sm+: cabecera centrada + X a la derecha -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37]">
+        <div
+          class="flex items-start pt-[max(0.5rem,env(safe-area-inset-top))] pl-4 pr-3 pb-5"
+        >
+          <div class="w-11 shrink-0" aria-hidden="true" />
+          <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <div
+              class="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm"
+            >
+              <SparklesIcon class="h-6 w-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="font-display text-lg font-bold leading-tight text-white">
+              Desglose de utilidades
+            </h3>
+            <p class="mt-1 text-xs font-normal text-white/85">
+              Por tipo de actividad
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/95 transition-colors hover:bg-white/15 active:bg-white/25 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarModalDesglose"
+          >
+            <XMarkIcon class="h-[1.375rem] w-[1.375rem]" />
+          </button>
+        </div>
+      </div>
+      <div
+        class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-6 sm:pt-5"
+      >
         <!-- Vista detalle Rifas (al hacer clic en Rifas) -->
         <div v-if="detalleRifasAbierto" class="space-y-4">
           <button
             type="button"
             @click="cerrarDetalleRifas"
-            class="flex items-center gap-2 text-violet-600 hover:text-violet-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rifas liquidadas</h4>
           <div v-if="detalleRifas.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-violet-400 animate-spin" />
+            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
           <div v-else-if="!detalleRifas.porMes || detalleRifas.porMes.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay rifas liquidadas.
           </div>
           <div v-else class="space-y-6">
             <!-- Totales acumulados (todas las rifas) -->
-            <div class="rounded-xl border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm">
-              <p class="text-xs font-bold uppercase tracking-wider text-violet-700 mb-3">Totales acumulados</p>
+            <div class="rounded-xl border-2 border-natillera-200 bg-gradient-to-br from-natillera-50 to-white p-4 shadow-sm">
+              <p class="text-xs font-bold uppercase tracking-wider text-natillera-700 mb-3">Totales acumulados</p>
               <div class="grid grid-cols-3 gap-3 text-center text-xs">
                 <div>
                   <p class="text-gray-500">Recaudado</p>
-                  <p class="font-bold text-violet-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalRecogido) }}</p>
+                  <p class="font-bold text-natillera-600 text-sm">${{ formatMoney(totalesAcumuladosRifas.totalRecogido) }}</p>
                 </div>
                 <div>
                   <p class="text-gray-500">Premio</p>
@@ -2406,7 +2795,7 @@
                   <div class="grid grid-cols-3 gap-2 text-center text-xs mt-2.5 py-2 px-2 rounded-lg bg-white/80 border border-gray-100">
                     <div>
                       <p class="text-gray-500">Recaudado</p>
-                      <p class="font-semibold text-violet-600">${{ formatMoney(rifa.totalRecogido) }}</p>
+                      <p class="font-semibold text-natillera-600">${{ formatMoney(rifa.totalRecogido) }}</p>
                     </div>
                     <div>
                       <p class="text-gray-500"><span class="sm:hidden">Premio</span><span class="hidden sm:inline">Premio entregado</span></p>
@@ -2422,13 +2811,13 @@
                       type="button"
                       @click="toggleRifaDesplegable(rifa.id)"
                       class="flex items-center justify-between gap-2 w-full text-left py-2 px-2.5 -mx-0.5 rounded-lg border border-transparent transition-all duration-200"
-                      :class="rifasDesplegados[rifa.id] ? 'bg-violet-100/80 border-violet-200/60 text-violet-800' : 'hover:bg-violet-50/80 border-violet-100 text-gray-600 hover:text-violet-700 hover:border-violet-200/40'"
+                      :class="rifasDesplegados[rifa.id] ? 'bg-natillera-100/80 border-natillera-200/60 text-natillera-800' : 'hover:bg-natillera-50/80 border-natillera-100 text-gray-600 hover:text-natillera-700 hover:border-natillera-200/40'"
                     >
                       <span class="flex items-center gap-2">
                         <span class="text-xs font-semibold uppercase tracking-wide">Información de pagos</span>
                         <span class="text-[11px] text-gray-500 font-normal normal-case">({{ rifa.socios.length }} {{ rifa.socios.length === 1 ? 'pago' : 'pagos' }})</span>
                       </span>
-                      <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', rifasDesplegados[rifa.id] ? 'rotate-180 text-violet-600' : 'text-gray-400']" />
+                      <ChevronDownIcon :class="['w-4 h-4 flex-shrink-0 transition-transform duration-200', rifasDesplegados[rifa.id] ? 'rotate-180 text-natillera-600' : 'text-gray-400']" />
                     </button>
                     <div v-show="rifasDesplegados[rifa.id]" class="mt-2 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
                       <table class="w-full text-xs">
@@ -2447,16 +2836,16 @@
                             :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-100'"
                           >
                             <td class="py-2 px-3 text-gray-700 truncate max-w-[140px]">{{ s.nombre }}</td>
-                            <td class="py-2 px-3 text-right tabular-nums font-medium text-violet-600">${{ formatMoney(s.valorPagado) }}</td>
+                            <td class="py-2 px-3 text-right tabular-nums font-medium text-natillera-600">${{ formatMoney(s.valorPagado) }}</td>
                             <td class="py-2 px-3 text-right text-gray-500">{{ s.fechaPago ? formatDate(s.fechaPago) : '—' }}</td>
                           </tr>
                           <tr class="border-t-2 border-gray-300 bg-gray-100/50">
                             <td colspan="3" class="py-0.5 px-0"></td>
                           </tr>
-                          <tr class="bg-violet-50/80 font-semibold text-gray-800">
-                            <td class="py-2.5 px-3 border-t border-violet-200">Total</td>
-                            <td class="py-2.5 px-3 text-right tabular-nums text-violet-600 border-t border-violet-200">${{ formatMoney((rifa.socios || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
-                            <td class="py-2.5 px-3 border-t border-violet-200"></td>
+                          <tr class="bg-natillera-50/80 font-semibold text-gray-800">
+                            <td class="py-2.5 px-3 border-t border-natillera-200">Total</td>
+                            <td class="py-2.5 px-3 text-right tabular-nums text-natillera-600 border-t border-natillera-200">${{ formatMoney((rifa.socios || []).reduce((sum, s) => sum + (parseFloat(s.valorPagado) || 0), 0)) }}</td>
+                            <td class="py-2.5 px-3 border-t border-natillera-200"></td>
                           </tr>
                         </tbody>
                       </table>
@@ -2473,14 +2862,14 @@
           <button
             type="button"
             @click="cerrarDetalleOtros"
-            class="flex items-center gap-2 text-violet-600 hover:text-violet-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Otros (por descripción de actividad)</h4>
           <div v-if="detalleOtros.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-violet-400 animate-spin" />
+            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
           <div v-else-if="!detalleOtros.porActividad || detalleOtros.porActividad.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay utilidades clasificadas como &quot;Otro&quot;.
@@ -2548,14 +2937,14 @@
           <button
             type="button"
             @click="cerrarDetalleSanciones"
-            class="flex items-center gap-2 text-violet-600 hover:text-violet-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Sanciones (multas pagadas)</h4>
           <div v-if="detalleSanciones.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-violet-400 animate-spin" />
+            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
           <div v-else-if="!detalleSanciones.lista || detalleSanciones.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay sanciones pagadas registradas.
@@ -2594,14 +2983,14 @@
           <button
             type="button"
             @click="cerrarDetallePrestamos"
-            class="flex items-center gap-2 text-violet-600 hover:text-violet-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Intereses por préstamo</h4>
           <div v-if="detallePrestamos.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-violet-400 animate-spin" />
+            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
           <div v-else-if="!detallePrestamos.lista || detallePrestamos.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay intereses de préstamos registrados.
@@ -2646,33 +3035,33 @@
           <button
             type="button"
             @click="cerrarConceptoEnDesarrollo"
-            class="flex items-center gap-2 text-violet-600 hover:text-violet-800 font-medium text-sm"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <div class="rounded-xl border-2 border-dashed border-violet-200 bg-violet-50/50 p-8 text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-violet-100 text-violet-500 mb-4">
+          <div class="rounded-xl border-2 border-dashed border-natillera-200 bg-natillera-50/50 p-8 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-natillera-100 text-natillera-500 mb-4">
               <SparklesIcon class="w-7 h-7" />
             </div>
-            <h4 class="text-lg font-semibold text-violet-800 mb-1">{{ labelConceptoEnDesarrollo(conceptoEnDesarrollo) }}</h4>
+            <h4 class="text-lg font-semibold text-natillera-800 mb-1">{{ labelConceptoEnDesarrollo(conceptoEnDesarrollo) }}</h4>
             <p class="text-gray-600 text-sm mb-3">Este desglose está en el taller.</p>
             <p class="text-gray-500 text-xs max-w-xs mx-auto">Pronto podrás ver aquí el detalle por mes, quién pagó y cuánto. Mientras tanto, el total ya lo tienes en la lista. 🛠️</p>
           </div>
         </div>
         <!-- Vista normal: total + por tipo + egresos/ingresos -->
         <template v-else>
-        <div class="rounded-xl bg-violet-50 border border-violet-200 p-4 mb-5">
+        <div class="rounded-xl bg-natillera-50 border border-natillera-200 p-4 mb-5">
           <div class="flex items-center gap-2 mb-1">
-            <p class="text-sm font-semibold text-violet-800">Total utilidades (neto)</p>
+            <p class="text-sm font-semibold text-natillera-800">Total utilidades (neto)</p>
             <span
-              class="inline-flex text-violet-500 hover:text-violet-700 cursor-help"
+              class="inline-flex text-natillera-500 hover:text-natillera-700 cursor-help"
               title="Se calcula: Utilidades recogidas (suma de todos los tipos) − Egresos de utilidades + Ingresos a utilidades."
             >
               <InformationCircleIcon class="w-4 h-4 flex-shrink-0" />
             </span>
           </div>
-          <p class="text-2xl font-bold text-violet-600 tabular-nums">
+          <p class="text-2xl font-bold text-natillera-600 tabular-nums">
             ${{ formatMoney(Math.max(0, (estadisticas.utilidadesRecogidas || 0) - (estadisticas.egresosUtilidades ?? 0) + (estadisticas.ingresosUtilidades ?? 0))) }}
           </p>
         </div>
@@ -2687,14 +3076,14 @@
               tabindex="0"
               @click="abrirConceptoPorTipo(item)"
               @keydown.enter="abrirConceptoPorTipo(item)"
-              class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-violet-50/50 hover:border-violet-200/50 transition-colors cursor-pointer"
+              class="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-natillera-50/50 hover:border-natillera-200/50 transition-colors cursor-pointer"
             >
               <div class="min-w-0">
                 <p class="font-medium text-gray-800">{{ item.label }}</p>
                 <p v-if="item.desc" class="text-xs text-gray-500 mt-0.5">{{ item.desc }}</p>
               </div>
               <div class="flex items-center gap-1.5">
-                <span class="font-bold text-violet-600 tabular-nums whitespace-nowrap">${{ formatMoney(item.value || 0) }}</span>
+                <span class="font-bold text-natillera-600 tabular-nums whitespace-nowrap">${{ formatMoney(item.value || 0) }}</span>
                 <ChevronRightIcon class="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
             </div>
@@ -2714,7 +3103,7 @@
         </div>
         <!-- Sin desglose -->
         <div v-if="!(estadisticas.utilidadesDesglose || []).length" class="text-center py-8 text-gray-500">
-          <SparklesIcon class="w-12 h-12 mx-auto mb-2 text-violet-200" />
+          <SparklesIcon class="w-12 h-12 mx-auto mb-2 text-natillera-200" />
           <p>No hay utilidades registradas aún.</p>
         </div>
         </template>
@@ -2727,106 +3116,122 @@
       :z-index="9998"
       align="bottom"
       overlay-class="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md max-h-[90vh] max-h-[85dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] max-h-[85dvh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-[#166534]/20"
       card-max-width="28rem"
       @close="cerrarRecordatorioModal"
     >
-      <div class="bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600 p-5 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-xl"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-              <BellAlertIcon class="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 class="text-lg font-bold">
-                {{ editandoRecordatorio ? 'Configurar recordatorio' : 'Recordatorios de esta natillera' }}
-              </h3>
-              <p class="text-white/90 text-sm">
-                {{ editandoRecordatorio ? 'Notas que verás al entrar a esta natillera' : 'Se muestran al entrar a esta natillera' }}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            @click="cerrarRecordatorioModal"
-            class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-          >
-            <XMarkIcon class="w-5 h-5" />
-          </button>
+      <div class="relative flex shrink-0 items-center gap-2.5 bg-[#166534] px-3 py-3 text-white sm:gap-3 sm:px-4 sm:py-3.5">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/30 text-white shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] ring-2 ring-white/55 sm:h-11 sm:w-11"
+        >
+          <CalendarDaysIcon class="h-5 w-5" stroke-width="2" />
+        </div>
+        <div class="relative z-10 flex min-w-0 flex-1 items-center">
+          <h3 class="font-body text-base font-bold leading-tight tracking-tight text-white sm:text-lg">
+            {{ editandoRecordatorio ? 'Configurar recordatorio' : 'Recordatorio programado' }}
+          </h3>
         </div>
       </div>
-      <div class="overflow-y-auto flex-1 min-h-0 p-5">
+      <!-- flex-1 + min-h-0: el scroll solo en el cuerpo; el pie queda fijo (iOS/Android) -->
+      <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
         <!-- Modo ver lista de recordatorios -->
         <template v-if="!editandoRecordatorio">
-          <div v-if="loadingRecordatorios" class="py-4 text-center text-gray-500 text-sm">Cargando recordatorios...</div>
-          <div v-else-if="listRecordatorios.length > 0" class="space-y-3">
-            <div
-              v-for="(item, idx) in listRecordatorios"
-              :key="item.id"
-              class="flex gap-2 items-start rounded-xl bg-amber-50 border border-amber-200 p-3"
-            >
-              <p class="flex-1 min-w-0 text-gray-700 whitespace-pre-wrap text-sm">{{ item.texto }}</p>
-              <div class="flex items-center gap-1 flex-shrink-0">
-                <button
-                  type="button"
-                  @click="abrirRecordatorioParaEditar(idx)"
-                  class="p-2 text-amber-600 hover:bg-amber-200 rounded-lg transition-colors"
-                  title="Editar"
-                >
-                  <PencilSquareIcon class="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  @click="eliminarRecordatorio(item.id)"
-                  class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                  title="Eliminar"
-                >
-                  <TrashIcon class="w-4 h-4" />
-                </button>
-              </div>
+          <div
+            class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
+          >
+            <div v-if="loadingRecordatorios" class="py-6 text-center text-xs font-medium text-gray-700 sm:text-sm">
+              Cargando recordatorios…
             </div>
+            <div v-else-if="listRecordatorios.length > 0" class="space-y-2">
+              <article
+                v-for="(item, idx) in listRecordatorios"
+                :key="item.id"
+                class="flex overflow-hidden rounded-lg border border-gray-200/90 bg-white shadow-sm"
+              >
+                <div class="w-1 shrink-0 bg-[#166534]" aria-hidden="true" />
+                <div class="flex min-w-0 flex-1 flex-col gap-1 p-3">
+                  <p class="text-xs font-semibold leading-relaxed text-gray-900 whitespace-pre-wrap sm:text-[13px]">
+                    {{ item.texto }}
+                  </p>
+                  <div class="flex items-center gap-1 text-[11px] font-medium text-gray-500 sm:text-xs">
+                    <CalendarDaysIcon class="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden="true" />
+                    <span>Pendiente</span>
+                  </div>
+                  <div class="mt-0.5 flex items-center justify-end gap-0 border-t border-gray-100 pt-1">
+                    <button
+                      type="button"
+                      @click="abrirRecordatorioParaEditar(idx)"
+                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 [-webkit-tap-highlight-color:transparent]"
+                      title="Editar"
+                    >
+                      <PencilSquareIcon class="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      @click="eliminarRecordatorio(item.id)"
+                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 [-webkit-tap-highlight-color:transparent]"
+                      title="Eliminar"
+                    >
+                      <TrashIcon class="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <p
+              v-else
+              class="rounded-lg border border-emerald-100/80 bg-emerald-50/50 px-2 py-4 text-center text-xs text-gray-800 sm:text-sm"
+            >
+              Aún no tienes recordatorios. Pulsa <span class="font-semibold text-[#124d26]">Agregar recordatorio</span> para crear uno.
+            </p>
           </div>
-          <p v-else class="text-gray-500 italic text-sm">Aún no tienes recordatorios. Haz clic en "Agregar recordatorio" para crear uno.</p>
-          <div class="flex flex-wrap gap-2 mt-4">
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 sm:gap-3 sm:p-4">
             <button
               type="button"
               @click="cerrarRecordatorioModal"
-              class="px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full bg-[#166534] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#145a2d] sm:gap-2 sm:px-4"
             >
-              Entendido
+              <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/15">
+                <CheckCircleIcon class="h-3.5 w-3.5 text-white" />
+              </span>
+              <span class="truncate">Entendido</span>
             </button>
             <button
               type="button"
               @click="abrirRecordatorioParaEditar(-1)"
-              class="px-4 py-2.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-xl border border-amber-200 transition-colors flex items-center gap-2"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border border-gray-200/90 bg-white px-3 py-2 text-sm font-semibold text-gray-950 shadow-sm transition hover:bg-emerald-50/80 sm:gap-2 sm:px-4"
             >
-              <PlusIcon class="w-4 h-4" />
-              Agregar recordatorio
+              <PlusIcon class="h-5 w-5 shrink-0 text-[#124d26]" />
+              <span class="text-center leading-tight">Agregar recordatorio</span>
             </button>
           </div>
         </template>
         <!-- Modo editar / nuevo recordatorio -->
         <template v-else>
-          <textarea
-            v-model="recordatorioEdicion"
-            rows="4"
-            class="w-full rounded-xl border border-gray-300 p-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400"
-            placeholder="Escribe aquí tu nota o recordatorio..."
-          />
-          <div class="flex flex-wrap gap-2 mt-4">
+          <div
+            class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
+          >
+            <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-[#124d26]">Tu nota</label>
+            <textarea
+              v-model="recordatorioEdicion"
+              rows="5"
+              class="w-full rounded-lg border border-emerald-200 bg-emerald-50/40 p-2.5 text-sm text-gray-900 placeholder-gray-500 focus:border-[#166534] focus:ring-2 focus:ring-[#166534]"
+              placeholder="Escribe aquí tu nota o recordatorio..."
+            />
+          </div>
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 sm:gap-3 sm:p-4">
             <button
               type="button"
               @click="guardarRecordatorio"
-              class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors flex items-center gap-2"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#166534] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#145a2d]"
             >
-              <CheckCircleIcon class="w-4 h-4" />
+              <CheckCircleIcon class="h-5 w-5 shrink-0" />
               Guardar
             </button>
             <button
               type="button"
               @click="cancelarEdicionRecordatorio"
-              class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+              class="inline-flex min-h-[42px] min-w-0 flex-1 items-center justify-center rounded-full border border-gray-200/90 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-emerald-50/80"
             >
               Cancelar
             </button>
@@ -2834,91 +3239,277 @@
         </template>
       </div>
     </ModalWrapper>
-    <!-- Modal Sin Socios -->
+    <!-- Modal Sin Socios (skill natillerapp-modals: ModalWrapper, velo 70 %, cabecera móvil horizontal / sm+ centrada, cuerpo scroll, pie CTA) -->
     <ModalWrapper
       :show="!!modalSinSocios"
       :z-index="50"
       align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-md max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
       @close="modalSinSocios = false"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <UsersIcon class="w-6 h-6 text-white" />
+          <!-- Móvil: icono izq. + título (más grande) + subtítulo + X -->
+          <div class="sm:hidden flex-shrink-0 bg-[#1B5E37]">
+            <div class="flex items-center gap-3 pl-4 pr-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))] min-h-[5.25rem]">
+              <div class="w-12 h-12 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <UsersIcon class="w-6 h-6 text-[#1B5E37]" />
               </div>
-              <div>
-                <h3 class="text-2xl font-display font-bold">
+              <div class="min-w-0 flex-1 text-left py-0.5 pr-2">
+                <h3 class="font-display font-bold text-white text-xl leading-tight mb-1">
                   Sin Socios
                 </h3>
-                <p class="text-white/90 text-sm">
+                <p class="text-xs text-white/85 font-normal leading-relaxed">
                   Tu natillera está lista para comenzar
                 </p>
               </div>
+              <button
+                v-if="modalSinSociosTieneScroll"
+                type="button"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                aria-label="Cerrar"
+                @click="modalSinSocios = false"
+              >
+                <XMarkIcon class="h-6 w-6" />
+              </button>
             </div>
-            <button 
-              @click="modalSinSocios = false"
-              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+          </div>
+          <!-- sm+: fila X + cabecera centrada (X solo si el cuerpo hace scroll) -->
+          <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-center">
+            <div
+              v-if="modalSinSociosTieneScroll"
+              class="flex justify-end pt-[max(0.2rem,env(safe-area-inset-top))] pr-4 sm:pr-5"
             >
-              <XMarkIcon class="w-5 h-5" />
+              <button
+                type="button"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                aria-label="Cerrar"
+                @click="modalSinSocios = false"
+              >
+                <XMarkIcon class="h-[1.375rem] w-[1.375rem]" />
+              </button>
+            </div>
+            <div
+              class="px-6 pb-7 sm:pt-1"
+              :class="modalSinSociosTieneScroll ? 'pt-0' : 'pt-[max(0.5rem,env(safe-area-inset-top))]'"
+            >
+              <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                <UsersIcon class="w-8 h-8 text-[#1B5E37]" />
+              </div>
+              <h3 class="font-display font-bold text-white text-xl sm:text-2xl mb-1.5">
+                Sin Socios
+              </h3>
+              <p class="text-sm sm:text-base text-white/85 font-normal leading-snug max-w-sm mx-auto">
+                Tu natillera está lista para comenzar
+              </p>
+            </div>
+          </div>
+          <!-- Cuerpo (min-h-0 flex-1: scroll iOS con flex) -->
+          <div
+            ref="scrollAreaModalSinSocios"
+            class="min-h-0 overflow-y-auto flex-1 px-6 pt-6 pb-2 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          >
+            <div>
+              <h4 class="text-lg font-display font-bold text-gray-900 mb-2">
+                ¡Comienza tu natillera agregando socios!
+              </h4>
+              <p class="text-gray-600 text-sm leading-relaxed">
+                Para que tu natillera pueda empezar a funcionar, necesitas agregar al menos un socio. Los socios son los participantes que realizarán los aportes mensuales o quincenales.
+              </p>
+            </div>
+            <div class="rounded-xl bg-[#E8F5E9] px-4 py-3.5 flex gap-3 items-start">
+              <InformationCircleIcon class="w-5 h-5 text-[#1B5E37] flex-shrink-0 mt-0.5" />
+              <div class="text-left text-sm text-gray-800 leading-relaxed">
+                <span class="font-semibold text-[#1B5E37]">¿Qué sigue después?</span>
+                <span class="text-gray-700">
+                  Una vez agregues socios, podrás gestionar cuotas, préstamos, actividades y mucho más para tu natillera.
+                </span>
+              </div>
+            </div>
+          </div>
+          <!-- Pie: safe-area para home indicator en iPhone -->
+          <div class="flex-shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 bg-white">
+            <button
+              type="button"
+              @click="modalSinSocios = false; if (id && id !== 'undefined' && id !== 'null') { markPendingPrimerSocioNavTourFromModal(id); router.push(`/natilleras/${id}/socios?agregar=true`) } else { router.push('/dashboard') }"
+              class="w-full min-h-[48px] px-5 py-3.5 rounded-full bg-[#1B5E37] hover:bg-[#154a2d] active:bg-[#124228] text-white font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            >
+              <PlusIcon class="w-5 h-5 shrink-0" />
+              <span>Crear Primer Socio</span>
+            </button>
+            <button
+              type="button"
+              @click="modalSinSocios = false"
+              class="w-full min-h-[48px] px-5 py-3 rounded-full text-sm font-semibold text-gray-600 border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            >
+              Cerrar
             </button>
           </div>
-        </div>
-        <!-- Contenido -->
-        <div class="overflow-y-auto flex-1 p-6 space-y-6">
-          <!-- Ilustración/Icono -->
-          <div class="flex justify-center">
-            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-natillera-100 to-emerald-100 flex items-center justify-center shadow-lg">
-              <UsersIcon class="w-16 h-16 text-natillera-600" />
-            </div>
+      </ModalWrapper>
+
+    <!-- Modal: todas las alertas — patrón natillerapp-modals (cabecera #1B5E37, cuerpo scroll único, CTA al final del scroll) -->
+    <ModalWrapper
+      :show="modalTodasLasAlertas"
+      :z-index="50"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
+      card-max-width="28rem"
+      @close="modalTodasLasAlertas = false"
+    >
+      <!-- Móvil: fila — icono | títulos | X (flex, sin absolute; skill modales) -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <BellAlertIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
-          <!-- Mensaje principal -->
-          <div class="text-center space-y-3">
-            <h4 class="text-xl font-display font-bold text-gray-800">
-              ¡Comienza tu natillera agregando socios!
-            </h4>
-            <p class="text-gray-600 leading-relaxed">
-              Para que tu natillera pueda empezar a funcionar, necesitas agregar al menos un socio. Los socios son los participantes que realizarán los aportes mensuales o quincenales.
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display text-base font-bold leading-tight text-white">
+              Todas las alertas
+            </h3>
+            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
+              Cuotas de la natillera y préstamos en mora
             </p>
           </div>
-          <!-- Información adicional -->
-          <div class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-5 border-2 border-blue-200">
-            <div class="flex items-start gap-3">
-              <InformationCircleIcon class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div class="flex-1">
-                <p class="font-semibold text-gray-800 mb-1">¿Qué sigue después?</p>
-                <p class="text-sm text-gray-600">
-                  Una vez agregues socios, podrás gestionar cuotas, préstamos, actividades y mucho más para tu natillera.
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalTodasLasAlertas = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+      <!-- Desktop: tres columnas — reserva | icono+títulos centrados | X -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div class="w-11 shrink-0" aria-hidden="true" />
+          <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+            <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <BellAlertIcon class="h-6 w-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
+              Todas las alertas
+            </h3>
+            <p class="mt-1 px-1 text-xs leading-snug text-white/90">
+              Cuotas de la natillera y préstamos en mora
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalTodasLasAlertas = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref="scrollAreaModalTodasLasAlertas"
+        class="min-h-0 flex-1 space-y-6 overflow-y-auto overflow-x-hidden overscroll-contain bg-white px-6 pt-5 pb-0 [-webkit-overflow-scrolling:touch]"
+      >
+        <!-- Cuotas en mora -->
+        <div v-if="cantidadCuotasEnMoraAlertas > 0">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500 text-white" aria-hidden="true">
+              <ExclamationTriangleIconSolid class="h-3 w-3" />
+            </span>
+            <span class="text-xs font-bold text-red-700 uppercase tracking-wide">Cuotas en mora</span>
+            <span class="text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none">{{ cantidadCuotasEnMoraAlertas }}</span>
+          </div>
+          <div class="space-y-0.5">
+            <div
+              v-for="socioMora in sociosCuotasMoraLista"
+              :key="'cma-' + socioMora.id"
+              class="flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-red-50/40 transition-colors"
+            >
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-500" aria-hidden="true">
+                <ExclamationTriangleIconSolid class="h-3 w-3" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-gray-900 truncate leading-tight">{{ socioMora.nombre }}</p>
+                <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                  {{ socioMora.cuotasMora }} {{ socioMora.cuotasMora === 1 ? 'cuota' : 'cuotas' }}
+                  · {{ socioMora.diasMora }} {{ socioMora.diasMora === 1 ? 'día' : 'días' }}
+                </p>
+              </div>
+              <div class="flex-shrink-0 pl-2 text-right tabular-nums leading-tight">
+                <p class="text-sm font-bold text-red-600">${{ formatMoney(socioMora.totalDeudaCuotas + socioMora.totalSanciones) }}</p>
+                <p v-if="socioMora.totalSanciones > 0" class="text-[10px] text-gray-400 mt-1">
+                  cuota <span class="text-gray-500">${{ formatMoney(socioMora.totalDeudaCuotas) }}</span>
+                  + multa <span class="text-amber-600">${{ formatMoney(socioMora.totalSanciones) }}</span>
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <!-- Footer -->
-        <div class="p-6 border-t border-gray-200 bg-gray-50 space-y-3">
-          <button 
-            @click="modalSinSocios = false; if (id && id !== 'undefined' && id !== 'null') { router.push(`/natilleras/${id}/socios?agregar=true`) } else { router.push('/dashboard') }"
-            class="w-full px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl flex items-center justify-center gap-2"
-          >
-            <PlusIcon class="w-5 h-5" />
-            <span>Crear Primer Socio</span>
-          </button>
-          <button 
-            @click="modalSinSocios = false"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
+
+        <!-- Separador -->
+        <div v-if="cantidadCuotasEnMoraAlertas > 0 && prestamosEnMoraLista.length > 0" class="border-t border-gray-100"></div>
+
+        <!-- Préstamos en mora -->
+        <div v-if="prestamosEnMoraLista.length > 0">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500 text-white" aria-hidden="true">
+              <BanknotesIconSolid class="h-3 w-3" />
+            </span>
+            <span class="text-xs font-bold text-violet-700 uppercase tracking-wide">Préstamos en mora</span>
+            <span class="text-[10px] font-bold text-white bg-violet-500 rounded-full px-1.5 py-0.5 leading-none">{{ prestamosEnMoraLista.length }}</span>
+          </div>
+          <div class="space-y-1">
+            <button
+              v-for="p in prestamosEnMoraLista"
+              :key="'pma-' + p.prestamoId"
+              type="button"
+              class="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60"
+              @click="cerrarModalTodasLasAlertasYVerPrestamo(p)"
+            >
+              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-100 text-violet-500" aria-hidden="true">
+                <BanknotesIconSolid class="h-3 w-3" />
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-gray-900 truncate leading-tight">{{ p.nombreSocio }}</p>
+                <p class="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                  {{ p.cuotasVencidas }} {{ p.cuotasVencidas === 1 ? 'cuota' : 'cuotas' }}
+                  · {{ p.diasMoraPrestamo }} {{ p.diasMoraPrestamo === 1 ? 'día' : 'días' }}
+                </p>
+              </div>
+              <div class="text-right flex-shrink-0 pl-2">
+                <p class="text-sm font-bold text-violet-600 tabular-nums leading-tight">${{ formatMoney(p.totalDeudaPrestamo) }}</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="space-y-3 border-t border-gray-200 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        >
+          <button
+            type="button"
+            class="w-full min-h-[48px] rounded-full border-2 border-gray-200 bg-white py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 active:bg-gray-100 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            @click="modalTodasLasAlertas = false"
           >
             Cerrar
           </button>
         </div>
-      </ModalWrapper>
+      </div>
+    </ModalWrapper>
+
+      <RechazarInvitacionConfirmModal
+        :invitacion="invitacionARechazarCompacta"
+        :loading="!!invitacionARechazarCompacta && procesandoInvitacionCompacta === invitacionARechazarCompacta.id"
+        @close="cerrarModalRechazarInvitacionCompacta"
+        @confirm="confirmarRechazarInvitacionCompacta"
+      />
     </div>
     <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
     <div class="hidden">
@@ -2933,7 +3524,7 @@
     </div>
 </template>
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -2957,7 +3548,6 @@ import {
   ChevronLeftIcon,
   UserIcon,
   PhoneIcon,
-  EnvelopeIcon,
   IdentificationIcon,
   MagnifyingGlassIcon,
   Cog6ToothIcon,
@@ -2966,14 +3556,19 @@ import {
   ArrowPathIcon,
   Bars3Icon,
   SparklesIcon,
-  CalculatorIcon,
   Squares2X2Icon,
   DocumentCheckIcon,
   ClipboardDocumentListIcon,
   BellAlertIcon,
   PencilSquareIcon,
-  TrashIcon
+  TrashIcon,
+  ChartPieIcon,
+  CheckBadgeIcon,
 } from '@heroicons/vue/24/outline'
+import {
+  ExclamationTriangleIcon as ExclamationTriangleIconSolid,
+  BanknotesIcon as BanknotesIconSolid,
+} from '@heroicons/vue/24/solid'
 import { useSociosStore } from '../../stores/socios'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useCuotasStore } from '../../stores/cuotas'
@@ -2982,16 +3577,30 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import RechazarInvitacionConfirmModal from '../../components/RechazarInvitacionConfirmModal.vue'
+import { useNotificationStore } from '../../stores/notifications'
+import {
+  formatearRolColaboradorInvitacion,
+  emailInvitadorDestacado,
+} from '../../utils/invitacionesColaborador'
 import BackButton from '../../components/BackButton.vue'
+import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
 import {
   pendingNatilleraSidebarAction,
   clearPendingNatilleraSidebarAction
 } from '../../composables/useNatilleraSidebarActions'
+import { markPendingPrimerSocioNavTourFromModal } from '../../composables/usePrimerSocioSociosNavTour'
+import {
+  shouldShowNatilleraDetalleNavTour,
+  startNatilleraDetalleNavTour
+} from '../../composables/useNatilleraDetalleNavTour'
 import { formatDate, formatDateWithTime } from '../../utils/formatDate'
+import { clearLastNatilleraId } from '../../utils/lastNatillera'
+import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 const props = defineProps({
   id: String
 })
@@ -3003,6 +3612,10 @@ const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
 const colaboradoresStore = useColaboradoresStore()
+const notificationStore = useNotificationStore()
+const invitacionARechazarCompacta = ref(null)
+const procesandoInvitacionCompacta = ref(null)
+const dashboardSidebar = inject('dashboardSidebar', null)
 const modalWhatsApp = ref(false)
 const modalComprobanteEstadoSocio = ref(false)
 const comprobanteEstadoSocio = ref(null)
@@ -3015,8 +3628,22 @@ const modalBuscarComprobante = ref(false)
 const modalCuotasSocio = ref(false)
 const animacionesCuotasMora = ref(true) // Controla si se muestran las animaciones de cuotas en mora
 const modalSociosEnMora = ref(false)
+/** Panel «Configuración de la natillera»: plegable en móvil y desktop */
+const datosNatilleraConfigPanelAbierto = ref(false)
+
+function toggleDatosNatilleraConfigPanel() {
+  datosNatilleraConfigPanelAbierto.value = !datosNatilleraConfigPanelAbierto.value
+}
+
 /** Timeout que abre modales automáticos (sin socios, mora, recordatorio) tras cargar; se cancela al abrir comprobante estado socio */
 let postCargaModalesTimeoutId = null
+/** Tour menú lateral / inferior + acciones (primera visita a detalle) */
+let detalleNavTourTimeoutId = null
+let detalleNavTourIntentos = 0
+/** Evita modales automáticos (sin socios, mora, recordatorio) mientras el recorrido está activo */
+const recorridoDetalleNavActivo = ref(false)
+/** Modales post-carga en cola hasta terminar o fallar el tour */
+const modalesPostCargaRetenidosPorTour = ref(false)
 const modalDesgloseUtilidades = ref(false)
 const yaVioDesgloseUtilidades = ref(false)
 const detalleRifasAbierto = ref(false)
@@ -3062,10 +3689,21 @@ const inputBusquedaRef = ref(null)
 const seccionAlertasRef = ref(null) // Ya no se usa, pero se mantiene por compatibilidad
 const bannerSociosEnMoraRef = ref(null)
 const cuotasNatillera = ref([])
+/** Movimientos extra (préstamos, actividades, rifas, liquidaciones) cargados en segundo plano */
+const movimientosNatilleraExtra = ref([])
 const sancionesPorCuota = ref({}) // Sanciones calculadas dinámicamente
 const configSancionesActiva = ref(false)
 const prestamosVencidos = ref([]) // Préstamos con cuotas vencidas agrupadas por socio
+/** Un elemento por préstamo activo con al menos una cuota del plan vencida e impaga */
+const prestamosEnMoraLista = ref([])
 const modalSinSocios = ref(false) // Modal para cuando no hay socios
+const modalTodasLasAlertas = ref(false)
+const scrollAreaModalTodasLasAlertas = ref(null)
+const scrollAreaModalSinSocios = ref(null)
+const { tieneScroll: modalSinSociosTieneScroll } = useModalBodyScrollOverflow(
+  modalSinSocios,
+  scrollAreaModalSinSocios
+)
 // Recordatorio personal (solo usuario raigo.16@gmail.com) — persistidos en Supabase
 const RECORDATORIO_EMAIL = 'raigo.16@gmail.com'
 const RECORDATORIO_STORAGE_KEY_LEGACY = 'natillerapp_recordatorio' // migración desde localStorage
@@ -3102,9 +3740,33 @@ useBodyScrollLock(modalBuscarComprobante)
 useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalSociosEnMora)
 useBodyScrollLock(modalSinSocios)
+useBodyScrollLock(modalTodasLasAlertas)
+useBodyScrollLock(modalDesgloseUtilidades)
 useBodyScrollLock(showRecordatorioModal)
 // Obtener el ID de la natillera
 const id = computed(() => props.id || route.params.id)
+
+/** Todas las invitaciones pendientes (visibles en cualquier natillera que abra el socio) */
+const misInvitacionesPendientesDetalle = computed(() => {
+  const list = colaboradoresStore.misInvitaciones || []
+  const nid = id.value
+  const arr = [...list]
+  if (nid) {
+    arr.sort((a, b) => {
+      const aHere = String(a.natillera_id) === String(nid) ? 0 : 1
+      const bHere = String(b.natillera_id) === String(nid) ? 0 : 1
+      return aHere - bHere
+    })
+  }
+  return arr
+})
+
+function esInvitacionDeNatilleraActual(inv) {
+  const nid = id.value
+  if (!nid || !inv?.natillera_id) return false
+  return String(inv.natillera_id) === String(nid)
+}
+
 // Configuración de meses
 const meses = [
   { value: 1, label: 'Enero' },
@@ -3286,6 +3948,429 @@ const nombreNatilleraPascalCase = computed(() => {
     .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
     .join(' ')
 })
+
+const fondoTotalIndicador = computed(() => {
+  return Math.max(
+    0,
+    (estadisticas.value.totalRecaudadoNetoInclParciales
+      ?? estadisticas.value.totalRecaudadoNeto
+      ?? estadisticas.value.totalAportado)
+    - (estadisticas.value.egresosRecaudado ?? 0)
+    + (estadisticas.value.ingresosRecaudado ?? 0)
+  )
+})
+
+const utilidadNetoIndicador = computed(() => {
+  const s = estadisticas.value
+  return Math.max(
+    0,
+    (s.utilidadesRecogidas || 0)
+    - (s.egresosUtilidades ?? 0)
+    + (s.ingresosUtilidades ?? 0)
+  )
+})
+
+/**
+ * Colores del gráfico de utilidades: solo tonos vivos (sin carbón #453D45 ni teal oscuro #436E6E).
+ * Se mantienen los ya usados (#E91E63, #90D15B, #F58231, #2EBA74) y se suman #73AA73, #B9E55D, #F47B3E.
+ */
+const COLORES_UTILIDAD_TIPO = {
+  sanciones: '#E91E63',
+  prestamos: '#73AA73',
+  rifas: '#90D15B',
+  bingo: '#F58231',
+  venta: '#B9E55D',
+  evento: '#2EBA74',
+  otro: '#F47B3E',
+  actividades_en_curso: '#2EBA74',
+}
+
+const COLORES_GRAFICO_UTILIDAD_ROTACION = [
+  '#2EBA74',
+  '#73AA73',
+  '#B9E55D',
+  '#F47B3E',
+  '#90D15B',
+  '#F58231',
+  '#E91E63',
+]
+
+const utilidadesCategoriaGrafico = computed(() => {
+  const raw = estadisticas.value.utilidadesDesglose || []
+  const items = raw.filter((i) => (i.value || 0) > 0)
+  const total = items.reduce((s, i) => s + (Number(i.value) || 0), 0)
+  if (total <= 0) {
+    return { segments: [], total: 0, conicGradient: 'conic-gradient(#e5e7eb 0% 100%)' }
+  }
+  const segments = items.map((i, idx) => {
+    const value = Number(i.value) || 0
+    const pct = (value / total) * 100
+    const mapped = COLORES_UTILIDAD_TIPO[i.id]
+    const color =
+      mapped ||
+      COLORES_GRAFICO_UTILIDAD_ROTACION[idx % COLORES_GRAFICO_UTILIDAD_ROTACION.length]
+    return {
+      id: i.id,
+      label: i.label || i.id,
+      value,
+      pct,
+      color,
+    }
+  })
+  let acc = 0
+  const stops = segments.map((s) => {
+    const start = acc
+    acc += s.pct
+    return `${s.color} ${start}% ${acc}%`
+  })
+  return {
+    segments,
+    total,
+    conicGradient: `conic-gradient(from -90deg, ${stops.join(', ')})`,
+  }
+})
+
+/** Egresos/ingresos del rubro utilidades: el donut sigue siendo 100% «recogidas» por categoría; esto enlaza con el neto. */
+const ajustesUtilidadesGrafico = computed(() => {
+  const s = estadisticas.value
+  const recogidas = Math.max(0, Number(s.utilidadesRecogidas) || 0)
+  const egresos = Math.max(0, Number(s.egresosUtilidades) || 0)
+  const ingresos = Math.max(0, Number(s.ingresosUtilidades) || 0)
+  const neto = Math.max(0, recogidas - egresos + ingresos)
+  return {
+    recogidas,
+    egresos,
+    ingresos,
+    neto,
+    tieneAjustes: egresos > 0 || ingresos > 0,
+  }
+})
+
+const sinActividadEnNatillera = computed(() =>
+  sociosEnMora.value.length === 0 &&
+  ultimosMovimientos.value.length === 0 &&
+  utilidadesCategoriaGrafico.value.segments.length === 0
+)
+
+function formatFechaCorta(fecha) {
+  if (!fecha) return '—'
+  const d = new Date(fecha + 'T00:00:00')
+  if (isNaN(d)) return '—'
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+/** Fin del ciclo según BD; si no hay fecha_fin, último día del mes_fin en anio (configuración). */
+const fechaFinConfiguracionTexto = computed(() => {
+  const n = natillera.value
+  if (!n) return '—'
+  if (n.fecha_fin) return formatFechaCorta(n.fecha_fin)
+  const mes = Number(n.mes_fin ?? 12)
+  const anio = Number(n.anio ?? new Date().getFullYear())
+  if (!Number.isFinite(mes) || mes < 1 || mes > 12 || !Number.isFinite(anio)) return '—'
+  const ultimo = new Date(anio, mes, 0)
+  if (isNaN(ultimo.getTime())) return '—'
+  const y = ultimo.getFullYear()
+  const mo = String(ultimo.getMonth() + 1).padStart(2, '0')
+  const da = String(ultimo.getDate()).padStart(2, '0')
+  return formatFechaCorta(`${y}-${mo}-${da}`)
+})
+
+const etiquetaTipoSancionesNatillera = computed(() => {
+  const t = (natillera.value?.reglas_multas?.sanciones?.tipo || '').toString().toLowerCase().trim()
+  if (t === 'simple') return 'Simple (valor fijo)'
+  if (t === 'escalonada') return 'Escalonada'
+  if (t === 'diaria') return 'Diaria (por día)'
+  if (t) return t
+  return '—'
+})
+
+/** Intereses adicionales por días y/o devolución por mora (reglas_multas.sanciones). */
+const sancionesAdicionalesNatilleraResumen = computed(() => {
+  const s = natillera.value?.reglas_multas?.sanciones
+  if (!s) return { activas: false, texto: 'No' }
+  const intereses = !!s.interesesAdicionales?.activo
+  const devolucion = !!s.devolucion?.activo
+  if (!intereses && !devolucion) return { activas: false, texto: 'No' }
+  const partes = []
+  if (intereses) partes.push('intereses adicionales por días')
+  if (devolucion) partes.push('devolución por mora excesiva')
+  return { activas: true, texto: partes.join(' · ') }
+})
+
+function _isoOrdenMovimiento(s) {
+  const t = (s || '').toString().trim()
+  return t || '1970-01-01T00:00:00.000Z'
+}
+
+/** Milisegundos para ordenar movimientos solo por tiempo (más reciente primero). */
+function _tsOrdenMovimiento(isoOTexto) {
+  const raw = (isoOTexto || '').toString().trim()
+  if (!raw) return 0
+  let ms = Date.parse(raw)
+  if (!Number.isFinite(ms) && /^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    ms = Date.parse(`${raw}T12:00:00`)
+  }
+  return Number.isFinite(ms) ? ms : 0
+}
+
+function tooltipTextoUltimoMovimiento(mov) {
+  const a = (mov?.estadoEtiqueta || '').toString().trim()
+  const b = (mov?.periodo || '').toString().trim()
+  if (a && b) return `${a} — ${b}`
+  return a || b || ''
+}
+
+/** Estilos compactos y legibles para la columna «Tipo» (badges). Colores por categoría bien diferenciados. */
+function clasesBadgeUltimoMov(estado) {
+  const base =
+    'inline-flex min-w-0 max-w-[6.85rem] sm:max-w-[10.25rem] items-center justify-center rounded-md border px-2 py-1 text-[10px] sm:text-[11px] font-semibold leading-tight shadow-sm truncate whitespace-nowrap'
+  const porEstado = {
+    // Cuota pagada: verde natillera
+    pago_cuota: 'border-green-500/35 bg-green-50 text-green-950',
+    pago_cuota_parcial: 'border-blue-400/70 bg-blue-50 text-blue-950',
+    pagado: 'border-green-500/35 bg-green-50 text-green-950',
+    mora: 'border-orange-400/80 bg-orange-50 text-orange-950',
+    parcial: 'border-blue-400/70 bg-blue-50 text-blue-950',
+    // Préstamos: violeta (abono) vs índigo (otorgamiento)
+    abono_prestamo: 'border-purple-400/75 bg-purple-50 text-purple-950',
+    prestamo_nuevo: 'border-indigo-400/80 bg-indigo-100 text-indigo-950',
+    // Actividades: turquesa · Rifas: fucsia (no confundir con egreso rojo)
+    pago_actividad: 'border-teal-400/80 bg-teal-50 text-teal-950',
+    pago_rifa: 'border-fuchsia-400/75 bg-fuchsia-50 text-fuchsia-950',
+    // Liquidación: ámbar (cierre), distinto del verde de cuota
+    liquidacion: 'border-amber-400/90 bg-amber-100 text-amber-950',
+    // Caja: cian (entra) vs rojo (sale), distintos del azul parcial y del fucsia rifa
+    ingreso_fondo: 'border-cyan-400/85 bg-cyan-50 text-cyan-950',
+    egreso_fondo: 'border-red-400/90 bg-red-50 text-red-950',
+  }
+  return [base, porEstado[estado] || 'border-slate-300 bg-slate-100 text-slate-900']
+}
+
+async function cargarMovimientosRecientesNatillera(natilleraId) {
+  if (!natilleraId) {
+    movimientosNatilleraExtra.value = []
+    return
+  }
+  try {
+    // Ronda 1: obtener IDs de socios (necesario para queries de préstamos)
+    const { data: snRows, error: errSn } = await supabase
+      .from('socios_natillera')
+      .select('id')
+      .eq('natillera_id', natilleraId)
+    if (errSn) throw errSn
+    const socioNatilleraIds = (snRows || []).map(r => r.id)
+    const out = []
+
+    // Ronda 2: todas las queries independientes en paralelo
+    const [prestamosRes, liquidadasRes, saRes, movsFondoRes] = await Promise.all([
+      socioNatilleraIds.length > 0
+        ? supabase.from('prestamos')
+            .select('id, monto, created_at, socio_natillera:socios_natillera(socio:socios(nombre))')
+            .in('socio_natillera_id', socioNatilleraIds)
+            .order('created_at', { ascending: false })
+            .limit(30)
+        : Promise.resolve({ data: [], error: null }),
+      supabase.from('actividades')
+        .select('id, descripcion, tipo, estado, utilidad, ingresos, updated_at, created_at')
+        .eq('natillera_id', natilleraId)
+        .eq('estado', 'liquidada')
+        .order('updated_at', { ascending: false })
+        .limit(30),
+      supabase.from('socios_actividad')
+        .select(`
+          id, valor_pagado, updated_at, created_at,
+          actividad:actividades!inner(id, descripcion, tipo, estado, natillera_id),
+          socio_natillera:socios_natillera(socio:socios(nombre))
+        `)
+        .eq('actividad.natillera_id', natilleraId)
+        .gt('valor_pagado', 0)
+        .order('updated_at', { ascending: false })
+        .limit(45),
+      supabase.from('movimientos_fondo')
+        .select('id, tipo, monto, forma_pago, descripcion, fecha, origen_egreso, destino_ingreso, created_at, updated_at')
+        .eq('natillera_id', natilleraId)
+        .order('created_at', { ascending: false })
+        .limit(55)
+    ])
+
+    // Procesar préstamos
+    const prestList = prestamosRes.data || []
+    const prestamoIds = prestList.map(p => p.id)
+    const nombrePorPrestamo = new Map(
+      prestList.map(p => [p.id, p.socio_natillera?.socio?.nombre || 'Socio'])
+    )
+    for (const p of prestList) {
+      out.push({
+        id: `prestamo-nuevo-${p.id}`,
+        sortAt: _isoOrdenMovimiento(p.created_at),
+        nombre: nombrePorPrestamo.get(p.id) || 'Socio',
+        periodo: 'Préstamo otorgado',
+        monto: Number(p.monto) || 0,
+        estado: 'prestamo_nuevo',
+        estadoEtiqueta: 'Préstamo',
+      })
+    }
+
+    // Ronda 3: pagos de préstamo (depende de prestamoIds)
+    if (prestamoIds.length > 0) {
+      const { data: pagosPrest, error: errPp } = await supabase
+        .from('pagos_prestamo')
+        .select('id, valor, fecha, prestamo_id')
+        .in('prestamo_id', prestamoIds)
+        .order('fecha', { ascending: false })
+        .limit(45)
+      if (!errPp && pagosPrest) {
+        for (const pay of pagosPrest) {
+          out.push({
+            id: `pago-prestamo-${pay.id}`,
+            sortAt: _isoOrdenMovimiento(pay.fecha),
+            nombre: nombrePorPrestamo.get(pay.prestamo_id) || 'Socio',
+            periodo: 'Abono a préstamo',
+            monto: Number(pay.valor) || 0,
+            estado: 'abono_prestamo',
+            estadoEtiqueta: 'Abono prést.',
+          })
+        }
+      }
+    }
+
+    // Procesar actividades liquidadas
+    if (!liquidadasRes.error) {
+      for (const a of liquidadasRes.data || []) {
+        const util = Number(a.utilidad)
+        const ing = Number(a.ingresos)
+        const raw = Number.isFinite(util) && util !== 0 ? util : ing
+        const monto = Math.max(0, Number.isFinite(raw) ? raw : 0)
+        const tipo = (a.tipo || '').toLowerCase()
+        const esRifa = tipo === 'rifa'
+        out.push({
+          id: `liq-act-${a.id}`,
+          sortAt: _isoOrdenMovimiento(a.updated_at || a.created_at),
+          nombre: '—',
+          periodo: `${esRifa ? 'Rifa liquidada' : 'Actividad liquidada'} · ${(a.descripcion || 'Sin título').trim() || 'Sin título'}`,
+          monto,
+          estado: 'liquidacion',
+          estadoEtiqueta: esRifa ? 'Liq. rifa' : 'Liquidación',
+        })
+      }
+    }
+
+    // Procesar pagos de actividad
+    if (!saRes.error && saRes.data) {
+      for (const sa of saRes.data) {
+        const act = sa.actividad
+        const tipoAct = (act?.tipo || '').toLowerCase()
+        const esRifa = tipoAct === 'rifa'
+        out.push({
+          id: `pago-act-sa-${sa.id}`,
+          sortAt: _isoOrdenMovimiento(sa.updated_at || sa.created_at),
+          nombre: sa.socio_natillera?.socio?.nombre || 'Socio',
+          periodo: (act?.descripcion || 'Actividad').trim() || 'Actividad',
+          monto: Number(sa.valor_pagado) || 0,
+          estado: esRifa ? 'pago_rifa' : 'pago_actividad',
+          estadoEtiqueta: esRifa ? 'Rifa' : 'Actividad',
+        })
+      }
+    }
+
+    // Procesar movimientos de fondo
+    if (!movsFondoRes.error && movsFondoRes.data) {
+      for (const m of movsFondoRes.data) {
+        const tipoMov = (m.tipo || '').toLowerCase()
+        if (tipoMov !== 'salida' && tipoMov !== 'entrada') continue
+        const raw = Number(m.monto) || 0
+        const abs = Math.abs(raw)
+        const esSalida = tipoMov === 'salida'
+        const montoSigned = esSalida ? -abs : abs
+        const fp = (m.forma_pago || '').toString().toLowerCase()
+        const formaTxt =
+          fp === 'efectivo' ? 'Efectivo' :
+          fp === 'transferencia' ? 'Transferencia' :
+          (m.forma_pago || '—').toString()
+        const orig = (m.origen_egreso || '').toString().toLowerCase()
+        const dest = (m.destino_ingreso || '').toString().toLowerCase()
+        let estado = ''
+        let estadoEtiqueta = ''
+        if (esSalida) {
+          estado = 'egreso_fondo'
+          estadoEtiqueta =
+            orig === 'utilidades' ? 'Egreso util.' :
+            orig === 'recaudado' ? 'Egreso caja' :
+            'Egreso'
+        } else {
+          estado = 'ingreso_fondo'
+          estadoEtiqueta =
+            dest === 'utilidades' ? 'Ingreso util.' :
+            dest === 'recaudado' ? 'Ingreso caja' :
+            'Ingreso'
+        }
+        const desc = (m.descripcion || '').toString().trim() || 'Movimiento de fondo'
+        const fechaIso =
+          m.created_at ||
+          m.updated_at ||
+          (m.fecha ? `${String(m.fecha).slice(0, 10)}T12:00:00` : '')
+        out.push({
+          id: `mf-${m.id}`,
+          sortAt: _isoOrdenMovimiento(fechaIso),
+          nombre: 'Fondo',
+          periodo: `${desc} · ${formaTxt}`,
+          monto: montoSigned,
+          estado,
+          estadoEtiqueta,
+        })
+      }
+    }
+
+    movimientosNatilleraExtra.value = out
+  } catch (e) {
+    console.warn('Error cargando movimientos recientes de la natillera:', e)
+    movimientosNatilleraExtra.value = []
+  }
+}
+
+const ultimosMovimientos = computed(() => {
+  const items = []
+  const cuotas = cuotasNatillera.value || []
+  for (const c of cuotas) {
+    const est = (c.estado || 'pendiente').toLowerCase()
+    // En BD / store la cuota pagada es «pagada» (no «pagado»).
+    const esCuotaPagadaCompleta = est === 'pagada' || est === 'pagado'
+    // Pago parcial: estado explícito O cuota con abono parcial (valor_pagado > 0 pero < valor_cuota)
+    const valorPagado = Number(c.valor_pagado) || 0
+    const valorCuota = Number(c.valor_cuota) || 0
+    const esCuotaParcial = est === 'parcial' || (!esCuotaPagadaCompleta && valorPagado > 0 && valorPagado < valorCuota)
+    if (!esCuotaPagadaCompleta && !esCuotaParcial) continue
+    const nombreSocio =
+      (c.socio_natillera?.socio?.nombre || '').trim() ||
+      (c.nombre_socio || '').trim() ||
+      'Socio'
+    const sortAt = _isoOrdenMovimiento(c.fecha_pago || c.updated_at || c.created_at)
+    const q = c.quincena ? `Q${c.quincena} ` : ''
+    const mesNombre = mesesCorto[c.mes] || ''
+    const montoCuota = Math.max(0, Number(c.valor_pagado) || 0) || Math.max(0, Number(c.valor_cuota) || 0)
+    items.push({
+      id: `cuota-${c.id}`,
+      sortAt,
+      nombre: nombreSocio,
+      periodo: `${q}${mesNombre} ${c.anio || ''}`.trim() || 'Cuota',
+      monto: montoCuota,
+      estado: esCuotaPagadaCompleta ? 'pago_cuota' : 'pago_cuota_parcial',
+      estadoEtiqueta: esCuotaPagadaCompleta ? 'Cuota' : 'Parcial',
+    })
+  }
+  for (const m of movimientosNatilleraExtra.value || []) {
+    items.push({ ...m })
+  }
+  // Solo por fecha/hora (más reciente arriba); sin agrupar por tipo. Desempate estable por id.
+  items.sort((a, b) => {
+    const tb = _tsOrdenMovimiento(b.sortAt)
+    const ta = _tsOrdenMovimiento(a.sortAt)
+    if (tb !== ta) return tb - ta
+    return String(b.id).localeCompare(String(a.id))
+  })
+  return items.slice(0, 6).map(({ sortAt: _s, ...rest }) => rest)
+})
+
 // Usuario autenticado y admin
 const usuarioAutenticado = ref(null)
 const adminActual = ref(null)
@@ -3302,6 +4387,77 @@ const esAdmin = computed(() => {
   if (!usuarioAutenticado.value || !natillera.value) return false
   return natillera.value.admin_id === usuarioAutenticado.value.id || esSuperUsuario.value
 })
+
+async function refrescarRolYPermisosTrasInvitacionAceptada() {
+  const natilleraId = id.value
+  if (!natilleraId || !natillera.value) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  if (esAdmin.value) return
+  try {
+    const [rol, permisos] = await Promise.all([
+      colaboradoresStore.obtenerMiRol(natilleraId),
+      colaboradoresStore.obtenerMisPermisos(natilleraId, { user, skipAdminCheck: true })
+    ])
+    miRol.value = rol
+    misPermisos.value = permisos
+  } catch (e) {
+    console.warn('Error refrescando rol tras aceptar invitación:', e)
+  }
+}
+
+function abrirModalRechazarInvitacionCompacta(inv) {
+  if (inv) invitacionARechazarCompacta.value = inv
+}
+
+function cerrarModalRechazarInvitacionCompacta() {
+  if (procesandoInvitacionCompacta.value) return
+  invitacionARechazarCompacta.value = null
+}
+
+async function confirmarRechazarInvitacionCompacta() {
+  const inv = invitacionARechazarCompacta.value
+  if (!inv) return
+  try {
+    procesandoInvitacionCompacta.value = inv.id
+    const resultado = await colaboradoresStore.rechazarInvitacion(inv.token_invitacion)
+    if (resultado.success) {
+      invitacionARechazarCompacta.value = null
+      notificationStore.info('Invitación rechazada')
+      await colaboradoresStore.fetchMisInvitaciones()
+    } else {
+      notificationStore.error(resultado.error || 'Error al rechazar la invitación')
+    }
+  } catch (e) {
+    notificationStore.error(e.message || 'Error al rechazar la invitación')
+  } finally {
+    procesandoInvitacionCompacta.value = null
+  }
+}
+
+async function aceptarInvitacionCompacta(inv) {
+  if (!inv) return
+  try {
+    procesandoInvitacionCompacta.value = inv.id
+    const resultado = await colaboradoresStore.aceptarInvitacion(inv.token_invitacion)
+    if (resultado.success) {
+      notificationStore.success(
+        `¡Ahora eres colaborador de "${resultado.data.natillera_nombre}"!`,
+        'Invitación aceptada'
+      )
+      await natillerasStore.fetchNatillerasCompartidas()
+      await colaboradoresStore.fetchMisInvitaciones()
+      await refrescarRolYPermisosTrasInvitacionAceptada()
+    } else {
+      notificationStore.error(resultado.error || 'Error al aceptar la invitación')
+    }
+  } catch (e) {
+    notificationStore.error(e.message || 'Error al aceptar la invitación')
+  } finally {
+    procesandoInvitacionCompacta.value = null
+  }
+}
+
 // Recordatorio personal: solo disponible para raigo.16@gmail.com
 const puedeUsarRecordatorio = computed(() => authStore.userEmail === RECORDATORIO_EMAIL)
 
@@ -4031,23 +5187,26 @@ async function obtenerPrestamosVencidos() {
     if (prestamosError) throw prestamosError
     if (!prestamosConPagos || prestamosConPagos.length === 0) {
       prestamosVencidos.value = []
+      prestamosEnMoraLista.value = []
       return
     }
     
     const hoy = new Date()
     hoy.setHours(0, 0, 0, 0)
     
-    // Procesar los datos en memoria (sin consultas adicionales)
     const sociosConPrestamosVencidos = {}
+    const prestamosLista = []
     
     prestamosConPagos.forEach(prestamo => {
       const planesPago = prestamo.plan_pagos_prestamo || []
+      let cuotasEstePrestamo = 0
+      let deudaEstePrestamo = 0
+      let fechaAntiguaEstePrestamo = null
       
       planesPago.forEach(plan => {
         const fechaProyectada = new Date(plan.fecha_proyectada)
         fechaProyectada.setHours(0, 0, 0, 0)
         
-        // Verificar si la cuota está vencida y no está completamente pagada
         const valorCuota = parseFloat(plan.valor_cuota || 0)
         const valorPagado = parseFloat(plan.valor_pagado || 0)
         const estaVencida = hoy > fechaProyectada
@@ -4055,6 +5214,13 @@ async function obtenerPrestamosVencidos() {
         
         if (estaVencida && noEstaPagada) {
           const socioId = prestamo.socio_natillera_id
+          const deudaCuota = valorCuota - valorPagado
+          
+          cuotasEstePrestamo++
+          deudaEstePrestamo += deudaCuota
+          if (!fechaAntiguaEstePrestamo || fechaProyectada < fechaAntiguaEstePrestamo) {
+            fechaAntiguaEstePrestamo = fechaProyectada
+          }
           
           if (!sociosConPrestamosVencidos[socioId]) {
             sociosConPrestamosVencidos[socioId] = {
@@ -4070,11 +5236,9 @@ async function obtenerPrestamosVencidos() {
           }
           
           sociosConPrestamosVencidos[socioId].cuotasVencidas++
-          const deudaCuota = valorCuota - valorPagado
           sociosConPrestamosVencidos[socioId].totalDeudaPrestamo += deudaCuota
           
-          // Calcular días de mora desde la fecha más antigua
-          if (!sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua || 
+          if (!sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua ||
               fechaProyectada < sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua) {
             sociosConPrestamosVencidos[socioId].fechaVencimientoMasAntigua = fechaProyectada
             sociosConPrestamosVencidos[socioId].cuotaVencidaMasAntigua = {
@@ -4085,12 +5249,30 @@ async function obtenerPrestamosVencidos() {
               valor_pagado: valorPagado,
               deuda: deudaCuota
             }
+            sociosConPrestamosVencidos[socioId].prestamoId = prestamo.id
           }
         }
       })
+      
+      if (cuotasEstePrestamo > 0 && fechaAntiguaEstePrestamo) {
+        const diasM = Math.max(
+          0,
+          Math.floor((hoy - fechaAntiguaEstePrestamo) / (1000 * 60 * 60 * 24))
+        )
+        const socioData = prestamo.socio_natillera?.socio
+        prestamosLista.push({
+          prestamoId: prestamo.id,
+          socio_natillera_id: prestamo.socio_natillera_id,
+          nombreSocio: socioData?.nombre || 'Sin nombre',
+          socio: socioData || null,
+          cuotasVencidas: cuotasEstePrestamo,
+          totalDeudaPrestamo: deudaEstePrestamo,
+          diasMoraPrestamo: diasM,
+          saldo_actual: parseFloat(prestamo.saldo_actual) || 0
+        })
+      }
     })
     
-    // Calcular días de mora para cada socio
     Object.values(sociosConPrestamosVencidos).forEach(socio => {
       if (socio.fechaVencimientoMasAntigua) {
         socio.diasMoraPrestamo = Math.floor((hoy - socio.fechaVencimientoMasAntigua) / (1000 * 60 * 60 * 24))
@@ -4098,10 +5280,16 @@ async function obtenerPrestamosVencidos() {
       }
     })
     
+    prestamosLista.sort((a, b) => {
+      if (b.diasMoraPrestamo !== a.diasMoraPrestamo) return b.diasMoraPrestamo - a.diasMoraPrestamo
+      return b.totalDeudaPrestamo - a.totalDeudaPrestamo
+    })
+    prestamosEnMoraLista.value = prestamosLista
     prestamosVencidos.value = Object.values(sociosConPrestamosVencidos)
   } catch (error) {
     console.error('Error obteniendo préstamos vencidos:', error)
     prestamosVencidos.value = []
+    prestamosEnMoraLista.value = []
   }
 }
 // Socios con problemas de mora o pendientes vencidos (incluyendo préstamos)
@@ -4275,11 +5463,15 @@ const sociosEnMora = computed(() => {
         return primeraCuota?.socio_natillera?.socio || null
       })()
       
-      // Calcular total de deuda incluyendo préstamos
-      const totalDeudaCompleto = s.totalDeuda + (s.totalDeudaPrestamo || 0)
-      
+      // Deuda solo de cuotas (sin préstamos)
+      const totalDeudaCuotas = s.totalDeuda
+      // Deuda total incluyendo préstamos
+      const totalDeudaCompleto = totalDeudaCuotas + (s.totalDeudaPrestamo || 0)
+
       return {
         ...s,
+        // Deuda solo de cuotas (para alertas de cuotas)
+        totalDeudaCuotas,
         // Total incluyendo sanciones y préstamos
         totalConSanciones: totalDeudaCompleto + s.totalSanciones,
         // Días de mora (mayor entre cuotas y préstamos)
@@ -4301,6 +5493,38 @@ const sociosEnMora = computed(() => {
       return b.totalConSanciones - a.totalConSanciones
     })
 })
+/** Total de cuotas de la natillera en mora (mismo criterio que sociosEnMora / estado real) */
+const cantidadCuotasEnMoraAlertas = computed(() =>
+  sociosEnMora.value.reduce((acc, s) => acc + (s.cuotasMora || 0), 0)
+)
+
+/** Máximo de filas en vista previa de Alertas recientes antes de «Ver todas» */
+const ALERTAS_RECIENTES_PREVIEW = 5
+
+const sociosCuotasMoraLista = computed(() => sociosEnMora.value.filter((s) => s.cuotasMora > 0))
+
+/** Vista previa: como máximo 5 filas en total (primero cuotas de la natillera, luego préstamos). */
+const previewCuotasCount = computed(() => {
+  const nC = sociosCuotasMoraLista.value.length
+  const nP = prestamosEnMoraLista.value.length
+  if (nC + nP <= ALERTAS_RECIENTES_PREVIEW) return nC
+  return Math.min(nC, ALERTAS_RECIENTES_PREVIEW)
+})
+
+const previewPrestamosCount = computed(() => {
+  const nC = sociosCuotasMoraLista.value.length
+  const nP = prestamosEnMoraLista.value.length
+  if (nC + nP <= ALERTAS_RECIENTES_PREVIEW) return nP
+  const cShown = Math.min(nC, ALERTAS_RECIENTES_PREVIEW)
+  return Math.min(nP, ALERTAS_RECIENTES_PREVIEW - cShown)
+})
+
+const hayMasAlertasRecientes = computed(() => {
+  const nC = sociosCuotasMoraLista.value.length
+  const nP = prestamosEnMoraLista.value.length
+  return nC + nP > ALERTAS_RECIENTES_PREVIEW
+})
+
 // Estadísticas de mora
 const totalCuotasMora = computed(() => {
   if (!cuotasNatillera.value || !cuotasNatillera.value.length) return 0
@@ -4328,18 +5552,15 @@ const totalSancionesMora = computed(() => {
   if (!sociosEnMora.value || !sociosEnMora.value.length) return 0
   return sociosEnMora.value.reduce((sum, s) => sum + (s?.totalSanciones || 0), 0)
 })
-// Estadísticas de préstamos vencidos
-const totalPrestamosVencidos = computed(() => {
-  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
-  return prestamosVencidos.value.length
-})
+// Estadísticas de préstamos vencidos (un préstamo = un registro en prestamosEnMoraLista)
+const totalPrestamosVencidos = computed(() => prestamosEnMoraLista.value?.length || 0)
 const totalCuotasPrestamosVencidos = computed(() => {
-  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
-  return prestamosVencidos.value.reduce((sum, p) => sum + (p?.cuotasVencidas || 0), 0)
+  if (!prestamosEnMoraLista.value?.length) return 0
+  return prestamosEnMoraLista.value.reduce((sum, p) => sum + (p?.cuotasVencidas || 0), 0)
 })
 const totalDeudaPrestamosVencidos = computed(() => {
-  if (!prestamosVencidos.value || !prestamosVencidos.value.length) return 0
-  return prestamosVencidos.value.reduce((sum, p) => sum + (p?.totalDeudaPrestamo || 0), 0)
+  if (!prestamosEnMoraLista.value?.length) return 0
+  return prestamosEnMoraLista.value.reduce((sum, p) => sum + (p?.totalDeudaPrestamo || 0), 0)
 })
 // Resumen financiero del socio seleccionado
 const resumenSocio = computed(() => {
@@ -5398,6 +6619,30 @@ function calcularEstadoRealCuota(cuota, diasGracia) {
   // Por defecto, mantener el estado original
   return cuota.estado || 'programada'
 }
+function verPrestamoEnMora(item) {
+  if (!id.value || id.value === 'undefined' || id.value === 'null') {
+    console.warn('ID de natillera inválido, redirigiendo al dashboard', id.value)
+    router.push('/dashboard')
+    return
+  }
+  if (natilleraPrestamosDeshabilitados(natillera.value)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    return
+  }
+  if (!item?.prestamoId) {
+    router.push(`/natilleras/${id.value}/prestamos`)
+    return
+  }
+  router.push({
+    path: `/natilleras/${id.value}/prestamos`,
+    query: { prestamoId: item.prestamoId }
+  })
+}
+
+function cerrarModalTodasLasAlertasYVerPrestamo(p) {
+  modalTodasLasAlertas.value = false
+  verPrestamoEnMora(p)
+}
 // Función para navegar a la vista de préstamos del socio
 function verPrestamoSocio(socioMora) {
   // Validar que el ID sea válido antes de navegar
@@ -5406,7 +6651,11 @@ function verPrestamoSocio(socioMora) {
     router.push('/dashboard')
     return
   }
-  
+  if (natilleraPrestamosDeshabilitados(natillera.value)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    return
+  }
+
   if (socioMora.prestamoId) {
     // Navegar a la vista de préstamos con el ID del préstamo en el query
     router.push({
@@ -5623,6 +6872,29 @@ function incrementarContadorModalSociosEnMora() {
   const contador = parseInt(localStorage.getItem(clave) || '0', 10)
   localStorage.setItem(clave, (contador + 1).toString())
 }
+
+async function ejecutarModalesAutomaticosPostCarga() {
+  if (recorridoDetalleNavActivo.value) return
+  if (!tieneSocios.value) {
+    modalSinSocios.value = true
+  }
+  const email = authStore.userEmail || usuarioAutenticado.value?.email || ''
+  if (email === RECORDATORIO_EMAIL) {
+    await fetchRecordatorios()
+    if (listRecordatorios.value.length > 0) {
+      showRecordatorioModal.value = true
+      editandoRecordatorio.value = false
+      recordatorioEdicionId.value = null
+    }
+  }
+}
+
+function liberarModalesPostCargaRetenidosTrasTour() {
+  if (!modalesPostCargaRetenidosPorTour.value) return
+  modalesPostCargaRetenidosPorTour.value = false
+  void ejecutarModalesAutomaticosPostCarga()
+}
+
 // Función de debug para reiniciar el contador (solo para desarrollo)
 function reiniciarContadorModalSociosEnMora() {
   const clave = obtenerClaveModalSociosEnMora()
@@ -5867,12 +7139,6 @@ async function scrollToBannerSociosEnMora() {
 //     }, 300)
 //   }
 // }, { deep: true })
-// Watch para recalcular estadísticas cuando cambie la natillera
-watch(natillera, async () => {
-  if (natillera.value) {
-    await calcularEstadisticasAsync()
-  }
-}, { deep: true })
 // Watch para asegurar scroll al inicio cuando se entra a la vista
 watch(() => route.name, (newName, oldName) => {
   if (newName === 'NatilleraDetalle' && newName !== oldName) {
@@ -5889,15 +7155,25 @@ watch(() => route.name, (newName, oldName) => {
 watch(() => id.value, async (newId, oldId) => {
   // Solo recargar si el ID realmente cambió
   if (newId && newId !== oldId) {
+    movimientosNatilleraExtra.value = []
     // Mostrar pantalla de carga cuando cambia el ID
     cargandoNatillera.value = true
     try {
-      // OPTIMIZACIÓN: Cargar SOLO datos esenciales primero
-      const [natilleraResult, cuotasResult] = await Promise.all([
-        natillerasStore.fetchNatillera(newId),
-        cuotasStore.fetchCuotasNatillera(newId, { skipMoraUpdate: true })
-      ])
-      
+      // fetchNatillera ya trae socios + cuotas; evitar duplicar consultas con fetchCuotasNatillera
+      const natilleraResult = await natillerasStore.fetchNatillera(newId)
+      if (!natilleraResult) {
+        const uid = usuarioAutenticado.value?.id || authStore.user?.id
+        if (uid) clearLastNatilleraId(uid)
+        cargandoNatillera.value = false
+        router.replace({ name: 'Dashboard' })
+        return
+      }
+      let cuotasResult = []
+      if (natilleraResult?.socios_natillera && natilleraResult?.cuotas) {
+        cuotasResult = cuotasStore.aplicarCuotasDesdeCargaNatillera(natilleraResult.socios_natillera, natilleraResult.cuotas)
+      } else {
+        cuotasResult = await cuotasStore.fetchCuotasNatillera(newId, { skipMoraUpdate: true })
+      }
       cuotasNatillera.value = cuotasResult || []
       
       // Cargar configuración (no bloquea)
@@ -5908,10 +7184,13 @@ watch(() => id.value, async (newId, oldId) => {
       cargandoNatillera.value = false
       
       // Cargar datos secundarios EN SEGUNDO PLANO (no bloquean la UI)
+      const configCacheWatch = natillera.value
       Promise.all([
         calcularEstadisticasAsync(),
         obtenerPrestamosVencidos(),
-        cuotasStore.calcularSancionesTotales(newId, cuotasResult)
+        cuotasStore.calcularSancionesTotales(newId, cuotasResult, configCacheWatch),
+        colaboradoresStore.fetchMisInvitaciones().catch(() => {}),
+        cargarMovimientosRecientesNatillera(newId)
       ]).then(([estadisticasResult, prestamosResult, sancionesResult]) => {
         if (sancionesResult?.success) {
           sancionesPorCuota.value = sancionesResult.sanciones || {}
@@ -5919,9 +7198,8 @@ watch(() => id.value, async (newId, oldId) => {
         }
       }).catch(err => console.warn('Error cargando datos secundarios:', err))
       
-      // Actualizar mora en segundo plano
-      cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, newId)
-        .then(() => cuotasStore.recalcularMultasCuotasMora(newId))
+      // Actualizar mora en segundo plano (no encadenar recalcularMultasCuotasMora: ya se calcula arriba)
+      cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, newId, configCacheWatch)
         .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     } catch (error) {
       console.error('Error recargando datos de natillera:', error)
@@ -5958,22 +7236,26 @@ onMounted(async () => {
   // Agregar listener para el botón atrás
   window.addEventListener('popstate', handlePopState)
   
-  // Obtener usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser()
-  usuarioAutenticado.value = user
-  
   try {
     const natilleraId = props.id || route.params.id
     
-    // OPTIMIZACIÓN: Cargar SOLO datos esenciales primero para mostrar la UI lo más rápido posible
-    // Fase 1: Cargar datos críticos en paralelo (solo lo necesario para renderizar)
-    const [natilleraResult, cuotasResult] = await Promise.all([
-      natillerasStore.fetchNatillera(natilleraId),
-      // skipMoraUpdate: true para carga rápida inicial (mora se actualiza después)
-      cuotasStore.fetchCuotasNatillera(natilleraId, { skipMoraUpdate: true })
-    ])
-    
-    // Asignar cuotas inmediatamente
+    // Usar authStore.user (local, sin round-trip de red) en vez de getUser()
+    const user = authStore.user
+    usuarioAutenticado.value = user
+    colaboradoresStore.fetchMisInvitaciones({ user }).catch(() => {})
+    const natilleraResult = await natillerasStore.fetchNatillera(natilleraId)
+    if (!natilleraResult) {
+      if (user?.id) clearLastNatilleraId(user.id)
+      cargandoNatillera.value = false
+      router.replace({ name: 'Dashboard' })
+      return
+    }
+    let cuotasResult = []
+    if (natilleraResult?.socios_natillera && natilleraResult?.cuotas) {
+      cuotasResult = cuotasStore.aplicarCuotasDesdeCargaNatillera(natilleraResult.socios_natillera, natilleraResult.cuotas)
+    } else {
+      cuotasResult = await cuotasStore.fetchCuotasNatillera(natilleraId, { skipMoraUpdate: true })
+    }
     cuotasNatillera.value = cuotasResult || []
     
     // Cargar configuración (no bloquea, se ejecuta en paralelo)
@@ -5982,25 +7264,10 @@ onMounted(async () => {
     // Cargar información del administrador (no crítico, puede ser en paralelo)
     cargarAdminActual().catch(err => console.warn('Error cargando admin:', err))
     
-    // Obtener el rol y permisos del usuario en la natillera
-    // Esperar a que natillera.value esté disponible
-    await nextTick()
+    // Para admin: asignar permisos de inmediato (no requiere query).
+    // Para colaborador: asignar defaults y cargar en background.
     if (natillera.value) {
-      if (!esAdmin.value) {
-        try {
-          const rol = await colaboradoresStore.obtenerMiRol(natilleraId)
-          miRol.value = rol
-          
-          // Obtener los permisos del usuario
-          const permisos = await colaboradoresStore.obtenerMisPermisos(natilleraId)
-          misPermisos.value = permisos
-        } catch (err) {
-          console.warn('Error obteniendo rol y permisos del usuario:', err)
-          miRol.value = null
-          misPermisos.value = null
-        }
-      } else {
-        // Si es admin, no necesita verificar rol, tiene todos los permisos
+      if (esAdmin.value) {
         miRol.value = 'administrador'
         misPermisos.value = {
           rol: 'administrador',
@@ -6022,18 +7289,35 @@ onMounted(async () => {
       }
     }
     
-    // IMPORTANTE: Ocultar pantalla de carga INMEDIATAMENTE después de tener datos esenciales
-    // Esto permite que el usuario vea la UI mientras se cargan datos secundarios
     await nextTick()
     cargandoNatillera.value = false
     
     // Fase 2: Cargar datos secundarios EN SEGUNDO PLANO (no bloquean la UI)
-    // Estas operaciones se ejecutan después de que la pantalla de carga se oculta
-    Promise.all([
+    const configCache = natillera.value
+    const backgroundTasks = [
       calcularEstadisticasAsync(),
       obtenerPrestamosVencidos(),
-      cuotasStore.calcularSancionesTotales(natilleraId, cuotasResult)
-    ]).then(([estadisticasResult, prestamosResult, sancionesResult]) => {
+      cuotasStore.calcularSancionesTotales(natilleraId, cuotasResult, configCache),
+      cargarMovimientosRecientesNatillera(natilleraId)
+    ]
+    // Rol y permisos de colaborador: cargar en background (no bloquea el render)
+    if (natillera.value && !esAdmin.value) {
+      backgroundTasks.push(
+        Promise.all([
+          colaboradoresStore.obtenerMiRol(natilleraId),
+          colaboradoresStore.obtenerMisPermisos(natilleraId, { user, skipAdminCheck: true })
+        ]).then(([rol, permisos]) => {
+          miRol.value = rol
+          misPermisos.value = permisos
+        }).catch(err => {
+          console.warn('Error obteniendo rol y permisos del usuario:', err)
+          miRol.value = null
+          misPermisos.value = null
+        })
+      )
+    }
+    Promise.all(backgroundTasks).then((results) => {
+      const sancionesResult = results[2]
       // Aplicar sanciones calculadas
       if (sancionesResult?.success) {
         sancionesPorCuota.value = sancionesResult.sanciones || {}
@@ -6042,40 +7326,86 @@ onMounted(async () => {
       }
     }).catch(err => console.warn('Error cargando datos secundarios:', err))
     
-    // Fase 3: Actualizar mora/multas en segundo plano (no bloquea la UI)
-    cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, natilleraId)
-      .then(() => cuotasStore.recalcularMultasCuotasMora(natilleraId))
+    // Fase 3: Actualizar mora/multas en segundo plano (no bloquea la UI).
+    // No encadenar recalcularMultasCuotasMora: Fase 2 ya ejecuta calcularSancionesTotales
+    // y actualizarEstadoMoraAutomatico aplica sanciones a cuotas que transicionan a mora.
+    cuotasStore.actualizarEstadoMoraAutomatico(cuotasResult, natilleraId, configCache)
       .catch(err => console.warn('Error actualizando mora en segundo plano:', err))
     
     // Asegurar scroll en la parte superior
     setTimeout(() => {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     }, 50)
+
+    const intentarTourNavDetalle = () => {
+      detalleNavTourTimeoutId = null
+      const nid = String(natilleraId || '')
+      const uid = usuarioAutenticado.value?.id
+      const ctxTour = {
+        natilleraId: nid,
+        userId: uid,
+        userCreatedAt: usuarioAutenticado.value?.created_at,
+        natilleraCreatedAt: natillera.value?.created_at
+      }
+      if (!nid || !uid || !shouldShowNatilleraDetalleNavTour(ctxTour)) {
+        liberarModalesPostCargaRetenidosTrasTour()
+        return
+      }
+      if (cargandoNatillera.value) {
+        if (detalleNavTourIntentos < 10) {
+          detalleNavTourIntentos++
+          detalleNavTourTimeoutId = setTimeout(intentarTourNavDetalle, 500)
+        } else {
+          liberarModalesPostCargaRetenidosTrasTour()
+        }
+        return
+      }
+      if (modalSinSocios.value || modalSociosEnMora.value || showRecordatorioModal.value) {
+        if (detalleNavTourIntentos < 15) {
+          detalleNavTourIntentos++
+          detalleNavTourTimeoutId = setTimeout(intentarTourNavDetalle, 1800)
+        } else {
+          liberarModalesPostCargaRetenidosTrasTour()
+        }
+        return
+      }
+      detalleNavTourIntentos = 0
+      startNatilleraDetalleNavTour({
+        natilleraId: nid,
+        userId: uid,
+        prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+        clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
+        openSidebar: () => dashboardSidebar?.openMobile?.(),
+        closeSidebar: () => dashboardSidebar?.closeMobile?.(),
+        onTourStart: () => {
+          recorridoDetalleNavActivo.value = true
+        },
+        onTourEnd: () => {
+          recorridoDetalleNavActivo.value = false
+          liberarModalesPostCargaRetenidosTrasTour()
+        }
+      })
+    }
+    detalleNavTourIntentos = 0
+    detalleNavTourTimeoutId = setTimeout(intentarTourNavDetalle, 1400)
     
     // Mostrar modales después de un pequeño delay para que la UI se renderice primero
     postCargaModalesTimeoutId = setTimeout(async () => {
       postCargaModalesTimeoutId = null
-      // Si no hay socios, mostrar modal para agregar socios
-      if (!tieneSocios.value) {
-        modalSinSocios.value = true
+      const ctxTourPostCarga = {
+        natilleraId: String(natilleraId || ''),
+        userId: usuarioAutenticado.value?.id,
+        userCreatedAt: usuarioAutenticado.value?.created_at,
+        natilleraCreatedAt: natillera.value?.created_at
       }
-      // Si hay socios en mora, abrir la modal automáticamente (máximo 2 veces por día)
-      else if (sociosEnMora.value && sociosEnMora.value.length > 0) {
-        if (puedeMostrarModalSociosEnMora()) {
-          modalSociosEnMora.value = true
-          incrementarContadorModalSociosEnMora()
-        }
+      if (
+        ctxTourPostCarga.userId &&
+        shouldShowNatilleraDetalleNavTour(ctxTourPostCarga)
+      ) {
+        modalesPostCargaRetenidosPorTour.value = true
+        return
       }
-      // Recordatorio personal: mostrar al entrar (solo raigo.16@gmail.com)
-      const email = authStore.userEmail || usuarioAutenticado.value?.email || ''
-      if (email === RECORDATORIO_EMAIL) {
-        await fetchRecordatorios()
-        if (listRecordatorios.value.length > 0) {
-          showRecordatorioModal.value = true
-          editandoRecordatorio.value = false
-          recordatorioEdicionId.value = null
-        }
-      }
+      await ejecutarModalesAutomaticosPostCarga()
     }, 300)
   } catch (error) {
     console.error('Error cargando datos de natillera:', error)
@@ -6083,10 +7413,16 @@ onMounted(async () => {
     cargandoNatillera.value = false
   }
 })
+
+
 onUnmounted(() => {
   if (postCargaModalesTimeoutId != null) {
     clearTimeout(postCargaModalesTimeoutId)
     postCargaModalesTimeoutId = null
+  }
+  if (detalleNavTourTimeoutId != null) {
+    clearTimeout(detalleNavTourTimeoutId)
+    detalleNavTourTimeoutId = null
   }
   // Remover listener del botón atrás
   window.removeEventListener('popstate', handlePopState)
@@ -6250,6 +7586,63 @@ onUnmounted(() => {
 .animate-glow-pulse {
   animation: glow-pulse 2s ease-in-out infinite;
 }
+
+/* Notificación compacta de invitación colaborador */
+@keyframes fade-in-invite {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-fade-in-invite {
+  animation: fade-in-invite 0.45s ease-out forwards;
+}
+@keyframes sweep-invite {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.5;
+  }
+  35% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(120%) skewX(-12deg);
+    opacity: 0;
+  }
+}
+.animate-sweep-invite {
+  animation: sweep-invite 4s ease-in-out infinite;
+}
+@keyframes bounce-slow-invite {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+.animate-bounce-slow-invite {
+  animation: bounce-slow-invite 2.2s ease-in-out infinite;
+}
+
+.invitacion-notify-card {
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+.invitacion-notify-card:hover {
+  box-shadow:
+    0 12px 28px -8px rgba(5, 80, 60, 0.18),
+    0 4px 12px -4px rgba(16, 185, 129, 0.12),
+    0 0 0 1px rgba(16, 185, 129, 0.12);
+}
+
 @keyframes float-1 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -6301,5 +7694,267 @@ onUnmounted(() => {
 }
 .animate-fade-in-out {
   animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* ─── Empty state: sin movimientos (1 col móvil, 2 cols desktop) ─── */
+.natillera-empty {
+  --ne-bg: hsl(120 12% 97%);
+  --ne-mint: hsl(152 42% 88%);
+  --ne-forest: hsl(152 55% 24%);
+  --ne-pig: hsl(152 50% 28%);
+  --ne-section: hsl(215 18% 38%);
+  --ne-muted: hsl(215 9% 46%);
+
+  max-width: 26rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 2rem 1.5rem 2.25rem;
+  text-align: center;
+  background: var(--ne-bg);
+  border-radius: 1rem;
+  border: 1px solid hsl(120 8% 90%);
+}
+
+@media (min-width: 640px) {
+  .natillera-empty {
+    max-width: 28rem;
+    padding: 2.5rem 2rem 2.5rem;
+    border-radius: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty {
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 2.25rem 2.5rem 2.5rem;
+    border-radius: 1.25rem;
+  }
+}
+
+.natillera-empty__grid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 2.5rem;
+    align-items: center;
+  }
+}
+
+.natillera-empty__lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.natillera-empty__illustration {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty__illustration {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.natillera-empty__ring-outer {
+  width: 7.25rem;
+  height: 7.25rem;
+  border-radius: 50%;
+  border: 2px dashed hsl(120 6% 78%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__ring-outer {
+    width: 7.75rem;
+    height: 7.75rem;
+  }
+}
+
+.natillera-empty__ring-inner {
+  width: 5.25rem;
+  height: 5.25rem;
+  border-radius: 50%;
+  background: var(--ne-mint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__ring-inner {
+    width: 5.5rem;
+    height: 5.5rem;
+  }
+}
+
+.natillera-empty__icon {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--ne-pig);
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__icon {
+    width: 2.625rem;
+    height: 2.625rem;
+  }
+}
+
+.natillera-empty__badge {
+  position: absolute;
+  bottom: 0;
+  right: calc(50% - 3.625rem - 0.25rem);
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--ne-forest);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid white;
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__badge {
+    width: 2.25rem;
+    height: 2.25rem;
+    right: calc(50% - 3.875rem - 0.3rem);
+  }
+}
+
+.natillera-empty__badge-icon {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__badge-icon {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+.natillera-empty__title {
+  margin: 0;
+  font-family: var(--font-display, ui-sans-serif, system-ui, sans-serif);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: hsl(220 14% 14%);
+}
+
+@media (min-width: 640px) {
+  .natillera-empty__title {
+    font-size: 1.5rem;
+  }
+}
+
+.natillera-empty__desc {
+  margin: 0.875rem auto 0;
+  max-width: 22rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ne-muted);
+  font-weight: 400;
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty__desc {
+    max-width: 26rem;
+  }
+}
+
+.natillera-empty__divider {
+  margin-top: 1.75rem;
+  margin-bottom: 1.5rem;
+  height: 1px;
+  width: 100%;
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+  background: hsl(120 8% 88%);
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty__divider {
+    display: none;
+  }
+}
+
+.natillera-empty__hints {
+  text-align: left;
+  max-width: 22rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .natillera-empty__hints {
+    max-width: none;
+    margin: 0;
+    padding-left: 2.5rem;
+    border-left: 1px solid hsl(120 8% 88%);
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
+
+.natillera-empty__hints-title {
+  margin: 0 0 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ne-section);
+}
+
+.natillera-empty__hints-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.natillera-empty__hints-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: hsl(220 12% 26%);
+  font-weight: 500;
+}
+
+.natillera-empty__hints-icon {
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  color: hsl(152 52% 32%);
+  margin-top: 0.1rem;
 }
 </style>

@@ -30,30 +30,53 @@ const classValue = computed(() => {
   return ''
 })
 
-// Determinar si el texto debe ser blanco (para fondos oscuros)
-const isWhiteText = computed(() => {
-  return classValue.value && classValue.value.includes('text-white')
+const cls = computed(() => (typeof classValue.value === 'string' ? classValue.value : ''))
+
+// Texto claro sobre fondo oscuro (blanco, cian, ámbar, etc.)
+const isLightOnDark = computed(() => {
+  const c = cls.value
+  if (!c) return false
+  return (
+    /\btext-white\b/.test(c) ||
+    /\btext-(cyan|sky|emerald|teal|amber|yellow|lime|rose|pink)-50\b/.test(c) ||
+    /\btext-(cyan|amber)-100\b/.test(c)
+  )
 })
+
+const isWhiteText = computed(() => cls.value.includes('text-white'))
 
 // Clase del contenedor
 const containerClass = computed(() => {
   return classValue.value || ''
 })
 
-// Clase para "Natiller" - gris oscuro por defecto, blanco si está en contexto blanco
+// "Natiller": en contexto claro hereda el color del contenedor (p. ej. text-cyan-50)
 const firstPartClass = computed(() => {
-  if (isWhiteText.value) {
-    return 'text-white'
-  }
+  if (isWhiteText.value) return 'text-white'
+  if (isLightOnDark.value) return ''
   return 'text-gray-900'
 })
 
-// "app": verde acento; en fondo oscuro, menta suave sin contorno duro
+// "app": acento según contexto (sobrio sobre oscuro; sin brillos llamativos)
 const appSpanStyle = computed(() => {
-  if (isWhiteText.value) {
+  const c = cls.value
+  const subtle = '0 1px 2px rgba(0,0,0,0.35)'
+  if (/\btext-white\b/.test(c)) {
     return {
-      color: 'hsl(131, 48%, 62%)',
-      textShadow: 'none',
+      color: 'hsl(131, 42%, 56%)',
+      textShadow: subtle,
+    }
+  }
+  if (/\btext-cyan-50\b/.test(c)) {
+    return {
+      color: 'hsl(172, 55%, 50%)',
+      textShadow: subtle,
+    }
+  }
+  if (/\btext-amber-50\b/.test(c)) {
+    return {
+      color: 'hsl(43, 55%, 52%)',
+      textShadow: subtle,
     }
   }
   return {

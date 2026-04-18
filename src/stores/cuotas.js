@@ -49,11 +49,17 @@ function calcularEstadoRealCuotaStore(cuota, diasGraciaVal) {
 
 export const useCuotasStore = defineStore('cuotas', () => {
   const cuotas = ref([])
+  const sociosNatillera = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const lastFetchedNatilleraId = ref(null)
   
   // Mapa para rastrear qué natilleras están generando cuotas (evitar ejecuciones paralelas)
   const generandoCuotasPorNatillera = new Map()
+
+  function hasCuotasForNatillera(natilleraId) {
+    return lastFetchedNatilleraId.value === natilleraId && cuotas.value.length > 0
+  }
 
   // Función para actualizar la referencia de socio_natillera en las cuotas ya cargadas
   function actualizarSocioNatilleraEnCuotas(socioNatilleraId, datosActualizados) {
@@ -66,6 +72,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
     })
   }
 
+  /**
+   * Rellena el store de cuotas a partir de socios_natillera + cuotas ya cargados por fetchNatillera,
+   * sin repetir consultas a Supabase (misma forma que fetchCuotasNatillera).
+   */
+  function aplicarCuotasDesdeCargaNatillera(sociosNatillera, cuotasData) {
+    const socios = sociosNatillera || []
+    const sociosMap = new Map(socios.map(s => [s.id, s]))
+    const cuotasConSocio = (cuotasData || []).map((cuota) => {
+      return { ...cuota, socio_natillera: sociosMap.get(cuota.socio_natillera_id) }
+    })
+    cuotas.value = cuotasConSocio
+    return cuotasConSocio
+  }
+
   // Opción skipMoraUpdate para cargas rápidas cuando solo necesitamos los datos
   // sin recalcular mora/multas (útil después de generar cuotas nuevas)
   async function fetchCuotasNatillera(natilleraId, opciones = {}) {
@@ -75,22 +95,23 @@ export const useCuotasStore = defineStore('cuotas', () => {
       loading.value = true
       error.value = null
 
-      // Primero obtener los IDs de socios_natillera de esta natillera (incluye estado para filtrar inactivos en vista de cuotas)
-      const { data: sociosNatillera, error: sociosError } = await supabase
+      const { data: sociosNatilleraData, error: sociosError } = await supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, periodicidad, estado, socio:socios(*)')
+        .select('id, valor_cuota_individual, periodicidad, estado, socio:socios(id, nombre, avatar_seed, avatar_style)')
         .eq('natillera_id', natilleraId)
 
       if (sociosError) throw sociosError
 
-      if (!sociosNatillera || sociosNatillera.length === 0) {
+      if (!sociosNatilleraData || sociosNatilleraData.length === 0) {
         cuotas.value = []
+        sociosNatillera.value = []
+        lastFetchedNatilleraId.value = natilleraId
         return []
       }
 
-      const socioNatilleraIds = sociosNatillera.map(s => s.id)
+      sociosNatillera.value = sociosNatilleraData
+      const socioNatilleraIds = sociosNatilleraData.map(s => s.id)
 
-      // Obtener las cuotas de esos socios
       const { data, error: fetchError } = await supabase
         .from('cuotas')
         .select('*')
@@ -99,23 +120,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       if (fetchError) throw fetchError
 
-      // Combinar datos de cuotas con info del socio
-      const cuotasConSocio = (data || []).map(cuota => {
-        const socioNatillera = sociosNatillera.find(s => s.id === cuota.socio_natillera_id)
-        return {
-          ...cuota,
-          socio_natillera: socioNatillera
-        }
-      })
+      const sociosMap = new Map(sociosNatilleraData.map(s => [s.id, s]))
+      const cuotasConSocio = (data || []).map(cuota => ({
+        ...cuota,
+        socio_natillera: sociosMap.get(cuota.socio_natillera_id)
+      }))
 
       cuotas.value = cuotasConSocio
+      lastFetchedNatilleraId.value = natilleraId
       
-      // Solo actualizar mora/multas si no se salta (primera carga o cuando hay cambios)
       if (!skipMoraUpdate) {
-        // Actualizar automáticamente el estado de cuotas en mora y aplicar sanciones
         await actualizarEstadoMoraAutomatico(cuotasConSocio, natilleraId)
-        
-        // Recalcular multas para cuotas que ya están en mora pero no tienen multa aplicada
         await recalcularMultasCuotasMora(natilleraId)
       }
       
@@ -268,47 +283,38 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (diasEnMora > 0 && diasParaInteres > 0 && valorInteres > 0) {
         const periodosInteres = Math.floor(diasEnMora / diasParaInteres)
         interesesAdicionales = periodosInteres * valorInteres
-        
-        console.log(`📊 Cálculo intereses cuota ${cuota.id}:`, {
-          fechaLimite: fechaLimiteStr,
-          diasEnMora,
-          diasParaInteres,
-          valorInteres,
-          periodosInteres,
-          interesesAdicionales
-        })
       }
     }
 
-    const totalSancion = multaBase + interesesAdicionales
-    
-    console.log(`💰 Sanción cuota ${cuota.id}: Base $${multaBase.toLocaleString()} + Intereses $${interesesAdicionales.toLocaleString()} = $${totalSancion.toLocaleString()}`)
-
-    return totalSancion
+    return multaBase + interesesAdicionales
   }
 
   // Función para calcular el total de sanciones de un conjunto de cuotas
-  async function calcularSancionesTotales(natilleraId, cuotasLista = null) {
+  async function calcularSancionesTotales(natilleraId, cuotasLista = null, configNatilleraCache = null) {
     try {
-      // Obtener configuración de sanciones y periodicidad de la natillera
-      const { data: natillera } = await supabase
-        .from('natilleras')
-        .select('reglas_multas, periodicidad')
-        .eq('id', natilleraId)
-        .single()
+      let reglasMultas, periodicidadNatillera
 
-      // reglas_multas puede venir como objeto o como string (JSON) desde Supabase
-      let reglasMultas = natillera?.reglas_multas
-      if (typeof reglasMultas === 'string') {
-        try {
-          reglasMultas = JSON.parse(reglasMultas)
-        } catch (_) {
-          reglasMultas = null
+      if (configNatilleraCache?.reglas_multas != null) {
+        reglasMultas = configNatilleraCache.reglas_multas
+        if (typeof reglasMultas === 'string') {
+          try { reglasMultas = JSON.parse(reglasMultas) } catch (_) { reglasMultas = null }
         }
+        periodicidadNatillera = configNatilleraCache.periodicidad || 'mensual'
+      } else {
+        const { data: natillera } = await supabase
+          .from('natilleras')
+          .select('reglas_multas, periodicidad')
+          .eq('id', natilleraId)
+          .single()
+        reglasMultas = natillera?.reglas_multas
+        if (typeof reglasMultas === 'string') {
+          try { reglasMultas = JSON.parse(reglasMultas) } catch (_) { reglasMultas = null }
+        }
+        periodicidadNatillera = natillera?.periodicidad || 'mensual'
       }
+
       const configSanciones = reglasMultas?.sanciones || null
       const diasGracia = reglasMultas?.dias_gracia ?? 3
-      const periodicidadNatillera = natillera?.periodicidad || 'mensual'
 
       // Buscar intereses adicionales en cualquier clave que lo contenga (interesesAdicionales, intereses_adicionales, etc.)
       let interesesConfig = configSanciones?.interesesAdicionales ?? configSanciones?.intereses_adicionales
@@ -321,38 +327,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const interesesDias = Math.max(1, Number(interesesConfig.dias) || 2)
       const interesesValor = Number(interesesConfig.valor) || 0
 
-      // Log: configuración de sanciones por días extras (intereses adicionales por día)
-      console.log('📋 [Sanciones días extras] Configuración:', {
-        activo: interesesActivo,
-        activoRaw: interesesConfig.activo,
-        cadaXDias: interesesDias,
-        valorPorPeriodo: interesesValor,
-        diasGraciaNatillera: diasGracia,
-        clavesSanciones: configSanciones ? Object.keys(configSanciones) : [],
-        reglasMultasTipo: typeof natillera?.reglas_multas,
-        descripcion: interesesActivo
-          ? `Cada ${interesesDias} día(s) se suma $${interesesValor.toLocaleString('es-CO')} a la sanción (días de gracia: ${diasGracia})`
-          : 'Inactivo'
-      })
-
-      console.log('🔧 Configuración de sanciones:', JSON.stringify(configSanciones, null, 2))
-      console.log('📅 Días de gracia (para intereses por tramo):', diasGracia)
-
       if (!configSanciones?.activa) {
-        console.log('⚠️ Sanciones no activas')
         return { 
           success: true, 
           sanciones: {},
           configActiva: false 
         }
       }
-
-      console.log('✅ Sanciones activas:', {
-        tipo: configSanciones.tipo,
-        valorFijo: configSanciones.valorFijo,
-        niveles: configSanciones.niveles,
-        interesesAdicionales: configSanciones.interesesAdicionales
-      })
 
       const lista = cuotasLista || cuotas.value
       const cuotasMora = lista.filter(c =>
@@ -362,20 +343,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const cuotasMoraConMulta = cuotasMora.filter(c => !c.no_calcular_multa)
       const cuotasMoraSinMulta = cuotasMora.filter(c => c.no_calcular_multa)
 
-      // Poner a 0 las sanciones de las cuotas en mora con no_calcular_multa (por si ya tenían multa calculada)
+      // Poner a 0 las sanciones de las cuotas en mora con no_calcular_multa (batch con .in)
       if (cuotasMoraSinMulta.length > 0) {
-        const updatesCero = cuotasMoraSinMulta.map(c => supabase
+        const idsSinMulta = cuotasMoraSinMulta.map(c => c.id)
+        const { error: errCero } = await supabase
           .from('cuotas')
-          .update({
-            valor_multa: 0,
-            valor_multa_base: 0,
-            valor_multa_intereses: 0
-          })
-          .eq('id', c.id))
-        const resultsCero = await Promise.all(updatesCero)
-        const erroresCero = resultsCero.filter(r => r.error)
-        if (erroresCero.length > 0) {
-          console.warn('📋 [Sanciones] Algunas cuotas no_calcular_multa no se pudieron poner a 0:', erroresCero)
+          .update({ valor_multa: 0, valor_multa_base: 0, valor_multa_intereses: 0 })
+          .in('id', idsSinMulta)
+        if (errCero) {
+          console.warn('📋 [Sanciones] Error poniendo a 0 cuotas no_calcular_multa:', errCero)
         }
         cuotasMoraSinMulta.forEach(c => {
           c.valor_multa = 0
@@ -544,34 +520,37 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
           sanciones[cuota.id] = multaBase + interesesAdicionales
           sancionesIntereses[cuota.id] = interesesAdicionales
-          console.log(`💰 Sanción cuota ${cuota.id}: mora_orden=${moraOrdenCuota ?? 'N/A'}, Base $${multaBase.toLocaleString()} + Intereses (tramo) $${interesesAdicionales.toLocaleString()} = $${(multaBase + interesesAdicionales).toLocaleString()}`)
         })
       })
 
       // Persistir en BD: valor_multa = base + intereses; valor_multa_base, mora_orden, fecha_inicio_mora solo primera vez; valor_multa_intereses siempre.
+      // Batches de máximo 10 requests concurrentes para no saturar el navegador.
       if (Object.keys(sanciones).length > 0) {
-        const updates = Object.entries(sanciones).map(([cuotaId, valor]) => {
-          const payload = {
-            valor_multa: Number(valor),
-            valor_multa_intereses: Number(sancionesIntereses[cuotaId] ?? 0)
+        const BATCH_SIZE = 10
+        const entries = Object.entries(sanciones)
+        for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+          const batch = entries.slice(i, i + BATCH_SIZE)
+          const updates = batch.map(([cuotaId, valor]) => {
+            const payload = {
+              valor_multa: Number(valor),
+              valor_multa_intereses: Number(sancionesIntereses[cuotaId] ?? 0)
+            }
+            if (sancionesBases[cuotaId] != null) {
+              payload.valor_multa_base = Number(sancionesBases[cuotaId])
+            }
+            if (nuevosMoraOrden[cuotaId] != null) {
+              payload.mora_orden = Number(nuevosMoraOrden[cuotaId])
+            }
+            if (nuevasFechasInicioMora[cuotaId]) {
+              payload.fecha_inicio_mora = nuevasFechasInicioMora[cuotaId]
+            }
+            return supabase.from('cuotas').update(payload).eq('id', cuotaId)
+          })
+          const results = await Promise.all(updates)
+          const errores = results.filter(r => r.error)
+          if (errores.length > 0) {
+            console.warn('Algunas actualizaciones de sanciones fallaron:', errores)
           }
-          if (sancionesBases[cuotaId] != null) {
-            payload.valor_multa_base = Number(sancionesBases[cuotaId])
-          }
-          if (nuevosMoraOrden[cuotaId] != null) {
-            payload.mora_orden = Number(nuevosMoraOrden[cuotaId])
-          }
-          if (nuevasFechasInicioMora[cuotaId]) {
-            payload.fecha_inicio_mora = nuevasFechasInicioMora[cuotaId]
-          }
-          return supabase.from('cuotas').update(payload).eq('id', cuotaId)
-        })
-        const results = await Promise.all(updates)
-        const errores = results.filter(r => r.error)
-        if (errores.length > 0) {
-          console.warn('📋 [Sanciones] Algunas actualizaciones fallaron:', errores)
-        } else {
-          console.log('📋 [Sanciones] valor_multa, valor_multa_base (si nueva), mora_orden, fecha_inicio_mora (si nueva), valor_multa_intereses actualizados en BD para', Object.keys(sanciones).length, 'cuotas')
         }
         lista.forEach(c => {
           if (sanciones[c.id] != null) {
@@ -609,7 +588,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
   // - En Mora: fecha_actual > fecha_vencimiento
   // - Pagada: valor_pagado >= (valor_cuota + valor_multa)
-  async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null) {
+  async function actualizarEstadoMoraAutomatico(cuotasLista = null, natilleraId = null, configNatilleraCache = null) {
     try {
       const lista = cuotasLista || cuotas.value
       if (!lista || lista.length === 0) return
@@ -671,9 +650,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const actualizaciones = []
 
-      // Corregir cuotas a programada (si estaban mal marcadas como pendiente)
       if (cuotasAProgramada.length > 0) {
-        console.log(`🔄 Corrigiendo ${cuotasAProgramada.length} cuota(s) de pendiente a programada`)
         const { data: actualizadasProgramada, error: errorProgramada } = await supabase
           .from('cuotas')
           .update({ estado: 'programada' })
@@ -704,12 +681,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       // Actualizar cuotas a mora con aplicación de sanciones
         if (cuotasAMora.length > 0) {
-        // Obtener la configuración de sanciones y periodicidad de la natillera
         let configSanciones = null
         let periodicidadNatillera = 'mensual'
         let diasGraciaMora = 3
 
-        if (natilleraId) {
+        if (configNatilleraCache?.reglas_multas != null) {
+          let reglasMultasMora = configNatilleraCache.reglas_multas
+          if (typeof reglasMultasMora === 'string') {
+            try { reglasMultasMora = JSON.parse(reglasMultasMora) } catch (_) { reglasMultasMora = null }
+          }
+          diasGraciaMora = reglasMultasMora?.dias_gracia ?? 3
+          configSanciones = reglasMultasMora?.sanciones || null
+          periodicidadNatillera = configNatilleraCache.periodicidad || 'mensual'
+        } else if (natilleraId) {
           const { data: natillera } = await supabase
             .from('natilleras')
             .select('reglas_multas, periodicidad')
@@ -723,7 +707,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
           configSanciones = reglasMultasMora?.sanciones || natillera?.reglas_multas?.sanciones || null
           periodicidadNatillera = natillera?.periodicidad || 'mensual'
         } else if (cuotasAMora.length > 0) {
-          // Obtener natillera_id desde el primer socio_natillera
           const { data: socioNatillera } = await supabase
             .from('socios_natillera')
             .select('natillera_id')
@@ -889,7 +872,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
             const otrasEnMoraConOrden = cuotasMoraSocio.filter(c => c.mora_orden != null && c.mora_orden !== '' && !cuotasNuevasPasandoAMora.some(n => n.id === c.id))
             let maxOrden = otrasEnMoraConOrden.length > 0 ? Math.max(...otrasEnMoraConOrden.map(c => Number(c.mora_orden))) : 0
 
-            console.log(`🔍 Socio ${socioId}: ${cuotasMoraSocio.length} cuotas en mora, ${cuotasNuevasPasandoAMora.length} nuevas pasando a mora, maxOrden=${maxOrden}`)
 
             // Para diaria por tramo: lista ordenada por fecha_limite (todas en mora + nuevas)
             const todasEnMoraOrdenadas = [...cuotasMoraSocio, ...cuotasNuevasPasandoAMora.map(n => n.cuotaCompleta)].filter(Boolean)
@@ -948,62 +930,67 @@ export const useCuotasStore = defineStore('cuotas', () => {
               multasCalculadas.set(cuotaInfo.id, valorMulta)
               moraOrdenCalculado.set(cuotaInfo.id, moraOrden)
               if (fechaInicioMora) fechaInicioMoraCalculada.set(cuotaInfo.id, fechaInicioMora)
-              console.log(`  ✅ Cuota ${cuotaInfo.id}: mora_orden=${moraOrden}, Base $${valorMulta.toLocaleString('es-CO')}, fecha_inicio_mora=${fechaInicioMora || 'N/A'}`)
             })
           })
         }
         
-        // Actualizar cada cuota a mora con multa, mora_orden y fecha_inicio_mora (modelo por racha)
-        for (const cuotaInfo of cuotasAMora) {
-          const datosActualizar = {
-            estado: 'mora',
-            fecha_mora: fechaActualStr
-          }
+        // Actualizar cuotas a mora en batches paralelos (en vez de secuencial)
+        const MORA_BATCH = 10
+        for (let bi = 0; bi < cuotasAMora.length; bi += MORA_BATCH) {
+          const batch = cuotasAMora.slice(bi, bi + MORA_BATCH)
+          const batchPromises = batch.map(cuotaInfo => {
+            const datosActualizar = {
+              estado: 'mora',
+              fecha_mora: fechaActualStr
+            }
 
-          const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
-          const valorMultaExistente = parseFloat(cuotaActual?.valor_multa) || 0
-          const valorMultaCalculada = multasCalculadas.get(cuotaInfo.id)
-          const tieneBasePersistida = cuotaActual?.valor_multa_base != null && cuotaActual?.valor_multa_base !== '' && Number(cuotaActual?.valor_multa_base) > 0
-          const moraOrdenNuevo = moraOrdenCalculado.get(cuotaInfo.id)
-          const fechaInicioMoraNueva = fechaInicioMoraCalculada.get(cuotaInfo.id)
+            const cuotaActual = lista.find(c => c.id === cuotaInfo.id)
+            const valorMultaExistente = parseFloat(cuotaActual?.valor_multa) || 0
+            const valorMultaCalculada = multasCalculadas.get(cuotaInfo.id)
+            const tieneBasePersistida = cuotaActual?.valor_multa_base != null && cuotaActual?.valor_multa_base !== '' && Number(cuotaActual?.valor_multa_base) > 0
+            const moraOrdenNuevo = moraOrdenCalculado.get(cuotaInfo.id)
+            const fechaInicioMoraNueva = fechaInicioMoraCalculada.get(cuotaInfo.id)
 
-          if (valorMultaCalculada !== undefined && valorMultaCalculada > 0) {
-            if (configSanciones?.tipo === 'escalonada' && valorMultaExistente > 0 && valorMultaCalculada < valorMultaExistente) {
-              datosActualizar.valor_multa = valorMultaExistente
-            } else {
-              datosActualizar.valor_multa = valorMultaCalculada
-              if (!tieneBasePersistida) {
-                // Diaria: no persistir valor_multa_base (se recalcula por días cada vez)
-                if (configSanciones?.tipo !== 'diaria') {
-                  datosActualizar.valor_multa_base = valorMultaCalculada
+            if (valorMultaCalculada !== undefined && valorMultaCalculada > 0) {
+              if (configSanciones?.tipo === 'escalonada' && valorMultaExistente > 0 && valorMultaCalculada < valorMultaExistente) {
+                datosActualizar.valor_multa = valorMultaExistente
+              } else {
+                datosActualizar.valor_multa = valorMultaCalculada
+                if (!tieneBasePersistida) {
+                  if (configSanciones?.tipo !== 'diaria') {
+                    datosActualizar.valor_multa_base = valorMultaCalculada
+                  }
+                  datosActualizar.valor_multa_intereses = 0
+                  if (moraOrdenNuevo != null) datosActualizar.mora_orden = Number(moraOrdenNuevo)
+                  if (fechaInicioMoraNueva) datosActualizar.fecha_inicio_mora = fechaInicioMoraNueva
                 }
-                datosActualizar.valor_multa_intereses = 0
-                if (moraOrdenNuevo != null) datosActualizar.mora_orden = Number(moraOrdenNuevo)
-                if (fechaInicioMoraNueva) datosActualizar.fecha_inicio_mora = fechaInicioMoraNueva
               }
+            } else if (cuotaInfo.yaTeníaMulta) {
+              if (cuotaActual?.valor_multa) {
+                datosActualizar.valor_multa = cuotaActual.valor_multa
+              }
+            } else if (cuotaActual?.no_calcular_multa) {
+              datosActualizar.valor_multa = 0
+              datosActualizar.valor_multa_base = 0
+              datosActualizar.valor_multa_intereses = 0
             }
-          } else if (cuotaInfo.yaTeníaMulta) {
-            if (cuotaActual?.valor_multa) {
-              datosActualizar.valor_multa = cuotaActual.valor_multa
+
+            return supabase
+              .from('cuotas')
+              .update(datosActualizar)
+              .eq('id', cuotaInfo.id)
+              .select()
+              .single()
+          })
+
+          const batchResults = await Promise.all(batchPromises)
+          batchResults.forEach(({ data, error: errorMora }) => {
+            if (errorMora) {
+              console.error('Error actualizando cuota en mora:', errorMora)
+            } else if (data) {
+              actualizaciones.push(data)
             }
-          } else if (cuotaActual?.no_calcular_multa) {
-            datosActualizar.valor_multa = 0
-            datosActualizar.valor_multa_base = 0
-            datosActualizar.valor_multa_intereses = 0
-          }
-
-          const { data: actualizadaMora, error: errorMora } = await supabase
-            .from('cuotas')
-            .update(datosActualizar)
-            .eq('id', cuotaInfo.id)
-            .select()
-            .single()
-
-          if (errorMora) {
-            console.error('Error actualizando cuota en mora:', errorMora)
-          } else if (actualizadaMora) {
-            actualizaciones.push(actualizadaMora)
-          }
+          })
         }
       }
 
@@ -1073,7 +1060,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Construir query para obtener socios activos (incluyendo nombre para auditoría)
       let query = supabase
         .from('socios_natillera')
-        .select('id, valor_cuota_individual, periodicidad, socio:socios(id, nombre)')
+        .select('id, valor_cuota_individual, periodicidad, socio:socios(id, nombre, avatar_seed, avatar_style)')
         .eq('natillera_id', natilleraId)
         .eq('estado', 'activo')
 
@@ -1594,66 +1581,74 @@ export const useCuotasStore = defineStore('cuotas', () => {
       loading.value = true
       error.value = null
 
-      // Obtener la cuota actual
-      const { data: cuotaActual, error: fetchError } = await supabase
-        .from('cuotas')
-        .select('*')
-        .eq('id', cuotaId)
-        .single()
+      // Paralelizar: obtener cuota + socio_natillera en una sola ronda
+      const [cuotaRes, socioRes] = await Promise.all([
+        supabase.from('cuotas').select('*').eq('id', cuotaId).single(),
+        // Usar el socio_natillera_id si viene en options (evita query extra)
+        options._socioNatilleraId
+          ? Promise.resolve({ data: { natillera_id: options._natilleraId, periodicidad: options._periodicidadSocio }, error: null })
+          : null
+      ])
 
-      if (fetchError) throw fetchError
+      if (cuotaRes.error) throw cuotaRes.error
+      const cuotaActual = cuotaRes.data
 
-      // Obtener natillera_id desde socios_natillera
-      const { data: socioNatillera, error: socioError } = await supabase
-        .from('socios_natillera')
-        .select('natillera_id')
-        .eq('id', cuotaActual.socio_natillera_id)
-        .single()
+      let natilleraId, periodicidadSocioCache
+      if (socioRes?.data?.natillera_id) {
+        natilleraId = socioRes.data.natillera_id
+        periodicidadSocioCache = socioRes.data.periodicidad
+      } else {
+        const { data: socioNatillera, error: socioError } = await supabase
+          .from('socios_natillera')
+          .select('natillera_id, periodicidad')
+          .eq('id', cuotaActual.socio_natillera_id)
+          .single()
+        if (socioError) throw socioError
+        natilleraId = socioNatillera?.natillera_id
+        periodicidadSocioCache = socioNatillera?.periodicidad
+      }
 
-      if (socioError) throw socioError
-
-      const natilleraId = socioNatillera?.natillera_id
       if (!natilleraId) {
         throw new Error('No se pudo obtener la natillera asociada a la cuota')
       }
 
-      // IMPORTANTE: Si la cuota tiene no_calcular_multa marcado, la multa debe ser siempre 0
       const tieneNoCalcularMulta = cuotaActual.no_calcular_multa || false
       
-      // Obtener configuración de sanciones y calcular sanción dinámica si la cuota está en mora
-      // NO calcular si tiene no_calcular_multa marcado
       let sancionDinamica = tieneNoCalcularMulta ? 0 : (cuotaActual.valor_multa || 0)
       if (cuotaActual.estado === 'mora' && !tieneNoCalcularMulta) {
-        const { data: natillera } = await supabase
-          .from('natilleras')
-          .select('reglas_multas, periodicidad')
-          .eq('id', natilleraId)
-          .single()
+        // Usar cache de natillera si viene en options, sino consultar
+        let natilleraConfig = options._natilleraConfig || null
+        if (!natilleraConfig) {
+          const { data: natillera } = await supabase
+            .from('natilleras')
+            .select('reglas_multas, periodicidad, nombre')
+            .eq('id', natilleraId)
+            .single()
+          natilleraConfig = natillera
+        }
         
-        const configSanciones = natillera?.reglas_multas?.sanciones || null
-        const diasGracia = natillera?.reglas_multas?.dias_gracia ?? 3
-        const periodicidadNatillera = natillera?.periodicidad || 'mensual'
+        const configSanciones = natilleraConfig?.reglas_multas?.sanciones || null
+        const diasGracia = natilleraConfig?.reglas_multas?.dias_gracia ?? 3
+        const periodicidadNatillera = natilleraConfig?.periodicidad || 'mensual'
         const interesesConfigPago = configSanciones?.interesesAdicionales ?? configSanciones?.intereses_adicionales ?? {}
         const interesesActivoPago = interesesConfigPago.activo === true || interesesConfigPago.activo === 'true' || interesesConfigPago.activo === 1
         const interesesDiasPago = Number(interesesConfigPago.dias) || 2
         const interesesValorPago = Number(interesesConfigPago.valor) || 0
-        console.log('📋 [Sanciones días extras] Al registrar pago:', { activo: interesesActivoPago, activoRaw: interesesConfigPago.activo, cadaXDias: interesesDiasPago, valorPorPeriodo: interesesValorPago, diasGracia })
-
         if (configSanciones?.activa) {
-          // Obtener todas las cuotas en mora del socio ordenadas por fecha
-          const { data: cuotasMoraSocio } = await supabase
-            .from('cuotas')
-            .select('id, fecha_limite, quincena')
-            .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
-            .eq('estado', 'mora')
-            .order('fecha_limite', { ascending: true })
+          // Paralelizar: cuotas en mora + periodicidad socio en una ronda
+          const [cuotasMoraRes, socioInfoRes] = await Promise.all([
+            supabase.from('cuotas').select('id, fecha_limite, quincena')
+              .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
+              .eq('estado', 'mora')
+              .order('fecha_limite', { ascending: true }),
+            periodicidadSocioCache
+              ? Promise.resolve({ data: { periodicidad: periodicidadSocioCache } })
+              : supabase.from('socios_natillera').select('periodicidad')
+                  .eq('id', cuotaActual.socio_natillera_id).single()
+          ])
           
-          // Obtener periodicidad del socio
-          const { data: socioNatilleraInfo } = await supabase
-            .from('socios_natillera')
-            .select('periodicidad')
-            .eq('id', cuotaActual.socio_natillera_id)
-            .single()
+          const cuotasMoraSocio = cuotasMoraRes.data
+          const socioNatilleraInfo = socioInfoRes.data
           
           const periodicidadSocio = socioNatilleraInfo?.periodicidad || 'mensual'
           const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' && periodicidadSocio === 'mensual'
@@ -1934,49 +1929,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
         nuevaEstado = cuotaActual.estado
       }
 
-      // Generar código único de comprobante solo si se está registrando un pago (no si ya existe)
+      // Generar código de comprobante (8 chars de 31 símbolos = ~852B combinaciones, colisión despreciable)
       let codigoComprobante = cuotaActual.codigo_comprobante || null
-      const codigoAnterior = codigoComprobante // Guardar el código anterior antes de generar uno nuevo
+      const codigoAnterior = codigoComprobante
       if (!codigoComprobante) {
-        try {
-          // Intentar generar un código único (máximo 5 intentos)
-          let intentos = 0
-          let codigoUnico = false
-          while (!codigoUnico && intentos < 5) {
-            codigoComprobante = generarCodigoComprobante()
-            // Verificar que el código no exista (solo si la columna existe)
-            try {
-              const { data: codigoExistente, error: codigoError } = await supabase
-                .from('cuotas')
-                .select('id')
-                .eq('codigo_comprobante', codigoComprobante)
-                .limit(1)
-              
-              // Si hay error porque la columna no existe, continuar sin código
-              if (codigoError && codigoError.message && codigoError.message.includes('codigo_comprobante')) {
-                codigoComprobante = null
-                break
-              }
-              
-              if (!codigoExistente || codigoExistente.length === 0) {
-                codigoUnico = true
-              }
-            } catch (e) {
-              // Si la columna no existe, continuar sin código
-              codigoComprobante = null
-              break
-            }
-            intentos++
-          }
-          
-          if (!codigoUnico && codigoComprobante) {
-            throw new Error('No se pudo generar un código único de comprobante')
-          }
-        } catch (e) {
-          // Si hay error generando el código, continuar sin él
-          console.warn('No se pudo generar código de comprobante:', e.message)
-          codigoComprobante = null
-        }
+        codigoComprobante = generarCodigoComprobante()
       }
 
       // Preparar objeto de actualización
@@ -2051,109 +2008,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const valorPagadoActividadesAnterior = parseFloat(cuotaActual.valor_pagado_actividades) || 0
       updateData.valor_pagado_actividades = valorPagadoActividadesAnterior + valorActividadesPagado
       
-      // Solo agregar codigo_comprobante si existe un código generado
-      // Esto evita errores si la columna no existe en la BD (migración no ejecutada)
       if (codigoComprobante) {
-        try {
-          // Intentar actualizar con el código
-          updateData.codigo_comprobante = codigoComprobante
-        } catch (e) {
-          // Si falla, continuar sin el código (la columna puede no existir)
-          console.warn('No se pudo agregar código de comprobante:', e.message)
-        }
+        updateData.codigo_comprobante = codigoComprobante
       }
 
-      // Intentar actualizar con el código si existe
-      let data, updateError
-      
-      if (updateData.codigo_comprobante) {
-        const result = await supabase
-          .from('cuotas')
-          .update(updateData)
-          .eq('id', cuotaId)
-          .select('*')
-          .maybeSingle()
-        
-        data = result.data
-        updateError = result.error
-        
-        // Si el error es por la columna codigo_comprobante, intentar sin ella
-        if (updateError && updateError.message && (
-          updateError.message.includes('codigo_comprobante') || 
-          updateError.message.includes('column') ||
-          updateError.code === 'PGRST116'
-        )) {
-          delete updateData.codigo_comprobante
-          const retryResult = await supabase
-            .from('cuotas')
-            .update(updateData)
-            .eq('id', cuotaId)
-            .select('*')
-            .maybeSingle()
-          
-          data = retryResult.data
-          updateError = retryResult.error
-        }
-      } else {
-        const result = await supabase
-          .from('cuotas')
-          .update(updateData)
-          .eq('id', cuotaId)
-          .select('*')
-          .maybeSingle()
-        
-        data = result.data
-        updateError = result.error
-      }
-      
-      // Si falla por columna valor_pagado_sancion (no existe en BD), reintentar sin ella
-      if (updateError && updateError.message && (
-        updateError.message.includes('valor_pagado_sancion') ||
-        (updateError.message.includes('column') && updateData.valor_pagado_sancion !== undefined)
-      )) {
-        delete updateData.valor_pagado_sancion
-        const retryMulta = await supabase
-          .from('cuotas')
-          .update(updateData)
-          .eq('id', cuotaId)
-          .select('*')
-          .maybeSingle()
-        data = retryMulta.data
-        updateError = retryMulta.error
-      }
-
-      // Si falla por columna valor_pagado_actividades (no existe en BD), reintentar sin ella
-      if (updateError && updateError.message && (
-        updateError.message.includes('valor_pagado_actividades') ||
-        (updateError.message.includes('column') && updateData.valor_pagado_actividades !== undefined)
-      )) {
-        delete updateData.valor_pagado_actividades
-        const retryActividades = await supabase
-          .from('cuotas')
-          .update(updateData)
-          .eq('id', cuotaId)
-          .select('*')
-          .maybeSingle()
-        data = retryActividades.data
-        updateError = retryActividades.error
-      }
-
-      // Si falla por columnas desglose mixto (valor_pagado_efectivo/transferencia), reintentar sin ellas
-      if (updateError && updateError.message && (
-        updateError.message.includes('valor_pagado_efectivo') ||
-        updateError.message.includes('valor_pagado_transferencia')
-      )) {
-        delete updateData.valor_pagado_efectivo
-        delete updateData.valor_pagado_transferencia
-        const retryDesglose = await supabase
-          .from('cuotas')
-          .update(updateData)
-          .eq('id', cuotaId)
-          .select('*')
-          .maybeSingle()
-        data = retryDesglose.data
-        updateError = retryDesglose.error
-      }
+      // Un solo update (las columnas ya existen en la BD tras migraciones)
+      const { data, error: updateError } = await supabase
+        .from('cuotas')
+        .update(updateData)
+        .eq('id', cuotaId)
+        .select('*')
+        .maybeSingle()
 
       if (updateError) throw updateError
       
@@ -2161,353 +2026,145 @@ export const useCuotasStore = defineStore('cuotas', () => {
         throw new Error('No se pudo actualizar la cuota')
       }
 
-      // Si había pago parcial y se agregó más (completar parcial): guardar en historial para que al reenviar se muestre "Historial de pagos"
-      const totalPagadoAntes = valorPagadoAnterior + sancionPagadaAnterior + valorPagadoActividadesAnterior
-      const totalPagadoDespues = nuevoValorPagado + (sancionPagadaAnterior + valorSancionPagada) + (valorPagadoActividadesAnterior + valorActividadesPagado)
-      let insertedHistorialComprobanteId = null
-      if (valorPagadoAnterior > 0 && totalPagadoDespues > totalPagadoAntes && codigoComprobante) {
-        try {
-          const { data: insertedHistorial, error: errHistInsert } = await supabase
-            .from('historial_comprobantes')
-            .insert({
-              cuota_id: cuotaId,
-              codigo_comprobante_anterior: codigoComprobante,
-              codigo_comprobante_nuevo: codigoComprobante,
-              valor_pagado_anterior: totalPagadoAntes,
-              valor_pagado_nuevo: totalPagadoDespues,
-              motivo: 'completar_pago_parcial',
-              fecha_actualizacion: new Date().toISOString()
-            })
-            .select('id')
-            .single()
-          if (!errHistInsert && insertedHistorial?.id) {
-            insertedHistorialComprobanteId = insertedHistorial.id
-          }
-        } catch (e) {
-          if (!e.message || !e.message.includes('historial_comprobantes')) {
-            console.warn('No se pudo guardar en historial de comprobantes (pago parcial completado):', e.message)
-          }
-        }
-      }
-
-      // Si se generó un nuevo código y había uno anterior, guardar en historial
-      // Nota: En registrarPago solo se genera código si no existe, así que no debería haber historial aquí
-      // El historial se guarda principalmente en guardarEdicionCuota cuando se actualiza un código existente
-
-      // Actualizar en el array local
+      // Actualizar array local inmediatamente (UI optimista)
       const index = cuotas.value.findIndex(c => c.id === cuotaId)
       if (index !== -1) {
         cuotas.value[index] = data
       }
 
-      // Verificar y actualizar otras cuotas en mora después de registrar un pago
-      await actualizarEstadoMoraAutomatico()
-
-      // Registrar sanción en utilidades_clasificadas si se pagó una sanción
-      // El valor de la sanción pagada es el que se calculó anteriormente (valorSancionPagada)
-      // Si se pagó la sanción (sancionQuitada = true), registrar en utilidades
-      // IMPORTANTE: No registrar si tiene no_calcular_multa marcado
-      const debeRegistrarUtilidad = !tieneNoCalcularMulta && sancionQuitada && valorSancionPagada > 0
-      const valorMultaPagada = tieneNoCalcularMulta ? 0 : valorSancionPagada
-
-      console.log('🔍 [UTILIDADES] Verificando registro de sanción:', {
-        nuevaEstado,
-        valorMultaPagada,
-        sancionAPagar,
-        valorSancionPagada,
-        sancionQuitada,
-        totalAPagar,
-        nuevoValorPagado,
-        estadoAnterior: cuotaActual.estado,
-        debeRegistrarUtilidad,
-        natilleraId,
-        cuotaId
-      })
-
-      // REGISTRAR SIEMPRE cuando hay sanción pagada
-      if (debeRegistrarUtilidad) {
-        console.log('✅ [UTILIDADES] Condición cumplida, procediendo a registrar...')
-        try {
-          // Forma de pago con la que se pagó la cuota (clasificación por tipo y por forma_pago)
-          const formaPago = (tipoPago && ['efectivo', 'transferencia', 'mixto'].includes((tipoPago || '').toLowerCase()))
-            ? (tipoPago || '').toLowerCase()
-            : null
-
-          // Obtener todos los socios_natillera de esta natillera
-          const { data: sociosNatillera, error: errorSocios } = await supabase
-            .from('socios_natillera')
-            .select('id')
-            .eq('natillera_id', natilleraId)
-
-          if (errorSocios) {
-            console.error('Error obteniendo socios_natillera:', errorSocios)
-            throw errorSocios
-          }
-
-          const socioNatilleraIds = (sociosNatillera || []).map(sn => sn.id)
-
-          if (socioNatilleraIds.length === 0) {
-            console.warn('⚠️ [UTILIDADES] No se encontraron socios_natillera para la natillera:', natilleraId)
-            // Continuar con el proceso aunque no haya socios, pero registrar la sanción de esta cuota
-          }
-
-          // NOTA: Como ahora quitamos la sanción (valor_multa = 0) cuando se paga,
-          // no podemos buscar cuotas con valor_multa > 0 para calcular el total.
-          // En su lugar, usamos el registro existente en utilidades_clasificadas
-          // (por esta forma de pago) y le sumamos el valor de la sanción pagada en esta transacción.
-          const querySanciones = (q) => {
-            let chain = q.eq('natillera_id', natilleraId).eq('tipo', 'sanciones').is('fecha_cierre', null)
-            if (formaPago != null) chain = chain.eq('forma_pago', formaPago)
-            else chain = chain.is('forma_pago', null)
-            return chain
-          }
-
-          // Obtener el registro existente primero para saber el monto actual (por forma_pago)
-          const { data: utilidadExistenteTemp, error: errorUtilidadTemp } = await querySanciones(
-            supabase.from('utilidades_clasificadas').select('monto')
-          ).maybeSingle()
-
-          if (errorUtilidadTemp) {
-            console.error('Error obteniendo utilidad existente temporal:', errorUtilidadTemp)
-            throw errorUtilidadTemp
-          }
-
-          // Calcular el monto final: monto existente + sanción pagada en esta transacción
-          const montoAnterior = parseFloat(utilidadExistenteTemp?.monto) || 0
-          const montoFinal = montoAnterior + valorMultaPagada
-
-          console.log('💰 [UTILIDADES] Total sanciones pagadas calculado:', {
-            montoAnterior,
-            valorMultaPagada,
-            montoFinal,
-            forma_pago: formaPago
-          })
-          
-          // No usar return aquí: salía de registrarPago entero y omitía historial_pagos_cuota, auditoría y cierre.
-          if (montoFinal <= 0) {
-            console.warn('⚠️ [UTILIDADES] No hay monto de sanción para registrar (se omite utilidad; el pago sigue válido)')
-          } else {
-          // Obtener el registro existente de utilidades_clasificadas para sanciones (misma forma_pago)
-          const { data: utilidadExistente, error: errorUtilidadExistente } = await querySanciones(
-            supabase.from('utilidades_clasificadas').select('id, monto, detalles')
-          ).maybeSingle()
-
-          if (errorUtilidadExistente) {
-            console.error('Error obteniendo utilidad existente:', errorUtilidadExistente)
-            throw errorUtilidadExistente
-          }
-
-          if (utilidadExistente) {
-            // Actualizar el registro existente
-            console.log('📝 [UTILIDADES] Actualizando registro existente:', {
-              id: utilidadExistente.id,
-              montoAnterior: utilidadExistente.monto,
-              montoNuevo: montoFinal,
-              forma_pago: formaPago
-            })
-
-            const { data: updatedData, error: updateUtilidadError } = await supabase
-              .from('utilidades_clasificadas')
-              .update({
-                monto: montoFinal,
-                descripcion: 'Multas pagadas por cuotas en mora',
-                detalles: utilidadExistente.detalles || {},
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', utilidadExistente.id)
-              .select()
-
-            if (updateUtilidadError) {
-              console.error('❌ [UTILIDADES] Error actualizando utilidad de sanciones:', updateUtilidadError)
-              throw updateUtilidadError
-            } else {
-              console.log('✅ [UTILIDADES] Utilidad de sanciones actualizada correctamente:', updatedData)
-            }
-          } else {
-            // Crear nuevo registro (con forma_pago para clasificación por tipo y por forma de pago)
-            console.log('📝 [UTILIDADES] Creando nuevo registro:', {
-              natilleraId,
-              tipo: 'sanciones',
-              monto: montoFinal,
-              forma_pago: formaPago
-            })
-
-            const insertPayload = {
-              natillera_id: natilleraId,
-              tipo: 'sanciones',
-              monto: montoFinal,
-              fecha_cierre: null,
-              descripcion: 'Multas pagadas por cuotas en mora',
-              detalles: {}
-            }
-            if (formaPago != null) insertPayload.forma_pago = formaPago
-
-            const { data: insertedData, error: insertUtilidadError } = await supabase
-              .from('utilidades_clasificadas')
-              .insert(insertPayload)
-              .select()
-
-            if (insertUtilidadError) {
-              console.error('❌ [UTILIDADES] Error insertando utilidad de sanciones:', insertUtilidadError)
-              throw insertUtilidadError
-            } else {
-              console.log('✅ [UTILIDADES] Utilidad de sanciones creada correctamente:', insertedData)
-            }
-          }
-          }
-        } catch (errorUtilidad) {
-          // No fallar el registro de pago si hay error al registrar la utilidad
-          console.error('❌ Error registrando sanción en utilidades:', errorUtilidad)
-        }
-      } else {
-        console.log('⏭️ No se registra utilidad de sanción:', {
-          razon: !sancionQuitada ? 'No se pagó la sanción' :
-                 valorSancionPagada === 0 ? 'No hay sanción pagada' : 'Razón desconocida',
-          sancionQuitada,
-          valorSancionPagada
-        })
-      }
-
-      // NOTA: El registro de utilidades de actividades ahora se hace en registrarPagosActividades
-      // en Cuotas.vue, donde tenemos acceso a la información completa de las actividades
-      // (estado, tipo, etc.) para registrar correctamente según si están liquidadas o en curso.
-
-      // Registrar auditoría
-      const auditoria = useAuditoria()
-      
-      // Obtener nombre del socio (ya tenemos natilleraId)
-      const { data: socioData } = await supabase
-        .from('socios_natillera')
-        .select('socio:socios(nombre)')
-        .eq('id', cuotaActual.socio_natillera_id)
-        .single()
-      
-      const nombreSocio = socioData?.socio?.nombre || 'Socio desconocido'
-      const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < totalAPagar
-      const tieneMulta = sancionDinamica > 0
-      let descripcion
-      if (esPagoParcial) {
-        descripcion = tieneMulta
-          ? `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')} incl. multa de $${sancionDinamica.toLocaleString('es-CO')})`
-          : `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')})`
-      } else if (nuevaEstado === 'pagada') {
-        descripcion = tieneMulta
-          ? `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (incluye multa de $${sancionDinamica.toLocaleString('es-CO')})`
-          : `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
-      } else {
-        descripcion = `Se registró pago de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
-      }
-      
-      // Asegurar que los IDs sean strings válidos
-      const cuotaIdStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
-      const natilleraIdStr = natilleraId ? String(natilleraId) : null
-      
-      // Registrar auditoría en segundo plano
-      registrarAuditoriaEnSegundoPlano(auditoria.registrarPago(
-        cuotaIdStr,
-        descripcion,
-        data,
-        natilleraIdStr,
-        {
-          socio_nombre: nombreSocio,
-          socio_natillera_id: cuotaActual.socio_natillera_id,
-          valor_pagado_anterior: cuotaActual.valor_pagado || 0,
-          valor_pagado_nuevo: nuevoValorPagado,
-          valor_pagado_agregado: valorPagado,
-          valor_cuota: cuotaActual.valor_cuota,
-          valor_multa: sancionDinamica, // Usar la sanción dinámica calculada
-          valor_multa_anterior: cuotaActual.valor_multa || 0,
-          total_a_pagar: totalAPagar,
-          estado_anterior: cuotaActual.estado,
-          estado_nuevo: nuevaEstado,
-          codigo_comprobante: codigoComprobante,
-          codigo_comprobante_anterior: codigoAnterior
-        }
-      ))
-
-      // IMPORTANTE: Si tiene no_calcular_multa marcado, asegurar que valorSancionPagada sea 0 en el retorno
       const valorSancionPagadaFinal = tieneNoCalcularMulta ? 0 : valorSancionPagada
 
-      // Registrar en historial_pagos_cuota este abono (historial detallado de pagos de la cuota)
-      try {
-        // Obtener nombre de la natillera para contexto en reportes/comprobantes (no es crítico si falla)
-        let natilleraNombre = null
-        try {
-          const { data: natData } = await supabase
-            .from('natilleras')
-            .select('nombre')
-            .eq('id', natilleraId)
-            .maybeSingle()
-          natilleraNombre = natData?.nombre || null
-        } catch (eNat) {
-          console.warn('No se pudo obtener nombre de natillera para historial_pagos_cuota:', eNat.message)
-        }
+      // Nombre del socio: usar cache de options si viene, sino del socio_natillera local
+      const nombreSocio = options._socioNombre
+        || cuotas.value.find(c => c.id === cuotaId)?.socio_natillera?.socio?.nombre
+        || 'Socio desconocido'
+      const natilleraNombre = options._natilleraNombre || null
 
-        const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
-        const valorPagadoNum = Number(valorPagado) || 0
-        let valorTotalHist =
-          (valorCuotaPagado || 0) +
-          (valorSancionPagadaFinal || 0) +
-          (valorActividadesPagado || 0) +
-          (valorCuotasPrestamosPagado || 0)
-        let valorCuotaHist = valorCuotaPagado || 0
-        let valorActividadesHist = valorActividadesPagado || 0
-        // Último recurso: si hubo abono pero el desglose quedó en 0 (casos límite de redondeo u orden),
-        // registrar el monto del abono para no omitir la fila en historial_pagos_cuota.
-        if (valorTotalHist <= 0 && valorPagadoNum > 0) {
-          valorTotalHist = valorPagadoNum
-          valorCuotaHist = valorPagadoNum
-          valorActividadesHist = 0
-        }
-        const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
-        const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
+      // Lanzar operaciones secundarias en paralelo (no bloquean el retorno)
+      const tareasSecundarias = []
 
-        const insertHistorial = {
-          cuota_id: cuotaId,
-          fecha_pago: new Date().toISOString(),
-          forma_pago: formaPagoHist,
-          socio_nombre: nombreSocio,
-          natillera_nombre: natilleraNombre,
-          valor_total: valorTotalHist,
-          valor_cuota: valorCuotaHist,
-          valor_sancion: valorSancionPagadaFinal || 0,
-          valor_actividades: valorActividadesHist,
-          valor_cuotas_prestamo: valorCuotasPrestamosPagado || 0,
-          valor_pagado_cuota_total: valorPagadoCuotaTotal
-        }
-        if (impuesto4x1000Hist > 0) {
-          insertHistorial.impuesto_4x1000 = impuesto4x1000Hist
-        }
-        if (Array.isArray(options.detalleActividades) && options.detalleActividades.length > 0) {
-          insertHistorial.detalle_actividades = options.detalleActividades
-        }
-        if (options.totalAPagar > 0) {
-          insertHistorial.total_a_pagar = options.totalAPagar
-        }
-        if (Array.isArray(options.detalleCuotasPrestamos) && options.detalleCuotasPrestamos.length > 0) {
-          insertHistorial.detalle_cuotas_prestamo = options.detalleCuotasPrestamos
-        }
+      // 1. Actualizar mora automática
+      tareasSecundarias.push(
+        actualizarEstadoMoraAutomatico().catch(e => console.warn('actualizarEstadoMoraAutomatico:', e.message))
+      )
 
-        let histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
-        if (histRes.error && String(histRes.error.message || '').includes('impuesto_4x1000')) {
-          delete insertHistorial.impuesto_4x1000
-          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
-        }
-        if (histRes.error && String(histRes.error.message || '').includes('detalle_actividades')) {
-          delete insertHistorial.detalle_actividades
-          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
-        }
-        if (histRes.error && (String(histRes.error.message || '').includes('total_a_pagar') || String(histRes.error.message || '').includes('detalle_cuotas_prestamo'))) {
-          delete insertHistorial.total_a_pagar
-          delete insertHistorial.detalle_cuotas_prestamo
-          histRes = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
-        }
-        if (histRes.error) {
-          console.error('historial_pagos_cuota insert falló (revisar RLS/columnas):', histRes.error.message)
-        }
-      } catch (eHist) {
-        console.error('historial_pagos_cuota insert excepción:', eHist.message)
+      // 2. Registrar utilidad de sanción (fire-and-forget)
+      const debeRegistrarUtilidad = !tieneNoCalcularMulta && sancionQuitada && valorSancionPagada > 0
+      const valorMultaPagada = tieneNoCalcularMulta ? 0 : valorSancionPagada
+      if (debeRegistrarUtilidad) {
+        tareasSecundarias.push((async () => {
+          try {
+            const formaPago = (tipoPago && ['efectivo', 'transferencia', 'mixto'].includes((tipoPago || '').toLowerCase()))
+              ? (tipoPago || '').toLowerCase()
+              : null
+            const querySanciones = (q) => {
+              let chain = q.eq('natillera_id', natilleraId).eq('tipo', 'sanciones').is('fecha_cierre', null)
+              if (formaPago != null) chain = chain.eq('forma_pago', formaPago)
+              else chain = chain.is('forma_pago', null)
+              return chain
+            }
+            const { data: utilExist } = await querySanciones(
+              supabase.from('utilidades_clasificadas').select('id, monto, detalles')
+            ).maybeSingle()
+            const montoFinal = (parseFloat(utilExist?.monto) || 0) + valorMultaPagada
+            if (montoFinal <= 0) return
+            if (utilExist) {
+              await supabase.from('utilidades_clasificadas')
+                .update({ monto: montoFinal, descripcion: 'Multas pagadas por cuotas en mora', detalles: utilExist.detalles || {}, updated_at: new Date().toISOString() })
+                .eq('id', utilExist.id)
+            } else {
+              const insertPayload = { natillera_id: natilleraId, tipo: 'sanciones', monto: montoFinal, fecha_cierre: null, descripcion: 'Multas pagadas por cuotas en mora', detalles: {} }
+              if (formaPago != null) insertPayload.forma_pago = formaPago
+              await supabase.from('utilidades_clasificadas').insert(insertPayload)
+            }
+          } catch (e) { console.error('Error registrando sanción en utilidades:', e) }
+        })())
       }
+
+      // 3. Registrar auditoría (fire-and-forget)
+      tareasSecundarias.push((async () => {
+        try {
+          const auditoria = useAuditoria()
+          const esPagoParcial = nuevoValorPagado > 0 && nuevoValorPagado < totalAPagar
+          const tieneMulta = sancionDinamica > 0
+          let descripcion
+          if (esPagoParcial) {
+            descripcion = tieneMulta
+              ? `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')} incl. multa de $${sancionDinamica.toLocaleString('es-CO')})`
+              : `Se registró pago parcial de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (Total: $${nuevoValorPagado.toLocaleString('es-CO')} de $${totalAPagar.toLocaleString('es-CO')})`
+          } else if (nuevaEstado === 'pagada') {
+            descripcion = tieneMulta
+              ? `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio} (incluye multa de $${sancionDinamica.toLocaleString('es-CO')})`
+              : `Se registró pago completo de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
+          } else {
+            descripcion = `Se registró pago de $${valorPagado.toLocaleString('es-CO')} para ${nombreSocio}`
+          }
+          const cuotaIdStr = typeof cuotaId === 'string' ? cuotaId : String(cuotaId || '')
+          const natilleraIdStr = natilleraId ? String(natilleraId) : null
+          registrarAuditoriaEnSegundoPlano(auditoria.registrarPago(cuotaIdStr, descripcion, data, natilleraIdStr, {
+            socio_nombre: nombreSocio, socio_natillera_id: cuotaActual.socio_natillera_id,
+            valor_pagado_anterior: cuotaActual.valor_pagado || 0, valor_pagado_nuevo: nuevoValorPagado,
+            valor_pagado_agregado: valorPagado, valor_cuota: cuotaActual.valor_cuota,
+            valor_multa: sancionDinamica, valor_multa_anterior: cuotaActual.valor_multa || 0,
+            total_a_pagar: totalAPagar, estado_anterior: cuotaActual.estado, estado_nuevo: nuevaEstado,
+            codigo_comprobante: codigoComprobante, codigo_comprobante_anterior: codigoAnterior
+          }))
+        } catch (e) { console.warn('Error en auditoría:', e) }
+      })())
+
+      // 4. Registrar historial_pagos_cuota (fire-and-forget)
+      tareasSecundarias.push((async () => {
+        try {
+          const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
+          const valorPagadoNum = Number(valorPagado) || 0
+          let valorTotalHist = (valorCuotaPagado || 0) + (valorSancionPagadaFinal || 0) + (valorActividadesPagado || 0) + (valorCuotasPrestamosPagado || 0)
+          let valorCuotaHist = valorCuotaPagado || 0
+          let valorActividadesHist = valorActividadesPagado || 0
+          if (valorTotalHist <= 0 && valorPagadoNum > 0) {
+            valorTotalHist = valorPagadoNum
+            valorCuotaHist = valorPagadoNum
+            valorActividadesHist = 0
+          }
+          const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
+          const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
+          const insertHistorial = {
+            cuota_id: cuotaId, fecha_pago: new Date().toISOString(), forma_pago: formaPagoHist,
+            socio_nombre: nombreSocio, natillera_nombre: natilleraNombre,
+            valor_total: valorTotalHist, valor_cuota: valorCuotaHist, valor_sancion: valorSancionPagadaFinal || 0,
+            valor_actividades: valorActividadesHist, valor_cuotas_prestamo: valorCuotasPrestamosPagado || 0,
+            valor_pagado_cuota_total: valorPagadoCuotaTotal
+          }
+          if (impuesto4x1000Hist > 0) insertHistorial.impuesto_4x1000 = impuesto4x1000Hist
+          if (Array.isArray(options.detalleActividades) && options.detalleActividades.length > 0) insertHistorial.detalle_actividades = options.detalleActividades
+          if (options.totalAPagar > 0) insertHistorial.total_a_pagar = options.totalAPagar
+          if (Array.isArray(options.detalleCuotasPrestamos) && options.detalleCuotasPrestamos.length > 0) insertHistorial.detalle_cuotas_prestamo = options.detalleCuotasPrestamos
+          await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+        } catch (e) { console.error('historial_pagos_cuota insert excepción:', e.message) }
+      })())
+
+      // 5. Historial de comprobantes para pago parcial completado (fire-and-forget)
+      const totalPagadoAntes = valorPagadoAnterior + sancionPagadaAnterior + valorPagadoActividadesAnterior
+      const totalPagadoDespues = nuevoValorPagado + (sancionPagadaAnterior + valorSancionPagada) + (valorPagadoActividadesAnterior + valorActividadesPagado)
+      let insertedHistorialComprobanteId = null
+      if (valorPagadoAnterior > 0 && totalPagadoDespues > totalPagadoAntes && codigoComprobante) {
+        tareasSecundarias.push((async () => {
+          try {
+            const { data: insertedHistorial } = await supabase
+              .from('historial_comprobantes')
+              .insert({
+                cuota_id: cuotaId, codigo_comprobante_anterior: codigoComprobante,
+                codigo_comprobante_nuevo: codigoComprobante, valor_pagado_anterior: totalPagadoAntes,
+                valor_pagado_nuevo: totalPagadoDespues, motivo: 'completar_pago_parcial',
+                fecha_actualizacion: new Date().toISOString()
+              })
+              .select('id').single()
+            if (insertedHistorial?.id) insertedHistorialComprobanteId = insertedHistorial.id
+          } catch (e) { console.warn('historial_comprobantes insert:', e.message) }
+        })())
+      }
+
+      // Lanzar tareas secundarias en background (no bloquean UI ni el retorno)
+      const _bgPromise = Promise.allSettled(tareasSecundarias)
 
       return { 
         success: true, 
@@ -2516,7 +2173,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
         valorActividadesPagado,
         valorCuotasPrestamosPagado,
         valorCuotaPagado,
-        insertedHistorialComprobanteId
+        insertedHistorialComprobanteId,
+        _bgPromise
       }
     } catch (e) {
       error.value = e.message
@@ -2791,46 +2449,65 @@ export const useCuotasStore = defineStore('cuotas', () => {
   }
 
   // Función para generar cuotas faltantes para socios que no tienen cuota en un mes
-  async function generarCuotasFaltantes(natilleraId, mes = null, anio = null) {
-    // Crear clave única para esta operación (natillera + mes + año)
+  // opts.configNatilleraCache: datos de natillera ya cargados para evitar re-query
+  // opts.sociosCargados: socios_natillera ya cargados para evitar re-query
+  async function generarCuotasFaltantes(natilleraId, mes = null, anio = null, opts = {}) {
     const claveOperacion = `${natilleraId}-${mes}-${anio}`
     
-    // Verificar si ya hay una operación en curso para evitar condiciones de carrera
     if (generandoCuotasPorNatillera.get(claveOperacion)) {
       return { success: true, message: 'Ya hay una generación en curso', cuotasGeneradas: 0, enCurso: true }
     }
     
-    // Marcar que estamos generando cuotas para esta natillera/mes/año
     generandoCuotasPorNatillera.set(claveOperacion, true)
     
     try {
       const tiempoInicio = performance.now()
       error.value = null
 
-      // Si no se especifica mes/año, usar el mes actual
       const fechaActual = new Date()
       const mesAGenerar = mes || (fechaActual.getMonth() + 1)
       const anioAGenerar = anio || fechaActual.getFullYear()
 
-      // SUPER OPTIMIZACIÓN: Una sola consulta que trae socios Y natillera EN PARALELO
-      const [sociosResult, natilleraResult] = await Promise.all([
-        supabase
-          .from('socios_natillera')
-          .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre)')
-          .eq('natillera_id', natilleraId)
-          .eq('estado', 'activo'),
-        supabase
-          .from('natilleras')
-          .select('nombre, reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
-          .eq('id', natilleraId)
-          .single()
-      ])
+      let sociosRapido, natillera
 
-      if (sociosResult.error) throw sociosResult.error
-      if (natilleraResult.error) throw natilleraResult.error
-      
-      const sociosRapido = sociosResult.data
-      const natillera = natilleraResult.data
+      // Reutilizar datos ya cargados cuando estén disponibles
+      const cachedConfig = opts.configNatilleraCache || null
+      const cachedSocios = opts.sociosCargados || null
+
+      if (cachedConfig && cachedSocios?.length) {
+        sociosRapido = cachedSocios
+        natillera = cachedConfig
+      } else {
+        const promises = []
+        if (cachedSocios?.length) {
+          promises.push(Promise.resolve({ data: cachedSocios, error: null }))
+        } else {
+          promises.push(
+            supabase
+              .from('socios_natillera')
+              .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre, avatar_seed, avatar_style)')
+              .eq('natillera_id', natilleraId)
+              .eq('estado', 'activo')
+          )
+        }
+        if (cachedConfig) {
+          promises.push(Promise.resolve({ data: cachedConfig, error: null }))
+        } else {
+          promises.push(
+            supabase
+              .from('natilleras')
+              .select('nombre, reglas_multas, mes_inicio, mes_fin, anio, anio_inicio')
+              .eq('id', natilleraId)
+              .single()
+          )
+        }
+        const [sociosResult, natilleraResult] = await Promise.all(promises)
+        if (sociosResult.error) throw sociosResult.error
+        if (natilleraResult.error) throw natilleraResult.error
+        sociosRapido = sociosResult.data
+        natillera = natilleraResult.data
+      }
+
       const nombreNatillera = natillera?.nombre || ''
 
       if (!sociosRapido || sociosRapido.length === 0) {
@@ -2999,7 +2676,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Obtener información completa de los socios que necesitan cuota (con valor_cuota_individual y nombre)
       const { data: sociosCompletos, error: sociosCompletosError } = await supabase
         .from('socios_natillera')
-        .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre)')
+        .select('id, periodicidad, valor_cuota_individual, socio:socios(id, nombre, avatar_seed, avatar_style)')
         .in('id', sociosSinCuota)
         .eq('estado', 'activo')
       
@@ -3556,7 +3233,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Obtener el nombre del socio
       const { data: socioNatillera, error: socioError } = await supabase
         .from('socios_natillera')
-        .select('socio:socios(id, nombre)')
+        .select('socio:socios(id, nombre, avatar_seed, avatar_style)')
         .eq('id', socioNatilleraId)
         .single()
       
@@ -3914,8 +3591,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
   return {
     cuotas,
+    sociosNatillera,
     loading,
     error,
+    lastFetchedNatilleraId,
+    hasCuotasForNatillera,
+    aplicarCuotasDesdeCargaNatillera,
     fetchCuotasNatillera,
     generarCuotasPeriodo,
     registrarPago,

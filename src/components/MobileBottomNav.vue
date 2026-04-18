@@ -9,8 +9,8 @@
       <!-- Inicio / Detalle Natillera -->
       <router-link
         :to="`/natilleras/${natilleraId}`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}`)"
@@ -34,9 +34,10 @@
       <!-- Socios -->
       <router-link
         v-if="natilleraId"
+        id="tour-bottom-nav-socios"
         :to="`/natilleras/${natilleraId}/socios`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}/socios`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/socios`)"
@@ -60,7 +61,7 @@
         v-else
         type="button"
         @click="navegarAPrimeraNatillera('socios')"
-        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
         <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Socios</span>
@@ -69,9 +70,10 @@
       <!-- Cuotas -->
       <router-link
         v-if="natilleraId"
+        id="tour-bottom-nav-cuotas"
         :to="`/natilleras/${natilleraId}/cuotas`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}/cuotas`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/cuotas`)"
@@ -95,18 +97,19 @@
         v-else
         type="button"
         @click="navegarAPrimeraNatillera('cuotas')"
-        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
         <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Cuotas</span>
       </button>
 
       <!-- Préstamos -->
-      <router-link
+      <button
         v-if="natilleraId"
-        :to="`/natilleras/${natilleraId}/prestamos`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        type="button"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation [-webkit-tap-highlight-color:transparent]"
+        :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'nav-item--active' : 'nav-item--inactive'"
+        @click="irAPrestamosDesdeNav"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/prestamos`)"
@@ -125,12 +128,12 @@
           class="text-[10px] sm:text-[11px] leading-tight font-semibold transition-colors"
           :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'text-white' : ''"
         >Prést.</span>
-      </router-link>
+      </button>
       <button
         v-else
         type="button"
         @click="navegarAPrimeraNatillera('prestamos')"
-        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
         <BanknotesIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Prést.</span>
@@ -140,8 +143,8 @@
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/actividades`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/actividades`)"
@@ -165,7 +168,7 @@
         v-else
         type="button"
         @click="navegarAPrimeraNatillera('actividades')"
-        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
         <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Act.</span>
@@ -176,8 +179,8 @@
         v-if="natilleraId"
         id="tour-bottom-nav-totales"
         :to="`/natilleras/${natilleraId}/cuadre-caja`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/cuadre-caja`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}/cuadre-caja`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/cuadre-caja`)"
@@ -201,7 +204,7 @@
         v-else
         type="button"
         @click="navegarAPrimeraNatillera('cuadre-caja')"
-        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200"
+        class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
         <CalculatorIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Totales</span>
@@ -211,8 +214,8 @@
       <router-link
         v-if="natilleraId"
         :to="`/natilleras/${natilleraId}/configuracion`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
@@ -235,8 +238,8 @@
       <router-link
         v-else
         to="/configuracion"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1 transition-all duration-200 relative"
-        :class="isActive('/configuracion') ? 'nav-item--active' : 'nav-item--inactive py-0.5'"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
+        :class="isActive('/configuracion') ? 'nav-item--active' : 'nav-item--inactive'"
       >
         <div
           v-if="isActive('/configuracion')"
@@ -261,13 +264,40 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../stores/natilleras'
+import { useNotificationStore } from '../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 
 defineProps({
   /** Oculta la barra cuando el menú lateral está abierto (móvil) */
   forceHidden: { type: Boolean, default: false }
+})
+
+// Prefetch de los chunks de las vistas destino del nav inferior para que al tocar
+// el ícono la navegación sea instantánea en lugar de esperar la descarga del chunk.
+const _navViewImports = [
+  () => import('../views/natilleras/NatilleraDetalle.vue'),
+  () => import('../views/socios/Socios.vue'),
+  () => import('../views/cuotas/CuotasMeses.vue'),
+  () => import('../views/prestamos/Prestamos.vue'),
+  () => import('../views/actividades/Actividades.vue'),
+  () => import('../views/cuadre/CuadreCaja.vue'),
+  () => import('../views/natilleras/NatilleraConfiguracion.vue'),
+]
+
+onMounted(() => {
+  const prefetchAll = () => {
+    _navViewImports.forEach((load, i) => {
+      setTimeout(() => load().catch(() => {}), i * 120)
+    })
+  }
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(prefetchAll, { timeout: 3000 })
+  } else {
+    setTimeout(prefetchAll, 1500)
+  }
 })
 import {
   HomeIcon,
@@ -291,6 +321,30 @@ import {
 const route = useRoute()
 const router = useRouter()
 const natillerasStore = useNatillerasStore()
+const notificationStore = useNotificationStore()
+
+function natilleraEnRutaParaPrestamos() {
+  const id = natilleraId.value
+  if (!id) return null
+  const list = natillerasStore.todasLasNatilleras || []
+  let n = list.find((x) => String(x.id) === String(id))
+  if (!n) {
+    const na = natillerasStore.natilleraActual
+    if (na && String(na.id) === String(id)) n = na
+  }
+  return n || null
+}
+
+function irAPrestamosDesdeNav() {
+  const id = natilleraId.value
+  if (!id) return
+  const n = natilleraEnRutaParaPrestamos()
+  if (n && natilleraPrestamosDeshabilitados(n)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    return
+  }
+  router.push(`/natilleras/${id}/prestamos`)
+}
 
 // Extraer el ID de natillera de la ruta actual
 const natilleraId = computed(() => {
@@ -318,11 +372,29 @@ function isActive(path) {
 
 // Navegar a la primera natillera activa con la sección especificada
 function navegarAPrimeraNatillera(seccion) {
-  const todasLasNatilleras = natillerasStore.todasLasNatilleras
-  const natilleraActiva = todasLasNatilleras.find(n => n.estado === 'activa')
-  
+  const todasLasNatilleras = natillerasStore.todasLasNatilleras || []
+  if (seccion === 'prestamos') {
+    const candidata = todasLasNatilleras.find(
+      (n) => n.estado === 'activa' && !natilleraPrestamosDeshabilitados(n)
+    )
+    if (candidata?.id) {
+      const id = String(candidata.id)
+      if (id && id !== 'undefined' && id !== 'null') {
+        router.push(`/natilleras/${id}/prestamos`)
+        return
+      }
+    }
+    notificationStore.info(
+      'No hay una natillera activa con préstamos habilitados',
+      'Préstamos'
+    )
+    router.push('/dashboard')
+    return
+  }
+
+  const natilleraActiva = todasLasNatilleras.find((n) => n.estado === 'activa')
+
   if (natilleraActiva && natilleraActiva.id) {
-    // Validar que el ID sea válido antes de navegar
     const id = String(natilleraActiva.id)
     if (id && id !== 'undefined' && id !== 'null') {
       router.push(`/natilleras/${id}/${seccion}`)
@@ -330,7 +402,6 @@ function navegarAPrimeraNatillera(seccion) {
       router.push('/dashboard')
     }
   } else {
-    // Si no hay natilleras activas, ir al dashboard
     router.push('/dashboard')
   }
 }

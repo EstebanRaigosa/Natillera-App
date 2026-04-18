@@ -1,8 +1,6 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-slate-100/50 via-white to-amber-50/40">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-12 lg:pb-10">
-      <Breadcrumbs class="mb-4 sm:mb-5" />
-
       <div v-if="inicializando" class="flex flex-col items-center justify-center py-32 px-4">
         <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-rose-100 to-amber-100 flex items-center justify-center mb-6 shadow-inner">
           <div class="animate-spin w-8 h-8 border-[3px] border-rose-400 border-t-transparent rounded-full" />
@@ -31,6 +29,7 @@
             <div class="h-1 bg-gradient-to-r from-rose-500 via-amber-500 to-teal-500" />
             <div class="p-4 sm:p-5">
               <div class="flex items-start gap-3 min-w-0">
+                <BackButton :to="`/natilleras/${natilleraId}`" :inline="true" />
                 <div
                   class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-amber-600 text-white shadow-md shadow-rose-500/25"
                 >
@@ -562,7 +561,7 @@ import {
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
 
 const props = defineProps({

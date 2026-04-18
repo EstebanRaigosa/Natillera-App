@@ -6,16 +6,16 @@
         v-if="isIos"
         :class="['modal-wrapper-ios', align === 'bottom' ? 'modal-wrapper-ios--bottom' : '']"
         :style="{ zIndex: zIndex }"
-        @click.self="onBackdropClick"
+        @click.self="tryClose"
       >
         <div
           :class="['modal-wrapper-ios__backdrop', iosSoftBackdrop ? 'modal-wrapper-ios__backdrop--sage' : '']"
           aria-hidden="true"
-          @click="onBackdropClick"
-          @touchstart.passive="onBackdropClick"
+          @click="tryClose"
+          @touchstart.passive="tryClose"
         />
         <div
-          class="modal-wrapper-ios__card"
+          :class="['modal-wrapper-ios__card', cardClass]"
           :style="cardMaxWidth ? { maxWidth: cardMaxWidth } : undefined"
           @click.stop
         >
@@ -26,14 +26,14 @@
       <div
         v-else
         :class="overlayClass"
-        @click.self="onBackdropClick"
+        @click.self="tryClose"
       >
         <div
-          :class="backdropClassComputed"
+          :class="backdropClass"
           style="pointer-events: auto !important; touch-action: manipulation !important; cursor: pointer !important; -webkit-tap-highlight-color: transparent; z-index: 0 !important;"
           aria-hidden="true"
-          @click="onBackdropClick"
-          @touchstart="onBackdropClick"
+          @click="tryClose"
+          @touchstart.passive="tryClose"
         />
         <div
           :class="cardClass"
@@ -48,7 +48,6 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
 import { useIsIos } from '../composables/useIsIos'
 
 const props = defineProps({
@@ -60,30 +59,25 @@ const props = defineProps({
   persistent: { type: Boolean, default: false },
   /** iOS: velo salvia al 70 % (skill modales Natillerapp) */
   iosSoftBackdrop: { type: Boolean, default: false },
-  /** Android/desktop: clases Tailwind del velo (sustituye el negro por defecto si se pasa) */
-  backdropClass: { type: String, default: '' },
   /** Android: clases del overlay (fixed inset-0 flex ...) */
   overlayClass: { type: String, default: 'fixed inset-0 z-50 flex items-center justify-center p-4' },
   /** Android: clases de la card (relative max-w-md ...) */
   cardClass: { type: String, default: 'relative max-w-lg w-full bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto' },
+  /** Android: capa detrás de la card (overlay oscuro por defecto) */
+  backdropClass: { type: String, default: 'absolute inset-0 bg-black/50 backdrop-blur-sm' },
   /** iOS: ancho máximo de la card (ej. '28rem' para max-w-md, '42rem' para max-w-2xl) */
   cardMaxWidth: { type: String, default: '' }
 })
 
 const emit = defineEmits(['close'])
 
-const isIos = useIsIos()
-
-const backdropClassComputed = computed(() =>
-  props.backdropClass?.trim()
-    ? props.backdropClass
-    : 'absolute inset-0 bg-black/50 backdrop-blur-sm'
-)
-
-function onBackdropClick() {
-  if (props.persistent) return
-  emit('close')
+function tryClose() {
+  if (!props.persistent) {
+    emit('close')
+  }
 }
+
+const isIos = useIsIos()
 </script>
 
 <style scoped>
