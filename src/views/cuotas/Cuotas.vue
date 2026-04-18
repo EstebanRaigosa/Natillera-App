@@ -24,32 +24,13 @@
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="flex items-center gap-3 flex-1 min-w-0">
-            <BackButton :to="`/natilleras/${id}/cuotas`" :inline="true" />
+            <BackButton :to="`/natilleras/${id}`" :inline="true" />
             <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <CurrencyDollarIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-3 flex-wrap">
-                <div>
-                  <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Cuotas y Pagos</h1>
-                  <p class="text-gray-500 mt-0.5 text-sm">Gestiona las cuotas del mes seleccionado</p>
-                </div>
-              </div>
-              <div class="hidden md:flex items-center gap-2 mt-3 flex-wrap">
-                <p class="text-xs text-gray-500 font-medium shrink-0">PERIODO</p>
-                <button
-                  id="tour-cuotas-periodo-selector-desktop"
-                  type="button"
-                  @click="abrirSelectorMes"
-                  class="flex items-center gap-2 px-3 py-2 bg-white/90 rounded-xl border border-gray-200/80 text-left min-w-0 max-w-sm hover:bg-white transition-colors"
-                >
-                  <span v-if="mesSeleccionado" class="text-xl flex-shrink-0">{{ getMesEmoji(mesSeleccionado) }}</span>
-                  <div class="min-w-0">
-                    <p class="text-sm font-bold text-gray-800 truncate">{{ mesSeleccionadoLabel || 'Seleccionar mes' }}</p>
-                    <p v-if="mesSeleccionado" class="text-xs text-gray-500">{{ anioMesSeleccionado }}</p>
-                  </div>
-                </button>
-              </div>
+              <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Cuotas y Pagos</h1>
+              <p class="text-gray-500 mt-0.5 text-sm">Gestiona las cuotas del mes seleccionado</p>
             </div>
           </div>
           <div class="flex gap-2 flex-wrap">
@@ -83,28 +64,22 @@
     <div class="relative md:hidden -mt-6 -mx-6 mb-[10px]">
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 mt-6 mx-6 border border-gray-200/80 shadow-sm">
         <div class="flex items-center gap-3 mb-3">
-          <BackButton :to="`/natilleras/${id}/cuotas`" :inline="true" />
+          <BackButton :to="`/natilleras/${id}`" :inline="true" />
           <div class="w-11 h-11 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
             <CurrencyDollarIcon class="w-5 h-5 text-white" />
           </div>
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <h1 class="text-xl font-bold text-gray-800">Cuotas y Pagos</h1>
             <p class="text-gray-500 mt-0.5 text-sm">Gestiona las cuotas del mes</p>
           </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <p class="text-xs text-gray-500 font-medium">PERIODO</p>
           <button
-            id="tour-cuotas-periodo-selector-mobile"
+            v-if="mesesNatillera.length > 1"
             type="button"
-            @click="abrirSelectorMes"
-            class="flex items-center gap-2 px-3 py-2.5 bg-white rounded-xl border border-gray-200/80 text-left flex-1 min-w-0"
+            @click="modalSelectorRapidoMes = true"
+            class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/90 border border-gray-200 shadow-sm text-gray-600 active:bg-white flex-shrink-0 touch-manipulation"
+            aria-label="Seleccionar mes"
           >
-            <span v-if="mesSeleccionado" class="text-xl flex-shrink-0">{{ getMesEmoji(mesSeleccionado) }}</span>
-            <div class="min-w-0">
-              <p class="text-sm font-bold text-gray-800 truncate">{{ mesSeleccionadoLabel || 'Seleccionar' }}</p>
-              <p v-if="mesSeleccionado" class="text-xs text-gray-500">{{ anioMesSeleccionado }}</p>
-            </div>
+            <CalendarDaysIcon class="w-5 h-5" />
           </button>
         </div>
         <button
@@ -119,8 +94,196 @@
       </div>
     </div>
 
-    <!-- Resumen del mes seleccionado - Desktop -->
-    <div class="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+    <!-- Tabs + Indicadores (bloque unificado) -->
+    <div>
+      <!-- Tabs de meses tipo carpeta. No-seleccionadas quedan detrás del contenedor;
+           la seleccionada sobresale por encima y se funde con su interior. -->
+      <div class="relative pt-1">
+        <!-- Desktop: flechas + scroll -->
+        <div class="hidden md:block relative">
+          <button
+            v-show="puedeScrollIzquierdaDesktop"
+            type="button"
+            @click="scrollCarruselDesktopDir(-1)"
+            class="flecha-carrusel absolute left-1 bottom-[13px] z-[30]"
+            aria-label="Mes anterior"
+          >
+            <ChevronLeftIcon class="w-5 h-5" />
+          </button>
+          <div
+            id="tour-cuotas-periodo-selector-desktop"
+            ref="carruselMesesDesktopRef"
+            @scroll="actualizarFlechasDesktop"
+            class="carrusel-meses flex items-end gap-2 overflow-x-auto px-10 snap-x"
+            role="tablist"
+            aria-label="Seleccionar mes"
+          >
+            <button
+              v-for="mes in mesesNatillera"
+              :key="`mes-desktop-${mes.value}`"
+              :ref="(el) => registrarChipDesktop(el, mes.value)"
+              type="button"
+              role="tab"
+              :aria-selected="mesSeleccionado === mes.value"
+              @click="seleccionarMes(mes.value)"
+              :class="[
+                'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between text-left snap-center rounded-t-2xl border border-b-0 transition-all',
+                mesSeleccionado === mes.value
+                  ? 'w-[150px] h-[78px] px-3 py-2.5 bg-white border-gray-200 shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
+                  : 'w-[132px] h-[62px] px-3 py-2 bg-gray-50 border-gray-200/70 hover:bg-white'
+              ]"
+            >
+              <span
+                class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
+                :class="dotColorMes(mes.value)"
+                aria-hidden="true"
+              />
+              <div class="pr-3">
+                <p class="text-sm font-bold text-gray-800 leading-tight flex items-center gap-1.5">
+                  <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
+                  <span class="truncate">{{ mes.label }}</span>
+                </p>
+                <p class="text-[11px] text-gray-500 mt-0.5 leading-none">{{ anioParaMes(mes.value) }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                  class="inline-flex items-center gap-0.5 text-red-600"
+                  :title="`${resumenMesCarrusel(mes.value).enMora} en mora`"
+                >
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" />
+                  <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                  class="inline-flex items-center gap-0.5 text-amber-600"
+                  :title="`${resumenMesCarrusel(mes.value).pendientes} pendientes`"
+                >
+                  <ClockIcon class="w-3.5 h-3.5" />
+                  <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+                </span>
+                <span
+                  v-if="esMesActualHoy(mes.value)"
+                  class="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white tracking-wide leading-none"
+                >HOY</span>
+              </div>
+            </button>
+          </div>
+          <button
+            v-show="puedeScrollDerechaDesktop"
+            type="button"
+            @click="scrollCarruselDesktopDir(1)"
+            class="flecha-carrusel absolute right-1 bottom-[13px] z-[30]"
+            aria-label="Mes siguiente"
+          >
+            <ChevronRightIcon class="w-5 h-5" />
+          </button>
+        </div>
+        <!-- Mobile: scroll táctil con indicadores de desplazamiento -->
+        <div class="md:hidden relative -mx-6">
+          <div
+            id="tour-cuotas-periodo-selector-mobile"
+            ref="carruselMesesMobileRef"
+            @scroll="actualizarIndicadoresMobile"
+            class="carrusel-meses carrusel-meses-mobile px-6 flex items-end gap-2 overflow-x-auto snap-x"
+            role="tablist"
+            aria-label="Seleccionar mes"
+          >
+            <button
+              v-for="mes in mesesNatillera"
+              :key="`mes-mobile-${mes.value}`"
+              :ref="(el) => registrarChipMobile(el, mes.value)"
+              type="button"
+              role="tab"
+              :aria-selected="mesSeleccionado === mes.value"
+              @click="seleccionarMes(mes.value)"
+              :class="[
+                'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between text-left snap-center rounded-t-2xl border border-b-0 touch-manipulation transition-all',
+                mesSeleccionado === mes.value
+                  ? 'w-[144px] h-[76px] px-3 py-2.5 bg-white border-gray-200 shadow-[0_-6px_16px_-6px_rgba(0,0,0,0.15)] z-[20]'
+                  : 'w-[126px] h-[60px] px-3 py-2 bg-gray-50 border-gray-200/70 active:bg-white'
+              ]"
+            >
+              <span
+                class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
+                :class="dotColorMes(mes.value)"
+                aria-hidden="true"
+              />
+              <div class="pr-3">
+                <p class="text-sm font-bold text-gray-800 leading-tight flex items-center gap-1.5">
+                  <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
+                  <span class="truncate">{{ mes.label }}</span>
+                </p>
+                <p class="text-[11px] text-gray-500 mt-0.5 leading-none">{{ anioParaMes(mes.value) }}</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                  class="inline-flex items-center gap-0.5 text-red-600"
+                  :title="`${resumenMesCarrusel(mes.value).enMora} en mora`"
+                >
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" />
+                  <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                  class="inline-flex items-center gap-0.5 text-amber-600"
+                  :title="`${resumenMesCarrusel(mes.value).pendientes} pendientes`"
+                >
+                  <ClockIcon class="w-3.5 h-3.5" />
+                  <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+                </span>
+                <span
+                  v-if="esMesActualHoy(mes.value)"
+                  class="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white tracking-wide leading-none"
+                >HOY</span>
+              </div>
+            </button>
+          </div>
+          <!-- Fade izquierdo (indica que hay más meses a la izquierda) -->
+          <div
+            v-show="puedeScrollIzquierdaMobile"
+            class="fade-mobile-left absolute top-0 bottom-0 left-0 pointer-events-none transition-opacity duration-200"
+            aria-hidden="true"
+          ></div>
+          <!-- Fade derecho (indica que hay más meses a la derecha) -->
+          <div
+            v-show="puedeScrollDerechaMobile"
+            class="fade-mobile-right absolute top-0 bottom-0 right-0 pointer-events-none transition-opacity duration-200"
+            aria-hidden="true"
+          ></div>
+          <!-- Chevron indicador izquierdo (móvil) -->
+          <button
+            type="button"
+            @click="scrollCarruselMobileDir(-1)"
+            aria-label="Mes anterior"
+            :class="[
+              'chevron-mobile absolute left-2 bottom-[16px] z-[30] transition-opacity duration-200',
+              puedeScrollIzquierdaMobile ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            ]"
+          >
+            <ChevronLeftIcon class="w-4 h-4" />
+          </button>
+          <!-- Chevron indicador derecho (móvil) -->
+          <button
+            type="button"
+            @click="scrollCarruselMobileDir(1)"
+            aria-label="Mes siguiente"
+            :class="[
+              'chevron-mobile absolute right-2 bottom-[16px] z-[30] transition-opacity duration-200',
+              puedeScrollDerechaMobile ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            ]"
+          >
+            <ChevronRightIcon class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Contenedor de indicadores: está por encima de las tabs no-seleccionadas
+           (las recubre por arriba) y la tab seleccionada (z-[20]) lo recubre a él. -->
+      <div class="relative z-10 -mt-1 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-3 sm:p-5">
+        <!-- Resumen del mes seleccionado - Desktop -->
+        <div class="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
       <button 
         @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'"
         :class="[
@@ -221,8 +384,8 @@
       </div>
     </div>
 
-    <!-- Resumen del mes seleccionado - Móvil (2x2) -->
-    <div class="md:hidden grid grid-cols-2 gap-3 mt-1 mb-3">
+        <!-- Resumen del mes seleccionado - Móvil (2x2) -->
+        <div class="md:hidden grid grid-cols-2 gap-3">
       <!-- Tarjeta Pagadas -->
       <button 
         @click="filtroEstado = filtroEstado === 'pagada' ? 'todos' : 'pagada'; cerrarFiltros()"
@@ -282,6 +445,8 @@
         <p class="text-xs font-medium text-gray-700 uppercase mb-2">TOTAL RECAUDADO</p>
         <p class="text-2xl font-bold text-green-600 leading-tight">${{ formatMoney(resumenMesActual.totalRecaudado || 0) }}</p>
       </button>
+        </div>
+      </div>
     </div>
 
     <!-- Barra de progreso móvil -->
@@ -1945,6 +2110,80 @@
         </button>
       </Transition>
     </Teleport>
+
+    <!-- Modal Selector Rápido de Mes (hoja inferior, móvil) -->
+    <ModalWrapper
+      :show="!!modalSelectorRapidoMes"
+      :z-index="60"
+      align="bottom"
+      overlay-class="fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 sm:p-4"
+      card-class="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+      @close="modalSelectorRapidoMes = false"
+    >
+      <div class="p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]">
+        <!-- Arrastrador visual -->
+        <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4 sm:hidden"></div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-gray-800">Seleccionar mes</h3>
+          <button
+            type="button"
+            @click="modalSelectorRapidoMes = false"
+            class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 text-gray-600"
+            aria-label="Cerrar"
+          >
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2.5 max-h-[60vh] overflow-y-auto">
+          <button
+            v-for="mes in mesesNatillera"
+            :key="`mes-rapido-${mes.value}`"
+            type="button"
+            @click="seleccionarMesRapido(mes.value)"
+            :class="[
+              'relative flex flex-col items-start text-left p-3 rounded-xl border transition-all touch-manipulation',
+              mesSeleccionado === mes.value
+                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/50'
+                : 'bg-white border-gray-200 active:bg-gray-50'
+            ]"
+          >
+            <span
+              class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
+              :class="dotColorMes(mes.value)"
+              aria-hidden="true"
+            />
+            <p
+              class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-3"
+              :class="mesSeleccionado === mes.value ? 'text-emerald-700' : 'text-gray-800'"
+            >
+              <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
+              <span class="truncate">{{ mes.label }}</span>
+            </p>
+            <p class="text-[11px] text-gray-500 mt-0.5">{{ anioParaMes(mes.value) }}</p>
+            <div class="flex items-center gap-2 mt-1.5 min-h-[16px] w-full">
+              <span
+                v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                class="inline-flex items-center gap-0.5 text-red-600"
+              >
+                <ExclamationTriangleIcon class="w-3 h-3" />
+                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+              </span>
+              <span
+                v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                class="inline-flex items-center gap-0.5 text-amber-600"
+              >
+                <ClockIcon class="w-3 h-3" />
+                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+              </span>
+              <span
+                v-if="esMesActualHoy(mes.value)"
+                class="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white tracking-wide leading-none"
+              >HOY</span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </ModalWrapper>
 
     <!-- Modal Confirmar Borrar Cuotas: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
@@ -6072,49 +6311,6 @@
     </ModalWrapper>
   </div>
 
-  <!-- Modal Selector de Mes: en iOS ModalWrapper; en Android estructura actual -->
-  <ModalWrapper
-    :show="!!modalSelectorMes"
-    :z-index="zIndexModalSelectorMes"
-    align="bottom"
-    :overlay-class="overlayClassModalSelectorMes"
-    card-class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden"
-    @close="modalSelectorMes = false"
-  >
-      <Transition name="modal-scale" appear>
-        <div
-          id="tour-modal-selector-mes"
-          class="relative w-full max-w-md bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden"
-        >
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold text-gray-800">Seleccionar Mes</h3>
-              <button 
-                @click="modalSelectorMes = false"
-                class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <XMarkIcon class="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-              <button
-                v-for="mes in mesesNatillera"
-                :key="mes.value"
-                type="button"
-                @click="seleccionarMesDesdeModal(mes)"
-                class="p-4 rounded-xl border-2 transition-all text-center"
-                :class="mesSeleccionado === mes.value 
-                  ? 'bg-green-500 text-white border-green-600 shadow-lg' 
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-green-300 hover:bg-green-50'"
-              >
-                <p class="font-semibold">{{ mes.label }}</p>
-              </button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-  </ModalWrapper>
-
   <!-- Modal Desglose Recaudación: en iOS ModalWrapper; en Android estructura actual -->
   <ModalWrapper
     :show="!!modalDesgloseRecaudacion"
@@ -6326,10 +6522,7 @@ import {
   getPrimerFlujoSocioNatilleraId,
   startPrimerCuotasDetalleSocioTour,
   markPrimerCuotasDetalleSocioTourDone,
-  clearPrimerFlujoSocioNatilleraId,
-  notifyPrimerCuotasDetalleModalMesAbierto,
-  notifyPrimerCuotasDetalleMesElegidoEnModal,
-  notifyPrimerCuotasDetalleModalCerradoSinElegirMes
+  clearPrimerFlujoSocioNatilleraId
 } from '../../composables/usePrimerSocioCuotasMesTour'
 const props = defineProps({
   id: String,
@@ -6468,11 +6661,69 @@ const modalEditarSocio = ref(false)
 const scrollMainAntesModal = ref(0)
 const scrollWindowAntesModal = ref(0)
 const modalProgreso = ref(false)
-const modalSelectorMes = ref(false)
-/** Tour detalle primer socio: elevar z-index del modal selector para que quede sobre el overlay de driver.js */
+/** Tour detalle primer socio: bandera activa durante el tour guiado del detalle. */
 const tourGuiadoCuotasDetalleActivo = ref(false)
-const mesAlAbrirModalSelector = ref(null)
 const desplegableYaAbonadoOpen = ref(false)
+// Selector rápido de mes (móvil): hoja inferior con grilla de meses
+const modalSelectorRapidoMes = ref(false)
+// Refs del carrusel de meses (desktop + móvil) para centrar el mes seleccionado
+const carruselMesesDesktopRef = ref(null)
+const carruselMesesMobileRef = ref(null)
+const chipRefsDesktop = new Map()
+const chipRefsMobile = new Map()
+// Visibilidad de flechas/indicadores del carrusel (desktop + móvil)
+const puedeScrollIzquierdaDesktop = ref(false)
+const puedeScrollDerechaDesktop = ref(false)
+const puedeScrollIzquierdaMobile = ref(false)
+const puedeScrollDerechaMobile = ref(false)
+function registrarChipDesktop(el, mes) {
+  if (el) chipRefsDesktop.set(mes, el)
+  else chipRefsDesktop.delete(mes)
+}
+function registrarChipMobile(el, mes) {
+  if (el) chipRefsMobile.set(mes, el)
+  else chipRefsMobile.delete(mes)
+}
+function actualizarFlechasDesktop() {
+  const c = carruselMesesDesktopRef.value
+  if (!c) {
+    puedeScrollIzquierdaDesktop.value = false
+    puedeScrollDerechaDesktop.value = false
+    return
+  }
+  puedeScrollIzquierdaDesktop.value = c.scrollLeft > 4
+  puedeScrollDerechaDesktop.value = c.scrollLeft + c.clientWidth < c.scrollWidth - 4
+}
+function actualizarIndicadoresMobile() {
+  const c = carruselMesesMobileRef.value
+  if (!c) {
+    puedeScrollIzquierdaMobile.value = false
+    puedeScrollDerechaMobile.value = false
+    return
+  }
+  puedeScrollIzquierdaMobile.value = c.scrollLeft > 4
+  puedeScrollDerechaMobile.value = c.scrollLeft + c.clientWidth < c.scrollWidth - 4
+}
+function scrollCarruselDesktopDir(dir) {
+  const c = carruselMesesDesktopRef.value
+  if (!c) return
+  const delta = Math.max(160, c.clientWidth * 0.6) * dir
+  try {
+    c.scrollBy({ left: delta, behavior: 'smooth' })
+  } catch {
+    c.scrollLeft = Math.max(0, c.scrollLeft + delta)
+  }
+}
+function scrollCarruselMobileDir(dir) {
+  const c = carruselMesesMobileRef.value
+  if (!c) return
+  const delta = Math.max(140, c.clientWidth * 0.7) * dir
+  try {
+    c.scrollBy({ left: delta, behavior: 'smooth' })
+  } catch {
+    c.scrollLeft = Math.max(0, c.scrollLeft + delta)
+  }
+}
 
 // Ref para bloquear el fondo cuando se está registrando un pago (declarado antes de useBodyScrollLock)
 const bloqueandoRegistroPago = ref(false)
@@ -6494,7 +6745,7 @@ useBodyScrollLock(modalDetalleSocio)
 useBodyScrollLock(modalHistorialAjustes)
 useBodyScrollLock(modalEditarSocio)
 useBodyScrollLock(modalProgreso)
-useBodyScrollLock(modalSelectorMes)
+useBodyScrollLock(modalSelectorRapidoMes)
 useBodyScrollLock(modalModificacion)
 useBodyScrollLock(modalRegistrarPagoSelector)
 
@@ -7029,16 +7280,6 @@ const mesesNatillera = computed(() => {
   
   return meses
 })
-
-const zIndexModalSelectorMes = computed(() =>
-  tourGuiadoCuotasDetalleActivo.value ? 1000000003 : 50
-)
-
-const overlayClassModalSelectorMes = computed(() =>
-  tourGuiadoCuotasDetalleActivo.value
-    ? 'fixed inset-0 z-[1000000003] flex items-end md:items-center justify-center p-4'
-    : 'fixed inset-0 z-50 flex items-end md:items-center justify-center p-4'
-)
 
 // Label del mes seleccionado
 const mesSeleccionadoLabel = computed(() => {
@@ -14279,9 +14520,75 @@ async function toggleNoCalcularMultaCuota(cuota) {
   }
 }
 
-// Función para abrir el modal y cargar socios
-function abrirSelectorMes() {
-  modalSelectorMes.value = true
+function anioParaMes(mes) {
+  return calcularAnioMes(mes, mesInicio.value, mesFin.value, anioNatillera.value)
+}
+
+function resumenMesCarrusel(mes) {
+  const anio = anioParaMes(mes)
+  return cuotasStore.getResumenPorMes(mes, anio) || { pagadas: 0, pendientes: 0, enMora: 0 }
+}
+
+function dotColorMes(mes) {
+  const r = resumenMesCarrusel(mes)
+  if (r.enMora > 0) return 'bg-red-500'
+  if (r.pendientes > 0) return 'bg-amber-500'
+  if (r.pagadas > 0) return 'bg-emerald-500'
+  return 'bg-gray-300'
+}
+
+function esMesActualHoy(mes) {
+  const now = new Date()
+  return mes === now.getMonth() + 1 && anioParaMes(mes) === now.getFullYear()
+}
+
+function seleccionarMes(mesValue) {
+  if (!mesValue || mesSeleccionado.value === mesValue) return
+  mesSeleccionado.value = mesValue
+  formCuotas.mes = mesValue
+  router.push(`/natilleras/${id}/cuotas/${mesValue}`)
+}
+
+function seleccionarMesRapido(mesValue) {
+  modalSelectorRapidoMes.value = false
+  seleccionarMes(mesValue)
+}
+
+function centrarChipEnCarrusel(container, chip) {
+  if (!container || !chip) return
+  const containerRect = container.getBoundingClientRect()
+  const chipRect = chip.getBoundingClientRect()
+  const delta = (chipRect.left - containerRect.left) - (container.clientWidth / 2) + (chip.clientWidth / 2)
+  const target = Math.max(0, container.scrollLeft + delta)
+  try {
+    container.scrollTo({ left: target, behavior: 'smooth' })
+  } catch {
+    container.scrollLeft = target
+  }
+}
+
+function centrarMesEnCarrusel(smooth = true) {
+  const mes = mesSeleccionado.value
+  if (!mes) return
+  nextTick(() => {
+    const desktopChip = chipRefsDesktop.get(mes)
+    const mobileChip = chipRefsMobile.get(mes)
+    if (smooth) {
+      centrarChipEnCarrusel(carruselMesesDesktopRef.value, desktopChip)
+      centrarChipEnCarrusel(carruselMesesMobileRef.value, mobileChip)
+    } else {
+      if (carruselMesesDesktopRef.value && desktopChip) {
+        const c = carruselMesesDesktopRef.value
+        const delta = (desktopChip.getBoundingClientRect().left - c.getBoundingClientRect().left) - (c.clientWidth / 2) + (desktopChip.clientWidth / 2)
+        c.scrollLeft = Math.max(0, c.scrollLeft + delta)
+      }
+      if (carruselMesesMobileRef.value && mobileChip) {
+        const c = carruselMesesMobileRef.value
+        const delta = (mobileChip.getBoundingClientRect().left - c.getBoundingClientRect().left) - (c.clientWidth / 2) + (mobileChip.clientWidth / 2)
+        c.scrollLeft = Math.max(0, c.scrollLeft + delta)
+      }
+    }
+  })
 }
 
 async function abrirModalGenerarCuotas() {
@@ -14481,13 +14788,6 @@ function esPrimerFlujoSocioCuota(cuota) {
   )
 }
 
-function seleccionarMesDesdeModal(mes) {
-  mesSeleccionado.value = mes.value
-  formCuotas.mes = mes.value
-  modalSelectorMes.value = false
-  router.push(`/natilleras/${id}/cuotas/${mes.value}`)
-}
-
 function schedulePrimerCuotasDetalleSocioTour() {
   if (!id) return
   if (!TOURS_ENABLED) return
@@ -14525,22 +14825,19 @@ function schedulePrimerCuotasDetalleSocioTour() {
   })
 }
 
-watch(modalSelectorMes, (open, wasOpen) => {
-  if (open) {
-    mesAlAbrirModalSelector.value = mesSeleccionado.value
-    notifyPrimerCuotasDetalleModalMesAbierto()
-    return
-  }
-  if (!wasOpen) return
-  const anterior = mesAlAbrirModalSelector.value
-  mesAlAbrirModalSelector.value = null
-  if (!tourGuiadoCuotasDetalleActivo.value) return
-  if (anterior !== null && anterior !== undefined && mesSeleccionado.value !== anterior) {
-    notifyPrimerCuotasDetalleMesElegidoEnModal()
-  } else {
-    notifyPrimerCuotasDetalleModalCerradoSinElegirMes()
-  }
+// Centrar el carrusel cuando cambia el mes seleccionado
+watch(mesSeleccionado, () => {
+  centrarMesEnCarrusel(true)
+  nextTick(() => {
+    actualizarFlechasDesktop()
+    actualizarIndicadoresMobile()
+  })
 })
+// Recalcular visibilidad de flechas/indicadores cuando cambie la lista de meses
+watch(mesesNatillera, () => nextTick(() => {
+  actualizarFlechasDesktop()
+  actualizarIndicadoresMobile()
+}))
 
 onMounted(async () => {
   const user = authStore.user
@@ -14551,8 +14848,7 @@ onMounted(async () => {
   
   try {
     // ── FASE 1: Cargar natillera + cuotas ──
-    // Si el store ya tiene las cuotas de esta natillera (ej: viene de CuotasMeses),
-    // reutilizar los datos en lugar de volver a consultar la BD.
+    // Si el store ya tiene las cuotas de esta natillera, reutilizar los datos en lugar de volver a consultar la BD.
     const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
 
     const [natilleraData, cuotasCargadas] = await Promise.all([
@@ -14561,6 +14857,11 @@ onMounted(async () => {
         ? Promise.resolve(cuotasStore.cuotas)
         : cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
     ])
+
+    // Si se entró sin :mes en la URL, reemplazarla con el mes seleccionado por defecto
+    if (!mesParam.value && mesSeleccionado.value) {
+      router.replace(`/natilleras/${id}/cuotas/${mesSeleccionado.value}`)
+    }
     
     const sociosDelStore = cuotasStore.sociosNatillera
     if (sociosDelStore && sociosDelStore.length > 0) {
@@ -14635,17 +14936,97 @@ onMounted(async () => {
   ]).catch(err => console.error('Error cargando datos secundarios:', err))
 
   await nextTick()
+  centrarMesEnCarrusel(false)
+  actualizarFlechasDesktop()
+  actualizarIndicadoresMobile()
+  window.addEventListener('resize', onResizeCarrusel)
   schedulePrimerCuotasDetalleSocioTour()
-  
+
   document.addEventListener('click', handleClickOutside)
 })
 
+function onResizeCarrusel() {
+  actualizarFlechasDesktop()
+  actualizarIndicadoresMobile()
+}
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('resize', onResizeCarrusel)
 })
 </script>
 
 <style scoped>
+.carrusel-meses {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  padding-top: 6px;
+}
+.carrusel-meses::-webkit-scrollbar {
+  display: none;
+}
+/* En móvil usamos snap mandatorio + stop-always para selección más fluida */
+.carrusel-meses-mobile {
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 28px;
+}
+.tab-mes-folder {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  -webkit-tap-highlight-color: rgba(5, 150, 105, 0.15);
+  -webkit-user-select: none;
+  user-select: none;
+}
+.flecha-carrusel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  border: 1px solid rgb(229 231 235);
+  color: rgb(75 85 99);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.flecha-carrusel:hover {
+  background-color: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
+/* Fades laterales móvil: indican scroll disponible sin crear un stacking context
+   que interfiera con el z-index de la pestaña seleccionada. */
+.fade-mobile-left,
+.fade-mobile-right {
+  width: 36px;
+  z-index: 5;
+}
+.fade-mobile-left {
+  background: linear-gradient(to right, rgb(243 244 246) 0%, rgba(243, 244, 246, 0) 100%);
+}
+.fade-mobile-right {
+  background: linear-gradient(to left, rgb(243 244 246) 0%, rgba(243, 244, 246, 0) 100%);
+}
+/* Chevron pequeño para móvil */
+.chevron-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgb(229 231 235);
+  color: rgb(75 85 99);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
 @keyframes bounce-subtle {
   0%, 100% {
     transform: translateY(0);

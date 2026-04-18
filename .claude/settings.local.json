@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(find /mnt/c/Users/LENOVO/Documents/Natillerapp/src -type f \\\\\\( -name \"*.vue\" -o -name \"*.js\" -o -name \"*.ts\" \\\\\\) -exec grep -l \"\\\\.from\\(\" {} \\\\;)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git -C /mnt/c/Users/LENOVO/Documents/Natillerapp log --oneline)",
+      "Bash(npx create-next-app@latest natillerapp-next --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx next:*)",
+      "Bash(npm run:*)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npx tsc:*)",
+      "Bash(grep -n \"useCuotasStore\\\\|import.*cuotas\" /mnt/c/Users/LENOVO/Documents/Natillerapp/src/views/natilleras/*.vue)",
+      "Bash(awk 'NR>=11700 && NR<=12250' /mnt/c/Users/LENOVO/Documents/Natillerapp/src/views/cuotas/Cuotas.vue)",
+      "Bash(awk NR>=4150 && NR<=4200 *)",
+      "Bash(awk NR>=4085 && NR<=4155 *)",
+      "Bash(npx vite *)"
+    ]
+  }
+}

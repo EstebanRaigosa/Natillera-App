@@ -3,9 +3,20 @@
     v-if="natilleraId"
     id="tour-mobile-bottom-nav"
     class="mobile-bottom-nav mobile-bottom-nav--shell lg:hidden fixed bottom-0 left-0 right-0 z-[49] app-shell-nav-bg rounded-t-3xl pt-3 overflow-visible shadow-[0_-4px_24px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out"
-    :class="forceHidden ? 'translate-y-[110%] pointer-events-none opacity-0' : 'translate-y-0 opacity-100'"
+    :class="[
+      forceHidden ? 'translate-y-[110%] pointer-events-none opacity-0' : 'translate-y-0 opacity-100',
+      destacarBarra && !forceHidden ? 'mobile-bottom-nav--destacar' : ''
+    ]"
   >
-    <div class="flex items-end justify-around gap-0.5 px-1 max-w-screen-sm mx-auto">
+    <!-- Haz de brillo que barre a través de las opciones durante la animación de atención -->
+    <div
+      v-if="destacarBarra && !forceHidden"
+      class="pointer-events-none absolute inset-x-0 top-0 bottom-0 rounded-t-3xl overflow-hidden z-[2]"
+      aria-hidden="true"
+    >
+      <div class="mobile-bottom-nav__shine"></div>
+    </div>
+    <div class="flex items-end justify-around gap-0.5 px-1 max-w-screen-sm mx-auto relative z-[3]">
       <!-- Inicio / Detalle Natillera -->
       <router-link
         :to="`/natilleras/${natilleraId}`"
@@ -264,7 +275,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useNotificationStore } from '../stores/notifications'
@@ -280,7 +291,7 @@ defineProps({
 const _navViewImports = [
   () => import('../views/natilleras/NatilleraDetalle.vue'),
   () => import('../views/socios/Socios.vue'),
-  () => import('../views/cuotas/CuotasMeses.vue'),
+  () => import('../views/cuotas/Cuotas.vue'),
   () => import('../views/prestamos/Prestamos.vue'),
   () => import('../views/actividades/Actividades.vue'),
   () => import('../views/cuadre/CuadreCaja.vue'),
@@ -298,6 +309,75 @@ onMounted(() => {
   } else {
     setTimeout(prefetchAll, 1500)
   }
+})
+
+// Animación de atención: cada 5s de inactividad, la barra inferior da un pequeño
+// rebote + brillo para recordarle al usuario que está ahí. Se reinicia con cualquier
+// interacción (toque, scroll, tecla) y se pausa cuando la pestaña está oculta.
+const destacarBarra = ref(false)
+const IDLE_MS = 5000
+const ANIMATION_MS = 1400
+let idleTimerId = null
+let animationResetId = null
+
+function programarDestacar() {
+  if (idleTimerId) clearTimeout(idleTimerId)
+  idleTimerId = window.setTimeout(() => {
+    if (document.hidden) return
+    destacarBarra.value = true
+    if (animationResetId) clearTimeout(animationResetId)
+    animationResetId = window.setTimeout(() => {
+      destacarBarra.value = false
+      animationResetId = null
+      programarDestacar()
+    }, ANIMATION_MS)
+  }, IDLE_MS)
+}
+
+function reiniciarInactividad() {
+  if (destacarBarra.value) {
+    destacarBarra.value = false
+    if (animationResetId) {
+      clearTimeout(animationResetId)
+      animationResetId = null
+    }
+  }
+  programarDestacar()
+}
+
+function manejarVisibilidad() {
+  if (document.hidden) {
+    if (idleTimerId) {
+      clearTimeout(idleTimerId)
+      idleTimerId = null
+    }
+    if (animationResetId) {
+      clearTimeout(animationResetId)
+      animationResetId = null
+    }
+    destacarBarra.value = false
+  } else {
+    programarDestacar()
+  }
+}
+
+onMounted(() => {
+  programarDestacar()
+  window.addEventListener('pointerdown', reiniciarInactividad, { passive: true })
+  window.addEventListener('touchstart', reiniciarInactividad, { passive: true })
+  window.addEventListener('keydown', reiniciarInactividad)
+  window.addEventListener('scroll', reiniciarInactividad, { passive: true, capture: true })
+  document.addEventListener('visibilitychange', manejarVisibilidad)
+})
+
+onUnmounted(() => {
+  if (idleTimerId) clearTimeout(idleTimerId)
+  if (animationResetId) clearTimeout(animationResetId)
+  window.removeEventListener('pointerdown', reiniciarInactividad)
+  window.removeEventListener('touchstart', reiniciarInactividad)
+  window.removeEventListener('keydown', reiniciarInactividad)
+  window.removeEventListener('scroll', reiniciarInactividad, { capture: true })
+  document.removeEventListener('visibilitychange', manejarVisibilidad)
 })
 import {
   HomeIcon,
@@ -447,5 +527,85 @@ function navegarAPrimeraNatillera(seccion) {
 
 .router-link-active svg {
   color: white;
+}
+
+/* Animación de atención cada 20s de inactividad.
+   Usa translate3d para forzar aceleración por GPU en iOS Safari/Android WebView
+   y evitar jank. Respeta prefers-reduced-motion. */
+@keyframes bottom-nav-rebote {
+  0%   { transform: translate3d(0, 0, 0); }
+  15%  { transform: translate3d(0, -10px, 0); }
+  32%  { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(0, -5px, 0); }
+  68%  { transform: translate3d(0, 0, 0); }
+  84%  { transform: translate3d(0, -2px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes bottom-nav-brillo {
+  0% {
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  }
+  40% {
+    box-shadow:
+      0 -4px 24px rgba(0, 0, 0, 0.25),
+      0 -2px 30px hsl(var(--primary) / 0.55),
+      0 -8px 20px hsl(var(--primary) / 0.35);
+  }
+  100% {
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.mobile-bottom-nav--destacar {
+  animation:
+    bottom-nav-rebote 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    bottom-nav-brillo 1.2s ease-in-out;
+  -webkit-animation:
+    bottom-nav-rebote 1.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+    bottom-nav-brillo 1.2s ease-in-out;
+  /* Mantener la transición base del forceHidden; animation se superpone temporalmente */
+  will-change: transform, box-shadow;
+}
+
+/* Haz de brillo que atraviesa las opciones (shine sweep) */
+@keyframes bottom-nav-shine-sweep {
+  0%   { transform: translate3d(-120%, 0, 0) skewX(-18deg); opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate3d(120%, 0, 0) skewX(-18deg); opacity: 0; }
+}
+
+.mobile-bottom-nav__shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.12) 35%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0.12) 65%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translate3d(-120%, 0, 0) skewX(-18deg);
+  animation: bottom-nav-shine-sweep 1.1s ease-out;
+  -webkit-animation: bottom-nav-shine-sweep 1.1s ease-out;
+  will-change: transform, opacity;
+  mix-blend-mode: screen;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-bottom-nav--destacar {
+    animation: bottom-nav-brillo 1.2s ease-in-out;
+    -webkit-animation: bottom-nav-brillo 1.2s ease-in-out;
+  }
+  .mobile-bottom-nav__shine {
+    animation: none;
+    -webkit-animation: none;
+    opacity: 0;
+  }
 }
 </style>

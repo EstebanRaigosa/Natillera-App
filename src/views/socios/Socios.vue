@@ -2000,7 +2000,7 @@ import {
   consumePendingPrimerSocioNavTour
 } from '../../composables/usePrimerSocioSociosNavTour'
 import {
-  setPendingPrimerSocioCuotasMesTour,
+  setPendingCuotasDetalleTour,
   setPrimerFlujoSocioNatilleraId
 } from '../../composables/usePrimerSocioCuotasMesTour'
 import { toPng } from 'html-to-image'
@@ -2783,8 +2783,8 @@ function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId
           prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
           clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
           onSociosTourClosed: (nid) => {
-            setPendingPrimerSocioCuotasMesTour(nid)
-            // Vista de selección de mes (CuotasMeses); el tour guiado continúa ahí.
+            setPendingCuotasDetalleTour(nid)
+            // Navegar a Cuotas: el tour guiado continúa en el detalle del mes.
             router.push(`/natilleras/${nid}/cuotas`)
           }
         })

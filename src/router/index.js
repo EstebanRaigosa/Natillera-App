@@ -22,7 +22,6 @@ const NatilleraCierre = () => import('../views/natilleras/NatilleraCierre.vue')
 const NatilleraCrear = () => import('../views/natilleras/NatilleraCrear.vue')
 const Socios = () => import('../views/socios/Socios.vue')
 const Cuotas = () => import('../views/cuotas/Cuotas.vue')
-const CuotasMeses = () => import('../views/cuotas/CuotasMeses.vue')
 const Prestamos = () => import('../views/prestamos/Prestamos.vue')
 const Actividades = () => import('../views/actividades/Actividades.vue')
 const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
@@ -117,8 +116,8 @@ const routes = [
       },
       {
         path: 'natilleras/:id/cuotas',
-        name: 'CuotasMeses',
-        component: CuotasMeses,
+        name: 'CuotasDefault',
+        component: Cuotas,
         props: true,
         meta: { title: 'Cuotas' }
       },
