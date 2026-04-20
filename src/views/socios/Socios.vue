@@ -3233,6 +3233,9 @@ async function handleGuardarSocio() {
           progresoCreacion.value.exito = true // El socio sí se creó
         }
 
+        // Refrescar lista de socios para que el nuevo (con sus cuotas ya generadas) aparezca con el shape completo
+        await sociosStore.fetchSociosNatillera(id)
+
         // Esperar 2.5 segundos y cerrar automáticamente
         await new Promise(resolve => setTimeout(resolve, 2500))
         cerrarModalProgreso()
@@ -3267,6 +3270,8 @@ async function handleGuardarSocio() {
             3000
           )
           cerrarModal()
+          // Refrescar lista para que el nuevo socio aparezca con shape completo (incluyendo cuotas)
+          await sociosStore.fetchSociosNatillera(id)
           if (eraListaSociosVacia && result.data?.id) {
             setPrimerFlujoSocioNatilleraId(id, result.data.id)
           }

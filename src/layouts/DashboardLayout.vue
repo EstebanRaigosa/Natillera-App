@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex max-lg:h-[100dvh] max-lg:max-h-[100dvh] max-lg:overflow-hidden">
+  <div class="min-h-screen min-h-[100dvh] flex max-lg:h-[100dvh] max-lg:max-h-[100dvh] max-lg:overflow-hidden">
     <!-- Área de activación hover (solo en lg, 1024px-1279px) -->
     <div 
       v-if="isLgScreen && !sidebarHover"
@@ -306,12 +306,12 @@
 
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
     <div 
-      class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen relative"
+      class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen lg:min-h-[100dvh] relative"
       :class="{ 'z-50': isBodyScrollLocked }"
     >
       <!-- Contenido principal: en <lg el scroll es interno para que el header sticky quede fijo al hacer scroll -->
       <main
-        class="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden overflow-y-auto lg:min-h-screen"
+        class="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden overflow-y-auto lg:min-h-screen lg:min-h-[100dvh]"
         :class="sidebarOpen && esViewportMovil ? 'max-lg:!overflow-y-hidden max-lg:touch-none' : ''"
       >
         <!-- Header móvil -->

@@ -37,7 +37,7 @@
     >
       <div
         v-if="isOpen"
-        class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-h-[calc(100vh-6rem)] sm:max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-[9999] safe-area-bottom"
+        class="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-h-[calc(100vh-6rem)] max-h-[calc(100dvh-6rem)] sm:max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden z-[9999] safe-area-bottom"
       >
         <!-- Header del formulario -->
         <div class="bg-gradient-to-r from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white flex items-center justify-between relative overflow-hidden flex-shrink-0">

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-slate-100/50 via-white to-amber-50/40">
+  <div class="min-h-screen min-h-[100dvh] bg-gradient-to-b from-slate-100/50 via-white to-amber-50/40">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 sm:pt-5 pb-12 lg:pb-10">
       <div v-if="inicializando" class="flex flex-col items-center justify-center py-32 px-4">
         <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-rose-100 to-amber-100 flex items-center justify-center mb-6 shadow-inner">

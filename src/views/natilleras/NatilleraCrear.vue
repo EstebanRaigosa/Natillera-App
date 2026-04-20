@@ -1,12 +1,12 @@
 <template>
   <div class="crear-natillera-wizard min-h-screen min-h-[100dvh] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] font-[family-name:var(--font-body)]">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
-      <div class="pt-4 sm:pt-6 mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div class="pt-3 sm:pt-4 mb-6">
+        <div class="flex flex-row items-center gap-3 sm:gap-4">
           <BackButton to="/dashboard" :inline="true" />
-          <div class="flex items-center gap-4 flex-1 min-w-0">
+          <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div
-              class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-natillera-100 flex items-center justify-center flex-shrink-0 border border-natillera-200/80"
+              class="hidden sm:flex w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-natillera-100 items-center justify-center flex-shrink-0 border border-natillera-200/80"
               aria-hidden="true"
             >
               <BanknotesIcon class="w-6 h-6 sm:w-7 sm:h-7 text-natillera-700" />
@@ -15,7 +15,7 @@
               <h1 class="font-display text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
                 Crear <span class="text-natillera-700">Natillera</span>
               </h1>
-              <p class="text-gray-500 text-sm mt-0.5">
+              <p class="hidden sm:block text-gray-500 text-sm mt-0.5">
                 Configura tu nuevo grupo de ahorro en 4 pasos simples
               </p>
             </div>

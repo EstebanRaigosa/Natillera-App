@@ -4124,255 +4124,365 @@
         </div>
     </ModalWrapper>
 
-    <!-- Modal Confirmación Antes de Registrar Pago -->
+    <!-- Modal Confirmación Antes de Registrar Pago (skill natillerapp-modals) -->
     <ModalWrapper
       :show="!!modalConfirmarPago"
       :z-index="65"
-      overlay-class="fixed inset-0 z-[65] flex items-center justify-center p-4"
-      card-class="relative max-w-lg w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] flex flex-col"
-      card-max-width="32rem"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[65] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
       @close="modalConfirmarPago = false"
     >
-      <!-- Header con gradiente -->
-      <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-        
-        <div class="relative z-10">
-          <div class="flex items-center gap-3 mb-2">
-            <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <div>
-              <h3 class="text-2xl font-display font-bold">
-                Confirmar Pago
-              </h3>
-              <p class="text-white/90 text-sm">
-                Revisa el desglose antes de registrar
-              </p>
-            </div>
+      <!-- Cabecera móvil: fila — icono | títulos | X -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <CheckCircleIcon class="h-5 w-5 text-[#1B5E37]" />
           </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display text-base font-bold leading-tight text-white">
+              Confirmar Pago
+            </h3>
+            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
+              Revisa el desglose antes de registrar
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalConfirmarPago = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+      <!-- Cabecera desktop: tres columnas — reserva | icono+títulos centrados | X -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div class="w-11 shrink-0" aria-hidden="true" />
+          <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+            <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <CheckCircleIcon class="h-6 w-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
+              Confirmar Pago
+            </h3>
+            <p class="mt-1 px-1 text-xs leading-snug text-white/90">
+              Revisa el desglose antes de registrar
+            </p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalConfirmarPago = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
         </div>
       </div>
 
-      <!-- Contenido -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-4">
-        <!-- Valor Total -->
-        <div class="bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl p-5 border-2 border-natillera-200 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-base font-semibold text-gray-700">Total a pagar</span>
-            <span class="text-3xl font-bold text-natillera-700">${{ formatMoney(desglosePagoConfirmacion?.total || 0) }}</span>
+      <!-- Cuerpo scrolleable + natiscroll (velo + hint; patrón skill modales) -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="contenidoScrollConfirmarPagoRef"
+          class="min-h-0 overflow-y-auto flex-1 px-4 sm:px-6 pt-5 pb-0 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalConfirmarPago"
+        >
+          <!-- Total a pagar (hero) -->
+          <div class="rounded-xl border border-[#1B5E37]/15 bg-[#E8F5E9] p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[11px] font-semibold uppercase tracking-wide text-[#1B5E37]/80">Total a pagar</p>
+                <p class="mt-1 font-display text-3xl font-bold text-[#1B5E37] tabular-nums">
+                  ${{ formatMoney(desglosePagoConfirmacion?.total || 0) }}
+                </p>
+              </div>
+              <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                <CurrencyDollarIcon class="h-6 w-6 text-[#1B5E37]" />
+              </div>
+            </div>
+
+            <!-- Pagado anteriormente (parcial) -->
+            <div
+              v-if="(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) > 0"
+              class="mt-4 flex items-center justify-between border-t border-[#1B5E37]/15 pt-3"
+            >
+              <span class="text-sm font-medium text-[#1B5E37]/90">Pagado anteriormente</span>
+              <span class="text-base font-bold text-[#1B5E37] tabular-nums">
+                ${{ formatMoney(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) }}
+              </span>
+            </div>
           </div>
 
+          <!-- Forma de pago (destacada — evita errores de selección) -->
           <div
-            v-if="desglosePagoConfirmacion?.tipoPago === 'transferencia' && (desglosePagoConfirmacion?.valorConsignadoTransferencia || 0) > 0"
-            class="rounded-lg border border-blue-200 bg-blue-50/90 px-3 py-2.5 text-sm text-blue-900"
+            class="relative overflow-hidden rounded-xl p-3.5 text-white shadow-md ring-1 ring-white/10"
+            :class="desglosePagoConfirmacion?.tipoPago === 'transferencia'
+              ? 'bg-gradient-to-br from-blue-600 to-indigo-700'
+              : 'bg-gradient-to-br from-[#1B5E37] to-[#124228]'"
           >
-            <p class="font-semibold">Total a consignar por transferencia</p>
-            <p class="text-lg font-bold tabular-nums">${{ formatMoney(desglosePagoConfirmacion.valorConsignadoTransferencia) }}</p>
-          </div>
-
-          <!-- Pagado anteriormente (cuando ya hubo pagos parciales) -->
-          <div 
-            v-if="(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) > 0"
-            class="mt-4 pt-4 border-t-2 border-natillera-200/50 flex items-center justify-between"
-          >
-            <span class="text-sm font-semibold text-emerald-700">Pagado anteriormente</span>
-            <span class="text-xl font-bold text-emerald-700">${{ formatMoney(desglosePagoConfirmacion?.valorPagadoAnteriorTotal || 0) }}</span>
-          </div>
-          
-          <!-- Forma de Pago - Destacada debajo del total -->
-          <div class="mt-4 pt-4 border-t-2 border-natillera-200/50">
-            <div class="flex items-center justify-between p-4 rounded-lg"
-              :class="desglosePagoConfirmacion?.tipoPago === 'transferencia' 
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-sm' 
-                : 'bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 shadow-sm'">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                  :class="desglosePagoConfirmacion?.tipoPago === 'transferencia' 
-                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
-                    : 'bg-gradient-to-br from-emerald-500 to-teal-600'">
-                  <span class="text-2xl">{{ desglosePagoConfirmacion?.tipoPago === 'transferencia' ? '💳' : '💵' }}</span>
+            <!-- Detalle decorativo -->
+            <div class="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-white/10 blur-2xl" aria-hidden="true" />
+            <div class="relative flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
+                  <CreditCardIcon
+                    v-if="desglosePagoConfirmacion?.tipoPago === 'transferencia'"
+                    class="h-5 w-5 text-white"
+                  />
+                  <BanknotesIcon v-else class="h-5 w-5 text-white" />
                 </div>
-                <div>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Forma de pago</p>
-                  <p class="text-lg font-bold"
-                    :class="desglosePagoConfirmacion?.tipoPago === 'transferencia' 
-                      ? 'text-blue-700' 
-                      : 'text-emerald-700'">
+                <div class="min-w-0">
+                  <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/75">Forma de pago</p>
+                  <p class="mt-0.5 font-display text-base font-bold leading-tight text-white">
                     {{ desglosePagoConfirmacion?.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
                   </p>
                 </div>
               </div>
-              <div class="w-6 h-6 rounded-full flex items-center justify-center"
-                :class="desglosePagoConfirmacion?.tipoPago === 'transferencia' 
-                  ? 'bg-blue-100' 
-                  : 'bg-emerald-100'">
-                <svg class="w-4 h-4"
-                  :class="desglosePagoConfirmacion?.tipoPago === 'transferencia' 
-                    ? 'text-blue-600' 
-                    : 'text-emerald-600'"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/30">
+                <CheckIcon class="h-4 w-4 text-white" stroke-width="2.5" />
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Pago parcial: pago pendiente tras este registro -->
-        <div v-if="desglosePagoConfirmacion?.esParcial && (desglosePagoConfirmacion?.pendienteDespuesPago || 0) > 0" class="rounded-xl p-4 border-2 border-amber-200 bg-amber-50/80">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                <span class="text-amber-600 text-lg">⏳</span>
+          <!-- Pago pendiente tras este pago (parcial) -->
+          <div
+            v-if="desglosePagoConfirmacion?.esParcial && (desglosePagoConfirmacion?.pendienteDespuesPago || 0) > 0"
+            class="rounded-xl border border-amber-200 bg-amber-50/80 p-3.5"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                  <ClockIcon class="h-5 w-5 text-amber-600" />
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-amber-900">Pago pendiente</p>
+                  <p class="text-[11px] text-amber-700">Después de este pago</p>
+                </div>
               </div>
-              <div>
-                <p class="text-sm font-semibold text-amber-800">Pago pendiente</p>
-                <p class="text-xs text-amber-600">Después de este pago</p>
-              </div>
-            </div>
-            <span class="text-xl font-bold text-amber-800">${{ formatMoney(desglosePagoConfirmacion?.pendienteDespuesPago || 0) }}</span>
-          </div>
-        </div>
-
-        <!-- Desglose -->
-        <div class="space-y-2">
-          <h4 class="text-sm font-semibold text-gray-700 mb-3">Desglose del pago:</h4>
-          
-          <!-- Cuota -->
-          <div v-if="(desglosePagoConfirmacion?.cuota || 0) > 0" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span class="text-blue-600 text-sm font-bold">C</span>
-              </div>
-              <span class="text-sm font-medium text-gray-700">Cuota</span>
-            </div>
-            <span class="text-sm font-semibold text-gray-800">${{ formatMoney(desglosePagoConfirmacion?.cuota || 0) }}</span>
-          </div>
-
-          <!-- Sanción -->
-          <div v-if="(desglosePagoConfirmacion?.sancion || 0) > 0" class="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                <span class="text-red-600 text-sm font-bold">S</span>
-              </div>
-              <span class="text-sm font-medium text-gray-700">Sanción</span>
-            </div>
-            <span class="text-sm font-semibold text-red-700">${{ formatMoney(desglosePagoConfirmacion?.sancion || 0) }}</span>
-          </div>
-
-          <!-- Actividades -->
-          <div v-if="(desglosePagoConfirmacion?.actividades || 0) > 0" class="flex items-center justify-between p-3 bg-purple-50 rounded-lg border border-purple-200">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span class="text-purple-600 text-sm font-bold">A</span>
-              </div>
-              <span class="text-sm font-medium text-gray-700">
-                Actividades 
-                <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadActividades || 0 }})</span>
+              <span class="text-base font-bold text-amber-900 tabular-nums">
+                ${{ formatMoney(desglosePagoConfirmacion?.pendienteDespuesPago || 0) }}
               </span>
             </div>
-            <span class="text-sm font-semibold text-purple-700">${{ formatMoney(desglosePagoConfirmacion?.actividades || 0) }}</span>
           </div>
 
-          <!-- Cuotas de Préstamos -->
-          <div v-if="(desglosePagoConfirmacion?.cuotasPrestamos || 0) > 0" class="bg-blue-50 rounded-lg border border-blue-200 overflow-hidden">
-            <!-- Header con total -->
-            <div class="flex items-center justify-between p-3">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span class="text-blue-600 text-sm font-bold">P</span>
-                </div>
-                <span class="text-sm font-medium text-gray-700">
-                  Cuotas de préstamos
-                  <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadCuotasPrestamos || 0 }})</span>
-                </span>
-              </div>
-              <span class="text-sm font-semibold text-blue-700">${{ formatMoney(desglosePagoConfirmacion?.cuotasPrestamos || 0) }}</span>
-            </div>
-            <!-- Desglose individual de cada cuota de préstamo -->
-            <div v-if="desglosePagoConfirmacion?.cuotasPrestamosDetalle && desglosePagoConfirmacion.cuotasPrestamosDetalle.length > 0" class="border-t border-blue-200 bg-blue-100/50 px-3 py-2 space-y-1.5">
-              <div 
-                v-for="(cuotaPrestamo, index) in desglosePagoConfirmacion.cuotasPrestamosDetalle" 
-                :key="index"
-                class="flex items-center justify-between text-xs"
+          <!-- Desglose del pago -->
+          <div>
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">Desglose del pago</p>
+            <div class="space-y-1.5">
+              <!-- Cuota -->
+              <div
+                v-if="(desglosePagoConfirmacion?.cuota || 0) > 0"
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2.5"
               >
-                <span class="text-gray-600 flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-                  {{ cuotaPrestamo.nombre }}
-                </span>
-                <span class="text-blue-700 font-semibold">${{ formatMoney(cuotaPrestamo.valor || 0) }}</span>
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9]">
+                    <BanknotesIcon class="h-4 w-4 text-[#1B5E37]" />
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">Cuota</span>
+                </div>
+                <span class="text-sm font-semibold text-gray-900 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuota || 0) }}</span>
+              </div>
+
+              <!-- Sanción -->
+              <div
+                v-if="(desglosePagoConfirmacion?.sancion || 0) > 0"
+                class="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/60 px-3 py-2.5"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+                    <ExclamationTriangleIcon class="h-4 w-4 text-red-600" />
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">Sanción</span>
+                </div>
+                <span class="text-sm font-semibold text-red-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.sancion || 0) }}</span>
+              </div>
+
+              <!-- Actividades -->
+              <div
+                v-if="(desglosePagoConfirmacion?.actividades || 0) > 0"
+                class="flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50/60 px-3 py-2.5"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+                    <CalendarDaysIcon class="h-4 w-4 text-purple-600" />
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">
+                    Actividades
+                    <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadActividades || 0 }})</span>
+                  </span>
+                </div>
+                <span class="text-sm font-semibold text-purple-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.actividades || 0) }}</span>
+              </div>
+
+              <!-- Cuotas de préstamos -->
+              <div
+                v-if="(desglosePagoConfirmacion?.cuotasPrestamos || 0) > 0"
+                class="overflow-hidden rounded-lg border border-blue-200 bg-blue-50/60"
+              >
+                <div class="flex items-center justify-between px-3 py-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+                      <CurrencyDollarIcon class="h-4 w-4 text-blue-600" />
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">
+                      Cuotas de préstamos
+                      <span class="text-xs text-gray-500">({{ desglosePagoConfirmacion?.cantidadCuotasPrestamos || 0 }})</span>
+                    </span>
+                  </div>
+                  <span class="text-sm font-semibold text-blue-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.cuotasPrestamos || 0) }}</span>
+                </div>
+                <div
+                  v-if="desglosePagoConfirmacion?.cuotasPrestamosDetalle && desglosePagoConfirmacion.cuotasPrestamosDetalle.length > 0"
+                  class="space-y-1 border-t border-blue-200/80 bg-blue-100/40 px-3 py-2"
+                >
+                  <div
+                    v-for="(cuotaPrestamo, index) in desglosePagoConfirmacion.cuotasPrestamosDetalle"
+                    :key="index"
+                    class="flex items-center justify-between text-xs"
+                  >
+                    <span class="flex items-center gap-1.5 text-gray-600 min-w-0 truncate">
+                      <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+                      <span class="truncate">{{ cuotaPrestamo.nombre }}</span>
+                    </span>
+                    <span class="shrink-0 font-semibold text-blue-700 tabular-nums">${{ formatMoney(cuotaPrestamo.valor || 0) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4×1000 (GMF) -->
+              <div
+                v-if="(desglosePagoConfirmacion?.impuesto4x1000 || 0) > 0"
+                class="flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50/60 px-3 py-2.5"
+              >
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white">
+                    <BuildingOffice2Icon class="h-4 w-4 text-sky-700" />
+                  </div>
+                  <span class="text-sm font-medium text-gray-700">4×1000 (GMF)</span>
+                </div>
+                <span class="text-sm font-semibold text-sky-700 tabular-nums">${{ formatMoney(desglosePagoConfirmacion?.impuesto4x1000 || 0) }}</span>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0 flex gap-3">
-        <button
-          @click="modalConfirmarPago = false"
-          class="flex-1 px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-        >
-          Cancelar
-        </button>
-        <button
-          @click="confirmarYRegistrarPago"
-          class="flex-1 px-4 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25"
-        >
-          Confirmar y Registrar
-        </button>
-      </div>
-    </ModalWrapper>
-
-    <!-- Modal Confirmación de Pago con Comprobante Visual: en iOS ModalWrapper; en Android estructura actual -->
-    <ModalWrapper
-      :show="!!modalConfirmacion"
-      :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
-      card-class="relative max-w-lg w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col"
-      card-max-width="32rem"
-      @close="cerrarConfirmacion"
-    >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-emerald-500 via-natillera-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 w-full flex items-start justify-between gap-3">
-            <div class="flex items-center gap-3 mb-2 min-w-0">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-                <CheckCircleIcon class="w-6 h-6 text-white" />
-              </div>
-              <div class="min-w-0">
-                <h3 class="text-2xl font-display font-bold">
-                  ¡Pago Registrado!
-                </h3>
-                <p class="text-white/90 text-sm mt-0.5">
-                  Comprobante generado exitosamente
-                </p>
-              </div>
-            </div>
+          <!-- Acciones al final del mismo scroll (safe-area iOS) -->
+          <div class="pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-200 space-y-3">
             <button
               type="button"
-              @click="cerrarConfirmacion"
-              class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors"
-              aria-label="Cerrar"
+              @click="confirmarYRegistrarPago"
+              class="w-full min-h-[48px] px-5 py-3.5 rounded-full bg-[#1B5E37] hover:bg-[#154a2d] active:bg-[#124228] text-white font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm [-webkit-tap-highlight-color:transparent] touch-manipulation"
             >
-              <XMarkIcon class="w-5 h-5" />
+              Confirmar y Registrar
+            </button>
+            <button
+              type="button"
+              @click="modalConfirmarPago = false"
+              class="w-full min-h-[48px] px-5 py-3 rounded-full text-sm font-semibold text-gray-600 border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            >
+              Cancelar
             </button>
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div 
+        <!-- Natiscroll: velo + «Desliza para ver más» -->
+        <div
+          v-show="hayNatiscrollModalConfirmarPago"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </ModalWrapper>
+
+    <!-- Modal Confirmación de Pago con Comprobante Visual (skill natillerapp-modals) -->
+    <ModalWrapper
+      :show="!!modalConfirmacion"
+      :z-index="50"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
+      @close="cerrarConfirmacion"
+    >
+        <!-- Cabecera móvil: fila — icono | títulos | X -->
+        <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+          <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <CheckCircleIcon class="h-5 w-5 text-[#1B5E37]" />
+            </div>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 class="font-display text-base font-bold leading-tight text-white">
+                ¡Pago Registrado!
+              </h3>
+              <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
+                Comprobante generado exitosamente
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+              aria-label="Cerrar"
+              @click="cerrarConfirmacion"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        <!-- Cabecera desktop: tres columnas — reserva | icono+títulos centrados | X -->
+        <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+          <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+            <div class="w-11 shrink-0" aria-hidden="true" />
+            <div class="flex min-w-0 flex-1 flex-col items-center text-center">
+              <div class="flex h-[3.2rem] w-[3.2rem] shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                <CheckCircleIcon class="h-6 w-6 text-[#1B5E37]" />
+              </div>
+              <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
+                ¡Pago Registrado!
+              </h3>
+              <p class="mt-1 px-1 text-xs leading-snug text-white/90">
+                Comprobante generado exitosamente
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
+              aria-label="Cerrar"
+              @click="cerrarConfirmacion"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Cuerpo: scroll único (contenido + acciones al final) -->
+        <div
           ref="scrollComprobanteRef"
           @scroll="verificarScrollComprobante"
-          class="overflow-y-auto flex-1 p-3 sm:p-6 relative"
+          class="min-h-0 overflow-y-auto flex-1 p-3 sm:p-6 relative bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
         >
           <!-- Indicador de scroll animado -->
           <Transition
@@ -4676,56 +4786,32 @@
 
           </div>
         </div>
-        </div>
 
-        <!-- Footer fijo con botones de acción -->
-        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
-          <!-- Móvil: dos botones píldora lado a lado + Cerrar como enlace -->
-          <div class="flex sm:hidden flex-col items-center gap-4">
+          <!-- Acciones al final del mismo scroll (sin footer fijo; safe-area iOS) -->
+          <div class="mt-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-200 space-y-3">
             <div class="flex items-center justify-center gap-3 w-full">
-              <button 
+              <button
                 @click="descargarComprobante"
                 :disabled="generandoImagen"
-                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);"
               >
                 <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
-                {{ generandoImagen ? '...' : 'Descargar' }}
+                <span>{{ generandoImagen ? '...' : 'Descargar' }}</span>
               </button>
-              <button 
+              <button
                 @click="compartirWhatsApp"
-                :disabled="generandoImagen || !pagoRegistrado?.socioTelefono"
+                :disabled="generandoImagen"
                 :class="[
-                  'flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all',
-                  (generandoImagen || !pagoRegistrado?.socioTelefono)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : ''
+                  'flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all',
+                  generandoImagen ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : ''
                 ]"
-                :style="(generandoImagen || !pagoRegistrado?.socioTelefono) ? {} : { background: '#16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.35)' }"
-                :title="!pagoRegistrado?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
+                :style="generandoImagen ? {} : { background: '#16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.35)' }"
               >
                 <ShareIcon class="w-5 h-5 flex-shrink-0" />
-                <span v-if="generandoImagen">...</span>
-                <span v-else-if="!pagoRegistrado?.socioTelefono">Compartir</span>
-                <span v-else>Compartir</span>
+                <span>{{ generandoImagen ? '...' : 'Compartir' }}</span>
               </button>
             </div>
-          </div>
-
-          <!-- Desktop: botones en columna y mensaje (sin botón WhatsApp, solo móvil) -->
-          <div class="hidden sm:block space-y-3">
-            <button 
-              @click="descargarComprobante"
-              :disabled="generandoImagen"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowDownTrayIcon class="w-5 h-5" />
-              {{ generandoImagen ? 'Generando...' : 'Descargar Imagen' }}
-            </button>
-
-            <p class="text-xs text-gray-400 text-center">
-              💡 En celular podrás enviar la imagen directamente a WhatsApp
-            </p>
           </div>
         </div>
     </ModalWrapper>
@@ -6572,6 +6658,36 @@ function programarNatiscrollModalPago() {
     actualizarNatiscrollModalPago()
   })
 }
+
+/** Natiscroll — modal Confirmar Pago (velo + «Desliza para ver más») */
+const contenidoScrollConfirmarPagoRef = ref(null)
+const hayNatiscrollModalConfirmarPago = ref(false)
+let rafNatiscrollModalConfirmarPago = null
+function actualizarNatiscrollModalConfirmarPago() {
+  const el = contenidoScrollConfirmarPagoRef.value
+  if (!el) {
+    hayNatiscrollModalConfirmarPago.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalConfirmarPago.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalConfirmarPago() {
+  if (rafNatiscrollModalConfirmarPago != null) cancelAnimationFrame(rafNatiscrollModalConfirmarPago)
+  rafNatiscrollModalConfirmarPago = requestAnimationFrame(() => {
+    rafNatiscrollModalConfirmarPago = null
+    actualizarNatiscrollModalConfirmarPago()
+  })
+}
+watch(modalConfirmarPago, async (abierto) => {
+  if (abierto) {
+    await nextTick()
+    programarNatiscrollModalConfirmarPago()
+  } else {
+    hayNatiscrollModalConfirmarPago.value = false
+  }
+})
 const mostrarIndicadorScroll = ref(false) // Indicador de scroll del modal comprobante (¡Pago registrado!)
 const modalEditarCuota = ref(false)
 /** Suma de impuesto_4x1000 en historial_pagos_cuota al abrir "Editar pago" (para detectar cambios y sincronizar). */
@@ -14235,7 +14351,7 @@ async function cargarNatillera() {
   // Una sola consulta que trae TODO lo necesario
   const { data } = await supabase
     .from('natilleras')
-    .select('nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas')
+    .select('nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas, periodicidad')
     .eq('id', id)
     .single()
   
