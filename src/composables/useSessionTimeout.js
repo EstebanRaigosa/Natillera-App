@@ -160,11 +160,11 @@ export function useSessionTimeout(timeoutMinutes = 15) {
    */
   function markAsBackground() {
     if (!authStore.isAuthenticated) {
-      try { localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY) } catch { /* Safari private mode */ }
+      localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
       return
     }
 
-    try { localStorage.setItem(BACKGROUND_TIMESTAMP_KEY, Date.now().toString()) } catch { /* Safari private mode / quota */ }
+    localStorage.setItem(BACKGROUND_TIMESTAMP_KEY, Date.now().toString())
     
     if (backgroundTimeoutId.value) {
       clearTimeout(backgroundTimeoutId.value)
@@ -182,13 +182,13 @@ export function useSessionTimeout(timeoutMinutes = 15) {
    */
   function handleReturnToForeground() {
     if (!authStore.isAuthenticated) {
-      try { localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY) } catch { /* Safari private mode */ }
+      localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
       return
     }
 
     const shouldLogout = checkBackgroundTimeout()
     
-    try { localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY) } catch { /* Safari private mode */ }
+    localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
     
     if (backgroundTimeoutId.value) {
       clearTimeout(backgroundTimeoutId.value)
@@ -297,13 +297,7 @@ export function useSessionTimeout(timeoutMinutes = 15) {
   }
   
   /**
-   * Verifica al iniciar si la sesión debe cerrarse por estar en background.
-   *
-   * Solo aplica cuando la app se recarga con una sesión persistida (localStorage).
-   * NO debe disparar logout si el usuario acaba de autenticarse (login/OAuth),
-   * porque el timestamp podría ser stale de una sesión anterior.
-   * El auth store ya limpia el timestamp antes de setear user.value,
-   * pero esta guarda actúa como capa de seguridad adicional.
+   * Verifica al iniciar si la sesión debe cerrarse por estar en background
    */
   function checkOnStart() {
     if (!authStore.isAuthenticated) {
@@ -311,20 +305,7 @@ export function useSessionTimeout(timeoutMinutes = 15) {
       return
     }
 
-    const raw = localStorage.getItem(BACKGROUND_TIMESTAMP_KEY)
-    if (!raw) return // No hay timestamp → nada que verificar
-
-    const elapsed = Date.now() - parseInt(raw, 10)
-
-    // Timestamps de más de 24 h son sin duda de una sesión anterior;
-    // descartarlos en lugar de disparar logout.
-    const MAX_STALE_MS = 24 * 60 * 60 * 1000
-    if (elapsed > MAX_STALE_MS || elapsed < 0) {
-      localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
-      return
-    }
-
-    if (elapsed >= backgroundTimeoutMs) {
+    if (checkBackgroundTimeout()) {
       handleBackgroundTimeout()
     } else {
       localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)

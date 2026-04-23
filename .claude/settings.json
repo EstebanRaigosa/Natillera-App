@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '/async function guardarEdicionCuota/,/^async function [a-zA-Z]/ {print NR\": \"$0}' /c/Users/LENOVO/Documents/Natillerapp/src/views/cuotas/Cuotas.vue)",
+      "mcp__supabase__list_tables"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

@@ -358,7 +358,11 @@ export const useSociosStore = defineStore('socios', () => {
         }
       ))
 
-      // Asignar actividades en curso al nuevo socio
+      // Asignar actividades al nuevo socio:
+      // - Todas las actividades en curso (cualquier tipo).
+      // - Rifas liquidadas (tipo='rifa' y estado='liquidada') para que el socio nuevo
+      //   también pueda aportar su parte; al cobrar, esa utilidad se suma a 'rifas'
+      //   en utilidades_clasificadas (ver registrarPagosActividades en Cuotas.vue).
       try {
         // Obtener información de la natillera para determinar periodicidad
         const { data: natilleraData } = await supabase
@@ -368,67 +372,64 @@ export const useSociosStore = defineStore('socios', () => {
           .single()
 
         if (natilleraData) {
-          // Buscar actividades en curso
-          const { data: actividadesEnCurso, error: actividadesError } = await supabase
+          // en_curso (cualquier tipo) + liquidada de tipo rifa
+          const { data: actividadesObjetivo, error: actividadesError } = await supabase
             .from('actividades')
-            .select('*')
+            .select('id, descripcion, tipo, estado')
             .eq('natillera_id', natilleraId)
-            .eq('estado', 'en_curso')
+            .or('estado.eq.en_curso,and(estado.eq.liquidada,tipo.eq.rifa)')
 
-          if (!actividadesError && actividadesEnCurso && actividadesEnCurso.length > 0) {
-            console.log(`📋 Encontradas ${actividadesEnCurso.length} actividades en curso para asignar al nuevo socio`)
+          if (!actividadesError && actividadesObjetivo && actividadesObjetivo.length > 0) {
+            console.log(`📋 Encontradas ${actividadesObjetivo.length} actividades (en curso + rifas liquidadas) para asignar al nuevo socio`)
 
-            // Función helper para determinar la quincena según la periodicidad
+            // Helper: determinar la quincena del nuevo socio según su periodicidad y la del patrón existente
             const determinarQuincenaParaSocio = (periodicidadSocio, quincenaActividad) => {
-              // IMPORTANTE: Si el socio es mensual, SIEMPRE retornar 0 para que coincida con cuotas mensuales (quincena 0 o null)
-              // Esto aplica tanto si la natillera es mensual como si es quincenal
-              if (periodicidadSocio === 'mensual') {
-                return 0
-              }
-              
-              // Si la natillera es mensual, siempre 0
-              if (!natilleraData || natilleraData.periodicidad === 'mensual') {
-                return 0
-              }
-              
-              // Si la natillera es quincenal y el socio es quincenal, usar la quincena de la actividad
-              if (natilleraData.periodicidad === 'quincenal') {
-                return quincenaActividad || null
-              }
-              
+              if (periodicidadSocio === 'mensual') return 0
+              if (!natilleraData || natilleraData.periodicidad === 'mensual') return 0
+              if (natilleraData.periodicidad === 'quincenal') return quincenaActividad || null
               return 0
             }
 
-            // Para cada actividad en curso, crear registro en socios_actividad
-            for (const actividad of actividadesEnCurso) {
-              // Verificar si ya existe un registro para esta actividad (para obtener el valor_asignado)
-              const { data: sociosActividadExistentes } = await supabase
+            for (const actividad of actividadesObjetivo) {
+              // Leer registros existentes para:
+              // - Evitar duplicar si ya existe uno para este socio.
+              // - Calcular valor_asignado: si todos los socios existentes tienen el mismo
+              //   valor (valores iguales), usar ese valor; si difieren, usar el promedio.
+              // - Heredar mes_pago/anio_pago/quincena_pago/fecha_limite_pago del patrón
+              //   (las columnas correctas están en socios_actividad, no en actividades).
+              const { data: existentes } = await supabase
                 .from('socios_actividad')
-                .select('valor_asignado')
+                .select('valor_asignado, mes_pago, anio_pago, quincena_pago, fecha_limite_pago, socio_natillera_id')
                 .eq('actividad_id', actividad.id)
-                .limit(1)
 
-              // Determinar el valor_asignado
-              let valorAsignado = 0
-              if (sociosActividadExistentes && sociosActividadExistentes.length > 0) {
-                // Si hay registros existentes, usar el valor_asignado del primero
-                // (asumiendo que si la actividad tiene valores iguales, todos tendrán el mismo valor)
-                valorAsignado = Number(sociosActividadExistentes[0].valor_asignado) || 0
+              if (!existentes || existentes.length === 0) {
+                // Sin referencia de periodo/valor no se puede asignar al nuevo socio
+                continue
               }
 
-              // Determinar la quincena según la periodicidad del socio y la actividad
-              const quincenaFinal = determinarQuincenaParaSocio(periodicidadFinal, actividad.quincena_pago)
+              if (existentes.some(e => e.socio_natillera_id === data.id)) {
+                // Defensivo: no duplicar (no debería ocurrir para socio recién creado)
+                continue
+              }
 
-              // Crear registro en socios_actividad
+              const valores = existentes.map(e => Number(e.valor_asignado) || 0)
+              const unicos = [...new Set(valores)]
+              const valorAsignado = unicos.length === 1
+                ? unicos[0]
+                : Math.round(valores.reduce((s, v) => s + v, 0) / valores.length)
+
+              const ref = existentes[0]
+              const quincenaFinal = determinarQuincenaParaSocio(periodicidadFinal, ref.quincena_pago)
+
               const nuevoRegistro = {
                 actividad_id: actividad.id,
                 socio_natillera_id: data.id,
                 valor_asignado: valorAsignado,
                 valor_pagado: 0,
                 estado: 'pendiente',
-                fecha_limite_pago: actividad.fecha_limite_pago,
-                mes_pago: actividad.mes_pago,
-                anio_pago: actividad.anio_pago,
+                fecha_limite_pago: ref.fecha_limite_pago,
+                mes_pago: ref.mes_pago,
+                anio_pago: ref.anio_pago,
                 quincena_pago: quincenaFinal,
                 nombre_socio: nombreSocio,
                 nombre_natillera: natilleraData.nombre || null
@@ -440,16 +441,15 @@ export const useSociosStore = defineStore('socios', () => {
 
               if (insertError) {
                 console.error(`⚠️ Error al asignar actividad ${actividad.id} al nuevo socio:`, insertError)
-                // No lanzar error, solo registrar en consola para no interrumpir la creación del socio
+                // No lanzar error para no interrumpir la creación del socio
               } else {
-                console.log(`✅ Actividad "${actividad.descripcion}" asignada al nuevo socio con valor $${valorAsignado}`)
+                console.log(`✅ Actividad "${actividad.descripcion}" (${actividad.estado}) asignada al nuevo socio con valor $${valorAsignado}`)
               }
             }
           }
         }
       } catch (errorAsignacion) {
-        // No lanzar error, solo registrar en consola para no interrumpir la creación del socio
-        console.error('⚠️ Error al asignar actividades en curso al nuevo socio:', errorAsignacion)
+        console.error('⚠️ Error al asignar actividades al nuevo socio:', errorAsignacion)
       }
 
       sociosNatillera.value.push(data)

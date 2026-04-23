@@ -1,5 +1,4 @@
 import { watch, onUnmounted, ref, readonly } from 'vue'
-import { detectIosPlatform } from './useIsIos'
 
 // Contador global: solo desbloquear cuando ninguna modal esté abierta (evita race al pasar de modal pago a modal comprobante)
 let lockCount = 0
@@ -10,8 +9,10 @@ const _isBodyScrollLocked = ref(false)
 /** Ref global: true cuando hay al menos una modal abierta (para que el layout suba z-index y la barra quede debajo) */
 export const isBodyScrollLocked = readonly(_isBodyScrollLocked)
 
+// Detectar iOS
 function isIOS() {
-  return detectIosPlatform()
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 }
 
 function updateLockedRef() {
@@ -56,9 +57,7 @@ function applyLock() {
     }
 
     requestAnimationFrame(() => {
-      const modals = document.querySelectorAll(
-        '.fixed.inset-0, [class*="fixed"][class*="inset-0"], .modal-wrapper-ios'
-      )
+      const modals = document.querySelectorAll('.fixed.inset-0, [class*="fixed"][class*="inset-0"]')
       modals.forEach(modal => {
         if (modal && modal.style) {
           modal.style.display = modal.style.display || 'flex'

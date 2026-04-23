@@ -23,7 +23,7 @@ export const PERMISOS_DISPONIBLES = {
   gestionar_actividades: { nombre: 'Gestionar Actividades', descripcion: 'Puede crear y gestionar actividades y rifas' },
   ver_auditoria: { nombre: 'Ver Auditoría', descripcion: 'Puede ver el historial de cambios' },
   configurar: { nombre: 'Configurar', descripcion: 'Puede modificar configuración y gestionar colaboradores' },
-  buscar_comprobante: { nombre: 'Buscar comprobante', descripcion: 'Puede buscar comprobantes de pago' },
+  buscar_comprobante: { nombre: 'Buscar Comprobante', descripcion: 'Puede buscar comprobantes de pago' },
   invitar_colaboradores: { nombre: 'Invitar Colaboradores', descripcion: 'Puede invitar colaboradores a la natillera' },
   notificar: { nombre: 'Notificar', descripcion: 'Puede enviar notificaciones por WhatsApp' },
   cerrar_natillera: { nombre: 'Cerrar Natillera', descripcion: 'Puede cerrar la natillera' }
@@ -118,19 +118,14 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
   }
 
   /**
-   * Obtener invitaciones pendientes para el usuario actual.
-   * @param {{ user?: object }} opts - Pasar user evita un round-trip de red a getUser().
+   * Obtener invitaciones pendientes para el usuario actual
    */
-  async function fetchMisInvitaciones(opts = {}) {
+  async function fetchMisInvitaciones() {
     try {
       loading.value = true
       error.value = null
 
-      let user = opts.user || null
-      if (!user) {
-        const { data } = await supabase.auth.getUser()
-        user = data.user
-      }
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return { success: false, error: 'No autenticado' }
 
       const { data, error: fetchError } = await supabase
@@ -687,35 +682,32 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
   /**
    * Obtener todos los permisos del usuario en una natillera
    */
-  async function obtenerMisPermisos(natilleraId, { user: userArg, skipAdminCheck } = {}) {
+  async function obtenerMisPermisos(natilleraId) {
     try {
-      let user = userArg
-      if (!user) {
-        const { data: { user: u } } = await supabase.auth.getUser()
-        user = u
-      }
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return null
 
-      if (!skipAdminCheck) {
-        const { data: natillera } = await supabase
-          .from('natilleras')
-          .select('admin_id')
-          .eq('id', natilleraId)
-          .single()
+      // Primero verificar si es el admin
+      const { data: natillera } = await supabase
+        .from('natilleras')
+        .select('admin_id')
+        .eq('id', natilleraId)
+        .single()
 
-        if (natillera?.admin_id === user.id) {
-          permisoActual.value = {
-            rol: 'administrador',
-            esAdmin: true,
-            permisos: Object.keys(PERMISOS_DISPONIBLES).reduce((acc, key) => {
-              acc[key] = true
-              return acc
-            }, {})
-          }
-          return permisoActual.value
+      if (natillera?.admin_id === user.id) {
+        // El admin tiene todos los permisos
+        permisoActual.value = {
+          rol: 'administrador',
+          esAdmin: true,
+          permisos: Object.keys(PERMISOS_DISPONIBLES).reduce((acc, key) => {
+            acc[key] = true
+            return acc
+          }, {})
         }
+        return permisoActual.value
       }
 
+      // Buscar permisos de colaborador (maybeSingle: si es admin no hay fila → no 406)
       const { data: colaborador } = await supabase
         .from('natillera_colaboradores')
         .select('rol, permisos, estado')
