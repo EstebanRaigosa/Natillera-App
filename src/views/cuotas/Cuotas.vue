@@ -1078,15 +1078,15 @@
                         </template>
                         <!-- Cuota pendiente o mora: total a pagar y desglose -->
                         <template v-else>
-                          <p 
-                            v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0 || getSancionCuota(cuota) > 0"
+                          <p
+                            v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0 || getSancionCuota(cuota) > 0"
                             class="text-xs text-gray-500 mb-0.5"
                           >
                             Total a Pagar
                           </p>
                           <p class="font-bold text-base sm:text-lg"
-                            :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' : 
-                                    getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0 ? 'text-orange-600' : 'text-gray-800'"
+                            :class="(cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-600' :
+                                    getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0 ? 'text-orange-600' : 'text-gray-800'"
                           >
                             ${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}
                           </p>
@@ -1108,11 +1108,11 @@
                           >
                             <span class="inline-block w-2 h-2 bg-purple-600 rounded-sm mr-1.5"></span>{{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                           </p>
-                          <p 
-                            v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" 
+                          <p
+                            v-if="getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0"
                             class="text-xs font-semibold mt-0.5 text-blue-600"
                           >
-                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                            <span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesAcumulado(cuota)) }}
                           </p>
                           <p 
                             v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0"
@@ -1451,11 +1451,11 @@
                       >
                         <span class="mr-1">●</span> {{ getTextoActividadesSocio(cuota) }} ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}
                       </li>
-                      <li 
-                        v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" 
+                      <li
+                        v-if="getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0"
                         class="text-blue-600 font-medium"
                       >
-                        <span class="mr-1">●</span> Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}
+                        <span class="mr-1">●</span> Pendiente préstamos ${{ formatMoney(getTotalCuotasPrestamosPendientesAcumulado(cuota)) }}
                       </li>
                       <li 
                         v-if="getTotalAbonadoPrestamosCuotaSocioSync(cuota) > 0" 
@@ -1818,7 +1818,7 @@
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
                     <div v-if="getSancionCuota(cuota) > 0" class="text-xs text-red-500 font-semibold">+ Multa: ${{ formatMoney(getSancionCuota(cuota)) }}</div>
                     <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesAcumulado(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado parcial -->
@@ -1827,16 +1827,16 @@
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota - (cuota.valor_pagado || 0)) }}</div>
                     <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesAcumulado(cuota)) }}</div>
                   </div>
                 </template>
                 <!-- Estado normal -->
                 <div v-else>
-                  <div v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="space-y-0.5">
+                  <div v-if="getActividadesPendientesSocio(cuota) > 0 || getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0" class="space-y-0.5">
                     <div>${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</div>
                     <div class="text-xs text-gray-500 font-normal">Cuota: ${{ formatMoney(cuota.valor_cuota) }}</div>
                     <div v-if="getActividadesPendientesSocio(cuota) > 0" class="text-xs text-purple-600 font-semibold">+ {{ getTextoActividadesSocio(cuota) }}: ${{ formatMoney(getActividadesPendientesSocio(cuota)) }}</div>
-                    <div v-if="getTotalCuotasPrestamosPendientesSocioSync(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesSocioSync(cuota)) }}</div>
+                    <div v-if="getTotalCuotasPrestamosPendientesAcumulado(cuota) > 0" class="text-xs text-blue-600 font-semibold">+ Cuotas de préstamos: ${{ formatMoney(getTotalCuotasPrestamosPendientesAcumulado(cuota)) }}</div>
                   </div>
                   <div v-else>
                     ${{ formatMoney(cuota.valor_cuota) }}
@@ -3368,6 +3368,12 @@
                           >
                             Programada para este período (no se puede quitar)
                           </span>
+                          <span
+                            v-else-if="cuotaPrestamo.es_atrasada"
+                            class="text-[10px] font-medium text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded inline-block"
+                          >
+                            Atrasada (sin pagar)
+                          </span>
                           <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                             <span class="text-gray-500">
                               Valor cuota: <span class="font-semibold text-gray-700">${{ formatMoney(cuotaPrestamo.valor_cuota || 0) }}</span>
@@ -3859,8 +3865,8 @@
             </div>
             <!-- Desglose individual de cada cuota de préstamo -->
             <div v-if="desglosePagoConfirmacion?.cuotasPrestamosDetalle && desglosePagoConfirmacion.cuotasPrestamosDetalle.length > 0" class="border-t border-blue-200 bg-blue-100/50 px-3 py-2 space-y-1.5">
-              <div 
-                v-for="(cuotaPrestamo, index) in desglosePagoConfirmacion.cuotasPrestamosDetalle" 
+              <div
+                v-for="(cuotaPrestamo, index) in desglosePagoConfirmacion.cuotasPrestamosDetalle"
                 :key="index"
                 class="flex items-center justify-between text-xs"
               >
@@ -3871,6 +3877,17 @@
                 <span class="text-blue-700 font-semibold">${{ formatMoney(cuotaPrestamo.valor || 0) }}</span>
               </div>
             </div>
+          </div>
+
+          <!-- 4×1000 (GMF) -->
+          <div v-if="(desglosePagoConfirmacion?.impuesto4x1000 || 0) > 0" class="flex items-center justify-between p-3 bg-sky-50 rounded-lg border border-sky-200">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                <span class="text-sm">🏦</span>
+              </div>
+              <span class="text-sm font-medium text-gray-700">4×1000 (GMF)</span>
+            </div>
+            <span class="text-sm font-semibold text-sky-700">${{ formatMoney(desglosePagoConfirmacion?.impuesto4x1000 || 0) }}</span>
           </div>
         </div>
       </div>
@@ -6260,6 +6277,9 @@ const cargandoActividades = ref(false) // Estado de carga de actividades
 const actividadesSeleccionadas = ref(new Set()) // IDs de actividades seleccionadas
 const actividadesDeLaCuotaActual = ref(new Set()) // IDs de actividades que corresponden al periodo de la cuota actual (no se pueden deseleccionar)
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
+// Contador para invalidar cargas concurrentes de cargarActividadesPendientesPorSocio:
+// si se dispara una nueva mientras la anterior estaba en curso, solo la última escribe el resultado.
+let actividadesRunId = 0
 const mostrandoAnimacionPago = ref(false) // Controla la animación de registro de pago
 useBodyScrollLock(mostrandoAnimacionPago) // Bloquear scroll durante la animación de pago
 const cuotasPrestamosPendientes = ref([]) // Cuotas de préstamos pendientes del socio
@@ -6272,6 +6292,8 @@ const cuotasPrestamosPagadasCache = ref(new Map()) // Caché de cuotas de prést
 const cuotasPrestamosPendientesPorPeriodo = ref(new Map())
 // Total abonado (valor_pagado en plan_pagos) por el mismo periodo — para "Pagado" en tarjeta socio / totales
 const cuotasPrestamosAbonadoPorPeriodo = ref(new Map())
+// Caché de total acumulado de cuotas de préstamos pendientes por cuota.id (incluye cuotas atrasadas de periodos anteriores)
+const cuotasPrestamosPendientesAcumuladoPorCuotaId = ref(new Map())
 // Variables para el modal de editar
 const actividadesPagadasEditar = ref([]) // Actividades pagadas de la cuota que se está editando
 const cuotasPrestamosPagadasEditar = ref([]) // Cuotas de préstamos pagadas de la cuota que se está editando
@@ -6790,8 +6812,10 @@ const cuotasFiltradas = computed(() => {
   let filtradas = cuotasMesActual.value
     .filter(c => !sociosInactivosSinPagoCompletoIds.value.has(c.socio_natillera_id))
     .map(cuota => {
-    // Calcular el estado real de cada cuota según las reglas
-    const estadoReal = calcularEstadoRealCuota(cuota, diasGracia.value)
+    // Calcular el estado real de cada cuota según las reglas.
+    // Pasamos verificarPendientes=true para que cuotas con actividades o préstamos
+    // pendientes no se muestren como "pagada" aunque valor_pagado >= valor_cuota.
+    const estadoReal = calcularEstadoRealCuota(cuota, diasGracia.value, true)
     return { ...cuota, estadoReal }
   })
 
@@ -7013,10 +7037,11 @@ const resumenMesActual = computed(() => {
     cuotas = cuotasStore.cuotas
   }
   
-  // Calcular estados reales y contar por estado
+  // Calcular estados reales y contar por estado.
+  // verificarPendientes=true: cuotas con actividades/préstamos pendientes no cuentan como pagadas.
   const cuotasConEstadoReal = cuotas.map(c => ({
     ...c,
-    estadoReal: calcularEstadoRealCuota(c, diasGracia.value)
+    estadoReal: calcularEstadoRealCuota(c, diasGracia.value, true)
   }))
   
   // Calcular totales financieros
@@ -7287,6 +7312,50 @@ async function sincronizarImpuesto4x1000HistorialTrasEditar(cuotaId, nuevoImpues
   }
 }
 
+/**
+ * Propaga un cambio de tipo_pago de una cuota a los registros relacionados que también
+ * almacenan forma_pago:
+ *  - socios_actividad (actividades del socio en el mismo periodo, pagadas con la forma anterior)
+ *  - plan_pagos_prestamo (cuotas de préstamo ligadas a esta cuota por cuota_id)
+ * No toca utilidades_clasificadas: al ser agregados por forma_pago, reasignar montos entre
+ * buckets de forma coherente requiere una reconciliación aparte.
+ */
+async function propagarFormaPagoTrasEditar(cuota, tipoPagoAnterior, tipoPagoNuevo) {
+  if (!cuota || !tipoPagoNuevo) return
+  const anterior = (tipoPagoAnterior || 'efectivo').toLowerCase()
+  const nuevo = (tipoPagoNuevo || 'efectivo').toLowerCase()
+  if (anterior === nuevo) return
+
+  // 1) Actividades (socios_actividad): mismo socio, mismo periodo, con pago y forma_pago anterior.
+  try {
+    let q = supabase
+      .from('socios_actividad')
+      .update({ forma_pago: nuevo })
+      .eq('socio_natillera_id', cuota.socio_natillera_id)
+      .gt('valor_pagado', 0)
+      .eq('forma_pago', anterior)
+    if (cuota.mes != null) q = q.eq('mes_pago', cuota.mes)
+    if (cuota.anio != null) q = q.eq('anio_pago', cuota.anio)
+    if (cuota.quincena != null) q = q.eq('quincena_pago', cuota.quincena)
+    const { error } = await q
+    if (error) console.warn('propagarFormaPago actividades:', error.message)
+  } catch (e) {
+    console.warn('propagarFormaPago actividades excepción:', e?.message || e)
+  }
+
+  // 2) Cuotas de préstamos (plan_pagos_prestamo) ligadas por cuota_id.
+  try {
+    const { error } = await supabase
+      .from('plan_pagos_prestamo')
+      .update({ forma_pago: nuevo })
+      .eq('cuota_id', cuota.id)
+      .gt('valor_pagado', 0)
+    if (error) console.warn('propagarFormaPago préstamos:', error.message)
+  } catch (e) {
+    console.warn('propagarFormaPago préstamos excepción:', e?.message || e)
+  }
+}
+
 // Función para formatear el valor del pago con puntos
 function formatearValorPago(value) {
   if (!value && value !== 0) return ''
@@ -7451,12 +7520,27 @@ const id = props.id || route.params.id
 // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
 // - En Mora: fecha_actual > fecha_vencimiento
 // - Pagada: valor_pagado >= valor_cuota
-function calcularEstadoRealCuota(cuota, diasGracia) {
+// verificarPendientes: si true, una cuota con valor_pagado >= valor_cuota pero con actividades
+// o cuotas de préstamo pendientes NO se considera pagada y se recalcula por fecha (pendiente/mora).
+// Se mantiene en false para el cálculo de sanciones, que depende solo del valor de la cuota.
+function calcularEstadoRealCuota(cuota, diasGracia, verificarPendientes = false) {
   const valorCuota = cuota.valor_cuota || 0
   const valorPagado = cuota.valor_pagado || 0
-  
+
   // Pagada: valor_pagado >= valor_cuota (según REGLAS.md, sin incluir sanción)
-  if (valorPagado >= valorCuota) {
+  let estaPagada = valorPagado >= valorCuota
+
+  // Si se pide verificar pendientes, una cuota con actividades o cuotas de préstamo
+  // pendientes deja de considerarse pagada (debe mostrarse como pendiente/mora + pago parcial)
+  if (estaPagada && verificarPendientes) {
+    const actividadesPend = getActividadesPendientesSocio(cuota)
+    const prestamosPend = getTotalCuotasPrestamosPendientesSocioSync(cuota)
+    if (actividadesPend > 0 || prestamosPend > 0) {
+      estaPagada = false
+    }
+  }
+
+  if (estaPagada) {
     return 'pagada'
   }
   
@@ -7597,11 +7681,11 @@ watch([actividadesPendientes, cuotasPrestamosPendientes, modalPago], async () =>
   }
 }, { deep: true })
 
-// Watch para cargar actividades pendientes y cuotas de préstamos pendientes cuando cambien las cuotas filtradas
-watch(cuotasFiltradas, async () => {
-  // Cargar actividades pendientes tanto en vista agrupada como en tarjetas individuales
+// Watch para cargar actividades y cuotas de préstamos cuando cambie el set de cuotas del mes.
+// Usamos cuotasMesActual (no cuotasFiltradas) para que cambios de búsqueda/filtros no vuelvan a disparar
+// las consultas y eviten parpadeos/carreras donde las actividades "aparecen y desaparecen".
+watch(cuotasMesActual, async () => {
   await cargarActividadesPendientesPorSocio()
-  // Cargar total de cuotas de préstamos pendientes por periodo para mostrar en tarjetas (programadas, pendientes, etc.)
   await cargarCuotasPrestamosPendientesParaLista()
 }, { immediate: true })
 
@@ -8149,7 +8233,7 @@ function getTotalAbonadoPrestamosCuotaSocioSync(cuota) {
 // Versión síncrona que usa datos en caché si están disponibles
 function getTotalCuotasPrestamosPendientesSocioSync(cuota) {
   if (!cuota || !cuota.socio_natillera_id) return 0
-  
+
   // 1) Usar caché por periodo (poblado al cargar la lista de cuotas)
   const mes = cuota.mes ?? (cuota.fecha_limite ? parseInt(String(cuota.fecha_limite).split('-')[1], 10) : null)
   const anio = cuota.anio ?? (cuota.fecha_limite ? parseInt(String(cuota.fecha_limite).split('-')[0], 10) : null)
@@ -8159,7 +8243,7 @@ function getTotalCuotasPrestamosPendientesSocioSync(cuota) {
     const cached = cuotasPrestamosPendientesPorPeriodo.value.get(key)
     if (cached != null && cached > 0) return cached
   }
-  
+
   // 2) Si tenemos las cuotas de préstamos pendientes cargadas para esta cuota (modal abierto), usarlas
   if (cuotaSeleccionada.value && cuotaSeleccionada.value.id === cuota.id && cuotasPrestamosPendientes.value.length > 0) {
     const total = cuotasPrestamosPendientes.value
@@ -8167,8 +8251,31 @@ function getTotalCuotasPrestamosPendientesSocioSync(cuota) {
       .reduce((sum, cp) => sum + (cp.valor_pendiente || 0), 0)
     return total
   }
-  
+
   return 0
+}
+
+// Total acumulado de cuotas de préstamos pendientes para esta cuota: incluye cuotas del periodo
+// actual MÁS las atrasadas (fecha_proyectada anterior a la fecha_limite de esta cuota) que sigan sin pagar.
+// Se usa en las tarjetas para que el socio vea el total real que adeuda al momento de pagar esta cuota.
+function getTotalCuotasPrestamosPendientesAcumulado(cuota) {
+  if (!cuota || !cuota.socio_natillera_id) return 0
+
+  // 1) Usar caché acumulado por cuota.id (poblado al cargar la lista de cuotas)
+  if (cuota.id != null) {
+    const cached = cuotasPrestamosPendientesAcumuladoPorCuotaId.value.get(cuota.id)
+    if (cached != null) return cached
+  }
+
+  // 2) Si el modal está abierto para esta cuota, sumar pendientes del periodo + atrasados cargados
+  if (cuotaSeleccionada.value && cuotaSeleccionada.value.id === cuota.id && cuotasPrestamosPendientes.value.length > 0) {
+    return cuotasPrestamosPendientes.value
+      .filter(cp => (cp.valor_pendiente || 0) > 0 && (cp.esta_programada || cp.es_atrasada))
+      .reduce((sum, cp) => sum + (cp.valor_pendiente || 0), 0)
+  }
+
+  // 3) Fallback al valor del periodo (sin acumular atrasados)
+  return getTotalCuotasPrestamosPendientesSocioSync(cuota)
 }
 
 // Obtener el total de cuotas de préstamos pagadas para una cuota específica
@@ -8334,11 +8441,12 @@ function getTextoActividadesGrupo(grupo) {
 }
 
 // Obtener el total a pagar incluyendo actividades pendientes y cuotas de préstamos pendientes
+// (incluye préstamos atrasados de periodos anteriores que sigan sin pagar)
 function getTotalAPagarConActividadesSocio(cuota) {
   if (!cuota) return 0
   const totalCuota = getTotalAPagar(cuota)
   const actividadesPendientes = getActividadesPendientesSocio(cuota)
-  const cuotasPrestamosPendientes = getTotalCuotasPrestamosPendientesSocioSync(cuota)
+  const cuotasPrestamosPendientes = getTotalCuotasPrestamosPendientesAcumulado(cuota)
   return totalCuota + actividadesPendientes + cuotasPrestamosPendientes
 }
 
@@ -8489,7 +8597,7 @@ async function abrirModalDetalleCuota(cuota) {
   // Asegurar que tengamos reglas de la natillera para el desglose de sanciones en el modal
   if (!natilleraConfigCache) await cargarNatillera()
   // Asegurar estadoReal para mostrar correctamente cuando cuota pagada tras pago parcial
-  const estadoReal = cuota?.estadoReal ?? calcularEstadoRealCuota(cuota, diasGracia.value)
+  const estadoReal = cuota?.estadoReal ?? calcularEstadoRealCuota(cuota, diasGracia.value, true)
   cuotaDetalle.value = { ...cuota, estadoReal }
   asignarScrollAntesDeAbrirModal() // que el lock use la posición guardada al hacer clic
   modalDetalleCuota.value = true
@@ -8706,16 +8814,24 @@ function actividadCorrespondeACuota(actividadSocio, cuota, actividad = null) {
 
 // Función para cargar actividades pendientes de todos los socios
 async function cargarActividadesPendientesPorSocio() {
+  // Invalida cargas anteriores aún en curso: solo la última escribe el resultado.
+  const runId = ++actividadesRunId
+  // Snapshot del set completo de cuotas del mes (no filtradas) al inicio.
+  // Así, filtros/búsquedas no quitan actividades de cuotas ocultas, y cambios
+  // reactivos durante la carga async no alteran qué cuotas se procesan.
+  const cuotasRef = (cuotasMesActual.value || []).filter(
+    c => !sociosInactivosSinPagoCompletoIds.value.has(c.socio_natillera_id)
+  )
   try {
-    // Obtener todos los socio_natillera_id únicos de las cuotas filtradas
+    // Obtener todos los socio_natillera_id únicos del snapshot
     const socioNatilleraIds = [...new Set(
-      cuotasFiltradas.value
+      cuotasRef
         .map(c => c.socio_natillera_id)
         .filter(id => id)
     )]
 
     if (socioNatilleraIds.length === 0) {
-      actividadesPendientesPorSocio.value = {}
+      if (runId === actividadesRunId) actividadesPendientesPorSocio.value = {}
       return
     }
 
@@ -8766,15 +8882,15 @@ async function cargarActividadesPendientesPorSocio() {
 
       if (errorSociosActividad) {
         console.error('❌ Error cargando actividades pendientes por socio:', errorSociosActividad)
-        actividadesPendientesPorSocio.value = {}
+        if (runId === actividadesRunId) actividadesPendientesPorSocio.value = {}
         return
       }
-      
+
       sociosActividadData = todasActividades || []
     }
 
     if (!sociosActividadData || sociosActividadData.length === 0) {
-      actividadesPendientesPorSocio.value = {}
+      if (runId === actividadesRunId) actividadesPendientesPorSocio.value = {}
       return
     }
 
@@ -8801,11 +8917,12 @@ async function cargarActividadesPendientesPorSocio() {
     
     console.log('🔍 Cargando actividades pendientes por cuota...')
     console.log('📊 Actividades encontradas en socios_actividad:', sociosActividadData.length)
-    console.log('📊 Cuotas filtradas:', cuotasFiltradas.value.length)
+    console.log('📊 Cuotas del mes (snapshot):', cuotasRef.length)
     console.log('📅 Periodo actual:', { mes: mesActual, anio: anioActual })
-    
-    // Inicializar todas las cuotas con estructura vacía (total = pendiente, totalPagado = actividades ya pagadas)
-    cuotasFiltradas.value.forEach(cuota => {
+
+    // Inicializar todas las cuotas del mes con estructura vacía (se usa el snapshot
+    // cuotasRef para que la inicialización no dependa de filtros/búsqueda)
+    cuotasRef.forEach(cuota => {
       if (!cuota.socio_natillera_id || !cuota.id) return
       totalesPorCuota[cuota.id] = { total: 0, totalPagado: 0, actividades: [] }
     })
@@ -8823,9 +8940,12 @@ async function cargarActividadesPendientesPorSocio() {
         return
       }
       
-      // Solo procesar actividades en curso (o ya pagadas, para mostrar en desglose; BD usa 'pagado')
-      if (actividad.estado && actividad.estado !== 'en_curso' && sa.estado !== 'pagada' && sa.estado !== 'pagado') {
-        console.log('⚠️ Actividad no está en curso:', actividad.id, 'estado:', actividad.estado)
+      // Procesar actividades en curso o liquidadas (las rifas liquidadas deben seguir apareciendo
+      // como pendientes si el socio aún no ha pagado su parte; al cobrar, esa utilidad se registra
+      // como 'rifas'). También incluimos pagadas para mostrar desglose.
+      const estadoOk = !actividad.estado || actividad.estado === 'en_curso' || actividad.estado === 'liquidada'
+      if (!estadoOk && sa.estado !== 'pagada' && sa.estado !== 'pagado') {
+        console.log('⚠️ Actividad en estado no soportado:', actividad.id, 'estado:', actividad.estado)
         return
       }
       
@@ -8862,7 +8982,7 @@ async function cargarActividadesPendientesPorSocio() {
       // Si quincena_pago es 2 pero debería ser 0 para socios mensuales, corregirlo
       if (quincenaPago === 2 || quincenaPago === 1) {
         // Verificar si la cuota correspondiente es mensual (quincena 0 o null)
-        const cuotaMensual = cuotasFiltradas.value.find(cuota => 
+        const cuotaMensual = cuotasRef.find(cuota =>
           cuota.socio_natillera_id === sa.socio_natillera_id &&
           cuota.mes === sa.mes_pago &&
           cuota.anio === sa.anio_pago &&
@@ -8888,7 +9008,7 @@ async function cargarActividadesPendientesPorSocio() {
       
       // Buscar la cuota correspondiente según quincena_pago
       // Regla: la actividad va SOLO en una quincena. Si la cuota de esa quincena ya está pagada y la actividad sigue sin pagar, se muestra en la siguiente quincena.
-      let cuotaCorrespondiente = cuotasFiltradas.value.find(cuota => {
+      let cuotaCorrespondiente = cuotasRef.find(cuota => {
         if (cuota.socio_natillera_id !== sa.socio_natillera_id) return false
         if (cuota.mes !== sa.mes_pago || cuota.anio !== sa.anio_pago) return false
         if (quincenaPago === null || quincenaPago === 0) {
@@ -8904,7 +9024,7 @@ async function cargarActividadesPendientesPorSocio() {
         const cuotaQ1 = cuotaCorrespondiente
         const q1Pagada = cuotaQ1.estado === 'pagada' || (parseFloat(cuotaQ1.valor_pagado || 0) >= parseFloat(cuotaQ1.valor_cuota || 0))
         if (q1Pagada) {
-          const cuotaQ2 = cuotasFiltradas.value.find(cuota =>
+          const cuotaQ2 = cuotasRef.find(cuota =>
             cuota.socio_natillera_id === sa.socio_natillera_id &&
             cuota.mes === sa.mes_pago &&
             cuota.anio === sa.anio_pago &&
@@ -8951,7 +9071,7 @@ async function cargarActividadesPendientesPorSocio() {
           mes_pago: sa.mes_pago,
           anio_pago: sa.anio_pago,
           quincena_pago: quincenaPago,
-          cuotas_disponibles: cuotasFiltradas.value
+          cuotas_disponibles: cuotasRef
             .filter(c => c.socio_natillera_id === sa.socio_natillera_id)
             .map(c => ({ id: c.id, mes: c.mes, anio: c.anio, quincena: c.quincena }))
         })
@@ -8964,11 +9084,14 @@ async function cargarActividadesPendientesPorSocio() {
       totales_por_cuota: totalesPorCuota
     })
 
-    // Cambiar la estructura para usar cuotaId como clave
-    actividadesPendientesPorSocio.value = totalesPorCuota
+    // Solo la ejecución más reciente escribe el resultado (evita que una respuesta
+    // tardía pise lo que escribió una ejecución posterior).
+    if (runId === actividadesRunId) {
+      actividadesPendientesPorSocio.value = totalesPorCuota
+    }
   } catch (e) {
     console.error('❌ Error cargando actividades pendientes por socio:', e)
-    actividadesPendientesPorSocio.value = {}
+    if (runId === actividadesRunId) actividadesPendientesPorSocio.value = {}
   }
 }
 
@@ -9389,6 +9512,9 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
     
     // Array para rastrear los pagos por tipo de actividad para utilidades
     const pagosPorTipoUtilidad = {} // { tipo: { liquidada: valor, en_curso: valor } }
+    // Rifas liquidadas: tracking por actividad para registrar utilidad con id_actividad
+    // (los pagos que entran después de la liquidación se suman como "rifas" en utilidades_clasificadas)
+    const pagosRifasLiquidadas = {} // { actividadId: { monto, descripcion } }
     
     if (valorRestante >= totalActividades) {
       // Pagar todas las actividades completamente
@@ -9456,15 +9582,26 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
             const estadoActividad = actividad.actividad.estado
             const tipoActividad = actividad.actividad.tipo || 'otro'
             const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
-            
-            if (!pagosPorTipoUtilidad[tipoUtilidad]) {
-              pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
-            }
-            
-            if (estadoActividad === 'liquidada') {
-              pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorPagadoEnEstaTransaccion
+
+            if (tipoUtilidad === 'rifas') {
+              // Rifas: solo se registran como utilidad si la actividad YA fue liquidada.
+              // Los pagos posteriores a la liquidación se acumulan por id_actividad.
+              if (estadoActividad === 'liquidada') {
+                const actId = actividad.actividad.id
+                if (!pagosRifasLiquidadas[actId]) {
+                  pagosRifasLiquidadas[actId] = { monto: 0, descripcion: actividad.actividad.descripcion || 'Rifa' }
+                }
+                pagosRifasLiquidadas[actId].monto += valorPagadoEnEstaTransaccion
+              }
             } else {
-              pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
+              if (!pagosPorTipoUtilidad[tipoUtilidad]) {
+                pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
+              }
+              if (estadoActividad === 'liquidada') {
+                pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorPagadoEnEstaTransaccion
+              } else {
+                pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
+              }
             }
           }
         }
@@ -9544,16 +9681,24 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
             const estadoActividad = actividad.actividad.estado
             const tipoActividad = actividad.actividad.tipo || 'otro'
             const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
-            
-            if (!pagosPorTipoUtilidad[tipoUtilidad]) {
-              pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
-            }
-            
-            if (estadoActividad === 'liquidada') {
-              pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorAPagar
+
+            if (tipoUtilidad === 'rifas') {
+              // Rifas: solo si la actividad YA fue liquidada, los pagos posteriores
+              // se acumulan por id_actividad y se registran como utilidad 'rifas'.
+              if (estadoActividad === 'liquidada') {
+                const actId = actividad.actividad.id
+                if (!pagosRifasLiquidadas[actId]) {
+                  pagosRifasLiquidadas[actId] = { monto: 0, descripcion: actividad.actividad.descripcion || 'Rifa' }
+                }
+                pagosRifasLiquidadas[actId].monto += valorAPagar
+              }
             } else {
-              // Las rifas en curso no se guardan en utilidades_clasificadas hasta que se liquide la actividad
-              if (tipoUtilidad !== 'rifas') {
+              if (!pagosPorTipoUtilidad[tipoUtilidad]) {
+                pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
+              }
+              if (estadoActividad === 'liquidada') {
+                pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorAPagar
+              } else {
                 pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorAPagar
               }
             }
@@ -9564,10 +9709,83 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
       }
     }
     
+    // Registrar pagos posteriores a la liquidación de rifas: van a utilidades_clasificadas
+    // como tipo='rifas' con id_actividad, respetando el formato que usa el módulo de liquidación.
+    // Además se actualizan actividades.ingresos y actividades.utilidad para que el desglose
+    // de utilidades (que lee actividades.utilidad) refleje el nuevo monto cobrado.
+    if (natilleraId && Object.keys(pagosRifasLiquidadas).length > 0) {
+      for (const [actividadId, info] of Object.entries(pagosRifasLiquidadas)) {
+        if (!info || !info.monto || info.monto <= 0) continue
+        try {
+          const queryRifa = (q) => {
+            let chain = q
+              .eq('natillera_id', natilleraId)
+              .eq('tipo', 'rifas')
+              .eq('id_actividad', actividadId)
+              .is('fecha_cierre', null)
+            if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
+            else chain = chain.is('forma_pago', null)
+            return chain
+          }
+          const { data: existRifa } = await queryRifa(
+            supabase.from('utilidades_clasificadas').select('id, monto')
+          ).maybeSingle()
+          const montoAnterior = parseFloat(existRifa?.monto) || 0
+          const montoFinal = montoAnterior + info.monto
+          if (existRifa) {
+            await supabase
+              .from('utilidades_clasificadas')
+              .update({
+                monto: montoFinal,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existRifa.id)
+          } else {
+            const insertRifa = {
+              natillera_id: natilleraId,
+              tipo: 'rifas',
+              id_actividad: actividadId,
+              monto: montoFinal,
+              fecha_cierre: null,
+              descripcion: `Utilidad de rifa: ${info.descripcion} (pagos posteriores a liquidación)`,
+              detalles: { post_liquidacion: true }
+            }
+            if (formaPagoAct != null) insertRifa.forma_pago = formaPagoAct
+            await supabase.from('utilidades_clasificadas').insert(insertRifa)
+          }
+
+          // Sumar el pago a actividades.ingresos y actividades.utilidad para que aparezca
+          // reflejado en el desglose de utilidades (que lee a.utilidad directamente).
+          try {
+            const { data: actAnterior } = await supabase
+              .from('actividades')
+              .select('ingresos, utilidad')
+              .eq('id', actividadId)
+              .single()
+            const ingresosAnt = parseFloat(actAnterior?.ingresos) || 0
+            const utilidadAnt = parseFloat(actAnterior?.utilidad) || 0
+            await supabase
+              .from('actividades')
+              .update({
+                ingresos: ingresosAnt + info.monto,
+                utilidad: utilidadAnt + info.monto
+              })
+              .eq('id', actividadId)
+          } catch (errUpdAct) {
+            console.error(`❌ Error actualizando ingresos/utilidad de actividad ${actividadId}:`, errUpdAct)
+          }
+
+          console.log(`✅ Utilidad registrada para rifa liquidada ${actividadId}: $${info.monto}`)
+        } catch (errRifa) {
+          console.error(`❌ Error registrando utilidad de rifa liquidada ${actividadId}:`, errRifa)
+        }
+      }
+    }
+
     // Registrar utilidades según el estado de las actividades pagadas
     if (natilleraId && Object.keys(pagosPorTipoUtilidad).length > 0) {
       for (const [tipoUtilidad, pagos] of Object.entries(pagosPorTipoUtilidad)) {
-        // Las rifas solo se registran en utilidades_clasificadas cuando se liquida la actividad desde el módulo Actividades, no al pagar la cuota
+        // Las rifas se registran por separado arriba (por id_actividad, sólo si ya fueron liquidadas)
         if (tipoUtilidad === 'rifas') continue
 
         // Registrar pagos de actividades liquidadas directamente en utilidades del tipo correspondiente
@@ -9927,12 +10145,16 @@ async function cargarCuotasPrestamosPendientes(cuota) {
     const anioActual = cuota.anio
     const quincenaActual = cuota.quincena
 
+    // Fecha tope del periodo de la cuota actual: cuotas de préstamo con fecha_proyectada
+    // anterior o igual a esta fecha que sigan sin pagar se consideran "atrasadas"
+    const fechaTopeCuotaActual = obtenerFechaTopePeriodoCuota(cuota)
+
     const cuotasProcesadas = planPagos.map(cuotaPrestamo => {
       const prestamo = prestamosMap.get(cuotaPrestamo.prestamo_id)
       const fechaProyectada = new Date(cuotaPrestamo.fecha_proyectada)
       const mesProyectado = fechaProyectada.getMonth() + 1
       const anioProyectado = fechaProyectada.getFullYear()
-      
+
       // Determinar la quincena proyectada según la periodicidad del préstamo
       let quincenaProyectada = null
       if (prestamo && prestamo.periodicidad === 'quincenal') {
@@ -9953,7 +10175,14 @@ async function cargarCuotasPrestamosPendientes(cuota) {
         quincenaActual
       )
 
-      const valorPendiente = parseFloat(cuotaPrestamo.valor_cuota || 0) - parseFloat(cuotaPrestamo.valor_pagado || 0)
+      const valorPendiente = Math.max(0, parseFloat(cuotaPrestamo.valor_cuota || 0) - parseFloat(cuotaPrestamo.valor_pagado || 0))
+
+      // Está "atrasada" si su periodo proyectado es anterior al periodo de la cuota actual
+      // (fecha_proyectada <= fecha tope) y aún tiene saldo pendiente.
+      const esAtrasada = !estaProgramada
+        && valorPendiente > 0
+        && fechaTopeCuotaActual != null
+        && fechaProyectada <= fechaTopeCuotaActual
 
       return {
         ...cuotaPrestamo,
@@ -9961,17 +10190,22 @@ async function cargarCuotasPrestamosPendientes(cuota) {
         mes_proyectado: mesProyectado,
         anio_proyectado: anioProyectado,
         quincena_proyectada: quincenaProyectada,
-        valor_pendiente: Math.max(0, valorPendiente),
-        esta_programada: estaProgramada
+        valor_pendiente: valorPendiente,
+        esta_programada: estaProgramada,
+        es_atrasada: esAtrasada
       }
     })
 
     cuotasPrestamosPendientes.value = cuotasProcesadas
 
-    // Marcar las cuotas que están programadas para el período actual
+    // Marcar las cuotas que están programadas para el período actual (no se pueden quitar)
+    // y también pre-seleccionar las atrasadas de periodos anteriores que sigan sin pagar
+    // (estas sí pueden deseleccionarse).
     cuotasProcesadas.forEach(cuotaPrestamo => {
       if (cuotaPrestamo.esta_programada) {
         cuotasPrestamosDeLaCuotaActual.value.add(cuotaPrestamo.id)
+        cuotasPrestamosSeleccionadas.value.add(cuotaPrestamo.id)
+      } else if (cuotaPrestamo.es_atrasada) {
         cuotasPrestamosSeleccionadas.value.add(cuotaPrestamo.id)
       }
     })
@@ -10023,6 +10257,7 @@ async function cargarCuotasPrestamosPendientesParaLista() {
   const vaciarMaps = () => {
     cuotasPrestamosPendientesPorPeriodo.value = new Map()
     cuotasPrestamosAbonadoPorPeriodo.value = new Map()
+    cuotasPrestamosPendientesAcumuladoPorCuotaId.value = new Map()
   }
   const cuotas = cuotasFiltradas.value
   if (!cuotas || cuotas.length === 0) {
@@ -10060,6 +10295,8 @@ async function cargarCuotasPrestamosPendientesParaLista() {
     }
     const totalesPendiente = new Map()
     const totalesAbonado = new Map()
+    // Agrupar las cuotas de préstamo pendientes por socio para calcular el acumulado por cuota.id
+    const pendientesPorSocio = new Map() // socio_natillera_id -> [{ fechaProyectada: Date, valorPendiente }]
     for (const cp of planPagos) {
       const prestamo = prestamosMap.get(cp.prestamo_id)
       if (!prestamo) continue
@@ -10080,14 +10317,64 @@ async function cargarCuotasPrestamosPendientesParaLista() {
       const valorPendiente = Math.max(0, valorCuota - valorPagado)
       if (valorPendiente > 0) {
         totalesPendiente.set(key, (totalesPendiente.get(key) || 0) + valorPendiente)
+        const lista = pendientesPorSocio.get(prestamo.socio_natillera_id) || []
+        lista.push({ fechaProyectada, valorPendiente })
+        pendientesPorSocio.set(prestamo.socio_natillera_id, lista)
       }
     }
+
+    // Calcular el acumulado por cuota.id: suma de cuotas de préstamo pendientes con
+    // fecha_proyectada <= fecha_limite (o final del periodo) de cada cuota de natillera del socio.
+    const totalesAcumulado = new Map()
+    for (const cuota of cuotas) {
+      if (!cuota?.id || !cuota.socio_natillera_id) continue
+      const lista = pendientesPorSocio.get(cuota.socio_natillera_id)
+      if (!lista || lista.length === 0) continue
+      const fechaTope = obtenerFechaTopePeriodoCuota(cuota)
+      if (!fechaTope) continue
+      const acumulado = lista.reduce((sum, item) => {
+        return item.fechaProyectada <= fechaTope ? sum + item.valorPendiente : sum
+      }, 0)
+      if (acumulado > 0) {
+        totalesAcumulado.set(cuota.id, acumulado)
+      }
+    }
+
     cuotasPrestamosPendientesPorPeriodo.value = totalesPendiente
     cuotasPrestamosAbonadoPorPeriodo.value = totalesAbonado
+    cuotasPrestamosPendientesAcumuladoPorCuotaId.value = totalesAcumulado
   } catch (e) {
     console.error('Error cargando cuotas de préstamos pendientes para lista:', e)
     vaciarMaps()
   }
+}
+
+// Calcula la fecha tope (último día del periodo) de una cuota de natillera.
+// Si la cuota es quincenal, restringe al día 15 (Q1) o último día del mes (Q2).
+// Si es mensual, usa el último día del mes. Cae al fecha_limite si no hay mes/año.
+function obtenerFechaTopePeriodoCuota(cuota) {
+  if (!cuota) return null
+  let mes = cuota.mes
+  let anio = cuota.anio
+  if ((mes == null || anio == null) && cuota.fecha_limite) {
+    const partes = String(cuota.fecha_limite).split('-')
+    if (partes.length >= 2) {
+      anio = parseInt(partes[0], 10)
+      mes = parseInt(partes[1], 10)
+    }
+  }
+  if (mes == null || anio == null) {
+    if (cuota.fecha_limite) {
+      const f = new Date(cuota.fecha_limite)
+      f.setHours(23, 59, 59, 999)
+      return f
+    }
+    return null
+  }
+  const quincena = cuota.quincena || 0
+  if (quincena === 1) return new Date(anio, mes - 1, 15, 23, 59, 59, 999)
+  if (quincena === 2) return new Date(anio, mes, 0, 23, 59, 59, 999)
+  return new Date(anio, mes, 0, 23, 59, 59, 999)
 }
 
 // Función para alternar selección de cuota de préstamo (las de la cuota actual no se pueden deseleccionar)
@@ -11054,6 +11341,9 @@ async function guardarEdicionCuota() {
     const codigoAnterior = cuotaEditando.value.codigo_comprobante
     let nuevoValorPagado = nuevoValor // Declarar fuera del bloque para que esté disponible después
     let valorCambio = false // Declarar fuera del bloque para que esté disponible después
+    // Cambio de forma de pago: fuera del bloque para propagar luego a actividades/préstamos
+    const tipoPagoAnterior = cuotaEditando.value.tipo_pago || 'efectivo'
+    const tipoPagoCambio = !!formEditarCuota.tipo_pago && formEditarCuota.tipo_pago !== tipoPagoAnterior
     
     let datosActualizar = {}
     
@@ -11168,9 +11458,7 @@ async function guardarEdicionCuota() {
       // Si el valor total pagado cambió (comparando el total completo: cuota + sanciones + actividades + préstamos)
       // o la cuota está pagada o tiene pago parcial y se está editando, generar un nuevo código de comprobante
       valorCambio = nuevoValorPagado !== valorTotalAnterior
-      // Verificar si cambió la forma de pago
-      const tipoPagoAnterior = cuotaEditando.value.tipo_pago || 'efectivo'
-      const tipoPagoCambio = formEditarCuota.tipo_pago !== tipoPagoAnterior
+      // tipoPagoAnterior y tipoPagoCambio ya están declarados arriba (scope externo)
       const gmfCambio =
         Math.round(nuevoImpuestoGmfEditar) !== Math.round(impuesto4x1000AnteriorEditar.value || 0)
       // Generar código nuevo si: hay cambio de valor, o si está pagada/tiene pago parcial y hay cualquier cambio (valor, forma de pago o 4×1000)
@@ -11282,6 +11570,14 @@ async function guardarEdicionCuota() {
     
     if (result.success) {
       if (tienePagoParcial || estaPagada) {
+        // Si cambió la forma de pago, propagar a actividades y préstamos ligados
+        if (tipoPagoCambio) {
+          await propagarFormaPagoTrasEditar(
+            cuotaEditando.value,
+            tipoPagoAnterior,
+            formEditarCuota.tipo_pago
+          )
+        }
         await sincronizarImpuesto4x1000HistorialTrasEditar(cuotaEditando.value.id, nuevoImpuestoGmfEditar)
       }
       // Si se generó un nuevo código de comprobante, mostrar el comprobante de modificación
@@ -13317,7 +13613,6 @@ async function reenviarComprobante(cuota) {
       
       // Solo consultar si tenemos periodo válido (mes y año)
       if (mesCuota != null && anioCuota != null) {
-        const tieneAlgunPago = (valorCuotaPagada + valorSancionPagada + valorActividadesPagadoEnCuota) > 0
         // Optimizar: solo consultar socios_actividad si realmente hay valor_pagado_actividades en esta cuota
         const promSociosActividad = valorActividadesPagadoEnCuota > 0
           ? supabase
@@ -13335,15 +13630,32 @@ async function reenviarComprobante(cuota) {
               .eq('anio_pago', anioCuota)
               .in('estado', ['pagado', 'parcial'])
           : Promise.resolve({ data: [] })
-        const promPrestamos = supabase
-          .from('prestamos')
-          .select('id')
-          .eq('socio_natillera_id', cuota.socio_natillera_id)
-          .in('estado', ['activo', 'pagado'])
 
-        const [sociosActividadRes, prestamosRes] = await Promise.all([
+        // Consultar plan_pagos_prestamo filtrando por socio usando inner join con prestamos.
+        // Lanzar por cuota_id y por periodo en paralelo (en lugar de secuencial) para ahorrar roundtrips.
+        const selectPlanPagos = 'id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago, pagada, mes, anio, quincena, prestamos!inner(socio_natillera_id, estado)'
+        const promPlanPagosPorCuota = supabase
+          .from('plan_pagos_prestamo')
+          .select(selectPlanPagos)
+          .eq('cuota_id', cuota.id)
+          .eq('prestamos.socio_natillera_id', cuota.socio_natillera_id)
+          .in('prestamos.estado', ['activo', 'pagado'])
+        let qPorPeriodo = supabase
+          .from('plan_pagos_prestamo')
+          .select(selectPlanPagos)
+          .eq('mes', mesCuota)
+          .eq('anio', anioCuota)
+          .eq('prestamos.socio_natillera_id', cuota.socio_natillera_id)
+          .in('prestamos.estado', ['activo', 'pagado'])
+        if (quincenaCuota != null) {
+          qPorPeriodo = qPorPeriodo.eq('quincena', quincenaCuota)
+        }
+        const promPlanPagosPorPeriodo = qPorPeriodo
+
+        const [sociosActividadRes, planPagosPorCuotaRes, planPagosPorPeriodoRes] = await Promise.all([
           promSociosActividad,
-          promPrestamos
+          promPlanPagosPorCuota,
+          promPlanPagosPorPeriodo
         ])
         
         const sociosActividadData = sociosActividadRes.data
@@ -13429,49 +13741,22 @@ async function reenviarComprobante(cuota) {
           }
         }
         
-        // Obtener cuotas de préstamos del período (pagadas y pendientes) para calcular obligación total
-        const prestamosSocio = prestamosRes.data
-        if (prestamosSocio && prestamosSocio.length > 0) {
-          const prestamoIds = prestamosSocio.map(p => p.id)
-          
-          // Buscar TODAS las cuotas de préstamos del mismo período (sin filtro pagada=true)
-          let cuotasPrestamosData = null
-          
-          // Primero intentar por cuota_id (las que se pagaron desde esta cuota)
-          const { data: porCuotaId } = await supabase
-            .from('plan_pagos_prestamo')
-            .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago, pagada, mes, anio, quincena')
-            .in('prestamo_id', prestamoIds)
-            .eq('cuota_id', cuota.id)
-          
-          if (porCuotaId && porCuotaId.length > 0) {
-            cuotasPrestamosData = porCuotaId
-          } else {
-            // Buscar por periodo (mes/anio/quincena)
-            let query = supabase
-              .from('plan_pagos_prestamo')
-              .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, fecha_pago, pagada, mes, anio, quincena')
-              .in('prestamo_id', prestamoIds)
-              .eq('mes', mesCuota)
-              .eq('anio', anioCuota)
-            if (quincenaCuota != null) {
-              query = query.eq('quincena', quincenaCuota)
-            }
-            const { data } = await query
-            cuotasPrestamosData = data
-          }
-          
-          if (cuotasPrestamosData && cuotasPrestamosData.length > 0) {
-            cuotasPrestamosPagadas = cuotasPrestamosData.map(cp => ({
-              nombre: `Cuota préstamo #${cp.numero_cuota}`,
-              valor: parseFloat(cp.valor_cuota) || 0,
-              valor_pagado: parseFloat(cp.valor_pagado) || 0,
-              pagada: cp.pagada,
-              numero_cuota: cp.numero_cuota,
-              prestamo_id: cp.prestamo_id
-            }))
-            totalCuotasPrestamos = cuotasPrestamosPagadas.reduce((sum, cp) => sum + (cp.valor || 0), 0)
-          }
+        // Cuotas de préstamos del periodo (pagadas y pendientes). Preferir las asociadas
+        // por cuota_id; si no hay, caer a las del mismo mes/anio/quincena.
+        const porCuotaIdData = planPagosPorCuotaRes.data || []
+        const porPeriodoData = planPagosPorPeriodoRes.data || []
+        const cuotasPrestamosData = porCuotaIdData.length > 0 ? porCuotaIdData : porPeriodoData
+
+        if (cuotasPrestamosData.length > 0) {
+          cuotasPrestamosPagadas = cuotasPrestamosData.map(cp => ({
+            nombre: `Cuota préstamo #${cp.numero_cuota}`,
+            valor: parseFloat(cp.valor_cuota) || 0,
+            valor_pagado: parseFloat(cp.valor_pagado) || 0,
+            pagada: cp.pagada,
+            numero_cuota: cp.numero_cuota,
+            prestamo_id: cp.prestamo_id
+          }))
+          totalCuotasPrestamos = cuotasPrestamosPagadas.reduce((sum, cp) => sum + (cp.valor || 0), 0)
         }
       }
     } catch (error) {

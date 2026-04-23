@@ -411,6 +411,21 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const nuevasFechasInicioMora = {} // fecha_inicio_mora para cuotas nuevas en mora (persistir)
 
       function obtenerFechaInicioMora(cuota, diasGraciaVal) {
+        // Cuota mensual en natillera quincenal: la mora se cuenta desde la Q1 VIRTUAL (día 15 del mes).
+        // Internamente la cuota cubre 2 quincenas, y la primera ya habría estado en mora a mitad de mes.
+        const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
+          (cuota.quincena === 0 || cuota.quincena == null)
+        if (esMensualEnQuincenal) {
+          const fl = cuota.fecha_limite
+          if (!fl) return null
+          const str = String(fl).substring(0, 10)
+          const [anio, mes] = str.split('-').map(Number)
+          if (Number.isNaN(anio) || Number.isNaN(mes)) return null
+          const fechaQ1 = new Date(anio, mes - 1, 15)
+          fechaQ1.setDate(fechaQ1.getDate() + (diasGraciaVal || 0) + 1)
+          fechaQ1.setHours(0, 0, 0, 0)
+          return fechaQ1.toISOString().split('T')[0]
+        }
         if (cuota.fecha_vencimiento) {
           const str = String(cuota.fecha_vencimiento).substring(0, 10)
           const [anio, mes, dia] = str.split('-').map(Number)
@@ -440,11 +455,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
           return fa - fb
         })
 
+        // Posición acumulada en la racha: una cuota mensual en natillera quincenal ocupa 2 slots
+        // (porque su sanción base equivale a 2 quincenas).
+        let posicionAcumulada = 0
         cuotasSocio.forEach((cuota, indexEnSocio) => {
           const tieneMoraOrden = cuota.mora_orden != null && cuota.mora_orden !== ''
           const tieneBasePersistida = cuota.valor_multa_base != null &&
             cuota.valor_multa_base !== '' &&
             Number(cuota.valor_multa_base) > 0
+
+          const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
+            (cuota.quincena === 0 || cuota.quincena == null)
+          const slotsCuota = esMensualEnQuincenal ? 2 : 1
+          const posicionInicio = posicionAcumulada + 1
 
           // BASE (snapshot): si ya tiene mora_orden/valor_multa_base, usarlos y NUNCA recalcular. Diaria: siempre por días.
           let multaBase = 0
@@ -484,15 +507,21 @@ export const useCuotasStore = defineStore('cuotas', () => {
             multaBase = Number(cuota.valor_multa_base)
           } else {
             // Cuota nueva en mora: asignar mora_orden por racha (por fecha_limite, más antigua primero).
-            // Para escalonada usar siempre la posición en la lista (1ª, 2ª, 3ª…) para no depender
-            // de mora_orden en memoria y evitar que todas terminen con el nivel máximo (6000).
-            const posicionEnRacha = indexEnSocio + 1
+            // Una cuota mensual en natillera quincenal cuenta como 2 slots: la base es la suma de
+            // 2 sanciones quincenales (escalonada → 2 posiciones consecutivas; simple → valorFijo × 2).
+            const posicionEnRacha = posicionInicio
             moraOrdenCuota = posicionEnRacha
             cuota.mora_orden = moraOrdenCuota
             if (configSanciones.tipo === 'simple') {
-              multaBase = configSanciones.valorFijo || 0
+              multaBase = (configSanciones.valorFijo || 0) * slotsCuota
             } else if (configSanciones.tipo === 'escalonada') {
-              multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionEnRacha)
+              if (slotsCuota === 2) {
+                const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionEnRacha)
+                const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, posicionEnRacha + 1)
+                multaBase = sancionPos1 + sancionPos2
+              } else {
+                multaBase = obtenerValorSancionPorPosicion(configSanciones, posicionEnRacha)
+              }
             }
             if (multaBase > 0) {
               sancionesBases[cuota.id] = multaBase
@@ -545,6 +574,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           sanciones[cuota.id] = multaBase + interesesAdicionales
           sancionesIntereses[cuota.id] = interesesAdicionales
           console.log(`💰 Sanción cuota ${cuota.id}: mora_orden=${moraOrdenCuota ?? 'N/A'}, Base $${multaBase.toLocaleString()} + Intereses (tramo) $${interesesAdicionales.toLocaleString()} = $${(multaBase + interesesAdicionales).toLocaleString()}`)
+          posicionAcumulada += slotsCuota
         })
       })
 
@@ -840,6 +870,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const fechaInicioMoraCalculada = new Map() // Map<cuotaId, fecha_inicio_mora YYYY-MM-DD>
 
         function obtenerFechaInicioMoraMora(cuota, diasGraciaVal) {
+          // Cuota mensual en natillera quincenal: la mora se cuenta desde la Q1 VIRTUAL (día 15 del mes).
+          const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
+            (cuota.quincena === 0 || cuota.quincena == null)
+          if (esMensualEnQuincenal) {
+            const fl = cuota.fecha_limite
+            if (!fl) return null
+            const str = String(fl).substring(0, 10)
+            const [anio, mes] = str.split('-').map(Number)
+            if (Number.isNaN(anio) || Number.isNaN(mes)) return null
+            const fechaQ1 = new Date(anio, mes - 1, 15)
+            fechaQ1.setDate(fechaQ1.getDate() + (diasGraciaVal || 0) + 1)
+            fechaQ1.setHours(0, 0, 0, 0)
+            return fechaQ1.toISOString().split('T')[0]
+          }
           if (cuota.fecha_vencimiento) {
             const str = String(cuota.fecha_vencimiento).substring(0, 10)
             const [anio, mes, dia] = str.split('-').map(Number)
@@ -908,16 +952,29 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 return
               }
 
+              // Una cuota mensual en natillera quincenal ocupa 2 slots de la racha
+              // (la sanción base equivale a 2 quincenas).
+              const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
+                (cuotaActual.quincena === 0 || cuotaActual.quincena == null)
+              const slotsCuota = esMensualEnQuincenal ? 2 : 1
+
               const moraOrden = maxOrden + 1
-              maxOrden = moraOrden
+              maxOrden = moraOrden + (slotsCuota - 1)
               const ordenParaValor = Math.min(moraOrden, 4) // Escalón máximo 4 (no expulsión)
 
               let valorMulta = 0
               const fechaInicioMora = obtenerFechaInicioMoraMora(cuotaActual, diasGraciaMora)
               if (configSanciones.tipo === 'simple') {
-                valorMulta = configSanciones.valorFijo || 0
+                valorMulta = (configSanciones.valorFijo || 0) * slotsCuota
               } else if (configSanciones.tipo === 'escalonada') {
-                valorMulta = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor)
+                if (slotsCuota === 2) {
+                  const ordenParaValor2 = Math.min(moraOrden + 1, 4)
+                  const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor)
+                  const sancionPos2 = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor2)
+                  valorMulta = sancionPos1 + sancionPos2
+                } else {
+                  valorMulta = obtenerValorSancionPorPosicion(configSanciones, ordenParaValor)
+                }
               } else if (configSanciones.tipo === 'diaria') {
                 const valorPorDia = configSanciones.valorPorDia || 0
                 let diasEnTramo = 1
@@ -1686,10 +1743,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
               const str = String(fl).substring(0, 10)
               const [anio, mes, dia] = str.split('-').map(Number)
               if (Number.isNaN(anio) || Number.isNaN(mes) || Number.isNaN(dia)) return null
-              const fechaVenc = new Date(anio, mes - 1, dia)
-              fechaVenc.setDate(fechaVenc.getDate() + (diasGracia || 0) + 1)
-              fechaVenc.setHours(0, 0, 0, 0)
-              return fechaVenc.toISOString().split('T')[0]
+              // Mensual en natillera quincenal: usar día 15 del mes (Q1 virtual)
+              const fechaBase = esMensualEnQuincenal
+                ? new Date(anio, mes - 1, 15)
+                : new Date(anio, mes - 1, dia)
+              fechaBase.setDate(fechaBase.getDate() + (diasGracia || 0) + 1)
+              fechaBase.setHours(0, 0, 0, 0)
+              return fechaBase.toISOString().split('T')[0]
             })()
             if (fechaInicio) {
               const [a, m, d] = fechaInicio.split('-').map(Number)
@@ -1726,7 +1786,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
           } else if (tieneBasePersistidaPago) {
             multaBase = Number(cuotaActual.valor_multa_base)
           } else if (configSanciones.tipo === 'simple') {
-            multaBase = configSanciones.valorFijo || 0
+            // Mensual en natillera quincenal: la base equivale a 2 quincenas
+            multaBase = (configSanciones.valorFijo || 0) * (esMensualEnQuincenal ? 2 : 1)
           } else if (configSanciones.tipo === 'escalonada') {
             if (esMensualEnQuincenal) {
               const sancionPos1 = obtenerValorSancionPorPosicion(configSanciones, posicionAcumulativa)
@@ -1751,7 +1812,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fechaLimiteCuota.setHours(0, 0, 0, 0)
               const hoy = new Date()
               hoy.setHours(0, 0, 0, 0)
-              const primeraDiaMora = new Date(fechaLimiteCuota)
+              // Mensual en natillera quincenal: la mora cuenta desde la Q1 virtual (día 15 del mes).
+              const primeraDiaMora = esMensualEnQuincenal
+                ? new Date(anio, mes, 15)
+                : new Date(fechaLimiteCuota)
               primeraDiaMora.setDate(primeraDiaMora.getDate() + diasGracia + 1)
               let finTramo = hoy
               if (indiceCuota !== -1 && cuotasMoraSocio && indiceCuota + 1 < cuotasMoraSocio.length) {

@@ -4536,7 +4536,9 @@ async function cargarDetalleRifas() {
       const socios = porActividad[a.id] || []
       const totalRecogido = socios.reduce((s, x) => s + x.valorPagado, 0) || parseFloat(a.ingresos) || 0
       const premio = parseFloat(a.gastos) || 0
-      const utilidad = parseFloat(a.utilidad) || 0
+      // Calcular utilidad dinámicamente (recaudado - premio) para reflejar pagos posteriores
+      // a la liquidación. a.utilidad puede estar desactualizado si entraron cobros después.
+      const utilidad = totalRecogido - premio
       porMesMap[key].totalRecogido += totalRecogido
       porMesMap[key].totalPremio += premio
       porMesMap[key].totalUtilidad += utilidad
