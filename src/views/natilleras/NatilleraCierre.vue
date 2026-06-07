@@ -548,7 +548,15 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
-import * as XLSX from 'xlsx-js-style'
+// xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
+// el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
+let XLSX = null
+async function ensureXLSX() {
+  if (!XLSX) {
+    const mod = await import('xlsx-js-style')
+    XLSX = mod.default || mod
+  }
+}
 import {
   ArrowDownTrayIcon,
   ArrowUpIcon,
@@ -560,9 +568,10 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
+import { useNotificationStore } from '../../stores/notifications'
 import { supabase } from '../../lib/supabase'
 import BackButton from '../../components/BackButton.vue'
-import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
+import { calcularCierreNatillera, getModoDistribucion, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
 
 const props = defineProps({
   id: { type: String, required: true }
@@ -572,6 +581,7 @@ const route = useRoute()
 const router = useRouter()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
+const notificationStore = useNotificationStore()
 
 const natilleraId = computed(() => props.id || route.params.id)
 const natillera = computed(() => natillerasStore.natilleraActual)
@@ -686,7 +696,8 @@ const LABELS_UTILIDAD_CIERRE = {
   venta: 'Ventas',
   evento: 'Eventos',
   otro: 'Otros',
-  sanciones: 'Sanciones'
+  sanciones: 'Sanciones',
+  utilidades_adicionales: 'Adicionales'
 }
 
 function formatMoney(value) {
@@ -752,7 +763,14 @@ async function exportarCierreAExcel() {
   if (datosCierre.value.length === 0) return
   exportandoCierreExcel.value = true
   try {
-    const datosExportar = datosCierre.value.map(d => {
+    await ensureXLSX()
+    const datosOrdenados = [...datosCierre.value].sort((a, b) => {
+      const nombreA = (a.socio?.nombre || '').toLowerCase()
+      const nombreB = (b.socio?.nombre || '').toLowerCase()
+      return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' })
+    })
+
+    const datosExportar = datosOrdenados.map(d => {
       const totalFinal = parseFloat(d.totalFinal) || 0
       const aEntregar = totalFinal >= 0 ? totalFinal : 0
       const debe = totalFinal < 0 ? -totalFinal : 0
@@ -844,15 +862,159 @@ async function exportarCierreAExcel() {
     ws['!cols'] = [{ wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }, { wch: 14 }]
 
     XLSX.utils.book_append_sheet(wb, ws, 'Cierre de Natillera')
+
+    construirHojaUtilidadesPorSocio(wb, datosOrdenados)
+
     const nombreArchivo = `Cierre_Natillera_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
     XLSX.writeFile(wb, nombreArchivo)
-    alert('Exportado a Excel correctamente')
+    notificationStore.exito('El archivo se descargó correctamente.', 'Excel exportado')
   } catch (e) {
     console.error('Error exportando cierre a Excel:', e)
-    alert('Error al exportar: ' + (e.message || 'Error desconocido'))
+    notificationStore.critica(e.message || 'Error desconocido', 'No se pudo exportar')
   } finally {
     exportandoCierreExcel.value = false
   }
+}
+
+/**
+ * Construye y agrega la hoja «Aportes y Utilidades» al libro:
+ * por cada socio (orden alfabético) muestra el % aportado al ahorro total
+ * y el valor recibido en cada tipo de utilidad (solo se incluyen tipos con monto > 0).
+ */
+function construirHojaUtilidadesPorSocio(wb, datosOrdenados) {
+  if (!datosOrdenados || datosOrdenados.length === 0) return
+
+  const totalAhorro = datosOrdenados.reduce((s, d) => s + (parseFloat(d.ahorro) || 0), 0)
+  const configCierre = natillera.value?.config_cierre || {}
+
+  // Solo incluir tipos con utilidad > 0 sumada entre todos los socios
+  const tiposActivos = TIPOS_UTILIDAD_CIERRE.filter(tipo => {
+    const totalTipo = datosOrdenados.reduce((s, d) => {
+      return s + (parseFloat(d.utilidadesPorConcepto?.[tipo]) || 0)
+    }, 0)
+    return totalTipo > 0
+  })
+
+  const modoPorTipo = {}
+  tiposActivos.forEach(tipo => {
+    modoPorTipo[tipo] = getModoDistribucion(configCierre, tipo)
+  })
+
+  const labelsTipos = tiposActivos.map(t => {
+    const modo = modoPorTipo[t]
+    const sigla = modo === 'proporcional' ? 'P' : 'E'
+    return `${LABELS_UTILIDAD_CIERRE[t] || t}\n(${sigla})`
+  })
+  const headers = ['Socio', '% Aportado', 'Ahorro', ...labelsTipos, 'Total Utilidades']
+  const totalCols = headers.length
+
+  const filasSocios = datosOrdenados.map(d => {
+    const ahorro = parseFloat(d.ahorro) || 0
+    const porcentaje = totalAhorro > 0 ? (ahorro / totalAhorro) : 0
+    const valoresTipos = tiposActivos.map(tipo => parseFloat(d.utilidadesPorConcepto?.[tipo]) || 0)
+    const totalUtilidades = valoresTipos.reduce((s, v) => s + v, 0)
+    return [
+      d.socio?.nombre || 'Socio',
+      porcentaje,
+      ahorro,
+      ...valoresTipos,
+      totalUtilidades
+    ]
+  })
+
+  const filaTotales = ['TOTAL', 1, totalAhorro]
+  tiposActivos.forEach(tipo => {
+    const totalTipo = datosOrdenados.reduce((s, d) => s + (parseFloat(d.utilidadesPorConcepto?.[tipo]) || 0), 0)
+    filaTotales.push(totalTipo)
+  })
+  const totalUtilidadesGeneral = datosOrdenados.reduce((s, d) => {
+    return s + tiposActivos.reduce((ss, tipo) => ss + (parseFloat(d.utilidadesPorConcepto?.[tipo]) || 0), 0)
+  }, 0)
+  filaTotales.push(totalUtilidadesGeneral)
+
+  const wsData = [
+    [natillera.value?.nombre || 'Natillera'],
+    ['Aportes y Utilidades por Socio'],
+    ['Exportado:', new Date().toLocaleString('es-CO')],
+    ['(E) Equitativa · (P) Proporcional al ahorro'],
+    headers,
+    ...filasSocios,
+    [],
+    filaTotales
+  ]
+
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+  ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: wsData.length - 1, c: totalCols - 1 } })
+  ws['!freeze'] = { xSplit: 1, ySplit: 5, topLeftCell: 'B6', state: 'frozen' }
+
+  const colorRed = { rgb: 'DC2626' }
+  const colorRedOscuro = { rgb: 'B91C1C' }
+
+  if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 14, color: { rgb: '1F2937' } } }
+  if (ws['A2']) ws['A2'].s = { font: { sz: 12, color: { rgb: '4B5563' } } }
+  if (ws['A3']) ws['A3'].s = { font: { sz: 10, color: { rgb: '6B7280' } } }
+  if (ws['A4']) ws['A4'].s = { font: { sz: 10, italic: true, color: { rgb: '6B7280' } } }
+
+  const headerRow = 4
+  for (let col = 0; col < totalCols; col++) {
+    const cell = XLSX.utils.encode_cell({ r: headerRow, c: col })
+    if (!ws[cell]) continue
+    ws[cell].s = {
+      fill: { fgColor: colorRed, patternType: 'solid' },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+      alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+      border: { top: { style: 'thin', color: colorRedOscuro }, bottom: { style: 'thin', color: colorRedOscuro }, left: { style: 'thin', color: colorRedOscuro }, right: { style: 'thin', color: colorRedOscuro } }
+    }
+  }
+  ws['!rows'] = ws['!rows'] || []
+  ws['!rows'][headerRow] = { hpt: 32 }
+
+  const dataStartRow = 5
+  const dataEndRow = dataStartRow + filasSocios.length - 1
+  for (let row = dataStartRow; row <= dataEndRow; row++) {
+    for (let col = 0; col < totalCols; col++) {
+      const cell = XLSX.utils.encode_cell({ r: row, c: col })
+      if (!ws[cell]) continue
+      const isPorcentaje = col === 1
+      const isUltimaCol = col === totalCols - 1
+      const color = isUltimaCol ? { rgb: '7E22CE' } : { rgb: '1F2937' }
+      ws[cell].s = {
+        fill: { fgColor: { rgb: 'FFFFFF' }, patternType: 'solid' },
+        font: { sz: 10, bold: col === 0 || isUltimaCol, color },
+        alignment: { horizontal: col >= 1 ? 'right' : 'left', vertical: 'center' },
+        border: { top: { style: 'thin', color: { rgb: 'E5E7EB' } }, bottom: { style: 'thin', color: { rgb: 'E5E7EB' } }, left: { style: 'thin', color: { rgb: 'E5E7EB' } }, right: { style: 'thin', color: { rgb: 'E5E7EB' } } }
+      }
+      if (isPorcentaje) {
+        ws[cell].z = '0.00%'
+      } else if (col >= 2) {
+        ws[cell].z = '#,##0'
+      }
+    }
+  }
+
+  const totalRow = dataEndRow + 2
+  for (let col = 0; col < totalCols; col++) {
+    const cell = XLSX.utils.encode_cell({ r: totalRow, c: col })
+    if (!ws[cell]) continue
+    ws[cell].s = {
+      fill: { fgColor: { rgb: 'FEE2E2' }, patternType: 'solid' },
+      font: { bold: true, sz: 11, color: { rgb: '991B1B' } },
+      alignment: { horizontal: col === 0 ? 'left' : 'right', vertical: 'center' },
+      border: { top: { style: 'medium', color: colorRedOscuro }, bottom: { style: 'medium', color: colorRedOscuro }, left: { style: 'thin', color: colorRedOscuro }, right: { style: 'thin', color: colorRedOscuro } }
+    }
+    if (col === 1) {
+      ws[cell].z = '0.00%'
+    } else if (col >= 2) {
+      ws[cell].z = '#,##0'
+    }
+  }
+
+  const cols = [{ wch: 28 }, { wch: 12 }, { wch: 14 }]
+  for (let i = 0; i < tiposActivos.length; i++) cols.push({ wch: 14 })
+  cols.push({ wch: 16 })
+  ws['!cols'] = cols
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Aportes y Utilidades')
 }
 
 function textoComprobanteSocio(dato) {

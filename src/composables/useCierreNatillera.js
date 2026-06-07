@@ -5,8 +5,18 @@
  */
 import { supabase } from '../lib/supabase'
 
-/** Tipos de utilidad en utilidades_clasificadas (deben coincidir con config_cierre) */
-export const TIPOS_UTILIDAD = ['prestamos', 'rifas', 'bingo', 'venta', 'evento', 'otro', 'sanciones']
+/**
+ * Tipos de utilidad considerados en el cierre.
+ *
+ * - Los seis primeros se persisten en utilidades_clasificadas (registros generados
+ *   por liquidación de actividades, intereses de préstamos y multas pagadas).
+ * - 'utilidades_adicionales' es un tipo virtual: se calcula al vuelo a partir de
+ *   movimientos_fondo con destino_ingreso/origen_egreso = 'utilidades' (es decir,
+ *   los ingresos/egresos a utilidades registrados manualmente desde el Cuadre de
+ *   Caja). No se almacena como fila aparte; el monto se obtiene como
+ *   sum(ingresos) − sum(egresos) en el momento del cierre.
+ */
+export const TIPOS_UTILIDAD = ['prestamos', 'rifas', 'bingo', 'venta', 'evento', 'otro', 'sanciones', 'utilidades_adicionales']
 
 /** Redondeo a 2 decimales */
 function round2(n) {
@@ -18,10 +28,11 @@ function round2(n) {
  * @param {object} config - config_cierre de la natillera
  * @param {string} tipo - prestamos | sanciones | rifas | bingo | venta | evento | otro
  */
-function getModoDistribucion(config, tipo) {
+export function getModoDistribucion(config, tipo) {
   if (!config) return 'equitativa'
   if (tipo === 'prestamos') return config.prestamos || 'equitativa'
   if (tipo === 'sanciones') return config.sanciones || 'equitativa'
+  if (tipo === 'utilidades_adicionales') return config.utilidades_adicionales || 'equitativa'
   const actividades = config.actividades || {}
   const modoActividades = config.modoActividades || 'general'
   if (modoActividades === 'general') return actividades.general || 'equitativa'
@@ -93,7 +104,7 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
       return { socios: [], totalAhorro: 0, utilidadesPorTipo: {} }
     }
 
-    const [cuotasRes, utilidadesRes, prestamosRes, natilleraRes] = await Promise.all([
+    const [cuotasRes, utilidadesRes, prestamosRes, movimientosUtilRes, natilleraRes] = await Promise.all([
       supabase
         .from('cuotas')
         .select('socio_natillera_id, estado, valor_cuota, valor_pagado, valor_multa, fecha_pago')
@@ -108,17 +119,24 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
         .select('socio_natillera_id, saldo_actual')
         .in('socio_natillera_id', ids)
         .in('estado', ['activo', 'pendiente']),
+      supabase
+        .from('movimientos_fondo')
+        .select('tipo, monto, fecha, destino_ingreso, origen_egreso')
+        .eq('natillera_id', natilleraId)
+        .or('destino_ingreso.eq.utilidades,origen_egreso.eq.utilidades'),
       configCierrePasado ? Promise.resolve({ data: null }) : supabase.from('natilleras').select('config_cierre').eq('id', natilleraId).maybeSingle()
     ])
 
     if (cuotasRes.error) throw cuotasRes.error
     if (utilidadesRes.error) throw utilidadesRes.error
     if (prestamosRes.error) throw prestamosRes.error
+    if (movimientosUtilRes.error) throw movimientosUtilRes.error
     if (natilleraRes && natilleraRes.error) throw natilleraRes.error
 
     const cuotas = cuotasRes.data || []
     const utilidadesFilas = utilidadesRes.data || []
     const prestamos = prestamosRes.data || []
+    const movimientosUtilidades = movimientosUtilRes.data || []
 
     const configCierre = configCierrePasado || (natilleraRes?.data?.config_cierre || {})
     const actividades = configCierre.actividades || {}
@@ -166,6 +184,27 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
         montosPorTipo[t] += parseFloat(row.monto) || 0
       }
     })
+
+    // Utilidades adicionales: ingresos a 'utilidades' menos egresos de 'utilidades'
+    // registrados manualmente desde el Cuadre de Caja en movimientos_fondo.
+    // Si la fecha del movimiento es posterior a la fecha de corte, se ignora.
+    let netoUtilidadesAdicionales = 0
+    movimientosUtilidades.forEach(m => {
+      if (fechaCorteObj && m.fecha) {
+        const fechaMov = new Date(m.fecha)
+        if (fechaMov > fechaCorteObj) return
+      }
+      const monto = parseFloat(m.monto) || 0
+      if (monto <= 0) return
+      if (m.tipo === 'entrada' && m.destino_ingreso === 'utilidades') {
+        netoUtilidadesAdicionales += monto
+      } else if (m.tipo === 'salida' && m.origen_egreso === 'utilidades') {
+        netoUtilidadesAdicionales -= monto
+      }
+    })
+    if (netoUtilidadesAdicionales > 0) {
+      montosPorTipo.utilidades_adicionales = netoUtilidadesAdicionales
+    }
 
     const utilidadesPorConceptoPorSocio = {}
     sociosNatillera.forEach(sn => {
@@ -237,6 +276,7 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
 export function useCierreNatillera() {
   return {
     calcularCierreNatillera,
+    getModoDistribucion,
     TIPOS_UTILIDAD
   }
 }

@@ -3,6 +3,7 @@
  * y catálogo fecha → draw_id. Ver GUIA-IMPLEMENTACION.md en proyecto Loteria.
  */
 import catalogoDefault from '../data/loteriaMedellinCatalogo.json'
+import { parseCatalogoDesdeHistoricoHtml } from './loteriaMedellinCatalogoParse.js'
 
 export const LOTERIA_MEDELLIN_AJAX_URL =
   'https://loteriademedellin.com.co/wp-admin/admin-ajax.php'
@@ -35,6 +36,12 @@ export function fechaEsPosteriorAlUltimoSorteoCatalogo(fecha, catalogo = catalog
   const keys = Object.keys(catalogo).sort()
   if (keys.length === 0) return false
   return fecha > keys[keys.length - 1]
+}
+
+/** Última fecha (YYYY-MM-DD) presente en el catálogo empaquetado (útil para depuración). */
+export function getUltimaFechaCatalogo(catalogo = catalogoDefault) {
+  const keys = Object.keys(catalogo).sort()
+  return keys.length ? keys[keys.length - 1] : null
 }
 
 /**
@@ -78,6 +85,84 @@ function getSupabaseLoteriaProxyUrl() {
   return `${base.replace(/\/$/, '')}/functions/v1/loteria-medellin`
 }
 
+function logLoteriaMedellin(mensaje, detalle) {
+  console.log('[Lotería Medellín]', mensaje, detalle ?? '')
+}
+
+const CATALOGO_CACHE_MS = 1000 * 60 * 60 * 6 // 6 h
+let catalogoResueltoCache = null
+let catalogoResueltoCacheAt = 0
+
+/** Limpia la caché del catálogo (p. ej. tras un error para forzar refetch). */
+export function invalidarCacheCatalogoLoteria() {
+  catalogoResueltoCache = null
+  catalogoResueltoCacheAt = 0
+}
+
+/**
+ * Catálogo fecha→draw_id: en producción vía Edge Function; en dev vía proxy Vite.
+ * Si falla, usa el JSON empaquetado. Caché en memoria ~6 h.
+ * @param {AbortSignal} [signal]
+ */
+export async function obtenerCatalogoLoteria(signal) {
+  const now = Date.now()
+  if (catalogoResueltoCache && now - catalogoResueltoCacheAt < CATALOGO_CACHE_MS) {
+    return catalogoResueltoCache
+  }
+
+  const remoto = await intentarFetchCatalogoRemoto(signal)
+  if (remoto && Object.keys(remoto).length > 0) {
+    catalogoResueltoCache = remoto
+    catalogoResueltoCacheAt = now
+    logLoteriaMedellin('catálogo activo (remoto)', { sorteos: Object.keys(remoto).length })
+    return remoto
+  }
+
+  catalogoResueltoCache = catalogoDefault
+  catalogoResueltoCacheAt = now
+  logLoteriaMedellin('catálogo activo (empaquetado, fallback)', { sorteos: Object.keys(catalogoDefault).length })
+  return catalogoDefault
+}
+
+async function intentarFetchCatalogoRemoto(signal) {
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api-loteria-historico', { signal, headers: { Accept: 'text/html' } })
+      if (res.ok) {
+        const html = await res.text()
+        const cat = parseCatalogoDesdeHistoricoHtml(html)
+        if (Object.keys(cat).length > 0) return cat
+      }
+    } catch (e) {
+      logLoteriaMedellin('catálogo remoto (dev proxy) falló', e?.message || String(e))
+    }
+  }
+
+  const url = getSupabaseLoteriaProxyUrl()
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+  if (!url) return null
+  try {
+    const headers = { 'Content-Type': 'application/json' }
+    if (url.includes('supabase.co') && anonKey) {
+      headers.apikey = anonKey
+      headers.Authorization = `Bearer ${anonKey}`
+    }
+    logLoteriaMedellin('fetch catálogo → Edge Function', { url })
+    const res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ catalog: true }),
+      signal,
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`)
+    if (data.catalog && typeof data.catalog === 'object') return data.catalog
+  } catch (e) {
+    logLoteriaMedellin('catálogo remoto (Edge) falló', e?.message || String(e))
+  }
+  return null
+}
+
 async function fetchAdminAjaxHtml(drawId, ajaxUrl, signal) {
   const params = new URLSearchParams()
   params.append('action', 'wp_get_results_lottery_template')
@@ -85,6 +170,12 @@ async function fetchAdminAjaxHtml(drawId, ajaxUrl, signal) {
   params.append('lottery_id', '16')
   params.append('draw_id', String(drawId))
   params.append('post_type', 'results_template')
+
+  logLoteriaMedellin('fetch admin-ajax', {
+    url: ajaxUrl,
+    method: 'POST',
+    bodyPreview: `action=wp_get_results_lottery_template&lottery_id=16&draw_id=${String(drawId)}`,
+  })
 
   const res = await fetch(ajaxUrl, {
     method: 'POST',
@@ -116,6 +207,11 @@ export async function consultarHtmlSorteo(drawId, signal) {
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
   if (customProxy) {
+    logLoteriaMedellin('consultarHtmlSorteo → proxy VITE_LOTERIA_MEDELLIN_PROXY_URL', {
+      drawId: String(drawId),
+      url: customProxy,
+      body: { draw_id: String(drawId) },
+    })
     const headers = { 'Content-Type': 'application/json' }
     if (customProxy.includes('supabase.co') && anonKey) {
       headers.apikey = anonKey
@@ -136,11 +232,21 @@ export async function consultarHtmlSorteo(drawId, signal) {
   }
 
   if (import.meta.env.DEV && typeof window !== 'undefined') {
+    logLoteriaMedellin('consultarHtmlSorteo → proxy Vite dev', {
+      drawId: String(drawId),
+      url: '/api-loteria-medellin-ajax',
+      nota: 'reenvía a loteriademedellin.com.co/wp-admin/admin-ajax.php',
+    })
     return fetchAdminAjaxHtml(drawId, '/api-loteria-medellin-ajax', signal)
   }
 
   const supabaseProxy = getSupabaseLoteriaProxyUrl()
   if (supabaseProxy) {
+    logLoteriaMedellin('consultarHtmlSorteo → Edge Function Supabase', {
+      drawId: String(drawId),
+      url: supabaseProxy,
+      body: { draw_id: String(drawId) },
+    })
     const headers = { 'Content-Type': 'application/json' }
     if (supabaseProxy.includes('supabase.co') && anonKey) {
       headers.apikey = anonKey
@@ -160,6 +266,10 @@ export async function consultarHtmlSorteo(drawId, signal) {
     return data.html
   }
 
+  logLoteriaMedellin('consultarHtmlSorteo → POST directo (producción)', {
+    drawId: String(drawId),
+    url: LOTERIA_MEDELLIN_AJAX_URL,
+  })
   return fetchAdminAjaxHtml(drawId, LOTERIA_MEDELLIN_AJAX_URL, signal)
 }
 

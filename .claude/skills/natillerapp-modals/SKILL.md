@@ -2,8 +2,10 @@
 name: natillerapp-modals
 description: >-
   Modales en Natillerapp (Vue 3 + Tailwind): usar ModalWrapper, patrón visual
-  tipo «Sin Socios», safe-area, scroll en iOS y useBodyScrollLock. Aplica al
-  crear, modificar o editar cualquier modal, diálogo o overlay equivalente.
+  tipo «Sin Socios», safe-area, scroll en iOS, useBodyScrollLock, footer de
+  acciones fijo y natiscroll (velo + «Desliza para ver más») **obligatorio**
+  en cualquier modal con cuerpo scrolleable. Aplica al crear, modificar o
+  editar cualquier modal, diálogo o overlay equivalente.
 ---
 
 # Modales — Natillerapp
@@ -40,7 +42,9 @@ El modal **«Sin Socios»** en `src/views/natilleras/NatilleraDetalle.vue` defin
 - **Android / desktop**: `backdrop-class` debe incluir `bg-[#C8D9C8]/70` (no el color plano al 100 % salvo excepción).
 - **iOS** (`ios-soft-backdrop`): el color equivalente vive en `src/components/ModalWrapper.vue` (`.modal-wrapper-ios__backdrop--sage`, `rgba(200, 217, 200, 0.7)`). Si cambias el porcentaje en un sitio, mantén **paridad** Tailwind ↔ CSS iOS.
 
-Ajusta título, textos e iconos; **estructura**: cabecera marca + **un solo cuerpo scrolleable** (`flex-1 min-h-0 overflow-y-auto`) que incluye **todo el contenido y las acciones al final** (ver abajo).
+Ajusta título, textos e iconos; **estructura**: cabecera marca (`flex-shrink-0`) + **cuerpo scrolleable** (`flex-1 min-h-0 overflow-y-auto`) + **footer de acciones fijo** (`flex-shrink-0` con `border-t` y safe-area), siempre visible cuando la modal tiene scroll. El natiscroll vive **dentro del cuerpo**, como overlay absoluto sobre el final del área scrolleable (ver abajo).
+
+> **Importante:** «Estandarizar un modal» en Natillerapp implica **siempre** estos cuatro elementos juntos: `ModalWrapper` + cabecera marca compacta + cuerpo scrolleable + **footer fijo** + **natiscroll** cuando el cuerpo puede desbordar. Si la decisión es deliberada de **no** usar natiscroll (modal cuyo cuerpo nunca desborda en ninguna pantalla soportada), **documentarlo en un comentario**. El default es **incluirlo**.
 
 ## Cabecera marca: móvil vs desktop (diseño)
 
@@ -74,6 +78,27 @@ En formularios y modales con CTA, la cabecera marca va **~20 % más pequeña** q
 
 **Botones X / volver:** área táctil **~44×44 px** (`h-11 w-11`), `touch-manipulation` en móvil, `aria-label` explícito.
 
+## Botones del pie de modal (primario / secundario)
+
+Referencia visual y técnica: modal **Registrar pago** en `src/views/cuotas/Cuotas.vue` y clases globales en `src/style.css`.
+
+| Rol | Clase | Uso |
+|-----|--------|-----|
+| **Primario** (acción principal: Guardar, Registrar, Confirmar, Exportar…) | `btn-modal-primary` | Fondo **#1B5E37**, hover **#155a32**, active **#134d2b**, sombra suave tintada marca, **pill** (`rounded-full`), altura mínima **48px**. |
+| **Secundario** (Cancelar, Cerrar sin acción destructiva) | `btn-modal-secondary` | Blanco, borde **gray-300**, texto **gray-700**, mismo radio y altura mínima. |
+
+Combinar con utilidades de layout según el modal: `flex-1`, `w-full`, `gap-2` en el contenedor, `inline-flex` ya está cubierto por las clases.
+
+**Excepciones (no usar verde marca como primario):** acciones **destructivas** (eliminar, rechazar irreversible) → rojo u otro color semántico; **advertencia** fuerte → ámbar; botones cuyo significado depende del color (p. ej. **Descargar** en azul, **WhatsApp** en verde propio) pueden mantener estilo específico; dejar un comentario corto en el template si no es `btn-modal-*`.
+
+```html
+<!-- Ejemplo: dos CTAs en fila -->
+<div class="flex gap-3">
+  <button type="button" class="btn-modal-secondary flex-1" @click="cerrar">Cancelar</button>
+  <button type="button" class="btn-modal-primary flex-1" @click="confirmar">Confirmar</button>
+</div>
+```
+
 ## Botón cerrar (X) e iOS / Safari
 
 Dentro de `ModalWrapper`, **no** usar `position: absolute` + `right-*` para la X en la cabecera: en iOS el ancestro del modal usa `transform`, y la X puede **desalinearse** (p. ej. verse a la izquierda).
@@ -81,17 +106,57 @@ Dentro de `ModalWrapper`, **no** usar `position: absolute` + `right-*` para la X
 - **Patrón obligatorio:** la X es un **hermano en `flex`** (o en la tercera columna del layout desktop anterior), con `flex-shrink-0`, **siempre al final** de la fila móvil o de la fila de cabecera desktop.
 - **Mostrar la X:** en formularios largos, **sí** conviene X **siempre visible** en cabecera además de «Cancelar» al final del scroll. El patrón opcional «ocultar X si no hay scroll» (`useModalBodyScrollOverflow`) queda solo para modales **informativos muy cortos** donde se quiera evitar redundancia; **no** es el default para registrar pago / formularios.
 
-## Cuerpo y acciones (scroll único)
+## Cuerpo y acciones (footer siempre visible)
 
-1. **Cuerpo** (`min-h-0 overflow-y-auto flex-1`): fondo blanco, tipografía gris para lectura. Caja informativa opcional: fondo `#E8F5E9`, borde suave, icono Heroicons. Clases scroll iOS: `overscroll-contain [-webkit-overflow-scrolling:touch]`.
-2. **Acciones primarias/secundarias**: **por defecto van al final del mismo scroll**, en un bloque con `border-t border-gray-200`, `pt-4` y **`pb-[max(1.25rem,env(safe-area-inset-bottom))]`** para respetar el home indicator. **No** uses un pie `flex-shrink-0` fijo fuera del scroll salvo **excepción** justificada (p. ej. flujo muy corto con una sola acción siempre visible y sin formulario largo).
-3. **Indicadores** ("desliza para ver más"): si aplica, deben vivir **dentro** del área scroll, justo encima del bloque de acciones, para no simular un pie fijo.
+Patrón **por defecto**: la card es `flex flex-col` con **tres áreas hermanas**:
+
+1. **Cabecera** (`flex-shrink-0`): cabecera marca compacta (sección anterior).
+2. **Cuerpo scrolleable** (`flex-1 min-h-0 overflow-y-auto`): fondo blanco, tipografía gris para lectura. Caja informativa opcional: fondo `#E8F5E9`, borde suave, icono Heroicons. Clases scroll iOS: `overscroll-contain [-webkit-overflow-scrolling:touch]`. Aquí va **todo el contenido** (formulario, lista, tablas, etc.).
+3. **Footer de acciones fijo** (`flex-shrink-0`): bloque hermano del cuerpo, con `border-t border-gray-200`, `bg-white`, `pt-4`, `px-*` consistente con el cuerpo y **`pb-[max(1.25rem,env(safe-area-inset-bottom))]`** para respetar el home indicator. Contiene los botones primario/secundario y queda **siempre visible** mientras el cuerpo se desplaza por encima.
+
+**Por qué**: evita que el usuario tenga que hacer scroll hasta el final para encontrar «Confirmar» / «Guardar» / «Cerrar». Es especialmente útil en formularios largos, listas (cuotas, socios, préstamos), tablas y modales de detalle.
+
+**Indicadores** (“desliza para ver más” / natiscroll): viven **dentro** del cuerpo scrolleable como overlay absoluto, **no** dentro del footer. Aparecen pegados al borde inferior del cuerpo, justo arriba del footer fijo, reforzando que aún hay contenido por revelar al desplazar. Detalle en la sección **Natiscroll** más abajo.
+
+**Excepción** (modal informativo muy corto, una sola línea + 1 CTA): se permite poner el botón al final del scroll sin footer separado (por ejemplo, modales de confirmación tipo «¿Eliminar este socio?»). Es **caso borde**, no el default.
+
+## Natiscroll (velo + «Desliza para ver más») — **obligatorio en modales con scroll**
+
+**Natiscroll** es el nombre interno del patrón para modales cuyo **contenido supera la altura visible**: se muestra un **velo** (degradado suave) al pie del área scrolleable y el texto **«Desliza para ver más»** mientras quede contenido sin ver. En iPhone/Safari refuerza que el modal **sí** se puede deslizar y no está “cortado”.
+
+> **Regla de estandarización:** todo modal que tenga **cuerpo scrolleable** (la inmensa mayoría: detalle, formularios, listas, comprobantes, confirmaciones con varios bloques) **debe** incluir natiscroll. Hablar de «estandarizar un modal» **sin** natiscroll es incompleto. Excepción única: el cuerpo es tan pequeño que **nunca** desbordará en ninguna pantalla razonable (≤ ~360 px de alto útil); en ese caso, dejar comentario explícito justificando la omisión.
+
+### Colocación en el layout
+
+- El velo y el hint van **dentro del cuerpo scrolleable** (o como **overlay absoluto** sobre él). **Nunca** dentro del footer fijo de acciones (no tendría sentido: el footer ya está siempre visible).
+- Patrón típico en el repo: un `div` `relative` envuelve al cuerpo (`overflow-y-auto`) y el natiscroll se posiciona con `pointer-events-none absolute inset-x-0 bottom-0 z-10` sobre el cuerpo. Así no interfiere con el scroll y queda visualmente pegado al borde superior del footer fijo, indicando que aún hay contenido por desplazar.
+- Composición: degradado suave `from-transparent to-white/88` (o al fondo de la card) + chip / texto centrado pequeño con tipografía marca («Desliza para ver más»).
+
+### Cómo saber si “hay más abajo”
+
+En el repo conviven dos enfoques; elige el que encaje con el modal:
+
+1. **`useModalBodyScrollOverflow`** (`src/composables/useModalBodyScrollOverflow.js`): `ResizeObserver` + `MutationObserver` miden si hay overflow vertical (`scrollHeight > clientHeight + 1`). Se usa, entre otras cosas, para **decidir si muestra la X** en modales muy cortos o como apoyo a la lógica del cuerpo scrolleable.
+2. **Natiscroll manual** (patrones en Cuotas / Préstamos / Socios): refs booleanas `hayNatiscroll…`, funciones `actualizarNatiscroll…` que comparan `scrollTop`, `clientHeight` y `scrollHeight`, y `programarNatiscroll…` que envuelven la actualización en **`requestAnimationFrame`** tras `@scroll.passive` en el contenedor, para no hacer trabajo pesado en cada evento de scroll táctil.
+
+### Reglas prácticas
+
+- Mostrar velo + hint solo si hay overflow **y** el usuario **no** ha llegado al final (umbral de unos píxeles opcional para evitar parpadeo).
+- Tras abrir el modal, cambiar tamaño de ventana o mutar el contenido del cuerpo: volver a medir (`nextTick`, watchers o reutilizar `measureOverflow` del composable).
+- **Contenido que cambia de altura (búsqueda, filtros, listas filtradas, acordeones, carga async):** el natiscroll manual **no** basta con `@scroll` y el `nextTick` del open. Cada vez que el cuerpo deje de necesitar scroll (p. ej. de muchas filas a **una**), hay que **volver a llamar** a `actualizarNatiscroll…` / `programarNatiscroll…` en un `watch` con `flush: 'post'` de las dependencias que afecten al layout (texto de búsqueda, `length` de la lista filtrada, etc.). Si no, el velo y «Desliza para ver más» pueden quedar visibles **sin** overflow real (bug visto en modal con búsqueda y un solo resultado).
+- Si usas **RAF** manual: **cancelar** el `requestAnimationFrame` pendiente al cerrar el modal o en `onUnmounted` (evita trabajo huérfano).
+
+### Dónde verlo en código
+
+- Demo: `src/views/demo/DesignSystemDemo.vue` (modal «Nati-scroll»).
+- Producción: buscar `natiscroll`, `hayNatiscroll` o `Desliza para ver más` en `src/views/cuotas/Cuotas.vue`, `src/views/prestamos/Prestamos.vue`, `src/views/socios/Socios.vue`.
 
 ## Diseño visual (línea «Sin Socios»)
 
 1. **Cabecera** (`flex-shrink-0`): fondo marca `#1B5E37`, texto blanco, `font-display` en títulos. Seguir **móvil = fila** y **desktop = icono arriba + textos abajo** (sección anterior) y la tabla compacta.
-2. **Cuerpo + pie lógico**: un solo contenedor scroll (sección **Cuerpo y acciones**).
-3. **X**: integrada por **flex**, nunca por **`absolute`** en cabeceras dentro de `ModalWrapper` (ver **Botón cerrar (X) e iOS / Safari**).
+2. **Cuerpo scrolleable** (`flex-1 min-h-0`): contenido del modal, con natiscroll como overlay si desborda (sección **Cuerpo y acciones**).
+3. **Footer de acciones** (`flex-shrink-0`): botones primario/secundario, **siempre visibles**, con `border-t`, `bg-white` y `safe-area-bottom`.
+4. **X**: integrada por **flex**, nunca por **`absolute`** en cabeceras dentro de `ModalWrapper` (ver **Botón cerrar (X) e iOS / Safari**).
 
 ## Snippet estructural (adaptar textos)
 
@@ -108,22 +173,40 @@ Dentro de `ModalWrapper`, **no** usar `position: absolute` + `right-*` para la X
   card-max-width="28rem"
   @close="modalMiFlujo = false"
 >
-  <!-- Cabecera: (1) sm:hidden → fila móvil [←?][icono][títulos flex-1][X] -->
+  <!-- Cabecera flex-shrink-0: (1) sm:hidden → fila móvil [←?][icono][títulos flex-1][X] -->
   <!-- (2) hidden sm:block → flex items-start: [w-11 izq][centro flex-col items-center][X] -->
-  <div
-    ref="scrollAreaModal"
-    class="flex-1 min-h-0 overflow-y-auto px-6 pt-5 pb-0 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
-  >
-    <!-- contenido del formulario -->
-    <!-- opcional: indicador "más abajo" (dentro del scroll) -->
-    <div class="pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-200 space-y-3">
-      <!-- botón secundario + primario, min-h-[48px], rounded-full -->
+
+  <!-- Contenedor cuerpo + natiscroll. relative para overlay del hint. -->
+  <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div
+      ref="scrollAreaModal"
+      class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-4 space-y-5 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+      @scroll.passive="programarNatiscroll"
+    >
+      <!-- contenido del formulario / lista -->
     </div>
+
+    <!-- Natiscroll: overlay absoluto sobre el cuerpo, visible solo si hay overflow -->
+    <div
+      v-show="hayNatiscroll"
+      class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+      aria-hidden="true"
+    >
+      <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+      <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+        <!-- chip «Desliza para ver más» con tipografía marca -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer de acciones: flex-shrink-0, siempre visible. Hereda safe-area-bottom. -->
+  <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3">
+    <!-- btn-modal-secondary + btn-modal-primary (+ flex-1 / w-full según layout); ver sección «Botones del pie de modal» -->
   </div>
 </ModalWrapper>
 ```
 
-Si la card ya es `flex flex-col` con cabecera `flex-shrink-0`, basta **un** `div` scroll con `flex-1 min-h-0` que envuelva contenido + acciones (como en `Cuotas.vue` modal pago).
+La card es `flex flex-col` con tres áreas hermanas: cabecera `flex-shrink-0`, cuerpo `flex-1 min-h-0` (con el natiscroll como overlay) y footer `flex-shrink-0`. Referencia viva: modal **Cuotas del Socio** y modal **Detalle del Socio** en `src/views/socios/Socios.vue`.
 
 En el `<script setup>`:
 

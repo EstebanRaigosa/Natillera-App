@@ -1,8 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@100..900&display=swap');
+/* Natillerapp Design System — tipografía única: Mulish (variable, 200..1000 + italic) */
+@import url('https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap');
 
 @import "tailwindcss";
 
 @theme {
+  /* Paleta marca — verde bosque (escala compatible con Tailwind green) */
   --color-natillera-50: #f0fdf4;
   --color-natillera-100: #dcfce7;
   --color-natillera-200: #bbf7d0;
@@ -13,7 +15,8 @@
   --color-natillera-700: #15803d;
   --color-natillera-800: #166534;
   --color-natillera-900: #14532d;
-  
+
+  /* Acento — naranja (CTA secundarios, actividades) */
   --color-accent-50: #fff7ed;
   --color-accent-100: #ffedd5;
   --color-accent-200: #fed7aa;
@@ -25,14 +28,22 @@
   --color-accent-800: #9a3412;
   --color-accent-900: #7c2d12;
 
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
-  
-  /* Custom breakpoint for extra small devices */
+  /* Tipografía: Mulish para títulos, cuerpo y etiquetas técnicas (un solo tipo) */
+  --font-display: 'Mulish', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Mulish', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Mantenemos el alias `--font-brand-mono` para no romper utilidades existentes;
+     ahora resuelve a Mulish con tracking ancho (uppercase/overlines) */
+  --font-brand-mono: 'Mulish', system-ui, sans-serif;
+
+  /* Breakpoints custom */
   --breakpoint-xs: 375px;
-  
-  /* Custom breakpoint for medium-large screens (1024px tablets) */
   --breakpoint-mlg: 1200px;
+}
+
+@layer utilities {
+  .font-brand-mono {
+    font-family: var(--font-brand-mono), ui-monospace, monospace;
+  }
 }
 
 /* Tour menu natillera (driver.js): estilo acorde a la app */
@@ -42,7 +53,7 @@
   padding: 1rem 1.1rem 1rem !important;
   border-radius: 1rem !important;
   border: 1px solid rgba(16, 185, 129, 0.35);
-  font-family: var(--font-body), 'DM Sans', system-ui, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
   background:
     linear-gradient(145deg, rgba(236, 253, 245, 0.95) 0%, rgba(255, 255, 255, 0.98) 38%, rgba(240, 253, 244, 0.92) 100%);
   box-shadow:
@@ -74,7 +85,7 @@
 }
 
 .driver-popover.driver-popover-natillera .driver-popover-title {
-  font-family: var(--font-display), 'Outfit', system-ui, sans-serif;
+  font-family: var(--font-display), system-ui, sans-serif;
   font-size: 1.125rem !important;
   font-weight: 700 !important;
   letter-spacing: -0.02em;
@@ -189,7 +200,8 @@
   
   body {
     font-family: var(--font-body);
-    @apply text-gray-800 bg-gradient-to-br from-slate-300 via-gray-200 to-emerald-200/60 min-h-screen;
+    @apply text-gray-800 min-h-screen;
+    background: var(--app-canvas-surface);
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -210,6 +222,72 @@
     @apply px-6 py-3 bg-white text-natillera-700 font-semibold rounded-xl border-2 border-natillera-200
            hover:bg-natillera-50 hover:border-natillera-300 transition-all duration-300
            active:scale-[0.98];
+  }
+
+  /**
+   * Pie de modal — referencia: modal «Registrar pago» (`Cuotas.vue`).
+   * Primario: verde marca #1B5E37; secundario: blanco + borde gris (cancelar/cerrar).
+   */
+  .btn-modal-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+    border-radius: 9999px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: #fff;
+    background: #1b5e37;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+    box-shadow:
+      0 4px 6px -1px rgba(27, 94, 55, 0.2),
+      0 2px 4px -2px rgba(27, 94, 55, 0.12);
+  }
+  .btn-modal-primary:hover:not(:disabled) {
+    background: #155a32;
+  }
+  .btn-modal-primary:active:not(:disabled) {
+    background: #134d2b;
+  }
+  .btn-modal-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-modal-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+    border-radius: 9999px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: #374151;
+    background: #fff;
+    border: 2px solid #d1d5db;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-modal-secondary:hover:not(:disabled) {
+    background: #f9fafb;
+  }
+  .btn-modal-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   
   .btn-accent {
@@ -1548,54 +1626,26 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   
   /* Optimización de botones para mejor respuesta táctil en iOS */
   button,
-  a,
-  a.router-link-active,
   [role="button"],
   .btn-primary,
   .btn-secondary,
   .btn-accent,
   input[type="button"],
   input[type="submit"] {
-    /* Eliminar delay de 300ms en iOS */
     touch-action: manipulation;
-    /* Mejorar feedback visual al tocar (evita highlight azul por defecto) */
     -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
-    /* Optimizar renderizado sin will-change excesivo */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    /* Prevenir selección de texto accidental */
     -webkit-user-select: none;
     user-select: none;
-    /* Asegurar que los botones siempre sean clickeables */
-    pointer-events: auto !important;
     cursor: pointer;
-    /* Apariencia nativa desactivada para evitar estilos raros en iOS */
     -webkit-appearance: none;
     appearance: none;
-    /* Asegurar que estén por encima de otros elementos */
-    position: relative;
-    z-index: 1;
   }
-  
-  /* Elementos hijos no deben capturar el tap (el tap va al botón) */
-  button *,
-  [role="button"] * {
-    pointer-events: none;
-  }
-  
-  button svg,
-  button img,
-  [role="button"] svg,
-  [role="button"] img {
-    pointer-events: none;
-  }
-  
-  /* router-link se renderiza como <a>; asegurar mismo comportamiento en iOS */
-  a[href].nav-item,
-  a[href].nav-link {
-    pointer-events: auto !important;
-    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
+
+  /* Links: solo touch-action y tap-highlight; NO forzar position/z-index
+     (crea stacking contexts en grids que confunden el hit-testing de WebKit) */
+  a {
     touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
   }
   
   /* Optimización específica para botones con gradientes */
@@ -1624,14 +1674,16 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   
   /* Optimización de inputs para iOS */
   input,
-  textarea,
-  select {
-    /* Mejorar renderizado */
+  textarea {
     -webkit-appearance: none;
     appearance: none;
-    /* Mejorar calidad de texto */
     -webkit-font-smoothing: antialiased;
-    /* Prevenir zoom en focus (iOS Safari) */
+    font-size: 16px;
+  }
+
+  /* Selects: mantener apariencia nativa (picker wheel) en iOS; solo forzar 16px para prevenir zoom */
+  select {
+    -webkit-font-smoothing: antialiased;
     font-size: 16px;
   }
   
@@ -1789,10 +1841,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: 44px;
   }
   
-  /* Optimizar scroll (mejora de rendimiento universal) */
-  * {
-    -webkit-overflow-scrolling: touch;
-  }
+  /* -webkit-overflow-scrolling: touch ya es el comportamiento por defecto desde iOS 13 */
 }
 
 /* Estilos específicos para dispositivos iOS detectados por JavaScript */
@@ -1802,42 +1851,25 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 }
 
 .ios-device button,
-.ios-device a,
 .ios-device [role="button"] {
-  /* Mejorar respuesta táctil en iOS */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  /* Asegurar que los botones siempre sean clickeables */
-  pointer-events: auto !important;
   cursor: pointer;
-  /* Mejorar área táctil */
-  position: relative;
-  z-index: 1;
 }
 
-/* Feedback visual cuando se toca un botón en iOS */
-.ios-device button.touch-active,
-.ios-device [role="button"].touch-active {
-  opacity: 0.8;
-  transform: scale(0.98);
-  transition: opacity 0.1s, transform 0.1s;
+.ios-device a {
+  -webkit-touch-callout: none;
 }
+
 
 /* Optimizaciones para dispositivos táctiles en general */
 .touch-device button,
-.touch-device a,
 .touch-device [role="button"] {
-  /* Área táctil mínima mejorada */
   min-height: 44px;
   min-width: 44px;
-  /* Mejor feedback visual */
   -webkit-tap-highlight-color: rgba(34, 197, 94, 0.2);
-  /* Asegurar que siempre sean clickeables */
-  pointer-events: auto !important;
   cursor: pointer;
-  position: relative;
-  z-index: 1;
 }
 
 /* Optimizaciones para dispositivos lentos */
@@ -1889,6 +1921,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     padding-right: env(safe-area-inset-right, 0);
     /* Corregir bug de 100vh en iOS Safari (barra de direcciones) */
     min-height: 100vh;
+    min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
 
@@ -1944,6 +1977,7 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   .h-screen,
   [class~="h-screen"] {
     min-height: 100vh;
+    min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
   
@@ -1962,34 +1996,20 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     -webkit-tap-highlight-color: transparent;
     cursor: pointer;
     touch-action: manipulation;
-    /* Forzar renderizado correcto en iOS */
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    /* Asegurar que las modales se rendericen por encima de todo */
-    will-change: transform;
-    /* Forzar nueva capa de composición en iOS */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    /* Asegurar que el contenido sea visible */
-    opacity: 1 !important;
-    visibility: visible !important;
-    /* Asegurar que la modal esté por encima de todo en iPhone */
     position: fixed !important;
-    /* Forzar renderizado en nueva capa de composición */
     isolation: isolate;
   }
   
   /* Contenedores de modales en iOS: asegurar renderizado correcto */
   [class*="fixed"].inset-0 > * {
-    /* Asegurar que el contenido de la modal se renderice */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     position: relative;
     z-index: 1;
-    /* Forzar renderizado del contenido */
-    opacity: 1 !important;
-    visibility: visible !important;
-    /* Asegurar que el contenido sea clickeable */
     pointer-events: auto !important;
   }
   
@@ -1998,23 +2018,16 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"],
   .fixed.inset-0 > .absolute.inset-0[class*="bg-black"],
   .fixed.inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
-  /* Regla general para cualquier overlay de fondo dentro de un contenedor fixed */
   .fixed.inset-0 > .absolute.inset-0,
   [class*="fixed"].inset-0 > .absolute.inset-0,
   .fixed.inset-0 > [class*="absolute"].inset-0 {
-    /* Asegurar que el overlay esté por debajo del contenido */
     z-index: 0 !important;
-    /* Forzar renderizado */
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
-    /* Asegurar que el overlay sea visible y clickeable */
-    opacity: 1 !important;
-    visibility: visible !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
     cursor: pointer !important;
     -webkit-tap-highlight-color: transparent !important;
-    /* Asegurar que cubra toda la pantalla */
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
@@ -2045,22 +2058,13 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   [class*="fixed"].inset-0 > .relative,
   [class*="fixed"].inset-0 > [class*="max-w"],
   [class*="fixed"].inset-0 > div:not([class*="absolute"]) {
-    /* Forzar renderizado del contenido de la modal */
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);
-    /* Asegurar que esté por encima del overlay */
     position: relative;
     z-index: 10 !important;
-    /* Asegurar visibilidad */
-    opacity: 1 !important;
-    visibility: visible !important;
-    display: block !important;
-    /* Asegurar que sea clickeable */
     pointer-events: auto !important;
-    /* Forzar nueva capa de composición */
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    will-change: transform;
   }
 
   /* Modales en Safari: que se vean completas en pantalla y el scroll funcione */
@@ -2194,32 +2198,17 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Contenedor principal de la modal (excluir sidebar-overlay para que el menú lateral quede encima) */
     [class*="fixed"].inset-0[class*="z-"]:not(.sidebar-overlay),
     .fixed.inset-0[class*="z-"]:not(.sidebar-overlay) {
-      /* Crear nuevo contexto de apilamiento */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Asegurar que esté por encima de todo */
-      z-index: 9999 !important;
-      /* Forzar renderizado */
-      display: flex !important;
-      opacity: 1 !important;
-      visibility: visible !important;
-      /* Asegurar que el contenido sea interactivo */
       pointer-events: auto !important;
     }
     
     /* Overlay de fondo: debe estar visible pero por debajo del contenido */
     [class*="fixed"].inset-0 > [class*="absolute"].inset-0,
     [class*="fixed"].inset-0 > .absolute.inset-0 {
-      /* Asegurar renderizado del overlay */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Estar por debajo del contenido */
       z-index: 0 !important;
-      /* Asegurar visibilidad */
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-      /* Asegurar que sea clickeable */
       pointer-events: auto !important;
     }
     
@@ -2229,22 +2218,13 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     [class*="fixed"].inset-0 > [class*="max-w"]:not([class*="absolute"]),
     [class*="fixed"].inset-0 > div.relative,
     [class*="fixed"].inset-0 > div[class*="bg-white"]:not([class*="absolute"]) {
-      /* Forzar renderizado del contenido */
       transform: translate3d(0, 0, 0) !important;
       -webkit-transform: translate3d(0, 0, 0) !important;
-      /* Estar por encima del overlay */
       position: relative !important;
       z-index: 10 !important;
-      /* Asegurar visibilidad */
-      opacity: 1 !important;
-      visibility: visible !important;
-      display: block !important;
-      /* Asegurar que sea clickeable */
       pointer-events: auto !important;
-      /* Forzar nueva capa de composición */
       -webkit-backface-visibility: hidden !important;
       backface-visibility: hidden !important;
-      will-change: transform !important;
     }
     
     /* Botones dentro de modales: asegurar que sean clickeables */
@@ -2267,15 +2247,23 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   }
 }
 
-/* Nova Design System — tokens globales (NOVA_DESIGN_SYSTEM.md §3–§7)
-   Tema forest en :root para que hsl(var(--*)) siempre resuelva (evita texto/fondo “invisible”). */
+/* ==========================================================================
+   NATILLERAPP DESIGN SYSTEM — tokens globales
+   Fuente única: Mulish. Color marca: #1B5E37 (verde bosque). Backdrop: #C8D9C8.
+   Patrón canónico: ver `Funcionalidades/sistema-diseno.md` y skill
+   `natillerapp-modals` (cabecera marca + cuerpo blanco + CTA pill).
+   ========================================================================== */
 :root {
   --radius: 0.625rem;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Mulish para todo el sistema (mantener alias --font-sans/--font-mono para compatibilidad Nova) */
+  --font-sans: 'Mulish', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Mulish', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Forest — primary = mismo verde que el CTA del login (152 69% 28%) */
   --background: 152 26% 96%;
   --foreground: 152 32% 12%;
@@ -2297,18 +2285,60 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
   --input: 152 13% 87%;
   --ring: 152 69% 28%;
   --surface-glow: 152 42% 36%;
-  /* Shell lateral + barra inferior: verde bosque (tono un poco más claro) */
-  --app-shell-nav-gradient: linear-gradient(
-    160deg,
-    hsl(151 36% 15%) 0%,
-    hsl(152 32% 19%) 30%,
-    hsl(152 34% 17%) 60%,
-    hsl(155 36% 14%) 100%
-  );
+
+  /* Shell lateral + barra inferior: ~2 tonos más oscuro que el verde primario (#166534) */
+  --app-shell-nav-solid: #0f3d22;
+  /* Lienzo del panel: gris neutro (tarjetas blancas “flotan” con sombra/borde) */
+  --app-canvas-surface: hsl(220 13% 92%);
+
+  /* === Tokens canónicos de marca (referencia única en el sistema de diseño) === */
+  --brand-primary: #1B5E37;            /* verde bosque — cabeceras de modal, CTA primario */
+  --brand-primary-hover: #154a2d;
+  --brand-primary-active: #124228;
+  --brand-primary-soft: #E8F5E9;       /* fondo informativo suave */
+  --brand-primary-soft-2: #d6ecd9;
+  --brand-shell-deep: #0f3d22;         /* shell de navegación */
+  --brand-backdrop-sage: #C8D9C8;      /* velo salvia para modales (70% opacidad recomendada) */
+
+  /* Estados semánticos */
+  --brand-success: #15803d;
+  --brand-warning: #b45309;
+  --brand-danger: #dc2626;
+  --brand-info: #1d4ed8;
+
+  /* Superficies */
+  --surface-canvas: hsl(220 13% 92%);
+  --surface-card: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-divider: rgba(15, 23, 42, 0.08);
+  --surface-divider-strong: rgba(15, 23, 42, 0.12);
+
+  /* Sombras (tintadas con verde marca para coherencia) */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 83, 45, 0.05);
+  --shadow-sm: 0 2px 6px -2px rgba(15, 83, 45, 0.08);
+  --shadow-md: 0 6px 16px -4px rgba(15, 83, 45, 0.12);
+  --shadow-lg: 0 14px 32px -8px rgba(15, 83, 45, 0.18);
+  --shadow-brand: 0 6px 18px -4px rgba(27, 94, 55, 0.32);
+
+  /* Radios */
+  --radius-sm: 0.5rem;     /* 8px  — chips, inputs pequeños */
+  --radius-md: 0.75rem;    /* 12px — inputs, botones rectangulares */
+  --radius-lg: 1rem;       /* 16px — cards */
+  --radius-xl: 1.25rem;    /* 20px — page headers, modales */
+  --radius-2xl: 1.5rem;    /* 24px — empty states */
+  --radius-pill: 9999px;   /* CTA pill */
+
+  /* Áreas táctiles iOS-safe */
+  --tap-min: 44px;
+  --tap-cta: 48px;
 }
 
 .app-shell-nav-bg {
-  background: var(--app-shell-nav-gradient);
+  background: var(--app-shell-nav-solid);
+}
+
+.app-canvas-bg {
+  background: var(--app-canvas-surface);
 }
 
 html[data-theme='forest'] body {
@@ -2717,4 +2747,377 @@ html[data-theme='forest'] body {
 .auth-modal-header {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
+}
+
+/* ==========================================================================
+   NATILLERAPP DS — utilidades canónicas (.ds-*)
+   Codifican el patrón validado en modales (header verde marca + cuerpo
+   blanco + CTA pill). Vistas pendientes (Socios, Actividades, Cuotas,
+   Préstamos) deben migrar a estas clases para alinearse con el sistema.
+   Convivencia: las clases legacy (.btn-primary, .card, .stat-card, .nova-*)
+   siguen funcionando — migración progresiva.
+   ========================================================================== */
+
+@layer components {
+  /* ---------- Encabezado de página (page header unificado) ---------- */
+  .ds-page-header {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-divider);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: 1rem;
+  }
+  @media (min-width: 640px) {
+    .ds-page-header { padding: 1.25rem 1.5rem; }
+  }
+  .ds-page-header__row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    .ds-page-header__row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+  .ds-page-header__lead {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .ds-page-header__icon {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-md);
+    background: var(--brand-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-xs);
+  }
+  @media (min-width: 640px) {
+    .ds-page-header__icon { width: 3rem; height: 3rem; }
+  }
+  .ds-page-header__title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.2;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 640px) {
+    .ds-page-header__title { font-size: 1.5rem; }
+  }
+  .ds-page-header__sub {
+    font-size: 0.8125rem;
+    color: #64748b;
+    margin-top: 0.125rem;
+    line-height: 1.4;
+  }
+  @media (min-width: 640px) {
+    .ds-page-header__sub { font-size: 0.875rem; }
+  }
+  .ds-page-header__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  /* ---------- Botones canónicos (pill, brand, área táctil 44+) ---------- */
+  .ds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: var(--tap-min);
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color var(--transition-base),
+                box-shadow var(--transition-base),
+                transform var(--transition-fast),
+                filter var(--transition-base);
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .ds-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ds-btn:active:not(:disabled) { transform: scale(0.98); }
+
+  .ds-btn--primary {
+    background: var(--brand-primary);
+    color: #fff;
+    box-shadow: var(--shadow-brand);
+  }
+  .ds-btn--primary:hover:not(:disabled) { background: var(--brand-primary-hover); }
+  .ds-btn--primary:active:not(:disabled) { background: var(--brand-primary-active); }
+
+  .ds-btn--secondary {
+    background: #fff;
+    color: var(--brand-primary);
+    border-color: rgba(27, 94, 55, 0.30);
+  }
+  .ds-btn--secondary:hover:not(:disabled) {
+    background: var(--brand-primary-soft);
+    border-color: var(--brand-primary);
+  }
+
+  .ds-btn--ghost {
+    background: transparent;
+    color: #334155;
+    min-height: 0;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+  }
+  .ds-btn--ghost:hover:not(:disabled) { background: rgba(15, 23, 42, 0.04); }
+
+  .ds-btn--danger {
+    background: var(--brand-danger);
+    color: #fff;
+    box-shadow: 0 4px 12px -2px rgba(220, 38, 38, 0.32);
+  }
+  .ds-btn--danger:hover:not(:disabled) { filter: brightness(0.94); }
+
+  .ds-btn--accent {
+    background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px -4px rgba(234, 88, 12, 0.32);
+  }
+  .ds-btn--accent:hover:not(:disabled) { filter: brightness(0.96); }
+
+  .ds-btn--block { width: 100%; }
+
+  /* ---------- Tarjetas ---------- */
+  .ds-card {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-divider);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-xs);
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+  }
+  @media (min-width: 640px) {
+    .ds-card { padding: 1.25rem; }
+  }
+  .ds-card--hover:hover { box-shadow: var(--shadow-md); }
+  .ds-card--elevated { box-shadow: var(--shadow-md); }
+  .ds-card--brand {
+    border-color: rgba(27, 94, 55, 0.18);
+    background: linear-gradient(180deg, #fff 0%, #f6fbf7 100%);
+  }
+
+  /* ---------- Inputs / labels ---------- */
+  .ds-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin-bottom: 0.375rem;
+  }
+  .ds-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    color: #0f172a;
+    font-family: var(--font-body);
+    font-size: 1rem; /* iOS: >=16px evita zoom */
+    line-height: 1.4;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--surface-divider-strong);
+    outline: none;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  }
+  .ds-input::placeholder { color: #94a3b8; }
+  .ds-input:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
+  }
+  .ds-input--error {
+    border-color: #fca5a5;
+  }
+  .ds-input--error:focus {
+    border-color: var(--brand-danger);
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+  }
+
+  /* ---------- Badges ---------- */
+  .ds-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+  }
+  .ds-badge--brand   { background: var(--brand-primary-soft); color: var(--brand-primary); }
+  .ds-badge--success { background: #dcfce7; color: #166534; }
+  .ds-badge--warning { background: #fef3c7; color: #92400e; }
+  .ds-badge--danger  { background: #fee2e2; color: #991b1b; }
+  .ds-badge--info    { background: #dbeafe; color: #1e40af; }
+  .ds-badge--muted   { background: #f1f5f9; color: #475569; }
+
+  /* ---------- Stat card (KPI numérico) ---------- */
+  .ds-stat-card {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-divider);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-width: 0;
+    transition: box-shadow var(--transition-base);
+  }
+  @media (min-width: 640px) {
+    .ds-stat-card { padding: 1.25rem; }
+  }
+  .ds-stat-card:hover { box-shadow: var(--shadow-md); }
+  .ds-stat-card__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    background: var(--brand-primary-soft);
+    color: var(--brand-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.625rem;
+  }
+  .ds-stat-card__value {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--brand-primary);
+    word-break: break-word;
+  }
+  @media (min-width: 640px) {
+    .ds-stat-card__value { font-size: 1.875rem; }
+  }
+  .ds-stat-card__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-top: 0.375rem;
+    line-height: 1.3;
+  }
+  @media (min-width: 640px) {
+    .ds-stat-card__label { font-size: 0.8125rem; }
+  }
+
+  /* ---------- Empty state (patrón "Sin Socios" como fallback de página) ---------- */
+  .ds-empty-state {
+    max-width: 28rem;
+    margin: 0 auto;
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(15, 83, 45, 0.10);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    background: #fff;
+  }
+  .ds-empty-state__header {
+    background: var(--brand-primary);
+    color: #fff;
+    text-align: center;
+    padding: 2rem 1.5rem 1.75rem;
+  }
+  @media (min-width: 640px) {
+    .ds-empty-state__header { padding: 2.5rem 2rem 2rem; }
+  }
+  .ds-empty-state__icon-wrap {
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 auto 0.875rem;
+    background: #fff;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-primary);
+    box-shadow: var(--shadow-sm);
+  }
+  @media (min-width: 640px) {
+    .ds-empty-state__icon-wrap { width: 4rem; height: 4rem; }
+  }
+  .ds-empty-state__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #fff;
+    font-size: 1.125rem;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 640px) {
+    .ds-empty-state__title { font-size: 1.25rem; }
+  }
+  .ds-empty-state__subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+  @media (min-width: 640px) {
+    .ds-empty-state__subtitle { font-size: 0.875rem; }
+  }
+  .ds-empty-state__body {
+    background: #fff;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  @media (min-width: 640px) {
+    .ds-empty-state__body { padding: 2rem; }
+  }
+
+  /* ---------- Aviso/Info card (mismo lenguaje que el callout en modal Username) ---------- */
+  .ds-callout {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    background: var(--brand-primary-soft);
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1rem;
+    color: #1f2937;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+  .ds-callout__icon {
+    flex-shrink: 0;
+    color: var(--brand-primary);
+    margin-top: 0.125rem;
+  }
+  .ds-callout__title {
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-right: 0.25rem;
+  }
+
+  /* ---------- Etiqueta/overline técnica (uppercase, tracking ancho) ---------- */
+  .ds-overline {
+    font-family: var(--font-brand-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand-primary);
+  }
 }

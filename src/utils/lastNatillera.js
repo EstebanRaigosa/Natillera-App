@@ -23,3 +23,12 @@ export function setLastNatilleraId(userId, natilleraId) {
     /* ignore */
   }
 }
+
+export function clearLastNatilleraId(userId) {
+  if (!userId || typeof window === 'undefined') return
+  try {
+    localStorage.removeItem(storageKeyLastNatillera(userId))
+  } catch {
+    /* ignore */
+  }
+}

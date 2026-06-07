@@ -23,11 +23,15 @@
   <!-- Contenido principal (solo si tiene acceso) -->
   <div v-else class="max-w-6xl mx-auto p-4 sm:p-6">
     <div class="mb-6">
-      <Breadcrumbs />
-      <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800 mb-2">
-        Centro de Soporte
-      </h1>
-      <p class="text-gray-600">Gestiona las consultas y mensajes de los usuarios</p>
+      <div class="flex items-center gap-3 mb-3">
+        <BackButton to="/dashboard" :inline="true" />
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-display font-bold text-gray-800">
+            Centro de Soporte
+          </h1>
+          <p class="text-gray-600 text-sm mt-0.5">Gestiona las consultas y mensajes de los usuarios</p>
+        </div>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -332,7 +336,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/auth'
 import { useSupportStore } from '../../stores/support'
 import { useNotificationStore } from '../../stores/notifications'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+import BackButton from '../../components/BackButton.vue'
 import AppBrand from '../../components/AppBrand.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'

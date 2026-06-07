@@ -7,8 +7,7 @@
     </div>
 
     <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-3">
@@ -828,19 +827,19 @@
           <!-- Acciones por paso (dentro del scroll; pie fijo eliminado) -->
           <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
             <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
-              <button type="button" @click="requestCloseTopModal" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">Cancelar</button>
-              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+              <button type="button" @click="requestCloseTopModal" class="btn-modal-secondary flex-1">Cancelar</button>
+              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
             </div>
             <div v-else-if="pasoNuevoPrestamo === 1" class="flex gap-2">
-              <button type="button" @click="pasoNuevoPrestamo--" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 inline-flex items-center justify-center gap-1.5 transition-colors"><ArrowLeftIcon class="w-4 h-4" /> Atrás</button>
-              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null || formPrestamo.numero_cuotas < 1 || formPrestamo.numero_cuotas > plazoMaximoCuotasCrear" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5 transition-colors">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
+              <button type="button" @click="pasoNuevoPrestamo--" class="btn-modal-secondary flex-1 inline-flex items-center justify-center gap-1.5"><ArrowLeftIcon class="w-4 h-4" /> Atrás</button>
+              <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.fecha_pago || !formPrestamo.numero_cuotas || formPrestamo.interes == null || formPrestamo.numero_cuotas < 1 || formPrestamo.numero_cuotas > plazoMaximoCuotasCrear" class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
             </div>
             <div v-else-if="!prestamoRecienCreado" class="flex gap-2">
-              <button type="button" @click="pasoNuevoPrestamo = 0" class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors">Cambiar datos</button>
-              <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center justify-center transition-colors">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
+              <button type="button" @click="pasoNuevoPrestamo = 0" class="btn-modal-secondary flex-1">Cambiar datos</button>
+              <button type="button" @click="handleCrearPrestamo" :disabled="loading" class="btn-modal-primary flex-1 disabled:opacity-50">{{ loading ? 'Creando...' : 'Confirmar' }}</button>
             </div>
             <div v-else class="flex gap-2">
-              <button type="button" @click="requestCloseTopModal" class="flex-1 min-h-[48px] py-3 rounded-full bg-gray-100 text-gray-800 font-semibold text-sm hover:bg-gray-200 transition-colors">Cerrar</button>
+              <button type="button" @click="requestCloseTopModal" class="btn-modal-secondary flex-1">Cerrar</button>
             </div>
           </div>
           </form>
@@ -1051,14 +1050,14 @@
                 <button
                   type="button"
                   @click="requestCloseTopModal"
-                  class="flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  class="btn-modal-secondary flex-1"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   @click="handleRegistrarAbono"
-                  class="flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 transition-colors"
+                  class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || (prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual))"
                 >
                   <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1828,6 +1827,31 @@
                   <span class="hidden sm:inline">WhatsApp</span>
                 </button>
               </div>
+
+              <!-- Badge: forma en que se entregó el préstamo -->
+              <div v-if="prestamoDetalle?.medio_entrega" class="mb-4 flex">
+                <div
+                  class="forma-pago-badge"
+                  :class="prestamoDetalle.medio_entrega === 'efectivo'
+                    ? 'forma-pago-badge--efectivo'
+                    : 'forma-pago-badge--transferencia'"
+                >
+                  <span class="forma-pago-badge__icon-wrap" aria-hidden="true">
+                    <BanknotesIcon
+                      v-if="prestamoDetalle.medio_entrega === 'efectivo'"
+                      class="w-4 h-4"
+                    />
+                    <ArrowsRightLeftIcon v-else class="w-4 h-4" />
+                  </span>
+                  <span class="forma-pago-badge__text">
+                    <span class="forma-pago-badge__label">Entregado en</span>
+                    <span class="forma-pago-badge__value">
+                      {{ prestamoDetalle.medio_entrega === 'efectivo' ? 'Efectivo' : 'Transferencia' }}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
               <div class="grid grid-cols-2 gap-6">
                 <!-- Primera columna -->
                 <div class="space-y-4">
@@ -2533,48 +2557,88 @@
                 <p class="text-gray-500 text-sm">No hay abonos registrados</p>
               </div>
               <div v-else class="space-y-2">
-                <div 
-                  v-for="pago in pagosPrestamo" 
+                <div
+                  v-for="pago in pagosPrestamo"
                   :key="pago.id"
-                  class="group flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-natillera-300 transition-all"
+                  class="group flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md hover:border-natillera-300 transition-all"
                 >
-                  <div class="flex items-center gap-3 flex-1">
+                  <div class="flex items-start gap-3 flex-1 min-w-0">
                     <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0">
                       <CurrencyDollarIcon class="w-5 h-5 text-white" />
                     </div>
                     <div class="flex-1 min-w-0">
-                      <p class="font-semibold text-gray-800">${{ formatMoney(pago.valor) }}</p>
+                      <div class="flex items-center justify-between gap-2">
+                        <p class="font-semibold text-gray-800">${{ formatMoney(pago.valor) }}</p>
+                        <span class="sm:hidden px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[10px] font-semibold flex-shrink-0">
+                          Abonado
+                        </span>
+                      </div>
                       <p class="text-xs text-gray-500">{{ formatDate(pago.fecha) }}</p>
+                      <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <template v-if="Array.isArray(pago.numeros_cuota) && pago.numeros_cuota.length > 0">
+                          <span
+                            v-for="(periodo, idx) in periodosDeNumerosCuota(pago.numeros_cuota)"
+                            :key="`${pago.id}-periodo-${idx}`"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-natillera-50 text-natillera-700 border border-natillera-200/70 text-[11px] font-semibold"
+                            :title="`Cuota correspondiente al período ${periodo}`"
+                          >
+                            <BanknotesIcon class="w-3 h-3" />
+                            {{ periodo }}
+                          </span>
+                        </template>
+                        <span
+                          v-if="formaPagoAbono(pago)"
+                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
+                          :class="FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].clase"
+                          :title="formaPagoAbono(pago) === 'mixto'
+                            ? `Pago mixto · Efectivo: $${formatMoney(pago.valor_efectivo)} · Transferencia: $${formatMoney(pago.valor_transferencia)}`
+                            : `Pagado en ${FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label.toLowerCase()}`"
+                        >
+                          <span aria-hidden="true">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].icon }}</span>
+                          {{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }}
+                        </span>
+                        <span
+                          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border"
+                          :class="pago.origen === 'cuota_natillera'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200/70'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200/70'"
+                          :title="pago.origen === 'cuota_natillera'
+                            ? 'Registrado al pagar la cuota de la natillera'
+                            : 'Registrado desde la vista de Préstamos'"
+                        >
+                          {{ pago.origen === 'cuota_natillera' ? 'Desde Cuotas' : 'Desde Préstamos' }}
+                        </span>
+                      </div>
                       <p v-if="pago.codigo_comprobante" class="text-xs text-gray-400 font-mono mt-1">
                         Código: {{ pago.codigo_comprobante }}
                       </p>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                  <div class="flex items-center gap-1.5 flex-shrink-0 justify-end pl-13 sm:pl-0 -mt-1 sm:mt-0">
+                    <span class="hidden sm:inline-flex px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
                       Abonado
                     </span>
                     <button
                       v-if="pago.codigo_comprobante"
                       @click.stop="reenviarComprobanteAbono(pago)"
-                      class="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                      class="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 p-2 inline-flex items-center justify-center text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors touch-manipulation"
                       title="Reenviar comprobante"
                     >
-                      <ArrowPathIcon class="w-4 h-4" />
+                      <ArrowPathIcon class="w-5 h-5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       @click.stop="abrirModalEditarAbono(pago)"
-                      class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      class="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 p-2 inline-flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all touch-manipulation"
                       title="Editar abono"
                     >
-                      <PencilIcon class="w-4 h-4" />
+                      <PencilIcon class="w-5 h-5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       @click.stop="confirmarEliminarAbono(pago)"
-                      class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      class="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 p-2 inline-flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all touch-manipulation"
                       title="Eliminar abono"
                     >
-                      <TrashIcon class="w-4 h-4" />
+                      <TrashIcon class="w-5 h-5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
@@ -2586,7 +2650,7 @@
                 <button
                   type="button"
                   @click="requestCloseTopModal"
-                  class="w-full sm:flex-1 min-h-[48px] py-3 rounded-full border border-gray-200 bg-white text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  class="btn-modal-secondary w-full sm:flex-1"
                 >
                   Cerrar
                 </button>
@@ -2594,7 +2658,7 @@
                   v-if="prestamoDetalle?.estado === 'activo'"
                   type="button"
                   @click="abrirModalAbono(prestamoDetalle)"
-                  class="w-full sm:flex-1 min-h-[48px] py-3 rounded-full bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition-colors"
+                  class="btn-modal-primary w-full sm:flex-1"
                 >
                   Registrar abono
                 </button>
@@ -2830,11 +2894,12 @@
             </div>
 
             <div class="space-y-3 border-t border-gray-200 pt-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+              <!-- Descargar: primario marca (excepción posible: azul solo si se prioriza semántica «archivo») -->
               <button
                 type="button"
                 @click="descargarPrestamo"
                 :disabled="generandoImagenPrestamo"
-                class="w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="btn-modal-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ArrowDownTrayIcon class="w-5 h-5" />
                 {{ generandoImagenPrestamo ? 'Generando…' : 'Descargar imagen' }}
@@ -2844,10 +2909,8 @@
                 @click="compartirPrestamoWhatsApp"
                 :disabled="generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono"
                 :class="[
-                  'w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-all',
-                  (generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
+                  'btn-modal-primary w-full',
+                  (generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono) ? 'opacity-50 cursor-not-allowed' : ''
                 ]"
                 :title="!prestamoDetalle?.socio_natillera?.socio?.telefono ? 'No hay teléfono registrado para este socio' : ''"
               >
@@ -2862,7 +2925,7 @@
               <button
                 type="button"
                 @click="requestCloseTopModal"
-                class="w-full min-h-[48px] px-4 py-3 rounded-full border border-gray-200 bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                class="btn-modal-secondary w-full"
               >
                 Cerrar
               </button>
@@ -3030,7 +3093,7 @@
               type="button"
               @click="descargarPrestamoNuevo"
               :disabled="generandoImagenPrestamoNuevo"
-              class="w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              class="btn-modal-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ArrowDownTrayIcon class="w-5 h-5" />
               {{ generandoImagenPrestamoNuevo ? 'Generando...' : 'Descargar imagen' }}
@@ -3040,10 +3103,8 @@
               @click="compartirPrestamoNuevoWhatsApp"
               :disabled="generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono"
               :class="[
-                'w-full min-h-[48px] flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-all',
-                (generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono)
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
+                'btn-modal-primary w-full',
+                (generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono) ? 'opacity-50 cursor-not-allowed' : ''
               ]"
               :title="!socioSeleccionado?.socio?.telefono ? 'El socio no tiene teléfono registrado' : ''"
             >
@@ -3055,7 +3116,7 @@
             <button
               type="button"
               @click="requestCloseTopModal"
-              class="w-full min-h-[48px] px-4 py-3 rounded-full border border-gray-200 bg-white text-gray-800 font-semibold text-sm hover:bg-gray-50 transition-colors"
+              class="btn-modal-secondary w-full"
             >
               Cerrar
             </button>
@@ -3282,9 +3343,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -3305,12 +3367,13 @@ import {
   CalendarDaysIcon,
   ClockIcon,
   ChevronRightIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  ArrowsRightLeftIcon
 } from '@heroicons/vue/24/outline'
 import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
 import DateInput from '../../components/DateInput.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useSessionDraftPersistence } from '../../composables/useSessionDraftPersistence'
@@ -3358,6 +3421,7 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const router = useRouter()
 const id = props.id || route.params.id
 
 const prestamos = ref([])
@@ -3501,9 +3565,11 @@ async function cargarReglasPrestamoNatillera() {
   try {
     const n = await natillerasStore.fetchNatillera(id)
     reglasInteresNatillera.value = parseReglasInteresPrestamo(n?.reglas_interes)
+    return n
   } catch (e) {
     console.warn('No se cargaron reglas de préstamo de la natillera:', e)
     reglasInteresNatillera.value = parseReglasInteresPrestamo(null)
+    return null
   }
 }
 
@@ -4086,6 +4152,79 @@ const vistaPreviaRefinanciacion = computed(() => {
 
 function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
+}
+
+const MESES_ES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+function etiquetaPeriodoCuotaPrestamo(cuota, periodicidad) {
+  if (!cuota) return null
+  let mes = cuota.mes
+  let anio = cuota.anio
+  let quincena = cuota.quincena
+  // Si falta cualquier dato (mes, anio o quincena cuando es quincenal), derivar de fecha_proyectada.
+  if (mes == null || anio == null || ((periodicidad || 'mensual') === 'quincenal' && quincena == null)) {
+    if (cuota.fecha_proyectada) {
+      const d = parseDateLocal(cuota.fecha_proyectada) || new Date(cuota.fecha_proyectada)
+      if (!isNaN(d.getTime())) {
+        if (mes == null) mes = d.getMonth() + 1
+        if (anio == null) anio = d.getFullYear()
+        if (quincena == null) quincena = d.getDate() <= 15 ? 1 : 2
+      }
+    }
+  }
+  if (mes == null || anio == null) return null
+  const nombreMes = MESES_ES[mes - 1] || ''
+  if ((periodicidad || 'mensual') === 'quincenal') {
+    const q = quincena === 2 ? '2da' : '1ra'
+    return `${q} quincena ${nombreMes} ${anio}`
+  }
+  return `${nombreMes} ${anio}`
+}
+
+// Determina la forma de pago de un abono usando el desglose efectivo/transferencia.
+function formaPagoAbono(pago) {
+  if (!pago) return null
+  const ef = parseFloat(pago.valor_efectivo) || 0
+  const tr = parseFloat(pago.valor_transferencia) || 0
+  if (ef > 0 && tr > 0) return 'mixto'
+  if (ef > 0) return 'efectivo'
+  if (tr > 0) return 'transferencia'
+  return null
+}
+
+const FORMA_PAGO_ABONO_ESTILO = {
+  efectivo: { label: 'Efectivo', icon: '💵', clase: 'bg-green-50 text-green-700 border-green-200/70' },
+  transferencia: { label: 'Transferencia', icon: '🏦', clase: 'bg-blue-50 text-blue-700 border-blue-200/70' },
+  mixto: { label: 'Mixto', icon: '🔀', clase: 'bg-purple-50 text-purple-700 border-purple-200/70' }
+}
+
+const cuotaPorNumeroMap = computed(() => {
+  const map = new Map()
+  for (const c of (planPagosPrestamo.value || [])) {
+    if (c.numero_cuota != null) map.set(c.numero_cuota, c)
+  }
+  return map
+})
+
+function periodosDeNumerosCuota(numerosCuota) {
+  if (!Array.isArray(numerosCuota) || numerosCuota.length === 0) return []
+  // Mostrar quincena (1ra/2da) si el socio en la natillera es quincenal o si el préstamo lo es.
+  const periodicidadSocio = prestamoDetalle.value?.socio_natillera?.periodicidad
+  const periodicidadPrestamo = prestamoDetalle.value?.periodicidad
+  const periodicidad = (periodicidadSocio === 'quincenal' || periodicidadPrestamo === 'quincenal')
+    ? 'quincenal'
+    : (periodicidadPrestamo || periodicidadSocio || 'mensual')
+  const labels = []
+  const seen = new Set()
+  for (const n of numerosCuota) {
+    const cuota = cuotaPorNumeroMap.value.get(n)
+    const label = etiquetaPeriodoCuotaPrestamo(cuota, periodicidad)
+    if (label && !seen.has(label)) {
+      seen.add(label)
+      labels.push(label)
+    }
+  }
+  return labels
 }
 
 function formatCurrencyInput(value) {
@@ -6023,11 +6162,48 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
       }
     }
 
+    // Recalcular numeros_cuota por cada pago según el orden de aplicación.
+    // Como los pagos se aplican en orden de fecha, cada pago "ocupa" un rango
+    // [acumPrev, acumPrev + valor) sobre la suma total de valores de cuotas.
+    // Las cuotas cuyo rango se solape con el rango del pago son las que tocó.
+    try {
+      const valoresCuota = cuotasOrdenadas.map(c => parseFloat(c.valor_cuota || 0))
+      let acumPagos = 0
+      const updatesNumerosCuota = []
+      for (const pago of todosPagos) {
+        const v = parseFloat(pago.valor) || 0
+        const inicio = acumPagos
+        const fin = acumPagos + v
+        const numerosTocados = []
+        let acumCuotas = 0
+        for (let i = 0; i < cuotasOrdenadas.length; i++) {
+          const cInicio = acumCuotas
+          const cFin = acumCuotas + valoresCuota[i]
+          if (fin > cInicio && inicio < cFin) {
+            numerosTocados.push(cuotasOrdenadas[i].numero_cuota)
+          }
+          acumCuotas = cFin
+        }
+        acumPagos = fin
+        updatesNumerosCuota.push(
+          supabase.from('pagos_prestamo')
+            .update({ numeros_cuota: numerosTocados.length > 0 ? numerosTocados : null })
+            .eq('id', pago.id)
+        )
+      }
+      await Promise.allSettled(updatesNumerosCuota)
+    } catch (errNumeros) {
+      console.error('⚠️ Error recalculando numeros_cuota de pagos:', errNumeros)
+    }
+
     // Recargar el plan de pagos
     await fetchPlanPagosPrestamo(prestamoId)
-    
+
     // Recargar todos los planes de pagos para actualizar el total pagado
     await recargarTodosLosPlanesPagos()
+
+    // Recargar el historial de abonos para reflejar los numeros_cuota actualizados
+    await fetchPagosPrestamo(prestamoId)
   } catch (e) {
     console.error('❌ Error actualizando plan de pagos después de editar abono:', e)
   }
@@ -6040,6 +6216,14 @@ function generarPlanPagos(prestamo) {
   const monto = prestamo.monto || 0
   const interes = prestamo.interes || 0
   const tasaMensual = interes / 100
+  // Resolver una sola vez el nombre del socio y de la natillera para todas las cuotas del plan.
+  const nombreSocioPlan = prestamo.nombre_socio
+    || prestamo.socio_natillera?.socio?.nombre
+    || prestamo.socio_natillera?.nombre
+    || null
+  const nombreNatilleraPlan = prestamo.nombre_natillera
+    || prestamo.socio_natillera?.natillera?.nombre
+    || null
   // Usar fecha_inicio si está disponible, sino usar created_at, sino fecha actual
   // Usamos parseDateLocal para evitar problemas de zona horaria
   const fechaInicio = prestamo.fecha_inicio 
@@ -6123,10 +6307,13 @@ function generarPlanPagos(prestamo) {
       interes: Math.round(interesCuota),
       saldo_proyectado: Math.round(saldoRestante),
       pagada: false,
+      nombre_socio: nombreSocioPlan,
+      socio_nombre: nombreSocioPlan,
+      nombre_natillera: nombreNatilleraPlan,
       ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
     })
   }
-  
+
   return planPagos
 }
 
@@ -6730,10 +6917,12 @@ async function handleCrearPrestamo() {
     }
   }
 
-  // Validar que haya recaudado suficiente según la forma de pago seleccionada
-  // Con interés anticipado el movimiento de caja es capital + intereses; con normal solo capital
+  // Validar que haya recaudado suficiente según la forma de pago seleccionada.
+  // Lo que efectivamente sale del fondo en la forma de pago es lo que recibe el socio:
+  // - Normal: capital completo
+  // - Anticipado: capital - interés (el interés se retiene y queda como utilidad)
   const montoAfectaFondo = mostrarInteresAnticipado.value
-    ? capital + Math.round(interesTotal.value)
+    ? Math.max(0, capital - Math.round(interesTotal.value))
     : capital
   const natilleraId = id
   if (natilleraId) {
@@ -6748,7 +6937,7 @@ async function handleCrearPrestamo() {
           generandoPrestamo.value = false
           loading.value = false
           notificationStore.warning(
-            `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor total del movimiento: $${formatMoney(montoAfectaFondo)}.`,
+            `No hay suficiente recaudado en efectivo para este préstamo. Disponible: $${formatMoney(disponibleEfectivo)}. Valor a desembolsar: $${formatMoney(montoAfectaFondo)}.`,
             'Fondo insuficiente (efectivo)'
           )
           return
@@ -6757,7 +6946,7 @@ async function handleCrearPrestamo() {
           generandoPrestamo.value = false
           loading.value = false
           notificationStore.warning(
-            `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor total del movimiento: $${formatMoney(montoAfectaFondo)}.`,
+            `No hay suficiente recaudado por transferencia para este préstamo. Disponible: $${formatMoney(disponibleTransferencia)}. Valor a desembolsar: $${formatMoney(montoAfectaFondo)}.`,
             'Fondo insuficiente (transferencia)'
           )
           return
@@ -6815,6 +7004,15 @@ async function handleCrearPrestamo() {
     const nombreSocio = data.socio_natillera?.socio?.nombre || 'Socio'
     
     // Generar plan de pagos usando la fecha del formulario
+    // Resolver nombres con fallback al join recién devuelto y a las réplicas pre-calculadas
+    const nombreSocioParaPlan = data.nombre_socio
+      || data.socio_natillera?.socio?.nombre
+      || nombreSocioReplica
+      || null
+    const nombreNatilleraParaPlan = data.nombre_natillera
+      || nombreNatilleraReplica
+      || null
+
     // Usamos la fecha directamente sin convertir a UTC para evitar problemas de zona horaria
     const planPagos = generarPlanPagos({
       ...data,
@@ -6822,7 +7020,9 @@ async function handleCrearPrestamo() {
       interes_anticipado: mostrarInteresAnticipado.value,
       numero_cuotas: formPrestamo.numero_cuotas,
       periodicidad: formPrestamo.periodicidad,
-      fecha_inicio: formPrestamo.fecha_pago || data.created_at
+      fecha_inicio: formPrestamo.fecha_pago || data.created_at,
+      nombre_socio: nombreSocioParaPlan,
+      nombre_natillera: nombreNatilleraParaPlan
     })
     
     // Insertar plan de pagos en la base de datos
@@ -7049,9 +7249,14 @@ function handleClickOutside(event) {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
+  const nNat = await cargarReglasPrestamoNatillera()
+  if (nNat && natilleraPrestamosDeshabilitados(nNat)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    router.replace(`/natilleras/${id}`)
+    return
+  }
   await fetchPrestamos()
   fetchSocios()
-  void cargarReglasPrestamoNatillera()
   tryRestorePrestamosWorkDraft()
 })
 
@@ -7154,7 +7359,8 @@ async function handleRegistrarAbono() {
         prestamoSeleccionado.value?.socio_natillera?.socio?.nombre ||
         prestamoSeleccionado.value?.socio_natillera?.nombre ||
         null,
-      nombre_natillera: natilleraAbono?.nombre || null
+      nombre_natillera: natilleraAbono?.nombre || null,
+      origen: 'prestamos'
     }
     
     console.log('💾 Registrando abono con datos:', datosPago)
@@ -8279,6 +8485,102 @@ async function compartirPrestamoNuevoWhatsApp() {
     width: 0.875rem;
     height: 0.875rem;
   }
+}
+
+/* Badge bonito para la forma en que se entregó el préstamo */
+.forma-pago-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.85rem 0.5rem 0.55rem;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  background: #fff;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.forma-pago-badge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--fp-bg-grad);
+  opacity: 0.55;
+  z-index: -1;
+}
+
+.forma-pago-badge:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.08),
+    0 2px 5px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.forma-pago-badge__icon-wrap {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--fp-icon-bg);
+  box-shadow:
+    0 4px 10px var(--fp-icon-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.forma-pago-badge__text {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+  gap: 0.1rem;
+}
+
+.forma-pago-badge__label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fp-label);
+  opacity: 0.78;
+}
+
+.forma-pago-badge__value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--fp-value);
+}
+
+/* Variante: efectivo (verde marca) */
+.forma-pago-badge--efectivo {
+  --fp-bg-grad: linear-gradient(135deg, hsl(152 80% 95%) 0%, hsl(152 70% 88%) 100%);
+  --fp-icon-bg: linear-gradient(135deg, hsl(152 69% 32%) 0%, hsl(152 69% 22%) 100%);
+  --fp-icon-glow: hsl(152 69% 22% / 0.35);
+  --fp-label: hsl(152 45% 30%);
+  --fp-value: hsl(152 60% 22%);
+  border-color: hsl(152 50% 70% / 0.6);
+}
+
+/* Variante: transferencia (azul/índigo) */
+.forma-pago-badge--transferencia {
+  --fp-bg-grad: linear-gradient(135deg, hsl(214 90% 96%) 0%, hsl(230 80% 92%) 100%);
+  --fp-icon-bg: linear-gradient(135deg, hsl(217 80% 50%) 0%, hsl(230 75% 42%) 100%);
+  --fp-icon-glow: hsl(220 70% 40% / 0.32);
+  --fp-label: hsl(220 50% 35%);
+  --fp-value: hsl(220 65% 28%);
+  border-color: hsl(220 60% 75% / 0.55);
 }
 </style>
 

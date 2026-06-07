@@ -305,7 +305,7 @@
     </div>
 
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
-    <div 
+    <div
       class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen lg:min-h-[100dvh] relative"
       :class="{ 'z-50': isBodyScrollLocked }"
     >
@@ -421,6 +421,7 @@ import {
   ArrowsRightLeftIcon
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
+import { useScrollRestoration } from '../composables/useScrollRestoration'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import AppBrand from '../components/AppBrand.vue'
@@ -428,6 +429,11 @@ import logoIconSrc from '../../assets/logo_icon.png'
 
 const router = useRouter()
 const route = useRoute()
+
+// Restaura la posición de scroll tras un reload por descarte de pestaña (móvil).
+// El contenedor scrolleable en <lg es <main class="...overflow-y-auto"> (mismo selector
+// que usa el router para el scroll-to-top).
+useScrollRestoration(() => document.querySelector('main.overflow-y-auto'))
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
@@ -787,17 +793,35 @@ onUnmounted(() => {
   background: hsl(var(--primary) / 0.22);
 }
 
+/* Opción seleccionada (referencia dashboard): píldora clara crema, texto/ícono
+   oscuros y barra de acento dorada a la izquierda, sobre el shell verde. */
 .nav-link-active {
-  @apply text-white font-semibold border-2;
-  background: hsl(var(--primary));
-  border-color: hsl(var(--primary) / 0.55);
-  box-shadow: 0 2px 12px hsl(var(--primary) / 0.28);
+  @apply font-semibold;
+  position: relative;
+  padding-left: 1.35rem; /* deja aire para la barra de acento */
+  background: #f5f1e7;
+  color: var(--brand-primary);
+  border: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.nav-link-active::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.4rem;
+  border-radius: 9999px;
+  background: var(--color-accent-400);
 }
 
 .nav-link-active:hover {
-  background: hsl(var(--primary));
-  filter: brightness(1.06);
-  box-shadow: 0 4px 16px hsl(var(--primary) / 0.35);
+  background: #fdfbf6;
+  color: var(--brand-primary);
+  filter: none;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
 }
 
 .sidebar-section {
@@ -815,7 +839,8 @@ onUnmounted(() => {
 }
 
 .nav-link-option.nav-link-active .sidebar-option-label {
-  @apply text-white font-semibold;
+  @apply font-semibold;
+  color: var(--brand-primary);
 }
 
 .nav-link-option {

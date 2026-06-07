@@ -1,7 +1,7 @@
 <template>
   <router-view />
   <!-- <ChatWidget /> -->
-  <NotificationToast />
+  <NatiNotificacion />
   <UsernameModal 
     :show="showUsernameModal" 
     @close="showUsernameModal = false"
@@ -14,7 +14,7 @@ import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 // import ChatWidget from './components/ChatWidget.vue'
-import NotificationToast from './components/NotificationToast.vue'
+import NatiNotificacion from './components/NatiNotificacion.vue'
 import UsernameModal from './components/UsernameModal.vue'
 import { useSessionTimeout } from './composables/useSessionTimeout'
 
@@ -65,13 +65,13 @@ function handleInputFocus(event) {
 }
 
 onMounted(() => {
-  authStore.checkAuth()
-  // Agregar listener global para Enter
+  // No llamar checkAuth(): onAuthStateChange (INITIAL_SESSION) ya restaura
+  // la sesión desde storage sin round-trip extra a Supabase.
+  // El router guard espera initialSessionReady antes de decidir.
+
   document.addEventListener('keydown', handleEnterKey)
-  // Agregar listener para hacer scroll cuando un input recibe focus (móvil)
   document.addEventListener('focusin', handleInputFocus)
   
-  // Iniciar el sistema de timeout de sesión si el usuario está autenticado
   if (authStore.isAuthenticated) {
     sessionTimeout.start()
   }

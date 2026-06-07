@@ -7,3 +7,20 @@
   to = "/index.html"
   status = 200
 
+# El service worker y su registro NO deben cachearse en el navegador/CDN, o los usuarios
+# quedarían atascados en una versión vieja del SW y no llegarían las actualizaciones (PWA).
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "no-cache"
+

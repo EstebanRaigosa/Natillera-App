@@ -1,0 +1,551 @@
+<template>
+  <div class="ds-demo-page max-w-5xl mx-auto pb-12 space-y-10">
+
+    <!-- ===== Page header (DS) ============================================ -->
+    <header class="ds-page-header">
+      <div class="ds-page-header__row">
+        <div class="ds-page-header__lead">
+          <div class="ds-page-header__icon">
+            <SwatchIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div class="min-w-0">
+            <h1 class="ds-page-header__title">Sistema de Diseño · Demo</h1>
+            <p class="ds-page-header__sub">
+              Tipografía Mulish · Color marca <code class="font-mono">#1B5E37</code> · Tokens, componentes y Nati-Notificación
+            </p>
+          </div>
+        </div>
+        <div class="ds-page-header__actions">
+          <button class="ds-btn ds-btn--secondary" type="button" @click="lanzarDemo">
+            <SparklesIcon class="w-4 h-4" />
+            Demo combinada
+          </button>
+          <button class="ds-btn ds-btn--primary" type="button" @click="nati.exito('Toast lanzado desde el page header', 'Listo')">
+            <BellAlertIcon class="w-4 h-4" />
+            Probar toast
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== Tipografía =================================================== -->
+    <section class="space-y-3">
+      <span class="ds-overline">Tipografía</span>
+      <div class="ds-card space-y-4">
+        <div>
+          <p class="ds-overline mb-2">Display · Mulish 800</p>
+          <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
+            Natilleras claras, equipos tranquilos.
+          </h1>
+        </div>
+        <hr class="border-slate-100" />
+        <div>
+          <p class="ds-overline mb-2">Encabezado sección · Mulish 700</p>
+          <h2 class="text-xl sm:text-2xl font-semibold text-slate-800">
+            Préstamos, cuotas y actividades en un lenguaje único
+          </h2>
+        </div>
+        <hr class="border-slate-100" />
+        <div>
+          <p class="ds-overline mb-2">Cuerpo · Mulish 400</p>
+          <p class="text-base text-slate-600 leading-relaxed">
+            Mulish es la única fuente del sistema. Cubre títulos (peso 700–800),
+            cuerpo (400) y etiquetas técnicas (700, mayúsculas, tracking ancho)
+            sin importar tipografías adicionales. Una sola fuente = bundle más
+            ligero y coherencia automática.
+          </p>
+        </div>
+        <hr class="border-slate-100" />
+        <div>
+          <p class="ds-overline mb-2">Numérico KPI · Mulish 800</p>
+          <p class="font-display text-4xl font-bold text-[color:var(--brand-primary)] tabular-nums">
+            $ 1.245.000
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Paleta y tokens ============================================= -->
+    <section class="space-y-3">
+      <span class="ds-overline">Tokens de marca</span>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div
+          v-for="t in tokens"
+          :key="t.name"
+          class="ds-card !p-3 flex flex-col gap-2"
+        >
+          <div
+            class="h-14 rounded-md border border-slate-100"
+            :style="{ background: t.value }"
+          />
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-800 truncate">{{ t.label }}</p>
+            <p class="text-xs text-slate-500 font-mono">{{ t.value }}</p>
+            <p class="text-[10px] text-slate-400 font-mono mt-0.5">{{ t.name }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Botones ====================================================== -->
+    <section class="space-y-3">
+      <span class="ds-overline">Botones</span>
+      <div class="ds-card space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="ds-btn ds-btn--primary"   type="button">
+            <CheckIcon class="w-4 h-4" />
+            Primary
+          </button>
+          <button class="ds-btn ds-btn--secondary" type="button">
+            <PencilIcon class="w-4 h-4" />
+            Secondary
+          </button>
+          <button class="ds-btn ds-btn--ghost"     type="button">
+            <ArrowPathIcon class="w-4 h-4" />
+            Ghost
+          </button>
+          <button class="ds-btn ds-btn--accent"    type="button">
+            <SparklesIcon class="w-4 h-4" />
+            Accent
+          </button>
+          <button class="ds-btn ds-btn--danger"    type="button">
+            <TrashIcon class="w-4 h-4" />
+            Danger
+          </button>
+          <button class="ds-btn ds-btn--primary"   type="button" disabled>
+            <CheckIcon class="w-4 h-4" />
+            Disabled
+          </button>
+        </div>
+        <hr class="border-slate-100" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-md">
+          <button class="ds-btn ds-btn--primary ds-btn--block" type="button">
+            <PlusIcon class="w-4 h-4" />
+            Block primary
+          </button>
+          <button class="ds-btn ds-btn--secondary ds-btn--block" type="button">
+            <ArrowDownTrayIcon class="w-4 h-4" />
+            Block secondary
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Inputs / Form ================================================ -->
+    <section class="space-y-3">
+      <span class="ds-overline">Formulario</span>
+      <div class="ds-card grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="ds-label">Nombre completo</label>
+          <input v-model="form.nombre" class="ds-input" placeholder="Ej. Esteban R." />
+        </div>
+        <div>
+          <label class="ds-label">Cuota mensual</label>
+          <input
+            v-model="form.cuota"
+            class="ds-input"
+            :class="{ 'ds-input--error': form.error }"
+            placeholder="$ 50.000"
+            inputmode="numeric"
+          />
+          <p v-if="form.error" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+            La cuota debe ser mayor a cero.
+          </p>
+        </div>
+        <div class="sm:col-span-2">
+          <div class="ds-callout">
+            <InformationCircleIcon class="w-5 h-5 ds-callout__icon" />
+            <div>
+              <span class="ds-callout__title">Importante</span>
+              <span>El cambio de cuota se aplicará al siguiente periodo, no afecta meses ya generados.</span>
+            </div>
+          </div>
+        </div>
+        <div class="sm:col-span-2 flex justify-end gap-2">
+          <button class="ds-btn ds-btn--ghost" type="button" @click="resetForm">
+            Cancelar
+          </button>
+          <button class="ds-btn ds-btn--primary" type="button" @click="guardar">
+            <CheckIcon class="w-4 h-4" />
+            Guardar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Stat cards ================================================== -->
+    <section class="space-y-3">
+      <span class="ds-overline">KPIs</span>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="ds-stat-card">
+          <div class="ds-stat-card__icon">
+            <UsersIcon class="w-5 h-5" />
+          </div>
+          <p class="ds-stat-card__value">24</p>
+          <p class="ds-stat-card__label">Socios activos</p>
+        </div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-card__icon">
+            <BanknotesIcon class="w-5 h-5" />
+          </div>
+          <p class="ds-stat-card__value">$ 1.85M</p>
+          <p class="ds-stat-card__label">Prestado</p>
+        </div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-card__icon">
+            <ArrowTrendingUpIcon class="w-5 h-5" />
+          </div>
+          <p class="ds-stat-card__value">$ 320K</p>
+          <p class="ds-stat-card__label">Intereses</p>
+        </div>
+        <div class="ds-stat-card">
+          <div class="ds-stat-card__icon">
+            <CalendarIcon class="w-5 h-5" />
+          </div>
+          <p class="ds-stat-card__value">3</p>
+          <p class="ds-stat-card__label">Actividades</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Cards y badges ============================================== -->
+    <section class="space-y-3">
+      <span class="ds-overline">Tarjetas y badges</span>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="ds-card ds-card--hover">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-semibold text-slate-800">Cuota junio</p>
+              <p class="text-sm text-slate-500">Vence 30/06/2026</p>
+            </div>
+            <span class="ds-badge ds-badge--success">Pagada</span>
+          </div>
+          <p class="mt-3 text-2xl font-bold font-display text-[color:var(--brand-primary)]">
+            $ 50.000
+          </p>
+        </div>
+
+        <div class="ds-card ds-card--brand">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-semibold text-slate-800">Cuota julio</p>
+              <p class="text-sm text-slate-500">Vence 30/07/2026</p>
+            </div>
+            <span class="ds-badge ds-badge--warning">Pendiente</span>
+          </div>
+          <p class="mt-3 text-2xl font-bold font-display text-slate-800">
+            $ 50.000
+          </p>
+        </div>
+
+        <div class="ds-card">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-semibold text-slate-800">Cuota mayo</p>
+              <p class="text-sm text-slate-500">Vencida hace 12 días</p>
+            </div>
+            <span class="ds-badge ds-badge--danger">Atrasada</span>
+          </div>
+          <p class="mt-3 text-2xl font-bold font-display text-[color:var(--brand-danger)]">
+            $ 52.500
+          </p>
+        </div>
+
+        <div class="ds-card ds-card--elevated">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="font-semibold text-slate-800">Cuota agosto</p>
+              <p class="text-sm text-slate-500">Generada automáticamente</p>
+            </div>
+            <span class="ds-badge ds-badge--info">Próxima</span>
+          </div>
+          <p class="mt-3 text-2xl font-bold font-display text-slate-800">
+            $ 50.000
+          </p>
+        </div>
+
+        <div class="ds-card !p-4 sm:col-span-2 flex flex-wrap gap-2">
+          <span class="ds-badge ds-badge--brand">Marca</span>
+          <span class="ds-badge ds-badge--success">Éxito</span>
+          <span class="ds-badge ds-badge--warning">Alerta</span>
+          <span class="ds-badge ds-badge--danger">Crítica</span>
+          <span class="ds-badge ds-badge--info">Info</span>
+          <span class="ds-badge ds-badge--muted">Neutro</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Empty state ================================================= -->
+    <section class="space-y-3">
+      <span class="ds-overline">Empty state</span>
+      <div class="ds-empty-state">
+        <div class="ds-empty-state__header">
+          <div class="ds-empty-state__icon-wrap">
+            <UsersIcon class="w-7 h-7" />
+          </div>
+          <h3 class="ds-empty-state__title">No hay socios registrados</h3>
+          <p class="ds-empty-state__subtitle">
+            Agrega el primer socio para comenzar a gestionar las cuotas
+          </p>
+        </div>
+        <div class="ds-empty-state__body">
+          <button class="ds-btn ds-btn--primary ds-btn--block" type="button">
+            <PlusIcon class="w-5 h-5" />
+            Agregar Primer Socio
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Nati-Notificación =========================================== -->
+    <section class="space-y-3">
+      <span class="ds-overline">Nati-Notificación</span>
+      <div class="ds-card space-y-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-800">Variantes</h3>
+          <p class="text-sm text-slate-500">
+            Pulsa cada botón para ver el toast en la esquina superior derecha.
+            Las variantes <code class="font-mono">alerta</code> y
+            <code class="font-mono">critica</code> usan
+            <code class="font-mono">role="alert"</code> +
+            <code class="font-mono">aria-live="assertive"</code>.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3">
+          <button
+            class="nati-trigger nati-trigger--informacion"
+            type="button"
+            @click="nati.informacion('Tu sesión expira en 2 minutos por inactividad.', 'Información')"
+          >
+            <InformationCircleIcon class="w-5 h-5" />
+            <div class="text-left">
+              <p class="font-semibold">Información</p>
+              <p class="text-xs opacity-80">Mensaje neutro · 5000 ms</p>
+            </div>
+          </button>
+
+          <button
+            class="nati-trigger nati-trigger--exito"
+            type="button"
+            @click="nati.exito('Cuota registrada correctamente.', 'Listo')"
+          >
+            <CheckCircleIcon class="w-5 h-5" />
+            <div class="text-left">
+              <p class="font-semibold">Éxito</p>
+              <p class="text-xs opacity-80">Acción completada · 4500 ms</p>
+            </div>
+          </button>
+
+          <button
+            class="nati-trigger nati-trigger--alerta"
+            type="button"
+            @click="nati.alerta('Hay 3 cuotas a punto de vencer este mes.', 'Atención')"
+          >
+            <ExclamationTriangleIcon class="w-5 h-5" />
+            <div class="text-left">
+              <p class="font-semibold">Alerta</p>
+              <p class="text-xs opacity-80">Advertencia · 6500 ms</p>
+            </div>
+          </button>
+
+          <button
+            class="nati-trigger nati-trigger--critica"
+            type="button"
+            @click="nati.critica('No se pudo conectar con el servidor. Revisa tu conexión.', 'Sin conexión')"
+          >
+            <XCircleIcon class="w-5 h-5" />
+            <div class="text-left">
+              <p class="font-semibold">Crítica</p>
+              <p class="text-xs opacity-80">Error grave · 8000 ms</p>
+            </div>
+          </button>
+        </div>
+
+        <hr class="border-slate-100" />
+
+        <div class="flex flex-wrap gap-2">
+          <button class="ds-btn ds-btn--secondary" type="button" @click="lanzarStack">
+            <BellAlertIcon class="w-4 h-4" />
+            Lanzar las 4 en cadena
+          </button>
+          <button class="ds-btn ds-btn--ghost" type="button" @click="lanzarPersistente">
+            Toast persistente
+          </button>
+          <button class="ds-btn ds-btn--ghost" type="button" @click="store.clear()">
+            <XMarkIcon class="w-4 h-4" />
+            Limpiar todas
+          </button>
+        </div>
+
+        <pre class="bg-slate-50 border border-slate-100 rounded-lg p-3 text-xs text-slate-700 overflow-x-auto"><code>// API canónica del DS
+const nati = useNotificationStore()
+
+nati.informacion('Mensaje neutro')
+nati.exito('Pago registrado', 'Listo')
+nati.alerta('Cuota próxima a vencer')
+nati.critica('Sin conexión', 'Error')
+
+// Personalizada
+nati.show({
+  type: 'alerta',
+  title: 'Confirmar',
+  message: 'Esta acción no se puede deshacer',
+  duration: 0   // 0 = persistente
+})</code></pre>
+      </div>
+    </section>
+
+    <p class="text-center text-xs text-slate-400 pt-2">
+      Sistema de diseño Natillerapp · Mulish + #1B5E37 · Documentación en
+      <code class="font-mono">Funcionalidades/sistema-diseno.md</code>
+    </p>
+  </div>
+</template>
+
+<script setup>
+import { reactive } from 'vue'
+import { useNotificationStore } from '../../stores/notifications'
+import {
+  SwatchIcon,
+  SparklesIcon,
+  BellAlertIcon,
+  CheckIcon,
+  PencilIcon,
+  ArrowPathIcon,
+  TrashIcon,
+  PlusIcon,
+  ArrowDownTrayIcon,
+  InformationCircleIcon,
+  UsersIcon,
+  BanknotesIcon,
+  ArrowTrendingUpIcon,
+  CalendarIcon,
+  XMarkIcon
+} from '@heroicons/vue/24/outline'
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon
+} from '@heroicons/vue/24/solid'
+
+const store = useNotificationStore()
+const nati = store
+
+const form = reactive({
+  nombre: '',
+  cuota: '',
+  error: false
+})
+
+const tokens = [
+  { name: '--brand-primary',         label: 'Primary',         value: '#1B5E37' },
+  { name: '--brand-primary-hover',   label: 'Primary hover',   value: '#154a2d' },
+  { name: '--brand-primary-active',  label: 'Primary active',  value: '#124228' },
+  { name: '--brand-primary-soft',    label: 'Primary soft',    value: '#E8F5E9' },
+  { name: '--brand-shell-deep',      label: 'Shell deep',      value: '#0f3d22' },
+  { name: '--brand-backdrop-sage',   label: 'Backdrop sage',   value: '#C8D9C8' },
+  { name: '--brand-success',         label: 'Success',         value: '#15803d' },
+  { name: '--brand-warning',         label: 'Warning',         value: '#b45309' },
+  { name: '--brand-danger',          label: 'Danger',          value: '#dc2626' },
+  { name: '--brand-info',            label: 'Info',            value: '#1d4ed8' },
+  { name: '--surface-canvas',        label: 'Canvas',          value: 'hsl(220, 13%, 92%)' },
+  { name: '--surface-card',          label: 'Card',            value: '#ffffff' }
+]
+
+function guardar() {
+  if (!form.cuota || Number(String(form.cuota).replace(/\D/g, '')) <= 0) {
+    form.error = true
+    nati.alerta('Revisa los campos del formulario.', 'Datos incompletos')
+    return
+  }
+  form.error = false
+  nati.exito(`Cuota guardada: ${form.cuota}`, 'Cambios aplicados')
+}
+
+function resetForm() {
+  form.nombre = ''
+  form.cuota = ''
+  form.error = false
+  nati.informacion('Formulario reiniciado.')
+}
+
+function lanzarStack() {
+  nati.informacion('Generando reporte mensual…')
+  setTimeout(() => nati.exito('Reporte generado.'), 800)
+  setTimeout(() => nati.alerta('2 cuotas siguen pendientes.'), 1600)
+  setTimeout(() => nati.critica('Falló el envío de comprobante a 1 socio.'), 2400)
+}
+
+function lanzarPersistente() {
+  nati.show({
+    type: 'alerta',
+    title: 'Acción requerida',
+    message: 'Este toast no se cierra solo. Pulsa la X para descartar.',
+    duration: 0
+  })
+}
+
+function lanzarDemo() {
+  nati.exito('Sistema de diseño cargado correctamente.', 'Mulish + verde bosque')
+  setTimeout(() => nati.informacion('Explora cada sección de la página.'), 700)
+}
+</script>
+
+<style scoped>
+.ds-demo-page {
+  font-family: var(--font-body);
+  color: #0f172a;
+}
+
+.ds-demo-page :deep(code) {
+  font-family: var(--font-brand-mono);
+  font-size: 0.75em;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.05em 0.35em;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+/* Botones disparadores de variantes — visualmente comunican el color de cada toast */
+.nati-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--surface-divider, rgba(15, 23, 42, 0.08));
+  border-radius: var(--radius-md, 0.75rem);
+  color: var(--nati-color);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 150ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nati-trigger::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--nati-color);
+}
+
+.nati-trigger:hover {
+  border-color: var(--nati-color);
+  box-shadow: 0 4px 14px -4px var(--nati-shadow, rgba(15, 83, 45, 0.18));
+}
+
+.nati-trigger:active {
+  transform: scale(0.99);
+}
+
+.nati-trigger--informacion { --nati-color: var(--brand-primary, #1B5E37); --nati-shadow: rgba(27, 94, 55, 0.22); }
+.nati-trigger--exito       { --nati-color: var(--brand-success, #15803d); --nati-shadow: rgba(21, 128, 61, 0.22); }
+.nati-trigger--alerta      { --nati-color: var(--brand-warning, #b45309); --nati-shadow: rgba(180, 83, 9, 0.22); }
+.nati-trigger--critica     { --nati-color: var(--brand-danger, #dc2626);  --nati-shadow: rgba(220, 38, 38, 0.22); }
+</style>

@@ -1,50 +1,61 @@
 <template>
-  <div class="dash-empty-natilleras">
-    <!-- Ilustración: círculo punteado + menta + alcancía -->
-    <div class="dash-empty-natilleras__illustration" aria-hidden="true">
-      <div class="dash-empty-natilleras__ring-outer">
-        <div class="dash-empty-natilleras__ring-inner">
-          <PiggyBankIcon class="dash-empty-natilleras__piggy" />
+  <div
+    class="dash-empty-natilleras"
+    :class="{ 'dash-empty-natilleras--with-sidebar': showComoFunciona }"
+  >
+    <div class="dash-empty-natilleras__grid">
+      <div class="dash-empty-natilleras__lead">
+        <!-- Ilustración: círculo punteado + menta + alcancía -->
+        <div class="dash-empty-natilleras__illustration" aria-hidden="true">
+          <div class="dash-empty-natilleras__ring-outer">
+            <div class="dash-empty-natilleras__ring-inner">
+              <PiggyBankIcon class="dash-empty-natilleras__piggy" />
+            </div>
+          </div>
         </div>
+
+        <h3 class="dash-empty-natilleras__title">
+          {{ title }}
+        </h3>
+        <p class="dash-empty-natilleras__desc">
+          {{ description }}
+        </p>
+
+        <router-link
+          :to="ctaTo"
+          class="dash-empty-natilleras__cta"
+        >
+          <span class="dash-empty-natilleras__cta-icon" aria-hidden="true">+</span>
+          <span>{{ ctaLabel }}</span>
+        </router-link>
       </div>
+
+      <div v-if="showComoFunciona" class="dash-empty-natilleras__divider" role="presentation" />
+
+      <section
+        v-if="showComoFunciona"
+        class="dash-empty-natilleras__how"
+        aria-labelledby="dash-empty-how-heading"
+      >
+        <h4 id="dash-empty-how-heading" class="dash-empty-natilleras__how-title">
+          Como funciona
+        </h4>
+        <ul class="dash-empty-natilleras__how-list">
+          <li class="dash-empty-natilleras__how-item">
+            <UserPlusIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
+            <span>Invita a los socios de tu grupo para que se unan</span>
+          </li>
+          <li class="dash-empty-natilleras__how-item">
+            <CalendarIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
+            <span>Define la cuota y la periodicidad de los pagos</span>
+          </li>
+          <li class="dash-empty-natilleras__how-item">
+            <PresentationChartLineIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
+            <span>Lleva el control de pagos, multas y sorteos</span>
+          </li>
+        </ul>
+      </section>
     </div>
-
-    <h3 class="dash-empty-natilleras__title">
-      {{ title }}
-    </h3>
-    <p class="dash-empty-natilleras__desc">
-      {{ description }}
-    </p>
-
-    <router-link
-      :to="ctaTo"
-      class="dash-empty-natilleras__cta"
-    >
-      <span class="dash-empty-natilleras__cta-icon" aria-hidden="true">+</span>
-      <span>{{ ctaLabel }}</span>
-    </router-link>
-
-    <div v-if="showComoFunciona" class="dash-empty-natilleras__divider" role="presentation" />
-
-    <section v-if="showComoFunciona" class="dash-empty-natilleras__how" aria-labelledby="dash-empty-how-heading">
-      <h4 id="dash-empty-how-heading" class="dash-empty-natilleras__how-title">
-        Como funciona
-      </h4>
-      <ul class="dash-empty-natilleras__how-list">
-        <li class="dash-empty-natilleras__how-item">
-          <UserPlusIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
-          <span>Invita a los socios de tu grupo para que se unan</span>
-        </li>
-        <li class="dash-empty-natilleras__how-item">
-          <CalendarIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
-          <span>Define la cuota y la periodicidad de los pagos</span>
-        </li>
-        <li class="dash-empty-natilleras__how-item">
-          <PresentationChartLineIcon class="dash-empty-natilleras__how-icon" aria-hidden="true" />
-          <span>Lleva el control de pagos, multas y sorteos</span>
-        </li>
-      </ul>
-    </section>
   </div>
 </template>
 
@@ -105,10 +116,49 @@ defineProps({
   }
 }
 
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar {
+    max-width: none;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 2.25rem 2.5rem 2.5rem;
+    border-radius: 1.25rem;
+  }
+}
+
+.dash-empty-natilleras__grid {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0 2.5rem;
+    align-items: center;
+  }
+}
+
+.dash-empty-natilleras__lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .dash-empty-natilleras__illustration {
   display: flex;
   justify-content: center;
   margin-bottom: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__illustration {
+    margin-bottom: 1.5rem;
+  }
 }
 
 .dash-empty-natilleras__ring-outer {
@@ -185,6 +235,12 @@ defineProps({
   font-weight: 400;
 }
 
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__desc {
+    max-width: 26rem;
+  }
+}
+
 .dash-empty-natilleras__cta {
   display: inline-flex;
   align-items: center;
@@ -231,11 +287,30 @@ defineProps({
   background: hsl(120 8% 88%);
 }
 
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__divider {
+    display: none;
+  }
+}
+
 .dash-empty-natilleras__how {
   text-align: left;
   max-width: 22rem;
   margin-left: auto;
   margin-right: auto;
+}
+
+@media (min-width: 1024px) {
+  .dash-empty-natilleras--with-sidebar .dash-empty-natilleras__how {
+    max-width: none;
+    margin: 0;
+    padding-left: 2.5rem;
+    border-left: 1px solid hsl(120 8% 88%);
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 }
 
 .dash-empty-natilleras__how-title {

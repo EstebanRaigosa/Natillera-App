@@ -45,7 +45,7 @@
       <div class="mt-6 flex flex-shrink-0 flex-col-reverse gap-3 border-t border-transparent pt-2 sm:flex-row sm:justify-end">
         <button
           type="button"
-          class="inline-flex min-h-[48px] w-full items-center justify-center rounded-full border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:min-w-[8rem]"
+          class="btn-modal-secondary inline-flex w-full sm:w-auto sm:min-w-[8rem] disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="loading"
           @click="handleClose"
         >

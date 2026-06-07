@@ -7,8 +7,7 @@
     </div>
 
     <!-- Header -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex flex-wrap items-center gap-4">
           <div class="flex items-center gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
@@ -434,6 +433,7 @@
                       <th class="py-3 px-2">Socio</th>
                       <th class="py-3 px-2 whitespace-nowrap">Fecha mov.</th>
                       <th class="py-3 px-2">Forma de pago</th>
+                      <th class="py-3 px-2">Observaciones</th>
                       <th class="py-3 px-2 text-right">Monto</th>
                     </tr>
                   </thead>
@@ -454,6 +454,10 @@
                       <td class="py-2.5 px-2">
                         <span :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">{{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}</span>
                       </td>
+                      <td class="py-2.5 px-2 text-gray-600 max-w-[260px]">
+                        <span v-if="item.observaciones" class="truncate block" :title="item.observaciones">{{ item.observaciones }}</span>
+                        <span v-else class="text-gray-300">—</span>
+                      </td>
                       <td class="py-2.5 px-2 text-right font-semibold" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
                         {{ item.monto >= 0 ? '+' : '' }}${{ formatMoney(item.monto) }}
                       </td>
@@ -461,7 +465,7 @@
                   </tbody>
                   <tfoot class="border-t-2 border-gray-200">
                     <tr class="font-bold text-gray-800">
-                      <td colspan="4" class="py-3 px-2">Total (filtrado)</td>
+                      <td colspan="5" class="py-3 px-2">Total (filtrado)</td>
                       <td class="py-3 px-2 text-right" :class="totalDetalleFiltrado >= 0 ? 'text-green-600' : 'text-red-600'">
                         {{ totalDetalleFiltrado >= 0 ? '+' : '' }}${{ formatMoney(totalDetalleFiltrado) }}
                       </td>
@@ -488,6 +492,9 @@
                     <p class="text-xs text-gray-500 tabular-nums">{{ formatDate(item.fecha_movimiento) }}</p>
                     <p class="text-xs" :class="item.forma_pago === 'transferencia' ? 'text-blue-600' : 'text-green-600'">
                       {{ item.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo' }}
+                    </p>
+                    <p v-if="item.observaciones" class="text-xs text-gray-500 mt-0.5 line-clamp-2" :title="item.observaciones">
+                      {{ item.observaciones }}
                     </p>
                   </div>
                   <span class="font-bold shrink-0 tabular-nums" :class="item.monto >= 0 ? 'text-green-600' : 'text-red-600'">
@@ -1139,7 +1146,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notifications'
 import BackButton from '../../components/BackButton.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -1165,7 +1172,15 @@ import {
   ChevronRightIcon,
   PencilIcon
 } from '@heroicons/vue/24/outline'
-import * as XLSX from 'xlsx-js-style'
+// xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
+// el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
+let XLSX = null
+async function ensureXLSX() {
+  if (!XLSX) {
+    const mod = await import('xlsx-js-style')
+    XLSX = mod.default || mod
+  }
+}
 
 const route = useRoute()
 const id = computed(() => route.params.id)
@@ -1193,7 +1208,10 @@ const CATEGORIAS_DETALLE = [
   { value: 'prestamo', label: 'Préstamo' },
   { value: 'interes_anticipado', label: 'Utilidad por interés anticipado' },
   { value: 'liquidacion_salida', label: 'Liquidación por salida' },
-  { value: 'premio_rifa', label: 'Premio rifa' }
+  { value: 'premio_rifa', label: 'Premio rifa' },
+  { value: 'movimiento_ingreso', label: 'Ingreso' },
+  { value: 'movimiento_egreso', label: 'Egreso' },
+  { value: 'movimiento_traslado', label: 'Traslado' }
 ]
 const filtroDetalleCategorias = ref([]) // Array: vacío = todas, si tiene valores = filtrar por esas
 const filtroDetalleFormaPago = ref('todos')
@@ -1205,7 +1223,8 @@ const OPCIONES_ORDENAR = [
   { value: 'socio', label: 'Socio' },
   { value: 'concepto', label: 'Concepto' },
   { value: 'monto', label: 'Monto' },
-  { value: 'periodo', label: 'Período' }
+  { value: 'periodo', label: 'Período' },
+  { value: 'fecha_movimiento', label: 'Fecha de movimiento' }
 ]
 
 const etiquetaOrdenDetalle = computed(() => {
@@ -1251,6 +1270,11 @@ function compararDetallePorCriterio(a, b, criterio) {
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}`
     return keyB.localeCompare(keyA)
   }
+  if (criterio === 'fecha_movimiento') {
+    const tA = a.fecha_movimiento ? new Date(a.fecha_movimiento).getTime() : 0
+    const tB = b.fecha_movimiento ? new Date(b.fecha_movimiento).getTime() : 0
+    return tB - tA
+  }
   return 0
 }
 const efectivoContado = ref(0)
@@ -1271,7 +1295,8 @@ const LABELS_UTILIDAD_SIMULADOR = {
   venta: 'Ventas',
   evento: 'Eventos',
   otro: 'Otros',
-  sanciones: 'Sanciones'
+  sanciones: 'Sanciones',
+  utilidades_adicionales: 'Adicionales'
 }
 async function ejecutarSimulador() {
   simuladorError.value = ''
@@ -1370,11 +1395,13 @@ const puedeGestionarCuotas = computed(() => {
 
 // Totales esperados: calculados desde detalleItems (fuente fiable) + movimientos
 // detalleItems incluye: cuotas, sanciones, actividades, GMF 4×1000 (historial transferencias), préstamos (negativo)
+// Tipos que NO cuentan como recaudo estructural: movimientos manuales (ingresos, egresos, traslados) — ya se suman aparte vía movimientosXNeto
+const TIPOS_NO_RECAUDO_ESTRUCTURAL = ['movimiento_ingreso', 'movimiento_egreso', 'movimiento_traslado']
 const recaudadoEfectivo = computed(() => {
-  return detalleItems.value.filter(i => (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+  return detalleItems.value.filter(i => !TIPOS_NO_RECAUDO_ESTRUCTURAL.includes(i.tipo) && (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 const recaudadoTransferencia = computed(() => {
-  return detalleItems.value.filter(i => (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
+  return detalleItems.value.filter(i => !TIPOS_NO_RECAUDO_ESTRUCTURAL.includes(i.tipo) && (i.forma_pago || 'efectivo') === 'transferencia' && (i.monto || 0) > 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0)
 })
 const recaudadoGmf4x1000 = computed(() => {
   return detalleItems.value
@@ -1611,7 +1638,8 @@ const detalleFiltrado = computed(() => {
     list = list.filter(i => {
       const concepto = (i.concepto || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
       const socio = (i.socio || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
-      return concepto.includes(busqueda) || socio.includes(busqueda)
+      const obs = (i.observaciones || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+      return concepto.includes(busqueda) || socio.includes(busqueda) || obs.includes(busqueda)
     })
   }
   const criterios = ordenarDetalleCriterios.value.length ? ordenarDetalleCriterios.value : ['socio']
@@ -1686,14 +1714,14 @@ function toggleFiltroCategoria(value) {
 }
 
 function getConceptoLabel(tipo) {
-  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', gmf_4x1000: '4x1000', prestamo: 'Préstamo', interes_anticipado: 'Utilidad por interés anticipado', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa' }
+  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', gmf_4x1000: '4x1000', prestamo: 'Préstamo', interes_anticipado: 'Utilidad por interés anticipado', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa', movimiento_ingreso: 'Ingreso', movimiento_egreso: 'Egreso', movimiento_traslado: 'Traslado' }
   return map[tipo] || tipo
 }
 function getConceptoClass(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
     return 'bg-orange-100 text-orange-800 border border-orange-300/60'
   }
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800' }
+  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800', movimiento_ingreso: 'bg-lime-100 text-lime-800', movimiento_egreso: 'bg-rose-100 text-rose-800', movimiento_traslado: 'bg-indigo-100 text-indigo-800' }
   return map[tipo] || 'bg-gray-100 text-gray-700'
 }
 function getMesLabel(mes) {
@@ -1741,6 +1769,7 @@ async function exportarAExcel() {
   if (detalleFiltrado.value.length === 0) return
   exportando.value = true
   try {
+    await ensureXLSX()
     const datosExportar = detalleFiltrado.value
       .slice()
       .sort((a, b) => {
@@ -1758,9 +1787,10 @@ async function exportarAExcel() {
         Concepto: i.concepto,
         Clasificación: getConceptoLabel(i.tipo),
         Socio: i.socio || '—',
-        'Fecha mov.': formatDate(i.fecha_movimiento),
+        'Fecha mov.': parseFechaExcel(i.fecha_movimiento),
         'Forma de pago': i.forma_pago === 'transferencia' ? 'Transferencia' : 'Efectivo',
         Período: formatPeriodoExport(natillera.value, i),
+        Observaciones: i.observaciones || '',
         Monto: parseFloat(i.monto) || 0
       }))
 
@@ -1777,7 +1807,7 @@ async function exportarAExcel() {
       const monto = parseFloat(m.monto) || 0
       const montoSigned = m.tipo === 'entrada' ? monto : -monto
       return [
-        m.fecha ? formatDate(m.fecha) : '—',
+        parseFechaExcel(m.fecha),
         m.tipo === 'entrada' ? 'Entrada' : 'Salida',
         idsTraslado.has(m.id) ? 'Traslado' : 'Movimiento',
         formaPago,
@@ -1786,8 +1816,6 @@ async function exportarAExcel() {
       ]
     })
     const movSheetName = 'Movimientos de Caja'
-    const movDataRowStartExcel = 6 // En la hoja Movimientos, los datos empiezan en fila 6 (1-based)
-    const movDataRowEndExcel = movimientosExport.length === 0 ? 5 : 5 + movimientosExport.length
 
     const wb = XLSX.utils.book_new()
     const totalRowDetalle = 5 + datosExportar.length + 2 // 0-based: header 5 + data + empty + total
@@ -1805,14 +1833,14 @@ async function exportarAExcel() {
       ['Exportado:', new Date().toLocaleString('es-CO')],
       ['Filtros:', `Categoría: ${filtroDetalleCategorias.value.length === 0 ? 'Todas' : filtroDetalleCategorias.value.map(c => getConceptoLabel(c)).join(', ')} | Forma de pago: ${filtroDetalleFormaPago.value === 'todos' ? 'Todas' : filtroDetalleFormaPago.value}${filtroDetalleMes.value ? ` | Mes: ${getMesLabel(Number(filtroDetalleMes.value.split('-')[1]))} ${filtroDetalleMes.value.split('-')[0]}` : ''}`],
       [],
-      ['Socio', 'Concepto', 'Clasificación', 'Fecha mov.', 'Forma de pago', 'Período', 'Monto', ''],
-      ...datosExportar.map(d => [d.Socio, d.Concepto, d.Clasificación, d['Fecha mov.'], d['Forma de pago'], d.Período, d.Monto, '']),
+      ['Socio', 'Concepto', 'Clasificación', 'Fecha mov.', 'Forma de pago', 'Período', 'Observaciones', 'Monto'],
+      ...datosExportar.map(d => [d.Socio, d.Concepto, d.Clasificación, d['Fecha mov.'], d['Forma de pago'], d.Período, d.Observaciones, d.Monto]),
       [],
-      ['TOTAL', '', '', '', '', '', totalDetalleFiltrado.value, ''],
-      ['Total Efectivo (detalle)', '', '', '', '', '', 0, ''],
-      ['Total Transferencia (detalle)', '', '', '', '', '', 0, '']
+      ['TOTAL', '', '', '', '', '', '', totalDetalleFiltrado.value],
+      ['Total Efectivo (detalle)', '', '', '', '', '', '', 0],
+      ['Total Transferencia (detalle)', '', '', '', '', '', '', 0]
     ]
-    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const ws = XLSX.utils.aoa_to_sheet(wsData, { cellDates: true })
     ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: rowTotalTransferenciaDetalle, c: 7 } })
     ws['!freeze'] = { xSplit: 0, ySplit: 6, topLeftCell: 'A7', state: 'frozen' }
 
@@ -1861,8 +1889,8 @@ async function exportarAExcel() {
         const isSocioCol = col === 0
         ws[cell].s = {
           fill: { fgColor: blockColor, patternType: 'solid' },
-          font: { sz: 10, bold: isSocioCol, color: col === 6 ? (monto >= 0 ? { rgb: '047857' } : colorRojo) : { rgb: '1F2937' } },
-          alignment: { horizontal: col === 6 ? 'right' : 'left', vertical: 'center' },
+          font: { sz: 10, bold: isSocioCol, color: col === 7 ? (monto >= 0 ? { rgb: '047857' } : colorRojo) : { rgb: '1F2937' } },
+          alignment: { horizontal: col === 7 ? 'right' : 'left', vertical: 'center', wrapText: col === 6 },
           border: {
             top: { style: 'thin', color: { rgb: 'E5E7EB' } },
             bottom: borderBottom,
@@ -1870,21 +1898,23 @@ async function exportarAExcel() {
             right: { style: 'thin', color: { rgb: 'E5E7EB' } }
           }
         }
-        if (col === 6) ws[cell].z = monto >= 0 ? '#,##0' : '#,##0;[Red]-#,##0'
+        if (col === 7) ws[cell].z = monto >= 0 ? '#,##0' : '#,##0;[Red]-#,##0'
+        if (col === 3) ws[cell].z = 'dd/mm/yyyy'
       }
     }
 
     const cellTotalLabel = XLSX.utils.encode_cell({ r: totalRow, c: 0 })
-    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 6 })
+    const cellTotalVal = XLSX.utils.encode_cell({ r: totalRow, c: 7 })
     ws[cellTotalLabel].s = {
       fill: { fgColor: { rgb: 'CCFBF1' }, patternType: 'solid' },
       font: { bold: true, sz: 12, color: { rgb: '0F766E' } },
       alignment: { horizontal: 'left', vertical: 'center' },
       border: { top: { style: 'medium', color: colorTealOscuro }, bottom: { style: 'medium', color: colorTealOscuro }, left: { style: 'thin', color: colorTealOscuro }, right: { style: 'thin', color: colorTealOscuro } }
     }
-    const formulaTotal = movimientosExport.length > 0
-      ? `=SUM(G${detalleExcelStart}:G${detalleExcelEnd})+SUM('${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUM(G${detalleExcelStart}:G${detalleExcelEnd})`
+    // Los movimientos manuales (ingresos, egresos, traslados) ya viven en el detalle como tipos
+    // movimiento_ingreso/egreso/traslado, así que el total general solo suma el detalle filtrado.
+    // La hoja "Movimientos de Caja" se mantiene como referencia cruda (no se suma para evitar duplicación).
+    const formulaTotal = `=SUM(H${detalleExcelStart}:H${detalleExcelEnd})`
     ws[cellTotalVal].f = formulaTotal
     ws[cellTotalVal].t = 'n'
     if (ws[cellTotalVal].v != null) delete ws[cellTotalVal].v
@@ -1896,17 +1926,13 @@ async function exportarAExcel() {
     }
     ws[cellTotalVal].z = '#,##0;[Red]-#,##0'
 
-    // Totales por forma de pago en detalle + movimientos de caja (SUMIF detalle + SUMIF movimientos)
-    const formulaEfectivoDetalle = movimientosExport.length > 0
-      ? `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Efectivo",G${detalleExcelStart}:G${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Efectivo",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Efectivo",G${detalleExcelStart}:G${detalleExcelEnd})`
-    const formulaTransferenciaDetalle = movimientosExport.length > 0
-      ? `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Transferencia",G${detalleExcelStart}:G${detalleExcelEnd})+SUMIF('${movSheetName}'!D${movDataRowStartExcel}:D${movDataRowEndExcel},"Transferencia",'${movSheetName}'!F${movDataRowStartExcel}:F${movDataRowEndExcel})`
-      : `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Transferencia",G${detalleExcelStart}:G${detalleExcelEnd})`
+    // Totales por forma de pago — solo del detalle (los movimientos manuales ya están dentro)
+    const formulaEfectivoDetalle = `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Efectivo",H${detalleExcelStart}:H${detalleExcelEnd})`
+    const formulaTransferenciaDetalle = `=SUMIF(E${detalleExcelStart}:E${detalleExcelEnd},"Transferencia",H${detalleExcelStart}:H${detalleExcelEnd})`
     const cellEfectivoDetalleLabel = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 0 })
-    const cellEfectivoDetalleVal = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 6 })
+    const cellEfectivoDetalleVal = XLSX.utils.encode_cell({ r: rowTotalEfectivoDetalle, c: 7 })
     const cellTransferenciaDetalleLabel = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 0 })
-    const cellTransferenciaDetalleVal = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 6 })
+    const cellTransferenciaDetalleVal = XLSX.utils.encode_cell({ r: rowTotalTransferenciaDetalle, c: 7 })
     if (!ws[cellEfectivoDetalleLabel]) ws[cellEfectivoDetalleLabel] = { t: 's', v: 'Total Efectivo (detalle)' }
     ws[cellEfectivoDetalleLabel].s = {
       fill: { fgColor: { rgb: 'D1FAE5' }, patternType: 'solid' },
@@ -1944,7 +1970,7 @@ async function exportarAExcel() {
     }
     ws[cellTransferenciaDetalleVal].z = '#,##0;[Red]-#,##0'
 
-    ws['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 14 }]
+    ws['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 32 }, { wch: 14 }]
     ws['!merges'] = []
 
     // Hoja "Movimientos de Caja": entradas/salidas manuales con formato claro
@@ -1958,7 +1984,7 @@ async function exportarAExcel() {
       ['Fecha', 'Tipo', 'Concepto', 'Forma de pago', 'Descripción', 'Monto'],
       ...movimientosExport
     ]
-    const movWs = XLSX.utils.aoa_to_sheet(movWsData)
+    const movWs = XLSX.utils.aoa_to_sheet(movWsData, { cellDates: true })
     const movLastRow = movDataStart + movimientosExport.length + 4 // 0-based: título + subtítulo + exportado + vacío + header + datos
     movWs['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: movLastRow, c: 5 } })
     movWs['!freeze'] = { xSplit: 0, ySplit: 5, topLeftCell: 'A6', state: 'frozen' }
@@ -1991,6 +2017,7 @@ async function exportarAExcel() {
           border: { top: { style: 'thin', color: { rgb: 'E5E7EB' } }, bottom: { style: 'thin', color: { rgb: 'E5E7EB' } }, left: { style: 'thin', color: { rgb: 'E5E7EB' } }, right: { style: 'thin', color: { rgb: 'E5E7EB' } } }
         }
         if (col === 5) movWs[cell].z = esIngreso ? '#,##0' : '#,##0;[Red]-#,##0'
+        if (col === 0) movWs[cell].z = 'dd/mm/yyyy'
       }
     }
     movWs['!cols'] = [{ wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 14 }, { wch: 32 }, { wch: 14 }]
@@ -2013,6 +2040,7 @@ async function exportarSimuladorAExcel() {
   if (simuladorSociosFiltrados.value.length === 0) return
   exportandoSimulador.value = true
   try {
+    await ensureXLSX()
     const datosExportar = simuladorSociosFiltrados.value.map(d => {
       const totalFinal = parseFloat(d.totalFinal) || 0
       const aEntregar = totalFinal >= 0 ? totalFinal : 0
@@ -2123,6 +2151,19 @@ function formatDate(str) {
   if (!str) return '—'
   const d = new Date(str)
   return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// Devuelve Date para que Excel lo reconozca como fecha (tipo 'd' + numFmt dd/mm/yyyy).
+// Usa hora 12:00 local para evitar saltos por zona horaria negativa.
+function parseFechaExcel(str) {
+  if (!str) return null
+  // "YYYY-MM-DD" (sin hora): construir como fecha LOCAL al mediodía.
+  if (typeof str === 'string') {
+    const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12, 0, 0)
+  }
+  const d = new Date(str)
+  return isNaN(d.getTime()) ? null : d
 }
 
 // Funciones helper para movimientos
@@ -2392,6 +2433,75 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     })
   })
 
+  // Movimientos manuales (ingresos, egresos, traslados): excluir los que ya generaron items específicos
+  const idsConsumidos = new Set([
+    ...premiosFromMov.map(m => m.id).filter(Boolean),
+    ...liquidacionesFromMov.map(m => m.id).filter(Boolean),
+    ...(movimientosData || []).filter(esMovEntradaRecaudoLiquidada).map(m => m.id).filter(Boolean)
+  ])
+  const movimientosManuales = (movimientosData || []).filter(m => m && !idsConsumidos.has(m.id))
+  const fechaNormSimple = (s) => {
+    if (!s) return ''
+    const d = new Date(s)
+    if (isNaN(d.getTime())) return String(s).slice(0, 10)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+  const idsTrasladoDetalle = new Set()
+  movimientosManuales.forEach(m1 => {
+    if (idsTrasladoDetalle.has(m1.id)) return
+    const monto1 = parseFloat(m1.monto ?? m1.Monto) || 0
+    if (monto1 <= 0) return
+    const fecha1 = fechaNormSimple(m1.fecha)
+    const par = movimientosManuales.find(m2 =>
+      m2.id !== m1.id &&
+      !idsTrasladoDetalle.has(m2.id) &&
+      m2.tipo !== m1.tipo &&
+      (m2.forma_pago ?? m2.Forma_pago) !== (m1.forma_pago ?? m1.Forma_pago) &&
+      fechaNormSimple(m2.fecha) === fecha1 &&
+      (parseFloat(m2.monto ?? m2.Monto) || 0) === monto1
+    )
+    if (par) {
+      idsTrasladoDetalle.add(m1.id)
+      idsTrasladoDetalle.add(par.id)
+    }
+  })
+  movimientosManuales.forEach(m => {
+    const fp = tipoPagoMov(m.forma_pago ?? m.Forma_pago)
+    const monto = parseFloat(m.monto ?? m.Monto) || 0
+    if (monto <= 0) return
+    const descRaw = (m.descripcion || m.Descripcion || '').toString().trim()
+    const fechaMov = m.fecha ? new Date(m.fecha) : null
+    const mes = fechaMov && !isNaN(fechaMov.getTime()) ? fechaMov.getMonth() + 1 : undefined
+    const anio = fechaMov && !isNaN(fechaMov.getTime()) ? fechaMov.getFullYear() : undefined
+    const esTraslado = idsTrasladoDetalle.has(m.id)
+    let tipo, montoFinal, concepto
+    if (esTraslado) {
+      tipo = 'movimiento_traslado'
+      montoFinal = m.tipo === 'entrada' ? monto : -monto
+      concepto = 'Traslado'
+    } else if (m.tipo === 'entrada') {
+      tipo = 'movimiento_ingreso'
+      montoFinal = monto
+      concepto = 'Ingreso'
+    } else {
+      tipo = 'movimiento_egreso'
+      montoFinal = -monto
+      concepto = 'Egreso'
+    }
+    items.push({
+      tipo,
+      concepto,
+      socio: '—',
+      forma_pago: fp,
+      monto: montoFinal,
+      mes,
+      anio,
+      socioEsMensual: true,
+      fecha_movimiento: m.fecha || null,
+      observaciones: descRaw || ''
+    })
+  })
+
   // GMF 4×1000 por abono en transferencia (desde historial_pagos_cuota; un registro por fila de historial)
   ;(historialImpuesto4x1000 || []).forEach(h => {
     const imp = parseFloat(h.impuesto_4x1000) || 0
@@ -2420,7 +2530,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
   })
 
   // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, interes_anticipado, prestamo, liquidacion_salida, premio_rifa)
-  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4 }
+  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4, movimiento_ingreso: 5, movimiento_egreso: 5.5, movimiento_traslado: 6 }
   items.sort((a, b) => {
     const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}-${ordenTipo[a.tipo] ?? 4}`
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}-${ordenTipo[b.tipo] ?? 4}`

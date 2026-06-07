@@ -1,2009 +1,2447 @@
 <template>
-  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative pb-6">
-    <!-- Efectos decorativos de fondo -->
-    <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
-      <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
-      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
-            <BackButton :to="`/natilleras/${id}`" :inline="true" />
-            <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div class="min-w-0">
-              <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Socios</h1>
-              <p class="hidden sm:block text-gray-500 mt-0.5 text-sm">Gestiona los participantes y sus cuotas personalizadas</p>
-            </div>
+  <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-6">
+    <!-- Page header (DS) — patrón unificado Socios/Actividades/Cuotas/Préstamos -->
+    <header ref="headerRef" class="ds-page-header">
+      <div class="ds-page-header__row">
+        <div class="ds-page-header__lead">
+          <BackButton :to="`/natilleras/${id}`" :inline="true" />
+          <div class="ds-page-header__icon">
+            <UsersIcon class="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div class="flex flex-wrap gap-2 justify-end sm:justify-end w-full sm:w-auto shrink-0">
-            <button v-if="!esVisor" @click="modalImportar = true" class="hidden md:inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 hover:shadow-md transition-all shadow-sm">
-              <ArrowUpTrayIcon class="w-5 h-5" />
-              <span>Importar CSV</span>
-            </button>
-            <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center justify-center gap-2 w-full sm:w-auto">
-              <PlusIcon class="w-5 h-5" />
-              <span>Agregar Socio</span>
-            </button>
+          <div class="min-w-0 flex-1">
+            <h1 class="ds-page-header__title">Socios</h1>
+            <p class="ds-page-header__sub hidden sm:block">Gestiona los participantes y sus cuotas personalizadas</p>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Barra de búsqueda -->
-    <div v-if="sociosStore.sociosNatillera.length > 0" class="relative">
-      <div class="relative bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-4 shadow-lg">
-        <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-6 top-1/2 -translate-y-1/2" />
-        <input 
-          v-model="busqueda"
-          type="text"
-          placeholder="Buscar socio por nombre, documento o teléfono..."
-          class="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-700 placeholder-gray-400"
-          @keydown.esc="busqueda = ''"
-        />
-        <button 
-          v-if="busqueda"
-          @click="busqueda = ''"
-          class="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Limpiar búsqueda"
-        >
-          <XMarkIcon class="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-
-    <!-- Lista de socios -->
-    <div v-if="cargaInicial && sociosStore.loading" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-400 mt-4">Cargando socios...</p>
-    </div>
-
-    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-      <!-- Círculos decorativos -->
-      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-      <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-400/10 to-natillera-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-      
-      <div class="relative z-10">
-        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-natillera-500 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-natillera-500/30">
-          <UsersIcon class="w-10 h-10 text-white" />
-        </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
-          No hay socios registrados
-        </h3>
-        <p class="text-gray-500 mb-8 text-sm sm:text-base">
-          Agrega el primer socio para comenzar a gestionar las cuotas
-        </p>
-        <button v-if="!esVisor" @click="abrirModalAgregar" class="btn-primary inline-flex items-center gap-2">
-          <PlusIcon class="w-5 h-5" />
-          Agregar Primer Socio
-        </button>
-      </div>
-    </div>
-
-    <!-- Sin resultados de búsqueda -->
-    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length > 0 && sociosFiltrados.length === 0" class="relative bg-gradient-to-br from-white via-gray-50/30 to-gray-50/20 rounded-3xl p-8 sm:p-12 border border-gray-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-      <!-- Círculos decorativos -->
-      <div class="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-gray-400/10 to-gray-400/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-      <div class="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-gray-400/10 to-gray-400/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2"></div>
-      
-      <div class="relative z-10">
-        <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-400 to-gray-500 rounded-3xl flex items-center justify-center shadow-lg">
-          <MagnifyingGlassIcon class="w-10 h-10 text-white" />
-        </div>
-        <h3 class="font-display font-bold text-gray-800 text-xl sm:text-2xl mb-2">
-          No se encontraron socios
-        </h3>
-        <p class="text-gray-500 mb-8 text-sm sm:text-base">
-          No hay socios que coincidan con "{{ busqueda }}"
-        </p>
-        <button @click="busqueda = ''" class="btn-secondary inline-flex items-center gap-2">
-          <XMarkIcon class="w-4 h-4" />
-          Limpiar búsqueda
-        </button>
-      </div>
-    </div>
-
-    <TransitionGroup 
-      v-else-if="sociosFiltrados.length > 0" 
-      name="socio-card" 
-      tag="div" 
-      class="grid gap-4 sm:gap-5 lg:grid-cols-2"
-    >
-      <div 
-        v-for="sn in sociosFiltrados" 
-        :key="sn.id"
-        :class="[
-          'relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-2xl p-5 sm:p-6 border border-natillera-200/50 shadow-lg transition-all duration-300 overflow-hidden group socio-card-item',
-          sn.estado === 'inactivo' 
-            ? 'opacity-60 grayscale cursor-not-allowed' 
-            : 'hover:shadow-2xl hover:shadow-natillera-500/10 hover:-translate-y-1'
-        ]"
-      >
-        <!-- Círculo decorativo -->
-        <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-natillera-400/10 to-emerald-400/10 rounded-full blur-xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500"></div>
-        
-        <div 
-          :class="[
-            'relative z-10',
-            'cursor-pointer'
-          ]"
-          @click="sn.estado === 'activo' ? verDetalleSocio(sn) : verComprobanteSalida(sn)"
-        >
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-              <img 
-                :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)" 
-                :alt="sn.socio?.nombre"
-                class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-natillera-200 shadow-md flex-shrink-0 object-cover group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300"
-              />
-              <div class="flex-1 min-w-0">
-                <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-1 truncate">
-                  {{ sn.socio?.nombre }}
-                </h3>
-                <p class="text-sm text-gray-500 truncate mt-1 flex items-center gap-1.5">
-                  <EnvelopeIcon class="w-3.5 h-3.5 flex-shrink-0" />
-                  <span v-if="sn.socio?.email">{{ sn.socio.email }}</span>
-                  <span v-else class="text-gray-400">Sin correo</span>
-                </p>
-                <p class="text-sm text-gray-500 truncate mt-1 flex items-center gap-1.5">
-                  <PhoneIcon class="w-3.5 h-3.5 flex-shrink-0" />
-                  <span v-if="sn.socio?.telefono">{{ sn.socio.telefono }}</span>
-                  <span v-else class="text-gray-400">Sin teléfono</span>
-                </p>
-              </div>
-            </div>
-            <span 
-              :class="[
-                'badge flex-shrink-0',
-                sn.estado === 'activo' ? 'badge-success' : 'badge-warning'
-              ]"
-            >
-              {{ sn.estado }}
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-4">
-            <div class="relative p-4 bg-gradient-to-br from-natillera-50 to-emerald-50 rounded-xl border border-natillera-200/50 shadow-sm group-hover:shadow-md transition-shadow">
-              <p class="text-xs text-gray-500 mb-1.5 font-medium">Cuota Individual</p>
-              <p class="font-bold text-natillera-700 text-lg sm:text-xl">${{ formatMoney(sn.valor_cuota_individual) }}</p>
-            </div>
-            <div class="relative p-4 rounded-xl border shadow-sm group-hover:shadow-md transition-shadow" :class="sn.periodicidad === 'quincenal' ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200/50' : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200/50'">
-              <p class="text-xs text-gray-500 mb-1.5 font-medium">Periodicidad</p>
-              <p class="font-bold text-lg sm:text-xl" :class="sn.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
-                {{ sn.periodicidad === 'quincenal' ? '🗓️ Quincenal' : '📅 Mensual' }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-end pt-4 border-t border-gray-200/50">
-            <div class="flex gap-2 flex-shrink-0">
-              <!-- Botones solo visibles cuando está activo -->
-              <template v-if="sn.estado === 'activo'">
-                <button 
-                  @click.stop="verCuotasSocio(sn)"
-                  class="px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-natillera-500 to-natillera-600 hover:from-natillera-600 hover:to-natillera-700 rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
-                  title="Ver cuotas"
-                >
-                  Ver cuotas
-                </button>
-                <button 
-                  v-if="!esVisor"
-                  @click.stop="editarSocio(sn)"
-                  class="p-2 text-blue-600 hover:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-indigo-600 bg-blue-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
-                  title="Editar"
-                  aria-label="Editar socio"
-                >
-                  <PencilIcon class="w-5 h-5" />
-                </button>
-                <button 
-                  v-if="!esVisor"
-                  @click.stop="confirmarEliminarSocio(sn)"
-                  class="p-2 text-red-500 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-600 bg-red-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
-                  title="Eliminar socio"
-                  aria-label="Eliminar socio"
-                >
-                  <TrashIcon class="w-5 h-5" />
-                </button>
-                <button 
-                  v-if="!esVisor"
-                  @click.stop="abrirModalDesactivar(sn)"
-                  class="p-2 text-amber-600 hover:text-white hover:bg-gradient-to-r hover:from-amber-500 hover:to-orange-600 bg-amber-50 rounded-lg transition-all hover:scale-110 shadow-sm hover:shadow-md flex items-center justify-center"
-                  title="Desactivar"
-                  aria-label="Desactivar socio"
-                >
-                  <XCircleIcon class="w-5 h-5" />
-                </button>
-              </template>
-              <!-- Solo botón de activar cuando está inactivo - Destacado con color vibrante -->
-              <button 
-                v-else-if="!esVisor"
-                @click.stop="abrirModalActivar(sn)"
-                class="px-4 py-2.5 text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 border-2 border-green-400 rounded-lg transition-all hover:scale-105 shadow-lg hover:shadow-xl font-semibold flex items-center gap-2 animate-pulse hover:animate-none relative z-20"
-                style="filter: none !important;"
-                title="Activar socio"
-                aria-label="Activar socio"
-              >
-                <CheckCircleIcon class="w-5 h-5" />
-                <span class="text-sm">Activar</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </TransitionGroup>
-
-    <!-- Modal Detalle Socio -->
-    <ModalWrapper
-      :show="!!modalDetalle"
-      :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto"
-      card-max-width="32rem"
-      @close="modalDetalle = false"
-    >
-        <!-- Header del modal -->
-        <div class="flex items-center gap-4 mb-6">
-          <img 
-            :src="getAvatarUrl(socioSeleccionado?.socio?.nombre || socioSeleccionado?.id, socioSeleccionado?.socio?.avatar_seed, socioSeleccionado?.socio?.avatar_style)" 
-            :alt="socioSeleccionado?.socio?.nombre"
-            class="w-16 h-16 rounded-2xl bg-natillera-100 shadow-lg"
-          />
-          <div class="flex-1">
-            <h3 class="text-xl font-display font-bold text-gray-800">
-              {{ socioSeleccionado?.socio?.nombre }}
-            </h3>
-            <span 
-              :class="[
-                'badge mt-1',
-                socioSeleccionado?.estado === 'activo' ? 'badge-success' : 'badge-warning'
-              ]"
-            >
-              {{ socioSeleccionado?.estado }}
-            </span>
-          </div>
-          <button 
-            @click="modalDetalle = false"
-            class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+          <!-- Móvil: CTA primario en línea con el título (sm+ usa el bloque de actions) -->
+          <button
+            v-if="!esVisor"
+            type="button"
+            class="ds-btn ds-btn--primary sm:hidden socios-header-add"
+            aria-label="Agregar socio"
+            @click="abrirModalAgregar"
           >
-            <XMarkIcon class="w-6 h-6" />
+            <PlusIcon class="w-5 h-5" />
           </button>
         </div>
+        <div class="ds-page-header__actions hidden sm:flex">
+          <button
+            v-if="!esVisor"
+            type="button"
+            class="ds-btn ds-btn--secondary hidden md:inline-flex"
+            aria-label="Importar socios desde CSV"
+            @click="modalImportar = true"
+          >
+            <ArrowUpTrayIcon class="w-4 h-4" />
+            <span>Importar CSV</span>
+          </button>
+          <button
+            v-if="!esVisor"
+            type="button"
+            class="ds-btn ds-btn--primary"
+            aria-label="Agregar nuevo socio"
+            @click="abrirModalAgregar"
+          >
+            <PlusIcon class="w-4 h-4" />
+            <span>Agregar socio</span>
+          </button>
+        </div>
+      </div>
+    </header>
 
-        <!-- Indicador de estado (siempre visible) -->
-        <div 
-          :class="[
-            'p-4 rounded-xl mb-4 flex items-center gap-3',
-            resumenSocio.alDia 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          ]"
+    <!-- Estado: cargando -->
+    <div v-if="cargaInicial && sociosStore.loading" class="text-center py-12">
+      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
+      <p class="text-slate-400 mt-4 text-sm">Cargando socios…</p>
+    </div>
+
+    <!-- Empty state: sin socios registrados (DS) -->
+    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length === 0" class="ds-empty-state">
+      <div class="ds-empty-state__header">
+        <div class="ds-empty-state__icon-wrap">
+          <UsersIcon class="w-7 h-7" />
+        </div>
+        <h3 class="ds-empty-state__title">No hay socios registrados</h3>
+        <p class="ds-empty-state__subtitle">
+          Agrega el primer socio para comenzar a gestionar las cuotas
+        </p>
+      </div>
+      <div class="ds-empty-state__body">
+        <button
+          v-if="!esVisor"
+          type="button"
+          class="ds-btn ds-btn--primary ds-btn--block"
+          @click="abrirModalAgregar"
         >
-          <component 
-            :is="resumenSocio.alDia ? CheckCircleIcon : ExclamationCircleIcon"
-            :class="[
-              'w-8 h-8',
-              resumenSocio.alDia ? 'text-green-500' : 'text-red-500'
-            ]"
+          <PlusIcon class="w-5 h-5" />
+          Agregar primer socio
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabla de socios (toolbar + tabla/lista + paginación) -->
+    <section
+      v-else
+      class="bg-white rounded-2xl border border-[color:var(--surface-divider)] shadow-[var(--shadow-xs)] overflow-hidden"
+    >
+      <!-- Toolbar: búsqueda + filtros -->
+      <div class="socios-toolbar">
+        <div class="socios-toolbar__search">
+          <MagnifyingGlassIcon class="w-4 h-4" aria-hidden="true" />
+          <input
+            ref="inputBusquedaSocios"
+            v-model="busqueda"
+            type="text"
+            :inputmode="inputModeBusqueda"
+            placeholder="Buscar por nombre"
+            class="socios-search__input"
+            aria-label="Buscar socio por nombre, documento, email o teléfono"
+            autocomplete="off"
+            @pointerdown="habilitarTecladoSoftBusqueda"
+            @touchstart.passive="habilitarTecladoSoftBusqueda"
+            @keydown="habilitarTecladoSoftBusqueda"
+            @keydown.esc="busqueda = ''"
           />
-          <div>
-            <p :class="['font-semibold', resumenSocio.alDia ? 'text-green-700' : 'text-red-700']">
-              {{ resumenSocio.alDia ? '¡Al día con los pagos!' : 'Tiene pagos pendientes' }}
-            </p>
-            <p class="text-sm text-gray-600">
-              {{ resumenSocio.alDia 
-                ? 'Este socio ha cumplido con todas sus cuotas' 
-                : `Debe ${resumenSocio.cuotasPendientes + resumenSocio.cuotasMora} cuota(s)` 
-              }}
-            </p>
-          </div>
+          <button
+            v-if="busqueda"
+            type="button"
+            class="socios-search__clear"
+            aria-label="Limpiar búsqueda"
+            @click="busqueda = ''"
+          >
+            <XMarkIcon class="w-4 h-4" />
+          </button>
+        </div>
+        <div class="socios-toolbar__filters">
+          <select v-model="filtroEstado" class="socios-filter" aria-label="Filtrar por estado">
+            <option value="todos">Estado: Todos</option>
+            <option value="activo">Estado: Activos</option>
+            <option value="inactivo">Estado: Inactivos</option>
+          </select>
+          <select v-model="filtroPeriodicidad" class="socios-filter" aria-label="Filtrar por periodicidad">
+            <option value="todos">Periodicidad: Todas</option>
+            <option value="mensual">Mensual</option>
+            <option value="quincenal">Quincenal</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Sin resultados con filtros aplicados -->
+      <div v-if="sociosFiltrados.length === 0" class="px-6 py-14 text-center">
+        <div class="w-14 h-14 mx-auto mb-4 bg-slate-100 rounded-2xl flex items-center justify-center">
+          <MagnifyingGlassIcon class="w-7 h-7 text-slate-400" />
+        </div>
+        <p class="font-display font-bold text-slate-800 text-base sm:text-lg mb-1">Sin resultados</p>
+        <p class="text-sm text-slate-500 mb-5">
+          No hay socios que coincidan con los filtros aplicados
+        </p>
+        <button type="button" class="ds-btn ds-btn--secondary" @click="limpiarFiltros">
+          <XMarkIcon class="w-4 h-4" />
+          Limpiar filtros
+        </button>
+      </div>
+
+      <template v-else>
+        <!-- Tabla — desktop (md+) -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="socios-table">
+            <thead>
+              <tr>
+                <th>Socio</th>
+                <th>Contacto</th>
+                <th>Estado</th>
+                <th>Cuota</th>
+                <th>Periodicidad</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="sn in sociosPaginados"
+                :key="sn.id"
+                class="socios-table__row"
+                :class="{ 'socios-table__row--inactivo': sn.estado !== 'activo' }"
+                tabindex="0"
+                :aria-label="`Ver detalle de ${sn.socio?.nombre}`"
+                @click="abrirDetalleFila(sn)"
+                @keydown.enter.self="abrirDetalleFila(sn)"
+              >
+                <td>
+                  <div class="flex items-center gap-3 min-w-0">
+                    <img
+                      :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)"
+                      :alt="sn.socio?.nombre"
+                      class="w-10 h-10 rounded-full object-cover bg-slate-100 flex-shrink-0"
+                    />
+                    <div class="min-w-0">
+                      <p class="font-bold text-slate-800 truncate leading-tight">
+                        {{ sn.socio?.nombre || 'Socio sin nombre' }}
+                      </p>
+                      <p class="text-[11px] text-slate-400 truncate font-mono mt-0.5">
+                        {{ sn.socio?.documento ? `ID: ${sn.socio.documento}` : '—' }}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <p class="text-sm text-slate-700 truncate">
+                    {{ sn.socio?.email || '—' }}
+                  </p>
+                  <p class="text-xs text-slate-400 truncate mt-0.5">
+                    {{ sn.socio?.telefono || 'Sin teléfono' }}
+                  </p>
+                </td>
+                <td>
+                  <span class="ds-badge" :class="badgeEstadoClase(sn.estado)">
+                    <span class="badge-dot" :class="dotEstadoClase(sn.estado)" aria-hidden="true"></span>
+                    {{ labelEstado(sn.estado) }}
+                  </span>
+                </td>
+                <td>
+                  <p class="font-bold text-slate-800 tabular-nums leading-tight">
+                    $ {{ formatMoney(sn.valor_cuota_individual) }}
+                  </p>
+                  <span
+                    v-if="estadoCuotaSocio(sn)"
+                    class="cuota-status"
+                    :class="estadoCuotaSocio(sn) === 'mora' ? 'cuota-status--mora' : 'cuota-status--ok'"
+                  >
+                    {{ estadoCuotaSocio(sn) === 'mora' ? 'Pendiente' : 'Al día' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="text-sm text-slate-600 capitalize">
+                    {{ sn.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex items-center justify-end gap-0.5">
+                    <template v-if="sn.estado === 'activo'">
+                      <button
+                        type="button"
+                        class="action-btn action-btn--brand"
+                        title="Ver cuotas"
+                        aria-label="Ver cuotas del socio"
+                        @click.stop="verCuotasSocio(sn)"
+                      >
+                        <CurrencyDollarIcon class="w-5 h-5" />
+                      </button>
+                      <button
+                        v-if="!esVisor"
+                        type="button"
+                        class="action-btn action-btn--info"
+                        title="Editar"
+                        aria-label="Editar socio"
+                        @click.stop="editarSocio(sn)"
+                      >
+                        <PencilIcon class="w-5 h-5" />
+                      </button>
+                      <button
+                        v-if="!esVisor"
+                        type="button"
+                        class="action-btn action-btn--warning"
+                        title="Desactivar"
+                        aria-label="Desactivar socio"
+                        @click.stop="abrirModalDesactivar(sn)"
+                      >
+                        <XCircleIcon class="w-5 h-5" />
+                      </button>
+                      <button
+                        v-if="!esVisor"
+                        type="button"
+                        class="action-btn action-btn--danger"
+                        title="Eliminar socio"
+                        aria-label="Eliminar socio"
+                        @click.stop="confirmarEliminarSocio(sn)"
+                      >
+                        <TrashIcon class="w-5 h-5" />
+                      </button>
+                    </template>
+                    <button
+                      v-else-if="!esVisor"
+                      type="button"
+                      class="ds-btn ds-btn--primary !min-h-[36px] !py-1.5 !px-3 !text-xs"
+                      title="Activar socio"
+                      aria-label="Activar socio"
+                      @click.stop="abrirModalActivar(sn)"
+                    >
+                      <CheckCircleIcon class="w-4 h-4" />
+                      Activar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- Secciones desplegables -->
-        <div class="space-y-3">
-          
-          <!-- Sección: Resumen Financiero (abierta por defecto) -->
-          <div class="border border-gray-200 rounded-xl overflow-hidden">
-            <button 
+        <!-- Lista — solo móvil (<md). El wrapper lleva md:hidden: el scoped .socios-mobile-list { display:flex } solía anular el hidden del <ul> en desktop. -->
+        <div class="md:hidden w-full">
+        <ul class="socios-mobile-list">
+          <li
+            v-for="sn in sociosPaginados"
+            :key="sn.id"
+            class="socios-mobile-card"
+            :class="{ 'socios-mobile-card--inactivo': sn.estado !== 'activo' }"
+          >
+            <button
               type="button"
-              @click="toggleSeccion('finanzas')"
-              class="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-colors text-left"
+              class="socios-mobile-card__main"
+              :aria-label="`Ver detalle de ${sn.socio?.nombre}`"
+              @click="abrirDetalleFila(sn)"
             >
-              <span class="font-semibold text-gray-800 flex items-center gap-2">
-                <BanknotesIcon class="w-5 h-5 text-green-600" />
-                Resumen Financiero
-              </span>
-              <ChevronDownIcon 
-                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'finanzas' ? 'rotate-180' : '']" 
-              />
-            </button>
-            <div v-show="seccionActiva === 'finanzas'" class="p-4 border-t border-gray-100 bg-white">
-              <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100">
-                  <p class="text-xs font-medium text-green-600 mb-1">TOTAL APORTADO</p>
-                  <p class="text-2xl font-bold text-green-700">${{ formatMoney(resumenSocio.totalAportado) }}</p>
-                </div>
-                <div class="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100">
-                  <p class="text-xs font-medium text-amber-600 mb-1">PENDIENTE</p>
-                  <p class="text-2xl font-bold text-amber-700">${{ formatMoney(resumenSocio.totalPendiente) }}</p>
-                </div>
-              </div>
-              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Cuotas</p>
-              <div class="grid grid-cols-3 gap-2">
-                <div class="text-center p-3 bg-gray-50 rounded-xl">
-                  <p class="text-xl font-bold text-green-600">{{ resumenSocio.cuotasPagadas }}</p>
-                  <p class="text-xs text-gray-500">Pagadas</p>
-                </div>
-                <div class="text-center p-3 bg-gray-50 rounded-xl">
-                  <p class="text-xl font-bold text-amber-600">{{ resumenSocio.cuotasPendientes }}</p>
-                  <p class="text-xs text-gray-500">Pendientes</p>
-                </div>
-                <div class="text-center p-3 bg-gray-50 rounded-xl">
-                  <p class="text-xl font-bold text-red-600">{{ resumenSocio.cuotasMora }}</p>
-                  <p class="text-xs text-gray-500">En Mora</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección: Información de Contacto -->
-          <div class="border border-gray-200 rounded-xl overflow-hidden">
-            <button 
-              type="button"
-              @click="toggleSeccion('contacto')"
-              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-            >
-              <span class="font-semibold text-gray-800 flex items-center gap-2">
-                <UserIcon class="w-5 h-5 text-gray-600" />
-                Información de Contacto
-              </span>
-              <ChevronDownIcon 
-                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'contacto' ? 'rotate-180' : '']" 
-              />
-            </button>
-            <div v-show="seccionActiva === 'contacto'" class="p-4 border-t border-gray-100 bg-white space-y-2">
-              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <PhoneIcon class="w-5 h-5 text-gray-400" />
-                <div class="flex-1">
-                  <p class="text-xs text-gray-500">Teléfono / WhatsApp</p>
-                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.telefono || 'No registrado' }}</p>
-                </div>
-                <a 
-                  v-if="socioSeleccionado?.socio?.telefono"
-                  :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
-                  target="_blank"
-                  class="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition-colors"
-                >
-                  Enviar mensaje
-                </a>
-              </div>
-              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <EnvelopeIcon class="w-5 h-5 text-gray-400" />
-                <div>
-                  <p class="text-xs text-gray-500">Correo electrónico</p>
-                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.email || 'No registrado' }}</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <IdentificationIcon class="w-5 h-5 text-gray-400" />
-                <div>
-                  <p class="text-xs text-gray-500">Documento de identidad</p>
-                  <p class="font-medium text-gray-800">{{ socioSeleccionado?.socio?.documento || 'No registrado' }}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección: Configuración en la Natillera -->
-          <div class="border border-gray-200 rounded-xl overflow-hidden">
-            <button 
-              type="button"
-              @click="toggleSeccion('config')"
-              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-            >
-              <span class="font-semibold text-gray-800 flex items-center gap-2">
-                <CurrencyDollarIcon class="w-5 h-5 text-gray-600" />
-                Configuración de Cuotas
-              </span>
-              <ChevronDownIcon 
-                :class="['w-5 h-5 text-gray-500 transition-transform duration-200', seccionActiva === 'config' ? 'rotate-180' : '']" 
-              />
-            </button>
-            <div v-show="seccionActiva === 'config'" class="p-4 border-t border-gray-100 bg-white">
-              <div class="grid grid-cols-2 gap-3">
-                <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-100">
-                  <p class="text-xs text-gray-500 mb-1">Cuota por período</p>
-                  <p class="text-xl font-bold text-natillera-700">${{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}</p>
-                </div>
-                <div class="p-4 rounded-xl border" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'">
-                  <p class="text-xs text-gray-500 mb-1">Periodicidad</p>
-                  <p class="text-xl font-bold" :class="socioSeleccionado?.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-blue-700'">
-                    {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+              <!-- Avatar + bloque texto: nombre, correo y teléfono debajo del nombre -->
+              <div class="flex items-start gap-2.5">
+                <img
+                  :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed, sn.socio?.avatar_style)"
+                  :alt="sn.socio?.nombre"
+                  class="w-10 h-10 rounded-full object-cover bg-slate-100 flex-shrink-0"
+                />
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-2">
+                    <p class="font-bold text-slate-800 truncate text-sm leading-snug">
+                      {{ sn.socio?.nombre || 'Socio sin nombre' }}
+                    </p>
+                    <span class="ds-badge flex-shrink-0" :class="badgeEstadoClase(sn.estado)">
+                      <span class="badge-dot" :class="dotEstadoClase(sn.estado)" aria-hidden="true"></span>
+                      {{ labelEstado(sn.estado) }}
+                    </span>
+                  </div>
+                  <p class="flex items-center gap-1 mt-1 text-[11px] text-slate-500 truncate leading-tight">
+                    <EnvelopeIcon class="w-3 h-3 flex-shrink-0 text-slate-400" aria-hidden="true" />
+                    <span class="truncate">{{ sn.socio?.email || 'Sin correo' }}</span>
+                  </p>
+                  <p class="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500 truncate leading-tight">
+                    <PhoneIcon class="w-3 h-3 flex-shrink-0 text-slate-400" aria-hidden="true" />
+                    <span class="truncate">{{ sn.socio?.telefono || 'Sin teléfono' }}</span>
                   </p>
                 </div>
               </div>
-              <p class="text-xs text-gray-500 mt-3 bg-gray-50 p-2 rounded-lg">
-                {{ socioSeleccionado?.periodicidad === 'quincenal' 
-                  ? '💡 Este socio paga 2 cuotas por mes (una cada quincena)' 
-                  : '💡 Este socio paga 1 cuota por mes' }}
-              </p>
+
+              <!-- Métricas (Cuota / Periodicidad) — bloque compacto -->
+              <div class="socios-mobile-card__metrics">
+                <div class="min-w-0">
+                  <p class="socios-mobile-metric-label">Cuota</p>
+                  <p class="font-bold text-slate-800 tabular-nums text-sm leading-none">
+                    $ {{ formatMoney(sn.valor_cuota_individual) }}
+                  </p>
+                  <span
+                    v-if="estadoCuotaSocio(sn)"
+                    class="cuota-status cuota-status--compact mt-0.5"
+                    :class="estadoCuotaSocio(sn) === 'mora' ? 'cuota-status--mora' : 'cuota-status--ok'"
+                  >
+                    {{ estadoCuotaSocio(sn) === 'mora' ? 'Pendiente' : 'Al día' }}
+                  </span>
+                </div>
+                <div class="text-right min-w-0">
+                  <p class="socios-mobile-metric-label">Periodicidad</p>
+                  <p class="text-xs text-slate-700 capitalize leading-none">
+                    {{ sn.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <!-- Acciones (pill suaves, fuera del button principal para evitar nesting) -->
+            <div v-if="!esVisor" class="socios-mobile-card__actions">
+              <template v-if="sn.estado === 'activo'">
+                <button
+                  type="button"
+                  class="card-pill card-pill--brand"
+                  aria-label="Ver cuotas del socio"
+                  @click.stop="verCuotasSocio(sn)"
+                >
+                  <CurrencyDollarIcon class="w-4 h-4" />
+                  Cuotas
+                </button>
+                <button
+                  type="button"
+                  class="card-pill card-pill--info"
+                  aria-label="Editar socio"
+                  @click.stop="editarSocio(sn)"
+                >
+                  <PencilIcon class="w-4 h-4" />
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="card-pill card-pill--warning"
+                  aria-label="Desactivar socio"
+                  @click.stop="abrirModalDesactivar(sn)"
+                >
+                  <XCircleIcon class="w-4 h-4" />
+                  Inact.
+                </button>
+                <button
+                  type="button"
+                  class="card-pill card-pill--danger card-pill--icon"
+                  aria-label="Eliminar socio"
+                  @click.stop="confirmarEliminarSocio(sn)"
+                >
+                  <TrashIcon class="w-4 h-4" />
+                </button>
+              </template>
+              <button
+                v-else
+                type="button"
+                class="ds-btn ds-btn--primary !min-h-[36px] !py-1.5 !px-3 !text-xs flex-1"
+                aria-label="Activar socio"
+                @click.stop="abrirModalActivar(sn)"
+              >
+                <CheckCircleIcon class="w-4 h-4" />
+                Activar
+              </button>
+            </div>
+            <!-- Visor (solo lectura): solo Cuotas si está activo -->
+            <div v-else-if="sn.estado === 'activo'" class="socios-mobile-card__actions">
+              <button
+                type="button"
+                class="card-pill card-pill--brand"
+                aria-label="Ver cuotas del socio"
+                @click.stop="verCuotasSocio(sn)"
+              >
+                <CurrencyDollarIcon class="w-4 h-4" />
+                Cuotas
+              </button>
+            </div>
+          </li>
+        </ul>
+        </div>
+
+        <!-- Paginación -->
+        <div class="socios-pagination">
+          <div class="socios-pagination__info">
+            <label class="socios-page-size">
+              <span class="text-xs text-slate-500">Filas:</span>
+              <select
+                v-model.number="itemsPorPagina"
+                class="socios-page-size__select"
+                aria-label="Filas por página"
+              >
+                <option v-for="n in ITEMS_POR_PAGINA_OPCIONES" :key="n" :value="n">{{ n }}</option>
+              </select>
+            </label>
+            <p class="text-xs text-slate-500">
+              Mostrando
+              <strong class="text-slate-700 font-semibold">{{ rangoMostrado }}</strong>
+              de
+              <strong class="text-slate-700 font-semibold">{{ sociosFiltrados.length }}</strong>
+              {{ sociosFiltrados.length === 1 ? 'socio' : 'socios' }}
+            </p>
+          </div>
+          <div v-if="totalPaginas > 1" class="flex items-center gap-1">
+            <button
+              type="button"
+              class="socios-page-btn"
+              :disabled="paginaActual === 1"
+              aria-label="Página anterior"
+              @click="paginaActual = Math.max(1, paginaActual - 1)"
+            >
+              <ChevronLeftIcon class="w-4 h-4" />
+            </button>
+            <button
+              v-for="p in paginasVisibles"
+              :key="p"
+              type="button"
+              class="socios-page-btn"
+              :class="{ 'socios-page-btn--active': p === paginaActual }"
+              :aria-current="p === paginaActual ? 'page' : undefined"
+              :aria-label="`Ir a página ${p}`"
+              @click="paginaActual = p"
+            >
+              {{ p }}
+            </button>
+            <button
+              type="button"
+              class="socios-page-btn"
+              :disabled="paginaActual === totalPaginas"
+              aria-label="Página siguiente"
+              @click="paginaActual = Math.min(totalPaginas, paginaActual + 1)"
+            >
+              <ChevronRightIcon class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- FAB flotante (móvil + desktop): aparece cuando el header sale de viewport -->
+    <Transition name="socios-fab">
+      <button
+        v-if="mostrarFab"
+        type="button"
+        class="socios-fab"
+        aria-label="Agregar socio"
+        @click="abrirModalAgregar"
+      >
+        <PlusIcon class="w-6 h-6" />
+      </button>
+    </Transition>
+
+    <!-- Modal Detalle Socio — patrón estándar (skill natillerapp-modals + DS) -->
+    <ModalWrapper
+      :show="!!modalDetalle"
+      :z-index="50"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="32rem"
+      @close="modalDetalle = false"
+    >
+      <!-- Cabecera marca: avatar redondo blanco, nombre, badge de estado, X en flex -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
+        <!-- Móvil: una sola fila [avatar | nombre+estado | X] -->
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <img
+            v-if="socioSeleccionado"
+            :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)"
+            :alt="socioSeleccionado.socio?.nombre"
+            class="w-10 h-10 shrink-0 rounded-full object-cover bg-white shadow-sm"
+          />
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight truncate">
+              {{ socioSeleccionado?.socio?.nombre || 'Socio' }}
+            </h3>
+            <span class="ds-badge mt-1" :class="badgeEstadoClase(socioSeleccionado?.estado)">
+              <span class="badge-dot" :class="dotEstadoClase(socioSeleccionado?.estado)" aria-hidden="true"></span>
+              {{ labelEstado(socioSeleccionado?.estado) }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalDetalle = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+        <!-- Desktop: avatar arriba centrado, nombre y badge debajo, X en flex (no absolute) -->
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <img
+              v-if="socioSeleccionado"
+              :src="getAvatarUrl(socioSeleccionado.socio?.nombre || socioSeleccionado.id, socioSeleccionado.socio?.avatar_seed, socioSeleccionado.socio?.avatar_style)"
+              :alt="socioSeleccionado.socio?.nombre"
+              class="w-14 h-14 mb-2 rounded-full object-cover bg-white shadow-sm"
+            />
+            <h3 class="font-display font-bold text-white text-lg leading-tight truncate max-w-full">
+              {{ socioSeleccionado?.socio?.nombre || 'Socio' }}
+            </h3>
+            <span class="ds-badge mt-1.5" :class="badgeEstadoClase(socioSeleccionado?.estado)">
+              <span class="badge-dot" :class="dotEstadoClase(socioSeleccionado?.estado)" aria-hidden="true"></span>
+              {{ labelEstado(socioSeleccionado?.estado) }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            @click="modalDetalle = false"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalDetalleSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          @scroll.passive="programarNatiscrollModalDetalleSocio"
+        >
+          <!-- Estado de pagos: callout verde (al día) o ámbar (pendientes) -->
+          <div
+            class="ds-callout"
+            :style="resumenSocio.alDia
+              ? null
+              : 'background: rgba(254, 243, 199, 0.6); color: #78350f;'"
+          >
+            <component
+              :is="resumenSocio.alDia ? CheckCircleIcon : ExclamationCircleIcon"
+              class="w-5 h-5 ds-callout__icon flex-shrink-0"
+              :style="resumenSocio.alDia ? null : 'color: #b45309;'"
+            />
+            <div>
+              <span
+                class="ds-callout__title"
+                :style="resumenSocio.alDia ? null : 'color: #78350f;'"
+              >
+                {{ resumenSocio.alDia ? '¡Al día con los pagos!' : 'Tiene pagos pendientes' }}
+              </span>
+              <span>
+                {{ resumenSocio.alDia
+                  ? 'Este socio ha cumplido con todas sus cuotas.'
+                  : `Debe ${resumenSocio.cuotasPendientes + resumenSocio.cuotasMora} cuota${(resumenSocio.cuotasPendientes + resumenSocio.cuotasMora) === 1 ? '' : 's'}.` }}
+              </span>
             </div>
           </div>
 
+          <!-- Resumen Financiero — fijo, siempre visible (no desplegable) -->
+          <section class="detalle-resumen" aria-labelledby="detalle-resumen-titulo">
+            <div class="flex items-center gap-2 px-0.5">
+              <BanknotesIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+              <h3 id="detalle-resumen-titulo" class="font-display font-bold text-slate-800 text-sm">
+                Resumen financiero
+              </h3>
+            </div>
+
+            <!-- Métricas (destacadas): Total aportado + Pendiente -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="detalle-metric detalle-metric--positivo">
+                <p class="detalle-metric__label">Total aportado</p>
+                <p class="detalle-metric__value">
+                  $ {{ formatMoney(resumenSocio.totalAportado) }}
+                </p>
+              </div>
+              <div
+                class="detalle-metric"
+                :class="resumenSocio.totalPendiente > 0 ? 'detalle-metric--debe' : 'detalle-metric--neutro'"
+              >
+                <p class="detalle-metric__label">Pendiente</p>
+                <p class="detalle-metric__value">
+                  $ {{ formatMoney(resumenSocio.totalPendiente) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Configuración (peso ligero): Cuota + Periodicidad -->
+            <div>
+              <p class="ds-overline mb-1.5">Configuración del socio</p>
+              <div class="grid grid-cols-2 gap-2">
+                <div class="detalle-config-chip">
+                  <p class="detalle-config-chip__label">Cuota</p>
+                  <p class="detalle-config-chip__value detalle-config-chip__value--money">
+                    $ {{ formatMoney(socioSeleccionado?.valor_cuota_individual) }}
+                  </p>
+                </div>
+                <div class="detalle-config-chip">
+                  <p class="detalle-config-chip__label">Periodicidad</p>
+                  <p class="detalle-config-chip__value">
+                    {{ socioSeleccionado?.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
+                  </p>
+                  <p class="detalle-config-chip__hint">
+                    {{ socioSeleccionado?.periodicidad === 'quincenal' ? '2 cuotas / mes' : '1 cuota / mes' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini stats de cuotas -->
+            <div>
+              <p class="ds-overline mb-1.5">Cuotas</p>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="detalle-mini-stat">
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-success)]">{{ resumenSocio.cuotasPagadas }}</p>
+                  <p class="detalle-mini-stat__label">Pagadas</p>
+                </div>
+                <div class="detalle-mini-stat">
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-warning)]">{{ resumenSocio.cuotasPendientes }}</p>
+                  <p class="detalle-mini-stat__label">Pendientes</p>
+                </div>
+                <div class="detalle-mini-stat">
+                  <p class="detalle-mini-stat__value text-[color:var(--brand-danger)]">{{ resumenSocio.cuotasMora }}</p>
+                  <p class="detalle-mini-stat__label">En mora</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Cuotas pagadas -->
+          <section class="detalle-seccion">
+            <button
+              type="button"
+              class="detalle-seccion__head"
+              :aria-expanded="seccionActiva === 'cuotasPagadas'"
+              @click="toggleSeccion('cuotasPagadas')"
+            >
+              <span class="detalle-seccion__title">
+                <CalendarDaysIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                Cuotas pagadas
+              </span>
+              <ChevronDownIcon
+                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                :class="seccionActiva === 'cuotasPagadas' ? 'rotate-180' : ''"
+              />
+            </button>
+            <div v-show="seccionActiva === 'cuotasPagadas'" class="detalle-seccion__body">
+              <div v-if="loadingDetalle" class="text-center py-6 text-slate-500 text-sm">
+                Cargando cuotas pagadas…
+              </div>
+              <div v-else-if="cuotasPagadasDetalleSocio.length === 0" class="text-center py-6 text-slate-400 text-sm">
+                No hay cuotas pagadas registradas.
+              </div>
+              <div
+                v-else
+                class="overflow-x-auto max-h-[min(320px,45vh)] overflow-y-auto rounded-[var(--radius-md)] border border-[color:var(--surface-divider)]"
+              >
+                <table class="w-full min-w-[280px] text-sm text-left border-collapse">
+                  <thead class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] border-b border-[color:var(--surface-divider)]">
+                    <tr>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide text-right whitespace-nowrap">Valor</th>
+                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide whitespace-nowrap">Fecha pago</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 bg-white">
+                    <tr
+                      v-for="item in cuotasPagadasDetalleSocio"
+                      :key="item.id"
+                      class="hover:bg-[color:var(--brand-primary-soft)] transition-colors"
+                    >
+                      <td class="px-3 py-2 text-slate-800 align-top">{{ item.cuotaLabel }}</td>
+                      <td class="px-3 py-2 text-right font-semibold text-[color:var(--brand-primary)] tabular-nums whitespace-nowrap align-top">
+                        $ {{ formatMoney(item.valorPagado) }}
+                      </td>
+                      <td class="px-3 py-2 text-slate-600 whitespace-nowrap align-top">
+                        {{ item.fechaPago ? formatDate(item.fechaPago) : '—' }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-[color:var(--brand-primary-soft)] border-t border-[color:var(--surface-divider)]">
+                    <tr>
+                      <th scope="row" class="px-3 py-2.5 text-left font-bold text-slate-900 text-sm">Total</th>
+                      <td class="px-3 py-2.5 text-right font-bold text-[color:var(--brand-primary)] tabular-nums whitespace-nowrap text-sm">
+                        $ {{ formatMoney(totalValorCuotasPagadasDetalleSocio) }}
+                      </td>
+                      <td class="px-3 py-2.5"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Información de Contacto -->
+          <section class="detalle-seccion">
+            <button
+              type="button"
+              class="detalle-seccion__head"
+              :aria-expanded="seccionActiva === 'contacto'"
+              @click="toggleSeccion('contacto')"
+            >
+              <span class="detalle-seccion__title">
+                <UserIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                Información de contacto
+              </span>
+              <ChevronDownIcon
+                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                :class="seccionActiva === 'contacto' ? 'rotate-180' : ''"
+              />
+            </button>
+            <div v-show="seccionActiva === 'contacto'" class="detalle-seccion__body space-y-2">
+              <div class="detalle-info-row">
+                <PhoneIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="ds-overline mb-0.5">Teléfono / WhatsApp</p>
+                  <p class="font-semibold text-slate-800 text-sm truncate">
+                    {{ socioSeleccionado?.socio?.telefono || 'No registrado' }}
+                  </p>
+                </div>
+                <a
+                  v-if="socioSeleccionado?.socio?.telefono"
+                  :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="ds-btn ds-btn--secondary !min-h-[36px] !py-1.5 !px-3 !text-xs flex-shrink-0"
+                >
+                  <ChatBubbleLeftIcon class="w-4 h-4" />
+                  WhatsApp
+                </a>
+              </div>
+              <div class="detalle-info-row">
+                <EnvelopeIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="ds-overline mb-0.5">Correo electrónico</p>
+                  <p class="font-semibold text-slate-800 text-sm truncate">
+                    {{ socioSeleccionado?.socio?.email || 'No registrado' }}
+                  </p>
+                </div>
+              </div>
+              <div class="detalle-info-row">
+                <IdentificationIcon class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="flex-1 min-w-0">
+                  <p class="ds-overline mb-0.5">Documento</p>
+                  <p class="font-semibold text-slate-800 text-sm truncate">
+                    {{ socioSeleccionado?.socio?.documento || 'No registrado' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
         </div>
 
-        <!-- Botones de acción -->
-        <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-          <button 
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalDetalleSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer fijo: 2 filas con jerarquía clara. Siempre visible. Hereda safe-area-bottom. -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-2">
+        <!-- Fila 1: acciones principales (peso fuerte) -->
+        <div class="flex flex-col-reverse sm:flex-row gap-2">
+          <button
+            type="button"
+            class="btn-modal-secondary flex-1"
+            @click="modalDetalle = false"
+          >
+            Cerrar
+          </button>
+          <button
             v-if="!esVisor"
+            type="button"
+            class="btn-modal-primary flex-1"
             @click="modalDetalle = false; editarSocio(socioSeleccionado)"
-            class="btn-secondary flex-1 inline-flex items-center justify-center gap-2"
           >
             <PencilIcon class="w-4 h-4" />
             Editar
           </button>
-          <button 
-            @click="modalDetalle = false"
-            :class="esVisor ? 'btn-primary w-full' : 'btn-primary flex-1'"
+        </div>
+        <!-- Fila 2: acciones destructivas (peso ligero, ghost; solo admin) -->
+        <div v-if="!esVisor" class="flex justify-center gap-1">
+          <button
+            v-if="socioSeleccionado?.estado === 'activo'"
+            type="button"
+            class="detalle-ghost-btn detalle-ghost-btn--warning"
+            @click="modalDetalle = false; abrirModalDesactivar(socioSeleccionado)"
           >
-            Cerrar
+            <XCircleIcon class="w-3.5 h-3.5" />
+            Inactivar
+          </button>
+          <span
+            v-if="socioSeleccionado?.estado === 'activo'"
+            class="detalle-ghost-divider"
+            aria-hidden="true"
+          ></span>
+          <button
+            type="button"
+            class="detalle-ghost-btn detalle-ghost-btn--danger"
+            @click="modalDetalle = false; confirmarEliminarSocio(socioSeleccionado)"
+          >
+            <TrashIcon class="w-3.5 h-3.5" />
+            Eliminar
           </button>
         </div>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal Importar CSV -->
+    <!-- Modal Importar CSV — mismo shell que Agregar socio (skill natillerapp-modals + DS) -->
     <ModalWrapper
       :show="!!modalImportar"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="card relative max-w-lg w-full max-h-[90vh] overflow-y-auto"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="32rem"
       @close="cerrarModalImportar"
     >
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-display font-bold text-gray-800">
-            Importar Socios desde CSV
-          </h3>
-          <button @click="cerrarModalImportar" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-            <XMarkIcon class="w-5 h-5" />
+      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <ArrowUpTrayIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight">Importar socios</h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5">Plantilla o importación</p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="importando"
+            @click="cerrarModalImportar"
+          >
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <ArrowUpTrayIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg leading-tight">Importar socios</h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
+              Descarga la plantilla de ejemplo o carga un CSV: son acciones independientes
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="importando"
+            @click="cerrarModalImportar"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
 
-        <!-- Paso 1: Descargar ejemplo -->
-        <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <div class="flex items-start gap-3">
-            <DocumentArrowDownIcon class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div class="flex-1">
-              <p class="font-semibold text-blue-800">Paso 1: Descarga el archivo de ejemplo</p>
-              <p class="text-sm text-blue-700 mt-1">
-                Descarga el archivo CSV de ejemplo para ver el formato correcto de los datos.
-              </p>
-              <button 
-                @click="descargarEjemploCSV"
-                class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <ArrowDownTrayIcon class="w-4 h-4" />
-                Descargar ejemplo.csv
-              </button>
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalImportar"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-5"
+          @scroll.passive="programarNatiscrollModalImportar"
+        >
+          <span class="ds-overline">Descargar plantilla</span>
+          <div class="ds-callout">
+            <DocumentArrowDownIcon class="w-5 h-5 ds-callout__icon" />
+            <div>
+              <span class="ds-callout__title">Plantilla de ejemplo</span>
+              <span>
+                Baja un CSV de referencia para ver columnas y formato esperado. Es opcional y no tiene que hacerse antes ni después de importar.
+              </span>
             </div>
           </div>
-        </div>
+          <button
+            type="button"
+            class="ds-btn ds-btn--secondary w-full sm:w-auto"
+            @click="descargarEjemploCSV"
+          >
+            <ArrowDownTrayIcon class="w-4 h-4" />
+            Descargar ejemplo.csv
+          </button>
 
-        <!-- Paso 2: Subir archivo -->
-        <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-          <div class="flex items-start gap-3">
-            <ArrowUpTrayIcon class="w-6 h-6 text-gray-600 flex-shrink-0 mt-0.5" />
-            <div class="flex-1">
-              <p class="font-semibold text-gray-800">Paso 2: Sube tu archivo CSV</p>
-              <p class="text-sm text-gray-600 mt-1">
-                Selecciona el archivo CSV con los datos de los socios a importar.
-              </p>
-              <div class="mt-3">
-                <input 
-                  type="file" 
-                  ref="inputCSV"
-                  accept=".csv"
-                  @change="handleArchivoCSV"
-                  class="hidden"
-                />
-                <button 
-                  @click="$refs.inputCSV.click()"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border-2 border-dashed border-gray-300 hover:border-natillera-400 hover:text-natillera-700 transition-colors"
-                >
-                  <DocumentTextIcon class="w-4 h-4" />
-                  {{ archivoCSV ? archivoCSV.name : 'Seleccionar archivo...' }}
-                </button>
+          <div class="space-y-3 border-t border-[color:var(--surface-divider)] pt-5">
+            <span class="ds-overline">Cargar e importar</span>
+            <div class="rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] bg-[color:var(--surface-muted)] p-4">
+              <div class="flex items-start gap-3">
+                <ArrowUpTrayIcon class="w-5 h-5 text-[color:var(--brand-primary)] flex-shrink-0 mt-0.5" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-slate-800 text-sm">Importar desde tu equipo</p>
+                  <p class="text-sm text-slate-600 mt-1 leading-snug">
+                    Elige el archivo CSV con los socios que quieres dar de alta. Es un proceso aparte de descargar la plantilla.
+                  </p>
+                  <input
+                    ref="inputArchivoCsv"
+                    type="file"
+                    accept=".csv"
+                    class="hidden"
+                    tabindex="-1"
+                    @change="handleArchivoCSV"
+                  />
+                  <button
+                    type="button"
+                    class="ds-btn ds-btn--secondary mt-3 w-full sm:w-auto"
+                    :aria-label="archivoCSV ? `Archivo seleccionado: ${archivoCSV.name}` : 'Seleccionar archivo CSV'"
+                    @click="inputArchivoCsv?.click()"
+                  >
+                    <DocumentTextIcon class="w-4 h-4" />
+                    {{ archivoCSV ? archivoCSV.name : 'Seleccionar archivo…' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Vista previa de datos -->
-        <div v-if="sociosPreview.length > 0" class="mb-6">
-          <p class="font-semibold text-gray-800 mb-3">
-            Vista previa ({{ sociosPreview.length }} socios encontrados)
-          </p>
-          <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-100 sticky top-0">
-                <tr>
-                  <th class="text-left p-3 font-semibold text-gray-700">Nombre</th>
-                  <th class="text-left p-3 font-semibold text-gray-700">Cuota</th>
-                  <th class="text-left p-3 font-semibold text-gray-700">
-                    Teléfono <span class="text-red-500 text-xs">*</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(socio, index) in sociosPreview" :key="index" class="border-t border-gray-100">
-                  <td class="p-3 text-gray-800">{{ socio.nombre }}</td>
-                  <td class="p-3 text-natillera-600 font-medium">${{ formatMoney(socio.valor_cuota) }}</td>
-                  <td class="p-3" :class="socio.telefono ? 'text-gray-700' : 'text-red-500'">
-                    {{ socio.telefono || '❌ Requerido' }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-if="sociosPreview.length > 0" class="space-y-2">
+            <p class="ds-label mb-0">
+              Vista previa ({{ sociosPreview.length }} {{ sociosPreview.length === 1 ? 'socio' : 'socios' }})
+            </p>
+            <div class="max-h-48 overflow-y-auto rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-[color:var(--surface-muted)] sticky top-0 z-[1]">
+                  <tr>
+                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Nombre</th>
+                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
+                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">
+                      Teléfono <span class="text-[color:var(--brand-danger)]">*</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 bg-white">
+                  <tr v-for="(socio, index) in sociosPreview" :key="index">
+                    <td class="p-3 text-slate-800">{{ socio.nombre }}</td>
+                    <td class="p-3 font-semibold text-[color:var(--brand-primary)] tabular-nums">${{ formatMoney(socio.valor_cuota) }}</td>
+                    <td class="p-3" :class="socio.telefono ? 'text-slate-700' : 'text-[color:var(--brand-danger)] font-medium'">
+                      {{ socio.telefono || 'Requerido' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div v-if="errorImportar" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
+            <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon" style="color: #b91c1c;" />
+            <div>{{ errorImportar }}</div>
+          </div>
+
+          <div v-if="exitoImportar" class="ds-callout" style="background: #dcfce7; color: #166534;">
+            <CheckCircleIcon class="w-5 h-5 flex-shrink-0" style="color: var(--brand-success);" />
+            <div>{{ exitoImportar }}</div>
           </div>
         </div>
 
-        <!-- Error -->
-        <div v-if="errorImportar" class="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-          {{ errorImportar }}
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalImportar"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- Éxito -->
-        <div v-if="exitoImportar" class="mb-6 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
-          {{ exitoImportar }}
-        </div>
-
-        <!-- Botones -->
-        <div class="flex gap-3">
-          <button 
-            @click="cerrarModalImportar"
-            class="btn-secondary flex-1"
+      <!-- Footer fijo: siempre visible -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+        <button
+          type="button"
+          class="btn-modal-secondary flex-1"
+          :disabled="importando"
+          @click="cerrarModalImportar"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-modal-primary flex-1"
+          :disabled="sociosPreview.length === 0 || importando"
+          @click="importarSocios"
+        >
+          <svg
+            v-if="importando"
+            class="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            Cancelar
-          </button>
-          <button 
-            @click="importarSocios"
-            :disabled="sociosPreview.length === 0 || importando"
-            class="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {{ importando ? 'Importando...' : `Importar ${sociosPreview.length} socios` }}
-          </button>
-        </div>
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <ArrowUpTrayIcon v-else class="w-4 h-4" />
+          {{ importando ? 'Importando…' : (sociosPreview.length > 0 ? `Importar ${sociosPreview.length} socios` : 'Importar socios') }}
+        </button>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal Agregar Socio -->
+    <!-- Modal Agregar/Editar Socio: cabecera marca compacta + DS inputs/buttons + un solo scroll -->
     <ModalWrapper
       :show="!!modalAgregar"
       :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="card relative max-w-md w-full max-h-[90vh] overflow-y-auto"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
       @close="cerrarModal"
     >
-        <h3 class="text-xl font-display font-bold text-gray-800 mb-6">
-          {{ socioEditando ? 'Editar Socio' : 'Agregar Nuevo Socio' }}
-        </h3>
+      <!-- Cabecera marca (compacta ~20% según skill: X siempre en flex, nunca absolute) -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
+        <!-- Móvil: una sola fila [icono | títulos | X] -->
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <PencilIcon v-if="socioEditando" class="w-5 h-5 text-[color:var(--brand-primary)]" />
+            <UserPlusIcon v-else class="w-5 h-5 text-[color:var(--brand-primary)]" />
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight">
+              {{ socioEditando ? 'Editar socio' : 'Agregar socio' }}
+            </h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
+              {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Cerrar"
+            :disabled="guardando"
+            @click="cerrarModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
 
-        <form @submit.prevent="handleGuardarSocio" class="space-y-4">
-          <!-- Selector de Avatar -->
-          <div>
-            <label class="label">Selecciona un avatar</label>
-            <div class="flex items-center gap-4 mb-3">
-              <img 
-                :src="getAvatarUrl(formSocio.avatar_seed || 'nuevo', formSocio.avatar_seed, formSocio.avatar_style)" 
-                alt="Avatar seleccionado"
-                class="w-16 h-16 rounded-xl bg-natillera-100 border-2 border-natillera-300"
-              />
-              <button 
-                type="button"
-                @click="mostrarAvatares = !mostrarAvatares"
-                class="text-sm text-natillera-600 hover:text-natillera-700 font-medium"
-              >
-                {{ mostrarAvatares ? 'Ocultar opciones' : 'Cambiar avatar' }}
-              </button>
+        <!-- Desktop / tablet: bloque centrado [w-11 vacío | centro icono+títulos | X w-11] -->
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <PencilIcon v-if="socioEditando" class="w-6 h-6 text-[color:var(--brand-primary)]" />
+              <UserPlusIcon v-else class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
-            <div v-show="mostrarAvatares" class="bg-gray-50 rounded-xl overflow-hidden">
-              <!-- Grid de avatares -->
-              <div class="grid grid-cols-5 gap-2 p-3 max-h-52 overflow-y-auto">
+            <h3 class="font-display font-bold text-white text-lg leading-tight">
+              {{ socioEditando ? 'Editar socio' : 'Agregar socio' }}
+            </h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
+              {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar un nuevo socio' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
+            aria-label="Cerrar"
+            :disabled="guardando"
+            @click="cerrarModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalAgregarSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalAgregarSocio"
+        >
+          <form
+            id="form-agregar-socio"
+            class="space-y-5 px-5 sm:px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+            @submit.prevent="handleGuardarSocio"
+          >
+            <!-- Avatar -->
+            <div>
+              <label class="ds-label">Avatar del socio</label>
+              <div class="flex items-center gap-3">
+                <img
+                  :src="getAvatarUrl(formSocio.avatar_seed || 'nuevo', formSocio.avatar_seed, formSocio.avatar_style)"
+                  alt="Avatar seleccionado"
+                  class="w-14 h-14 rounded-full bg-[color:var(--brand-primary-soft)] border border-[color:var(--surface-divider-strong)] object-cover flex-shrink-0"
+                />
                 <button
-                  v-for="seed in avatarSeeds"
-                  :key="seed"
                   type="button"
-                  @click="formSocio.avatar_seed = seed; mostrarAvatares = false"
-                  :class="[
-                    'p-1 rounded-lg transition-all',
-                    formSocio.avatar_seed === seed 
-                      ? 'ring-2 ring-natillera-500 bg-natillera-100' 
-                      : 'hover:bg-gray-100'
-                  ]"
+                  class="ds-btn ds-btn--secondary"
+                  :aria-expanded="mostrarAvatares"
+                  @click="mostrarAvatares = !mostrarAvatares"
                 >
-                  <img 
-                    :src="getAvatarUrl(seed, seed, formSocio.avatar_style)" 
-                    :alt="seed"
-                    class="w-10 h-10 rounded-lg object-cover"
-                    loading="lazy"
-                    @error="handleAvatarError($event, seed)"
+                  <SparklesIcon class="w-4 h-4" />
+                  {{ mostrarAvatares ? 'Ocultar opciones' : 'Cambiar avatar' }}
+                </button>
+              </div>
+              <div
+                v-show="mostrarAvatares"
+                class="mt-3 rounded-[var(--radius-md)] border border-[color:var(--surface-divider)] bg-[color:var(--surface-muted)] overflow-hidden"
+              >
+                <div class="grid grid-cols-5 gap-2 p-3 max-h-52 overflow-y-auto">
+                  <button
+                    v-for="seed in avatarSeeds"
+                    :key="seed"
+                    type="button"
+                    :aria-label="`Elegir avatar ${seed}`"
+                    :class="[
+                      'p-1 rounded-[var(--radius-md)] transition-all touch-manipulation',
+                      formSocio.avatar_seed === seed
+                        ? 'ring-2 ring-[color:var(--brand-primary)] bg-white'
+                        : 'hover:bg-white/70'
+                    ]"
+                    @click="formSocio.avatar_seed = seed; mostrarAvatares = false"
+                  >
+                    <img
+                      :src="getAvatarUrl(seed, seed, formSocio.avatar_style)"
+                      :alt="seed"
+                      class="w-10 h-10 rounded-[var(--radius-sm)] object-cover"
+                      loading="lazy"
+                      @error="handleAvatarError($event, seed)"
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nombre -->
+            <div>
+              <label for="agregar-socio-nombre" class="ds-label">
+                Nombre completo <span class="text-[color:var(--brand-danger)]">*</span>
+              </label>
+              <input
+                id="agregar-socio-nombre"
+                ref="inputNombreSocio"
+                v-model="formSocio.nombre"
+                type="text"
+                class="ds-input"
+                placeholder="Ej: María García"
+                required
+              />
+            </div>
+
+            <!-- Periodicidad -->
+            <div>
+              <label class="ds-label">Periodicidad de pago</label>
+              <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-2.5'">
+                <button
+                  type="button"
+                  :disabled="periodicidadNatillera === 'mensual'"
+                  :class="[
+                    'periodicidad-opcion',
+                    formSocio.periodicidad === 'mensual' ? 'periodicidad-opcion--activa' : '',
+                    periodicidadNatillera === 'mensual' ? 'periodicidad-opcion--unica' : ''
+                  ]"
+                  @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
+                >
+                  <CalendarIcon class="w-5 h-5 flex-shrink-0" />
+                  <div class="min-w-0 flex-1 text-left">
+                    <p class="font-semibold text-sm leading-tight">Mensual</p>
+                    <p class="text-[0.6875rem] text-slate-500 mt-0.5">1 cuota por mes</p>
+                  </div>
+                  <span
+                    v-if="periodicidadNatillera === 'mensual'"
+                    class="ds-badge ds-badge--brand flex-shrink-0"
+                  >
+                    Único
+                  </span>
+                  <CheckCircleIcon
+                    v-else-if="formSocio.periodicidad === 'mensual'"
+                    class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
+                  />
+                </button>
+                <button
+                  v-if="periodicidadNatillera === 'quincenal'"
+                  type="button"
+                  :class="[
+                    'periodicidad-opcion',
+                    formSocio.periodicidad === 'quincenal' ? 'periodicidad-opcion--activa' : ''
+                  ]"
+                  @click="formSocio.periodicidad = 'quincenal'"
+                >
+                  <CalendarDaysIcon class="w-5 h-5 flex-shrink-0" />
+                  <div class="min-w-0 flex-1 text-left">
+                    <p class="font-semibold text-sm leading-tight">Quincenal</p>
+                    <p class="text-[0.6875rem] text-slate-500 mt-0.5">2 cuotas por mes</p>
+                  </div>
+                  <CheckCircleIcon
+                    v-if="formSocio.periodicidad === 'quincenal'"
+                    class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
                   />
                 </button>
               </div>
-            </div>
-          </div>
-
-          <!-- Nombre (obligatorio) -->
-          <div>
-            <label class="label">
-              Nombre completo <span class="text-red-500">*</span>
-            </label>
-            <input 
-              v-model="formSocio.nombre"
-              type="text" 
-              class="input-field"
-              placeholder="Ej: María García"
-              required
-            />
-          </div>
-
-          <!-- Periodicidad -->
-          <div>
-            <label class="label">
-              Periodicidad de pago
-            </label>
-            <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-3'">
-              <button
-                type="button"
-                @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
-                :disabled="periodicidadNatillera === 'mensual'"
-                :class="[
-                  'p-4 rounded-xl border-2 transition-all text-left w-full',
-                  formSocio.periodicidad === 'mensual'
-                    ? 'border-natillera-500 bg-natillera-50 ring-2 ring-natillera-200'
-                    : 'border-gray-200 bg-white hover:border-gray-300',
-                  periodicidadNatillera === 'mensual' ? 'cursor-default opacity-90' : ''
-                ]"
-              >
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xl">📅</span>
-                  <span class="font-semibold" :class="formSocio.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'">
-                    Mensual
-                  </span>
-                  <span v-if="periodicidadNatillera === 'mensual'" class="ml-auto text-xs bg-natillera-200 text-natillera-700 px-2 py-0.5 rounded-full font-medium">
-                    Único
-                  </span>
-                </div>
-                <p class="text-xs text-gray-500">1 cuota por mes</p>
-              </button>
-              <button
-                v-if="periodicidadNatillera === 'quincenal'"
-                type="button"
-                @click="formSocio.periodicidad = 'quincenal'"
-                :class="[
-                  'p-4 rounded-xl border-2 transition-all text-left',
-                  formSocio.periodicidad === 'quincenal'
-                    ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                ]"
-              >
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-xl">🗓️</span>
-                  <span class="font-semibold" :class="formSocio.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
-                    Quincenal
-                  </span>
-                </div>
-                <p class="text-xs text-gray-500">2 cuotas por mes</p>
-              </button>
-            </div>
-            <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mt-2">
-              Esta natillera está configurada como mensual
-            </p>
-          </div>
-
-          <!-- Cuota (obligatorio) - Lo más importante -->
-          <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-200">
-            <label class="label text-natillera-700">
-              💰 {{ textoLabelCuota }} <span class="text-red-500">*</span>
-            </label>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-              <input 
-                :value="formatearValorCuota(formSocio.valor_cuota)"
-                @input="handleValorCuotaInput($event)"
-                @focus="seleccionarMontoCuota"
-                @click="seleccionarMontoCuota"
-                @blur="handleValorCuotaBlur"
-                type="text"
-                inputmode="numeric"
-                class="input-field pl-8 text-lg font-semibold"
-                placeholder="Ingrese el valor de la cuota (ej: 120.000)"
-                required
-              />
-            </div>
-            <div class="mt-2 space-y-2">
-              <p class="text-xs text-natillera-600">
-                Este es el valor que el socio aportará en cada período
+              <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-slate-500 mt-2">
+                Esta natillera está configurada como mensual.
               </p>
-              
-              <!-- Alerta breve siempre visible cuando se edita -->
-              <div v-if="socioEditando" class="flex items-center gap-2 p-2.5 bg-amber-50/80 border border-amber-200/50 rounded-lg">
-                <ExclamationTriangleIcon class="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <p class="text-xs text-amber-700 flex-1">
-                  Este cambio afectará todas las cuotas generadas
+            </div>
+
+            <!-- Cuota (campo destacado) -->
+            <div class="cuota-bloque">
+              <label for="agregar-socio-cuota" class="ds-label flex items-center gap-1.5">
+                <CurrencyDollarIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                {{ textoLabelCuota }} <span class="text-[color:var(--brand-danger)]">*</span>
+              </label>
+              <div class="relative">
+                <span class="cuota-bloque__prefix">$</span>
+                <input
+                  id="agregar-socio-cuota"
+                  :value="formatearValorCuota(formSocio.valor_cuota)"
+                  type="text"
+                  inputmode="numeric"
+                  class="ds-input cuota-bloque__input"
+                  placeholder="120.000"
+                  required
+                  @input="handleValorCuotaInput($event)"
+                  @focus="seleccionarMontoCuota"
+                  @click="seleccionarMontoCuota"
+                  @blur="handleValorCuotaBlur"
+                />
+              </div>
+              <p class="text-xs text-[color:var(--brand-primary)] mt-2">
+                Valor que el socio aportará en cada período.
+              </p>
+
+              <!-- Aviso al editar (callout warning consistente con DS) -->
+              <div v-if="socioEditando" class="cuota-aviso">
+                <ExclamationTriangleIcon class="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
+                <p class="text-xs text-amber-800 flex-1 leading-snug">
+                  Este cambio afectará todas las cuotas generadas para este socio.
                 </p>
-                
-                <!-- Botón de información detallada integrado -->
                 <div class="relative flex-shrink-0">
-                  <button 
+                  <button
                     type="button"
                     data-advertencia-button
-                    @click.stop="mostrarAdvertenciaCuota = !mostrarAdvertenciaCuota"
-                    class="flex items-center justify-center w-6 h-6 text-amber-600 hover:text-amber-700 active:text-amber-800 hover:bg-amber-100 rounded-full transition-all touch-manipulation"
+                    class="inline-flex items-center justify-center w-7 h-7 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-full transition-colors touch-manipulation"
                     title="Ver más detalles"
+                    aria-label="Ver detalles del impacto"
+                    @click.stop="mostrarAdvertenciaCuota = !mostrarAdvertenciaCuota"
                   >
-                    <InformationCircleIcon class="w-5 h-5" />
+                    <InformationCircleIcon class="w-4 h-4" />
                   </button>
-                
-                <!-- Tooltip/Popover con la información completa -->
-                <Transition
-                  enter-active-class="transition-all duration-200 ease-out"
-                  enter-from-class="opacity-0 translate-y-2 scale-95"
-                  enter-to-class="opacity-100 translate-y-0 scale-100"
-                  leave-active-class="transition-all duration-150 ease-in"
-                  leave-from-class="opacity-100 translate-y-0 scale-100"
-                  leave-to-class="opacity-0 translate-y-2 scale-95"
-                >
-                  <div 
-                    v-show="mostrarAdvertenciaCuota"
-                    data-advertencia-tooltip
-                    class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 border border-amber-200 rounded-xl shadow-xl z-50"
-                    @click.stop
+                  <Transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="opacity-0 translate-y-2 scale-95"
+                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                    leave-active-class="transition-all duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0 scale-100"
+                    leave-to-class="opacity-0 translate-y-2 scale-95"
                   >
-                    <div class="absolute bottom-0 right-4 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 border-r border-b border-amber-200"></div>
-                    <p class="text-xs font-semibold text-amber-800 mb-1.5 flex items-center gap-1">
-                      <ExclamationTriangleIcon class="w-3.5 h-3.5" />
-                      Al modificar este valor:
-                    </p>
-                    <ul class="text-[11px] text-amber-700 space-y-1.5 leading-relaxed">
-                      <li class="flex items-start gap-1.5">
-                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
-                        <span>Se actualizarán <strong>todas las cuotas</strong> generadas para este socio</span>
-                      </li>
-                      <li class="flex items-start gap-1.5">
-                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
-                        <span><strong>Valor mayor:</strong> Cuotas pagadas → pagos parciales</span>
-                      </li>
-                      <li class="flex items-start gap-1.5">
-                        <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
-                        <span><strong>Valor menor:</strong> Se mantienen pagadas con nota</span>
-                      </li>
-                    </ul>
-                  </div>
-                </Transition>
+                    <div
+                      v-show="mostrarAdvertenciaCuota"
+                      data-advertencia-tooltip
+                      class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] shadow-xl z-50"
+                      @click.stop
+                    >
+                      <div class="absolute bottom-0 right-3 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 border-r border-b border-amber-200"></div>
+                      <p class="text-xs font-semibold text-amber-900 mb-1.5 flex items-center gap-1.5">
+                        <ExclamationTriangleIcon class="w-3.5 h-3.5" />
+                        Al modificar este valor:
+                      </p>
+                      <ul class="text-[11px] text-amber-800 space-y-1.5 leading-relaxed">
+                        <li class="flex items-start gap-1.5">
+                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                          <span>Se actualizarán <strong>todas las cuotas</strong> generadas para este socio.</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                          <span><strong>Valor mayor:</strong> las cuotas pagadas pasan a pagos parciales.</span>
+                        </li>
+                        <li class="flex items-start gap-1.5">
+                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
+                          <span><strong>Valor menor:</strong> se mantienen pagadas con nota.</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </Transition>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Teléfono (obligatorio y único) -->
-          <div>
-            <label class="label">
-              Teléfono / WhatsApp <span class="text-red-500">*</span>
-              <span class="text-xs font-normal text-gray-500 ml-2">(único por socio)</span>
-            </label>
-            <div class="relative flex gap-2">
-              <input 
-                v-model="formSocio.telefono"
-                type="tel" 
-                class="input-field flex-1"
-                placeholder="3001234567"
-                required
-              />
+            <!-- Teléfono -->
+            <div>
+              <label for="agregar-socio-telefono" class="ds-label flex items-center justify-between gap-2">
+                <span class="inline-flex items-center gap-1.5">
+                  <PhoneIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                  Teléfono / WhatsApp <span class="text-[color:var(--brand-danger)]">*</span>
+                </span>
+                <span class="text-[0.6875rem] font-normal text-slate-500">único por socio</span>
+              </label>
+              <div class="flex gap-2">
+                <input
+                  id="agregar-socio-telefono"
+                  v-model="formSocio.telefono"
+                  type="tel"
+                  class="ds-input flex-1"
+                  :class="{ 'ds-input--error': errorTelefonoDuplicado }"
+                  placeholder="3001234567"
+                  required
+                />
+                <button
+                  v-if="contactPickerDisponible"
+                  type="button"
+                  class="ds-btn ds-btn--secondary flex-shrink-0 !px-3"
+                  title="Seleccionar contacto del teléfono"
+                  aria-label="Seleccionar contacto"
+                  @click.stop.prevent="abrirSelectorContactos"
+                >
+                  <UserIcon class="w-4 h-4" />
+                  <span class="hidden sm:inline">Contactos</span>
+                </button>
+              </div>
+              <p v-if="errorTelefonoDuplicado" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+                Este número de teléfono ya está registrado para otro socio.
+              </p>
+              <p v-else class="text-xs text-slate-500 mt-1.5 leading-snug">
+                Número único requerido para recordatorios de pago.
+                <span v-if="contactPickerDisponible" class="block">
+                  Usa el botón “Contactos” para elegir desde tu agenda.
+                </span>
+              </p>
+            </div>
+
+            <!-- Información de contacto adicional (colapsable) -->
+            <div class="rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] overflow-hidden">
               <button
-                v-if="contactPickerDisponible"
-                @click="abrirSelectorContactos"
                 type="button"
-                class="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-natillera-500 to-emerald-500 hover:from-natillera-600 hover:to-emerald-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-                title="Seleccionar contacto del teléfono"
+                class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[color:var(--surface-muted)] hover:bg-[color:var(--brand-primary-soft)] transition-colors text-left touch-manipulation min-h-[48px]"
+                :aria-expanded="mostrarContacto"
+                @click="mostrarContacto = !mostrarContacto"
               >
-                <MagnifyingGlassIcon class="w-5 h-5" />
-                <span class="hidden sm:inline">Contactos</span>
+                <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <EnvelopeIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
+                  Información de contacto adicional
+                  <span class="text-slate-400 font-normal">(opcional)</span>
+                </span>
+                <ChevronDownIcon
+                  :class="['w-5 h-5 text-slate-400 transition-transform flex-shrink-0', mostrarContacto ? 'rotate-180' : '']"
+                />
+              </button>
+              <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-[color:var(--surface-divider)]">
+                <div>
+                  <label for="agregar-socio-email" class="ds-label">Correo electrónico</label>
+                  <input
+                    id="agregar-socio-email"
+                    v-model="formSocio.email"
+                    type="email"
+                    class="ds-input"
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+                <div>
+                  <label for="agregar-socio-documento" class="ds-label">Documento de identidad</label>
+                  <input
+                    id="agregar-socio-documento"
+                    v-model="formSocio.documento"
+                    type="text"
+                    class="ds-input"
+                    placeholder="Cédula (opcional)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Error global -->
+            <div v-if="errorSocio" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
+              <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon" style="color: #b91c1c;" />
+              <div>{{ errorSocio }}</div>
+            </div>
+
+            <!-- Acciones (mismo scroll, safe-area) -->
+            <div class="pt-4 border-t border-[color:var(--surface-divider)] space-y-2.5">
+              <button
+                type="submit"
+                class="btn-modal-primary relative w-full overflow-hidden"
+                :disabled="guardando"
+              >
+                <span :class="['inline-flex items-center justify-center gap-2 transition-opacity', guardando ? 'opacity-0' : 'opacity-100']">
+                  <CheckIcon class="w-5 h-5" />
+                  {{ socioEditando ? 'Guardar cambios' : 'Agregar socio' }}
+                </span>
+                <span
+                  v-if="guardando"
+                  class="absolute inset-0 inline-flex items-center justify-center gap-2"
+                >
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Guardando…</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                class="btn-modal-secondary w-full"
+                :disabled="guardando"
+                @click="cerrarModal"
+              >
+                Cancelar
               </button>
             </div>
-            <p class="text-xs text-gray-500 mt-1">
-              📱 Número único requerido para recordatorios de pago
-              <span v-if="contactPickerDisponible" class="block mt-1">
-                💡 Usa el botón "Contactos" para seleccionar desde tu agenda
-              </span>
-            </p>
-            <p v-if="errorTelefonoDuplicado" class="text-xs text-red-600 mt-1">
-              ⚠️ Este número de teléfono ya está registrado para otro socio
-            </p>
-          </div>
+          </form>
+        </div>
 
-          <!-- Información de contacto adicional (colapsable) -->
-          <div class="border border-gray-200 rounded-xl overflow-hidden">
-            <button 
-              type="button"
-              @click="mostrarContacto = !mostrarContacto"
-              class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        <div
+          v-show="hayNatiscrollModalAgregarSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div
+            class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+          >
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
             >
-              <span class="font-medium text-gray-700">
-                📧 Información de contacto adicional
-                <span class="text-gray-400 font-normal text-sm">(opcional)</span>
-              </span>
-              <ChevronDownIcon 
-                :class="['w-5 h-5 text-gray-400 transition-transform', mostrarContacto ? 'rotate-180' : '']" 
-              />
-            </button>
-            
-            <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-gray-200">
-              <div>
-                <label class="label">Correo electrónico</label>
-                <input 
-                  v-model="formSocio.email"
-                  type="email" 
-                  class="input-field"
-                  placeholder="correo@ejemplo.com"
-                />
-              </div>
-
-              <div>
-                <label class="label">Documento de identidad</label>
-                <input 
-                  v-model="formSocio.documento"
-                  type="text" 
-                  class="input-field"
-                  placeholder="Cédula (opcional)"
-                />
-              </div>
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
             </div>
           </div>
-
-          <div v-if="errorSocio" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-            {{ errorSocio }}
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button 
-              type="button"
-              @click="cerrarModal"
-              class="btn-secondary flex-1"
-              :disabled="guardando"
-            >
-              Cancelar
-            </button>
-            <button 
-              type="submit" 
-              class="btn-primary flex-1 relative overflow-hidden"
-              :disabled="guardando"
-            >
-              <span :class="['flex items-center justify-center gap-2 transition-opacity', guardando ? 'opacity-0' : 'opacity-100']">
-                {{ socioEditando ? 'Guardar Cambios' : 'Agregar Socio' }}
-              </span>
-              <span 
-                v-if="guardando" 
-                class="absolute inset-0 flex items-center justify-center gap-2"
-              >
-                <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Guardando...</span>
-              </span>
-            </button>
-          </div>
-        </form>
+        </div>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal Cuotas del Socio por Mes -->
+    <!-- Modal Cuotas del Socio: patrón modales + natiscroll; lista compacta en rejilla -->
     <ModalWrapper
       :show="!!modalCuotasSocio"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="42rem"
       @close="cerrarModalCuotasSocio"
     >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0 z-10">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 flex items-center justify-between gap-3 sm:gap-4">
-            <div class="flex items-center gap-3 min-w-0 flex-1 pr-2">
-              <img 
-                v-if="socioParaCuotas"
-                :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)" 
-                :alt="socioParaCuotas.socio?.nombre"
-                class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-white/30 shadow-md object-cover flex-shrink-0"
-              />
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0" v-else>
-                <CalendarDaysIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div class="min-w-0 flex-1 overflow-hidden">
-                <h3 class="text-lg sm:text-xl font-display font-bold truncate">
-                  Cuotas de {{ socioParaCuotas?.socio?.nombre }}
-                </h3>
-                <p class="text-white/90 text-xs sm:text-sm truncate mt-0.5">
-                  Historial de cuotas por mes
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-              <!-- Toggle Vista Simplificada -->
-              <button 
-                @click="vistaSimplificadaCuotas = !vistaSimplificadaCuotas"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                :title="vistaSimplificadaCuotas ? 'Vista completa' : 'Vista simplificada'"
-              >
-                <Squares2X2Icon v-if="!vistaSimplificadaCuotas" class="w-5 h-5" />
-                <Bars3Icon v-else class="w-5 h-5" />
-              </button>
-              <button 
-                @click="cerrarModalCuotasSocio"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-              >
-                <XMarkIcon class="w-5 h-5" />
-              </button>
-            </div>
+      <!-- Cabecera marca — móvil: fila -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img
+              v-if="socioParaCuotas"
+              :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
+              :alt="socioParaCuotas.socio?.nombre"
+              class="h-full w-full object-cover"
+            />
+            <CalendarDaysIcon v-else class="w-5 h-5 text-[#1B5E37]" />
           </div>
-        </div>
-
-        <!-- Contenido -->
-        <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
-          <!-- Estado de carga -->
-          <div v-if="loadingCuotasSocio" class="text-center py-12">
-            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-gray-500 text-sm">Cargando cuotas...</p>
+          <div class="flex-1 min-w-0 text-left">
+            <h3 class="text-base font-display font-bold leading-tight text-white truncate">
+              Cuotas del socio
+            </h3>
+            <p class="text-white/90 text-[0.6875rem] leading-snug mt-0.5 truncate">
+              {{ socioParaCuotas?.socio?.nombre || 'Socio' }}
+            </p>
           </div>
-          
-          <!-- Sin cuotas -->
-          <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-12">
-            <p class="text-gray-400 text-base sm:text-lg">No hay cuotas registradas</p>
-          </div>
-          
-          <!-- Lista de cuotas agrupadas por mes -->
-          <div v-else-if="!loadingCuotasSocio" class="space-y-4">
-            <!-- Vista Completa -->
-            <template v-if="!vistaSimplificadaCuotas">
-              <!-- Iterar sobre grupos de meses -->
-              <div
-                v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
-                :key="`${grupoMes.anio}-${grupoMes.mes}`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
-              >
-                <!-- Encabezado del mes -->
-                <div 
-                  v-if="!esVisor"
-                  @click.stop="navegarACuotasMes(grupoMes.mes)"
-                  class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm cursor-pointer hover:from-natillera-300 hover:via-natillera-200 hover:to-emerald-300 transition-all duration-200 active:scale-[0.98]"
-                  title="Haz clic para ver las cuotas de este mes"
-                >
-                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-pink-300 flex items-center justify-center text-4xl sm:text-5xl shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-xl sm:text-2xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-base text-gray-700 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                  <div class="flex-shrink-0">
-                    <ArrowRightIcon class="w-5 h-5 sm:w-6 sm:h-6 text-natillera-600" />
-                  </div>
-                </div>
-                <div 
-                  v-else
-                  class="flex items-center gap-4 px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm"
-                >
-                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 border-4 border-pink-300 flex items-center justify-center text-4xl sm:text-5xl shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-xl sm:text-2xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-base text-gray-700 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- Contenedor de cuotas del mes -->
-                <div class="p-3 sm:p-4 space-y-3">
-                <!-- Cuotas del mes -->
-              <div
-                v-for="(cuotaData, index) in grupoMes.cuotas"
-                :key="`${cuotaData.id}-${index}`"
-                class="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in-up"
-                :style="{ animationDelay: `${index * 0.05}s` }"
-                :class="[
-                  cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
-                  cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
-                  cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
-                  (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota)
-                    ? 'bg-orange-50/90 border-[2.5px] border-orange-300/80 shadow-md shadow-orange-100/50 ring-1 ring-orange-200/40' :
-                  cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
-                ]"
-              >
-              <!-- Efecto de resaltado para cuotas en mora -->
-              <div 
-                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/50 to-transparent animate-shimmer-mora pointer-events-none z-0"
-              ></div>
-              <!-- Borde pulsante para cuotas en mora -->
-              <div 
-                v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                class="absolute inset-0 border-2 border-red-500 rounded-xl animate-pulse pointer-events-none z-0"
-                style="animation-duration: 1.5s;"
-              ></div>
-              <div class="p-4 sm:p-4 relative">
-                <!-- Móvil: Layout estilo imagen -->
-                <div class="sm:hidden flex flex-col gap-3">
-                  <!-- Layout principal: izquierda (botones y fechas) y derecha (montos) -->
-                  <div class="flex items-start justify-between gap-4">
-                    <!-- Lado izquierdo: Botones y fechas -->
-                    <div class="flex flex-col gap-2 flex-1 min-w-0">
-                      <!-- Botón de quincena -->
-                      <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center shadow-sm">
-                        {{ cuotaData.quincena === 1 ? '1ER' : '2DO' }} QUINCENA
-                      </div>
-                      
-                      <!-- Badge de ajuste -->
-                      <div 
-                        v-if="tieneAjuste(cuotaData)"
-                        class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
-                        :title="getTextoAjuste(cuotaData)"
-                      >
-                        <InformationCircleIcon class="w-3.5 h-3.5" />
-                      </div>
-                      
-                      <!-- Badge de estado -->
-                      <div class="self-start">
-                        <!-- Pago parcial tiene prioridad sobre estado pagada -->
-                        <span 
-                          v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
-                        >
-                          PAGO PARCIAL
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
-                        >
-                          PAGADA
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
-                        >
-                          EN MORA
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                            ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                          </span>
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
-                        >
-                          PENDIENTE
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
-                        >
-                          PROGRAMADA
-                        </span>
-                      </div>
-
-                      <!-- Fecha de vencimiento -->
-                      <div class="flex items-center gap-2 mt-1">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-xs text-gray-600">
-                          Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <!-- Lado derecho: Montos -->
-                    <div class="flex flex-col items-end text-right flex-shrink-0">
-                      <!-- Etiqueta según estado -->
-                      <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
-                        TOTAL PAGADO
-                      </p>
-                      <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-amber-600 mb-1">
-                        PENDIENTE
-                      </p>
-                      <p v-else class="text-xs font-medium text-gray-500 mb-1">
-                        MONTO CUOTA
-                      </p>
-                      
-                      <!-- Monto principal -->
-                      <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
-                        <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                          <!-- Pago parcial: mostrar restante -->
-                          ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
-                        </template>
-                        <template v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                          <!-- Total pagado -->
-                          ${{ formatMoney(cuotaData.valorPagado) }}
-                        </template>
-                        <template v-else>
-                          <!-- Monto a pagar -->
-                          ${{ formatMoney(cuotaData.valorCuota + (cuotaData.sancion || 0)) }}
-                        </template>
-                      </p>
-                      
-                      <!-- Detalles de la cuota -->
-                      <div class="flex flex-col items-end gap-0.5">
-                        <p class="text-xs text-gray-500">
-                          Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                        </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
-                          Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                        </p>
-                        <!-- En pago parcial: mostrar lo pagado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
-                          Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                  <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                    <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <span class="text-xs text-green-600 font-medium">
-                      Pagado el: {{ formatDate(cuotaData.fechaPago) }}
-                    </span>
-                  </div>
-
-                  <!-- Botón WhatsApp (si aplica) -->
-                  <button
-                    v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                    @click="enviarWhatsAppCuota(cuotaData)"
-                    class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
-                    title="Enviar recordatorio por WhatsApp"
-                  >
-                    <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="text-sm font-semibold">Recordar cuota</span>
-                  </button>
-                </div>
-
-                <!-- Desktop: Layout horizontal original -->
-                <div class="hidden sm:flex sm:flex-col sm:gap-3">
-                  <!-- Fila superior: Badges y botones -->
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <!-- Badge de quincena -->
-                      <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-purple-700 shadow-md">
-                        {{ cuotaData.quincena === 1 ? '1er' : '2da' }} Quincena
-                      </div>
-                      <!-- Badge de ajuste -->
-                      <div 
-                        v-if="tieneAjuste(cuotaData)"
-                        class="px-3 py-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-blue-700 shadow-md"
-                        :title="getTextoAjuste(cuotaData)"
-                      >
-                        <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mr-1" />
-                        Ajuste
-                      </div>
-                      <!-- Badge de estado -->
-                      <span 
-                        v-if="cuotaData.estado === 'pagada'"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
-                      >
-                        pagada
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'mora'"
-                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
-                      >
-                        en mora
-                        <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                          ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                        </span>
-                      </span>
-                      <!-- Badge pago parcial -->
-                      <span 
-                        v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
-                      >
-                        pago parcial
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
-                      >
-                        pendiente
-                      </span>
-                      <span 
-                        v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                        class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
-                      >
-                        programada
-                      </span>
-                    </div>
-                    <!-- Botón WhatsApp -->
-                    <button
-                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                      @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
-                      title="Enviar recordatorio por WhatsApp"
-                    >
-                      <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
-                    </button>
-                  </div>
-
-                  <!-- Fila media: Monto principal -->
-                  <div class="flex items-baseline justify-between gap-3">
-                    <div class="flex-1">
-                      <div class="flex items-baseline gap-2">
-                        <span v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota" class="text-base font-semibold text-orange-600">Pendiente:</span>
-                        <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota) ? 'text-orange-600' : 'text-gray-800'">
-                          ${{ formatMoney(cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota ? cuotaData.valorCuota - cuotaData.valorPagado : (cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota)) }}
-                        </p>
-                      </div>
-                      <div class="flex items-center gap-2 mt-1 flex-wrap">
-                        <p class="text-sm text-gray-600 font-medium">
-                          Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                        </p>
-                        <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
-                          + Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Fila inferior: Detalles adicionales -->
-                  <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
-                    <div class="flex items-center gap-1.5">
-                      <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                      <span class="text-sm text-gray-600">
-                        Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                      </span>
-                    </div>
-                    <div v-if="cuotaData.estado === 'pagada' && cuotaData.fechaPago" class="flex items-center gap-1.5">
-                      <CalendarDaysIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span class="text-sm text-green-600 font-semibold">
-                        Pagado: {{ formatDate(cuotaData.fechaPago) }}
-                      </span>
-                    </div>
-                    <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
-                      Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              </div>
-              <!-- Fin del contenedor de cuotas del mes -->
-                </div>
-              <!-- Fin del grupo de mes -->
-            </div>
-            </template>
-            
-            <!-- Vista Simplificada -->
-            <template v-else>
-              <!-- Iterar sobre grupos de meses -->
-              <div
-                v-for="(grupoMes, grupoIndex) in cuotasAgrupadasPorMes"
-                :key="`${grupoMes.anio}-${grupoMes.mes}-simplificado`"
-                class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
-              >
-                <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm">
-                  <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
-                    {{ getMesEmoji(grupoMes.mes) }}
-                  </div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-gray-900 text-base sm:text-xl">
-                      {{ getMesLabel(grupoMes.mes) }} {{ grupoMes.anio }}
-                    </h4>
-                    <p class="text-xs sm:text-sm text-emerald-600 font-semibold">
-                      {{ grupoMes.cuotas.length }} {{ grupoMes.cuotas.length === 1 ? 'cuota' : 'cuotas' }}
-                    </p>
-                  </div>
-                </div>
-                
-                <!-- Contenedor de cuotas del mes -->
-                <div class="p-3 sm:p-4 space-y-3">
-                <!-- Cuotas del mes -->
-              <div
-                v-for="(cuotaData, index) in grupoMes.cuotas"
-                :key="`${cuotaData.id}-${index}`"
-                class="relative overflow-hidden rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 animate-fade-in-up"
-                :style="{ animationDelay: `${index * 0.03}s` }"
-                :class="[
-                  cuotaData.estado === 'pagada' 
-                    ? 'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40' :
-                  cuotaData.estado === 'mora' 
-                    ? `bg-red-50/90 border-[2.5px] border-red-300/80 shadow-md shadow-red-100/50 ring-1 ring-red-200/40 ${animacionesCuotasMora ? 'animate-mora-highlight' : ''}` :
-                  cuotaData.estado === 'programada'
-                    ? 'bg-gray-50/90 border-[2.5px] border-gray-300/80 shadow-md shadow-gray-100/50 ring-1 ring-gray-200/40' :
-                  cuotaData.estado === 'pendiente'
-                    ? 'bg-amber-50/90 border-[2.5px] border-amber-300/80 shadow-md shadow-amber-100/50 ring-1 ring-amber-200/40' :
-                  'bg-green-50/90 border-[2.5px] border-green-300/80 shadow-md shadow-green-100/50 ring-1 ring-green-200/40'
-                ]"
-              >
-                <!-- Efecto de resaltado para cuotas en mora -->
-                <div 
-                  v-if="cuotaData.estado === 'mora' && animacionesCuotasMora"
-                  class="absolute inset-0 bg-gradient-to-r from-transparent via-red-300/30 to-transparent animate-shimmer-mora pointer-events-none z-0"
-                ></div>
-                <div class="p-4 sm:p-4 relative z-10">
-                  <!-- Móvil: Layout estilo imagen -->
-                  <div class="sm:hidden flex flex-col gap-3">
-                    <!-- Layout principal: izquierda (botones y fechas) y derecha (montos) -->
-                    <div class="flex items-start justify-between gap-4">
-                      <!-- Lado izquierdo: Botones y fechas -->
-                      <div class="flex flex-col gap-2 flex-1 min-w-0">
-                        <!-- Botón de quincena -->
-                        <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center shadow-sm">
-                          {{ cuotaData.quincena === 1 ? '1ER' : '2DO' }} QUINCENA
-                        </div>
-                        
-                        <!-- Badge de ajuste -->
-                        <div 
-                          v-if="tieneAjuste(cuotaData)"
-                          class="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"
-                          :title="getTextoAjuste(cuotaData)"
-                        >
-                          <InformationCircleIcon class="w-3.5 h-3.5" />
-                        </div>
-                        
-                        <!-- Badge de estado -->
-                        <div class="self-start">
-                          <!-- Pago parcial tiene prioridad sobre estado pagada -->
-                          <span 
-                            v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/60 shadow-sm"
-                          >
-                            PAGO PARCIAL
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'pagada' || (cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)))"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/60 shadow-sm"
-                          >
-                            PAGADA
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'mora'"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/60 shadow-sm"
-                          >
-                            EN MORA
-                            <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                              ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                            </span>
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/60 shadow-sm"
-                          >
-                            PENDIENTE
-                          </span>
-                          <span 
-                            v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/60 shadow-sm"
-                          >
-                            PROGRAMADA
-                          </span>
-                        </div>
-
-                        <!-- Fecha de vencimiento -->
-                        <div class="flex items-center gap-2 mt-1">
-                          <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                          <span class="text-xs text-gray-600">
-                            Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                          </span>
-                        </div>
-                      </div>
-
-                      <!-- Lado derecho: Montos -->
-                      <div class="flex flex-col items-end text-right flex-shrink-0">
-                        <!-- Etiqueta según estado -->
-                        <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-green-600 mb-1">
-                          TOTAL PAGADO
-                        </p>
-                        <p v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs font-medium text-orange-600 mb-1">
-                          PAGO PARCIAL
-                        </p>
-                        <p v-else class="text-xs font-medium text-gray-500 mb-1">
-                          MONTO CUOTA
-                        </p>
-                        
-                        <!-- Monto principal -->
-                        <p class="text-2xl font-bold mb-1" :class="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-green-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0)) ? 'text-orange-600' : (cuotaData.sancion > 0 ? 'text-red-600' : 'text-gray-800'))">
-                          <template v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                            <!-- Pago parcial: mostrar restante -->
-                            ${{ formatMoney((cuotaData.valorCuota + (cuotaData.sancion || 0)) - cuotaData.valorPagado) }}
-                          </template>
-                          <template v-else-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado >= (cuotaData.valorCuota + (cuotaData.sancion || 0))">
-                            <!-- Total pagado -->
-                            ${{ formatMoney(cuotaData.valorPagado) }}
-                          </template>
-                          <template v-else>
-                            <!-- Monto a pagar -->
-                            ${{ formatMoney(cuotaData.valorCuota + (cuotaData.sancion || 0)) }}
-                          </template>
-                        </p>
-                        
-                        <!-- Detalles de la cuota -->
-                        <div class="flex flex-col items-end gap-0.5">
-                          <p class="text-xs text-gray-500">
-                            Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                          </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-xs text-red-600 font-medium">
-                            Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                          </p>
-                          <!-- En pago parcial: mostrar lo pagado -->
-                          <p v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))" class="text-xs text-green-600 font-medium mt-1">
-                            Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Fecha de pago (si está pagada o parcialmente pagada) -->
-                    <div v-if="cuotaData.valorPagado > 0 && cuotaData.fechaPago" class="flex items-center gap-2 pt-2 border-t border-gray-200">
-                      <CheckCircleIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span class="text-xs text-green-600 font-medium">
-                        Pagado el: {{ formatDate(cuotaData.fechaPago) }}
-                      </span>
-                    </div>
-
-                    <!-- Botón WhatsApp (si aplica) -->
-                    <button
-                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                      @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
-                      title="Enviar recordatorio por WhatsApp"
-                    >
-                      <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                      <span class="text-sm font-semibold">Recordar cuota</span>
-                    </button>
-                  </div>
-
-                  <!-- Desktop: Layout horizontal original -->
-                  <div class="hidden sm:flex sm:flex-col sm:gap-3">
-                    <!-- Fila superior: Badges y botones -->
-                    <div class="flex items-center justify-between gap-2">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <!-- Badge de quincena -->
-                        <div v-if="cuotaData.quincena" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-purple-700 shadow-md">
-                          {{ cuotaData.quincena === 1 ? '1er' : '2da' }} Quincena
-                        </div>
-                        <!-- Badge de ajuste -->
-                        <div 
-                          v-if="tieneAjuste(cuotaData)"
-                          class="px-3 py-1.5 bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold rounded-lg flex items-center justify-center border-2 border-blue-700 shadow-md"
-                          :title="getTextoAjuste(cuotaData)"
-                        >
-                          <InformationCircleIcon class="w-4 h-4 flex-shrink-0 mr-1" />
-                          Ajuste
-                        </div>
-                        <!-- Badge de estado -->
-                        <span 
-                          v-if="cuotaData.estado === 'pagada'"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-green-200/90 text-green-800 border border-green-300/70 shadow-sm"
-                        >
-                          pagada
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'mora'"
-                          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-red-200/90 text-red-800 border border-red-300/70 shadow-sm"
-                        >
-                          en mora
-                          <span v-if="cuotaData.diasMora > 0" class="text-red-900 font-extrabold">
-                            ({{ cuotaData.diasMora }} {{ cuotaData.diasMora === 1 ? 'día' : 'días' }})
-                          </span>
-                        </span>
-                        <!-- Badge pago parcial -->
-                        <span 
-                          v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < (cuotaData.valorCuota + (cuotaData.sancion || 0))"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-orange-200/90 text-orange-800 border border-orange-300/70 shadow-sm"
-                        >
-                          pago parcial
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'pendiente' && !(cuotaData.valorPagado > 0)"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-200/90 text-amber-800 border border-amber-300/70 shadow-sm"
-                        >
-                          pendiente
-                        </span>
-                        <span 
-                          v-else-if="cuotaData.estado === 'programada' || (!cuotaData.estado && cuotaData.valorPagado === 0)"
-                          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold bg-gray-200/90 text-gray-800 border border-gray-300/70 shadow-sm"
-                        >
-                          programada
-                        </span>
-                        <!-- Badge de periodicidad -->
-                        <span 
-                          :class="[
-                            'inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border',
-                            cuotaData.periodicidad === 'quincenal' 
-                              ? 'bg-purple-100 text-purple-700 border-purple-200'
-                              : 'bg-blue-100 text-blue-700 border-blue-200'
-                          ]"
-                        >
-                          <CalendarDaysIcon class="w-3.5 h-3.5 flex-shrink-0" />
-                          <span>{{ cuotaData.periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}</span>
-                        </span>
-                      </div>
-                      <!-- Botón WhatsApp -->
-                      <button
-                        v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
-                        @click="enviarWhatsAppCuota(cuotaData)"
-                        class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
-                        title="Enviar recordatorio por WhatsApp"
-                      >
-                        <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
-                      </button>
-                    </div>
-
-                    <!-- Fila media: Monto principal -->
-                    <div class="flex items-baseline justify-between gap-3">
-                      <div class="flex-1">
-                        <div class="flex items-baseline gap-2">
-                          <span v-if="cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota" class="text-base font-semibold text-orange-600">Pendiente:</span>
-                          <p class="text-xl font-bold" :class="cuotaData.sancion > 0 ? 'text-red-600' : (cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota) ? 'text-orange-600' : 'text-gray-800'">
-                            ${{ formatMoney(cuotaData.valorPagado > 0 && cuotaData.valorPagado < cuotaData.valorCuota ? cuotaData.valorCuota - cuotaData.valorPagado : (cuotaData.totalConSanciones > 0 ? cuotaData.totalConSanciones : cuotaData.valorCuota)) }}
-                          </p>
-                        </div>
-                        <div class="flex items-center gap-2 mt-1 flex-wrap">
-                          <p class="text-sm text-gray-600 font-medium">
-                            Cuota: ${{ formatMoney(cuotaData.valorCuota) }}
-                          </p>
-                          <p v-if="cuotaData.sancion > 0" class="text-sm text-red-600 font-semibold">
-                            + Sanción: ${{ formatMoney(cuotaData.sancion) }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Fila inferior: Detalles adicionales -->
-                    <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200">
-                      <div class="flex items-center gap-1.5">
-                        <CalendarDaysIcon class="w-4 h-4 text-gray-500 flex-shrink-0" />
-                        <span class="text-sm text-gray-600">
-                          Vence: {{ formatDate(cuotaData.fechaVencimiento) }}
-                        </span>
-                      </div>
-                      <div v-if="cuotaData.estado === 'pagada' && cuotaData.fechaPago" class="flex items-center gap-1.5">
-                        <CalendarDaysIcon class="w-4 h-4 text-green-600 flex-shrink-0" />
-                        <span class="text-sm text-green-600 font-semibold">
-                          Pagado: {{ formatDate(cuotaData.fechaPago) }}
-                        </span>
-                      </div>
-                      <p v-if="cuotaData.valorPagado > 0" class="text-sm font-semibold text-green-600 whitespace-nowrap">
-                        Pagado: ${{ formatMoney(cuotaData.valorPagado) }}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- Fin del contenedor de cuotas del mes -->
-                </div>
-              <!-- Fin del grupo de mes simplificado -->
-            </div>
-            </template>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-          <button 
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
             @click="cerrarModalCuotasSocio"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all text-sm sm:text-base"
           >
-            Cerrar
+            <XMarkIcon class="w-6 h-6" />
           </button>
         </div>
+      </div>
+      <!-- Cabecera marca — desktop -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start pt-[max(1rem,env(safe-area-inset-top))] pb-5 px-4">
+          <div class="w-11 flex-shrink-0" aria-hidden="true" />
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-[3.2rem] h-[3.2rem] rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+              <img
+                v-if="socioParaCuotas"
+                :src="getAvatarUrl(socioParaCuotas.socio?.nombre || socioParaCuotas.id, socioParaCuotas.socio?.avatar_seed, socioParaCuotas.socio?.avatar_style)"
+                :alt="socioParaCuotas.socio?.nombre"
+                class="h-full w-full object-cover"
+              />
+              <CalendarDaysIcon v-else class="w-6 h-6 text-[#1B5E37]" />
+            </div>
+            <h3 class="text-lg font-display font-bold text-white mt-2.5 leading-tight">
+              Cuotas del socio
+            </h3>
+            <p class="text-white/90 text-xs mt-1 leading-snug px-1">
+              {{ socioParaCuotas?.socio?.nombre || 'Socio' }} · historial por mes
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-full text-white hover:bg-white/15 active:bg-white/20 transition-colors touch-manipulation"
+            aria-label="Cerrar"
+            @click="cerrarModalCuotasSocio"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalCuotasSocio"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-4 pb-5 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalCuotasSocio"
+        >
+          <div v-if="loadingCuotasSocio" class="text-center py-10">
+            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+            <p class="text-gray-500 text-sm">Cargando cuotas…</p>
+          </div>
+
+          <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-10 px-2">
+            <p class="text-gray-500 text-sm">No hay cuotas registradas</p>
+          </div>
+
+          <template v-else>
+            <!-- Resumen de totales — siempre visible al inicio -->
+            <section class="cuotas-resumen" aria-label="Resumen de cuotas">
+              <div class="cuotas-resumen__top">
+                <div class="cuotas-resumen__total">
+                  <p class="cuotas-resumen__total-label">Total adeudado</p>
+                  <p
+                    class="cuotas-resumen__total-valor"
+                    :class="totalesCuotasSocioModal.totalAdeudado > 0 ? 'is-debe' : 'is-aldia'"
+                  >
+                    $ {{ formatMoney(totalesCuotasSocioModal.totalAdeudado) }}
+                  </p>
+                  <p class="cuotas-resumen__total-sub">
+                    Pagado $ {{ formatMoney(totalesCuotasSocioModal.totalPagado) }}
+                    de $ {{ formatMoney(totalesCuotasSocioModal.totalObligacion) }}
+                  </p>
+                </div>
+                <div class="cuotas-resumen__progress" aria-hidden="true">
+                  <div
+                    class="cuotas-resumen__progress-bar"
+                    :style="{
+                      width: totalesCuotasSocioModal.totalObligacion > 0
+                        ? Math.min(100, Math.round((totalesCuotasSocioModal.totalPagado / totalesCuotasSocioModal.totalObligacion) * 100)) + '%'
+                        : '0%'
+                    }"
+                  ></div>
+                </div>
+              </div>
+              <div class="cuotas-resumen__chips">
+                <div class="cuotas-resumen__chip cuotas-resumen__chip--pagadas">
+                  <p class="cuotas-resumen__chip-valor">{{ totalesCuotasSocioModal.pagadas }}</p>
+                  <p class="cuotas-resumen__chip-label">Pagadas</p>
+                </div>
+                <div
+                  v-if="totalesCuotasSocioModal.parciales > 0"
+                  class="cuotas-resumen__chip cuotas-resumen__chip--parciales"
+                >
+                  <p class="cuotas-resumen__chip-valor">{{ totalesCuotasSocioModal.parciales }}</p>
+                  <p class="cuotas-resumen__chip-label">Parciales</p>
+                </div>
+                <div class="cuotas-resumen__chip cuotas-resumen__chip--pendientes">
+                  <p class="cuotas-resumen__chip-valor">{{ totalesCuotasSocioModal.pendientes }}</p>
+                  <p class="cuotas-resumen__chip-label">Pendientes</p>
+                </div>
+                <div class="cuotas-resumen__chip cuotas-resumen__chip--mora">
+                  <p class="cuotas-resumen__chip-valor">{{ totalesCuotasSocioModal.mora }}</p>
+                  <p class="cuotas-resumen__chip-label">En mora</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- Móvil (<md): tarjetas compactas. Wrapper div para que md:hidden gane sobre el display:flex scoped del <ul>. -->
+            <div class="md:hidden">
+              <ul class="cuotas-mobile-list">
+                <li
+                  v-for="(cuotaData, idx) in cuotasSocioPorMes"
+                  :key="`m-${cuotaData.id}-${idx}`"
+                  class="cuotas-mobile-card"
+                  :class="[
+                    cuotaData.estado === 'pagada' || (cuotaData.valorPagado || 0) >= totalObligacionCuotaSocioModal(cuotaData) ? 'cuotas-mobile-card--pagada' : '',
+                    cuotaData.estado === 'mora' && animacionesCuotasMora ? 'cuotas-mobile-card--mora' : '',
+                    !esVisor && cuotaData.mes != null ? 'cuotas-mobile-card--clickable' : ''
+                  ]"
+                  :tabindex="!esVisor && cuotaData.mes != null ? 0 : -1"
+                  :role="!esVisor && cuotaData.mes != null ? 'button' : null"
+                  @click="handleClickFilaCuotaSocioModal(cuotaData)"
+                  @keydown.enter.prevent="handleClickFilaCuotaSocioModal(cuotaData)"
+                >
+                  <!-- Fila 1: Q-badge + mes + valor + estado -->
+                  <div class="cuotas-mobile-card__row">
+                    <span
+                      class="cuotas-mobile-card__qbadge"
+                      :class="metaPeriodoCuotaSocioModal(cuotaData).cls"
+                      :title="etiquetaPeriodoCuotaSocioModal(cuotaData)"
+                      :aria-label="etiquetaPeriodoCuotaSocioModal(cuotaData)"
+                    >
+                      {{ metaPeriodoCuotaSocioModal(cuotaData).short }}
+                    </span>
+                    <p class="cuotas-mobile-card__mes">
+                      {{ etiquetaMesAnioCuotaSocioModal(cuotaData) }}
+                    </p>
+                    <p class="cuotas-mobile-card__valor">
+                      $ {{ formatMoney(getMontoValorCuotaSocioModal(cuotaData)) }}
+                    </p>
+                    <span
+                      class="cuotas-mobile-card__badge"
+                      :class="clasesEstadoCuotaSocioModal(cuotaData).badge"
+                    >
+                      {{ etiquetaEstadoCuotaSocioModal(cuotaData) }}
+                    </span>
+                  </div>
+                  <!-- Fila 2: subetiqueta + acción WhatsApp -->
+                  <div class="cuotas-mobile-card__sub-row">
+                    <p class="cuotas-mobile-card__sub">
+                      {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
+                    </p>
+                    <button
+                      v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                      type="button"
+                      class="cuotas-mobile-card__wsp"
+                      aria-label="Enviar recordatorio por WhatsApp"
+                      @click.stop="enviarWhatsAppCuota(cuotaData)"
+                    >
+                      <ChatBubbleLeftIcon class="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+          <!-- Desktop (md+): rejilla compacta de 5 columnas -->
+          <div class="hidden md:block rounded-xl border border-gray-200/90 bg-white overflow-hidden shadow-sm pb-2">
+            <div
+              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 px-2 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
+              role="row"
+            >
+              <span>Mes</span>
+              <span>Cuota</span>
+              <span class="text-right tabular-nums">Valor a pagar</span>
+              <span class="text-right">Estado</span>
+              <span class="text-center" aria-hidden="true" />
+            </div>
+            <div class="divide-y divide-gray-100">
+              <div
+                v-for="(cuotaData, idx) in cuotasSocioPorMes"
+                :key="`d-${cuotaData.id}-${idx}`"
+                role="row"
+                class="grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 items-center px-2 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-natillera-500/40 focus-visible:ring-inset"
+                :class="[
+                  !esVisor ? 'cursor-pointer hover:bg-emerald-50/40 active:bg-emerald-50/60' : '',
+                  cuotaData.estado === 'mora' && animacionesCuotasMora ? 'bg-red-50/50' : '',
+                  cuotaData.estado === 'pagada' || (cuotaData.valorPagado || 0) >= totalObligacionCuotaSocioModal(cuotaData) ? 'bg-green-50/25' : ''
+                ]"
+                :tabindex="!esVisor ? 0 : -1"
+                @click="handleClickFilaCuotaSocioModal(cuotaData)"
+                @keydown.enter.prevent="handleClickFilaCuotaSocioModal(cuotaData)"
+              >
+                <div class="text-gray-800 font-semibold leading-tight min-w-0">
+                  <span class="block truncate" :title="etiquetaMesAnioCuotaSocioModal(cuotaData)">
+                    {{ etiquetaMesAnioCuotaSocioModal(cuotaData) }}
+                  </span>
+                </div>
+                <div class="text-gray-800 font-semibold tabular-nums leading-tight">
+                  {{ etiquetaPeriodoCuotaSocioModal(cuotaData) }}
+                </div>
+                <div class="text-right min-w-0">
+                  <p class="font-bold tabular-nums text-gray-900 leading-tight">
+                    ${{ formatMoney(getMontoValorCuotaSocioModal(cuotaData)) }}
+                  </p>
+                  <p class="text-[10px] text-gray-500 leading-tight mt-0.5 truncate">
+                    {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
+                  </p>
+                </div>
+                <div class="flex flex-col items-end gap-0.5 min-w-0 justify-self-end">
+                  <span
+                    class="inline-flex max-w-full items-center justify-center rounded-md border px-1 py-0.5 text-[11px] font-bold leading-tight"
+                    :class="clasesEstadoCuotaSocioModal(cuotaData).badge"
+                  >
+                    {{ etiquetaEstadoCuotaSocioModal(cuotaData) }}
+                  </span>
+                </div>
+                <div class="flex justify-center" @click.stop>
+                  <button
+                    v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                    type="button"
+                    class="h-9 w-9 rounded-lg bg-green-500 hover:bg-green-600 text-white flex items-center justify-center touch-manipulation shadow-sm"
+                    title="WhatsApp"
+                    aria-label="Enviar recordatorio por WhatsApp"
+                    @click="enviarWhatsAppCuota(cuotaData)"
+                  >
+                    <ChatBubbleLeftIcon class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </template>
+        </div>
+
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalCuotasSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer fijo: siempre visible. Hereda safe-area-bottom. -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <button
+          type="button"
+          class="btn-modal-secondary w-full"
+          @click="cerrarModalCuotasSocio"
+        >
+          Cerrar
+        </button>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal de confirmación para eliminar socio -->
+    <!-- Modal Eliminar Socio — patrón estándar (skill natillerapp-modals + DS) -->
     <ModalWrapper
       :show="!!socioAEliminar"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-red-200 overflow-hidden flex flex-col"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="socioAEliminar = null"
+      @close="!eliminando && (socioAEliminar = null)"
     >
-        <!-- Header con gradiente rojo -->
-        <div class="bg-gradient-to-br from-red-500 via-red-600 to-rose-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-          <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
-          <div class="relative z-10">
-            <div class="flex items-center gap-3 sm:gap-4">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-                <ExclamationTriangleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <h3 class="text-lg sm:text-xl font-bold truncate">⚠️ Eliminar Socio</h3>
-                <p class="text-white/90 text-xs sm:text-sm">Esta acción es IRREVERSIBLE</p>
-              </div>
-            </div>
+      <!-- Cabecera danger (rojo): comunica acción irreversible -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-danger)] text-white">
+        <!-- Móvil: una sola fila -->
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <ExclamationTriangleIcon class="w-5 h-5 text-[color:var(--brand-danger)]" />
           </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight truncate">
+              Eliminar socio
+            </h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
+              Acción irreversible
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="eliminando"
+            @click="socioAEliminar = null"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
         </div>
+        <!-- Desktop: icono arriba centrado, X en flex -->
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <ExclamationTriangleIcon class="w-6 h-6 text-[color:var(--brand-danger)]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg leading-tight">
+              Eliminar socio
+            </h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
+              Acción irreversible
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="eliminando"
+            @click="socioAEliminar = null"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
 
-        <!-- Contenido con scroll -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 sm:space-y-4">
-          <!-- Mensaje principal -->
+      <!-- Cuerpo scrolleable -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalEliminarSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          @scroll.passive="programarNatiscrollModalEliminarSocio"
+        >
+          <!-- Pregunta principal -->
           <div class="text-center">
-            <p class="text-base sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">
+            <p class="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight">
               ¿Estás completamente seguro?
             </p>
-            <p class="text-sm sm:text-base text-gray-600">
-              Estás a punto de eliminar al socio <strong class="text-red-600">"{{ socioAEliminar.socio?.nombre }}"</strong> de esta natillera.
+            <p class="text-sm text-slate-600 mt-1.5 leading-snug">
+              Estás a punto de eliminar al socio
+              <strong class="text-[color:var(--brand-danger)]">«{{ socioAEliminar.socio?.nombre }}»</strong>
+              de esta natillera.
             </p>
           </div>
 
-          <!-- Advertencia destacada -->
-          <div class="bg-gradient-to-br from-red-50 via-rose-50 to-red-50 border-2 border-red-300 rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-md">
-            <div class="flex items-start gap-2 sm:gap-3 mb-3">
-              <ExclamationTriangleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <!-- Advertencia: callout danger -->
+          <div class="modal-callout-danger">
+            <div class="flex items-start gap-2.5">
+              <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-danger)] mt-0.5" />
               <div class="flex-1 min-w-0">
-                <p class="font-bold text-red-800 text-sm sm:text-base mb-2">
-                  ⚠️ ADVERTENCIA: Se perderá TODA la información
+                <p class="font-bold text-[color:var(--brand-danger)] text-sm">
+                  Se perderá toda la información
                 </p>
-                <p class="text-xs sm:text-sm text-red-700 mb-2 font-semibold">
-                  Esta acción eliminará PERMANENTEMENTE:
+                <p class="text-xs text-red-700 mt-0.5">
+                  Esta acción eliminará permanentemente:
                 </p>
-                <ul class="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-red-700">
-                  <li class="flex items-start gap-1.5 sm:gap-2">
-                    <span class="text-red-600 font-bold mt-0.5 flex-shrink-0">•</span>
+                <ul class="mt-2 space-y-1.5 text-xs text-red-700">
+                  <li class="flex items-start gap-1.5">
+                    <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                     <span><strong>Todas las cuotas</strong> (pagadas y pendientes)</span>
                   </li>
-                  <li class="flex items-start gap-1.5 sm:gap-2">
-                    <span class="text-red-600 font-bold mt-0.5 flex-shrink-0">•</span>
-                    <span><strong>Todos los préstamos</strong> y pagos</span>
+                  <li class="flex items-start gap-1.5">
+                    <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span><strong>Todos los préstamos</strong> y sus pagos</span>
                   </li>
-                  <li class="flex items-start gap-1.5 sm:gap-2">
-                    <span class="text-red-600 font-bold mt-0.5 flex-shrink-0">•</span>
+                  <li class="flex items-start gap-1.5">
+                    <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                     <span><strong>Todas las multas</strong> y sanciones</span>
                   </li>
-                  <li class="flex items-start gap-1.5 sm:gap-2">
-                    <span class="text-red-600 font-bold mt-0.5 flex-shrink-0">•</span>
+                  <li class="flex items-start gap-1.5">
+                    <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                     <span><strong>Todo el historial</strong> de comprobantes</span>
                   </li>
-                  <li class="flex items-start gap-1.5 sm:gap-2">
-                    <span class="text-red-600 font-bold mt-0.5 flex-shrink-0">•</span>
-                    <span><strong>Todos los registros financieros</strong></span>
+                  <li class="flex items-start gap-1.5">
+                    <CheckIcon class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span><strong>Registros financieros</strong> asociados</span>
                   </li>
                 </ul>
               </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-red-200">
-              <p class="text-xs text-red-600 font-semibold">
-                💡 Nota: Solo se eliminará de esta natillera.
-              </p>
+          </div>
+
+          <!-- Aviso de alcance: solo callout sutil -->
+          <div class="ds-callout">
+            <InformationCircleIcon class="w-5 h-5 ds-callout__icon" />
+            <div>
+              Solo se elimina de esta natillera; los datos en otras natilleras del socio no se ven afectados.
             </div>
           </div>
+        </div>
 
-          <!-- Mensaje final -->
-          <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 sm:p-3">
-            <p class="text-xs text-amber-800 text-center font-medium">
-              ⚠️ Esta acción no se puede deshacer.
-            </p>
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalEliminarSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Footer con botones -->
-        <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex gap-2 sm:gap-3 flex-shrink-0">
-          <button
-            @click="socioAEliminar = null"
-            :disabled="eliminando"
-            class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold text-sm sm:text-base rounded-lg sm:rounded-xl transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+      <!-- Footer fijo: siempre visible -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+        <button
+          type="button"
+          class="btn-modal-secondary flex-1"
+          :disabled="eliminando"
+          @click="socioAEliminar = null"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="ds-btn ds-btn--danger flex-1"
+          :disabled="eliminando"
+          @click="eliminarSocioConfirmado"
+        >
+          <svg
+            v-if="eliminando"
+            class="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            Cancelar
-          </button>
-          <button
-            @click="eliminarSocioConfirmado"
-            :disabled="eliminando"
-            class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-sm sm:text-base rounded-lg sm:rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
-          >
-            <span v-if="eliminando" class="flex items-center justify-center gap-2">
-              <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Eliminando...</span>
-            </span>
-            <span v-else>Sí, Eliminar</span>
-          </button>
-        </div>
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <TrashIcon v-else class="w-4 h-4" />
+          {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
+        </button>
+      </div>
     </ModalWrapper>
 
-    <!-- Modal Desactivar Socio: sanción opcional y totales -->
+    <!-- Modal Desactivar Socio — patrón estándar (skill natillerapp-modals + DS) -->
     <ModalWrapper
       :show="!!socioADesactivar"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-amber-200 overflow-hidden flex flex-col"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="cerrarModalDesactivar()"
+      @close="!desactivando && cerrarModalDesactivar()"
     >
-      <!-- Header -->
-      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-              <XCircleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-lg sm:text-xl font-bold truncate">Desactivar socio</h3>
-              <p class="text-white/90 text-xs sm:text-sm truncate">{{ socioADesactivar?.socio?.nombre }}</p>
-            </div>
+      <!-- Cabecera warning (ámbar): comunica acción reversible pero crítica -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-warning)] text-white">
+        <!-- Móvil: una sola fila -->
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <XCircleIcon class="w-5 h-5 text-[color:var(--brand-warning)]" />
           </div>
-          <button type="button" @click="cerrarModalDesactivar()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
-            <XMarkIcon class="w-6 h-6" />
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight truncate">
+              Desactivar socio
+            </h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
+              {{ socioADesactivar?.socio?.nombre }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="desactivando"
+            @click="cerrarModalDesactivar()"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+        <!-- Desktop -->
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <XCircleIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg leading-tight">
+              Desactivar socio
+            </h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 truncate max-w-[20rem]">
+              {{ socioADesactivar?.socio?.nombre }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="desactivando"
+            @click="cerrarModalDesactivar()"
+          >
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-        <!-- Check: Aplicar sanción por retiro (estiludo) -->
-        <button
-          type="button"
-          @click="desactivarSancionar = !desactivarSancionar"
-          :class="[
-            'w-full flex items-start gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200',
-            desactivarSancionar
-              ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300 shadow-md shadow-amber-200/40'
-              : 'bg-gray-50 border-gray-200 hover:border-amber-200 hover:bg-amber-50/30'
-          ]"
+      <!-- Cuerpo scrolleable -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalDesactivarSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          @scroll.passive="programarNatiscrollModalDesactivarSocio"
         >
-          <span
-            :class="[
-              'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-lg border-2 transition-all duration-200',
-              desactivarSancionar
-                ? 'border-amber-500 bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-inner'
-                : 'border-gray-300 bg-white'
-            ]"
+
+          <!-- 1. Sanción por retiro (toggle) -->
+          <button
+            type="button"
+            class="modal-toggle-card"
+            :class="{ 'is-active': desactivarSancionar }"
+            :aria-pressed="desactivarSancionar"
+            @click="desactivarSancionar = !desactivarSancionar"
           >
-            <CheckIcon v-if="desactivarSancionar" class="w-4 h-4 stroke-[2.5]" />
-          </span>
-          <span class="min-w-0 flex-1 pt-0.5">
-            <p class="font-semibold text-gray-800 text-sm sm:text-base">Aplicar sanción por retiro</p>
-            <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Descontar un porcentaje para el fondo (sanción por retiro)</p>
-          </span>
-        </button>
+            <span class="modal-toggle-card__check" aria-hidden="true">
+              <CheckIcon v-if="desactivarSancionar" class="w-3.5 h-3.5 stroke-[3]" />
+            </span>
+            <span class="min-w-0 flex-1 text-left">
+              <span class="block font-display font-semibold text-slate-800 text-sm">
+                Aplicar sanción por retiro
+              </span>
+              <span class="block text-xs text-slate-500 mt-0.5 leading-snug">
+                Descontar un porcentaje del ahorro para el fondo de la natillera.
+              </span>
+            </span>
+          </button>
 
-        <!-- Porcentaje de sanción (solo si aplica sanción) -->
-        <div v-if="desactivarSancionar" class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Porcentaje de sanción por retiro (%)</label>
-          <input
-            v-model.number="desactivarPorcentajeSancion"
-            type="number"
-            min="0"
-            max="100"
-            step="0.5"
-            class="w-full px-4 py-3 rounded-xl border-2 border-amber-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-gray-800 font-medium"
-            placeholder="0"
+          <!-- 1.b Porcentaje de sanción -->
+          <div v-if="desactivarSancionar" class="space-y-1.5">
+            <label for="desactivar-porcentaje" class="ds-label">
+              Porcentaje de sanción (%)
+            </label>
+            <input
+              id="desactivar-porcentaje"
+              v-model.number="desactivarPorcentajeSancion"
+              type="number"
+              min="0"
+              max="100"
+              step="0.5"
+              inputmode="decimal"
+              class="ds-input"
+              placeholder="0"
+            />
+          </div>
+
+          <!-- 2. Resumen del socio -->
+          <section>
+            <h4 class="ds-overline mb-2">Resumen del socio</h4>
+            <div class="modal-data-list">
+              <div class="modal-data-list__row">
+                <span class="modal-data-list__label">Total ahorrado</span>
+                <span v-if="loadingTotalesDesactivar" class="modal-data-list__value modal-data-list__value--muted">Cargando…</span>
+                <span v-else class="modal-data-list__value modal-data-list__value--positive tabular-nums">
+                  ${{ formatMoney(totalesDesactivar.totalAhorrado) }}
+                </span>
+              </div>
+              <div class="modal-data-list__row">
+                <span class="modal-data-list__label">Entregado en actividades</span>
+                <span v-if="loadingTotalesDesactivar" class="modal-data-list__value modal-data-list__value--muted">—</span>
+                <span v-else class="modal-data-list__value tabular-nums">
+                  ${{ formatMoney(totalesDesactivar.totalActividades) }}
+                </span>
+              </div>
+              <div class="modal-data-list__row">
+                <span class="modal-data-list__label">Pagado en sanciones</span>
+                <span v-if="loadingTotalesDesactivar" class="modal-data-list__value modal-data-list__value--muted">—</span>
+                <span v-else class="modal-data-list__value modal-data-list__value--danger tabular-nums">
+                  ${{ formatMoney(totalesDesactivar.totalSancionesPagadas) }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. Liquidación -->
+          <section>
+            <h4 class="ds-overline mb-2">Liquidación al desactivar</h4>
+            <div class="modal-liquidacion">
+              <div class="modal-liquidacion__row">
+                <span class="modal-liquidacion__label">Entregar al socio</span>
+                <span class="modal-liquidacion__value modal-liquidacion__value--main tabular-nums">
+                  ${{ formatMoney(valorEntregarDesactivar) }}
+                </span>
+              </div>
+              <div v-if="desactivarSancionar" class="modal-liquidacion__row">
+                <span class="modal-liquidacion__label">Para el fondo (sanción)</span>
+                <span class="modal-liquidacion__value modal-liquidacion__value--warning tabular-nums">
+                  ${{ formatMoney(valorFondoDesactivar) }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Forma de pago -->
+          <section>
+            <h4 class="ds-overline mb-2">Forma de pago</h4>
+            <p class="text-[11px] text-slate-500 leading-snug mb-2">
+              El total (entregar + sanción) se descontará en cuadre de caja con esta forma de pago.
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                class="modal-segmented"
+                :class="{ 'is-active': desactivarFormaPago === 'efectivo' }"
+                :aria-pressed="desactivarFormaPago === 'efectivo'"
+                @click="desactivarFormaPago = 'efectivo'"
+              >
+                <BanknotesIcon class="w-4 h-4" />
+                Efectivo
+              </button>
+              <button
+                type="button"
+                class="modal-segmented"
+                :class="{ 'is-active': desactivarFormaPago === 'transferencia' }"
+                :aria-pressed="desactivarFormaPago === 'transferencia'"
+                @click="desactivarFormaPago = 'transferencia'"
+              >
+                <BuildingOffice2Icon class="w-4 h-4" />
+                Transferencia
+              </button>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalDesactivarSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
           />
-        </div>
-
-        <!-- Resumen: totales del socio -->
-        <div class="rounded-xl border-2 border-gray-200 overflow-hidden">
-          <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
-            <p class="font-semibold text-gray-700 text-sm">Resumen del socio</p>
-          </div>
-          <div class="divide-y divide-gray-100">
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-gray-600 text-sm">Total ahorrado</span>
-              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">Cargando...</span>
-              <span v-else class="font-bold text-natillera-700 tabular-nums">${{ formatMoney(totalesDesactivar.totalAhorrado) }}</span>
-            </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-gray-600 text-sm">Total entregado en actividades</span>
-              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">—</span>
-              <span v-else class="font-bold text-gray-800 tabular-nums">${{ formatMoney(totalesDesactivar.totalActividades) }}</span>
-            </div>
-            <div class="flex items-center justify-between px-4 py-3">
-              <span class="text-gray-600 text-sm">Total pagado en sanciones</span>
-              <span v-if="loadingTotalesDesactivar" class="text-gray-400 text-sm">—</span>
-              <span v-else class="font-bold text-rose-600 tabular-nums">${{ formatMoney(totalesDesactivar.totalSancionesPagadas) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Valor a entregar y valor para el fondo -->
-        <div class="rounded-xl border-2 border-amber-200 bg-amber-50/50 overflow-hidden">
-          <div class="bg-amber-100/80 px-4 py-2.5 border-b border-amber-200">
-            <p class="font-semibold text-amber-900 text-sm">Liquidación al desactivar</p>
-          </div>
-          <div class="p-4 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-gray-700 font-medium">Valor a entregar al socio</span>
-              <span class="font-bold text-lg text-natillera-700 tabular-nums">${{ formatMoney(valorEntregarDesactivar) }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-gray-700 font-medium">Valor para el fondo (sanción por retiro)</span>
-              <span class="font-bold text-lg text-amber-700 tabular-nums">${{ formatMoney(valorFondoDesactivar) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Forma de pago de la liquidación (resta de efectivo o transferencia) -->
-        <div class="rounded-xl border-2 border-gray-200 overflow-hidden">
-          <div class="bg-gray-100 px-4 py-2.5 border-b border-gray-200">
-            <p class="font-semibold text-gray-700 text-sm">Forma de pago de la liquidación</p>
-            <p class="text-xs text-gray-500 mt-0.5">Se descontará el total (entregar + sanción) de esta forma de pago en cuadre de caja</p>
-          </div>
-          <div class="p-4 flex gap-3">
-            <button
-              type="button"
-              @click="desactivarFormaPago = 'efectivo'"
-              :class="[
-                'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-medium transition-all',
-                desactivarFormaPago === 'efectivo'
-                  ? 'border-amber-500 bg-amber-50 text-amber-800'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-amber-200'
-              ]"
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
             >
-              <BanknotesIcon class="w-5 h-5" />
-              Efectivo
-            </button>
-            <button
-              type="button"
-              @click="desactivarFormaPago = 'transferencia'"
-              :class="[
-                'flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-medium transition-all',
-                desactivarFormaPago === 'transferencia'
-                  ? 'border-blue-500 bg-blue-50 text-blue-800'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-blue-200'
-              ]"
-            >
-              <BuildingOffice2Icon class="w-5 h-5" />
-              Transferencia
-            </button>
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-200 flex gap-2 sm:gap-3 flex-shrink-0">
+      <!-- Footer fijo -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
-          @click="cerrarModalDesactivar()"
+          class="btn-modal-secondary flex-1"
           :disabled="desactivando"
-          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold text-sm sm:text-base rounded-xl transition-all shadow-sm"
+          @click="cerrarModalDesactivar()"
         >
           Cancelar
         </button>
         <button
           type="button"
-          @click="confirmarDesactivarSocio"
+          class="ds-btn modal-btn-warning flex-1"
           :disabled="desactivando"
-          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="confirmarDesactivarSocio"
         >
-          <span v-if="desactivando" class="flex items-center justify-center gap-2">
-            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Desactivando...
-          </span>
-          <span v-else>Confirmar desactivar</span>
+          <svg
+            v-if="desactivando"
+            class="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <XCircleIcon v-else class="w-4 h-4" />
+          {{ desactivando ? 'Desactivando…' : 'Confirmar desactivar' }}
         </button>
       </div>
     </ModalWrapper>
 
-    <!-- Modal Activar Socio: confirmación y reversión de movimientos -->
+    <!-- Modal Activar Socio — patrón estándar (skill natillerapp-modals + DS) -->
     <ModalWrapper
       :show="!!socioAActivar"
       :z-index="50"
       align="bottom"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-emerald-200 overflow-hidden flex flex-col"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="cerrarModalActivar()"
+      @close="!activando && cerrarModalActivar()"
     >
-      <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-green-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 -mt-12 sm:-mr-16 sm:-mt-16 blur-2xl"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-              <CheckCircleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-lg sm:text-xl font-bold truncate">Activar socio</h3>
-              <p class="text-white/90 text-xs sm:text-sm truncate">{{ socioAActivar?.socio?.nombre }}</p>
-            </div>
+      <!-- Cabecera success (verde) — reactivación positiva -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-success)] text-white">
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <CheckCircleIcon class="w-5 h-5 text-[color:var(--brand-success)]" />
           </div>
-          <button type="button" @click="cerrarModalActivar()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
-            <XMarkIcon class="w-6 h-6" />
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight truncate">
+              Activar socio
+            </h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
+              {{ socioAActivar?.socio?.nombre }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="activando"
+            @click="cerrarModalActivar()"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <CheckCircleIcon class="w-6 h-6 text-[color:var(--brand-success)]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg leading-tight">
+              Activar socio
+            </h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem] truncate">
+              {{ socioAActivar?.socio?.nombre }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="activando"
+            @click="cerrarModalActivar()"
+          >
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
       </div>
 
-      <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-        <div class="rounded-xl border-2 border-emerald-200 bg-emerald-50/50 overflow-hidden">
-          <div class="bg-emerald-100/80 px-4 py-2.5 border-b border-emerald-200">
-            <p class="font-semibold text-emerald-900 text-sm">Confirmar reactivación</p>
+      <!-- Cuerpo scrolleable -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalActivarSocio"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
+          @scroll.passive="programarNatiscrollModalActivarSocio"
+        >
+          <div class="text-center">
+            <p class="font-display font-bold text-slate-800 text-base sm:text-lg leading-tight">
+              ¿Reactivar a este socio?
+            </p>
+            <p class="text-sm text-slate-600 mt-1.5 leading-snug">
+              <strong class="text-[color:var(--brand-success)]">«{{ socioAActivar?.socio?.nombre }}»</strong>
+              volverá a estar activo en esta natillera.
+            </p>
           </div>
-          <div class="p-4 space-y-3">
-            <p class="text-gray-700 text-sm leading-relaxed">
-              El socio volverá a estar <strong>activo</strong> en la natillera. Si al desactivarse se generó liquidación (comprobante de salida), se revertirán automáticamente los movimientos de caja y la sanción por retiro asociados.
-            </p>
-            <p class="text-gray-600 text-sm">
-              ¿Deseas continuar?
-            </p>
+
+          <div class="modal-callout-success">
+            <CheckCircleIcon class="w-5 h-5 flex-shrink-0 text-[color:var(--brand-success)] mt-0.5" />
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-[color:var(--brand-success)] text-sm">
+                Movimientos automáticos
+              </p>
+              <p class="text-xs text-emerald-800/85 mt-0.5 leading-snug">
+                Si al desactivarse se generó liquidación (comprobante de salida), se revertirán automáticamente los movimientos de caja y la sanción por retiro asociados.
+              </p>
+            </div>
+          </div>
+
+          <div class="ds-callout">
+            <InformationCircleIcon class="w-5 h-5 ds-callout__icon" />
+            <div>
+              Las cuotas existentes y el historial del socio no se ven alterados; solo cambia su estado a activo.
+            </div>
+          </div>
+        </div>
+
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalActivarSocio"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="flex-shrink-0 p-4 sm:p-5 pt-0 flex gap-3">
+      <!-- Footer fijo: siempre visible -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
+          class="btn-modal-secondary flex-1"
+          :disabled="activando"
           @click="cerrarModalActivar()"
-          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-white border-2 border-gray-200 text-gray-700 font-bold text-sm sm:text-base rounded-xl hover:bg-gray-50 transition-all"
         >
           Cancelar
         </button>
         <button
           type="button"
-          @click="confirmarActivarSocio"
+          class="btn-modal-primary flex-1"
           :disabled="activando"
-          class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm sm:text-base rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          @click="confirmarActivarSocio"
         >
-          <span v-if="activando" class="flex items-center justify-center gap-2">
-            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Activando...
-          </span>
-          <span v-else>Confirmar activar</span>
+          <svg
+            v-if="activando"
+            class="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <CheckCircleIcon v-else class="w-4 h-4" />
+          {{ activando ? 'Activando…' : 'Confirmar activar' }}
         </button>
       </div>
     </ModalWrapper>
 
-    <!-- Modal Comprobante de Desactivación -->
+    <!-- Modal Comprobante de Desactivación — patrón estándar (skill natillerapp-modals + DS) -->
     <ModalWrapper
       :show="!!comprobanteDesactivacion"
       :z-index="55"
       align="bottom"
-      overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border-2 border-amber-200 overflow-hidden flex flex-col"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-[55] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="cerrarComprobanteDesactivacion()"
+      @close="!generandoImagenDesactivacion && cerrarComprobanteDesactivacion()"
     >
-      <div class="bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 p-4 sm:p-5 text-white relative overflow-hidden flex-shrink-0">
-        <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-        <div class="relative z-10 flex items-center justify-between">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0">
-              <DocumentTextIcon class="w-5 h-5 text-white" />
-            </div>
-            <div class="min-w-0">
-              <h3 class="text-lg sm:text-xl font-bold truncate">Comprobante de salida</h3>
-              <p class="text-white/90 text-xs sm:text-sm truncate">Salida de la natillera</p>
-            </div>
+      <!-- Cabecera warning (ámbar) — continuidad visual con la modal de desactivar -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-warning)] text-white">
+        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <DocumentTextIcon class="w-5 h-5 text-[color:var(--brand-warning)]" />
           </div>
-          <button type="button" @click="cerrarComprobanteDesactivacion()" class="p-2 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0" aria-label="Cerrar">
-            <XMarkIcon class="w-6 h-6" />
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display font-bold text-white text-base leading-tight truncate">
+              Comprobante de salida
+            </h3>
+            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
+              Liquidación por salida de la natillera
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="generandoImagenDesactivacion"
+            @click="cerrarComprobanteDesactivacion()"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <DocumentTextIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
+            </div>
+            <h3 class="font-display font-bold text-white text-lg leading-tight">
+              Comprobante de salida
+            </h3>
+            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
+              Liquidación por salida de la natillera
+            </p>
+          </div>
+          <button
+            type="button"
+            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            aria-label="Cerrar"
+            :disabled="generandoImagenDesactivacion"
+            @click="cerrarComprobanteDesactivacion()"
+          >
+            <XMarkIcon class="h-6 w-6" />
           </button>
         </div>
       </div>
-      <div class="overflow-y-auto flex-1 p-3 sm:p-4">
+
+      <!-- Cuerpo scrolleable con el ticket descargable -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="scrollAreaModalComprobanteDesactivacion"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--surface-soft,#f8fafc)] overscroll-contain [-webkit-overflow-scrolling:touch] px-4 sm:px-5 py-4"
+          @scroll.passive="programarNatiscrollModalComprobanteDesactivacion"
+        >
         <div
           ref="comprobanteDesactivacionRef"
           class="bg-white rounded-2xl overflow-hidden mx-auto"
@@ -2054,9 +2492,14 @@
                   <span style="color: #065f46; font-size: 11px; font-weight: 600;">Total ahorrado</span>
                   <span style="font-size: 13px; font-weight: 700; color: #065f46;">${{ formatMoney(comprobanteDesactivacion?.totalAhorrado || 0) }}</span>
                 </div>
-                <div v-if="(comprobanteDesactivacion?.valorFondo || 0) > 0" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: #991b1b; font-size: 11px; font-weight: 600;">Sanción por retiro</span>
-                  <span style="font-size: 13px; font-weight: 700; color: #dc2626;">${{ formatMoney(comprobanteDesactivacion?.valorFondo) }}</span>
+                <div v-if="(comprobanteDesactivacion?.valorFondo || 0) > 0" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                  <span style="color: #991b1b; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; min-width: 0;">
+                    <span style="white-space: nowrap;">Sanción por retiro</span>
+                    <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 999px; background: #fecaca; color: #991b1b; font-size: 10px; font-weight: 800; line-height: 1.4; white-space: nowrap;">
+                      {{ porcentajeSancionComprobante }}%
+                    </span>
+                  </span>
+                  <span style="font-size: 13px; font-weight: 700; color: #dc2626; white-space: nowrap;">${{ formatMoney(comprobanteDesactivacion?.valorFondo) }}</span>
                 </div>
                 <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
                   <span style="color: #b45309; font-size: 11px; font-weight: 700;">Valor a entregar</span>
@@ -2073,30 +2516,75 @@
             </div>
           </div>
         </div>
+        </div>
+
+        <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
+        <div
+          v-show="hayNatiscrollModalComprobanteDesactivacion"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-[var(--surface-soft,#f8fafc)]/95 via-[var(--surface-soft,#f8fafc)]/55 to-transparent"
+            aria-hidden="true"
+          />
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <div
+              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
+            >
+              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                Desliza para ver más
+              </p>
+              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 flex gap-3">
+
+      <!-- Footer fijo: siempre visible -->
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-2.5">
         <button
           type="button"
-          @click="descargarComprobanteDesactivacion"
+          class="ds-btn modal-btn-download flex-1"
           :disabled="generandoImagenDesactivacion"
-          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-white font-semibold text-sm bg-blue-600 hover:bg-blue-700 shadow-md transition-all disabled:opacity-50"
+          @click="descargarComprobanteDesactivacion"
         >
-          <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
-          {{ generandoImagenDesactivacion ? '...' : 'Descargar' }}
+          <svg
+            v-if="generandoImagenDesactivacion"
+            class="animate-spin h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <ArrowDownTrayIcon v-else class="w-4 h-4" />
+          {{ generandoImagenDesactivacion ? 'Generando…' : 'Descargar' }}
         </button>
         <button
           type="button"
+          class="ds-btn modal-btn-whatsapp flex-1"
+          :class="{ 'is-disabled': !comprobanteDesactivacion?.socioTelefono }"
+          :disabled="generandoImagenDesactivacion || !comprobanteDesactivacion?.socioTelefono"
           @click="compartirWhatsAppDesactivacion"
-          :disabled="generandoImagenDesactivacion"
-          :class="['flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm shadow-md transition-all', comprobanteDesactivacion?.socioTelefono && !generandoImagenDesactivacion ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed']"
         >
-          <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
+          <ChatBubbleLeftIcon class="w-4 h-4" />
           Compartir
         </button>
       </div>
     </ModalWrapper>
 
-    <!-- Modal de Progreso de Creación de Socio - DISEÑO ULTRA MODERNO -->
+    <!--
+      Modal de Progreso de Creación de Socio.
+      Excepción justificada al patrón estándar (skill `natillerapp-modals`):
+      es un loader transitorio (creando socio → generando cuotas → ¡listo!),
+      el cuerpo cabe en altura razonable y se cierra solo al terminar. Por
+      eso NO usa cabecera marca + cuerpo scrolleable + footer fijo + natiscroll;
+      mantiene su diseño orgánico de “ultra moderno” con animaciones.
+      Solo el botón “Cerrar” del estado de error usa `ds-btn` para coherencia.
+    -->
     <ModalWrapper
       :show="modalProgreso"
       :z-index="60"
@@ -2106,46 +2594,46 @@
     >
           <div class="relative w-full">
             <!-- Tarjeta principal con efecto 3D -->
-            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
+            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-natillera-700/20 overflow-hidden border border-white/50">
               <!-- Gradiente superior decorativo -->
-              <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 opacity-10"></div>
-              
+              <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-natillera-600 via-natillera-700 to-natillera-800 opacity-10"></div>
+
               <!-- Anillos orbitales decorativos (cuando está procesando) -->
               <div v-if="!progresoCreacion.exito && !progresoCreacion.error" class="absolute inset-0 flex items-center justify-center pointer-events-none" style="top: -20px">
-                <div class="w-40 h-40 border border-emerald-200/30 rounded-full animate-orbit-slow"></div>
-                <div class="absolute w-32 h-32 border border-green-200/40 rounded-full animate-orbit-reverse"></div>
+                <div class="w-40 h-40 border border-natillera-200/40 rounded-full animate-orbit-slow"></div>
+                <div class="absolute w-32 h-32 border border-natillera-300/40 rounded-full animate-orbit-reverse"></div>
               </div>
 
               <div class="relative p-8 pb-10">
                 <!-- Icono principal con múltiples capas de animación -->
                 <div class="relative mx-auto mb-8 w-28 h-28">
                   <!-- Aura exterior pulsante -->
-                  <div 
+                  <div
                     :class="[
                       'absolute -inset-4 rounded-full transition-all duration-700',
-                      progresoCreacion.exito 
-                        ? 'bg-emerald-400/20 animate-pulse-success' 
+                      progresoCreacion.exito
+                        ? 'bg-natillera-500/25 animate-pulse-success'
                         : progresoCreacion.error && progresoCreacion.paso === 0
                           ? 'bg-red-400/20 animate-pulse'
-                          : 'bg-gradient-to-r from-emerald-400/15 via-green-400/20 to-teal-400/15 animate-pulse-slow'
+                          : 'bg-gradient-to-r from-natillera-500/15 via-natillera-600/20 to-natillera-700/15 animate-pulse-slow'
                     ]"
                   ></div>
-                  
+
                   <!-- Anillo giratorio exterior -->
-                  <div 
+                  <div
                     v-if="!progresoCreacion.exito && progresoCreacion.paso > 0"
-                    class="absolute -inset-2 rounded-full border-2 border-dashed border-emerald-300/40 animate-spin-very-slow"
+                    class="absolute -inset-2 rounded-full border-2 border-dashed border-natillera-400/50 animate-spin-very-slow"
                   ></div>
-                  
+
                   <!-- Círculo principal -->
-                  <div 
+                  <div
                     :class="[
                       'absolute inset-0 rounded-full flex items-center justify-center transition-all duration-700 transform',
-                      progresoCreacion.exito 
-                        ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-2xl shadow-emerald-500/50 scale-110' 
+                      progresoCreacion.exito
+                        ? 'bg-gradient-to-br from-natillera-600 via-natillera-700 to-natillera-800 shadow-2xl shadow-natillera-700/50 scale-110'
                         : progresoCreacion.error && progresoCreacion.paso === 0
                           ? 'bg-gradient-to-br from-red-400 via-rose-500 to-pink-500 shadow-2xl shadow-red-500/40'
-                          : 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-xl shadow-emerald-500/30'
+                          : 'bg-gradient-to-br from-natillera-600 via-natillera-700 to-natillera-800 shadow-xl shadow-natillera-700/30'
                     ]"
                   >
                     <!-- Efecto de brillo interior -->
@@ -2156,7 +2644,7 @@
                       <div class="relative">
                         <UserIcon class="w-12 h-12 text-white drop-shadow-lg animate-bounce-gentle" />
                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                          <PlusIcon class="w-3 h-3 text-emerald-500" />
+                          <PlusIcon class="w-3 h-3 text-natillera-700" />
                         </div>
                       </div>
                     </template>
@@ -2198,10 +2686,10 @@
                 </h3>
 
                 <!-- Mensaje de progreso con animación sutil -->
-                <p 
+                <p
                   :class="[
                     'text-center text-base font-medium mb-6 transition-all duration-500',
-                    progresoCreacion.exito ? 'text-emerald-600' : 
+                    progresoCreacion.exito ? 'text-natillera-700' :
                     progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-gray-500'
                   ]"
                 >
@@ -2212,20 +2700,20 @@
                 <div class="relative mb-8">
                   <!-- Línea de conexión -->
                   <div class="absolute top-4 left-8 right-8 h-0.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      class="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-700 ease-out rounded-full"
+                    <div
+                      class="h-full bg-gradient-to-r from-natillera-600 to-natillera-700 transition-all duration-700 ease-out rounded-full"
                       :style="{ width: `${((progresoCreacion.paso - 1) / 2) * 100}%` }"
                     ></div>
                   </div>
-                  
+
                   <div class="relative flex justify-between">
                     <!-- Paso 1: Socio -->
                     <div class="flex flex-col items-center">
-                      <div 
+                      <div
                         :class="[
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 1 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                          progresoCreacion.paso >= 1
+                            ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
                             : 'bg-gray-100 text-gray-400'
                         ]"
                       >
@@ -2237,16 +2725,16 @@
                         <UserIcon v-else-if="progresoCreacion.paso === 1" class="w-4 h-4" />
                         <span v-else class="text-xs font-bold">1</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-emerald-600' : 'text-gray-400']">Socio</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-natillera-700' : 'text-gray-400']">Socio</span>
                     </div>
-                    
+
                     <!-- Paso 2: Cuotas -->
                     <div class="flex flex-col items-center">
-                      <div 
+                      <div
                         :class="[
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 2 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                          progresoCreacion.paso >= 2
+                            ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
                             : 'bg-gray-100 text-gray-400'
                         ]"
                       >
@@ -2258,16 +2746,16 @@
                         <SparklesIcon v-else-if="progresoCreacion.paso === 2" class="w-4 h-4 animate-pulse" />
                         <span v-else class="text-xs font-bold">2</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-emerald-600' : 'text-gray-400']">Cuotas</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-natillera-700' : 'text-gray-400']">Cuotas</span>
                     </div>
-                    
+
                     <!-- Paso 3: Listo -->
                     <div class="flex flex-col items-center">
-                      <div 
+                      <div
                         :class="[
                           'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 3 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
+                          progresoCreacion.paso >= 3
+                            ? 'bg-gradient-to-br from-natillera-600 to-natillera-800 text-white shadow-lg shadow-natillera-700/30 scale-110'
                             : 'bg-gray-100 text-gray-400'
                         ]"
                       >
@@ -2278,7 +2766,7 @@
                         </template>
                         <span v-else class="text-xs font-bold">3</span>
                       </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-emerald-600' : 'text-gray-400']">¡Listo!</span>
+                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-natillera-700' : 'text-gray-400']">¡Listo!</span>
                     </div>
                   </div>
                 </div>
@@ -2295,14 +2783,14 @@
                   >
                     <div class="relative group">
                       <!-- Glow effect -->
-                      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                      
-                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl">
-                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <div class="absolute -inset-1 bg-gradient-to-r from-natillera-600 via-natillera-700 to-natillera-800 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
+
+                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-natillera-50 to-natillera-100 border border-natillera-200/60 rounded-2xl">
+                        <div class="w-10 h-10 bg-gradient-to-br from-natillera-600 to-natillera-800 rounded-xl flex items-center justify-center shadow-lg shadow-natillera-700/30">
                           <SparklesIcon class="w-5 h-5 text-white" />
                         </div>
                         <div class="text-left">
-                          <p class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                          <p class="text-2xl font-bold bg-gradient-to-r from-natillera-700 to-natillera-800 bg-clip-text text-transparent">
                             {{ progresoCreacion.cuotasGeneradas }}
                           </p>
                           <p class="text-xs text-gray-500 font-medium">cuotas generadas</p>
@@ -2328,10 +2816,12 @@
                   <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
                     <p class="text-sm text-red-600">{{ progresoCreacion.error }}</p>
                   </div>
-                  <button 
+                  <button
+                    type="button"
+                    class="ds-btn ds-btn--danger w-full sm:w-auto sm:px-8"
                     @click="cerrarModalProgreso"
-                    class="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:-translate-y-0.5 transition-all duration-300"
                   >
+                    <XMarkIcon class="w-4 h-4" />
                     Cerrar
                   </button>
                 </div>
@@ -2339,8 +2829,8 @@
 
               <!-- Barra de progreso inferior decorativa -->
               <div class="h-1.5 bg-gray-100">
-                <div 
-                  class="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 transition-all duration-700 ease-out"
+                <div
+                  class="h-full bg-gradient-to-r from-natillera-600 via-natillera-700 to-natillera-800 transition-all duration-700 ease-out"
                   :style="{ width: `${(progresoCreacion.paso / 3) * 100}%` }"
                 ></div>
               </div>
@@ -2358,18 +2848,28 @@ import { useCuotasStore } from '../../stores/cuotas'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
+import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { TOURS_ENABLED } from '../../config/toursEnabled'
 import { shouldShowNatilleraMenuTour, startNatilleraMenuTour } from '../../composables/useNatilleraMenuTour'
+import {
+  shouldShowPrimerSocioSociosNavTour,
+  startPrimerSocioSociosNavTour,
+  consumePendingPrimerSocioNavTour
+} from '../../composables/usePrimerSocioSociosNavTour'
+import {
+  setPendingPrimerSocioCuotasMesTour,
+  setPrimerFlujoSocioNatilleraId
+} from '../../composables/usePrimerSocioCuotasMesTour'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import { 
   ArrowLeftIcon,
-  ArrowRightIcon,
   PlusIcon,
   UsersIcon,
   PhoneIcon,
@@ -2377,10 +2877,13 @@ import {
   XCircleIcon,
   CheckCircleIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   XMarkIcon,
   BanknotesIcon,
   ClockIcon,
   UserIcon,
+  UserPlusIcon,
   EnvelopeIcon,
   IdentificationIcon,
   CurrencyDollarIcon,
@@ -2395,8 +2898,6 @@ import {
   CalendarIcon,
   CalendarDaysIcon,
   ChatBubbleLeftIcon,
-  Squares2X2Icon,
-  Bars3Icon,
   TrashIcon,
   SparklesIcon,
   CheckIcon,
@@ -2418,6 +2919,32 @@ const colaboradoresStore = useColaboradoresStore()
 const dashboardSidebar = inject('dashboardSidebar', null)
 
 const modalAgregar = ref(false)
+const scrollAreaModalAgregarSocio = ref(null)
+// Nota: la X de la cabecera es siempre visible en formularios largos (skill `natillerapp-modals`),
+// por eso ya no usamos `useModalBodyScrollOverflow` para alternar su visibilidad.
+const hayNatiscrollModalAgregarSocio = ref(false)
+let rafNatiscrollModalAgregarSocio = null
+
+function actualizarNatiscrollModalAgregarSocio() {
+  const el = scrollAreaModalAgregarSocio.value
+  if (!el || !modalAgregar.value) {
+    hayNatiscrollModalAgregarSocio.value = false
+    return
+  }
+  hayNatiscrollModalAgregarSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalAgregarSocio() {
+  if (rafNatiscrollModalAgregarSocio != null) cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
+  rafNatiscrollModalAgregarSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalAgregarSocio = null
+    actualizarNatiscrollModalAgregarSocio()
+  })
+}
+
+const inputNombreSocio = ref(null)
 const modalDetalle = ref(false)
 const modalImportar = ref(false)
 const modalCuotasSocio = ref(false)
@@ -2426,17 +2953,126 @@ const modalProgreso = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
 useBodyScrollLock(modalAgregar)
+watch(modalAgregar, (open) => {
+  if (!open) {
+    hayNatiscrollModalAgregarSocio.value = false
+    return
+  }
+  nextTick(() => {
+    programarNatiscrollModalAgregarSocio()
+    requestAnimationFrame(() => {
+      const el = inputNombreSocio.value
+      if (el && typeof el.focus === 'function') {
+        try {
+          el.focus({ preventScroll: true })
+        } catch {
+          el.focus()
+        }
+      }
+    })
+  })
+})
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalImportar)
 useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalProgreso)
 
 const loadingCuotasSocio = ref(false)
-const vistaSimplificadaCuotas = ref(false)
 const socioEditando = ref(null)
 const socioSeleccionado = ref(null)
 const socioParaCuotas = ref(null)
 const cuotasSocioPorMes = ref([])
+
+const scrollAreaModalCuotasSocio = ref(null)
+const hayNatiscrollModalCuotasSocio = ref(false)
+let rafNatiscrollModalCuotasSocio = null
+
+function actualizarNatiscrollModalCuotasSocio() {
+  const el = scrollAreaModalCuotasSocio.value
+  if (!el || !modalCuotasSocio.value) {
+    hayNatiscrollModalCuotasSocio.value = false
+    return
+  }
+  hayNatiscrollModalCuotasSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalCuotasSocio() {
+  if (rafNatiscrollModalCuotasSocio != null) cancelAnimationFrame(rafNatiscrollModalCuotasSocio)
+  rafNatiscrollModalCuotasSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalCuotasSocio = null
+    actualizarNatiscrollModalCuotasSocio()
+  })
+}
+
+watch(
+  [modalCuotasSocio, loadingCuotasSocio, () => cuotasSocioPorMes.value.length],
+  () => {
+    if (modalCuotasSocio.value) {
+      nextTick(() => programarNatiscrollModalCuotasSocio())
+    } else {
+      hayNatiscrollModalCuotasSocio.value = false
+    }
+  },
+  { flush: 'post' }
+)
+
+
+// Totales agregados de la modal de cuotas del socio (mostrados al inicio)
+const totalesCuotasSocioModal = computed(() => {
+  const cuotas = cuotasSocioPorMes.value || []
+  let pagadas = 0
+  let parciales = 0
+  let pendientes = 0
+  let mora = 0
+  let totalObligacion = 0
+  let totalPagado = 0
+  for (const c of cuotas) {
+    const obligacion = (c.valorCuota || 0) + (c.sancion || 0)
+    const pagado = c.valorPagado || 0
+    totalObligacion += obligacion
+    totalPagado += Math.min(pagado, obligacion)
+    if (c.estado === 'pagada' || pagado >= obligacion) {
+      pagadas++
+    } else if (pagado > 0 && pagado < obligacion) {
+      parciales++
+    } else if (c.estado === 'mora') {
+      mora++
+    } else {
+      pendientes++ // pendiente, programada u otro
+    }
+  }
+  const totalAdeudado = Math.max(0, totalObligacion - totalPagado)
+  return {
+    total: cuotas.length,
+    pagadas,
+    parciales,
+    pendientes,
+    mora,
+    totalObligacion,
+    totalPagado,
+    totalAdeudado,
+  }
+})
+
+// Porcentaje de sanción aplicado a mostrar en la línea "Sanción por retiro" del comprobante.
+// Si vino explícito (comprobante recién generado) lo usamos; si no, lo derivamos de los importes.
+const porcentajeSancionComprobante = computed(() => {
+  const c = comprobanteDesactivacion.value
+  if (!c) return '0'
+  let pct = Number(c.porcentajeSancion)
+  if (!Number.isFinite(pct) || pct <= 0) {
+    const fondo = Number(c.valorFondo) || 0
+    const entregar = Number(c.valorEntregar) || 0
+    const base = fondo + entregar
+    pct = base > 0 ? (fondo / base) * 100 : 0
+  }
+  if (pct <= 0) return '0'
+  const redondeado = Math.round(pct * 10) / 10
+  return Number.isInteger(redondeado) ? String(redondeado) : redondeado.toFixed(1).replace(/\.0$/, '')
+})
+
 const errorSocio = ref('')
 const errorTelefonoDuplicado = ref(false)
 const mostrarContacto = ref(false)
@@ -2444,6 +3080,9 @@ const mostrarAdvertenciaCuota = ref(false)
 const cuotasSocio = ref([])
 const loadingDetalle = ref(false)
 const busqueda = ref('')
+const inputBusquedaSocios = ref(null)
+/** Evita repetir el foco automático al entrar (p. ej. al importar más socios) */
+const enfocoBusquedaInicialHecho = ref(false)
 const socioAEliminar = ref(null)
 useBodyScrollLock(computed(() => !!socioAEliminar.value))
 
@@ -2478,6 +3117,11 @@ const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga
 const miRol = ref(null)
 
+// FAB flotante: aparece cuando el header sale del viewport
+const headerRef = ref(null)
+const headerVisible = ref(true)
+let headerObserver = null
+
 // Variables para el modal de progreso de creación de socio
 const progresoCreacion = ref({
   paso: 0, // 0: iniciando, 1: creando socio, 2: generando cuotas, 3: completado
@@ -2500,63 +3144,396 @@ const loadingCuotas = ref(false)
 
 // Variables para importación CSV
 const archivoCSV = ref(null)
+const inputArchivoCsv = ref(null)
 const sociosPreview = ref([])
 const errorImportar = ref('')
 const exitoImportar = ref('')
 const importando = ref(false)
 
 // Sección activa del modal de detalle (solo una a la vez)
-const seccionActiva = ref('finanzas')  // 'finanzas', 'contacto', 'config' o null
+const seccionActiva = ref('cuotasPagadas')  // 'cuotasPagadas', 'contacto' o null (el resumen financiero es fijo, no desplegable)
 
-// Socios filtrados por búsqueda
-const sociosFiltrados = computed(() => {
-  if (!busqueda.value.trim()) {
-    return sociosStore.sociosNatillera
+// ─────────────────────────────────────────────────────────────
+// Natiscroll para modales estandarizadas (skill natillerapp-modals: obligatorio
+// en cualquier modal con cuerpo scrolleable). Mantener cada bloque al lado del
+// resto para localizarlo rápido.
+// Sigue el mismo patrón que `cuotasSocio` y `agregarSocio`: ref del scroll,
+// ref booleana, RAF, función de actualización y watch que reactive cuando se
+// abre el modal o cambia el contenido.
+// ─────────────────────────────────────────────────────────────
+
+// Natiscroll · Modal Detalle del Socio
+const scrollAreaModalDetalleSocio = ref(null)
+const hayNatiscrollModalDetalleSocio = ref(false)
+let rafNatiscrollModalDetalleSocio = null
+
+function actualizarNatiscrollModalDetalleSocio() {
+  const el = scrollAreaModalDetalleSocio.value
+  if (!el || !modalDetalle.value) {
+    hayNatiscrollModalDetalleSocio.value = false
+    return
   }
-  const termino = busqueda.value.toLowerCase().trim()
-  return sociosStore.sociosNatillera.filter(sn => 
-    sn.socio?.nombre?.toLowerCase().includes(termino) ||
-    sn.socio?.documento?.toLowerCase().includes(termino) ||
-    sn.socio?.telefono?.includes(termino)
+  hayNatiscrollModalDetalleSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalDetalleSocio() {
+  if (rafNatiscrollModalDetalleSocio != null) cancelAnimationFrame(rafNatiscrollModalDetalleSocio)
+  rafNatiscrollModalDetalleSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalDetalleSocio = null
+    actualizarNatiscrollModalDetalleSocio()
+  })
+}
+
+watch(
+  [modalDetalle, loadingDetalle, () => cuotasSocio.value.length, seccionActiva],
+  () => {
+    if (modalDetalle.value) {
+      nextTick(() => programarNatiscrollModalDetalleSocio())
+    } else {
+      hayNatiscrollModalDetalleSocio.value = false
+    }
+  },
+  { flush: 'post' }
+)
+
+// Natiscroll · Modal Desactivar Socio
+const scrollAreaModalDesactivarSocio = ref(null)
+const hayNatiscrollModalDesactivarSocio = ref(false)
+let rafNatiscrollModalDesactivarSocio = null
+
+function actualizarNatiscrollModalDesactivarSocio() {
+  const el = scrollAreaModalDesactivarSocio.value
+  if (!el || !socioADesactivar.value) {
+    hayNatiscrollModalDesactivarSocio.value = false
+    return
+  }
+  hayNatiscrollModalDesactivarSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalDesactivarSocio() {
+  if (rafNatiscrollModalDesactivarSocio != null) cancelAnimationFrame(rafNatiscrollModalDesactivarSocio)
+  rafNatiscrollModalDesactivarSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalDesactivarSocio = null
+    actualizarNatiscrollModalDesactivarSocio()
+  })
+}
+
+watch(
+  [
+    socioADesactivar,
+    desactivarSancionar,
+    desactivarPorcentajeSancion,
+    loadingTotalesDesactivar,
+  ],
+  () => {
+    if (socioADesactivar.value) {
+      nextTick(() => programarNatiscrollModalDesactivarSocio())
+    } else {
+      hayNatiscrollModalDesactivarSocio.value = false
+    }
+  },
+  { flush: 'post' }
+)
+
+// Natiscroll · Modal Eliminar Socio
+const scrollAreaModalEliminarSocio = ref(null)
+const hayNatiscrollModalEliminarSocio = ref(false)
+let rafNatiscrollModalEliminarSocio = null
+
+function actualizarNatiscrollModalEliminarSocio() {
+  const el = scrollAreaModalEliminarSocio.value
+  if (!el || !socioAEliminar.value) {
+    hayNatiscrollModalEliminarSocio.value = false
+    return
+  }
+  hayNatiscrollModalEliminarSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalEliminarSocio() {
+  if (rafNatiscrollModalEliminarSocio != null) cancelAnimationFrame(rafNatiscrollModalEliminarSocio)
+  rafNatiscrollModalEliminarSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalEliminarSocio = null
+    actualizarNatiscrollModalEliminarSocio()
+  })
+}
+
+watch(socioAEliminar, () => {
+  if (socioAEliminar.value) {
+    nextTick(() => programarNatiscrollModalEliminarSocio())
+  } else {
+    hayNatiscrollModalEliminarSocio.value = false
+  }
+}, { flush: 'post' })
+
+// Natiscroll · Modal Comprobante de Salida (ticket descargable)
+const scrollAreaModalComprobanteDesactivacion = ref(null)
+const hayNatiscrollModalComprobanteDesactivacion = ref(false)
+let rafNatiscrollModalComprobanteDesactivacion = null
+
+function actualizarNatiscrollModalComprobanteDesactivacion() {
+  const el = scrollAreaModalComprobanteDesactivacion.value
+  if (!el || !comprobanteDesactivacion.value) {
+    hayNatiscrollModalComprobanteDesactivacion.value = false
+    return
+  }
+  hayNatiscrollModalComprobanteDesactivacion.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalComprobanteDesactivacion() {
+  if (rafNatiscrollModalComprobanteDesactivacion != null) cancelAnimationFrame(rafNatiscrollModalComprobanteDesactivacion)
+  rafNatiscrollModalComprobanteDesactivacion = requestAnimationFrame(() => {
+    rafNatiscrollModalComprobanteDesactivacion = null
+    actualizarNatiscrollModalComprobanteDesactivacion()
+  })
+}
+
+watch(comprobanteDesactivacion, () => {
+  if (comprobanteDesactivacion.value) {
+    nextTick(() => programarNatiscrollModalComprobanteDesactivacion())
+  } else {
+    hayNatiscrollModalComprobanteDesactivacion.value = false
+  }
+}, { flush: 'post' })
+
+// Natiscroll · Modal Importar CSV
+const scrollAreaModalImportar = ref(null)
+const hayNatiscrollModalImportar = ref(false)
+let rafNatiscrollModalImportar = null
+
+function actualizarNatiscrollModalImportar() {
+  const el = scrollAreaModalImportar.value
+  if (!el || !modalImportar.value) {
+    hayNatiscrollModalImportar.value = false
+    return
+  }
+  hayNatiscrollModalImportar.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalImportar() {
+  if (rafNatiscrollModalImportar != null) cancelAnimationFrame(rafNatiscrollModalImportar)
+  rafNatiscrollModalImportar = requestAnimationFrame(() => {
+    rafNatiscrollModalImportar = null
+    actualizarNatiscrollModalImportar()
+  })
+}
+
+watch(
+  [modalImportar, () => sociosPreview.value.length, errorImportar, exitoImportar],
+  () => {
+    if (modalImportar.value) {
+      nextTick(() => programarNatiscrollModalImportar())
+    } else {
+      hayNatiscrollModalImportar.value = false
+    }
+  },
+  { flush: 'post' }
+)
+
+// Natiscroll · Modal Activar Socio
+const scrollAreaModalActivarSocio = ref(null)
+const hayNatiscrollModalActivarSocio = ref(false)
+let rafNatiscrollModalActivarSocio = null
+
+function actualizarNatiscrollModalActivarSocio() {
+  const el = scrollAreaModalActivarSocio.value
+  if (!el || !socioAActivar.value) {
+    hayNatiscrollModalActivarSocio.value = false
+    return
+  }
+  hayNatiscrollModalActivarSocio.value =
+    el.scrollHeight > el.clientHeight + 1 &&
+    el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+
+function programarNatiscrollModalActivarSocio() {
+  if (rafNatiscrollModalActivarSocio != null) cancelAnimationFrame(rafNatiscrollModalActivarSocio)
+  rafNatiscrollModalActivarSocio = requestAnimationFrame(() => {
+    rafNatiscrollModalActivarSocio = null
+    actualizarNatiscrollModalActivarSocio()
+  })
+}
+
+watch(socioAActivar, () => {
+  if (socioAActivar.value) {
+    nextTick(() => programarNatiscrollModalActivarSocio())
+  } else {
+    hayNatiscrollModalActivarSocio.value = false
+  }
+}, { flush: 'post' })
+
+// Filtros y paginación de la tabla
+const filtroEstado = ref('todos')           // 'todos' | 'activo' | 'inactivo'
+const filtroPeriodicidad = ref('todos')     // 'todos' | 'mensual' | 'quincenal'
+const paginaActual = ref(1)
+
+const ITEMS_POR_PAGINA_OPCIONES = [10, 25, 50, 100]
+const ITEMS_POR_PAGINA_DEFECTO = 10
+const STORAGE_KEY_ITEMS_POR_PAGINA = 'socios:itemsPorPagina'
+
+function leerItemsPorPaginaInicial() {
+  try {
+    const guardado = Number(localStorage.getItem(STORAGE_KEY_ITEMS_POR_PAGINA))
+    if (ITEMS_POR_PAGINA_OPCIONES.includes(guardado)) return guardado
+  } catch { /* localStorage no disponible (SSR / privado) */ }
+  return ITEMS_POR_PAGINA_DEFECTO
+}
+
+const itemsPorPagina = ref(leerItemsPorPaginaInicial())
+
+watch(itemsPorPagina, (nv) => {
+  paginaActual.value = 1
+  try { localStorage.setItem(STORAGE_KEY_ITEMS_POR_PAGINA, String(nv)) } catch { /* noop */ }
+})
+
+const sociosFiltrados = computed(() => {
+  let res = sociosStore.sociosNatillera
+  const termino = busqueda.value.trim().toLowerCase()
+  if (termino) {
+    res = res.filter(sn =>
+      sn.socio?.nombre?.toLowerCase().includes(termino) ||
+      sn.socio?.documento?.toLowerCase().includes(termino) ||
+      sn.socio?.telefono?.includes(termino) ||
+      sn.socio?.email?.toLowerCase().includes(termino)
+    )
+  }
+  if (filtroEstado.value !== 'todos') {
+    res = res.filter(sn => sn.estado === filtroEstado.value)
+  }
+  if (filtroPeriodicidad.value !== 'todos') {
+    res = res.filter(sn => sn.periodicidad === filtroPeriodicidad.value)
+  }
+  return [...res].sort((a, b) =>
+    (a.socio?.nombre || '').localeCompare(b.socio?.nombre || '', 'es', { sensitivity: 'base' })
   )
 })
 
-// Cuotas agrupadas por mes y año
-const cuotasAgrupadasPorMes = computed(() => {
-  if (!cuotasSocioPorMes.value || cuotasSocioPorMes.value.length === 0) return []
-  
-  const agrupadas = {}
-  
-  cuotasSocioPorMes.value.forEach(cuota => {
-    const key = `${cuota.anio}-${cuota.mes}`
-    if (!agrupadas[key]) {
-      agrupadas[key] = {
-        mes: cuota.mes,
-        anio: cuota.anio,
-        cuotas: []
+const totalPaginas = computed(() => Math.max(1, Math.ceil(sociosFiltrados.value.length / itemsPorPagina.value)))
+
+const sociosPaginados = computed(() => {
+  const start = (paginaActual.value - 1) * itemsPorPagina.value
+  return sociosFiltrados.value.slice(start, start + itemsPorPagina.value)
+})
+
+const rangoMostrado = computed(() => {
+  const total = sociosFiltrados.value.length
+  if (total === 0) return '0'
+  const start = (paginaActual.value - 1) * itemsPorPagina.value + 1
+  const end = Math.min(start + itemsPorPagina.value - 1, total)
+  return `${start}-${end}`
+})
+
+const paginasVisibles = computed(() => {
+  const total = totalPaginas.value
+  const cur = paginaActual.value
+  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
+  let start = Math.max(1, cur - 2)
+  let end = Math.min(total, start + 4)
+  if (end - start < 4) start = Math.max(1, end - 4)
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+})
+
+watch([busqueda, filtroEstado, filtroPeriodicidad], () => {
+  paginaActual.value = 1
+})
+
+watch(totalPaginas, (nv) => {
+  if (paginaActual.value > nv) paginaActual.value = nv
+})
+
+// inputmode del input de búsqueda. Se setea a 'none' durante el focus inicial
+// programático en móvil para que el teclado virtual NO se abra automáticamente.
+// El primer pointerdown / touchstart / keydown real del usuario lo restaura a 'text'.
+const inputModeBusqueda = ref('text')
+const tecladoSoftBusquedaRehabilitado = ref(false)
+
+function habilitarTecladoSoftBusqueda() {
+  if (tecladoSoftBusquedaRehabilitado.value) return
+  tecladoSoftBusquedaRehabilitado.value = true
+  inputModeBusqueda.value = 'text'
+}
+
+function enfocarInputBusquedaSocios() {
+  // En móvil, evita el teclado virtual durante el focus inicial programático.
+  // Se restaurará al primer touch/click/keydown del usuario sobre el input.
+  if (!tecladoSoftBusquedaRehabilitado.value && esDispositivoMovil()) {
+    inputModeBusqueda.value = 'none'
+  }
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const el = inputBusquedaSocios.value
+      if (!el || typeof el.focus !== 'function') return
+      try {
+        el.focus({ preventScroll: true })
+      } catch {
+        el.focus()
       }
-    }
-    agrupadas[key].cuotas.push(cuota)
-  })
-  
-  // Ordenar las cuotas dentro de cada grupo por quincena (si existe) o por fecha
-  Object.keys(agrupadas).forEach(key => {
-    agrupadas[key].cuotas.sort((a, b) => {
-      if (a.quincena && b.quincena) {
-        return a.quincena - b.quincena
-      }
-      if (a.quincena && !b.quincena) return -1
-      if (!a.quincena && b.quincena) return 1
-      return new Date(a.fechaVencimiento) - new Date(b.fechaVencimiento)
     })
   })
-  
-  // Convertir a array y ordenar por año y mes (más antiguo primero)
-  return Object.values(agrupadas).sort((a, b) => {
-    if (a.anio !== b.anio) return a.anio - b.anio
-    return a.mes - b.mes
-  })
+}
+
+// Al abrir la vista con lista de socios: foco en la búsqueda (una sola vez por visita)
+watch(
+  [cargaInicial, () => sociosStore.sociosNatillera.length],
+  ([cargando, cantidad]) => {
+    if (cargando || enfocoBusquedaInicialHecho.value) return
+    if (cantidad === 0) return
+    enfocoBusquedaInicialHecho.value = true
+    enfocarInputBusquedaSocios()
+  },
+  { flush: 'post' }
+)
+
+const moraPorSocioId = computed(() => {
+  const map = new Map()
+  if (Array.isArray(sociosConCuotasEnMora.value)) {
+    sociosConCuotasEnMora.value.forEach(s => map.set(s.id, s))
+  }
+  return map
 })
+
+function estadoCuotaSocio(sn) {
+  if (!sn || sn.estado !== 'activo') return null
+  return moraPorSocioId.value.has(sn.id) ? 'mora' : 'aldia'
+}
+
+function badgeEstadoClase(estado) {
+  if (estado === 'activo') return 'ds-badge--success'
+  if (estado === 'inactivo') return 'ds-badge--warning'
+  return 'ds-badge--danger'
+}
+
+function dotEstadoClase(estado) {
+  if (estado === 'activo') return 'badge-dot--success'
+  if (estado === 'inactivo') return 'badge-dot--warning'
+  return 'badge-dot--danger'
+}
+
+function labelEstado(estado) {
+  if (estado === 'activo') return 'Activo'
+  if (estado === 'inactivo') return 'Inactivo'
+  return 'Expulsado'
+}
+
+function abrirDetalleFila(sn) {
+  if (sn.estado === 'activo') verDetalleSocio(sn)
+  else verComprobanteSalida(sn)
+}
+
+function limpiarFiltros() {
+  busqueda.value = ''
+  filtroEstado.value = 'todos'
+  filtroPeriodicidad.value = 'todos'
+}
 
 function toggleSeccion(seccion) {
   seccionActiva.value = seccionActiva.value === seccion ? null : seccion
@@ -2575,6 +3552,16 @@ const formSocio = reactive({
 
 const mostrarAvatares = ref(false)
 
+watch(
+  [mostrarContacto, mostrarAvatares, socioEditando],
+  () => {
+    if (modalAgregar.value) {
+      nextTick(() => programarNatiscrollModalAgregarSocio())
+    }
+  },
+  { flush: 'post' }
+)
+
 // Verificar si la Contact Picker API está disponible
 const contactPickerDisponible = ref(false)
 const razonNoDisponible = ref('')
@@ -2585,63 +3572,83 @@ function esDispositivoMovil() {
          (window.innerWidth <= 768 && 'ontouchstart' in window)
 }
 
+// Detectar iOS / iPadOS / iPhone / iPod (cualquier navegador, incluido Chrome iOS).
+// En iOS todos los navegadores usan WebKit y NINGUNO soporta Contact Picker API.
+function esIosOIpadOS() {
+  const ua = navigator.userAgent || ''
+  if (/iPhone|iPad|iPod/i.test(ua)) return true
+  // iPadOS 13+ se reporta como Mac con touch (Apple cambió el UA en iPadOS).
+  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
+  return false
+}
+
+// Detectar Safari (macOS / iOS) — no soporta Contact Picker API.
+function esSafari() {
+  const ua = navigator.userAgent || ''
+  // Safari sin ser Chrome/Edge/Opera/Brave/Firefox
+  return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|EdgiOS|FxiOS|OPR|OPiOS|Brave/i.test(ua)
+}
+
 // Verificar disponibilidad de la Contact Picker API al montar el componente
 onMounted(() => {
+  // Lista de exclusión: contextos donde la Contact Picker API NO existe.
+  // Ocultar el botón directamente para no exponer una funcionalidad rota.
+  if (esIosOIpadOS()) {
+    razonNoDisponible.value = 'iOS no soporta la selección de contactos vía web.'
+    contactPickerDisponible.value = false
+    return
+  }
+  if (esSafari()) {
+    razonNoDisponible.value = 'Safari no soporta la selección de contactos vía web.'
+    contactPickerDisponible.value = false
+    return
+  }
+
+  // Solo dispositivos móviles (la API es exclusivamente móvil; en desktop no existe).
   const esMovil = esDispositivoMovil()
-  
-  // Verificar si la Contact Picker API está disponible
-  // Esta API está disponible principalmente en Chrome/Edge en Android
   if (!esMovil) {
     razonNoDisponible.value = 'La función de contactos solo está disponible en dispositivos móviles'
     contactPickerDisponible.value = false
     return
   }
 
-  // Verificar si la API está disponible en el navegador
-  if ('contacts' in navigator && 'select' in navigator.contacts) {
-    contactPickerDisponible.value = true
-    razonNoDisponible.value = ''
-  } else if ('contacts' in navigator && 'pick' in navigator.contacts) {
-    // API alternativa en algunos navegadores móviles
-    contactPickerDisponible.value = true
-    razonNoDisponible.value = ''
-  } else {
-    // Intentar verificar de otra manera (para APIs experimentales)
-    try {
-      if (navigator.contacts && typeof navigator.contacts.select === 'function') {
-        contactPickerDisponible.value = true
-        razonNoDisponible.value = ''
-      } else if (navigator.contacts && typeof navigator.contacts.pick === 'function') {
-        contactPickerDisponible.value = true
-        razonNoDisponible.value = ''
-      } else {
-        // API no disponible - determinar la razón
-        const userAgent = navigator.userAgent
-        if (/iPhone|iPad|iPod/i.test(userAgent)) {
-          razonNoDisponible.value = 'iOS Safari no soporta esta función. Usa Chrome o Edge en Android.'
-        } else if (/Android/i.test(userAgent)) {
-          razonNoDisponible.value = 'Esta función requiere Chrome o Edge en Android. Tu navegador actual no la soporta.'
-        } else {
-          razonNoDisponible.value = 'Tu navegador no soporta la selección de contactos. Prueba con Chrome o Edge en Android.'
-        }
-        contactPickerDisponible.value = false
-      }
-    } catch (e) {
-      // API no disponible
-      razonNoDisponible.value = 'Error al verificar la disponibilidad de la API de contactos'
-      contactPickerDisponible.value = false
-    }
+  // Requiere contexto seguro (HTTPS o localhost).
+  if (!window.isSecureContext) {
+    razonNoDisponible.value = 'Necesitas HTTPS para usar el selector de contactos.'
+    contactPickerDisponible.value = false
+    return
   }
-  
+
+  // Verificación final: la API debe existir y exponer un método select/pick callable.
+  try {
+    const contactsApi = navigator.contacts
+    if (contactsApi && typeof contactsApi.select === 'function') {
+      contactPickerDisponible.value = true
+      razonNoDisponible.value = ''
+    } else if (contactsApi && typeof contactsApi.pick === 'function') {
+      contactPickerDisponible.value = true
+      razonNoDisponible.value = ''
+    } else {
+      contactPickerDisponible.value = false
+      razonNoDisponible.value = 'Esta función requiere Chrome o Edge actualizados en Android.'
+    }
+  } catch {
+    contactPickerDisponible.value = false
+    razonNoDisponible.value = 'No se pudo verificar la API de contactos en este navegador.'
+  }
+
   // Debug: mostrar información en consola (solo en desarrollo)
   if (import.meta.env.DEV) {
     console.log('Contact Picker API:', {
       disponible: contactPickerDisponible.value,
       esMovil,
+      esIos: esIosOIpadOS(),
+      esSafari: esSafari(),
+      isSecureContext: window.isSecureContext,
       userAgent: navigator.userAgent,
       tieneContacts: 'contacts' in navigator,
-      tieneSelect: 'contacts' in navigator && 'select' in navigator.contacts,
-      tienePick: 'contacts' in navigator && 'pick' in navigator.contacts,
+      tieneSelect: 'contacts' in navigator && typeof navigator.contacts?.select === 'function',
+      tienePick: 'contacts' in navigator && typeof navigator.contacts?.pick === 'function',
       razon: razonNoDisponible.value
     })
   }
@@ -2698,6 +3705,23 @@ const periodicidadNatillera = computed(() => {
 const esVisor = computed(() => {
   return miRol.value === 'visor'
 })
+
+// FAB flotante: aparece cuando el header sale del viewport y no hay modal abierto
+const mostrarFab = computed(() =>
+  !esVisor.value &&
+  !cargaInicial.value &&
+  sociosStore.sociosNatillera.length > 0 &&
+  !headerVisible.value &&
+  !modalAgregar.value &&
+  !modalImportar.value &&
+  !modalDetalle.value &&
+  !modalCuotasSocio.value &&
+  !modalProgreso.value &&
+  !socioAEliminar.value &&
+  !socioADesactivar.value &&
+  !socioAActivar.value &&
+  !comprobanteDesactivacion.value
+)
 
 // Usuario autenticado
 const usuarioAutenticado = ref(null)
@@ -2951,7 +3975,21 @@ function limpiarNumeroTelefono(telefono) {
 
 // Función para abrir el selector de contactos del dispositivo móvil
 async function abrirSelectorContactos() {
+  // Activar la bandera ANTES de cualquier acción async para que cualquier
+  // popstate disparado por el browser durante el ciclo del picker se ignore.
+  suprimirPopstateContactos = true
+
   try {
+    // El Contact Picker API requiere contexto seguro (HTTPS o localhost)
+    if (!window.isSecureContext) {
+      notificationStore.error(
+        'Necesitas abrir la app por HTTPS para usar el selector de contactos.',
+        'Conexión no segura',
+        3500
+      )
+      return
+    }
+
     // Verificar si la API está disponible
     if (!('contacts' in navigator)) {
       notificationStore.error(
@@ -3073,11 +4111,38 @@ async function abrirSelectorContactos() {
         4000
       )
     }
+  } finally {
+    // Mantener la supresión un breve lapso adicional: algunos navegadores
+    // disparan popstate justo después de que la promesa del picker resuelve.
+    setTimeout(() => {
+      suprimirPopstateContactos = false
+    }, 600)
   }
 }
 
 function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
+  if (!TOURS_ENABLED) return
   if (!eraListaVaciaAntes || !natilleraId) return
+
+  const veniaDeModalSinSocios = consumePendingPrimerSocioNavTour(natilleraId)
+  if (veniaDeModalSinSocios && shouldShowPrimerSocioSociosNavTour(natilleraId)) {
+    nextTick(() => {
+      setTimeout(() => {
+        startPrimerSocioSociosNavTour({
+          natilleraId,
+          prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+          clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
+          onSociosTourClosed: (nid) => {
+            setPendingPrimerSocioCuotasMesTour(nid)
+            // Vista de selección de mes (CuotasMeses); el tour guiado continúa ahí.
+            router.push(`/natilleras/${nid}/cuotas`)
+          }
+        })
+      }, 900)
+    })
+    return
+  }
+
   if (!shouldShowNatilleraMenuTour(natilleraId)) return
   if (!dashboardSidebar?.openMobile || !dashboardSidebar?.closeMobile) return
   nextTick(() => {
@@ -3521,6 +4586,9 @@ async function handleGuardarSocio() {
         // Esperar 2.5 segundos y cerrar automáticamente
         await new Promise(resolve => setTimeout(resolve, 2500))
         cerrarModalProgreso()
+        if (eraListaSociosVacia && socioNatilleraId) {
+          setPrimerFlujoSocioNatilleraId(id, socioNatilleraId)
+        }
         programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
 
       } else {
@@ -3549,6 +4617,9 @@ async function handleGuardarSocio() {
             3000
           )
           cerrarModal()
+          if (eraListaSociosVacia && result.data?.id) {
+            setPrimerFlujoSocioNatilleraId(id, result.data.id)
+          }
           programarTourMenuNatilleraSiCorresponde(eraListaSociosVacia, id)
         } else {
           if (result.error?.includes('unique') || result.error?.includes('duplicate') || result.error?.includes('teléfono')) {
@@ -3898,6 +4969,9 @@ async function confirmarDesactivarSocio() {
       }
       const codigoComprobante = generarCodigoComprobanteSalida()
       const fechaComprobante = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+      const porcentajeSancionAplicado = desactivarSancionar.value && desactivarPorcentajeSancion.value > 0
+        ? Math.min(100, Math.max(0, Number(desactivarPorcentajeSancion.value) || 0))
+        : 0
       const datosComprobante = {
         socioNombre: sn.socio?.nombre || 'Socio',
         socioTelefono: sn.socio?.telefono || null,
@@ -3907,6 +4981,7 @@ async function confirmarDesactivarSocio() {
         totalSancionesPagadas: tot.totalSancionesPagadas || 0,
         valorEntregar,
         valorFondo,
+        porcentajeSancion: porcentajeSancionAplicado,
         codigoComprobante
       }
       const { error: errComprobante } = await supabase.from('comprobantes_salida').upsert({
@@ -4053,6 +5128,58 @@ function getMesLabel(mes) {
   return mesObj ? mesObj.label : `Mes ${mes}`
 }
 
+/** Cuotas con estado pagada para el modal de detalle: etiqueta tipo "1.ª de Marzo 2026", valor y fecha (orden reciente primero). */
+const cuotasPagadasDetalleSocio = computed(() => {
+  const list = (cuotasSocio.value || []).filter((c) => c.estado === 'pagada')
+  const items = list.map((c) => {
+    let mes = c.mes
+    let anio = c.anio
+    if (c.fecha_limite && typeof c.fecha_limite === 'string' && c.fecha_limite.includes('-')) {
+      const [y, m] = c.fecha_limite.split('-').map(Number)
+      if (anio == null) anio = y
+      if (mes == null) mes = m
+    }
+    const nombreMes = mes != null ? getMesLabel(mes) : null
+    let cuotaLabel = 'Cuota'
+    if (c.quincena === 1 && nombreMes != null && anio != null) {
+      cuotaLabel = `1.ª de ${nombreMes} ${anio}`
+    } else if (c.quincena === 2 && nombreMes != null && anio != null) {
+      cuotaLabel = `2.ª de ${nombreMes} ${anio}`
+    } else if (nombreMes != null && anio != null) {
+      cuotaLabel = `${nombreMes} ${anio}`
+    } else if (anio != null) {
+      cuotaLabel = c.quincena === 1 ? `1.ª quincena ${anio}` : c.quincena === 2 ? `2.ª quincena ${anio}` : `${anio}`
+    } else if (c.quincena === 1) {
+      cuotaLabel = '1.ª quincena'
+    } else if (c.quincena === 2) {
+      cuotaLabel = '2.ª quincena'
+    }
+
+    const fechaPagoMs = c.fecha_pago ? new Date(c.fecha_pago).getTime() : 0
+    let fechaLimiteMs = 0
+    if (c.fecha_limite) {
+      fechaLimiteMs = new Date(c.fecha_limite).getTime()
+    }
+
+    return {
+      id: c.id,
+      cuotaLabel,
+      fechaPago: c.fecha_pago,
+      valorPagado: c.valor_pagado || 0,
+      fechaPagoMs,
+      fechaLimiteMs
+    }
+  })
+  return items.sort(
+    (a, b) =>
+      (b.fechaPagoMs || b.fechaLimiteMs) - (a.fechaPagoMs || a.fechaLimiteMs)
+  )
+})
+
+const totalValorCuotasPagadasDetalleSocio = computed(() =>
+  cuotasPagadasDetalleSocio.value.reduce((s, i) => s + (i.valorPagado || 0), 0)
+)
+
 // Función para obtener el emoji del mes
 function getMesEmoji(mes) {
   const emojis = {
@@ -4160,6 +5287,85 @@ function tienePagoParcial(cuota) {
   return valorPagado > 0 && valorPagado < totalAPagar
 }
 
+function totalObligacionCuotaSocioModal(c) {
+  return (c.valorCuota || 0) + (c.sancion || 0)
+}
+
+function etiquetaMesAnioCuotaSocioModal(c) {
+  if (c.mes == null) {
+    return c.anio != null ? String(c.anio) : '—'
+  }
+  const anio = c.anio != null ? c.anio : ''
+  return `${getMesLabel(c.mes)}${anio !== '' ? ` ${anio}` : ''}`.trim()
+}
+
+function handleClickFilaCuotaSocioModal(c) {
+  if (esVisor.value) return
+  if (c.mes == null) return
+  navegarACuotasMes(c.mes)
+}
+
+function etiquetaPeriodoCuotaSocioModal(c) {
+  if (c.quincena === 1) return '1.ª Q'
+  if (c.quincena === 2) return '2.ª Q'
+  return 'Mes'
+}
+
+// Meta corta para el badge de quincena (móvil): label + clase de color.
+function metaPeriodoCuotaSocioModal(c) {
+  if (c.quincena === 1) return { short: 'Q1', cls: 'is-q1' }
+  if (c.quincena === 2) return { short: 'Q2', cls: 'is-q2' }
+  return { short: 'M', cls: 'is-mes' }
+}
+
+function getMontoValorCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado >= total) return pagado
+  if (pagado > 0 && pagado < total) return total - pagado
+  return total
+}
+
+function subetiquetaValorCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado >= total) return 'Liquidado'
+  if (pagado > 0 && pagado < total) return `Pagado $${formatMoney(pagado)}`
+  return 'Pendiente de pago'
+}
+
+function etiquetaEstadoCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado > 0 && pagado < total) return 'Parcial'
+  if (c.estado === 'pagada' || pagado >= total) return 'Pagada'
+  if (c.estado === 'mora') return c.diasMora > 0 ? `Mora ${c.diasMora}d` : 'Mora'
+  if (c.estado === 'pendiente') return 'Pend.'
+  if (c.estado === 'programada') return 'Prog.'
+  return '—'
+}
+
+function clasesEstadoCuotaSocioModal(c) {
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  if (pagado > 0 && pagado < total) {
+    return { badge: 'bg-orange-100 text-orange-900 border-orange-200' }
+  }
+  if (c.estado === 'pagada' || pagado >= total) {
+    return { badge: 'bg-green-100 text-green-900 border-green-200' }
+  }
+  if (c.estado === 'mora') {
+    return { badge: 'bg-red-100 text-red-900 border-red-200' }
+  }
+  if (c.estado === 'pendiente') {
+    return { badge: 'bg-amber-100 text-amber-900 border-amber-200' }
+  }
+  if (c.estado === 'programada') {
+    return { badge: 'bg-slate-100 text-slate-700 border-slate-200' }
+  }
+  return { badge: 'bg-gray-100 text-gray-800 border-gray-200' }
+}
+
 // Función para abrir el modal de cuotas del socio
 async function verCuotasSocio(sn) {
   // Desactivar animaciones de cuotas en mora al hacer clic en "ver cuotas"
@@ -4177,10 +5383,9 @@ async function verCuotasSocio(sn) {
     const resumen = await sociosStore.obtenerResumenSocio(sn.id)
     const cuotas = resumen?.cuotas || []
     
-    // Obtener días de gracia de la natillera
-    await natillerasStore.fetchNatillera(id)
+    // Obtener días de gracia de la natillera (ya cargada en onMounted)
     const natillera = natillerasStore.natilleraActual
-    const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
+    const diasGracia = natillera?.reglas_multas?.dias_gracia ?? 3
     
     // Calcular sanciones dinámicas para las cuotas del socio
     const resultSanciones = await cuotasStore.calcularSancionesTotales(id, cuotas)
@@ -4322,6 +5527,7 @@ async function verCuotasSocio(sn) {
     alert(`Error al cargar las cuotas: ${error?.message || 'Error desconocido'}`)
   } finally {
     loadingCuotasSocio.value = false
+    nextTick(() => programarNatiscrollModalCuotasSocio())
   }
 }
 
@@ -4334,6 +5540,11 @@ function cerrarModalCuotasSocio() {
 
 // Función para manejar el botón atrás del navegador en móvil
 let modalHistoryState = null
+
+// Bandera para suprimir handlePopState mientras el Contact Picker está abierto.
+// Algunos navegadores (Chrome Android, WebViews) disparan popstate al cerrar el
+// picker, lo que cerraba el modal de Agregar Socio sin que el usuario lo pidiera.
+let suprimirPopstateContactos = false
 
 function handleModalBack(modalRef, modalName) {
   watch(modalRef, (isOpen) => {
@@ -4359,6 +5570,11 @@ function handleModalBack(modalRef, modalName) {
 
 // Listener para el botón atrás del navegador
 function handlePopState(event) {
+  // Si el Contact Picker está activo, ignorar el popstate: algunos navegadores
+  // disparan history.back() automático al cerrar el selector de contactos y eso
+  // cerraba el modal de Agregar Socio.
+  if (suprimirPopstateContactos) return
+
   // Verificar modales en orden de z-index (las más altas primero)
   // Esto asegura que se cierre primero la modal superior cuando hay modales anidadas
   
@@ -4693,6 +5909,7 @@ function cerrarModalImportar() {
   sociosPreview.value = []
   errorImportar.value = ''
   exitoImportar.value = ''
+  if (inputArchivoCsv.value) inputArchivoCsv.value.value = ''
 }
 
 async function verDetalleSocio(sn) {
@@ -4727,13 +5944,18 @@ async function verComprobanteSalida(sn) {
     return
   }
   if (row) {
+    const valorFondoRow = parseFloat(row.valor_sancion) || 0
+    const valorEntregarRow = parseFloat(row.valor_entregar) || 0
+    const baseRecaudada = valorFondoRow + valorEntregarRow
+    const porcentajeDerivado = baseRecaudada > 0 ? (valorFondoRow / baseRecaudada) * 100 : 0
     comprobanteDesactivacion.value = {
       socioNombre: row.socio_nombre || sn.socio?.nombre || 'Socio',
       socioTelefono: row.socio_telefono || sn.socio?.telefono || null,
       fecha: row.fecha,
       totalAhorrado: parseFloat(row.total_ahorrado) || 0,
-      valorFondo: parseFloat(row.valor_sancion) || 0,
-      valorEntregar: parseFloat(row.valor_entregar) || 0,
+      valorFondo: valorFondoRow,
+      valorEntregar: valorEntregarRow,
+      porcentajeSancion: porcentajeDerivado,
       codigoComprobante: row.codigo_comprobante
     }
     comprobantesSalidaGuardados.value[sn.id] = { ...comprobanteDesactivacion.value }
@@ -4784,100 +6006,60 @@ watch(() => props.id || route.params.id, async (newId) => {
 async function fetchPrestamosEnMora() {
   loadingPrestamos.value = true
   try {
-    // Obtener los IDs de socios_natillera de esta natillera
-    const { data: sociosNatillera } = await supabase
-      .from('socios_natillera')
-      .select('id, socio:socios(*)')
-      .eq('natillera_id', id)
-
-    if (!sociosNatillera || sociosNatillera.length === 0) {
+    // Reusar socios ya cargados por sociosStore en lugar de un fetch extra
+    const sociosNatilleraData = sociosStore.sociosNatillera
+    if (!sociosNatilleraData || sociosNatilleraData.length === 0) {
       prestamosEnMora.value = []
       return
     }
 
-    const socioNatilleraIds = sociosNatillera.map(s => s.id)
+    const socioNatilleraIds = sociosNatilleraData.map(s => s.id)
 
-    // Obtener préstamos activos
-    const { data: prestamos, error } = await supabase
+    // Un solo request con nested select (antes: 3 queries secuenciales)
+    const { data: prestamos, error: prestamosErr } = await supabase
       .from('prestamos')
-      .select('*')
+      .select('*, plan_pagos_prestamo(prestamo_id, fecha_proyectada, pagada, valor_cuota)')
       .in('socio_natillera_id', socioNatilleraIds)
       .eq('estado', 'activo')
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (prestamosErr) throw prestamosErr
 
     if (!prestamos || prestamos.length === 0) {
       prestamosEnMora.value = []
       return
     }
 
-    // Obtener IDs de préstamos para cargar el plan de pagos
-    const prestamoIds = prestamos.map(p => p.id)
-
-    // Cargar el plan de pagos para todos los préstamos
-    const { data: planPagos, error: planError } = await supabase
-      .from('plan_pagos_prestamo')
-      .select('*')
-      .in('prestamo_id', prestamoIds)
-
-    if (planError) throw planError
-
-    // Crear un mapa por prestamo_id
-    const planPagosMap = (planPagos || []).reduce((acc, cuota) => {
-      if (!acc[cuota.prestamo_id]) {
-        acc[cuota.prestamo_id] = []
-      }
-      acc[cuota.prestamo_id].push(cuota)
-      return acc
-    }, {})
-
-    // Fecha actual para calcular vencimientos
     const fechaActual = new Date()
     fechaActual.setHours(0, 0, 0, 0)
 
-    // Filtrar préstamos con cuotas vencidas
     const prestamosConMora = prestamos.map(prestamo => {
-      const socioNatillera = sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
-      const planPagosPrestamo = planPagosMap[prestamo.id] || []
+      const socioNat = sociosNatilleraData.find(s => s.id === prestamo.socio_natillera_id)
+      const planPagosPrestamo = prestamo.plan_pagos_prestamo || []
 
-      // Filtrar cuotas vencidas (no pagadas y con fecha anterior a hoy)
       const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
-        const fechaVencimiento = new Date(cuota.fecha_proyectada)
-        fechaVencimiento.setHours(0, 0, 0, 0)
-        return !cuota.pagada && fechaVencimiento < fechaActual
+        if (cuota.pagada) return false
+        const fv = new Date(cuota.fecha_proyectada)
+        fv.setHours(0, 0, 0, 0)
+        return fv < fechaActual
       })
 
-      const tieneCuotasVencidas = cuotasVencidasArray.length > 0
-      const cuotasVencidas = cuotasVencidasArray.length
+      if (cuotasVencidasArray.length === 0) return null
 
-      // Calcular días de mora y valor en deuda
-      let diasMora = 0
-      let valorCuotasEnDeuda = 0
+      cuotasVencidasArray.sort((a, b) => new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada))
 
-      if (cuotasVencidasArray.length > 0) {
-        const cuotaMasAntigua = cuotasVencidasArray.sort((a, b) =>
-          new Date(a.fecha_proyectada) - new Date(b.fecha_proyectada)
-        )[0]
-
-        const fechaVencimientoMasAntigua = new Date(cuotaMasAntigua.fecha_proyectada)
-        fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
-
-        const diffTime = fechaActual - fechaVencimientoMasAntigua
-        diasMora = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-        valorCuotasEnDeuda = cuotasVencidasArray.reduce((sum, cuota) => sum + (cuota.valor_cuota || 0), 0)
-      }
+      const fechaVencMasAntigua = new Date(cuotasVencidasArray[0].fecha_proyectada)
+      fechaVencMasAntigua.setHours(0, 0, 0, 0)
 
       return {
         ...prestamo,
-        socio_natillera: socioNatillera,
-        tieneCuotasVencidas,
-        cuotasVencidas,
-        diasMora,
-        valorCuotasEnDeuda
+        socio_natillera: socioNat,
+        tieneCuotasVencidas: true,
+        cuotasVencidas: cuotasVencidasArray.length,
+        diasMora: Math.floor((fechaActual - fechaVencMasAntigua) / 86400000),
+        valorCuotasEnDeuda: cuotasVencidasArray.reduce((sum, c) => sum + (c.valor_cuota || 0), 0)
       }
-    }).filter(p => p.tieneCuotasVencidas)
+    }).filter(Boolean)
 
     prestamosEnMora.value = prestamosConMora
   } catch (e) {
@@ -5005,6 +6187,11 @@ function irAPrestamos() {
     router.push('/dashboard')
     return
   }
+  const n = natillerasStore.natilleraActual
+  if (n && String(n.id) === String(id) && natilleraPrestamosDeshabilitados(n)) {
+    notificationStore.info('La natillera no permite préstamos', 'Préstamos')
+    return
+  }
   router.push(`/natilleras/${id}/prestamos`)
 }
 
@@ -5020,72 +6207,674 @@ function irACuotas() {
 }
 
 onMounted(async () => {
-  // Obtener usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser()
-  usuarioAutenticado.value = user
-  
-  // Cargar natillera actual para obtener su periodicidad
-  if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
-    await natillerasStore.fetchNatillera(id)
+  // Observer del header para mostrar/ocultar el FAB cuando sale del viewport
+  if (typeof IntersectionObserver !== 'undefined' && headerRef.value) {
+    headerObserver = new IntersectionObserver(
+      ([entry]) => { headerVisible.value = entry.isIntersecting },
+      { threshold: 0, rootMargin: '0px 0px -8px 0px' }
+    )
+    headerObserver.observe(headerRef.value)
   }
-  
-  // Obtener el rol del usuario en la natillera
-  await nextTick()
+
+  // ── Phase 1: Cargas críticas en PARALELO ──
+  // Antes: 6 awaits secuenciales (~6 round-trips).
+  // Ahora: 3 fetches en paralelo (~1 round-trip) para mostrar la lista de socios lo antes posible.
+  const needsNatillera = !natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id
+
+  const [userResult] = await Promise.all([
+    supabase.auth.getUser(),
+    needsNatillera
+      ? supabase.from('natilleras').select('*').eq('id', id).maybeSingle().then(({ data }) => {
+          if (data) natillerasStore.natilleraActual = data
+        })
+      : Promise.resolve(),
+    sociosStore.fetchSociosNatillera(id)
+  ])
+
+  const user = userResult.data.user
+  usuarioAutenticado.value = user
+  cargaInicial.value = false
+
+  // ── Phase 2: Poblar cuotas store sin re-fetch (datos ya en sociosStore) ──
+  const sociosNat = sociosStore.sociosNatillera
+  if (sociosNat.length > 0) {
+    const allCuotas = sociosNat.flatMap(sn =>
+      (sn.cuotas || []).map(c => ({ ...c, socio_natillera_id: sn.id }))
+    )
+    cuotasStore.aplicarCuotasDesdeCargaNatillera(
+      sociosNat.map(sn => ({
+        id: sn.id,
+        valor_cuota_individual: sn.valor_cuota_individual,
+        periodicidad: sn.periodicidad,
+        estado: sn.estado,
+        socio: sn.socio
+      })),
+      allCuotas
+    )
+  }
+
+  // ── Phase 3: Trabajo secundario NO bloqueante ──
   const natillera = natillerasStore.natilleraActual
-  if (natillera) {
-    if (!esAdmin.value) {
-      try {
-        const rol = await colaboradoresStore.obtenerMiRol(id)
-        miRol.value = rol
-      } catch (err) {
-        console.warn('Error obteniendo rol del usuario:', err)
-        miRol.value = null
-      }
-    } else {
-      // Si es admin, no necesita verificar rol
+  if (natillera && user) {
+    if (natillera.admin_id === user.id) {
       miRol.value = 'administrador'
+    } else {
+      colaboradoresStore.obtenerMiRol(id)
+        .then(rol => { miRol.value = rol })
+        .catch(() => { miRol.value = null })
     }
   }
-  
-  // Cargar socios y marcar carga inicial como completada
-  await sociosStore.fetchSociosNatillera(id)
-  cargaInicial.value = false
-  
+
   fetchPrestamosEnMora()
-  // Cargar cuotas para mostrar socios con cuotas en mora
+
   loadingCuotas.value = true
-  try {
-    await cuotasStore.fetchCuotasNatillera(id)
-  } finally {
-    loadingCuotas.value = false
-  }
-  
-  // Agregar listener para el botón atrás
+  cuotasStore.fetchCuotasNatillera(id).finally(() => { loadingCuotas.value = false })
+
   window.addEventListener('popstate', handlePopState)
-  
-  // Si viene con query parameter agregar=true, abrir el modal automáticamente
+
   if (route.query.agregar === 'true') {
-    // Esperar un momento para asegurar que todo esté cargado
     await nextTick()
     setTimeout(() => {
       abrirModalAgregar()
-      // Limpiar el query parameter de la URL sin recargar la página
       router.replace({ query: {} })
     }, 300)
   }
 })
 
 onUnmounted(() => {
+  if (rafNatiscrollModalAgregarSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
+    rafNatiscrollModalAgregarSocio = null
+  }
+  if (rafNatiscrollModalCuotasSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalCuotasSocio)
+    rafNatiscrollModalCuotasSocio = null
+  }
   // Limpiar listener al desmontar
   if (clickOutsideListener) {
     document.removeEventListener('click', clickOutsideListener)
   }
   // Remover listener para el botón atrás
   window.removeEventListener('popstate', handlePopState)
+  if (headerObserver) {
+    headerObserver.disconnect()
+    headerObserver = null
+  }
 })
 </script>
 
 <style scoped>
+/* ==========================================================================
+   Tabla de Socios (DS) — toolbar, tabla desktop, lista móvil, paginación
+   ========================================================================== */
+
+/* ---------- Toolbar (search + filtros) ---------- */
+.socios-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--surface-divider);
+  background: var(--surface-muted);
+  align-items: center;
+}
+@media (min-width: 640px) {
+  .socios-toolbar { padding: 1rem 1.25rem; gap: 0.75rem; }
+}
+
+.socios-toolbar__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border: 1px solid var(--surface-divider-strong);
+  border-radius: var(--radius-pill);
+  padding: 0.4375rem 0.875rem;
+  flex: 1 1 220px;
+  min-height: 44px;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.socios-toolbar__search:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
+}
+.socios-toolbar__search > svg {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.socios-search__input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 1rem; /* ≥16px → evita zoom Safari iOS */
+  line-height: 1.4;
+  color: #0f172a;
+  min-width: 0;
+}
+.socios-search__input::placeholder { color: #94a3b8; }
+
+.socios-search__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.socios-search__clear:hover { background: rgba(15, 23, 42, 0.06); }
+
+.socios-toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Selects custom (appearance:none acotado a esta clase, no global) */
+.socios-filter {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  border: 1px solid var(--surface-divider-strong);
+  border-radius: var(--radius-pill);
+  padding: 0.5rem 2rem 0.5rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+  min-height: 44px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1rem;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+}
+.socios-filter:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
+}
+@media (max-width: 480px) {
+  .socios-filter { flex: 1; min-width: 0; }
+}
+
+/* ---------- Tabla desktop ---------- */
+.socios-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.socios-table thead th {
+  font-family: var(--font-brand-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  text-align: left;
+  padding: 0.875rem 1rem;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--surface-divider);
+  white-space: nowrap;
+}
+.socios-table thead th.text-right { text-align: right; }
+.socios-table tbody td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  vertical-align: middle;
+  font-size: 0.875rem;
+  color: #334155;
+}
+.socios-table tbody tr:last-child td { border-bottom: 0; }
+
+.socios-table__row {
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+}
+.socios-table__row:hover { background: var(--brand-primary-soft); }
+.socios-table__row:focus-visible {
+  outline: none;
+  background: var(--brand-primary-soft);
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+.socios-table__row--inactivo {
+  opacity: 0.6;
+}
+.socios-table__row--inactivo:hover { background: rgba(15, 23, 42, 0.03); }
+
+/* ---------- Lista móvil: fondo lienzo para diferenciar las tarjetas blancas ---------- */
+.socios-mobile-list {
+  background: var(--surface-canvas);
+  /* Solo espacio vertical: las tarjetas usan todo el ancho del contenedor (sin márgenes laterales) */
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---------- Tarjeta móvil ---------- */
+.socios-mobile-card {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-divider-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow var(--transition-base),
+              border-color var(--transition-base),
+              transform var(--transition-fast);
+}
+.socios-mobile-card:active {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.socios-mobile-card--inactivo { opacity: 0.6; }
+
+.socios-mobile-card__main {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color var(--transition-base);
+}
+
+/* Métricas compactas bajo el bloque nombre/contacto */
+.socios-mobile-card__metrics {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-divider);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.socios-mobile-metric-label {
+  font-family: var(--font-brand-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+  line-height: 1;
+}
+
+/* Sub-estado cuota más pequeño dentro de tarjeta compacta */
+.cuota-status--compact {
+  font-size: 0.625rem;
+  margin-top: 0.125rem;
+}
+.cuota-status--compact::before {
+  width: 4px;
+  height: 4px;
+}
+.socios-mobile-card__main:active { background: var(--brand-primary-soft); }
+.socios-mobile-card__main:focus-visible {
+  outline: none;
+  background: var(--brand-primary-soft);
+  box-shadow: inset 3px 0 0 var(--brand-primary);
+}
+
+.socios-mobile-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3125rem;
+  padding: 0.5rem 0.625rem 0.625rem;
+  border-top: 1px solid var(--surface-divider);
+  background: var(--surface-muted);
+}
+
+/* Pills suaves para acciones de la tarjeta móvil (no usar gradientes vibrantes) */
+.card-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex: 1 1 auto;
+  min-height: 32px;
+  padding: 0.3125rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 0;
+  cursor: pointer;
+  transition: filter var(--transition-base), transform var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.card-pill:active { transform: scale(0.97); }
+.card-pill--icon {
+  flex: 0 0 auto;
+  min-width: 32px;
+  padding: 0.3125rem;
+}
+.card-pill--brand   { background: var(--brand-primary-soft); color: var(--brand-primary); }
+.card-pill--info    { background: #dbeafe;                   color: #1d4ed8; }
+.card-pill--warning { background: #fef3c7;                   color: #b45309; }
+.card-pill--danger  { background: #fee2e2;                   color: #b91c1c; }
+.card-pill--brand:hover,
+.card-pill--info:hover,
+.card-pill--warning:hover,
+.card-pill--danger:hover { filter: brightness(0.96); }
+
+/* ---------- Badge dot (estado con punto coloreado) ---------- */
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.badge-dot--success { background: var(--brand-success); }
+.badge-dot--warning { background: var(--brand-warning); }
+.badge-dot--danger  { background: var(--brand-danger); }
+
+/* ---------- Sub-estado de cuota (Al día / Pendiente) ---------- */
+.cuota-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  margin-top: 0.1875rem;
+  line-height: 1.2;
+}
+.cuota-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.cuota-status--ok   { color: var(--brand-success); }
+.cuota-status--mora { color: var(--brand-warning); }
+
+/* ---------- Botones-icono de acción ---------- */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background-color var(--transition-base), color var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.action-btn:hover  { background: rgba(15, 23, 42, 0.06); color: #0f172a; }
+.action-btn:active { transform: scale(0.96); }
+.action-btn--brand:hover   { background: var(--brand-primary-soft); color: var(--brand-primary); }
+.action-btn--info:hover    { background: #dbeafe; color: #1d4ed8; }
+.action-btn--warning:hover { background: #fef3c7; color: #b45309; }
+.action-btn--danger:hover  { background: #fee2e2; color: #b91c1c; }
+
+/* ---------- Paginación ---------- */
+.socios-pagination {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  border-top: 1px solid var(--surface-divider);
+  background: var(--surface-muted);
+}
+@media (min-width: 640px) {
+  .socios-pagination { flex-direction: row; padding: 0.875rem 1.25rem; }
+}
+
+.socios-pagination__info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  justify-content: center;
+}
+@media (min-width: 640px) {
+  .socios-pagination__info { justify-content: flex-start; }
+}
+
+.socios-page-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4375rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.socios-page-size__select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  border: 1px solid var(--surface-divider-strong);
+  border-radius: var(--radius-md);
+  padding: 0.3125rem 1.625rem 0.3125rem 0.625rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  min-height: 32px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.4375rem center;
+  background-size: 0.875rem;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+.socios-page-size__select:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
+}
+/* En móviles muy pequeños, el select crece para mantener área táctil cómoda */
+@media (max-width: 480px) {
+  .socios-page-size__select { min-height: 36px; }
+}
+
+.socios-page-btn {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #475569;
+  background: transparent;
+  border: 1px solid var(--surface-divider);
+  cursor: pointer;
+  transition: background-color var(--transition-base),
+              border-color var(--transition-base),
+              color var(--transition-base),
+              box-shadow var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.socios-page-btn:hover:not(:disabled) {
+  background: #fff;
+  border-color: rgba(27, 94, 55, 0.30);
+  color: var(--brand-primary);
+}
+.socios-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.socios-page-btn--active,
+.socios-page-btn--active:hover {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+
+/* ---------- Botón compacto «+» en la cabecera (móvil) ---------- */
+.socios-header-add {
+  width: 44px;
+  min-width: 44px;
+  padding: 0;
+  flex-shrink: 0;
+  /* hereda colores y radio del .ds-btn--primary; aquí solo lo hacemos icon-only */
+}
+
+/* ---------- FAB flotante «+» ---------- */
+.socios-fab {
+  position: fixed;
+  z-index: 40;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: var(--brand-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 12px 28px -6px rgba(15, 83, 45, 0.45),
+              0 4px 8px -2px rgba(15, 83, 45, 0.25);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background-color var(--transition-base),
+              transform var(--transition-fast),
+              box-shadow var(--transition-base);
+}
+.socios-fab:hover { background: var(--brand-primary-hover); }
+.socios-fab:active { transform: scale(0.96); }
+@media (min-width: 1024px) {
+  .socios-fab { bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+}
+
+.socios-fab-enter-active,
+.socios-fab-leave-active {
+  transition: opacity 200ms ease,
+              transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.socios-fab-enter-from,
+.socios-fab-leave-to {
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+
+/* ---------- iOS: refuerzo táctil/scroll ---------- */
+@supports (-webkit-touch-callout: none) {
+  .socios-mobile-card,
+  .socios-mobile-card__main,
+  .socios-table__row,
+  .action-btn,
+  .card-pill,
+  .socios-fab,
+  .socios-page-btn,
+  .socios-search__clear { -webkit-transform: translate3d(0, 0, 0); }
+}
+
+/* ==========================================================================
+   Modal Agregar / Editar Socio — bloques DS
+   ========================================================================== */
+
+/* Selector de periodicidad (Mensual / Quincenal) — tonos verde marca, sin morado */
+.periodicidad-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.75rem 0.875rem;
+  min-height: 56px;
+  background: #fff;
+  border: 1.5px solid var(--surface-divider-strong);
+  border-radius: var(--radius-lg);
+  color: #475569;
+  cursor: pointer;
+  transition: border-color var(--transition-base),
+              background-color var(--transition-base),
+              box-shadow var(--transition-base);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  text-align: left;
+}
+.periodicidad-opcion:hover:not(:disabled) {
+  border-color: rgba(27, 94, 55, 0.40);
+}
+.periodicidad-opcion--activa {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.10);
+}
+.periodicidad-opcion--activa > svg:first-child { color: var(--brand-primary); }
+.periodicidad-opcion--unica {
+  cursor: default;
+  opacity: 0.95;
+}
+
+/* Bloque destacado de la cuota */
+.cuota-bloque {
+  padding: 1rem;
+  background: var(--brand-primary-soft);
+  border: 1px solid rgba(27, 94, 55, 0.18);
+  border-radius: var(--radius-lg);
+}
+.cuota-bloque__prefix {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  font-weight: 600;
+  font-size: 1rem;
+  pointer-events: none;
+}
+.cuota-bloque__input {
+  padding-left: 1.875rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+/* Aviso warning dentro de la cuota (al editar) */
+.cuota-aviso {
+  margin-top: 0.625rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: rgba(254, 243, 199, 0.7);
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  border-radius: var(--radius-md);
+}
+
+/* iOS: forzar GPU en elementos del modal con transforms/transitions */
+@supports (-webkit-touch-callout: none) {
+  .periodicidad-opcion,
+  .cuota-bloque__input { -webkit-transform: translate3d(0, 0, 0); }
+}
+
 /* Animación de entrada para las cuotas */
 @keyframes fade-in-up {
   from {
@@ -5501,6 +7290,719 @@ onUnmounted(() => {
 .animate-check-draw path {
   stroke-dasharray: 24;
   animation: check-draw 0.4s ease-out forwards;
+}
+
+/* === Detalle del socio: secciones colapsables, mini-stats e info-rows === */
+.detalle-seccion {
+  border: 1px solid var(--surface-divider);
+  border-radius: var(--radius-lg);
+  background: #fff;
+  overflow: hidden;
+}
+.detalle-seccion__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-muted);
+  text-align: left;
+  transition: background-color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+}
+.detalle-seccion__head:hover {
+  background: var(--brand-primary-soft);
+}
+.detalle-seccion__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+.detalle-seccion__body {
+  padding: 1rem;
+  border-top: 1px solid var(--surface-divider);
+  background: #fff;
+}
+
+.detalle-mini-stat {
+  text-align: center;
+  padding: 0.625rem 0.5rem;
+  background: var(--surface-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--surface-divider);
+}
+.detalle-mini-stat__value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.detalle-mini-stat__label {
+  font-size: 0.6875rem;
+  color: #64748b;
+  margin-top: 0.125rem;
+}
+
+.detalle-info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-muted);
+  border: 1px solid var(--surface-divider);
+  border-radius: var(--radius-md);
+}
+
+/* === Modal Detalle Socio: Resumen Financiero === */
+
+/* Wrapper del resumen fijo (no es desplegable): título + grupos espaciados */
+.detalle-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* Métricas (destacadas): Total aportado + Pendiente — peso visual fuerte */
+.detalle-metric {
+  background: var(--surface-muted, #f8fafc);
+  border: 1px solid var(--surface-divider, #e2e8f0);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.detalle-metric__label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+.detalle-metric__value {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.detalle-metric--positivo {
+  background: var(--brand-primary-soft, #e8f5ec);
+  border-color: rgba(27, 94, 55, 0.18);
+}
+.detalle-metric--positivo .detalle-metric__label { color: var(--brand-primary, #1B5E37); }
+.detalle-metric--positivo .detalle-metric__value { color: var(--brand-primary, #1B5E37); }
+.detalle-metric--debe {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.detalle-metric--debe .detalle-metric__label { color: #b45309; }
+.detalle-metric--debe .detalle-metric__value { color: #b45309; }
+.detalle-metric--neutro {
+  background: var(--surface-muted, #f8fafc);
+}
+
+/* Chips de configuración (Cuota, Periodicidad) — peso ligero, dashed */
+.detalle-config-chip {
+  background: #fff;
+  border: 1px dashed var(--surface-divider-strong, #cbd5e1);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+.detalle-config-chip__label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0;
+}
+.detalle-config-chip__value {
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  color: #334155;
+  margin: 0;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.detalle-config-chip__value--money {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #0f172a;
+  text-transform: none;
+}
+.detalle-config-chip__hint {
+  font-size: 0.625rem;
+  color: #94a3b8;
+  margin: 0;
+  margin-top: 0.0625rem;
+}
+
+/* === Modal Detalle Socio: botones ghost del footer (peso ligero) === */
+.detalle-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.375rem 0.75rem;
+  min-height: 36px;
+  font-family: var(--font-display, inherit);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+.detalle-ghost-btn:active { transform: scale(0.98); }
+.detalle-ghost-btn--warning { color: #b45309; }
+.detalle-ghost-btn--warning:hover {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+.detalle-ghost-btn--warning:active {
+  background: #fef3c7;
+}
+.detalle-ghost-btn--danger { color: #b91c1c; }
+.detalle-ghost-btn--danger:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.detalle-ghost-btn--danger:active {
+  background: #fee2e2;
+}
+.detalle-ghost-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--surface-divider, #e2e8f0);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+/* === Modal Cuotas del Socio: tarjetas compactas para móvil === */
+.cuotas-mobile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.cuotas-mobile-card {
+  background: #fff;
+  border: 1px solid var(--surface-divider-strong, #e2e8f0);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 0.5rem 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  outline: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.cuotas-mobile-card--clickable {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.cuotas-mobile-card--clickable:hover {
+  background: var(--brand-primary-soft);
+  border-color: var(--brand-primary-soft);
+}
+.cuotas-mobile-card--clickable:active {
+  transform: scale(0.99);
+}
+.cuotas-mobile-card:focus-visible {
+  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.25);
+  border-color: var(--brand-primary);
+}
+.cuotas-mobile-card--pagada {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.cuotas-mobile-card--mora {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* Fila 1: Q-badge | mes | valor | estado */
+.cuotas-mobile-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.cuotas-mobile-card__qbadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.875rem;
+  height: 1.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+.cuotas-mobile-card__qbadge.is-q1 {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+.cuotas-mobile-card__qbadge.is-q2 {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: #ddd6fe;
+}
+.cuotas-mobile-card__qbadge.is-mes {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
+}
+.cuotas-mobile-card__mes {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-display, inherit);
+  font-weight: 700;
+  font-size: 0.875rem;
+  line-height: 1.15;
+  color: #0f172a;
+  text-transform: capitalize;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cuotas-mobile-card__valor {
+  flex-shrink: 0;
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-size: 0.9375rem;
+  line-height: 1.1;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+  white-space: nowrap;
+}
+.cuotas-mobile-card__badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 9999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+/* Fila 2: subetiqueta + WSP */
+.cuotas-mobile-card__sub-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  /* alineamos con el inicio del mes (después del Q-badge) */
+  padding-left: calc(1.875rem + 0.5rem);
+  min-height: 1.125rem;
+}
+.cuotas-mobile-card__sub {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.6875rem;
+  color: #64748b;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cuotas-mobile-card__wsp {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.25rem 0.625rem;
+  min-height: 26px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.cuotas-mobile-card__wsp:hover {
+  background: #15803d;
+}
+.cuotas-mobile-card__wsp:active {
+  background: #166534;
+}
+
+/* === Modal Cuotas: bloque resumen al inicio === */
+.cuotas-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem 1rem;
+  border: 1px solid var(--surface-divider, #e2e8f0);
+  background: var(--surface-muted, #f8fafc);
+  border-radius: var(--radius-lg);
+}
+.cuotas-resumen__top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.cuotas-resumen__total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.cuotas-resumen__total-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+.cuotas-resumen__total-valor {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+.cuotas-resumen__total-valor.is-debe { color: #b45309; }
+.cuotas-resumen__total-valor.is-aldia { color: var(--brand-primary, #1B5E37); }
+.cuotas-resumen__total-sub {
+  font-size: 0.6875rem;
+  color: #64748b;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.cuotas-resumen__progress {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.cuotas-resumen__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand-primary, #1B5E37), #22c55e);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+.cuotas-resumen__chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 480px) {
+  .cuotas-resumen__chips {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.cuotas-resumen__chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.375rem;
+  background: #fff;
+  border: 1px solid var(--surface-divider, #e2e8f0);
+  border-radius: var(--radius-md);
+  text-align: center;
+  min-height: 56px;
+}
+.cuotas-resumen__chip-valor {
+  font-family: var(--font-display, inherit);
+  font-weight: 800;
+  font-size: 1.125rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+.cuotas-resumen__chip-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin: 0;
+}
+.cuotas-resumen__chip--pagadas    .cuotas-resumen__chip-valor { color: #15803d; }
+.cuotas-resumen__chip--parciales  .cuotas-resumen__chip-valor { color: #c2410c; }
+.cuotas-resumen__chip--pendientes .cuotas-resumen__chip-valor { color: #b45309; }
+.cuotas-resumen__chip--mora       .cuotas-resumen__chip-valor { color: #b91c1c; }
+
+/* ─────────────────────────────────────────────────────────────
+   Modales de inactivar/eliminar — primitivas DS scoped
+   ───────────────────────────────────────────────────────────── */
+
+/* Callout danger (modal eliminar) */
+.modal-callout-danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-lg, 0.875rem);
+  padding: 0.875rem 1rem;
+}
+
+/* Callout success (modal activar — info positiva) */
+.modal-callout-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg, 0.875rem);
+  padding: 0.875rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+}
+
+/* Toggle de tarjeta (modal desactivar — sanción) */
+.modal-toggle-card {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-lg, 0.875rem);
+  border: 1px solid var(--surface-divider, #e5e7eb);
+  background: var(--surface-soft, #f8fafc);
+  text-align: left;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.modal-toggle-card:hover { border-color: #d6b88a; }
+.modal-toggle-card.is-active {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b inset;
+}
+.modal-toggle-card__check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.125rem;
+  border-radius: 0.375rem;
+  border: 1.5px solid #cbd5e1;
+  background: #fff;
+  color: #fff;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+.modal-toggle-card.is-active .modal-toggle-card__check {
+  background: var(--brand-warning, #b45309);
+  border-color: var(--brand-warning, #b45309);
+}
+
+/* Lista de datos (resumen del socio) */
+.modal-data-list {
+  border: 1px solid var(--surface-divider, #e5e7eb);
+  border-radius: var(--radius-lg, 0.875rem);
+  background: #fff;
+  overflow: hidden;
+}
+.modal-data-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6875rem 0.875rem;
+  border-bottom: 1px solid var(--surface-divider, #e5e7eb);
+}
+.modal-data-list__row:last-child { border-bottom: none; }
+.modal-data-list__label {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+.modal-data-list__value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+.modal-data-list__value--positive { color: var(--brand-success, #15803d); }
+.modal-data-list__value--danger   { color: var(--brand-danger,  #dc2626); }
+.modal-data-list__value--muted    { color: #94a3b8; font-weight: 500; font-size: 0.8125rem; }
+
+/* Bloque de liquidación */
+.modal-liquidacion {
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  border-radius: var(--radius-lg, 0.875rem);
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.modal-liquidacion__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.modal-liquidacion__label {
+  font-size: 0.8125rem;
+  color: #475569;
+  font-weight: 500;
+}
+.modal-liquidacion__value {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.modal-liquidacion__value--main    { color: var(--brand-success, #15803d); }
+.modal-liquidacion__value--warning { color: var(--brand-warning, #b45309); }
+
+/* Segmented (forma de pago) */
+.modal-segmented {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4375rem;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md, 0.625rem);
+  border: 1px solid var(--surface-divider, #e5e7eb);
+  background: #fff;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+.modal-segmented:hover { border-color: #cbd5e1; }
+.modal-segmented.is-active {
+  background: #fffbeb;
+  border-color: var(--brand-warning, #b45309);
+  color: var(--brand-warning, #b45309);
+  box-shadow: 0 0 0 1px var(--brand-warning, #b45309) inset;
+}
+
+/* Botón warning sólido (acción primaria de desactivar) */
+.modal-btn-warning {
+  background: var(--brand-warning, #b45309);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(180, 83, 9, 0.32);
+}
+.modal-btn-warning:hover:not(:disabled) {
+  background: #92400e;
+  box-shadow: 0 6px 16px -2px rgba(180, 83, 9, 0.4);
+}
+.modal-btn-warning:active:not(:disabled) {
+  background: #78350f;
+  box-shadow: 0 2px 6px -1px rgba(180, 83, 9, 0.3);
+}
+.modal-btn-warning:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botón Descargar (azul info) — modal comprobante de salida */
+.modal-btn-download {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.32);
+}
+.modal-btn-download:hover:not(:disabled) {
+  background: #1d4ed8;
+  box-shadow: 0 6px 16px -2px rgba(37, 99, 235, 0.4);
+}
+.modal-btn-download:active:not(:disabled) {
+  background: #1e40af;
+  box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.3);
+}
+.modal-btn-download:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botón success sólido (acción primaria de activar / éxito) */
+.modal-btn-success {
+  background: var(--brand-success, #15803d);
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(21, 128, 61, 0.32);
+}
+.modal-btn-success:hover:not(:disabled) {
+  background: #166534;
+  box-shadow: 0 6px 16px -2px rgba(21, 128, 61, 0.4);
+}
+.modal-btn-success:active:not(:disabled) {
+  background: #14532d;
+  box-shadow: 0 2px 6px -1px rgba(21, 128, 61, 0.3);
+}
+.modal-btn-success:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Botón WhatsApp (verde marca WhatsApp) — modal comprobante de salida */
+.modal-btn-whatsapp {
+  background: #16a34a;
+  color: #fff;
+  box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.32);
+}
+.modal-btn-whatsapp:hover:not(:disabled) {
+  background: #15803d;
+  box-shadow: 0 6px 16px -2px rgba(22, 163, 74, 0.4);
+}
+.modal-btn-whatsapp:active:not(:disabled) {
+  background: #166534;
+  box-shadow: 0 2px 6px -1px rgba(22, 163, 74, 0.3);
+}
+.modal-btn-whatsapp:disabled,
+.modal-btn-whatsapp.is-disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 </style>
 

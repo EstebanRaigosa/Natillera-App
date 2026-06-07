@@ -1,8 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
     <!-- Header unificado -->
-    <div class="relative">
-      <Breadcrumbs />
+    <div>
       <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
         <div class="flex items-center gap-3">
           <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -1068,6 +1067,141 @@
                       </button>
                     </div>
                   </div>
+
+                  <!-- Configuración de Utilidades Adicionales (ingresos desde el Cuadre de Caja) -->
+                  <div class="mb-6">
+                    <label class="label font-semibold text-gray-700 mb-3 flex items-start gap-2">
+                      <ArrowTrendingUpIcon class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span class="text-sm sm:text-base flex-1 min-w-0 flex items-center gap-1.5 flex-wrap">
+                        Utilidades adicionales
+                        <span class="relative inline-flex">
+                          <button
+                            type="button"
+                            class="inline-flex w-5 h-5 items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50 active:bg-emerald-100 touch-manipulation"
+                            :aria-expanded="tooltipUtilidadesAdicionales"
+                            aria-label="Información sobre utilidades adicionales"
+                            @click="tooltipUtilidadesAdicionales = !tooltipUtilidadesAdicionales"
+                            @blur="tooltipUtilidadesAdicionales = false"
+                          >
+                            <InformationCircleIcon class="w-4 h-4" />
+                          </button>
+                          <span
+                            v-show="tooltipUtilidadesAdicionales"
+                            role="tooltip"
+                            class="absolute z-20 left-1/2 -translate-x-1/2 top-full mt-1 w-64 sm:w-72 rounded-lg bg-gray-900 text-white text-[11px] leading-snug px-3 py-2 shadow-lg"
+                          >
+                            Son las utilidades que se ingresan manualmente desde el
+                            <strong>Cuadre de Caja</strong> al elegir <em>Ingreso → Utilidades</em>
+                            (por ejemplo, donaciones, intereses extra o ajustes a favor del fondo).
+                            Los egresos a «utilidades» del cuadre se restan del neto antes de repartir.
+                          </span>
+                        </span>
+                      </span>
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3 break-words">
+                      Define cómo se reparten los ingresos a utilidades registrados desde el Cuadre de Caja
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        @click="configCierre.utilidades_adicionales = 'equitativa'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
+                          configCierre.utilidades_adicionales === 'equitativa'
+                            ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-200'
+                            : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2 min-w-0">
+                          <div
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.utilidades_adicionales === 'equitativa'
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <UsersIcon class="w-5 h-5" :class="configCierre.utilidades_adicionales === 'equitativa' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span
+                              :class="[
+                                'font-bold text-sm block truncate',
+                                configCierre.utilidades_adicionales === 'equitativa' ? 'text-emerald-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Equitativa
+                            </span>
+                          </div>
+                          <div
+                            v-if="configCierre.utilidades_adicionales === 'equitativa'"
+                            class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p
+                          :class="[
+                            'text-xs break-words',
+                            configCierre.utilidades_adicionales === 'equitativa' ? 'text-emerald-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Las utilidades adicionales se reparten a partes iguales entre todos los socios
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        @click="configCierre.utilidades_adicionales = 'proporcional'"
+                        :class="[
+                          'relative p-4 rounded-xl border-2 transition-all duration-200 text-left overflow-hidden',
+                          configCierre.utilidades_adicionales === 'proporcional'
+                            ? 'border-emerald-500 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg shadow-emerald-500/20 ring-2 ring-emerald-200'
+                            : 'border-gray-200 bg-white hover:border-emerald-300 hover:bg-gray-50'
+                        ]"
+                      >
+                        <div class="flex items-center gap-3 mb-2 min-w-0">
+                          <div
+                            :class="[
+                              'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200',
+                              configCierre.utilidades_adicionales === 'proporcional'
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30'
+                                : 'bg-gray-100 border-2 border-gray-200'
+                            ]"
+                          >
+                            <ChartBarIcon class="w-5 h-5" :class="configCierre.utilidades_adicionales === 'proporcional' ? 'text-white' : 'text-gray-400'" />
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <span
+                              :class="[
+                                'font-bold text-sm block truncate',
+                                configCierre.utilidades_adicionales === 'proporcional' ? 'text-emerald-700' : 'text-gray-700'
+                              ]"
+                            >
+                              Proporcional
+                            </span>
+                          </div>
+                          <div
+                            v-if="configCierre.utilidades_adicionales === 'proporcional'"
+                            class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p
+                          :class="[
+                            'text-xs break-words',
+                            configCierre.utilidades_adicionales === 'proporcional' ? 'text-emerald-600' : 'text-gray-500'
+                          ]"
+                        >
+                          Las utilidades adicionales se reparten según lo ahorrado por cada socio
+                        </p>
+                      </button>
+                    </div>
+                  </div>
               </div>
 
                 </div>
@@ -1687,7 +1821,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useCuotasStore } from '../../stores/cuotas'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
-import Breadcrumbs from '../../components/Breadcrumbs.vue'
+
 import BackButton from '../../components/BackButton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -1713,7 +1847,9 @@ import {
   XMarkIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  BanknotesIcon
+  BanknotesIcon,
+  ArrowTrendingUpIcon,
+  InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -1826,8 +1962,11 @@ const configCierre = ref({
     otro: 'equitativa'
   },
   prestamos: 'equitativa', // 'equitativa' o 'proporcional'
-  sanciones: 'equitativa' // 'equitativa' o 'proporcional'
+  sanciones: 'equitativa', // 'equitativa' o 'proporcional'
+  utilidades_adicionales: 'equitativa' // Ingresos a 'utilidades' desde el Cuadre de Caja
 })
+
+const tooltipUtilidadesAdicionales = ref(false)
 
 // Tipos de actividades disponibles
 const tiposActividades = [
@@ -2001,7 +2140,8 @@ async function guardarConfigBasica() {
       modoActividades: configCierre.value.modoActividades,
       actividades: configCierre.value.actividades,
       prestamos: configCierre.value.prestamos,
-      sanciones: configCierre.value.sanciones
+      sanciones: configCierre.value.sanciones,
+      utilidades_adicionales: configCierre.value.utilidades_adicionales
     },
     mes_inicio: configPeriodo.value.mes_inicio,
     anio_inicio: configPeriodo.value.anio_inicio,
@@ -2369,7 +2509,8 @@ function actualizarValoresDesdeNatillera() {
         otro: actividadesConfig.otro || 'equitativa'
       },
       prestamos: configCierreActual.prestamos || 'equitativa',
-      sanciones: configCierreActual.sanciones || 'equitativa'
+      sanciones: configCierreActual.sanciones || 'equitativa',
+      utilidades_adicionales: configCierreActual.utilidades_adicionales || 'equitativa'
     }
     
     // Cargar configuración de sanciones

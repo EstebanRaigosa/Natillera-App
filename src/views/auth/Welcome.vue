@@ -1,39 +1,45 @@
 <template>
   <div>
-    <!-- Loading mientras verifica autenticación (panel blanco: contraste con verde marca) -->
-    <div
-      v-if="isLoading"
-      class="welcome-oauth-loading flex flex-col items-center justify-center py-10 px-5 rounded-2xl border border-natillera-200/90 bg-gradient-to-b from-natillera-50 via-white to-natillera-50/40 shadow-[0_8px_30px_-12px_rgba(20,83,45,0.12)]"
-      role="status"
-      aria-live="polite"
-      aria-label="Cargando"
-    >
-      <div class="welcome-oauth-loading__logo-wrap">
-        <img
-          :src="logoIconSrc"
-          alt=""
-          class="welcome-oauth-loading__logo"
-          width="120"
-          height="120"
-          decoding="async"
-          draggable="false"
-        />
-      </div>
-      <p class="mt-5 text-center text-[0.9375rem] font-semibold text-natillera-900 tracking-tight">
-        {{ loadingMessage }}
-      </p>
-      <p class="mt-1 text-center text-xs font-medium text-natillera-800/75">
-        Conectando con tu cuenta…
-      </p>
-      <div class="welcome-oauth-loading__progress mt-5 w-full max-w-[200px]">
-        <div class="welcome-oauth-loading__track">
-          <div class="welcome-oauth-loading__bar" />
+    <!-- Pantalla completa (desktop: cubre panel marca + formulario; evita que solo se vea en la columna del formulario) -->
+    <Teleport to="body">
+      <div
+        v-if="isLoading"
+        class="welcome-oauth-overlay fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/[0.97] backdrop-blur-[3px] min-[1024px]:bg-gradient-to-br min-[1024px]:from-white min-[1024px]:via-emerald-50/35 min-[1024px]:to-white pt-[max(2.5rem,env(safe-area-inset-top,0px))] pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))]"
+        role="status"
+        aria-live="polite"
+        aria-label="Cargando"
+      >
+        <div
+          class="welcome-oauth-loading flex w-full max-w-md flex-col items-center justify-center rounded-2xl border border-natillera-200/90 bg-gradient-to-b from-natillera-50 via-white to-natillera-50/40 py-10 px-5 shadow-[0_8px_30px_-12px_rgba(20,83,45,0.12)]"
+        >
+          <div class="welcome-oauth-loading__logo-wrap">
+            <img
+              :src="logoIconSrc"
+              alt=""
+              class="welcome-oauth-loading__logo"
+              width="120"
+              height="120"
+              decoding="async"
+              draggable="false"
+            />
+          </div>
+          <p class="mt-5 text-center text-[0.9375rem] font-semibold text-natillera-900 tracking-tight">
+            {{ loadingMessage }}
+          </p>
+          <p class="mt-1 text-center text-xs font-medium text-natillera-800/75">
+            Conectando con tu cuenta…
+          </p>
+          <div class="welcome-oauth-loading__progress mt-5 w-full max-w-[200px]">
+            <div class="welcome-oauth-loading__track">
+              <div class="welcome-oauth-loading__bar" />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
 
-    <!-- Vista de error de OAuth (cancelación o error) -->
-    <template v-else-if="oauthError">
+    <!-- Vista de error de OAuth (cancelación o error) — condiciones explícitas: el v-if de carga está dentro de Teleport y no puede usar v-else-if -->
+    <template v-if="!isLoading && oauthError">
       <div class="flex flex-col items-center gap-6 mb-8">
         <!-- Icono de error -->
         <div class="relative">
@@ -104,7 +110,7 @@
     </template>
 
     <!-- Contenido de bienvenida normal (confirmación de email) -->
-    <template v-else>
+    <template v-if="!isLoading && !oauthError">
       <div class="flex flex-col items-center gap-6 mb-8">
         <!-- Icono de éxito animado -->
         <div class="relative">
@@ -207,6 +213,7 @@
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
+import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
 import AppBrand from '../../components/AppBrand.vue'
@@ -217,6 +224,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const isLoading = ref(true)
 const loadingMessage = ref('Verificando sesión...')
+
+useBodyScrollLock(isLoading)
 const oauthError = ref(null)
 const oauthErrorTitle = ref('')
 const oauthErrorMessage = ref('')
@@ -285,7 +294,6 @@ async function retryGoogleLogin() {
 }
 
 onMounted(async () => {
-  // Primero verificar si hay errores de OAuth en la URL
   const detectedError = detectOAuthError()
   
   if (detectedError) {
@@ -294,95 +302,87 @@ onMounted(async () => {
     oauthErrorMessage.value = detectedError.message
     oauthErrorDescription.value = detectedError.description
     isLoading.value = false
-    
-    // Limpiar los parámetros de la URL para evitar mostrar el error nuevamente
     window.history.replaceState({}, document.title, window.location.pathname)
     return
   }
   
-  // Si no hay error explícito, verificar la sesión
   loadingMessage.value = 'Verificando autenticación...'
-  
-  // Esperar un poco para que Supabase procese cualquier token de OAuth
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Verificar sesión múltiples veces (puede tomar tiempo en procesar OAuth)
-  let attempts = 0
-  const maxAttempts = 5 // 5 intentos x 1 segundo = 5 segundos máximo
-  
-  const checkSession = setInterval(async () => {
-    attempts++
-    await authStore.checkAuth()
-    
-    if (authStore.isAuthenticated) {
-      clearInterval(checkSession)
-      
-      // Verificar si hay un teléfono pendiente de registro
+
+  // Escuchar el evento de auth en vez de hacer polling cada 1s.
+  // Supabase detecta los tokens en la URL automáticamente (detectSessionInUrl: true)
+  // y dispara SIGNED_IN cuando la sesión está lista.
+  let resolved = false
+
+  const resolve = async (user) => {
+    if (resolved) return
+    resolved = true
+
+    if (user) {
       const telefonoPendiente = localStorage.getItem('telefono_pendiente_registro')
-      if (telefonoPendiente && authStore.userEmail) {
-        // PRIMERO: Actualizar el perfil de usuario con el teléfono
-        const resultPerfil = await authStore.actualizarPerfilUsuarioConTelefono(telefonoPendiente)
-        
-        if (resultPerfil.success) {
-          console.log('Perfil de usuario actualizado con teléfono')
-        } else {
-          console.error('Error actualizando perfil de usuario:', resultPerfil.error)
-        }
-        
-        // SEGUNDO: Actualizar socios con el email del usuario registrado
-        const resultSocios = await authStore.actualizarSociosConEmail(telefonoPendiente, authStore.userEmail)
-        
-        if (resultSocios.success) {
-          console.log(`Socios actualizados: ${resultSocios.sociosActualizados}`)
-        } else {
-          console.error('Error actualizando socios:', resultSocios.error)
-        }
-        
-        // Limpiar el teléfono pendiente
+      if (telefonoPendiente && user.email) {
+        await Promise.all([
+          authStore.actualizarPerfilUsuarioConTelefono(telefonoPendiente)
+            .catch(e => console.error('Error actualizando perfil:', e)),
+          authStore.actualizarSociosConEmail(telefonoPendiente, user.email)
+            .catch(e => console.error('Error actualizando socios:', e))
+        ])
         localStorage.removeItem('telefono_pendiente_registro')
       }
-      
-      const loc = await resolvePostLoginLocation(authStore.user)
+
+      const loc = await resolvePostLoginLocation(user)
       router.replace(loc)
       return
     }
-    
-    // Si pasaron 5 segundos y no hay sesión, asumir que fue cancelado o hubo timeout
-    if (attempts >= maxAttempts) {
-      clearInterval(checkSession)
-      
-      // Verificar una última vez
-      await authStore.checkAuth()
-      
-      if (!authStore.isAuthenticated) {
-        // No hay sesión y pasó el tiempo, probablemente fue cancelado o timeout
-        // Solo mostrar error si NO viene de confirmación de email (que sería un flujo normal)
-        // Para distinguir, verificamos si hay parámetros de tipo "email confirmation"
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const queryParams = new URLSearchParams(window.location.search.substring(1))
-        const type = hashParams.get('type') || queryParams.get('type')
-        
-        // Si viene de confirmación de email, mostrar vista normal
-        if (type === 'signup' || type === 'email') {
-          isLoading.value = false
-          return
-        }
-        
-        // Si no, probablemente fue OAuth cancelado o timeout
-        oauthError.value = {
-          error: true,
-          title: 'Tiempo de espera agotado',
-          message: 'El inicio de sesión con Google tardó demasiado',
-          description: 'Esto puede ocurrir si cancelaste el proceso o si hubo un problema de conexión. Por favor, intenta nuevamente.'
-        }
-        oauthErrorTitle.value = oauthError.value.title
-        oauthErrorMessage.value = oauthError.value.message
-        oauthErrorDescription.value = oauthError.value.description
-      }
-      
+
+    // Sin sesión: distinguir confirmación de email vs OAuth cancelado/timeout
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const queryParams = new URLSearchParams(window.location.search.substring(1))
+    const type = hashParams.get('type') || queryParams.get('type')
+
+    if (type === 'signup' || type === 'email') {
       isLoading.value = false
+      return
     }
-  }, 1000) // Verificar cada segundo
+
+    oauthError.value = {
+      error: true,
+      title: 'Tiempo de espera agotado',
+      message: 'El inicio de sesión con Google tardó demasiado',
+      description: 'Esto puede ocurrir si cancelaste el proceso o si hubo un problema de conexión. Por favor, intenta nuevamente.'
+    }
+    oauthErrorTitle.value = oauthError.value.title
+    oauthErrorMessage.value = oauthError.value.message
+    oauthErrorDescription.value = oauthError.value.description
+    isLoading.value = false
+  }
+
+  // 1) Verificar si la sesión ya está disponible (token procesado antes de montar)
+  const { data: { session } } = await supabase.auth.getSession()
+  if (session?.user?.email_confirmed_at) {
+    authStore.user = session.user
+    await resolve(session.user)
+    return
+  }
+
+  // 2) Suscribirse al cambio de auth para capturar el momento exacto
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      if (resolved) return
+      if (event === 'SIGNED_IN' && session?.user) {
+        subscription.unsubscribe()
+        authStore.user = session.user
+        await resolve(session.user)
+      }
+    }
+  )
+
+  // 3) Timeout de seguridad: 6s máximo
+  setTimeout(() => {
+    if (!resolved) {
+      subscription.unsubscribe()
+      resolve(null)
+    }
+  }, 6000)
 })
 
 function goToLogin() {

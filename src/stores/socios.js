@@ -955,5 +955,10 @@ export const useSociosStore = defineStore('socios', () => {
     obtenerResumenSocio,
     eliminarSocioNatillera
   }
+}, {
+  // Cache para pintado instantáneo tras el reload por descarte de pestaña (móvil).
+  persist: {
+    pick: ['socios', 'sociosNatillera'],
+  },
 })
 

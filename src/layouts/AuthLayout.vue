@@ -4,7 +4,7 @@
     <div class="auth-beta-badge">
       <div class="auth-beta-pill flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full">
         <span class="auth-beta-pill__dot" aria-hidden="true" />
-        BETA V0.1
+        BETA V0.6
       </div>
     </div>
 
@@ -69,11 +69,11 @@
                 <span>Comunidad unida</span>
               </div>
             </div>
-
-            <p class="auth-copyright">
-              &copy; {{ currentYear }} NatilleraApp
-            </p>
           </div>
+
+          <p class="auth-copyright">
+            &copy; {{ currentYear }} NatilleraApp
+          </p>
         </div>
       </div>
 
@@ -93,7 +93,9 @@
           <div class="auth-disc auth-disc--m1"></div>
           <div class="auth-disc auth-disc--m2"></div>
         </div>
-        <div class="relative z-10 flex flex-col items-center gap-1 py-5 px-4 sm:py-6 sm:gap-1.5">
+        <div
+          class="relative z-10 flex flex-col items-center gap-1 px-4 pb-5 sm:pb-6 sm:gap-1.5 pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:pt-[max(1.5rem,env(safe-area-inset-top,0px))]"
+        >
           <div class="auth-brand-row auth-brand-row--mobile">
             <div class="auth-isotipo-ring auth-isotipo-ring--mobile">
               <img
@@ -155,8 +157,8 @@ const currentYear = computed(() => new Date().getFullYear())
 
 .auth-beta-badge {
   position: fixed;
-  top: 1rem;
-  right: 1rem;
+  top: max(1rem, env(safe-area-inset-top, 0px));
+  right: max(1rem, env(safe-area-inset-right, 0px));
   z-index: 50;
 }
 
@@ -165,6 +167,7 @@ const currentYear = computed(() => new Date().getFullYear())
   border: 1px solid hsla(131, 28%, 34%, 0.65);
   color: hsl(131 25% 92%);
   letter-spacing: 0.04em;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   box-shadow: 0 2px 12px hsla(0, 0%, 0%, 0.2);
 }
@@ -198,6 +201,8 @@ const currentYear = computed(() => new Date().getFullYear())
   position: relative;
   flex: 1.35 1 0;
   min-width: 0;
+  min-height: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -301,14 +306,14 @@ const currentYear = computed(() => new Date().getFullYear())
   );
 }
 
-/* ── Content: bloque centrado en vertical en todo el panel ── */
+/* ── Content: bloque principal centrado; copyright anclado al fondo del panel ── */
 .auth-brand-content {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -320,7 +325,9 @@ const currentYear = computed(() => new Date().getFullYear())
   flex-direction: column;
   align-items: center;
   text-align: center;
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  justify-content: center;
   max-width: 100%;
   gap: 1.25rem;
 }
@@ -471,6 +478,7 @@ const currentYear = computed(() => new Date().getFullYear())
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
@@ -488,10 +496,12 @@ const currentYear = computed(() => new Date().getFullYear())
   stroke-width: 1.65;
 }
 
-/* ── Copyright ── */
+/* ── Copyright (pie del panel izquierdo) ── */
 .auth-copyright {
-  margin-top: 0.5rem;
-  padding-top: 0;
+  flex-shrink: 0;
+  margin: 0;
+  padding-top: 1rem;
+  text-align: center;
   font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -547,7 +557,7 @@ const currentYear = computed(() => new Date().getFullYear())
 .auth-mobile-form {
   flex: 1;
   background: hsl(131 10% 98.5%);
-  padding: 1.25rem 1rem 2rem;
+  padding: 1.25rem 1rem max(2rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
   margin-top: -0.75rem;
   position: relative;
   z-index: 5;
@@ -556,7 +566,7 @@ const currentYear = computed(() => new Date().getFullYear())
 
 @media (min-width: 640px) {
   .auth-mobile-form {
-    padding: 1.5rem 1.5rem 2rem;
+    padding: 1.5rem 1.5rem max(2rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
     max-width: 460px;
     margin-left: auto;
     margin-right: auto;
@@ -598,8 +608,8 @@ const currentYear = computed(() => new Date().getFullYear())
 
 @media (max-width: 1023px) {
   .auth-beta-badge {
-    top: 0.75rem;
-    left: 0.75rem;
+    top: max(0.75rem, env(safe-area-inset-top, 0px));
+    left: max(0.75rem, env(safe-area-inset-left, 0px));
     right: auto;
   }
 }
