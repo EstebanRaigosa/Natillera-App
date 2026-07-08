@@ -49,7 +49,9 @@
       "Bash(npx vue-tsc *)",
       "Bash(awk '/^  return \\\\{/,/^  \\\\}/' src/stores/cuotas.js)",
       "Bash(git rm *)",
-      "Bash(awk '/<!-- /{c=$0} /Resumen del mes/{print NR\": \"c; exit}')"
+      "Bash(awk '/<!-- /{c=$0} /Resumen del mes/{print NR\": \"c; exit}')",
+      "Bash(curl -sI https://natillerapp.com/sw.js)",
+      "Bash(curl -sI https://natillerapp.com/manifest.webmanifest)"
     ]
   }
 }

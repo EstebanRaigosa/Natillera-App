@@ -2529,6 +2529,39 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     })
   })
 
+  // Reconciliación GMF: cuotas.impuesto_4x1000 es la fuente SÍNCRONA confiable (se guarda en el
+  // update de la cuota, a diferencia del insert fire-and-forget de historial_pagos_cuota, que a
+  // veces falta). Si una cuota tiene más GMF en su columna que lo ya contabilizado desde historial,
+  // agregar solo la diferencia para no subcontar (y sin doble contar lo que sí vino del historial).
+  const gmfHistPorCuota = {}
+  ;(historialImpuesto4x1000 || []).forEach(h => {
+    const imp = parseFloat(h.impuesto_4x1000) || 0
+    if (imp <= 0) return
+    if (String(h.forma_pago || '').toLowerCase().trim() !== 'transferencia') return
+    gmfHistPorCuota[h.cuota_id] = (gmfHistPorCuota[h.cuota_id] || 0) + imp
+  })
+  ;(nat.cuotas || []).forEach(c => {
+    const colGmf = Math.round(parseFloat(c.impuesto_4x1000) || 0)
+    if (colGmf <= 0) return
+    const faltante = colGmf - Math.round(gmfHistPorCuota[c.id] || 0)
+    if (faltante <= 0) return
+    const socio = sociosMap[c.socio_natillera_id] || '—'
+    const fechaPago = c.fecha_pago ? new Date(c.fecha_pago) : null
+    const fechaValida = fechaPago && !isNaN(fechaPago.getTime())
+    items.push({
+      tipo: 'gmf_4x1000',
+      concepto: '4x1000',
+      socio,
+      forma_pago: 'transferencia',
+      monto: faltante,
+      mes: fechaValida ? fechaPago.getMonth() + 1 : c.mes,
+      anio: fechaValida ? fechaPago.getFullYear() : c.anio,
+      quincena: c.quincena != null ? c.quincena : undefined,
+      socioEsMensual: (periodicidadPorSocioId[c.socio_natillera_id] || 'mensual') === 'mensual',
+      fecha_movimiento: c.fecha_pago || c.updated_at || null
+    })
+  })
+
   // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, interes_anticipado, prestamo, liquidacion_salida, premio_rifa)
   const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4, movimiento_ingreso: 5, movimiento_egreso: 5.5, movimiento_traslado: 6 }
   items.sort((a, b) => {

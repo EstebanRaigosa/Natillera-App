@@ -35,15 +35,6 @@
           >
             <CalendarDaysIcon class="w-5 h-5" />
           </button>
-          <button
-            v-if="!esVisor && mostrarBotonRegistrarPago"
-            type="button"
-            class="ds-btn ds-btn--primary sm:hidden cuotas-header-icon-btn"
-            aria-label="Registrar pago"
-            @click="abrirModalRegistrarPagoSelector"
-          >
-            <BanknotesIcon class="w-5 h-5" />
-          </button>
         </div>
         <div class="ds-page-header__actions hidden sm:flex">
           <button
@@ -78,6 +69,18 @@
           </button>
         </div>
       </div>
+
+      <!-- Móvil: botón registrar pago a ancho completo dentro del header (sm+ usa el bloque de actions) -->
+      <button
+        v-if="!esVisor && mostrarBotonRegistrarPago"
+        type="button"
+        class="ds-btn ds-btn--primary sm:hidden w-full mt-3"
+        aria-label="Registrar pago"
+        @click="abrirModalRegistrarPagoSelector"
+      >
+        <BanknotesIcon class="w-5 h-5" />
+        <span>Registrar Pago</span>
+      </button>
     </header>
 
     <!-- Tabs + Indicadores (bloque unificado) -->
@@ -261,7 +264,7 @@
 
     <!-- Búsqueda + filtros (estilo Socios) -->
     <div
-      v-if="!cuotasStore.loading && !inicializando && cuotasMesActual.length > 0"
+      v-if="!cambiandoMes && !cuotasStore.loading && !inicializando && cuotasMesActual.length > 0"
       class="cuotas-toolbar"
     >
       <div class="socios-toolbar__search">
@@ -290,26 +293,49 @@
           <XMarkIcon class="w-4 h-4" />
         </button>
       </div>
-      <div class="socios-toolbar__filters">
-        <select v-model="filtroEstado" class="socios-filter" aria-label="Filtrar por estado">
-          <option value="todos">Todos los estados</option>
-          <option value="pagada">Pagadas</option>
-          <option value="pendiente">Pendientes</option>
-          <option value="mora">En mora</option>
-        </select>
-        <select v-model="filtroPeriodicidad" class="socios-filter" aria-label="Filtrar por periodicidad">
-          <option value="todos">Todas las periodicidades</option>
-          <option value="mensual">Mensual</option>
-          <option value="quincenal">Quincenal</option>
-        </select>
+      <div class="cuotas-filtros">
+        <!-- Estado: control segmentado (el activo se resalta en verde; «Todos» = quitar) -->
+        <div class="cuotas-segmented" role="group" aria-label="Filtrar por estado">
+          <span class="cuotas-segmented__icon" aria-hidden="true">
+            <FunnelIcon class="w-4 h-4" />
+          </span>
+          <button
+            v-for="op in opcionesFiltroEstado"
+            :key="`estado-${op.value}`"
+            type="button"
+            class="cuotas-segmented__opt"
+            :class="{ 'is-selected': filtroEstado === op.value }"
+            :aria-pressed="filtroEstado === op.value"
+            @click="filtroEstado = op.value"
+          >
+            {{ op.label }}
+          </button>
+        </div>
+        <!-- Periodicidad -->
+        <div class="cuotas-segmented" role="group" aria-label="Filtrar por periodicidad">
+          <span class="cuotas-segmented__icon" aria-hidden="true">
+            <CalendarDaysIcon class="w-4 h-4" />
+          </span>
+          <button
+            v-for="op in opcionesFiltroPeriodicidad"
+            :key="`period-${op.value}`"
+            type="button"
+            class="cuotas-segmented__opt"
+            :class="{ 'is-selected': filtroPeriodicidad === op.value }"
+            :aria-pressed="filtroPeriodicidad === op.value"
+            @click="filtroPeriodicidad = op.value"
+          >
+            {{ op.label }}
+          </button>
+        </div>
       </div>
       <span class="cuotas-toolbar__count">
         Mostrando {{ cuotasFiltradas.length }} de {{ cuotasMesActual.length }} cuotas
       </span>
     </div>
 
-    <!-- Lista de cuotas - Indicador de carga mejorado -->
-    <div v-if="cuotasStore.loading || inicializando" class="flex flex-col items-center justify-center py-16 px-4">
+    <!-- Generando cuotas del mes: spinner con mensaje explícito (operación con escritura en BD) -->
+    <div v-if="generandoCuotas" class="flex flex-col items-center justify-center py-16 px-4">
       <div class="relative">
         <!-- Fondo con pulso suave -->
         <div class="absolute inset-0 w-20 h-20 -m-2 bg-natillera-100 rounded-full animate-pulse"></div>
@@ -319,21 +345,20 @@
         <div class="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-natillera-500 border-r-natillera-400 rounded-full animate-spin"></div>
         <!-- Icono central -->
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <svg v-if="generandoCuotas" class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <svg v-else class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
       </div>
-      <p class="text-gray-700 mt-6 font-semibold text-lg">
-        {{ generandoCuotas ? 'Preparando cuotas del mes...' : 'Cargando cuotas...' }}
-      </p>
-      <p class="text-gray-400 text-sm mt-1">
-        {{ generandoCuotas ? 'Generando cuotas para los socios' : 'Esto solo tomará un momento' }}
-      </p>
+      <p class="text-gray-700 mt-6 font-semibold text-lg">Preparando cuotas del mes...</p>
+      <p class="text-gray-400 text-sm mt-1">Generando cuotas para los socios</p>
     </div>
+
+    <!-- Cargando / cambio de mes: skeleton de tarjetas (evita salto brusco mientras recalcula) -->
+    <CuotasSkeleton
+      v-else-if="cambiandoMes || cuotasStore.loading || inicializando"
+      :filas="6"
+    />
 
     <!-- Estado vacío: Sin cuotas generadas para el mes -->
     <div v-else-if="cuotasMesActual.length === 0" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-8 sm:p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
@@ -797,7 +822,7 @@
             :key="grupo.socioId"
             :id="grupo.cuotas.some(c => esPrimerFlujoSocioCuota(c)) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalCuotasSocio(grupo)"
-            class="ds-card ds-card--hover relative overflow-hidden flex items-center gap-3 sm:gap-4 cursor-pointer border-l-[6px]"
+            class="ds-card ds-card--hover relative overflow-hidden flex flex-col gap-3 cursor-pointer border-l-[6px]"
             :class="[
               grupo.estado === 'pagada' ? 'border-l-green-500 bg-green-50/50' :
               grupo.estado === 'mora' ? 'border-l-red-500 bg-red-50/60' :
@@ -807,6 +832,7 @@
             ]"
             style="touch-action: manipulation;"
           >
+            <div class="flex items-center gap-3 sm:gap-4">
             <!-- Avatar -->
             <img
               :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
@@ -867,6 +893,64 @@
                   ]"
                   :style="{ width: grupo.progreso + '%' }"
                 />
+              </div>
+            </div>
+            </div>
+
+            <!-- Desglose por cuota: valor de la cuota, sanción, actividades, préstamos y estado de pago -->
+            <div class="flex flex-col gap-2 pt-2.5 border-t border-gray-200/70">
+              <div
+                v-for="cuota in grupo.cuotas"
+                :key="cuota.id"
+                class="rounded-lg border px-2.5 py-2"
+                :class="[
+                  (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/70 border-green-200' :
+                  tienePagoParcialCuota(cuota) ? 'bg-amber-50/80 border-amber-300' :
+                  (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50/70 border-red-200' :
+                  'bg-gray-50 border-gray-200'
+                ]"
+              >
+                <!-- Cabecera: periodo + estado + total del periodo -->
+                <div class="flex items-center justify-between gap-2">
+                  <span
+                    class="inline-flex items-center gap-1.5 text-xs font-semibold"
+                    :class="[
+                      (cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-800' :
+                      tienePagoParcialCuota(cuota) ? 'text-amber-800' :
+                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' : 'text-gray-700'
+                    ]"
+                  >
+                    <CheckCircleIcon v-if="(cuota.estadoReal || cuota.estado) === 'pagada'" class="w-4 h-4 flex-shrink-0" />
+                    <CurrencyDollarIcon v-else-if="tienePagoParcialCuota(cuota)" class="w-4 h-4 flex-shrink-0" />
+                    <ExclamationCircleIcon v-else-if="(cuota.estadoReal || cuota.estado) === 'mora'" class="w-4 h-4 flex-shrink-0" />
+                    <ClockIcon v-else class="w-4 h-4 flex-shrink-0" />
+                    {{ getPeriodoCuotaCorto(cuota) }}
+                    <span class="font-normal text-[11px] text-gray-500">
+                      · {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
+                            tienePagoParcialCuota(cuota) ? ((cuota.estadoReal || cuota.estado) === 'mora' ? 'Parcial · vencida' : 'Parcial') :
+                            (cuota.estadoReal || cuota.estado) === 'mora' ? 'En mora' :
+                            (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 'Pendiente' }}
+                    </span>
+                  </span>
+                  <span class="text-xs font-bold text-gray-900 tabular-nums flex-shrink-0">
+                    ${{ formatMoney((desglosePorCuota[cuota.id] || {}).total || 0) }}
+                  </span>
+                </div>
+                <!-- Conceptos: solo se muestran los que aplican (> 0), salvo la cuota -->
+                <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-600">
+                  <span>Cuota <span class="font-semibold text-gray-800 tabular-nums">${{ formatMoney((desglosePorCuota[cuota.id] || {}).cuota || 0) }}</span></span>
+                  <span v-if="(desglosePorCuota[cuota.id] || {}).sancion > 0">Sanción <span class="font-semibold text-red-600 tabular-nums">${{ formatMoney(desglosePorCuota[cuota.id].sancion) }}</span></span>
+                  <span v-if="(desglosePorCuota[cuota.id] || {}).actividad > 0">Actividad <span class="font-semibold text-emerald-600 tabular-nums">${{ formatMoney(desglosePorCuota[cuota.id].actividad) }}</span></span>
+                  <span v-if="(desglosePorCuota[cuota.id] || {}).prestamo > 0">Préstamo <span class="font-semibold text-blue-600 tabular-nums">${{ formatMoney(desglosePorCuota[cuota.id].prestamo) }}</span></span>
+                </div>
+                <!-- Pago parcial de esta quincena: lo abonado y lo que falta -->
+                <div
+                  v-if="tienePagoParcialCuota(cuota)"
+                  class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] border-t border-amber-200/60 pt-1.5"
+                >
+                  <span class="text-green-700">Pagado <span class="font-semibold tabular-nums">${{ formatMoney(getTotalPagadoConActividadesSocio(cuota)) }}</span></span>
+                  <span class="text-amber-700">Pendiente <span class="font-semibold tabular-nums">${{ formatMoney(getTotalAPagarConActividadesSocio(cuota)) }}</span></span>
+                </div>
               </div>
             </div>
           </div>
@@ -2074,19 +2158,19 @@
             </div>
           </div>
 
-          <!-- Cuotas del periodo (1ª / 2ª quincena o mensual). Tocar una no pagada abre el registro de pago. -->
+          <!-- Cuotas del periodo (1ª / 2ª quincena o mensual). Tocar: editar si ya tiene pago, registrar si no. -->
           <div
             v-for="cuota in socioCuotasSel.cuotas"
             :key="cuota.id"
-            @click="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada' && abrirPagoCuotaDesdeSocio(cuota)"
+            @click="abrirAccionCuotaDesdeSocio(cuota)"
             class="rounded-xl border border-gray-200 bg-white p-3.5 border-l-[5px]"
             :class="[
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'border-l-green-500 bg-green-50/40' :
+              tienePagoParcialCuota(cuota) ? 'border-l-amber-500 bg-amber-50/50' :
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'border-l-red-500 bg-red-50/50' :
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'border-l-slate-400 bg-slate-50/60' :
-              tienePagoParcialCuota(cuota) ? 'border-l-amber-500 bg-amber-50/50' :
               'border-l-orange-500 bg-orange-50/40',
-              !esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada' ? 'cursor-pointer hover:shadow-sm transition-shadow' : ''
+              !esVisor ? 'cursor-pointer hover:shadow-sm transition-shadow' : ''
             ]"
             style="touch-action: manipulation;"
           >
@@ -2105,18 +2189,19 @@
                   class="ds-badge"
                   :class="[
                     (cuota.estadoReal || cuota.estado) === 'pagada' ? 'ds-badge--success' :
+                    tienePagoParcialCuota(cuota) ? 'ds-badge--warning' :
                     (cuota.estadoReal || cuota.estado) === 'mora' ? 'ds-badge--danger' :
                     (cuota.estadoReal || cuota.estado) === 'programada' ? 'ds-badge--muted' :
                     'ds-badge--warning'
                   ]"
                 >
                   {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
+                     tienePagoParcialCuota(cuota) ? ((cuota.estadoReal || cuota.estado) === 'mora' ? 'Parcial · vencida' : 'Parcial') :
                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
-                     (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' :
-                     tienePagoParcialCuota(cuota) ? 'Parcial' : 'Pendiente' }}
+                     (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 'Pendiente' }}
                 </span>
                 <ChevronRightIcon
-                  v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
+                  v-if="!esVisor"
                   class="w-4 h-4 text-gray-400"
                 />
               </div>
@@ -2193,6 +2278,52 @@
                   <li v-if="getTotalAPagarConActividadesSocio(cuota) <= 0" class="text-green-600">Todo al día</li>
                 </ul>
               </div>
+            </div>
+
+            <!-- Admin: activar/desactivar el cálculo de multa para esta cuota (solo raigo.16@gmail.com) -->
+            <label
+              v-if="esUsuarioAdmin && ((cuota.estadoReal || cuota.estado) === 'mora' || cuota.no_calcular_multa)"
+              class="mt-3 flex items-center gap-2 text-xs text-amber-700 cursor-pointer"
+              @click.stop
+            >
+              <input
+                type="checkbox"
+                :checked="!!cuota.no_calcular_multa"
+                @change="toggleNoCalcularMultaCuota(cuota)"
+                class="rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+              />
+              <span>No calcular multa para esta cuota</span>
+            </label>
+
+            <!-- Acciones en una fila: Pagar/Pagar restante (verde marca) y Reenviar (violeta, color de la app) -->
+            <div
+              v-if="(!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada') || (cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
+              class="mt-3 flex gap-2"
+            >
+              <!-- Pagar (pendiente) o completar el pago (parcial). No aparece si ya está pagada. -->
+              <button
+                v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
+                type="button"
+                @click.stop="abrirPagoCuotaDesdeSocio(cuota)"
+                class="flex-1 px-4 py-2.5 bg-[#1B5E37] hover:bg-[#155a32] active:bg-[#134d2b] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2"
+                style="touch-action: manipulation;"
+              >
+                <CurrencyDollarIcon class="w-4 h-4" />
+                <span>{{ tienePagoParcialCuota(cuota) ? 'Pagar restante' : 'Pagar' }}</span>
+              </button>
+
+              <!-- Reenviar comprobante (cuotas pagadas o con pago parcial) -->
+              <button
+                v-if="(cuota.estadoReal || cuota.estado) === 'pagada' || tienePagoParcialCuota(cuota)"
+                type="button"
+                @click.stop="reenviarComprobante(cuota)"
+                class="flex-1 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2"
+                style="touch-action: manipulation;"
+                title="Reenviar comprobante"
+              >
+                <ArrowPathIcon class="w-4 h-4" />
+                <span>Reenviar</span>
+              </button>
             </div>
           </div>
         </div>
@@ -3036,16 +3167,6 @@
                   <p :class="['font-bold text-base', cuotaSeleccionada?.estado === 'mora' ? 'text-red-600' : 'text-orange-600']">
                     ${{ formatMoney(getTotalPendienteMostrarModalPago()) }}
                   </p>
-                </div>
-                <!-- Detalle: sanción pendiente (mora) -->
-                <div
-                  v-if="getSancionCuota(cuotaSeleccionada) > 0"
-                  class="flex items-center justify-between text-sm pt-1 border-t border-gray-200/80"
-                >
-                  <span class="text-red-600 flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 bg-red-600 rounded-full"></span>Sanción pendiente
-                  </span>
-                  <span class="font-semibold text-red-600">${{ formatMoney(getSancionCuota(cuotaSeleccionada)) }}</span>
                 </div>
                 <div
                   v-if="lineasDesgloseModalPago.length > 0"
@@ -4827,37 +4948,60 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white my-0 sm:my-4"
       card-max-width="28rem"
-      @close="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
+      @close="cerrarModalEditarCuota()"
     >
-        <!-- Header con gradiente (fijo) - tamaño reducido ~20% -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-4 text-white relative overflow-hidden flex-shrink-0">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-20 h-20 bg-white/10 rounded-full -ml-10 -mb-10 blur-xl"></div>
-          
-          <div class="relative z-10">
-            <div class="flex items-center gap-2 mb-1">
-              <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/30">
-                <PencilIcon class="w-5 h-5 text-white" />
-              </div>
-              <h3 class="text-xl font-display font-bold">
-                Editar Pago
-              </h3>
+        <!-- Cabecera marca (móvil = fila) — skill natillerapp-modals -->
+        <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+          <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <PencilIcon class="h-5 w-5 text-[#1B5E37]" />
             </div>
-            <p class="text-white/90 text-xs">
-              <span v-if="(cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada'">
-                Modifica el valor del pago registrado
-              </span>
-              <span v-else>
-                Modifica el valor pagado de la cuota
-              </span>
-            </p>
+            <div class="min-w-0 flex-1 text-left">
+              <h3 class="font-display text-base font-bold leading-tight text-white">Editar Pago</h3>
+              <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
+                {{ (cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada' ? 'Modifica el valor del pago registrado' : 'Modifica el valor pagado de la cuota' }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
+              aria-label="Cerrar"
+              @click="cerrarModalEditarCuota"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+        <!-- Cabecera marca (desktop = icono arriba + textos centrados, X en flex) -->
+        <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+          <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+            <div class="w-11 shrink-0" aria-hidden="true" />
+            <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+              <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                <PencilIcon class="h-6 w-6 text-[#1B5E37]" />
+              </div>
+              <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Editar Pago</h3>
+              <p class="mt-1 text-xs leading-snug text-white/90">
+                {{ (cuotaEditando?.estadoReal || cuotaEditando?.estado) === 'pagada' ? 'Modifica el valor del pago registrado' : 'Modifica el valor pagado de la cuota' }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
+              aria-label="Cerrar"
+              @click="cerrarModalEditarCuota"
+            >
+              <XMarkIcon class="h-6 w-6" />
+            </button>
           </div>
         </div>
 
-        <!-- Contenido con scroll (min-h-0 permite que flex reduzca y active overflow-y-auto) -->
-        <div 
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain relative"
+        <!-- Cuerpo scrolleable + natiscroll (skill natillerapp-modals) -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+        <div
+          ref="scrollContainerEditarCuota"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 space-y-6 overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalEditarCuota"
         >
           <!-- Card de información del socio -->
           <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
@@ -5273,13 +5417,31 @@
           </div>
         </div>
 
+          <!-- Natiscroll: «Desliza para ver más» -->
+          <div
+            v-show="hayNatiscrollModalEditarCuota"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+            aria-hidden="true"
+          >
+            <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent" />
+            <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+              <div class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3">
+                <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
+                  Desliza para ver más
+                </p>
+                <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Footer con botones (fijo, pegados al fondo del modal) -->
         <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
           <div class="flex gap-3">
             <button 
               type="button"
-              @click="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
-              @touchstart="modalEditarCuota = false; formEditarCuota.valor = 0; formEditarCuota.tipo_pago = 'efectivo'; formEditarCuota.aplicaImpuesto4x1000 = false"
+              @click="cerrarModalEditarCuota()"
+              @touchstart="cerrarModalEditarCuota()"
               class="btn-modal-secondary relative z-20 flex-1"
               style="pointer-events: auto !important; touch-action: manipulation !important; min-height: 44px;"
               >
@@ -6248,6 +6410,7 @@ import DatePicker from '../../components/DatePicker.vue'
 import BackButton from '../../components/BackButton.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import LoadingBox from '../../components/LoadingBox.vue'
+import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { TOURS_ENABLED } from '../../config/toursEnabled'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
@@ -6478,6 +6641,23 @@ async function abrirPagoCuotaDesdeSocio(cuota) {
   await nextTick() // deja que el unlock restaure el scroll antes de relockear con el pago
   abrirModalPago(cuota)
 }
+/** Edita el pago existente de una cuota desde el modal del socio (reabre el modal al cerrar). */
+async function abrirEdicionCuotaDesdeSocio(cuota) {
+  if (!cuota) return
+  volverASocioTrasPago.value = true
+  modalCuotasSocio.value = false
+  await nextTick()
+  abrirModalEditar(cuota)
+}
+/** Clic en una cuota del modal del socio: si ya tiene algún pago → editar; si no → registrar pago. */
+function abrirAccionCuotaDesdeSocio(cuota) {
+  if (!cuota || esVisor.value) return
+  if (getTotalPagadoConActividadesSocio(cuota) > 0) {
+    abrirEdicionCuotaDesdeSocio(cuota)
+  } else {
+    abrirPagoCuotaDesdeSocio(cuota)
+  }
+}
 /** Expande/colapsa el desglose de la sanción de una cuota (base + días + adicionales). */
 function toggleSancionDetalle(cuotaId) {
   sancionDetalleAbierta.value = sancionDetalleAbierta.value === cuotaId ? null : cuotaId
@@ -6501,6 +6681,15 @@ watch(modalPago, async (abierto) => {
     modalCuotasSocio.value = true
   }
 })
+// Igual que el pago: al cerrar la edición por «atrás»/cancelar, reabrir la modal del socio.
+watch(modalEditarCuota, async (abierto) => {
+  if (abierto || !volverASocioTrasPago.value) return
+  volverASocioTrasPago.value = false
+  await nextTick()
+  if (!modalModificacion.value && !modalConfirmacion.value && socioCuotasSelId.value) {
+    modalCuotasSocio.value = true
+  }
+})
 /** Estado global del grupo de cuotas de un socio (para color de la fila/modal). */
 function getEstadoGrupoSocio(grupo) {
   const cuotas = grupo?.cuotas || []
@@ -6516,6 +6705,33 @@ function getPeriodoCuotaLabel(cuota) {
   if (cuota?.quincena === 1) return '1ª Quincena'
   if (cuota?.quincena === 2) return '2ª Quincena'
   return 'Mensual'
+}
+/** Etiqueta corta del periodo para chips en la tarjeta del socio. */
+function getPeriodoCuotaCorto(cuota) {
+  if (cuota?.quincena === 1) return '1ª Q'
+  if (cuota?.quincena === 2) return '2ª Q'
+  return 'Mensual'
+}
+/**
+ * Desglose de conceptos de una cuota para la tarjeta del socio: valor de la cuota,
+ * sanción, actividades y préstamos que le corresponden, con el total y el estado de pago.
+ */
+function getDesgloseCuotaSocio(cuota) {
+  const valorCuota = cuota?.valor_cuota || 0
+  const sancion = getSancionCuotaDetalle(cuota) || 0
+  const actInfo = getActividadesInfoSocio(cuota)
+  const actividad = actInfo.totalOriginal || ((actInfo.pagadas || 0) + (actInfo.total || 0))
+  const prestamo = (getTotalCuotasPrestamosPendientesSocioSync(cuota) || 0) + (getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)
+  const estado = cuota?.estadoReal || cuota?.estado
+  return {
+    cuota: valorCuota,
+    sancion,
+    actividad,
+    prestamo,
+    total: valorCuota + sancion + actividad + prestamo,
+    estado,
+    pagada: estado === 'pagada'
+  }
 }
 
 const desgloseSancionDetalle = computed(() => getDesgloseSancionCuota(cuotaDetalle.value))
@@ -6753,6 +6969,48 @@ watch(modalGenerarCuotas, async (abierto) => {
     }
   }
 })
+
+// ---- Natiscroll modal Editar Pago ----
+const scrollContainerEditarCuota = ref(null)
+const hayNatiscrollModalEditarCuota = ref(false)
+let rafNatiscrollModalEditarCuota = null
+function actualizarNatiscrollModalEditarCuota() {
+  const el = scrollContainerEditarCuota.value
+  if (!el) {
+    hayNatiscrollModalEditarCuota.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalEditarCuota.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalEditarCuota() {
+  if (rafNatiscrollModalEditarCuota != null) cancelAnimationFrame(rafNatiscrollModalEditarCuota)
+  rafNatiscrollModalEditarCuota = requestAnimationFrame(() => {
+    rafNatiscrollModalEditarCuota = null
+    actualizarNatiscrollModalEditarCuota()
+  })
+}
+/** Cierra el modal de editar pago y limpia el formulario (usado por X, Cancelar y @close). */
+function cerrarModalEditarCuota() {
+  modalEditarCuota.value = false
+  formEditarCuota.valor = 0
+  formEditarCuota.tipo_pago = 'efectivo'
+  formEditarCuota.aplicaImpuesto4x1000 = false
+}
+watch(modalEditarCuota, async (abierto) => {
+  if (abierto) {
+    await nextTick()
+    programarNatiscrollModalEditarCuota()
+  } else {
+    hayNatiscrollModalEditarCuota.value = false
+    if (rafNatiscrollModalEditarCuota != null) {
+      cancelAnimationFrame(rafNatiscrollModalEditarCuota)
+      rafNatiscrollModalEditarCuota = null
+    }
+  }
+})
+
 const dropdownMesAbierto = ref(false)
 const dropdownMesRef = ref(null)
 const sancionesDinamicas = ref({}) // Sanciones calculadas dinámicamente
@@ -6765,6 +7023,7 @@ const actividadesSeleccionadas = ref(new Set()) // IDs de actividades selecciona
 const actividadesDeLaCuotaActual = ref(new Set()) // IDs de actividades que corresponden al periodo de la cuota actual (no se pueden deseleccionar)
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
 const mostrandoAnimacionPago = ref(false) // Activo mientras se procesa el pago (LoadingBox + bloqueandoRegistroPago)
+const cambiandoMes = ref(false) // Activo mientras se recalcula/renderiza la lista al cambiar de mes (muestra skeleton)
 const cuotasPrestamosPendientes = ref([]) // Cuotas de préstamos pendientes del socio
 const cuotasPrestamosDesplegableAbierto = ref(false) // Estado del desplegable de cuotas de préstamos
 const cargandoCuotasPrestamos = ref(false) // Estado de carga de cuotas de préstamos
@@ -6810,6 +7069,18 @@ const generandoCuotas = ref(false) // Flag para evitar ejecuciones paralelas de 
 const filtroEstado = ref('todos')
 const filtroPeriodicidad = ref('todos')
 const filtroTipoPago = ref('todos')
+// Opciones para los controles segmentados de filtro (más bonito que un <select>).
+const opcionesFiltroEstado = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'pagada', label: 'Pagadas' },
+  { value: 'pendiente', label: 'Pendientes' },
+  { value: 'mora', label: 'En mora' }
+]
+const opcionesFiltroPeriodicidad = [
+  { value: 'todos', label: 'Todas' },
+  { value: 'mensual', label: 'Mensual' },
+  { value: 'quincenal', label: 'Quincenal' }
+]
 const busquedaCuotas = ref('')
 const mostrarFiltros = ref(false)
 const inputBusquedaRef = ref(null)
@@ -7537,6 +7808,14 @@ const cuotasAgrupadasPorSocio = computed(() => {
     const nombreB = (b.socio?.nombre || '').toLowerCase()
     return nombreA.localeCompare(nombreB, 'es', { sensitivity: 'base' })
   })
+})
+
+// Desglose de conceptos por cuota (cuota, sanción, actividades, préstamos) para las tarjetas.
+// Memoizado por id para no recalcular en cada render del template.
+const desglosePorCuota = computed(() => {
+  const map = {}
+  cuotasFiltradas.value.forEach(c => { map[c.id] = getDesgloseCuotaSocio(c) })
+  return map
 })
 
 // Datos del socio seleccionado para la modal de cuotas (computed para reflejar pagos en vivo).
@@ -8364,13 +8643,14 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
     filtroTipoPago.value = 'todos' // Resetear filtro de tipo de pago
-    
+
     // Evitar ejecuciones paralelas de generación de cuotas
     if (generandoCuotas.value) {
       console.log('⏭️ Generación de cuotas ya en curso, ignorando...')
+      cambiandoMes.value = false
       return
     }
-    
+
     // Generar cuotas automáticamente para el mes seleccionado si faltan
     try {
       generandoCuotas.value = true
@@ -8384,7 +8664,7 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
       // Verificar primero con datos locales si faltan cuotas
       const cuotasActuales = cuotasStore.cuotas
       const faltanCuotas = verificarCuotasFaltantes(cuotasActuales, nuevoMes, anioCorrecto)
-      
+
       if (faltanCuotas) {
         const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioCorrecto, {
           configNatilleraCache: natilleraConfigCache
@@ -8398,12 +8678,28 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
     } finally {
       generandoCuotas.value = false
     }
-    
-    // Recalcular sanciones en segundo plano si están activadas
+
+    // Recalcular sanciones y ESPERAR: el skeleton (cambiandoMes) se mantiene visible
+    // hasta que la info del mes —incluidas sanciones/intereses por día— esté lista,
+    // para no mostrar la vista con datos a medias que "aparecen" después.
     if (sancionesActivas.value) {
-      recalcularSancionesMes() // Sin await para no bloquear
+      try {
+        await recalcularSancionesMes()
+      } catch (error) {
+        console.error('Error recalculando sanciones:', error)
+      }
     }
   }
+
+  // Ocultar el skeleton una vez que la data final del mes ya está calculada.
+  // nextTick pinta el skeleton; el rAF garantiza que se muestre al menos un frame
+  // antes de renderizar (y recalcular) la lista pesada, evitando un flash abrupto.
+  await nextTick()
+  await new Promise((resolve) => {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve())
+    else resolve()
+  })
+  cambiandoMes.value = false
 })
 
 // Cuando cambia el mes en el formulario, buscar fechas existentes
@@ -10011,6 +10307,19 @@ async function abrirModalPago(cuota) {
   })
 
   try {
+    // Asegurar que la sanción de la cuota esté calculada ANTES de fijar el valor a cobrar y el
+    // desglose. Una cuota recién en mora por fecha puede no tener valor_multa persistido ni estar
+    // aún en sancionesDinamicas (recalcularSancionesMes es fire-and-forget al montar la vista); sin
+    // esto el modal omitiría la sanción tanto en el desglose como en el monto de formPago.valor.
+    if (
+      sancionesActivas.value &&
+      !cuota.no_calcular_multa &&
+      calcularEstadoRealCuota(cuota, diasGracia.value) === 'mora' &&
+      getSancionTotalCuota(cuota) <= 0
+    ) {
+      await recalcularSancionesMes()
+    }
+
     // Paralelizar cargas independientes
     await Promise.all([
       cargarActividadesPendientes(cuota),
@@ -14122,14 +14431,28 @@ async function reenviarComprobante(cuota) {
     gmfCuotaUpfront <= 0 && cuota.id && (tipoPagoLowerReenvio === 'transferencia' || tipoPagoLowerReenvio === 'mixto')
       ? obtenerRespaldoGmfDesdeHistorialComprobantes(cuota.id)
       : Promise.resolve({ totalGmf: 0, historialPagos: null })
+  // Datos frescos desde la BD: el objeto `cuota` del store puede estar desactualizado (cargado antes
+  // de un pago/edición en otro dispositivo o antes de una reconciliación). La BD es la fuente
+  // confiable, así que releemos GMF y fecha de pago aquí en vez de fiarnos solo del objeto en memoria.
+  const promCuotaGmfFresh = cuota.id
+    ? supabase.from('cuotas').select('impuesto_4x1000, fecha_pago').eq('id', cuota.id).maybeSingle()
+    : Promise.resolve({ data: null })
 
-  const [historialRes, sociosActividadRes, prestamosRes, planPagosPorCuotaRes, respaldoGmfRes] = await Promise.all([
+  const [historialRes, sociosActividadRes, prestamosRes, planPagosPorCuotaRes, respaldoGmfRes, cuotaGmfFreshRes] = await Promise.all([
     historialPromise,
     promSociosActividad,
     promPrestamos,
     promPlanPagosPorCuota,
-    promRespaldoGmf
+    promRespaldoGmf,
+    promCuotaGmfFresh
   ])
+  // La fuente confiable de GMF: el mayor entre el objeto en memoria y el valor fresco de la BD.
+  const gmfCuotaConfiable = Math.max(
+    gmfCuotaUpfront,
+    Math.max(0, Math.round(parseFloat(cuotaGmfFreshRes?.data?.impuesto_4x1000) || 0))
+  )
+  // Fecha de pago confiable: la fresca de la BD si existe, si no la del objeto en memoria.
+  const fechaPagoConfiable = cuotaGmfFreshRes?.data?.fecha_pago || cuota.fecha_pago
   let historialRows = historialRes.data
   const historialErrorPrimera = historialRes.error
 
@@ -14334,11 +14657,11 @@ async function reenviarComprobante(cuota) {
     historialPagosReenvio = []
   }
 
-  // Fuente PRIMARIA confiable: el 4×1000 guardado en la propia cuota (update síncrono).
-  // El historial puede faltar o quedar incompleto (insert fire-and-forget); la columna de
-  // la cuota no. Solo es > 0 si en algún pago realmente se cobró 4×1000.
-  if (gmfCuotaUpfront > totalGmfHistorialReenvio) {
-    totalGmfHistorialReenvio = gmfCuotaUpfront
+  // Fuente PRIMARIA confiable: el 4×1000 guardado en la propia cuota (update síncrono), leído
+  // fresco de la BD. El historial puede faltar o quedar incompleto (insert fire-and-forget); la
+  // columna de la cuota no. Solo es > 0 si en algún pago realmente se cobró 4×1000.
+  if (gmfCuotaConfiable > totalGmfHistorialReenvio) {
+    totalGmfHistorialReenvio = gmfCuotaConfiable
   }
 
   // Respaldo legado: GMF que no quedó en cuota ni en historial_pagos_cuota, pero sí en el
@@ -14444,9 +14767,9 @@ async function reenviarComprobante(cuota) {
     valorEfectivo,
     valorTransferencia,
     impuesto4x1000: totalGmfHistorialReenvio,
-    fecha: cuota.fecha_pago 
+    fecha: fechaPagoConfiable
       ? (() => {
-          const d = new Date(cuota.fecha_pago)
+          const d = new Date(fechaPagoConfiable)
           const fechaStr = d.toLocaleDateString('es-CO', {
             year: 'numeric',
             month: 'long',
@@ -14459,8 +14782,8 @@ async function reenviarComprobante(cuota) {
           return `${fechaStr}\n${horaStr}`
         })()
       : 'Fecha no registrada',
-    fechaCorta: cuota.fecha_pago 
-      ? new Date(cuota.fecha_pago).toLocaleDateString('es-CO', {
+    fechaCorta: fechaPagoConfiable
+      ? new Date(fechaPagoConfiable).toLocaleDateString('es-CO', {
           year: 'numeric',
           month: 'long',
           day: 'numeric'
@@ -14809,6 +15132,10 @@ async function toggleNoCalcularMultaCuota(cuota) {
       cuota.valor_multa = 0
       cuota.valor_multa_base = 0
       cuota.valor_multa_intereses = 0
+    } else if (sancionesActivas.value) {
+      // Al re-habilitar la multa, recalcular de inmediato para que la sanción vuelva a
+      // aparecer (en la lista y en el modal de detalle) sin esperar a otro recálculo.
+      await recalcularSancionesMes()
     }
   } catch (e) {
     console.error('Error actualizando no_calcular_multa en cuota:', e)
@@ -14839,6 +15166,9 @@ function esMesActualHoy(mes) {
 
 function seleccionarMes(mesValue) {
   if (!mesValue || mesSeleccionado.value === mesValue) return
+  // Mostrar skeleton mientras se recalcula/renderiza la info del nuevo mes.
+  // El watcher de mesSeleccionado lo apaga tras pintar el skeleton (doble rAF).
+  cambiandoMes.value = true
   mesSeleccionado.value = mesValue
   formCuotas.mes = mesValue
   router.push(`/natilleras/${id}/cuotas/${mesValue}`)
@@ -15324,39 +15654,69 @@ onUnmounted(() => {
   touch-action: manipulation;
 }
 .socios-search__clear:hover { background: rgba(15, 23, 42, 0.06); }
-.socios-toolbar__filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.socios-filter {
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: #fff;
-  border: 1px solid var(--surface-divider-strong);
-  border-radius: var(--radius-pill);
-  padding: 0.5rem 2rem 0.5rem 0.875rem;
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #334155;
-  min-height: 44px;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  background-size: 1rem;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
-  -webkit-tap-highlight-color: transparent;
+/* ---------- Filtros como controles segmentados (pills) ---------- */
+.cuotas-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
-.socios-filter:focus {
-  outline: none;
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
+.cuotas-segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1875rem;
+  padding: 0.25rem;
+  background: rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--surface-divider);
+  border-radius: 9999px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cuotas-segmented::-webkit-scrollbar { display: none; }
+.cuotas-segmented__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  padding-left: 0.375rem;
+  padding-right: 0.125rem;
+  flex-shrink: 0;
+}
+.cuotas-segmented__opt {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  border-radius: 9999px;
+  padding: 0.5rem 0.875rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 40px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.cuotas-segmented__opt:not(.is-selected):hover { color: var(--brand-primary); }
+/* Opción activa: verde de marca para identificar el filtro aplicado de un vistazo */
+.cuotas-segmented__opt.is-selected {
+  background: var(--brand-primary);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(27, 94, 55, 0.35);
 }
 .cuotas-toolbar__count {
   font-size: 0.8125rem;
   color: #94a3b8;
   white-space: nowrap;
 }
-@media (max-width: 480px) {
-  .socios-filter { flex: 1; min-width: 0; }
+@media (max-width: 640px) {
+  .cuotas-filtros { flex-basis: 100%; }
+  .cuotas-segmented { flex: 1 1 auto; }
   .cuotas-toolbar__count { width: 100%; text-align: left; }
 }
 

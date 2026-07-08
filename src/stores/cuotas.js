@@ -2185,7 +2185,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
         } catch (e) { console.warn('Error en auditoría:', e) }
       })())
 
-      // 4. Registrar historial_pagos_cuota (fire-and-forget)
+      // 4. Registrar historial_pagos_cuota (best-effort con reintento).
+      // Nota: el GMF y los totales YA quedan de forma síncrona y confiable en la fila de la cuota
+      // (update principal + columna impuesto_4x1000). Este historial es el desglose por transacción.
       tareasSecundarias.push((async () => {
         try {
           const formaPagoHist = (tipoPago || 'efectivo').toLowerCase()
@@ -2211,7 +2213,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
           if (Array.isArray(options.detalleActividades) && options.detalleActividades.length > 0) insertHistorial.detalle_actividades = options.detalleActividades
           if (options.totalAPagar > 0) insertHistorial.total_a_pagar = options.totalAPagar
           if (Array.isArray(options.detalleCuotasPrestamos) && options.detalleCuotasPrestamos.length > 0) insertHistorial.detalle_cuotas_prestamo = options.detalleCuotasPrestamos
-          await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+          // Supabase NO lanza excepción en errores de BD (RLS/constraint): los devuelve en { error }.
+          // Antes no se revisaba `.error`, por eso los fallos quedaban silenciados. Revisar y reintentar 1 vez.
+          let ultimoError = null
+          for (let intento = 1; intento <= 2; intento++) {
+            const { error: insErr } = await supabase.from('historial_pagos_cuota').insert(insertHistorial)
+            if (!insErr) { ultimoError = null; break }
+            ultimoError = insErr
+          }
+          if (ultimoError) console.error('historial_pagos_cuota insert falló tras reintento:', ultimoError.message)
         } catch (e) { console.error('historial_pagos_cuota insert excepción:', e.message) }
       })())
 
