@@ -1,0 +1,51 @@
+<!-- ============================================================================
+     Natillera — sprite de iconos/isotipo (identidad de ahorro comunitario).
+     Pegar JUSTO DESPUÉS de <body>. Usar con: <svg class="..."><use href="#iso-natillera"/></svg>
+     currentColor controla el trazo/relleno donde aplica.
+     ========================================================================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+
+    <!-- Isotipo marca: frasco de ahorro con brote y moneda (ahorro que crece) -->
+    <symbol id="iso-natillera" viewBox="0 0 48 48">
+      <!-- tapa -->
+      <rect x="17" y="7" width="14" height="5" rx="2" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <!-- frasco -->
+      <path d="M14 14 h20 a3 3 0 0 1 3 3 v20 a5 5 0 0 1-5 5 H16 a5 5 0 0 1-5-5 V17 a3 3 0 0 1 3-3 Z"
+            fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+      <!-- líquido / ahorro -->
+      <path d="M12 30 q6 3 12 0 t12 0 v6 a5 5 0 0 1-5 5 H17 a5 5 0 0 1-5-5 Z" fill="currentColor" opacity=".18"/>
+      <!-- moneda -->
+      <circle cx="24" cy="34" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M24 32.2 v3.6 M22.4 33 h3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <!-- brote saliendo por la tapa -->
+      <path d="M24 12 C24 8 21 6 19 6 c1.5 2 2 4 5 6 Z" fill="currentColor" opacity=".55"/>
+      <path d="M24 12 C24 7 27 5 29.5 4.5 c-1 2.5-2 4.5-5.5 7.5 Z" fill="currentColor"/>
+      <path d="M24 13 v-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- Olla comunitaria (natilla) — motivo secundario -->
+    <symbol id="ic-olla" viewBox="0 0 48 48">
+      <path d="M9 20 h30 v9 a10 10 0 0 1-10 10 H19 a10 10 0 0 1-10-10 Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M6 20 h36" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M6 20 l-3-3 M42 20 l3-3" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M18 14 c0-3 2-4 2-6 M24 13 c0-3 2-4 2-6 M30 14 c0-3 2-4 2-6"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+    </symbol>
+
+    <!-- Mano con moneda (comunidad / entrega) -->
+    <symbol id="ic-mano-moneda" viewBox="0 0 48 48">
+      <circle cx="24" cy="15" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <path d="M24 13 v4 M22 15 h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M8 34 c4-3 9-3 12 0 l3 2 h7 a3 3 0 0 0 0-6 h-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M6 32 v8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- Frijol / semilla (bullet decorativo) -->
+    <symbol id="ic-frijol" viewBox="0 0 24 24">
+      <path d="M15 4 C9 4 5 8 5 13 s4 7 8 7 6-3 6-7 C19 8 18 4 15 4 Z" fill="currentColor"/>
+      <path d="M13 8 c-2 1-3 3-2 6" fill="none" stroke="var(--crema, #F6EFDF)" stroke-width="1.4" stroke-linecap="round"/>
+    </symbol>
+
+  </defs>
+</svg>

@@ -41,5 +41,20 @@
     "additionalDirectories": [
       "\\tmp"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/ios-safari-check.mjs\"",
+            "statusMessage": "Validando compat iOS/Safari...",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }

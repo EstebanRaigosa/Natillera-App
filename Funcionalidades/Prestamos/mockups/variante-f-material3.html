@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Préstamos · Natillerapp — Material 3</title>
+
+<!-- 1) Vue 3 global (NO módulo) -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<!-- 2) Motor (no se modifica) -->
+<script src="./engine.js"></script>
+<!-- 3) Mulish + Material Symbols -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+
+<!-- 4) Material Web + dynamic color -->
+<script type="module">
+  import 'https://esm.run/@material/web/all.js';
+  import { styles as typescale } from 'https://esm.run/@material/web/typography/md-typescale-styles.js';
+  document.adoptedStyleSheets.push(typescale.styleSheet);
+  import { argbFromHex, themeFromSourceColor, applyTheme } from 'https://esm.run/@material/material-color-utilities';
+  const theme = themeFromSourceColor(argbFromHex('#1B5E37')); // semilla = verde marca
+  const setScheme = (dark) => applyTheme(theme, { target: document.body, dark });
+  window.__setScheme = setScheme;
+  setScheme(matchMedia('(prefers-color-scheme: dark)').matches);
+  window.dispatchEvent(new CustomEvent('md-ready'));
+</script>
+
+<style>
+  :root {
+    color-scheme: light dark;
+    /* Material 3 usa estos tokens para toda la type scale (brand + plain).
+       Al apuntarlos a Mulish, TODOS los md-typescale-* y componentes md-* la heredan. */
+    --md-ref-typeface-brand: 'Mulish';
+    --md-ref-typeface-plain: 'Mulish';
+  }
+
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: 'Mulish', system-ui, sans-serif;
+  }
+  body {
+    background: var(--md-sys-color-surface-container, #f4f4f4);
+    color: var(--md-sys-color-on-surface, #1a1a1a);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  md-icon { font-family: 'Material Symbols Outlined'; }
+  .sym { font-family: 'Material Symbols Outlined'; font-weight: 400; font-style: normal; line-height: 1;
+    -webkit-font-feature-settings: 'liga'; letter-spacing: normal; text-transform: none; white-space: nowrap; }
+
+  /* ---- Layout shell ---- */
+  .shell {
+    display: flex;
+    min-height: 100vh; min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Navigation rail (medium/expanded) */
+  .rail {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 88px;
+    padding: 12px 0 env(safe-area-inset-bottom);
+    background: var(--md-sys-color-surface);
+    gap: 8px;
+    position: sticky; top: 0;
+    height: 100vh; height: 100dvh;
+    z-index: 5;
+  }
+  .rail-fab { margin-bottom: 8px; }
+  .rail-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    width: 100%; padding: 4px 0; cursor: pointer;
+    color: var(--md-sys-color-on-surface-variant);
+    border: none; background: none;
+    font-family: inherit;
+  }
+  .rail-pill {
+    display: grid; place-items: center;
+    width: 56px; height: 32px; border-radius: 16px;
+    transition: background 200ms cubic-bezier(.2,0,0,1);
+  }
+  .rail-item.active .rail-pill { background: var(--md-sys-color-secondary-container); }
+  .rail-item.active { color: var(--md-sys-color-on-secondary-container); }
+  .rail-item .sym { font-size: 24px; }
+  .rail-label { font-size: 12px; font-weight: 500; letter-spacing: .5px; }
+
+  .main {
+    flex: 1 1 auto;
+    display: flex; flex-direction: column;
+    min-width: 0;
+  }
+
+  /* Top app bar */
+  .topbar {
+    position: sticky; top: 0; z-index: 4;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+    min-height: 56px;
+    box-sizing: border-box;
+  }
+  .topbar__title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topbar__lead { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+    background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+  .topbar__lead .sym { font-size: 22px; }
+  .role-wrap { display: flex; align-items: center; gap: 8px; }
+  .role-wrap span { font-size: 12px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
+
+  .content {
+    flex: 1 1 auto;
+    padding: 16px 16px 120px;
+    max-width: 1080px;
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+  @media (min-width: 840px) {
+    .content { padding: 24px 24px 40px; }
+  }
+
+  /* Summary cards */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media (min-width: 600px) { .summary-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .summary-grid { grid-template-columns: repeat(5, 1fr); } }
+
+  .stat {
+    position: relative;
+    border-radius: 16px;
+    padding: 16px;
+    background: var(--md-sys-color-surface-container-high);
+    overflow: hidden;
+  }
+  .stat--primary { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+  .stat--tertiary { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+  .stat--secondary { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+  .stat__label { font-size: 12px; font-weight: 500; letter-spacing: .3px; opacity: .9; display: flex; align-items: center; gap: 6px; }
+  .stat__label .sym { font-size: 18px; }
+  .stat__value { margin-top: 6px; font-weight: 500; line-height: 1.15; }
+
+  /* Tabs + search row */
+  .toolbar {
+    display: flex; flex-direction: column; gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (min-width: 700px) {
+    .toolbar { flex-direction: row; align-items: center; }
+    .toolbar md-tabs { flex: 1 1 auto; }
+    .toolbar .search { width: 320px; }
+  }
+  .search { width: 100%; }
+
+  /* Loan cards */
+  .list { display: flex; flex-direction: column; gap: 12px; }
+  @media (min-width: 760px) {
+    .list { display: grid; grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .loan {
+    position: relative;
+    border-radius: 20px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 180ms cubic-bezier(.2,0,0,1);
+    --md-elevation-level: 1;
+  }
+  .loan:active { transform: scale(.99); }
+  /* Por cobrar = vivo */
+  .loan--activo { background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface); }
+  /* Pagados = cerrado, plano, atenuado */
+  .loan--pagado { background: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface-variant); --md-elevation-level: 0; }
+  .loan--pagado .loan__saldo-value { color: var(--md-sys-color-on-surface-variant); opacity: .55; }
+
+  .loan__head { display: flex; align-items: center; gap: 12px; }
+  .loan__avatar {
+    flex: none; width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 500; font-size: 16px;
+    background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+  }
+  .loan--pagado .loan__avatar { background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); }
+  .loan__who { flex: 1 1 auto; min-width: 0; }
+  .loan__name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .loan__meta { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+  .loan__saldo { text-align: right; }
+  .loan__saldo-label { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+  .loan__saldo-value { font-weight: 500; }
+
+  .loan__chips { margin-top: 12px; }
+  .loan__progress { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .loan__progress-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+
+  .chip-mora { color: var(--md-sys-color-error) !important; }
+
+  .empty {
+    text-align: center; padding: 48px 16px; color: var(--md-sys-color-on-surface-variant);
+    grid-column: 1 / -1;
+  }
+  .empty .sym { font-size: 48px; display: block; margin-bottom: 8px; opacity: .5; }
+
+  /* FAB fixed (compact only) */
+  .fab-fixed {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 6;
+  }
+  @media (min-width: 840px) { .fab-fixed { display: none; } }
+
+  /* Dialog internals */
+  .dlg-section { margin-bottom: 16px; }
+  .dlg-section:last-child { margin-bottom: 0; }
+  .field-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 520px) { .field-grid.two { grid-template-columns: 1fr 1fr; } }
+  .fw { width: 100%; }
+
+  .calc-box {
+    border-radius: 16px;
+    padding: 14px 16px;
+    background: var(--md-sys-color-surface-container-highest);
+  }
+  .calc-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 14px; }
+  .calc-row.total { border-top: 1px solid var(--md-sys-color-outline-variant); margin-top: 6px; padding-top: 8px; font-weight: 500; }
+  .calc-row .lbl { color: var(--md-sys-color-on-surface-variant); }
+  .calc-row .val { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .calc-row .val.pos { color: var(--md-sys-color-primary); }
+
+  .help-card {
+    border-radius: 12px; padding: 12px 14px; margin-top: 10px;
+    background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);
+    font-size: 13px; line-height: 1.4;
+  }
+  .help-card b { font-weight: 500; }
+
+  .err-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .err-item {
+    display: flex; gap: 8px; align-items: flex-start;
+    border-radius: 10px; padding: 8px 12px; font-size: 13px;
+    background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);
+  }
+  .err-item .sym { font-size: 18px; margin-top: 1px; }
+
+  .plan-preview { max-height: 220px; overflow: auto; border-radius: 12px; border: 1px solid var(--md-sys-color-outline-variant); }
+  .plan-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .plan-table th, .plan-table td { padding: 8px 10px; text-align: right; white-space: nowrap; }
+  .plan-table th { position: sticky; top: 0; background: var(--md-sys-color-surface-container-high); color: var(--md-sys-color-on-surface-variant); font-weight: 500; z-index: 1; }
+  .plan-table th:first-child, .plan-table td:first-child { text-align: center; }
+  .plan-table td:nth-child(2) { text-align: left; }
+  .plan-table tbody tr { border-top: 1px solid var(--md-sys-color-outline-variant); }
+  .plan-table .st { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; }
+  .st-pagada { color: var(--md-sys-color-primary); }
+  .st-parcial { color: var(--md-sys-color-tertiary); }
+  .st-vencida { color: var(--md-sys-color-error); }
+  .st-pendiente { color: var(--md-sys-color-on-surface-variant); }
+
+  .kv { display: flex; flex-direction: column; gap: 2px; }
+  .kv .k { font-size: 11px; color: var(--md-sys-color-on-surface-variant); }
+  .kv .v { font-weight: 500; }
+  .kv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
+  @media (min-width: 520px) { .kv-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .abono-item, .refi-item {
+    border-radius: 12px; padding: 10px 12px; margin-top: 8px;
+    background: var(--md-sys-color-surface-container-high);
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+  }
+  .abono-item .sym { color: var(--md-sys-color-primary); }
+
+  .cuota-pick {
+    display: flex; align-items: center; gap: 10px;
+    border-radius: 12px; padding: 8px 12px; margin-top: 8px;
+    background: var(--md-sys-color-surface-container-high);
+  }
+  .cuota-pick .grow { flex: 1 1 auto; }
+  .cuota-pick .cp-title { font-weight: 500; font-size: 14px; }
+  .cuota-pick .cp-sub { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+  .cuota-pick.venc { outline: 1px solid var(--md-sys-color-error); }
+
+  .reparto {
+    border-radius: 12px; overflow: hidden; margin-top: 8px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .reparto-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px; }
+  .reparto-row + .reparto-row { border-top: 1px solid var(--md-sys-color-outline-variant); }
+  .reparto-row .num { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600;
+    background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); flex: none; }
+  .reparto-row .rl { flex: 1 1 auto; }
+  .reparto-row .rv { font-weight: 500; font-variant-numeric: tabular-nums; }
+  .reparto-row.muted { color: var(--md-sys-color-on-surface-variant); }
+  .reparto-row.muted .num { background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); }
+
+  .comprobante {
+    border-radius: 16px; padding: 18px;
+    background: var(--md-sys-color-surface-container-highest);
+    text-align: center;
+  }
+  .comprobante .check {
+    width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
+    display: grid; place-items: center;
+    background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+  }
+  .comprobante .check .sym { font-size: 40px; }
+  .comprobante .lines { text-align: left; margin-top: 12px; }
+
+  md-dialog { max-width: min(560px, 96vw); }
+  md-dialog form { --md-dialog-container-max-block-size: 90dvh; }
+
+  .seg-label { font-size: 12px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); margin-bottom: 8px; display: block; }
+  .slider-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
+  .slider-label .v { font-weight: 500; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div class="shell">
+    <!-- Navigation rail (medium/expanded) -->
+    <nav class="rail" :style="railStyle" aria-label="Navegación principal">
+      <md-fab class="rail-fab" size="small" aria-label="Nuevo préstamo"
+        v-if="isAdmin" @click="openCrear">
+        <md-icon slot="icon">add</md-icon>
+      </md-fab>
+      <button class="rail-item" v-for="it in railItems" :key="it.id"
+        :class="{ active: it.id==='prestamos' }" type="button"
+        @click="it.id==='cuotas' && isAdmin ? openSimular() : null">
+        <span class="rail-pill"><span class="sym">{{ it.icon }}</span></span>
+        <span class="rail-label">{{ it.label }}</span>
+      </button>
+    </nav>
+
+    <div class="main">
+      <!-- Top app bar -->
+      <header class="topbar">
+        <div class="topbar__lead"><span class="sym">payments</span></div>
+        <div class="topbar__title md-typescale-title-large">Préstamos</div>
+        <div class="role-wrap" role="group" aria-label="Rol de usuario">
+          <span>{{ isAdmin ? 'Admin' : 'Visor' }}</span>
+          <md-switch :selected="isAdmin" aria-label="Cambiar rol Admin / Visor"
+            @change="isAdmin = $event.target.selected"></md-switch>
+        </div>
+        <md-icon-button v-if="isAdmin" @click="openSimular" aria-label="Simular cobro en Cuotas">
+          <md-icon>point_of_sale</md-icon>
+        </md-icon-button>
+        <md-icon-button @click="toggleTheme" :aria-label="isDark ? 'Modo claro' : 'Modo oscuro'">
+          <md-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</md-icon>
+        </md-icon-button>
+      </header>
+
+      <main class="content">
+        <!-- Resumen del módulo -->
+        <section class="summary-grid" aria-label="Resumen del módulo">
+          <div class="stat stat--primary">
+            <div class="stat__label"><span class="sym">account_balance_wallet</span>Prestado</div>
+            <div class="stat__value md-typescale-title-medium">{{ fmt(totales.totalPrestado) }}</div>
+          </div>
+          <div class="stat stat--tertiary">
+            <div class="stat__label"><span class="sym">trending_up</span>Intereses ganados</div>
+            <div class="stat__value md-typescale-title-medium">{{ fmt(totales.interesesGanados) }}</div>
+          </div>
+          <div class="stat stat--secondary">
+            <div class="stat__label"><span class="sym">savings</span>Abonado</div>
+            <div class="stat__value md-typescale-title-medium">{{ fmt(totales.totalAbonado) }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label"><span class="sym">payments</span>Fondo efectivo</div>
+            <div class="stat__value md-typescale-title-medium">{{ fmt(state.fondo.efectivo) }}</div>
+          </div>
+          <div class="stat">
+            <div class="stat__label"><span class="sym">send_to_mobile</span>Fondo transferencia</div>
+            <div class="stat__value md-typescale-title-medium">{{ fmt(state.fondo.transferencia) }}</div>
+          </div>
+        </section>
+
+        <!-- Tabs + buscador -->
+        <div class="toolbar">
+          <md-tabs :active-tab-index="tabIndex" @change="onTabChange" aria-label="Filtrar préstamos">
+            <md-primary-tab id="t-cobrar">
+              <md-icon slot="icon">pending_actions</md-icon>
+              Por cobrar ({{ porCobrar.length }})
+            </md-primary-tab>
+            <md-primary-tab id="t-pagados">
+              <md-icon slot="icon">task_alt</md-icon>
+              Pagados ({{ pagados.length }})
+            </md-primary-tab>
+          </md-tabs>
+          <md-outlined-text-field class="search" placeholder="Buscar socio…"
+            :value="query" @input="query = $event.target.value">
+            <md-icon slot="leading-icon">search</md-icon>
+            <md-icon-button slot="trailing-icon" v-if="query" @click="query=''" aria-label="Limpiar">
+              <md-icon>close</md-icon>
+            </md-icon-button>
+          </md-outlined-text-field>
+        </div>
+
+        <!-- Lista -->
+        <section class="list" aria-label="Lista de préstamos">
+          <template v-if="visibles.length">
+            <div v-for="p in visibles" :key="p.id"
+              class="loan" :class="'loan--' + p.estado"
+              tabindex="0" role="button"
+              @click="openDetalle(p)" @keydown.enter="openDetalle(p)">
+              <md-elevation></md-elevation>
+              <md-ripple></md-ripple>
+
+              <div class="loan__head">
+                <div class="loan__avatar">{{ iniciales(p.socioId) }}</div>
+                <div class="loan__who">
+                  <div class="loan__name">{{ nombre(p.socioId) }}</div>
+                  <div class="loan__meta">
+                    {{ fmt(p.capital) }} · {{ p.nCuotas }} cuotas · {{ p.periodicidad }}
+                  </div>
+                </div>
+                <div class="loan__saldo">
+                  <div class="loan__saldo-label">{{ p.estado==='pagado' ? 'Saldado' : 'Saldo' }}</div>
+                  <div class="loan__saldo-value"
+                    :class="p.estado==='pagado' ? 'md-typescale-title-medium' : 'md-typescale-headline-small'">
+                    {{ fmt(p.saldoActual) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="loan__chips">
+                <md-chip-set>
+                  <!-- Pagados -->
+                  <md-assist-chip v-if="p.estado==='pagado'" label="Saldado">
+                    <md-icon slot="icon">check_circle</md-icon>
+                  </md-assist-chip>
+                  <!-- Mora -->
+                  <md-assist-chip v-else-if="resumen(p).estadoGlobal==='mora'"
+                    class="chip-mora"
+                    :label="resumen(p).cuotasVencidas + ' en mora'">
+                    <md-icon slot="icon" class="chip-mora">error</md-icon>
+                  </md-assist-chip>
+                  <!-- Al día -->
+                  <md-assist-chip v-else label="Al día">
+                    <md-icon slot="icon">schedule</md-icon>
+                  </md-assist-chip>
+
+                  <md-suggestion-chip :label="p.tipo === 'compuesto' ? 'Compuesto' : 'Simple'"></md-suggestion-chip>
+                  <md-suggestion-chip :label="p.modalidad === 'anticipado' ? 'Anticipado' : 'Normal'"></md-suggestion-chip>
+                </md-chip-set>
+              </div>
+
+              <div class="loan__progress">
+                <md-linear-progress :value="progreso(p)"
+                  :aria-label="'Progreso ' + Math.round(progreso(p)*100) + '%'"></md-linear-progress>
+                <div class="loan__progress-meta">
+                  <span>{{ resumen(p).cuotasPagadas }} / {{ p.nCuotas }} cuotas</span>
+                  <span>{{ Math.round(progreso(p)*100) }}%</span>
+                </div>
+              </div>
+            </div>
+          </template>
+          <div v-else class="empty">
+            <span class="sym">{{ tabIndex===0 ? 'inbox' : 'done_all' }}</span>
+            <div class="md-typescale-body-large">
+              {{ tabIndex===0 ? 'No hay préstamos por cobrar' : 'No hay préstamos pagados' }}
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- FAB fija (compact) -->
+  <md-fab class="fab-fixed" variant="primary" label="Nuevo préstamo"
+    v-if="isAdmin" @click="openCrear" aria-label="Nuevo préstamo">
+    <md-icon slot="icon">add</md-icon>
+  </md-fab>
+
+  <!-- ============ DIALOG: CREAR ============ -->
+  <md-dialog :open="dlg.crear" @closed="dlg.crear=false">
+    <div slot="headline"><md-icon style="margin-right:8px">request_quote</md-icon>Nuevo préstamo</div>
+    <form slot="content" method="dialog" id="form-crear">
+      <div class="dlg-section">
+        <md-outlined-select class="fw" label="Socio" :value="form.socioId"
+          @change="form.socioId = $event.target.value">
+          <md-select-option v-for="s in state.socios" :key="s.id" :value="s.id">
+            <div slot="headline">{{ s.nombre }}</div>
+          </md-select-option>
+        </md-outlined-select>
+      </div>
+
+      <div class="dlg-section field-grid two">
+        <md-outlined-text-field label="Monto (capital)" type="number" inputmode="numeric"
+          :value="form.capital" @input="form.capital = $event.target.value" suffix-text="COP">
+          <md-icon slot="leading-icon">attach_money</md-icon>
+        </md-outlined-text-field>
+        <md-outlined-text-field label="Tasa mensual %" type="number" step="0.1"
+          :value="form.tasaPct" @input="form.tasaPct = $event.target.value" suffix-text="%">
+          <md-icon slot="leading-icon">percent</md-icon>
+        </md-outlined-text-field>
+      </div>
+
+      <div class="dlg-section">
+        <span class="seg-label">Tipo de interés</span>
+        <md-chip-set>
+          <md-filter-chip label="Simple" :selected="form.tipo==='simple'"
+            @click="form.tipo='simple'"></md-filter-chip>
+          <md-filter-chip label="Compuesto" :selected="form.tipo==='compuesto'"
+            @click="form.tipo='compuesto'"></md-filter-chip>
+        </md-chip-set>
+      </div>
+
+      <div class="dlg-section">
+        <span class="seg-label">Modalidad</span>
+        <md-chip-set>
+          <md-filter-chip label="Normal (interés al vencer)" :selected="form.modalidad==='normal'"
+            @click="form.modalidad='normal'"></md-filter-chip>
+          <md-filter-chip label="Anticipado (interés descontado)" :selected="form.modalidad==='anticipado'"
+            @click="form.modalidad='anticipado'"></md-filter-chip>
+        </md-chip-set>
+        <div class="help-card">
+          <template v-if="form.modalidad==='anticipado'">
+            <b>Anticipado:</b> el socio recibe <b>{{ fmt(desemb) }}</b> (capital menos interés).
+            Del fondo sale <b>{{ fmt(desemb) }}</b>. La utilidad se reconoce <b>al desembolsar</b>.
+          </template>
+          <template v-else>
+            <b>Normal:</b> el socio recibe <b>{{ fmt(Number(form.capital)||0) }}</b> (todo el capital).
+            Del fondo sale <b>{{ fmt(Number(form.capital)||0) }}</b>. La utilidad se reconoce
+            <b>a medida que se pagan las cuotas</b>.
+          </template>
+        </div>
+      </div>
+
+      <div class="dlg-section">
+        <div class="slider-label">
+          <span class="seg-label" style="margin:0">Número de cuotas</span>
+          <span class="v">{{ form.nCuotas }} / {{ state.reglas.plazo_maximo }}</span>
+        </div>
+        <md-slider class="fw" ticks labeled
+          min="1" :max="state.reglas.plazo_maximo" :value="form.nCuotas"
+          @input="form.nCuotas = Number($event.target.value)"></md-slider>
+      </div>
+
+      <div class="dlg-section field-grid two">
+        <md-outlined-select label="Periodicidad" :value="form.periodicidad"
+          @change="form.periodicidad = $event.target.value">
+          <md-select-option value="mensual"><div slot="headline">Mensual</div></md-select-option>
+          <md-select-option value="quincenal"><div slot="headline">Quincenal</div></md-select-option>
+        </md-outlined-select>
+        <md-outlined-select label="Medio de entrega" :value="form.medioEntrega"
+          @change="form.medioEntrega = $event.target.value">
+          <md-select-option value="efectivo"><div slot="headline">Efectivo</div></md-select-option>
+          <md-select-option value="transferencia"><div slot="headline">Transferencia</div></md-select-option>
+        </md-outlined-select>
+      </div>
+
+      <div class="dlg-section">
+        <md-outlined-text-field class="fw" label="Fecha 1ª cuota" type="date"
+          :value="form.fecha" @input="form.fecha = $event.target.value">
+          <md-icon slot="leading-icon">event</md-icon>
+        </md-outlined-text-field>
+      </div>
+
+      <!-- Cálculo en vivo -->
+      <div class="dlg-section calc-box">
+        <div class="calc-row"><span class="lbl">Interés total</span><span class="val">{{ fmt(calc.interesTotal) }}</span></div>
+        <div class="calc-row"><span class="lbl">Valor de cuota</span><span class="val">{{ fmt(calc.valorCuota) }}</span></div>
+        <div class="calc-row"><span class="lbl">Sale del fondo ({{ form.medioEntrega }})</span><span class="val">{{ fmt(desemb) }}</span></div>
+        <div class="calc-row total"><span class="lbl">Total a pagar</span><span class="val pos">{{ fmt(calc.total) }}</span></div>
+      </div>
+
+      <!-- Preview plan -->
+      <div class="dlg-section" v-if="calc.plan.length">
+        <span class="seg-label">Vista previa del plan</span>
+        <div class="plan-preview">
+          <table class="plan-table">
+            <thead><tr><th>#</th><th>Fecha</th><th>Cuota</th><th>Capital</th><th>Interés</th></tr></thead>
+            <tbody>
+              <tr v-for="c in calc.plan" :key="c.n">
+                <td>{{ c.n }}</td><td>{{ fmtFecha(c.fecha) }}</td>
+                <td>{{ fmt(c.valor) }}</td><td>{{ fmt(c.capital) }}</td><td>{{ fmt(c.interes) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Errores -->
+      <div class="err-list" v-if="errores.length">
+        <div class="err-item" v-for="(e,i) in errores" :key="i">
+          <span class="sym">error</span><span>{{ e.msg }}</span>
+        </div>
+      </div>
+    </form>
+    <div slot="actions">
+      <md-text-button form="form-crear" @click="dlg.crear=false">Cancelar</md-text-button>
+      <md-filled-button form="form-crear" :disabled="errores.length>0" @click="confirmarCrear">
+        Confirmar
+      </md-filled-button>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: DETALLE ============ -->
+  <md-dialog :open="dlg.detalle" @closed="dlg.detalle=false">
+    <div slot="headline" v-if="sel">
+      <md-icon style="margin-right:8px">receipt_long</md-icon>{{ nombre(sel.socioId) }}
+    </div>
+    <div slot="content" v-if="sel">
+      <div class="dlg-section">
+        <md-chip-set>
+          <md-assist-chip v-if="sel.estado==='pagado'" label="Saldado"><md-icon slot="icon">check_circle</md-icon></md-assist-chip>
+          <md-assist-chip v-else-if="resumen(sel).estadoGlobal==='mora'" class="chip-mora"
+            :label="resumen(sel).cuotasVencidas+' en mora'"><md-icon slot="icon" class="chip-mora">error</md-icon></md-assist-chip>
+          <md-assist-chip v-else label="Al día"><md-icon slot="icon">schedule</md-icon></md-assist-chip>
+          <md-suggestion-chip :label="sel.tipo==='compuesto'?'Compuesto':'Simple'"></md-suggestion-chip>
+          <md-suggestion-chip :label="sel.modalidad==='anticipado'?'Anticipado':'Normal'"></md-suggestion-chip>
+        </md-chip-set>
+      </div>
+
+      <div class="dlg-section kv-grid">
+        <div class="kv"><span class="k">Capital</span><span class="v">{{ fmt(sel.capital) }}</span></div>
+        <div class="kv"><span class="k">Interés total</span><span class="v">{{ fmt(sel.interesTotal) }}</span></div>
+        <div class="kv"><span class="k">Total</span><span class="v">{{ fmt(sel.total) }}</span></div>
+        <div class="kv"><span class="k">Saldo actual</span><span class="v">{{ fmt(sel.saldoActual) }}</span></div>
+        <div class="kv"><span class="k">Tasa</span><span class="v">{{ pct(sel.tasaPct) }} · {{ sel.periodicidad }}</span></div>
+        <div class="kv"><span class="k">Medio</span><span class="v">{{ sel.medioEntrega }}</span></div>
+      </div>
+
+      <md-divider></md-divider>
+      <div class="dlg-section" style="margin-top:14px">
+        <span class="seg-label">Plan de pagos</span>
+        <div class="plan-preview" style="max-height:260px">
+          <table class="plan-table">
+            <thead><tr><th>#</th><th>Fecha</th><th>Cuota</th><th>Abonado</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr v-for="c in sel.plan" :key="c.n">
+                <td>{{ c.n }}</td><td>{{ fmtFecha(c.fecha) }}</td>
+                <td>{{ fmt(c.valor) }}</td><td>{{ fmt(c.abonado) }}</td>
+                <td><span class="st" :class="'st-'+estadoCuota(c)">
+                  <span class="sym" style="font-size:14px">{{ iconoCuota(estadoCuota(c)) }}</span>{{ estadoCuota(c) }}
+                </span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="dlg-section" v-if="sel.abonos && sel.abonos.length">
+        <span class="seg-label">Historial de abonos</span>
+        <div class="abono-item" v-for="a in sel.abonos" :key="a.id">
+          <span class="sym">check_circle</span>
+          <div style="flex:1">
+            <div>{{ fmt(a.monto) }} · {{ a.formaPago }}</div>
+            <div style="font-size:11px;color:var(--md-sys-color-on-surface-variant)">
+              {{ fmtFecha(a.fecha) }} · saldo {{ fmt(a.saldoAnterior) }} → {{ fmt(a.saldoNuevo) }}
+            </div>
+          </div>
+          <md-text-button @click="reenviarComprobante(a)">Reenviar</md-text-button>
+        </div>
+      </div>
+
+      <div class="dlg-section" v-if="sel.refinanciaciones && sel.refinanciaciones.length">
+        <span class="seg-label">Refinanciaciones</span>
+        <div class="refi-item" v-for="(r,i) in sel.refinanciaciones" :key="i">
+          <span class="sym">autorenew</span>
+          <div>{{ fmtFecha(r.fecha) }} · base {{ fmt(r.saldoBase) }} · {{ r.nCuotas }} cuotas · {{ pct(r.tasaPct) }}</div>
+        </div>
+      </div>
+    </div>
+    <div slot="actions" v-if="sel">
+      <md-text-button @click="dlg.detalle=false">Cerrar</md-text-button>
+      <template v-if="isAdmin && sel.estado==='activo'">
+        <md-text-button @click="openEliminar" style="--md-text-button-label-text-color:var(--md-sys-color-error)">Eliminar</md-text-button>
+        <md-outlined-button @click="openRefinanciar">Refinanciar</md-outlined-button>
+        <md-filled-button @click="openAbono">Abonar</md-filled-button>
+      </template>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: ABONO ============ -->
+  <md-dialog :open="dlg.abono" @closed="dlg.abono=false">
+    <div slot="headline"><md-icon style="margin-right:8px">savings</md-icon>Registrar abono</div>
+    <form slot="content" method="dialog" id="form-abono" v-if="sel">
+      <div class="dlg-section">
+        <div class="calc-box">
+          <div class="calc-row"><span class="lbl">Socio</span><span class="val">{{ nombre(sel.socioId) }}</span></div>
+          <div class="calc-row"><span class="lbl">Saldo actual</span><span class="val">{{ fmt(sel.saldoActual) }}</span></div>
+        </div>
+      </div>
+      <div class="dlg-section field-grid two">
+        <md-outlined-text-field label="Monto del abono" type="number" inputmode="numeric"
+          :value="abono.monto" @input="abono.monto = $event.target.value">
+          <md-icon slot="leading-icon">attach_money</md-icon>
+        </md-outlined-text-field>
+        <md-outlined-select label="Forma de pago" :value="abono.formaPago"
+          @change="abono.formaPago = $event.target.value">
+          <md-select-option value="efectivo"><div slot="headline">Efectivo</div></md-select-option>
+          <md-select-option value="transferencia"><div slot="headline">Transferencia</div></md-select-option>
+        </md-outlined-select>
+      </div>
+      <div class="dlg-section">
+        <md-outlined-text-field class="fw" label="Fecha" type="date"
+          :value="abono.fecha" @input="abono.fecha = $event.target.value">
+          <md-icon slot="leading-icon">event</md-icon>
+        </md-outlined-text-field>
+      </div>
+      <div class="dlg-section" style="display:flex;gap:8px;flex-wrap:wrap">
+        <md-assist-chip label="Una cuota" @click="abono.monto = String(sel.valorCuota)"></md-assist-chip>
+        <md-assist-chip label="Saldar todo" @click="abono.monto = String(sel.saldoActual)"></md-assist-chip>
+      </div>
+      <div class="err-list" v-if="abonoError">
+        <div class="err-item"><span class="sym">error</span><span>{{ abonoError }}</span></div>
+      </div>
+    </form>
+    <div slot="actions">
+      <md-text-button form="form-abono" @click="dlg.abono=false">Cancelar</md-text-button>
+      <md-filled-button form="form-abono" :disabled="!!abonoError || !(Number(abono.monto)>0)"
+        @click="confirmarAbono">Aplicar abono</md-filled-button>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: REFINANCIAR ============ -->
+  <md-dialog :open="dlg.refi" @closed="dlg.refi=false">
+    <div slot="headline"><md-icon style="margin-right:8px">autorenew</md-icon>Refinanciar préstamo</div>
+    <form slot="content" method="dialog" id="form-refi" v-if="sel">
+      <div class="dlg-section calc-box">
+        <div class="calc-row"><span class="lbl">Saldo base</span><span class="val">{{ fmt(sel.saldoActual) }}</span></div>
+      </div>
+      <div class="dlg-section field-grid two">
+        <md-outlined-text-field label="Nuevas cuotas" type="number" inputmode="numeric"
+          :value="refi.nCuotas" @input="refi.nCuotas = Number($event.target.value)"></md-outlined-text-field>
+        <md-outlined-text-field label="Tasa mensual %" type="number" step="0.1"
+          :value="refi.tasaPct" @input="refi.tasaPct = $event.target.value" suffix-text="%"></md-outlined-text-field>
+      </div>
+      <div class="dlg-section field-grid two">
+        <md-outlined-select label="Tipo" :value="refi.tipo" @change="refi.tipo = $event.target.value">
+          <md-select-option value="simple"><div slot="headline">Simple</div></md-select-option>
+          <md-select-option value="compuesto"><div slot="headline">Compuesto</div></md-select-option>
+        </md-outlined-select>
+        <md-outlined-text-field label="Fecha 1ª cuota" type="date"
+          :value="refi.fecha" @input="refi.fecha = $event.target.value"></md-outlined-text-field>
+      </div>
+      <div class="dlg-section calc-box" v-if="refiPreview">
+        <div class="calc-row"><span class="lbl">Nuevo interés</span><span class="val">{{ fmt(refiPreview.interesTotal) }}</span></div>
+        <div class="calc-row"><span class="lbl">Valor cuota</span><span class="val">{{ fmt(refiPreview.valorCuota) }}</span></div>
+        <div class="calc-row total"><span class="lbl">Nuevo total</span><span class="val pos">{{ fmt(refiPreview.total) }}</span></div>
+      </div>
+    </form>
+    <div slot="actions">
+      <md-text-button form="form-refi" @click="dlg.refi=false">Cancelar</md-text-button>
+      <md-filled-button form="form-refi" @click="confirmarRefi">Refinanciar</md-filled-button>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: ELIMINAR ============ -->
+  <md-dialog :open="dlg.eliminar" @closed="dlg.eliminar=false">
+    <div slot="headline"><md-icon style="margin-right:8px;color:var(--md-sys-color-error)">delete</md-icon>Eliminar préstamo</div>
+    <div slot="content" v-if="sel">
+      ¿Eliminar el préstamo de <b>{{ nombre(sel.socioId) }}</b> por {{ fmt(sel.capital) }}?
+      Se devolverá el saldo pendiente ({{ fmt(sel.saldoActual) }}) al fondo. Esta acción no se puede deshacer.
+    </div>
+    <div slot="actions">
+      <md-text-button @click="dlg.eliminar=false">Cancelar</md-text-button>
+      <md-filled-button @click="confirmarEliminar"
+        style="--md-filled-button-container-color:var(--md-sys-color-error);--md-filled-button-label-text-color:var(--md-sys-color-on-error)">
+        Eliminar
+      </md-filled-button>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: COMPROBANTE ============ -->
+  <md-dialog :open="dlg.comprobante" @closed="dlg.comprobante=false">
+    <div slot="headline"><md-icon style="margin-right:8px">receipt</md-icon>Comprobante</div>
+    <div slot="content" v-if="comprobante">
+      <div class="comprobante">
+        <div class="check"><span class="sym">check</span></div>
+        <div class="md-typescale-title-medium">{{ comprobante.titulo }}</div>
+        <div class="lines">
+          <div class="calc-row" v-for="(l,i) in comprobante.lineas" :key="i">
+            <span class="lbl">{{ l.k }}</span><span class="val">{{ l.v }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-section" v-if="comprobante.pideTelefono" style="margin-top:14px">
+        <md-outlined-text-field class="fw" label="Teléfono del socio (para WhatsApp)"
+          type="tel" :value="telInput" @input="telInput = $event.target.value">
+          <md-icon slot="leading-icon">phone</md-icon>
+        </md-outlined-text-field>
+      </div>
+    </div>
+    <div slot="actions">
+      <md-text-button @click="dlg.comprobante=false">Cerrar</md-text-button>
+      <md-outlined-button @click="descargarComprobante">
+        <md-icon slot="icon">download</md-icon>Descargar
+      </md-outlined-button>
+      <md-filled-button @click="enviarWhatsApp">
+        <md-icon slot="icon">chat</md-icon>WhatsApp
+      </md-filled-button>
+    </div>
+  </md-dialog>
+
+  <!-- ============ DIALOG: SIMULAR COBRO (Cuotas) ============ -->
+  <md-dialog :open="dlg.simular" @closed="dlg.simular=false">
+    <div slot="headline"><md-icon style="margin-right:8px">point_of_sale</md-icon>Simular cobro en Cuotas</div>
+    <form slot="content" method="dialog" id="form-sim">
+      <div class="dlg-section field-grid two">
+        <md-outlined-select label="Socio" :value="sim.socioId" @change="onSimSocio($event.target.value)">
+          <md-select-option v-for="s in sociosConActivos" :key="s.id" :value="s.id">
+            <div slot="headline">{{ s.nombre }}</div>
+          </md-select-option>
+        </md-outlined-select>
+        <md-outlined-text-field label="Fecha del cobro" type="date"
+          :value="sim.fecha" @input="onSimFecha($event.target.value)">
+          <md-icon slot="leading-icon">event</md-icon>
+        </md-outlined-text-field>
+      </div>
+
+      <div class="dlg-section">
+        <span class="seg-label">Período: {{ periodoLabel(sim.periodo) }} — cuotas de préstamo</span>
+        <div v-if="!sim.cuotas.length" style="font-size:13px;color:var(--md-sys-color-on-surface-variant)">
+          Sin cuotas de préstamo para este período.
+        </div>
+        <div class="cuota-pick" v-for="(c,i) in sim.cuotas" :key="i" :class="{venc:c.vencida}">
+          <md-checkbox :checked="c.sel" @change="c.sel = $event.target.checked" touch-target="wrapper"></md-checkbox>
+          <div class="grow">
+            <div class="cp-title">Cuota #{{ c.n }} · {{ fmt(c.pendiente) }}</div>
+            <div class="cp-sub">
+              {{ nombre(prestamoSocioId(c.prestamoId)) }} · {{ periodoLabel(c.periodo) }}
+              <span v-if="c.vencida" style="color:var(--md-sys-color-error)"> · vencida</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dlg-section field-grid two">
+        <md-outlined-text-field label="Sanción" type="number" inputmode="numeric"
+          :value="sim.sancion" @input="sim.sancion = $event.target.value"></md-outlined-text-field>
+        <md-outlined-text-field label="Actividades" type="number" inputmode="numeric"
+          :value="sim.actividades" @input="sim.actividades = $event.target.value"></md-outlined-text-field>
+      </div>
+      <div class="dlg-section field-grid two">
+        <md-outlined-text-field label="Cuota natillera" type="number" inputmode="numeric"
+          :value="sim.cuotaNatillera" @input="sim.cuotaNatillera = $event.target.value"></md-outlined-text-field>
+        <md-filled-text-field label="Monto recibido" type="number" inputmode="numeric"
+          :value="sim.montoRecibido" @input="sim.montoRecibido = $event.target.value">
+          <md-icon slot="leading-icon">payments</md-icon>
+        </md-filled-text-field>
+      </div>
+
+      <div class="dlg-section">
+        <span class="seg-label">Reparto por prioridad</span>
+        <div class="reparto">
+          <div class="reparto-row" :class="{muted: repartoSim.sancion===0}">
+            <div class="num">1</div><div class="rl">Sanción</div><div class="rv">{{ fmt(repartoSim.sancion) }}</div>
+          </div>
+          <div class="reparto-row" :class="{muted: repartoSim.actividades===0}">
+            <div class="num">2</div><div class="rl">Actividades</div><div class="rv">{{ fmt(repartoSim.actividades) }}</div>
+          </div>
+          <div class="reparto-row" :class="{muted: repartoSim.prestamo===0}">
+            <div class="num">3</div><div class="rl">Préstamo ({{ repartoSim.detallePrestamo.length }} cuota(s))</div>
+            <div class="rv">{{ fmt(repartoSim.prestamo) }}</div>
+          </div>
+          <div class="reparto-row" :class="{muted: repartoSim.cuota===0}">
+            <div class="num">4</div><div class="rl">Cuota natillera</div><div class="rv">{{ fmt(repartoSim.cuota) }}</div>
+          </div>
+          <div class="reparto-row muted" v-if="repartoSim.sobrante>0">
+            <div class="num" style="background:var(--md-sys-color-tertiary)">+</div>
+            <div class="rl">Sobrante</div><div class="rv">{{ fmt(repartoSim.sobrante) }}</div>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div slot="actions">
+      <md-text-button form="form-sim" @click="dlg.simular=false">Cancelar</md-text-button>
+      <md-filled-button form="form-sim" :disabled="repartoSim.prestamo<=0" @click="confirmarSimular">
+        Aplicar cobro
+      </md-filled-button>
+    </div>
+  </md-dialog>
+</div>
+
+<script>
+(function () {
+  const { createApp, reactive, ref, computed, watch } = Vue;
+  const PE = window.PE;
+
+  const app = createApp({
+    setup() {
+      // ---- Estado base (reactivo ANTES de computed/watch) ----
+      const state = reactive(PE.initState());
+      const isAdmin = ref(true);
+      const isDark = ref(matchMedia('(prefers-color-scheme: dark)').matches);
+      const tabIndex = ref(0);
+      const query = ref('');
+      const sel = ref(null);
+
+      const dlg = reactive({
+        crear: false, detalle: false, abono: false, refi: false,
+        eliminar: false, comprobante: false, simular: false,
+      });
+
+      // Formularios
+      const form = reactive({
+        socioId: state.socios[0].id,
+        capital: 500000,
+        tasaPct: state.reglas.porcentaje,
+        tipo: 'simple',
+        modalidad: 'normal',
+        nCuotas: 6,
+        periodicidad: 'mensual',
+        medioEntrega: 'efectivo',
+        fecha: PE.isoDate(new Date(2026, 7, 5)),
+      });
+
+      const abono = reactive({ monto: '', formaPago: 'efectivo', fecha: PE.isoDate(PE.HOY) });
+      const refi = reactive({ nCuotas: 6, tasaPct: state.reglas.porcentaje, tipo: 'simple', fecha: PE.isoDate(new Date(2026, 7, 5)) });
+      const sim = reactive({
+        socioId: '', fecha: PE.isoDate(PE.HOY), periodo: PE.periodoDeFecha(PE.HOY, 'mensual'),
+        cuotas: [], sancion: 0, actividades: 0, cuotaNatillera: 20000, montoRecibido: 0,
+      });
+
+      const comprobante = ref(null);
+      const telInput = ref('');
+
+      // ---- Helpers de presentación ----
+      const fmt = PE.fmt, fmtFecha = PE.fmtFecha, pct = PE.pct;
+      const periodoLabel = PE.periodoLabel, estadoCuota = PE.estadoCuota;
+      const nombre = (id) => (PE.socio(id) || {}).nombre || '—';
+      const iniciales = (id) => {
+        const n = nombre(id).split(' ').filter(Boolean);
+        return ((n[0]?.[0] || '') + (n[1]?.[0] || '')).toUpperCase();
+      };
+      const resumen = (p) => PE.resumenPrestamo(p);
+      const progreso = (p) => {
+        const abonado = p.plan.reduce((s, c) => s + c.abonado, 0);
+        return p.total ? Math.min(1, abonado / p.total) : 0;
+      };
+      const iconoCuota = (e) => ({ pagada: 'check_circle', parcial: 'timelapse', vencida: 'error', pendiente: 'schedule' })[e] || 'schedule';
+      const prestamoSocioId = (prId) => (state.prestamos.find(p => p.id === prId) || {}).socioId;
+
+      // ---- Listas / totales ----
+      const totales = computed(() => PE.totalesModulo(state.prestamos));
+      const filtrar = (arr) => {
+        const q = query.value.trim().toLowerCase();
+        if (!q) return arr;
+        return arr.filter(p => nombre(p.socioId).toLowerCase().includes(q));
+      };
+      const porCobrar = computed(() => state.prestamos.filter(p => p.estado === 'activo'));
+      const pagados = computed(() => state.prestamos.filter(p => p.estado === 'pagado'));
+      const visibles = computed(() => filtrar(tabIndex.value === 0 ? porCobrar.value : pagados.value));
+
+      const railItems = [
+        { id: 'inicio', icon: 'home', label: 'Inicio' },
+        { id: 'socios', icon: 'group', label: 'Socios' },
+        { id: 'cuotas', icon: 'event_repeat', label: 'Cuotas' },
+        { id: 'prestamos', icon: 'payments', label: 'Préstamos' },
+        { id: 'ajustes', icon: 'settings', label: 'Ajustes' },
+      ];
+      const railStyle = computed(() => ({})); // hidden/shown via CSS media query below
+
+      // ---- Cálculo en vivo crear ----
+      const calc = computed(() => {
+        const capital = Number(form.capital) || 0;
+        const tasaPct = Number(form.tasaPct) || 0;
+        const nCuotas = Number(form.nCuotas) || 1;
+        if (capital <= 0) return { interesTotal: 0, total: 0, valorCuota: 0, plan: [] };
+        try {
+          const g = PE.generarPlan({
+            capital, tasaPct, tipo: form.tipo, modalidad: form.modalidad,
+            nCuotas, periodicidad: form.periodicidad, fechaPrimeraCuota: new Date(form.fecha),
+          });
+          return g;
+        } catch (e) { return { interesTotal: 0, total: 0, valorCuota: 0, plan: [] }; }
+      });
+      const desemb = computed(() => PE.desembolso({
+        capital: Number(form.capital) || 0,
+        interesTotal: calc.value.interesTotal,
+        modalidad: form.modalidad,
+      }));
+      const errores = computed(() => PE.validarPrestamo({
+        capital: Number(form.capital) || 0,
+        tasaPct: Number(form.tasaPct) || 0,
+        tipo: form.tipo, modalidad: form.modalidad,
+        nCuotas: Number(form.nCuotas) || 0,
+        periodicidad: form.periodicidad,
+        medioEntrega: form.medioEntrega,
+        plazoMaximo: state.reglas.plazo_maximo,
+      }, state.fondo));
+
+      // ---- Abono validación ----
+      const abonoError = computed(() => {
+        const m = Number(abono.monto) || 0;
+        if (!sel.value) return '';
+        if (m <= 0) return '';
+        if (m > sel.value.saldoActual) return `El abono supera el saldo (${fmt(sel.value.saldoActual)}).`;
+        return '';
+      });
+
+      // ---- Refi preview ----
+      const refiPreview = computed(() => {
+        if (!sel.value) return null;
+        const n = Number(refi.nCuotas) || 1;
+        if (n < 1) return null;
+        try {
+          return PE.generarPlan({
+            capital: sel.value.saldoActual, tasaPct: Number(refi.tasaPct) || 0,
+            tipo: refi.tipo, modalidad: sel.value.modalidad,
+            nCuotas: n, periodicidad: sel.value.periodicidad,
+            fechaPrimeraCuota: new Date(refi.fecha),
+          });
+        } catch (e) { return null; }
+      });
+
+      // ---- Simular reparto ----
+      const sociosConActivos = computed(() =>
+        state.socios.filter(s => state.prestamos.some(p => p.socioId === s.id && p.estado === 'activo')));
+      const repartoSim = computed(() => PE.aplicarPagoCuotas({
+        montoRecibido: Number(sim.montoRecibido) || 0,
+        sancion: Number(sim.sancion) || 0,
+        actividades: Number(sim.actividades) || 0,
+        cuotasPrestamoSel: sim.cuotas.filter(c => c.sel),
+        cuotaNatillera: Number(sim.cuotaNatillera) || 0,
+      }));
+
+      // ---- Tema ----
+      function toggleTheme() {
+        isDark.value = !isDark.value;
+        if (window.__setScheme) window.__setScheme(isDark.value);
+      }
+      // reaplica esquema cuando el módulo de color ya cargó
+      window.addEventListener('md-ready', () => { if (window.__setScheme) window.__setScheme(isDark.value); });
+
+      function onTabChange(e) { tabIndex.value = e.target.activeTabIndex; }
+
+      // ---- Acciones ----
+      function openCrear() {
+        Object.assign(form, {
+          socioId: state.socios[0].id, capital: 500000, tasaPct: state.reglas.porcentaje,
+          tipo: 'simple', modalidad: 'normal', nCuotas: 6, periodicidad: 'mensual',
+          medioEntrega: 'efectivo', fecha: PE.isoDate(new Date(2026, 7, 5)),
+        });
+        dlg.crear = true;
+      }
+
+      function confirmarCrear() {
+        if (errores.value.length) return;
+        const nuevo = PE.crearPrestamo({
+          socioId: form.socioId,
+          capital: Number(form.capital), tasaPct: Number(form.tasaPct),
+          tipo: form.tipo, modalidad: form.modalidad,
+          nCuotas: Number(form.nCuotas), periodicidad: form.periodicidad,
+          fechaPrimeraCuota: new Date(form.fecha), medioEntrega: form.medioEntrega,
+        });
+        const sale = PE.desembolso({ capital: nuevo.capital, interesTotal: nuevo.interesTotal, modalidad: nuevo.modalidad });
+        if (form.medioEntrega === 'efectivo') state.fondo.efectivo -= sale;
+        else state.fondo.transferencia -= sale;
+        state.prestamos.push(nuevo);
+        dlg.crear = false;
+        tabIndex.value = 0;
+
+        const s = PE.socio(nuevo.socioId);
+        comprobante.value = {
+          titulo: 'Préstamo creado',
+          pideTelefono: !s.telefono,
+          telefono: s.telefono,
+          lineas: [
+            { k: 'Socio', v: s.nombre },
+            { k: 'Capital', v: fmt(nuevo.capital) },
+            { k: 'Entregado', v: fmt(sale) + ' (' + form.medioEntrega + ')' },
+            { k: 'Interés', v: fmt(nuevo.interesTotal) },
+            { k: 'Total a pagar', v: fmt(nuevo.total) },
+            { k: 'Cuotas', v: nuevo.nCuotas + ' × ' + fmt(nuevo.valorCuota) },
+          ],
+        };
+        telInput.value = s.telefono || '';
+        dlg.comprobante = true;
+      }
+
+      function openDetalle(p) { sel.value = p; dlg.detalle = true; }
+
+      function openAbono() {
+        dlg.detalle = false;
+        abono.monto = ''; abono.formaPago = sel.value.medioEntrega; abono.fecha = PE.isoDate(PE.HOY);
+        dlg.abono = true;
+      }
+      function confirmarAbono() {
+        if (abonoError.value || !(Number(abono.monto) > 0)) return;
+        const monto = Number(abono.monto);
+        const p = sel.value;
+        const ab = PE.aplicarAbono(p, monto, { fecha: abono.fecha, formaPago: abono.formaPago });
+        // Recomponer fondo
+        if (abono.formaPago === 'efectivo') state.fondo.efectivo += monto;
+        else state.fondo.transferencia += monto;
+        dlg.abono = false;
+
+        const s = PE.socio(p.socioId);
+        comprobante.value = {
+          titulo: p.estado === 'pagado' ? '¡Préstamo saldado!' : 'Abono registrado',
+          pideTelefono: !s.telefono, telefono: s.telefono,
+          lineas: [
+            { k: 'Socio', v: s.nombre },
+            { k: 'Abono', v: fmt(monto) + ' (' + abono.formaPago + ')' },
+            { k: 'Saldo anterior', v: fmt(ab.saldoAnterior) },
+            { k: 'Saldo nuevo', v: fmt(ab.saldoNuevo) },
+          ],
+        };
+        telInput.value = s.telefono || '';
+        if (p.estado === 'pagado') tabIndex.value = 1;
+        dlg.comprobante = true;
+      }
+
+      function openRefinanciar() {
+        dlg.detalle = false;
+        Object.assign(refi, { nCuotas: sel.value.nCuotas, tasaPct: sel.value.tasaPct, tipo: sel.value.tipo, fecha: PE.isoDate(new Date(2026, 7, 5)) });
+        dlg.refi = true;
+      }
+      function confirmarRefi() {
+        PE.refinanciar(sel.value, {
+          fechaPrimeraCuota: new Date(refi.fecha),
+          nCuotas: Number(refi.nCuotas), tasaPct: Number(refi.tasaPct), tipo: refi.tipo,
+        });
+        dlg.refi = false;
+      }
+
+      function openEliminar() { dlg.detalle = false; dlg.eliminar = true; }
+      function confirmarEliminar() {
+        const p = sel.value;
+        // devolver saldo pendiente al fondo por el medio de entrega
+        if (p.medioEntrega === 'efectivo') state.fondo.efectivo += p.saldoActual;
+        else state.fondo.transferencia += p.saldoActual;
+        const i = state.prestamos.indexOf(p);
+        if (i >= 0) state.prestamos.splice(i, 1);
+        dlg.eliminar = false;
+        sel.value = null;
+      }
+
+      // ---- Comprobante ----
+      function descargarComprobante() {
+        const c = comprobante.value; if (!c) return;
+        const txt = [c.titulo, '', ...c.lineas.map(l => `${l.k}: ${l.v}`)].join('\n');
+        const blob = new Blob([txt], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'comprobante.txt';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+      function enviarWhatsApp() {
+        const c = comprobante.value; if (!c) return;
+        const tel = telInput.value || c.telefono || '';
+        const txt = encodeURIComponent([c.titulo, '', ...c.lineas.map(l => `${l.k}: ${l.v}`)].join('\n'));
+        window.open(`https://wa.me/57${tel.replace(/\D/g, '')}?text=${txt}`, '_blank');
+      }
+      function reenviarComprobante(a) {
+        const s = PE.socio(sel.value.socioId);
+        comprobante.value = {
+          titulo: 'Comprobante de abono', pideTelefono: !s.telefono, telefono: s.telefono,
+          lineas: [
+            { k: 'Socio', v: s.nombre },
+            { k: 'Abono', v: fmt(a.monto) },
+            { k: 'Fecha', v: fmtFecha(a.fecha) },
+            { k: 'Saldo', v: fmt(a.saldoAnterior) + ' → ' + fmt(a.saldoNuevo) },
+          ],
+        };
+        telInput.value = s.telefono || '';
+        dlg.comprobante = true;
+      }
+
+      // ---- Simular cobro ----
+      function recalcSimCuotas() {
+        if (!sim.socioId) { sim.cuotas = []; return; }
+        const prSocio = state.prestamos.filter(p => p.socioId === sim.socioId);
+        const items = PE.cuotasPrestamoParaPeriodo(prSocio, sim.periodo);
+        sim.cuotas = items.map(c => ({ ...c, sel: true }));
+        const totalPend = items.reduce((s, c) => s + c.pendiente, 0);
+        sim.montoRecibido = totalPend + Number(sim.cuotaNatillera || 0);
+      }
+      function openSimular() {
+        const first = sociosConActivos.value[0];
+        sim.socioId = first ? first.id : '';
+        sim.fecha = PE.isoDate(PE.HOY);
+        sim.periodo = PE.periodoDeFecha(PE.HOY, 'mensual');
+        sim.sancion = 0; sim.actividades = 0; sim.cuotaNatillera = 20000;
+        recalcSimCuotas();
+        dlg.simular = true;
+      }
+      function onSimSocio(id) { sim.socioId = id; recalcSimCuotas(); }
+      function onSimFecha(f) {
+        sim.fecha = f;
+        sim.periodo = PE.periodoDeFecha(new Date(f), 'mensual');
+        recalcSimCuotas();
+      }
+      function confirmarSimular() {
+        const r = repartoSim.value;
+        // aplicar los abonos reales a cada préstamo
+        for (const d of r.detallePrestamo) {
+          const p = state.prestamos.find(x => x.id === d.prestamoId);
+          if (p) {
+            PE.aplicarAbono(p, d.aplicado, { fecha: sim.fecha, formaPago: 'efectivo' });
+            state.fondo.efectivo += d.aplicado;
+          }
+        }
+        dlg.simular = false;
+        comprobante.value = {
+          titulo: 'Cobro aplicado en Cuotas', pideTelefono: false, telefono: '',
+          lineas: [
+            { k: 'Sanción', v: fmt(r.sancion) },
+            { k: 'Actividades', v: fmt(r.actividades) },
+            { k: 'Préstamo', v: fmt(r.prestamo) },
+            { k: 'Cuota natillera', v: fmt(r.cuota) },
+            { k: 'Sobrante', v: fmt(r.sobrante) },
+          ],
+        };
+        dlg.comprobante = true;
+      }
+
+      // Exponer simular en rail item Cuotas (click)
+      // (se llama con doble uso: botón dedicado abajo)
+
+      return {
+        state, isAdmin, isDark, tabIndex, query, sel, dlg,
+        form, abono, refi, sim, comprobante, telInput,
+        fmt, fmtFecha, pct, periodoLabel, estadoCuota, iconoCuota,
+        nombre, iniciales, resumen, progreso, prestamoSocioId,
+        totales, porCobrar, pagados, visibles, railItems, railStyle,
+        calc, desemb, errores, abonoError, refiPreview, sociosConActivos, repartoSim,
+        toggleTheme, onTabChange,
+        openCrear, confirmarCrear, openDetalle, openAbono, confirmarAbono,
+        openRefinanciar, confirmarRefi, openEliminar, confirmarEliminar,
+        descargarComprobante, enviarWhatsApp, reenviarComprobante,
+        openSimular, onSimSocio, onSimFecha, confirmarSimular,
+      };
+    },
+  });
+
+  app.config.compilerOptions.isCustomElement = (t) => t.startsWith('md-');
+  app.mount('#app');
+
+  // Mostrar la navigation rail en medium/expanded
+  const mq = matchMedia('(min-width: 840px)');
+  const applyRail = () => {
+    document.querySelectorAll('.rail').forEach(r => { r.style.display = mq.matches ? 'flex' : 'none'; });
+  };
+  mq.addEventListener('change', applyRail);
+  // aplicar tras montar
+  requestAnimationFrame(applyRail);
+})();
+</script>
+
+<!-- v-cloak: ocultar hasta que Vue monte -->
+<style>[v-cloak]{display:none}</style>
+</body>
+</html>

@@ -1,0 +1,383 @@
+/* ============================================================================
+ * Natillera UI — Design system "Identidad natillera"
+ * Ahorro comunitario: textura de papel, verde tierra + crema, sellos de tinta,
+ * frasco de ahorro que se llena, recibos de papel, detalles hechos a mano.
+ * Pensado para convivir con Tailwind (layout) sin pelear.
+ * ==========================================================================*/
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Nunito:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap');
+
+:root {
+  /* Paleta tierra */
+  --verde-900: #10331d;
+  --verde-800: #143f24;
+  --verde-700: #1B5E37;   /* marca */
+  --verde-600: #24713f;
+  --verde-500: #2E7D4F;
+  --oliva:     #7C8A4E;
+  --oliva-2:   #98a565;
+  --crema:     #F6EFDF;   /* papel */
+  --crema-2:   #EFE5CF;
+  --crema-3:   #E7DABF;
+  --tinta:     #23301f;   /* texto principal sobre crema */
+  --tinta-2:   #5b5f4d;   /* texto secundario */
+  --terracota: #C4633B;   /* acento / secundario / actividades */
+  --terracota-2:#a94f2c;
+  --mostaza:   #D19A2B;   /* parcial / pendiente / aviso */
+  --rojo-tierra:#A8402F;  /* mora / vencida */
+  --salvia:    #C8D9C8;
+
+  --radio: 18px;
+  --sombra-suave: 0 10px 30px -18px rgba(31, 46, 26, .55);
+  --sombra-media: 0 20px 45px -24px rgba(31, 46, 26, .6);
+
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-mano: 'Caveat', cursive;
+}
+
+/* ---------------------------------------------------------------------------
+ * Base
+ * -------------------------------------------------------------------------*/
+body.nat {
+  font-family: var(--font-body);
+  color: var(--tinta);
+  background-color: var(--crema);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+/* Textura de papel: grano sutil con fibras. Overlay fijo, no intercepta clicks. */
+body.nat::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .55;
+  background-image:
+    radial-gradient(1100px 600px at 8% -8%, rgba(46, 125, 79, .10), transparent 60%),
+    radial-gradient(900px 520px at 108% 4%, rgba(196, 99, 59, .08), transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  background-size: cover, cover, 180px 180px;
+}
+.nat > * { position: relative; z-index: 1; }
+
+.font-display { font-family: var(--font-display); }
+.font-mano { font-family: var(--font-mano); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------------------
+ * Tarjeta natillera — borde "cosido" (dashed) sobre papel
+ * -------------------------------------------------------------------------*/
+.nat-card {
+  position: relative;
+  background: linear-gradient(180deg, #fffaf0 0%, var(--crema) 100%);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-suave);
+  border: 1px solid var(--crema-3);
+}
+/* Puntada interior tipo bordado */
+.nat-card::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1.5px dashed rgba(35, 48, 31, .18);
+  border-radius: calc(var(--radio) - 8px);
+  pointer-events: none;
+}
+.nat-card--plain::after { display: none; }
+.nat-card--raised { box-shadow: var(--sombra-media); }
+
+/* Encabezado de marca (verde) */
+.nat-brandhead {
+  background:
+    radial-gradient(120% 140% at 0% 0%, var(--verde-600), var(--verde-800) 70%);
+  color: #f4ecd8;
+  position: relative;
+  overflow: hidden;
+}
+.nat-brandhead::before { /* trama de puntos tejida */
+  content: '';
+  position: absolute; inset: 0; opacity: .16; pointer-events: none;
+  background-image: radial-gradient(currentColor 1px, transparent 1.4px);
+  background-size: 14px 14px;
+  color: #d8e6cf;
+}
+
+/* ---------------------------------------------------------------------------
+ * Sello de tinta (insignia de estado) — rotado, tinta traslúcida
+ * -------------------------------------------------------------------------*/
+.sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: 11px;
+  line-height: 1;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+  background: rgba(255, 255, 255, .35);
+  mix-blend-mode: multiply;
+  transform: rotate(-3deg);
+}
+.sello--dia    { color: var(--verde-600); }
+.sello--pagado { color: var(--verde-700); }
+.sello--mora   { color: var(--rojo-tierra); }
+.sello--parcial{ color: var(--mostaza); }
+
+/* Sello grande "PAGADO" para estampar comprobantes/tarjetas saldadas */
+.sello-grande {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--verde-700);
+  border: 3px double currentColor;
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 20px;
+  background: transparent;
+  mix-blend-mode: multiply;
+  transform: rotate(-9deg);
+  opacity: .8;
+}
+.sello-grande--mora { color: var(--rojo-tierra); }
+
+/* Etiqueta manuscrita (notas tipo cuaderno) */
+.nota-mano {
+  font-family: var(--font-mano);
+  font-size: 20px;
+  color: var(--terracota-2);
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+ * Frasco de ahorro (progreso vertical que se llena) — usa --fill: 0..100
+ * -------------------------------------------------------------------------*/
+.frasco {
+  --fill: 0%;
+  position: relative;
+  width: 34px;
+  height: 44px;
+  border: 2px solid var(--verde-800);
+  border-radius: 7px 7px 11px 11px;
+  background: rgba(255,255,255,.5);
+  overflow: hidden;
+  flex: none;
+}
+.frasco::before { /* tapa */
+  content: '';
+  position: absolute;
+  top: -6px; left: 50%; transform: translateX(-50%);
+  width: 22px; height: 6px;
+  border: 2px solid var(--verde-800);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background: var(--crema-2);
+}
+.frasco::after { /* líquido de ahorro */
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: var(--fill);
+  background: repeating-linear-gradient(-45deg, var(--verde-500), var(--verde-500) 6px, var(--verde-600) 6px, var(--verde-600) 12px);
+  transition: height .5s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Barra "sembrada": progreso lineal con textura de semillas */
+.barra-nat {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--crema-3);
+  box-shadow: inset 0 1px 2px rgba(31,46,26,.15);
+  overflow: hidden;
+}
+.barra-nat > i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 6px 50%, rgba(255,255,255,.5) 1.5px, transparent 2px) 0 0 / 12px 100% repeat-x,
+    linear-gradient(90deg, var(--verde-500), var(--verde-600));
+  transition: width .5s cubic-bezier(.2,.8,.2,1);
+}
+
+/* Fila de semillas (progreso discreto) — pinta n llenas de m */
+.semillas { display: inline-flex; gap: 4px; }
+.semillas i {
+  width: 9px; height: 12px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: var(--crema-3);
+  transform: rotate(-12deg);
+  box-shadow: inset 0 0 0 1px rgba(31,46,26,.12);
+}
+.semillas i.on { background: var(--verde-500); box-shadow: inset -1px -1px 0 rgba(0,0,0,.12); }
+
+/* ---------------------------------------------------------------------------
+ * Chips de concepto (cuota / sanción / actividad / préstamo)
+ * -------------------------------------------------------------------------*/
+.chip-nat {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--crema-2); color: var(--tinta);
+  border: 1px solid var(--crema-3);
+}
+.chip-nat.is-prestamo { background: #e9f0e4; color: var(--verde-700); border-color: #cfe0c6; }
+.chip-nat.is-sancion  { background: #f6e2dc; color: var(--rojo-tierra); border-color: #eccabf; }
+.chip-nat.is-actividad{ background: #f7ecd6; color: var(--terracota-2); border-color: #ecd9b6; }
+.chip-nat.is-cuota    { background: #e7efe9; color: var(--verde-800); border-color: #cfe0d3; }
+
+/* ---------------------------------------------------------------------------
+ * Botones
+ * -------------------------------------------------------------------------*/
+.btn-nat {
+  font-family: var(--font-body);
+  font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 0 18px;
+  border-radius: 14px;
+  color: #f4ecd8;
+  background: linear-gradient(180deg, var(--verde-600), var(--verde-700));
+  border: 1px solid var(--verde-800);
+  box-shadow: 0 4px 0 0 var(--verde-800), 0 10px 18px -10px rgba(20,63,36,.7);
+  touch-action: manipulation;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  cursor: pointer;
+}
+.btn-nat:active { transform: translateY(3px); box-shadow: 0 1px 0 0 var(--verde-800), 0 6px 12px -10px rgba(20,63,36,.7); }
+.btn-nat:disabled { filter: grayscale(.5) opacity(.55); box-shadow: none; cursor: not-allowed; }
+
+.btn-terra {
+  color: #fff;
+  background: linear-gradient(180deg, var(--terracota), var(--terracota-2));
+  border-color: var(--terracota-2);
+  box-shadow: 0 4px 0 0 var(--terracota-2), 0 10px 18px -10px rgba(169,79,44,.6);
+}
+.btn-terra:active { transform: translateY(3px); box-shadow: 0 1px 0 0 var(--terracota-2); }
+
+.btn-ghost {
+  font-weight: 700; min-height: 46px; padding: 0 16px;
+  border-radius: 14px;
+  color: var(--verde-800);
+  background: transparent;
+  border: 1.5px dashed rgba(27,94,55,.45);
+  touch-action: manipulation; cursor: pointer;
+  transition: background .12s ease;
+}
+.btn-ghost:active { background: rgba(27,94,55,.06); }
+
+/* Botón flotante (FAB) tipo sello */
+.fab-nat {
+  background: linear-gradient(180deg, var(--verde-600), var(--verde-700));
+  color: #f4ecd8;
+  border: 2px solid var(--crema);
+  box-shadow: 0 12px 26px -10px rgba(20,63,36,.8);
+}
+
+/* ---------------------------------------------------------------------------
+ * Inputs (>=16px para no hacer zoom en iOS)
+ * -------------------------------------------------------------------------*/
+.in-nat, .nat select, .nat input[type=text], .nat input[type=number], .nat input[type=date] {
+  font-size: 16px;
+  font-family: var(--font-body);
+  color: var(--tinta);
+  background: #fffdf6;
+  border: 1.5px solid var(--crema-3);
+  border-radius: 12px;
+  padding: 11px 13px;
+  width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.in-nat:focus, .nat select:focus, .nat input:focus {
+  outline: none;
+  border-color: var(--verde-500);
+  box-shadow: 0 0 0 3px rgba(46,125,79,.16);
+}
+.in-error { border-color: var(--rojo-tierra) !important; box-shadow: 0 0 0 3px rgba(168,64,47,.14) !important; }
+
+/* Buscador con icono: el icono va por FLEX (no absolute + translate-y),
+   así Safari no lo descentra al cambiar la altura del input al enfocar (iOS §5.2).
+   El borde/relleno va en el contenedor (.in-nat), el input interno va limpio. */
+.search-wrap { display: flex; align-items: center; gap: .55rem; }
+.search-wrap > svg { flex: none; }
+.search-wrap > input {
+  flex: 1; min-width: 0;
+  border: 0; background: transparent; outline: none; box-shadow: none;
+  padding: 0; font-size: 16px; color: inherit;
+}
+.search-wrap:focus-within { border-color: var(--verde-500); box-shadow: 0 0 0 3px rgba(46,125,79,.16); }
+
+/* Segmented (tipo/modalidad/periodicidad) con aire artesanal */
+.seg-nat { display: inline-flex; background: var(--crema-2); border: 1.5px solid var(--crema-3); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg-nat button {
+  font-weight: 700; font-size: 13px;
+  padding: 8px 12px; border-radius: 9px;
+  color: var(--tinta-2); background: transparent;
+  min-height: 40px; touch-action: manipulation; cursor: pointer;
+  transition: all .15s ease;
+}
+.seg-nat button.on {
+  background: #fffdf6; color: var(--verde-700);
+  box-shadow: 0 2px 6px -2px rgba(31,46,26,.3);
+}
+
+/* ---------------------------------------------------------------------------
+ * Recibo / comprobante de papel con borde rasgado
+ * -------------------------------------------------------------------------*/
+.recibo {
+  background: #fffdf5;
+  color: var(--tinta);
+  border-radius: 14px 14px 0 0;
+  box-shadow: var(--sombra-media);
+  position: relative;
+  border: 1px solid var(--crema-3);
+  padding: 22px 20px 26px;
+  /* borde inferior en zig-zag (rasgado) */
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    conic-gradient(from -45deg at bottom, #0000 0 90deg, #000 0) 0 100% / 16px 9px repeat-x;
+          mask:
+    linear-gradient(#000 0 0) padding-box,
+    conic-gradient(from -45deg at bottom, #0000 0 90deg, #000 0) 0 100% / 16px 9px repeat-x;
+  padding-bottom: 30px;
+}
+.recibo .linea-punto { border-top: 2px dashed var(--crema-3); margin: 12px 0; }
+.recibo .fila { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; font-variant-numeric: tabular-nums; }
+.recibo .fila b { font-weight: 800; }
+.recibo .total { font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+
+/* ---------------------------------------------------------------------------
+ * Backdrop de modal (velo salvia con blur suave; menos blur en iOS)
+ * -------------------------------------------------------------------------*/
+.nat-veil {
+  background: rgba(72, 92, 68, .42);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+@supports (-webkit-touch-callout: none) {
+  .nat-veil { -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); background: rgba(72,92,68,.5); }
+}
+
+/* Filas de tabla estilo cuaderno de cuentas (para variante ledger) */
+.cuaderno { border-collapse: separate; border-spacing: 0; }
+.cuaderno tr { background-image: linear-gradient(transparent 95%, rgba(31,46,26,.06) 0); }
+.cuaderno td, .cuaderno th { border-bottom: 1px dashed var(--crema-3); }
+
+/* Animaciones (con -webkit- y translate3d para iOS/GPU) */
+@-webkit-keyframes natSheetUp { from { -webkit-transform: translate3d(0,100%,0);} to { -webkit-transform: translate3d(0,0,0);} }
+@keyframes natSheetUp { from { transform: translate3d(0,100%,0);} to { transform: translate3d(0,0,0);} }
+.anim-sheet { -webkit-animation: natSheetUp .32s cubic-bezier(.2,.8,.2,1); animation: natSheetUp .32s cubic-bezier(.2,.8,.2,1); }
+
+@-webkit-keyframes natPop { 0%{ -webkit-transform: scale(.94); opacity:0 } 100%{ -webkit-transform: scale(1); opacity:1 } }
+@keyframes natPop { 0%{ transform: scale(.94); opacity:0 } 100%{ transform: scale(1); opacity:1 } }
+.anim-pop { -webkit-animation: natPop .28s cubic-bezier(.2,.8,.2,1); animation: natPop .28s cubic-bezier(.2,.8,.2,1); }
+
+@-webkit-keyframes natStamp { 0%{ -webkit-transform: scale(1.6) rotate(-9deg); opacity:0 } 60%{ -webkit-transform: scale(.92) rotate(-9deg); opacity:1 } 100%{ -webkit-transform: scale(1) rotate(-9deg); } }
+@keyframes natStamp { 0%{ transform: scale(1.6) rotate(-9deg); opacity:0 } 60%{ transform: scale(.92) rotate(-9deg); opacity:1 } 100%{ transform: scale(1) rotate(-9deg); } }
+.anim-stamp { -webkit-animation: natStamp .5s cubic-bezier(.2,.9,.3,1) both; animation: natStamp .5s cubic-bezier(.2,.9,.3,1) both; }

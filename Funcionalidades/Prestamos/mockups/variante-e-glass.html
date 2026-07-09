@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Préstamos · Glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --blur-card: 18px;
+    --blur-modal: 26px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  *{ -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:'Sora', system-ui, sans-serif;
+    color:#eaf6ee;
+    min-height:100vh;
+    min-height:100dvh;
+    min-height:-webkit-fill-available;
+    position:relative;
+    overflow-x:hidden;
+    background:#062018;
+  }
+  /* Fondo escénico fijo */
+  .scene{
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(120% 90% at 15% 0%, #0e4d38 0%, #093b2c 38%, #062018 72%),
+      linear-gradient(160deg, #0a3a2b 0%, #062018 100%);
+  }
+  .blob{ position:fixed; z-index:-1; border-radius:50%; filter: blur(80px); opacity:.55; pointer-events:none; will-change:transform; }
+  .blob-1{ width:420px; height:420px; top:-120px; left:-80px;  background:#25c07a; opacity:.42; }
+  .blob-2{ width:380px; height:380px; top:20%; right:-120px;   background:#0fb6c9; opacity:.34; }
+  .blob-3{ width:460px; height:460px; bottom:-160px; left:20%;  background:#a3e635; opacity:.20; }
+  .blob-4{ width:300px; height:300px; bottom:12%; right:6%;     background:#34d399; opacity:.24; }
+
+  /* Vidrio */
+  .glass{
+    background: rgba(255,255,255,0.10);
+    -webkit-backdrop-filter: blur(var(--blur-card)) saturate(140%);
+    backdrop-filter: blur(var(--blur-card)) saturate(140%);
+    border:1px solid rgba(255,255,255,0.16);
+    border-top:1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 20px 45px -20px rgba(0,0,0,.55);
+  }
+  .glass-strong{
+    background: rgba(255,255,255,0.15);
+    -webkit-backdrop-filter: blur(var(--blur-card)) saturate(150%);
+    backdrop-filter: blur(var(--blur-card)) saturate(150%);
+    border:1px solid rgba(255,255,255,0.18);
+    border-top:1px solid rgba(255,255,255,0.4);
+    box-shadow: 0 24px 55px -22px rgba(0,0,0,.6);
+  }
+  .glass-soft{
+    background: rgba(255,255,255,0.06);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    backdrop-filter: blur(12px) saturate(120%);
+    border:1px solid rgba(255,255,255,0.10);
+  }
+  /* Reflejo lineal superior */
+  .sheen{ position:relative; overflow:hidden; }
+  .sheen::before{
+    content:''; position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+    pointer-events:none;
+  }
+
+  /* Pagados: atenuado / desaturado / hacia el fondo */
+  .glass-paid{
+    background: rgba(190,205,198,0.055) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(60%);
+    backdrop-filter: blur(10px) saturate(60%);
+    border:1px solid rgba(255,255,255,0.08) !important;
+    border-top:1px solid rgba(255,255,255,0.14) !important;
+    box-shadow: 0 12px 30px -22px rgba(0,0,0,.5) !important;
+    filter: saturate(.65) opacity(.9);
+  }
+
+  /* glows de estado */
+  .glow-aldia{ box-shadow: 0 0 0 1px rgba(163,230,53,.28), 0 12px 34px -18px rgba(132,204,22,.55); }
+  .glow-mora { box-shadow: 0 0 0 1px rgba(251,113,133,.35), 0 12px 34px -16px rgba(244,63,94,.6); }
+  .glow-emerald{ box-shadow: 0 10px 30px -12px rgba(16,185,129,.65); }
+
+  .txt-dim{ color:rgba(234,246,238,.72); }
+  .txt-faint{ color:rgba(234,246,238,.55); }
+
+  /* Inputs vidrio */
+  .in{
+    width:100%; font-size:16px; color:#eefaf2;
+    background: rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:14px; padding:11px 13px;
+    outline:none; transition:.15s;
+    -webkit-appearance:none;
+  }
+  .in::placeholder{ color:rgba(234,246,238,.5); }
+  .in:focus{ border-color:rgba(52,211,153,.7); background:rgba(255,255,255,0.12); box-shadow:0 0 0 3px rgba(52,211,153,.18); }
+  select.in{ background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23c7ffe4' stroke-width='2' viewBox='0 0 24 24'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+  select.in option{ color:#0c2b20; }
+  /* Buscador: icono por FLEX (no absolute + translate-y) para no descentrar en iOS al enfocar */
+  .search-wrap{ display:flex; align-items:center; gap:9px; }
+  .search-wrap > svg{ flex:none; }
+  .search-wrap > input{ flex:1; min-width:0; border:0; background:transparent; outline:none; box-shadow:none; padding:0; font-size:16px; color:inherit; }
+  .search-wrap:focus-within{ border-color:rgba(52,211,153,.7); background:rgba(255,255,255,0.12); box-shadow:0 0 0 3px rgba(52,211,153,.18); }
+  label.lbl{ font-size:12.5px; font-weight:500; color:rgba(234,246,238,.78); margin-bottom:5px; display:block; letter-spacing:.2px; }
+
+  /* Botones */
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; font-weight:600; border-radius:16px; padding:11px 18px; min-height:44px; touch-action:manipulation; cursor:pointer; transition:.16s; border:1px solid transparent; font-size:14.5px; }
+  .btn-primary{ background:linear-gradient(135deg, rgba(16,185,129,.9), rgba(5,150,105,.85)); color:#f0fff8; border-color:rgba(255,255,255,.25); box-shadow:0 10px 28px -10px rgba(16,185,129,.75); }
+  .btn-primary:active{ transform:scale(.98); }
+  .btn-glass{ background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.2); color:#eafaf1; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .btn-glass:active{ transform:scale(.98); background:rgba(255,255,255,.16); }
+  .btn-danger{ background:rgba(244,63,94,.18); border-color:rgba(251,113,133,.4); color:#ffe0e4; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:999px; letter-spacing:.2px; }
+  .pill-aldia{ background:rgba(163,230,53,.16); color:#d9f99d; border:1px solid rgba(163,230,53,.35); }
+  .pill-mora { background:rgba(244,63,94,.16); color:#fecdd3; border:1px solid rgba(251,113,133,.4); }
+  .pill-pagado{ background:rgba(148,163,184,.14); color:#cbd5e1; border:1px solid rgba(148,163,184,.28); }
+
+  /* Progreso */
+  .track{ height:9px; border-radius:999px; background:rgba(255,255,255,.10); overflow:hidden; border:1px solid rgba(255,255,255,.08); }
+  .fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,#a3e635,#34d399); box-shadow:0 0 12px rgba(52,211,153,.7); transition:width .5s ease; }
+  .fill-dim{ background:linear-gradient(90deg,#94a3b8,#64748b); box-shadow:none; }
+
+  /* Segmented tabs */
+  .seg{ position:relative; display:flex; padding:5px; border-radius:18px; }
+  .seg-thumb{ position:absolute; top:5px; bottom:5px; border-radius:14px;
+    background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3);
+    -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    box-shadow:0 8px 22px -10px rgba(16,185,129,.6); transition:.32s cubic-bezier(.4,0,.2,1); }
+  .seg-btn{ position:relative; z-index:1; flex:1; min-height:42px; display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600; font-size:14px; border-radius:14px; background:transparent; border:none; color:rgba(234,246,238,.6); cursor:pointer; touch-action:manipulation; transition:.2s; }
+  .seg-btn.on{ color:#f2fff8; }
+
+  /* Modal */
+  .veil{ position:fixed; inset:0; z-index:50; display:flex; align-items:flex-end; justify-content:center;
+    background:rgba(5,25,18,.55);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  @media(min-width:640px){ .veil{ align-items:center; } }
+  .modal{ width:100%; max-width:560px; max-height:90dvh; max-height:90vh; display:flex; flex-direction:column;
+    border-radius:26px 26px 0 0;
+    background: rgba(255,255,255,0.13);
+    -webkit-backdrop-filter: blur(var(--blur-modal)) saturate(150%);
+    backdrop-filter: blur(var(--blur-modal)) saturate(150%);
+    border:1px solid rgba(255,255,255,0.2);
+    border-top:1px solid rgba(255,255,255,0.4);
+    box-shadow:0 -20px 60px -20px rgba(0,0,0,.7);
+    transform:translate3d(0,0,0);
+  }
+  @media(min-width:640px){ .modal{ border-radius:26px; } }
+  .modal-body{ overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 18px 4px; }
+  .modal-actions{ padding:14px 18px calc(14px + var(--safe-b)); border-top:1px solid rgba(255,255,255,.12); }
+
+  .card-enter{ animation:rise .4s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes rise{ from{ opacity:0; -webkit-transform:translate3d(0,14px,0); transform:translate3d(0,14px,0);} to{ opacity:1; -webkit-transform:translate3d(0,0,0); transform:translate3d(0,0,0);} }
+  .modal-enter{ animation:sheet .34s cubic-bezier(.2,.8,.3,1) both; }
+  @keyframes sheet{ from{ opacity:0; -webkit-transform:translate3d(0,40px,0); transform:translate3d(0,40px,0);} to{ opacity:1; -webkit-transform:translate3d(0,0,0); transform:translate3d(0,0,0);} }
+
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.18); border-radius:8px; }
+
+  .hair{ border-color:rgba(255,255,255,.10) !important; }
+
+  /* iOS: reducir blur costoso y subir opacidad para legibilidad */
+  @supports (-webkit-touch-callout: none){
+    :root{ --blur-card:11px; --blur-modal:16px; }
+    .glass{ background:rgba(255,255,255,0.14); }
+    .glass-strong{ background:rgba(255,255,255,0.18); }
+    .modal{ background:rgba(20,50,40,0.9); }
+    .veil{ -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+    .blob{ filter:blur(60px); }
+  }
+</style>
+</head>
+<body>
+<div class="scene"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+<div class="blob blob-4"></div>
+
+<div id="app"></div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="./engine.js"></script>
+<script>
+const { createApp, ref, reactive, computed, watch, nextTick, onMounted } = Vue;
+
+createApp({
+  setup(){
+    const PE = window.PE;
+
+    /* ---------- ESTADO BASE (declarado ANTES de computed/watch) ---------- */
+    const state = reactive(PE.initState());
+    const rol = ref('admin');            // 'admin' | 'visor'
+    const puedeEditar = computed(()=> rol.value === 'admin');
+    const tab = ref('activos');          // 'activos' | 'pagados'
+    const busqueda = ref('');
+
+    const vista = ref('lista');          // 'lista' | 'detalle'
+    const detalleId = ref(null);
+
+    // Modales
+    const modal = ref(null);             // 'crear' | 'abonar' | 'refinanciar' | 'eliminar' | 'cobro' | 'comprobante' | 'telefono'
+    const comprobante = ref(null);       // objeto comprobante
+    const telPendiente = ref({ socio:null, cb:null, valor:'' });
+
+    /* ---------- HELPERS ---------- */
+    const fmt = PE.fmt, fmtNum = PE.fmtNum, pct = PE.pct, fmtFecha = PE.fmtFecha;
+    const nombreSocio = (id)=> (PE.socio(id)?.nombre) || '—';
+    const inicial = (id)=>{ const n = nombreSocio(id); return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); };
+
+    function resumen(p){ return PE.resumenPrestamo(p); }
+    function progreso(p){
+      const pagado = p.plan.reduce((s,c)=>s+c.abonado,0);
+      return p.total ? Math.min(100, Math.round(pagado / p.total * 100)) : 0;
+    }
+    function estadoGlobal(p){ return PE.resumenPrestamo(p).estadoGlobal; }
+
+    /* ---------- TOTALES / FONDO ---------- */
+    const totales = computed(()=> PE.totalesModulo(state.prestamos));
+
+    /* ---------- LISTAS FILTRADAS ---------- */
+    const activos = computed(()=> state.prestamos.filter(p=>p.estado==='activo'));
+    const pagados = computed(()=> state.prestamos.filter(p=>p.estado==='pagado'));
+
+    const listaFiltrada = computed(()=>{
+      const base = tab.value==='activos' ? activos.value : pagados.value;
+      const q = busqueda.value.trim().toLowerCase();
+      if(!q) return base;
+      return base.filter(p=> nombreSocio(p.socioId).toLowerCase().includes(q));
+    });
+
+    const detalle = computed(()=> state.prestamos.find(p=>p.id===detalleId.value) || null);
+
+    /* ---------- NAVEGACIÓN ---------- */
+    function abrirDetalle(p){ detalleId.value = p.id; vista.value = 'detalle'; window.scrollTo(0,0); }
+    function volver(){ vista.value = 'lista'; detalleId.value = null; }
+
+    /* ---------- SCROLL LOCK ---------- */
+    watch(modal, (m)=>{
+      document.body.style.overflow = m ? 'hidden' : '';
+    });
+    function cerrarModal(){ modal.value = null; }
+
+    /* ========================================================================
+       CREAR PRÉSTAMO
+    ======================================================================== */
+    const hoyIso = PE.isoDate(PE.HOY);
+    const form = reactive({
+      socioId:'', capital:'', tasaPct:2, tipo:'simple', modalidad:'normal',
+      nCuotas:6, periodicidad:'mensual', fecha:hoyIso, medioEntrega:'efectivo',
+    });
+    function resetForm(){
+      Object.assign(form, { socioId:'', capital:'', tasaPct:2, tipo:'simple', modalidad:'normal',
+        nCuotas:6, periodicidad:'mensual', fecha:hoyIso, medioEntrega:'efectivo' });
+    }
+    function abrirCrear(){ resetForm(); modal.value='crear'; }
+
+    const plazoMax = computed(()=> state.reglas.plazo_maximo);
+    const capNum = computed(()=> Number(form.capital)||0);
+
+    const calc = computed(()=>{
+      const capital = capNum.value;
+      const nCuotas = Number(form.nCuotas)||0;
+      if(capital<=0 || nCuotas<=0) return null;
+      const g = PE.generarPlan({
+        capital, tasaPct:Number(form.tasaPct)||0, tipo:form.tipo, modalidad:form.modalidad,
+        nCuotas, periodicidad:form.periodicidad, fechaPrimeraCuota:new Date(form.fecha),
+      });
+      const des = PE.desembolso({ capital, interesTotal:g.interesTotal, modalidad:form.modalidad });
+      return { ...g, desembolso:des };
+    });
+
+    const erroresCrear = computed(()=>{
+      return PE.validarPrestamo({
+        capital:capNum.value, tasaPct:Number(form.tasaPct)||0, tipo:form.tipo, modalidad:form.modalidad,
+        nCuotas:Number(form.nCuotas)||0, periodicidad:form.periodicidad, medioEntrega:form.medioEntrega,
+        plazoMaximo:plazoMax.value,
+      }, state.fondo);
+    });
+    function errFor(campo){ return erroresCrear.value.find(e=>e.campo===campo)?.msg; }
+    const puedeCrear = computed(()=> form.socioId && capNum.value>0 && erroresCrear.value.length===0 );
+
+    const ayudaModalidad = computed(()=>{
+      return form.modalidad==='anticipado'
+        ? 'Anticipado: el interés se descuenta del desembolso. El socio recibe menos, pero abona el capital completo.'
+        : 'Normal: el socio recibe el capital completo; el interés se paga distribuido en las cuotas (mayor al inicio).';
+    });
+
+    function confirmarCrear(){
+      if(!puedeCrear.value) return;
+      const p = PE.crearPrestamo({
+        socioId:form.socioId, capital:capNum.value, tasaPct:Number(form.tasaPct)||0, tipo:form.tipo,
+        modalidad:form.modalidad, nCuotas:Number(form.nCuotas), periodicidad:form.periodicidad,
+        fechaPrimeraCuota:new Date(form.fecha), medioEntrega:form.medioEntrega,
+      });
+      state.prestamos.push(p);
+      const des = PE.desembolso({ capital:p.capital, interesTotal:p.interesTotal, modalidad:p.modalidad });
+      if(form.medioEntrega==='efectivo') state.fondo.efectivo -= des;
+      else state.fondo.transferencia -= des;
+
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo:'Préstamo desembolsado',
+        socio: soc?.nombre, telefono: soc?.telefono, prestamoId:p.id,
+        lineas:[
+          ['Capital', fmt(p.capital)],
+          ['Tasa', pct(p.tasaPct)+' · '+(p.tipo==='simple'?'Simple':'Compuesto')],
+          ['Modalidad', p.modalidad==='anticipado'?'Anticipado':'Normal'],
+          ['Plazo', p.nCuotas+' cuotas '+(p.periodicidad==='quincenal'?'quincenales':'mensuales')],
+          ['Interés total', fmt(p.interesTotal)],
+          ['Total a pagar', fmt(p.total)],
+          ['Valor cuota', fmt(p.valorCuota)],
+          ['Desembolsado ('+p.medioEntrega+')', fmt(des)],
+        ],
+      };
+      modal.value='comprobante';
+    }
+
+    /* ========================================================================
+       ABONO
+    ======================================================================== */
+    const abonoData = reactive({ monto:'', fecha:hoyIso, formaPago:'efectivo' });
+    function abrirAbonar(){ abonoData.monto=''; abonoData.fecha=hoyIso; abonoData.formaPago='efectivo'; modal.value='abonar'; }
+    const abonoNum = computed(()=> Number(abonoData.monto)||0 );
+    const abonoValido = computed(()=> detalle.value && abonoNum.value>0 && abonoNum.value <= detalle.value.saldoActual );
+
+    function confirmarAbono(){
+      if(!abonoValido.value) return;
+      const p = detalle.value;
+      const ab = PE.aplicarAbono(p, abonoNum.value, { fecha:abonoData.fecha, formaPago:abonoData.formaPago });
+      if(abonoData.formaPago==='efectivo') state.fondo.efectivo += abonoNum.value;
+      else state.fondo.transferencia += abonoNum.value;
+
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo:'Abono registrado',
+        socio: soc?.nombre, telefono: soc?.telefono, prestamoId:p.id,
+        lineas:[
+          ['Monto abonado', fmt(ab.monto)],
+          ['Forma de pago', abonoData.formaPago==='efectivo'?'Efectivo':'Transferencia'],
+          ['Fecha', fmtFecha(ab.fecha)],
+          ['Saldo anterior', fmt(ab.saldoAnterior)],
+          ['Saldo nuevo', fmt(ab.saldoNuevo)],
+          ['Cuotas afectadas', ab.cuotas.length? ('#'+ab.cuotas.join(', #')) : '—'],
+        ],
+        pagado: ab.saldoNuevo<=0,
+      };
+      modal.value='comprobante';
+    }
+
+    /* ========================================================================
+       REFINANCIAR
+    ======================================================================== */
+    const refiData = reactive({ nCuotas:6, tasaPct:2, tipo:'simple', fecha:hoyIso });
+    function abrirRefinanciar(){
+      const p = detalle.value;
+      Object.assign(refiData, { nCuotas:p.nCuotas, tasaPct:p.tasaPct, tipo:p.tipo, fecha:hoyIso });
+      modal.value='refinanciar';
+    }
+    const refiPreview = computed(()=>{
+      const p = detalle.value; if(!p) return null;
+      const n = Number(refiData.nCuotas)||0; if(n<=0) return null;
+      return PE.generarPlan({
+        capital:p.saldoActual, tasaPct:Number(refiData.tasaPct)||0, tipo:refiData.tipo,
+        modalidad:p.modalidad, nCuotas:n, periodicidad:p.periodicidad, fechaPrimeraCuota:new Date(refiData.fecha),
+      });
+    });
+    const refiValido = computed(()=>{ const n=Number(refiData.nCuotas)||0; return n>=1 && n<=plazoMax.value; });
+    function confirmarRefinanciar(){
+      if(!refiValido.value) return;
+      const p = detalle.value;
+      PE.refinanciar(p, { fechaPrimeraCuota:new Date(refiData.fecha), nCuotas:Number(refiData.nCuotas), tasaPct:Number(refiData.tasaPct)||0, tipo:refiData.tipo });
+      cerrarModal();
+    }
+
+    /* ========================================================================
+       ELIMINAR
+    ======================================================================== */
+    function abrirEliminar(){ modal.value='eliminar'; }
+    function confirmarEliminar(){
+      const id = detalle.value.id;
+      const idx = state.prestamos.findIndex(p=>p.id===id);
+      if(idx>=0) state.prestamos.splice(idx,1);
+      cerrarModal();
+      volver();
+    }
+
+    /* ========================================================================
+       SIMULAR COBRO EN CUOTAS
+    ======================================================================== */
+    const cobro = reactive({
+      socioId:'', periodicidad:'mensual', fecha:hoyIso,
+      montoRecibido:'', sancion:'', actividades:'', cuotaNatillera:'',
+      cuotasSel:[],   // ids seleccionadas: prestamoId+'#'+n
+    });
+    function abrirCobro(){
+      Object.assign(cobro, { socioId:'', periodicidad:'mensual', fecha:hoyIso, montoRecibido:'', sancion:'', actividades:'', cuotaNatillera:'', cuotasSel:[] });
+      modal.value='cobro';
+    }
+    const cobroPeriodo = computed(()=> PE.periodoDeFecha(new Date(cobro.fecha), cobro.periodicidad) );
+    const cobroCuotasPrestamo = computed(()=>{
+      if(!cobro.socioId) return [];
+      const delSocio = state.prestamos.filter(p=>p.socioId===cobro.socioId && p.estado==='activo');
+      return PE.cuotasPrestamoParaPeriodo(delSocio, cobroPeriodo.value);
+    });
+    // preselección: todas al abrir/cambiar socio
+    watch(cobroCuotasPrestamo, (nuevas)=>{
+      cobro.cuotasSel = nuevas.map(c=> c.prestamoId+'#'+c.n);
+    });
+    function keyCuota(c){ return c.prestamoId+'#'+c.n; }
+    function toggleCuota(c){
+      const k = keyCuota(c);
+      const i = cobro.cuotasSel.indexOf(k);
+      if(i>=0) cobro.cuotasSel.splice(i,1); else cobro.cuotasSel.push(k);
+    }
+    const cuotasPrestamoSel = computed(()=> cobroCuotasPrestamo.value.filter(c=> cobro.cuotasSel.includes(keyCuota(c))) );
+
+    const cobroReparto = computed(()=>{
+      return PE.aplicarPagoCuotas({
+        montoRecibido:Number(cobro.montoRecibido)||0,
+        sancion:Number(cobro.sancion)||0,
+        actividades:Number(cobro.actividades)||0,
+        cuotasPrestamoSel:cuotasPrestamoSel.value,
+        cuotaNatillera:Number(cobro.cuotaNatillera)||0,
+      });
+    });
+    function confirmarCobro(){
+      const rep = cobroReparto.value;
+      // Aplica abonos reales por préstamo con la porción destinada.
+      const porPrestamo = {};
+      rep.detallePrestamo.forEach(d=>{ porPrestamo[d.prestamoId]=(porPrestamo[d.prestamoId]||0)+d.aplicado; });
+      Object.entries(porPrestamo).forEach(([pid,monto])=>{
+        const p = state.prestamos.find(x=>x.id===pid);
+        if(p && monto>0){
+          PE.aplicarAbono(p, monto, { fecha:cobro.fecha, formaPago:'efectivo' });
+          state.fondo.efectivo += monto;
+        }
+      });
+      const soc = PE.socio(cobro.socioId);
+      comprobante.value = {
+        tipo:'Cobro aplicado (Cuotas)',
+        socio: soc?.nombre, telefono: soc?.telefono,
+        lineas:[
+          ['Monto recibido', fmt(Number(cobro.montoRecibido)||0)],
+          ['1 · Sanción', fmt(rep.sancion)],
+          ['2 · Actividades', fmt(rep.actividades)],
+          ['3 · Préstamo', fmt(rep.prestamo)],
+          ['4 · Cuota natillera', fmt(rep.cuota)],
+          ['Sobrante', fmt(rep.sobrante)],
+        ],
+      };
+      modal.value='comprobante';
+    }
+
+    /* ========================================================================
+       COMPROBANTE — descargar / whatsapp
+    ======================================================================== */
+    function textoComprobante(c){
+      let t = '🧾 '+c.tipo+'\n';
+      if(c.socio) t += 'Socio: '+c.socio+'\n';
+      t += '—————————————\n';
+      c.lineas.forEach(([k,v])=> t += k+': '+v+'\n');
+      t += '—————————————\nNatillerapp';
+      return t;
+    }
+    function descargarComprobante(){
+      const c = comprobante.value;
+      const blob = new Blob([textoComprobante(c)], { type:'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download='comprobante-'+(c.prestamoId||'cobro')+'.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function enviarWhatsapp(){
+      const c = comprobante.value;
+      if(!c.telefono){
+        telPendiente.value = { socio:c.socio, valor:'', cb:(tel)=>{ c.telefono=tel; _openWa(c,tel); } };
+        modal.value='telefono';
+        return;
+      }
+      _openWa(c, c.telefono);
+    }
+    function _openWa(c, tel){
+      const url = 'https://wa.me/57'+tel.replace(/\D/g,'')+'?text='+encodeURIComponent(textoComprobante(c));
+      window.open(url,'_blank');
+    }
+    function confirmarTelefono(){
+      const tel = telPendiente.value.valor.trim();
+      if(!tel) return;
+      modal.value='comprobante';
+      nextTick(()=> telPendiente.value.cb && telPendiente.value.cb(tel));
+    }
+
+    // reenviar comprobante de un abono desde el detalle
+    function reenviarAbono(p, ab){
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo:'Abono registrado', socio:soc?.nombre, telefono:soc?.telefono, prestamoId:p.id,
+        lineas:[
+          ['Monto abonado', fmt(ab.monto)],
+          ['Forma de pago', ab.formaPago==='efectivo'?'Efectivo':'Transferencia'],
+          ['Fecha', fmtFecha(ab.fecha)],
+          ['Saldo anterior', fmt(ab.saldoAnterior)],
+          ['Saldo nuevo', fmt(ab.saldoNuevo)],
+        ],
+      };
+      modal.value='comprobante';
+    }
+
+    /* ---------- estado por cuota (helpers presentación) ---------- */
+    function cuotaEstado(c){ return PE.estadoCuota(c); }
+    function cuotaPillClass(c){
+      const e = cuotaEstado(c);
+      if(e==='pagada') return 'pill-pagado';
+      if(e==='vencida') return 'pill-mora';
+      if(e==='parcial') return 'pill-aldia';
+      return '';
+    }
+    function cuotaLabel(c){
+      const e = cuotaEstado(c);
+      return { pagada:'Pagada', vencida:'Vencida', parcial:'Parcial', pendiente:'Pendiente' }[e];
+    }
+
+    return {
+      PE, state, rol, puedeEditar, tab, busqueda, vista, detalle, detalleId,
+      modal, comprobante, telPendiente,
+      fmt, fmtNum, pct, fmtFecha, nombreSocio, inicial,
+      totales, activos, pagados, listaFiltrada, resumen, progreso, estadoGlobal,
+      abrirDetalle, volver, cerrarModal,
+      form, plazoMax, calc, errFor, erroresCrear, puedeCrear, ayudaModalidad, abrirCrear, confirmarCrear, capNum,
+      abonoData, abrirAbonar, abonoNum, abonoValido, confirmarAbono,
+      refiData, abrirRefinanciar, refiPreview, refiValido, confirmarRefinanciar,
+      abrirEliminar, confirmarEliminar,
+      cobro, abrirCobro, cobroPeriodo, cobroCuotasPrestamo, keyCuota, toggleCuota, cobroReparto, confirmarCobro,
+      descargarComprobante, enviarWhatsapp, confirmarTelefono, reenviarAbono,
+      cuotaEstado, cuotaPillClass, cuotaLabel,
+    };
+  },
+  template: `
+  <div class="max-w-3xl mx-auto px-4 pb-24" style="padding-top:calc(env(safe-area-inset-top,0px) + 16px);">
+
+    <!-- ============ HEADER ============ -->
+    <header class="glass-strong sheen rounded-[26px] p-5 card-enter">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[12px] uppercase tracking-[.25em] txt-faint font-medium">Natillerapp</p>
+          <h1 class="text-2xl font-bold mt-0.5" style="letter-spacing:-.5px;">Préstamos</h1>
+        </div>
+        <!-- Toggle rol -->
+        <div class="seg glass-soft" style="width:172px;">
+          <div class="seg-thumb" :style="{ left: rol==='admin' ? '5px':'50%', width:'calc(50% - 5px)' }"></div>
+          <button class="seg-btn" :class="{on: rol==='admin'}" @click="rol='admin'">Admin</button>
+          <button class="seg-btn" :class="{on: rol==='visor'}" @click="rol='visor'">Visor</button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-3 gap-2.5 mt-4">
+        <div class="glass-soft rounded-2xl p-3">
+          <p class="text-[11px] txt-faint">Prestado activo</p>
+          <p class="text-[15px] sm:text-lg font-bold mt-1 leading-tight">{{ fmt(totales.totalPrestado) }}</p>
+        </div>
+        <div class="glass-soft rounded-2xl p-3">
+          <p class="text-[11px] txt-faint">Intereses</p>
+          <p class="text-[15px] sm:text-lg font-bold mt-1 leading-tight" style="color:#d9f99d;">{{ fmt(totales.interesesGanados) }}</p>
+        </div>
+        <div class="glass-soft rounded-2xl p-3">
+          <p class="text-[11px] txt-faint">Abonado</p>
+          <p class="text-[15px] sm:text-lg font-bold mt-1 leading-tight">{{ fmt(totales.totalAbonado) }}</p>
+        </div>
+      </div>
+
+      <!-- Fondo -->
+      <div class="flex items-center gap-3 mt-3 text-[13px]">
+        <span class="glass-soft rounded-full px-3 py-1.5 flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:#34d399;box-shadow:0 0 8px #34d399;"></span>
+          Efectivo <b class="font-semibold">{{ fmt(state.fondo.efectivo) }}</b>
+        </span>
+        <span class="glass-soft rounded-full px-3 py-1.5 flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:#38bdf8;box-shadow:0 0 8px #38bdf8;"></span>
+          Transfer. <b class="font-semibold">{{ fmt(state.fondo.transferencia) }}</b>
+        </span>
+      </div>
+    </header>
+
+    <!-- ============ LISTA ============ -->
+    <template v-if="vista==='lista'">
+
+      <!-- Tabs + acciones -->
+      <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div class="seg glass flex-1" style="max-width:100%;">
+          <div class="seg-thumb" :style="{ left: tab==='activos' ? '5px':'50%', width:'calc(50% - 5px)' }"></div>
+          <button class="seg-btn" :class="{on:tab==='activos'}" @click="tab='activos'">
+            Por cobrar
+            <span class="glass-soft rounded-full px-1.5 text-[11px]">{{ activos.length }}</span>
+          </button>
+          <button class="seg-btn" :class="{on:tab==='pagados'}" @click="tab='pagados'">
+            Pagados
+            <span class="glass-soft rounded-full px-1.5 text-[11px]">{{ pagados.length }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Buscador + crear -->
+      <div class="mt-3 flex gap-2.5">
+        <div class="in search-wrap flex-1">
+          <svg class="w-4 h-4" style="color:rgba(234,246,238,.55)" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input v-model="busqueda" placeholder="Buscar por socio…">
+        </div>
+        <button v-if="puedeEditar" class="btn btn-primary shrink-0" @click="abrirCobro" title="Simular cobro en Cuotas">
+          <svg class="w-4.5 h-4.5" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16v4H4z"/><path d="M4 12h16v8H4z"/><path d="M8 16h4"/></svg>
+        </button>
+        <button v-if="puedeEditar" class="btn btn-primary shrink-0" @click="abrirCrear">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="hidden sm:inline">Nuevo</span>
+        </button>
+      </div>
+
+      <!-- Vacío -->
+      <div v-if="listaFiltrada.length===0" class="glass rounded-[24px] p-10 mt-4 text-center">
+        <p class="txt-dim">Sin préstamos {{ tab==='activos'?'por cobrar':'pagados' }}{{ busqueda?' para “'+busqueda+'”':'' }}.</p>
+      </div>
+
+      <!-- Tarjetas -->
+      <div class="mt-4 space-y-3.5">
+        <div v-for="p in listaFiltrada" :key="p.id"
+             @click="abrirDetalle(p)"
+             class="sheen rounded-[24px] p-4 card-enter cursor-pointer transition-transform active:scale-[.99]"
+             :class="p.estado==='pagado' ? 'glass-paid' : (estadoGlobal(p)==='mora' ? 'glass-strong glow-mora' : 'glass-strong glow-aldia')">
+
+          <div class="flex items-center gap-3">
+            <!-- Avatar -->
+            <div class="w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-[15px] shrink-0"
+                 :class="p.estado==='pagado' ? 'glass-soft' : 'glass'"
+                 :style="p.estado==='pagado' ? 'color:#cbd5e1' : 'color:#eafaf1;box-shadow:0 6px 18px -8px rgba(16,185,129,.6)'">
+              <template v-if="p.estado==='pagado'">
+                <svg width="20" height="20" fill="none" stroke="#a3e635" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </template>
+              <template v-else>{{ inicial(p.socioId) }}</template>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold truncate" :class="p.estado==='pagado' ? 'txt-dim':''">{{ nombreSocio(p.socioId) }}</p>
+              <p class="text-[12.5px] txt-faint">Capital {{ fmt(p.capital) }} · {{ p.nCuotas }} cuotas</p>
+            </div>
+            <span class="pill"
+              :class="estadoGlobal(p)==='pagado'?'pill-pagado':(estadoGlobal(p)==='mora'?'pill-mora':'pill-aldia')">
+              <template v-if="estadoGlobal(p)==='pagado'">✓ Liquidado</template>
+              <template v-else-if="estadoGlobal(p)==='mora'">● En mora</template>
+              <template v-else>● Al día</template>
+            </span>
+          </div>
+
+          <!-- Saldo destacado (solo activos) -->
+          <div class="flex items-end justify-between mt-3.5">
+            <div>
+              <p class="text-[11px] txt-faint">{{ p.estado==='pagado' ? 'Saldo' : 'Saldo pendiente' }}</p>
+              <p class="font-bold leading-none mt-1"
+                 :class="p.estado==='pagado' ? 'text-lg txt-dim' : 'text-2xl'"
+                 :style="p.estado==='pagado' ? '' : (estadoGlobal(p)==='mora'?'color:#fecdd3':'color:#eefaf2')">
+                {{ fmt(p.saldoActual) }}
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-[11px] txt-faint">Valor cuota</p>
+              <p class="font-semibold mt-1" :class="p.estado==='pagado'?'txt-dim':''">{{ fmt(p.valorCuota) }}</p>
+            </div>
+          </div>
+
+          <!-- Progreso -->
+          <div class="mt-3">
+            <div class="track"><div class="fill" :class="p.estado==='pagado'?'fill-dim':''" :style="{width:progreso(p)+'%'}"></div></div>
+            <div class="flex justify-between mt-1.5 text-[11px] txt-faint">
+              <span>{{ resumen(p).cuotasPagadas }}/{{ p.plan.length }} cuotas</span>
+              <span>{{ progreso(p) }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ============ DETALLE ============ -->
+    <template v-else-if="detalle">
+      <button class="btn btn-glass mt-4" @click="volver">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        Volver
+      </button>
+
+      <!-- Cabecera detalle -->
+      <div class="glass-strong sheen rounded-[24px] p-5 mt-3 card-enter"
+           :class="estadoGlobal(detalle)==='mora'?'glow-mora':(estadoGlobal(detalle)==='pagado'?'':'glow-aldia')">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl glass flex items-center justify-center font-bold" style="box-shadow:0 6px 18px -8px rgba(16,185,129,.6)">{{ inicial(detalle.socioId) }}</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-lg truncate">{{ nombreSocio(detalle.socioId) }}</p>
+            <p class="text-[12.5px] txt-faint">{{ PE.socio(detalle.socioId)?.telefono || 'Sin teléfono' }}</p>
+          </div>
+          <span class="pill" :class="estadoGlobal(detalle)==='pagado'?'pill-pagado':(estadoGlobal(detalle)==='mora'?'pill-mora':'pill-aldia')">
+            {{ estadoGlobal(detalle)==='pagado'?'✓ Liquidado':(estadoGlobal(detalle)==='mora'?'● En mora':'● Al día') }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5 mt-4 text-[13px]">
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Capital</p><p class="font-semibold mt-0.5">{{ fmt(detalle.capital) }}</p></div>
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Saldo</p><p class="font-semibold mt-0.5">{{ fmt(detalle.saldoActual) }}</p></div>
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Tasa · tipo</p><p class="font-semibold mt-0.5">{{ pct(detalle.tasaPct) }} · {{ detalle.tipo==='simple'?'Simple':'Comp.' }}</p></div>
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Modalidad</p><p class="font-semibold mt-0.5">{{ detalle.modalidad==='anticipado'?'Anticipado':'Normal' }}</p></div>
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Interés total</p><p class="font-semibold mt-0.5" style="color:#d9f99d">{{ fmt(detalle.interesTotal) }}</p></div>
+          <div class="glass-soft rounded-xl p-2.5"><p class="txt-faint text-[11px]">Total a pagar</p><p class="font-semibold mt-0.5">{{ fmt(detalle.total) }}</p></div>
+        </div>
+
+        <!-- Acciones -->
+        <div v-if="puedeEditar" class="flex gap-2 mt-4">
+          <button v-if="detalle.estado==='activo'" class="btn btn-primary flex-1" @click="abrirAbonar">Abonar</button>
+          <button v-if="detalle.estado==='activo'" class="btn btn-glass flex-1" @click="abrirRefinanciar">Refinanciar</button>
+          <button class="btn btn-danger" @click="abrirEliminar" title="Eliminar">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Plan de pagos -->
+      <div class="glass rounded-[24px] p-4 mt-3.5 card-enter">
+        <p class="font-semibold mb-3 flex items-center gap-2">
+          <svg width="18" height="18" fill="none" stroke="#a3e635" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+          Plan de pagos
+        </p>
+        <div class="space-y-2">
+          <div v-for="c in detalle.plan" :key="c.n" class="glass-soft rounded-xl p-3 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg glass flex items-center justify-center text-[13px] font-bold shrink-0">{{ c.n }}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-semibold text-[14px]">{{ fmt(c.valor) }}</span>
+                <span class="pill" :class="cuotaPillClass(c)" v-if="cuotaPillClass(c)">{{ cuotaLabel(c) }}</span>
+                <span class="text-[11px] txt-faint" v-else>{{ cuotaLabel(c) }}</span>
+              </div>
+              <p class="text-[11.5px] txt-faint mt-0.5">{{ fmtFecha(c.fecha) }} · {{ PE.periodoLabel(c.periodo) }}</p>
+            </div>
+            <div class="text-right text-[11.5px] txt-faint shrink-0">
+              <p>Cap {{ fmtNum(c.capital) }}</p>
+              <p>Int {{ fmtNum(c.interes) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial abonos -->
+      <div class="glass rounded-[24px] p-4 mt-3.5 card-enter" v-if="detalle.abonos && detalle.abonos.length">
+        <p class="font-semibold mb-3">Historial de abonos</p>
+        <div class="space-y-2">
+          <div v-for="ab in detalle.abonos" :key="ab.id" class="glass-soft rounded-xl p-3 flex items-center gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-[14px]">{{ fmt(ab.monto) }} <span class="text-[11px] txt-faint font-normal">· {{ ab.formaPago }}</span></p>
+              <p class="text-[11.5px] txt-faint">{{ fmtFecha(ab.fecha) }} · saldo {{ fmt(ab.saldoAnterior) }} → {{ fmt(ab.saldoNuevo) }}</p>
+            </div>
+            <button class="btn btn-glass" style="min-height:38px;padding:6px 12px;font-size:12.5px" @click="reenviarAbono(detalle, ab)">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              Reenviar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refinanciaciones -->
+      <div class="glass rounded-[24px] p-4 mt-3.5 card-enter" v-if="detalle.refinanciaciones && detalle.refinanciaciones.length">
+        <p class="font-semibold mb-3">Refinanciaciones</p>
+        <div class="space-y-2">
+          <div v-for="(r,i) in detalle.refinanciaciones" :key="i" class="glass-soft rounded-xl p-3 text-[13px]">
+            <p class="font-semibold">{{ fmtFecha(r.fecha) }}</p>
+            <p class="txt-faint text-[12px] mt-0.5">Saldo base {{ fmt(r.saldoBase) }} · {{ r.nCuotas }} cuotas · {{ pct(r.tasaPct) }} · nuevo interés {{ fmt(r.interesNuevo) }}</p>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ================= MODALES ================= -->
+
+    <!-- CREAR -->
+    <div v-if="modal==='crear'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter">
+        <div class="p-5 pb-3 flex items-center gap-3 border-b hair">
+          <div class="w-10 h-10 rounded-xl glass flex items-center justify-center shrink-0">
+            <svg width="20" height="20" fill="none" stroke="#a3e635" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <div class="flex-1"><p class="font-bold text-lg leading-none">Nuevo préstamo</p><p class="text-[12px] txt-faint mt-1">Cálculo en vivo</p></div>
+          <button class="btn btn-glass" style="min-height:38px;width:38px;padding:0" @click="cerrarModal">✕</button>
+        </div>
+
+        <div class="modal-body py-4 space-y-3.5">
+          <div>
+            <label class="lbl">Socio</label>
+            <select v-model="form.socioId" class="in">
+              <option value="" disabled>Selecciona un socio</option>
+              <option v-for="s in state.socios" :key="s.id" :value="s.id">{{ s.nombre }}</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lbl">Monto</label>
+              <input v-model="form.capital" type="number" inputmode="numeric" class="in" placeholder="800000">
+              <p v-if="errFor('capital')" class="text-[11.5px] mt-1" style="color:#fecaca">{{ errFor('capital') }}</p>
+            </div>
+            <div>
+              <label class="lbl">Tasa mensual (%)</label>
+              <input v-model="form.tasaPct" type="number" step="0.1" inputmode="decimal" class="in">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lbl">Tipo de interés</label>
+              <select v-model="form.tipo" class="in"><option value="simple">Simple</option><option value="compuesto">Compuesto</option></select>
+            </div>
+            <div>
+              <label class="lbl">Modalidad</label>
+              <select v-model="form.modalidad" class="in"><option value="normal">Normal</option><option value="anticipado">Anticipado</option></select>
+            </div>
+          </div>
+          <div class="glass-soft rounded-xl p-2.5 text-[12px] txt-dim leading-snug">{{ ayudaModalidad }}</div>
+          <p v-if="errFor('anticipado')" class="text-[11.5px]" style="color:#fecaca">{{ errFor('anticipado') }}</p>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lbl">N.º cuotas (1–{{ plazoMax }})</label>
+              <input v-model="form.nCuotas" type="number" :min="1" :max="plazoMax" inputmode="numeric" class="in">
+              <p v-if="errFor('nCuotas')" class="text-[11.5px] mt-1" style="color:#fecaca">{{ errFor('nCuotas') }}</p>
+            </div>
+            <div>
+              <label class="lbl">Periodicidad</label>
+              <select v-model="form.periodicidad" class="in"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option></select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lbl">Fecha 1.ª cuota</label>
+              <input v-model="form.fecha" type="date" class="in">
+            </div>
+            <div>
+              <label class="lbl">Medio de entrega</label>
+              <select v-model="form.medioEntrega" class="in"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select>
+            </div>
+          </div>
+          <p v-if="errFor('fondo')" class="text-[11.5px]" style="color:#fecaca">{{ errFor('fondo') }}</p>
+
+          <!-- Cálculo en vivo -->
+          <div v-if="calc" class="glass-strong sheen rounded-2xl p-4 glow-emerald">
+            <p class="text-[11px] uppercase tracking-widest txt-faint mb-2">Cálculo en vivo</p>
+            <div class="grid grid-cols-2 gap-y-2 text-[13px]">
+              <span class="txt-dim">Interés total</span><span class="text-right font-semibold" style="color:#d9f99d">{{ fmt(calc.interesTotal) }}</span>
+              <span class="txt-dim">Total a pagar</span><span class="text-right font-semibold">{{ fmt(calc.total) }}</span>
+              <span class="txt-dim">Valor cuota</span><span class="text-right font-semibold">{{ fmt(calc.valorCuota) }}</span>
+              <span class="txt-dim">Desembolso</span><span class="text-right font-bold" style="color:#7dd3fc">{{ fmt(calc.desembolso) }}</span>
+            </div>
+            <!-- preview plan -->
+            <div class="mt-3 border-t hair pt-2.5">
+              <p class="text-[11px] txt-faint mb-1.5">Vista previa del plan</p>
+              <div class="space-y-1 max-h-32 overflow-y-auto pr-1">
+                <div v-for="c in calc.plan.slice(0,4)" :key="c.n" class="flex justify-between text-[12px]">
+                  <span class="txt-dim">#{{ c.n }} · {{ fmtFecha(c.fecha) }}</span>
+                  <span class="font-medium">{{ fmt(c.valor) }}</span>
+                </div>
+                <p v-if="calc.plan.length>4" class="text-[11px] txt-faint text-center">+ {{ calc.plan.length-4 }} cuotas más</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="cerrarModal">Cancelar</button>
+          <button class="btn btn-primary flex-1" :disabled="!puedeCrear" @click="confirmarCrear">Crear préstamo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABONAR -->
+    <div v-if="modal==='abonar'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter">
+        <div class="p-5 pb-3 flex items-center gap-3 border-b hair">
+          <div class="w-10 h-10 rounded-xl glass flex items-center justify-center shrink-0">
+            <svg width="20" height="20" fill="none" stroke="#a3e635" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9a3 3 0 000 6h6a3 3 0 010 6H6"/></svg>
+          </div>
+          <div class="flex-1"><p class="font-bold text-lg leading-none">Registrar abono</p><p class="text-[12px] txt-faint mt-1">Saldo {{ fmt(detalle.saldoActual) }}</p></div>
+          <button class="btn btn-glass" style="min-height:38px;width:38px;padding:0" @click="cerrarModal">✕</button>
+        </div>
+        <div class="modal-body py-4 space-y-3.5">
+          <div>
+            <label class="lbl">Monto</label>
+            <input v-model="abonoData.monto" type="number" inputmode="numeric" class="in" :placeholder="fmtNum(detalle.valorCuota)">
+            <p v-if="abonoNum>detalle.saldoActual" class="text-[11.5px] mt-1" style="color:#fecaca">Excede el saldo pendiente ({{ fmt(detalle.saldoActual) }}).</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="lbl">Fecha</label><input v-model="abonoData.fecha" type="date" class="in"></div>
+            <div><label class="lbl">Forma de pago</label><select v-model="abonoData.formaPago" class="in"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></div>
+          </div>
+          <div class="glass-soft rounded-xl p-3 flex justify-between text-[13px]">
+            <span class="txt-dim">Saldo tras abono</span>
+            <span class="font-bold" style="color:#d9f99d">{{ fmt(Math.max(0, detalle.saldoActual - abonoNum)) }}</span>
+          </div>
+        </div>
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="cerrarModal">Cancelar</button>
+          <button class="btn btn-primary flex-1" :disabled="!abonoValido" @click="confirmarAbono">Registrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- REFINANCIAR -->
+    <div v-if="modal==='refinanciar'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter">
+        <div class="p-5 pb-3 flex items-center gap-3 border-b hair">
+          <div class="w-10 h-10 rounded-xl glass flex items-center justify-center shrink-0">
+            <svg width="20" height="20" fill="none" stroke="#a3e635" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 019-9 9 9 0 016.7 3M21 12a9 9 0 01-9 9 9 9 0 01-6.7-3"/><path d="M18 3v3h-3M6 21v-3h3"/></svg>
+          </div>
+          <div class="flex-1"><p class="font-bold text-lg leading-none">Refinanciar</p><p class="text-[12px] txt-faint mt-1">Sobre saldo {{ fmt(detalle.saldoActual) }}</p></div>
+          <button class="btn btn-glass" style="min-height:38px;width:38px;padding:0" @click="cerrarModal">✕</button>
+        </div>
+        <div class="modal-body py-4 space-y-3.5">
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="lbl">N.º cuotas (1–{{ plazoMax }})</label><input v-model="refiData.nCuotas" type="number" :min="1" :max="plazoMax" inputmode="numeric" class="in"></div>
+            <div><label class="lbl">Tasa (%)</label><input v-model="refiData.tasaPct" type="number" step="0.1" inputmode="decimal" class="in"></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="lbl">Tipo</label><select v-model="refiData.tipo" class="in"><option value="simple">Simple</option><option value="compuesto">Compuesto</option></select></div>
+            <div><label class="lbl">Fecha 1.ª cuota</label><input v-model="refiData.fecha" type="date" class="in"></div>
+          </div>
+          <p v-if="!refiValido" class="text-[11.5px]" style="color:#fecaca">El plazo debe estar entre 1 y {{ plazoMax }} cuotas.</p>
+          <div v-if="refiPreview && refiValido" class="glass-strong sheen rounded-2xl p-4 glow-emerald">
+            <p class="text-[11px] uppercase tracking-widest txt-faint mb-2">Nuevo plan</p>
+            <div class="grid grid-cols-2 gap-y-2 text-[13px]">
+              <span class="txt-dim">Interés nuevo</span><span class="text-right font-semibold" style="color:#d9f99d">{{ fmt(refiPreview.interesTotal) }}</span>
+              <span class="txt-dim">Total</span><span class="text-right font-semibold">{{ fmt(refiPreview.total) }}</span>
+              <span class="txt-dim">Valor cuota</span><span class="text-right font-semibold">{{ fmt(refiPreview.valorCuota) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="cerrarModal">Cancelar</button>
+          <button class="btn btn-primary flex-1" :disabled="!refiValido" @click="confirmarRefinanciar">Refinanciar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELIMINAR -->
+    <div v-if="modal==='eliminar'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter" style="max-width:420px">
+        <div class="modal-body py-6 text-center">
+          <div class="w-14 h-14 rounded-2xl mx-auto flex items-center justify-center" style="background:rgba(244,63,94,.16);border:1px solid rgba(251,113,133,.4)">
+            <svg width="26" height="26" fill="none" stroke="#fda4af" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          </div>
+          <p class="font-bold text-lg mt-4">¿Eliminar préstamo?</p>
+          <p class="txt-dim text-[13px] mt-1">Se eliminará el préstamo de <b>{{ nombreSocio(detalle.socioId) }}</b>. Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="cerrarModal">Cancelar</button>
+          <button class="btn btn-danger flex-1" @click="confirmarEliminar">Eliminar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMULAR COBRO -->
+    <div v-if="modal==='cobro'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter">
+        <div class="p-5 pb-3 flex items-center gap-3 border-b hair">
+          <div class="w-10 h-10 rounded-xl glass flex items-center justify-center shrink-0">
+            <svg width="20" height="20" fill="none" stroke="#a3e635" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+          </div>
+          <div class="flex-1"><p class="font-bold text-lg leading-none">Cobro en Cuotas</p><p class="text-[12px] txt-faint mt-1">Prioridad: sanción → actividades → préstamo → cuota</p></div>
+          <button class="btn btn-glass" style="min-height:38px;width:38px;padding:0" @click="cerrarModal">✕</button>
+        </div>
+        <div class="modal-body py-4 space-y-3.5">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="lbl">Socio</label>
+              <select v-model="cobro.socioId" class="in"><option value="" disabled>Selecciona</option><option v-for="s in state.socios" :key="s.id" :value="s.id">{{ s.nombre }}</option></select>
+            </div>
+            <div>
+              <label class="lbl">Periodicidad</label>
+              <select v-model="cobro.periodicidad" class="in"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option></select>
+            </div>
+          </div>
+          <div>
+            <label class="lbl">Fecha del período</label>
+            <input v-model="cobro.fecha" type="date" class="in">
+            <p class="text-[11.5px] txt-faint mt-1">Período: {{ PE.periodoLabel(cobroPeriodo) }}</p>
+          </div>
+
+          <!-- Cuotas de préstamo -->
+          <div v-if="cobro.socioId">
+            <label class="lbl">Cuotas de préstamo del período (acumuladas/vencidas)</label>
+            <div v-if="cobroCuotasPrestamo.length===0" class="glass-soft rounded-xl p-3 text-[12.5px] txt-faint">Sin cuotas de préstamo pendientes en este período.</div>
+            <div v-else class="space-y-2">
+              <label v-for="c in cobroCuotasPrestamo" :key="keyCuota(c)"
+                     class="glass-soft rounded-xl p-3 flex items-center gap-3 cursor-pointer"
+                     :class="{'glow-mora': c.vencida}">
+                <input type="checkbox" :checked="cobro.cuotasSel.includes(keyCuota(c))" @change="toggleCuota(c)"
+                       style="width:20px;height:20px;accent-color:#34d399">
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-[13.5px]">Cuota #{{ c.n }} · {{ fmt(c.pendiente) }}
+                    <span v-if="c.vencida" class="pill pill-mora ml-1">Vencida</span>
+                  </p>
+                  <p class="text-[11.5px] txt-faint">{{ PE.periodoLabel(c.periodo) }} · valor {{ fmt(c.valor) }}</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="lbl">Monto recibido</label><input v-model="cobro.montoRecibido" type="number" inputmode="numeric" class="in" placeholder="0"></div>
+            <div><label class="lbl">Cuota natillera</label><input v-model="cobro.cuotaNatillera" type="number" inputmode="numeric" class="in" placeholder="0"></div>
+            <div><label class="lbl">Sanción</label><input v-model="cobro.sancion" type="number" inputmode="numeric" class="in" placeholder="0"></div>
+            <div><label class="lbl">Actividades</label><input v-model="cobro.actividades" type="number" inputmode="numeric" class="in" placeholder="0"></div>
+          </div>
+
+          <!-- Reparto en vivo -->
+          <div class="glass-strong sheen rounded-2xl p-4 glow-emerald">
+            <p class="text-[11px] uppercase tracking-widest txt-faint mb-2">Reparto por prioridad</p>
+            <div class="space-y-1.5 text-[13px]">
+              <div class="flex justify-between"><span class="txt-dim">1 · Sanción</span><span class="font-semibold">{{ fmt(cobroReparto.sancion) }}</span></div>
+              <div class="flex justify-between"><span class="txt-dim">2 · Actividades</span><span class="font-semibold">{{ fmt(cobroReparto.actividades) }}</span></div>
+              <div class="flex justify-between"><span class="txt-dim">3 · Préstamo</span><span class="font-semibold" style="color:#d9f99d">{{ fmt(cobroReparto.prestamo) }}</span></div>
+              <div class="flex justify-between"><span class="txt-dim">4 · Cuota natillera</span><span class="font-semibold">{{ fmt(cobroReparto.cuota) }}</span></div>
+              <div class="flex justify-between border-t hair pt-1.5 mt-1"><span class="txt-dim">Sobrante</span><span class="font-bold" style="color:#7dd3fc">{{ fmt(cobroReparto.sobrante) }}</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="cerrarModal">Cancelar</button>
+          <button class="btn btn-primary flex-1" :disabled="!cobro.socioId || cobroReparto.prestamo<=0" @click="confirmarCobro">Aplicar cobro</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPROBANTE -->
+    <div v-if="modal==='comprobante'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter" style="max-width:440px">
+        <div class="modal-body py-6">
+          <div class="glass-strong sheen rounded-[22px] p-5 glow-emerald">
+            <div class="flex items-center gap-3 pb-3 border-b hair">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center" style="background:rgba(163,230,53,.18);border:1px solid rgba(163,230,53,.4)">
+                <svg width="22" height="22" fill="none" stroke="#d9f99d" stroke-width="2.2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+              </div>
+              <div>
+                <p class="font-bold text-[15px] leading-none">{{ comprobante.tipo }}</p>
+                <p class="text-[12px] txt-faint mt-1" v-if="comprobante.socio">{{ comprobante.socio }}</p>
+              </div>
+            </div>
+            <div class="space-y-2 pt-3.5 text-[13.5px]">
+              <div v-for="(l,i) in comprobante.lineas" :key="i" class="flex justify-between gap-3">
+                <span class="txt-dim">{{ l[0] }}</span>
+                <span class="font-semibold text-right">{{ l[1] }}</span>
+              </div>
+            </div>
+            <p v-if="comprobante.pagado" class="mt-3 pill pill-aldia justify-center w-full">✓ Préstamo liquidado</p>
+          </div>
+        </div>
+        <div class="modal-actions space-y-2.5">
+          <div class="flex gap-2.5">
+            <button class="btn btn-glass flex-1" @click="descargarComprobante">
+              <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+              Descargar
+            </button>
+            <button class="btn btn-primary flex-1" @click="enviarWhatsapp">
+              <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+              WhatsApp
+            </button>
+          </div>
+          <button class="btn btn-glass w-full" @click="cerrarModal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEDIR TELÉFONO -->
+    <div v-if="modal==='telefono'" class="veil" @click.self="cerrarModal">
+      <div class="modal modal-enter" style="max-width:400px">
+        <div class="modal-body py-6">
+          <p class="font-bold text-lg">Teléfono requerido</p>
+          <p class="txt-dim text-[13px] mt-1 mb-3">{{ telPendiente.socio }} no tiene teléfono. Ingresa uno para enviar por WhatsApp.</p>
+          <label class="lbl">Teléfono</label>
+          <input v-model="telPendiente.valor" type="tel" inputmode="tel" class="in" placeholder="3001234567">
+        </div>
+        <div class="modal-actions flex gap-2.5">
+          <button class="btn btn-glass flex-1" @click="modal='comprobante'">Volver</button>
+          <button class="btn btn-primary flex-1" :disabled="!telPendiente.valor.trim()" @click="confirmarTelefono">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  `
+}).mount('#app');
+</script>
+</body>
+</html>

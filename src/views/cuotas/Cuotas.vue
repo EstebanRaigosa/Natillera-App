@@ -1,8 +1,6 @@
 <template>
-  <LoadingScreen
-    :visible="inicializando"
-    text="Cargando cuotas"
-  />
+  <!-- Skeleton de carga al entrar a Cuotas (reemplaza la pantalla de carga full-screen) -->
+  <CuotasPageSkeleton v-if="inicializando" :filas="6" />
 
   <!-- Reenvío de comprobante o registro de pago (mismo LoadingBox lg) -->
   <LoadingBox
@@ -11,6 +9,128 @@
     :text="textoLoadingBoxCarga"
     :aria-label="ariaLoadingBoxCarga"
   />
+
+  <!-- Modal Selector Rápido de Mes — natillerapp-modals.
+       Fuera del gate de carga: se abre de inmediato al entrar mientras las cuotas cargan
+       por detrás. La cuadrícula muestra su propio skeleton hasta que la config de la
+       natillera está lista (configCargada). -->
+  <ModalWrapper
+    :show="!!modalSelectorRapidoMes"
+    :z-index="50"
+    align="bottom"
+    :ios-soft-backdrop="true"
+    overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
+    backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+    card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+    card-max-width="28rem"
+    @close="modalSelectorRapidoMes = false"
+  >
+    <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+      <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+          <CalendarDaysIcon class="h-5 w-5 text-[#1B5E37]" />
+        </div>
+        <div class="min-w-0 flex-1 text-left">
+          <h3 class="font-display text-base font-bold leading-tight text-white">Seleccionar mes</h3>
+          <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">{{ configCargada ? `${mesSeleccionadoLabel} ${anioMesSeleccionado}` : 'Cargando meses…' }}</p>
+        </div>
+        <button
+          type="button"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+          aria-label="Cerrar"
+          @click="modalSelectorRapidoMes = false"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
+      </div>
+    </div>
+    <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+      <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div class="w-11 shrink-0" aria-hidden="true" />
+        <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+          <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <CalendarDaysIcon class="h-6 w-6 text-[#1B5E37]" />
+          </div>
+          <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Seleccionar mes</h3>
+          <p class="mt-1 text-xs leading-snug text-white/90">{{ configCargada ? `${mesSeleccionadoLabel} ${anioMesSeleccionado}` : 'Cargando meses…' }}</p>
+        </div>
+        <button
+          type="button"
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
+          aria-label="Cerrar"
+          @click="modalSelectorRapidoMes = false"
+        >
+          <XMarkIcon class="h-6 w-6" />
+        </button>
+      </div>
+    </div>
+    <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+      <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden" aria-hidden="true" />
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
+        <!-- Cuadrícula de meses (config lista) -->
+        <div v-if="configCargada" class="grid grid-cols-3 gap-2.5">
+          <button
+            v-for="mes in mesesNatillera"
+            :key="`mes-rapido-${mes.value}`"
+            type="button"
+            @click="seleccionarMesRapido(mes.value)"
+            :class="[
+              'relative flex flex-col items-start text-left p-3 rounded-xl border transition-all touch-manipulation',
+              mesSeleccionado === mes.value
+                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/50'
+                : 'bg-white border-gray-200 active:bg-gray-50'
+            ]"
+          >
+            <span
+              class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
+              :class="dotColorMes(mes.value)"
+              aria-hidden="true"
+            />
+            <p
+              class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-3"
+              :class="mesSeleccionado === mes.value ? 'text-emerald-700' : 'text-gray-800'"
+            >
+              <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
+              <span class="truncate">{{ mes.label }}</span>
+            </p>
+            <p class="text-[11px] text-gray-500 mt-0.5">{{ anioParaMes(mes.value) }}</p>
+            <div class="flex items-center gap-2 mt-1.5 min-h-[16px] w-full">
+              <span
+                v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                class="inline-flex items-center gap-0.5 text-red-600"
+              >
+                <ExclamationTriangleIcon class="w-3 h-3" />
+                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+              </span>
+              <span
+                v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                class="inline-flex items-center gap-0.5 text-amber-600"
+              >
+                <ClockIcon class="w-3 h-3" />
+                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+              </span>
+              <span
+                v-if="esMesActualHoy(mes.value)"
+                class="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white tracking-wide leading-none"
+              >HOY</span>
+            </div>
+          </button>
+        </div>
+        <!-- Skeleton de la cuadrícula mientras carga la config de la natillera -->
+        <div v-else class="grid grid-cols-3 gap-2.5" aria-hidden="true">
+          <div
+            v-for="n in 6"
+            :key="`mes-rapido-skel-${n}`"
+            class="flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-white"
+          >
+            <div class="h-4 w-16 rounded bg-gray-200 animate-pulse"></div>
+            <div class="h-3 w-10 rounded bg-gray-100 animate-pulse"></div>
+            <div class="h-2 w-8 rounded bg-gray-100 animate-pulse mt-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ModalWrapper>
 
   <div v-if="!inicializando" class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative">
     <!-- Page header (DS) — patrón unificado Socios/Actividades/Cuotas/Préstamos -->
@@ -1360,111 +1480,8 @@
       </Transition>
     </Teleport>
 
-    <!-- Modal Selector Rápido de Mes — natillerapp-modals -->
-    <ModalWrapper
-      :show="!!modalSelectorRapidoMes"
-      :z-index="50"
-      align="bottom"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
-      card-max-width="28rem"
-      @close="modalSelectorRapidoMes = false"
-    >
-      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
-        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <CalendarDaysIcon class="h-5 w-5 text-[#1B5E37]" />
-          </div>
-          <div class="min-w-0 flex-1 text-left">
-            <h3 class="font-display text-base font-bold leading-tight text-white">Seleccionar mes</h3>
-            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">{{ mesSeleccionadoLabel }} {{ anioMesSeleccionado }}</p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="modalSelectorRapidoMes = false"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
-        <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
-          <div class="w-11 shrink-0" aria-hidden="true" />
-          <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-              <CalendarDaysIcon class="h-6 w-6 text-[#1B5E37]" />
-            </div>
-            <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Seleccionar mes</h3>
-            <p class="mt-1 text-xs leading-snug text-white/90">{{ mesSeleccionadoLabel }} {{ anioMesSeleccionado }}</p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="modalSelectorRapidoMes = false"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-        <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden" aria-hidden="true" />
-        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
-        <div class="grid grid-cols-3 gap-2.5">
-          <button
-            v-for="mes in mesesNatillera"
-            :key="`mes-rapido-${mes.value}`"
-            type="button"
-            @click="seleccionarMesRapido(mes.value)"
-            :class="[
-              'relative flex flex-col items-start text-left p-3 rounded-xl border transition-all touch-manipulation',
-              mesSeleccionado === mes.value
-                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/50'
-                : 'bg-white border-gray-200 active:bg-gray-50'
-            ]"
-          >
-            <span
-              class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
-              :class="dotColorMes(mes.value)"
-              aria-hidden="true"
-            />
-            <p
-              class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-3"
-              :class="mesSeleccionado === mes.value ? 'text-emerald-700' : 'text-gray-800'"
-            >
-              <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
-              <span class="truncate">{{ mes.label }}</span>
-            </p>
-            <p class="text-[11px] text-gray-500 mt-0.5">{{ anioParaMes(mes.value) }}</p>
-            <div class="flex items-center gap-2 mt-1.5 min-h-[16px] w-full">
-              <span
-                v-if="resumenMesCarrusel(mes.value).enMora > 0"
-                class="inline-flex items-center gap-0.5 text-red-600"
-              >
-                <ExclamationTriangleIcon class="w-3 h-3" />
-                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).enMora }}</span>
-              </span>
-              <span
-                v-if="resumenMesCarrusel(mes.value).pendientes > 0"
-                class="inline-flex items-center gap-0.5 text-amber-600"
-              >
-                <ClockIcon class="w-3 h-3" />
-                <span class="text-[10px] font-bold leading-none">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
-              </span>
-              <span
-                v-if="esMesActualHoy(mes.value)"
-                class="ml-auto px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-emerald-500 text-white tracking-wide leading-none"
-              >HOY</span>
-            </div>
-          </button>
-        </div>
-        </div>
-      </div>
-    </ModalWrapper>
+    <!-- Modal Selector Rápido de Mes: renderizado al inicio del template, fuera del gate
+         de carga (v-if="inicializando"), para que aparezca de inmediato al entrar. -->
 
     <!-- Modal Confirmar Borrar Cuotas — natillerapp-modals (confirmación corta: sin natiscroll; cuerpo no desborda en viewports habituales) -->
     <ModalWrapper
@@ -6408,7 +6425,7 @@ import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
 
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
 import LoadingBox from '../../components/LoadingBox.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -6718,7 +6735,13 @@ function getPeriodoCuotaCorto(cuota) {
  */
 function getDesgloseCuotaSocio(cuota) {
   const valorCuota = cuota?.valor_cuota || 0
-  const sancion = getSancionCuotaDetalle(cuota) || 0
+  // Sanción de la quincena incluyendo la ya pagada (valor_pagado_sancion), no solo la pendiente,
+  // para que en la tarjeta se vea la sanción aunque la cuota ya esté pagada. Math.max evita el
+  // doble conteo con la ruta de sobrepago/valor_multa de getSancionCuotaDetalle.
+  const sancion = Math.max(
+    (getSancionCuota(cuota) || 0) + (parseFloat(cuota?.valor_pagado_sancion) || 0),
+    getSancionCuotaDetalle(cuota) || 0
+  )
   const actInfo = getActividadesInfoSocio(cuota)
   const actividad = actInfo.totalOriginal || ((actInfo.pagadas || 0) + (actInfo.total || 0))
   const prestamo = (getTotalCuotasPrestamosPendientesSocioSync(cuota) || 0) + (getTotalCuotasPrestamosPagadasSocioSync(cuota) || 0)
@@ -6813,6 +6836,8 @@ const tourGuiadoCuotasDetalleActivo = ref(false)
 const desplegableYaAbonadoOpen = ref(false)
 // Selector rápido de mes (móvil): hoja inferior con grilla de meses
 const modalSelectorRapidoMes = ref(false)
+// Config de la natillera lista (meses + año). Hasta entonces el selector muestra skeleton.
+const configCargada = ref(false)
 // Refs del carrusel de meses (desktop + móvil) para centrar el mes seleccionado
 const carruselMesesDesktopRef = ref(null)
 const carruselMesesMobileRef = ref(null)
@@ -14849,6 +14874,28 @@ function elegirMesInicial() {
   formCuotas.mes = mesSeleccionado.value
 }
 
+// Prima la config de meses de forma SÍNCRONA desde la caché de módulo o el store persistido
+// (natilleraActual), para que el selector muestre los meses seleccionables de inmediato —sin
+// skeleton— mientras las cuotas cargan por detrás. Devuelve true si logró primar la config.
+function primeConfigSync() {
+  let data = natilleraConfigCache
+  if (!data) {
+    const na = natillerasStore.natilleraActual
+    if (na && String(na.id) === String(id)) data = na
+  }
+  if (!data) return false
+
+  natilleraNombre.value = data.nombre
+  mesInicio.value = data.mes_inicio || 1
+  mesFin.value = data.mes_fin || 11
+  diasGracia.value = data.reglas_multas?.dias_gracia || 3
+  sancionesActivas.value = data.reglas_multas?.sanciones?.activa || false
+  const anio = data.anio_inicio ?? data.anio ?? new Date().getFullYear()
+  anioNatillera.value = Number(anio)
+  elegirMesInicial()
+  return true
+}
+
 async function cargarNatillera() {
   // Si ya tenemos la config en caché, usarla
   if (natilleraConfigCache) {
@@ -15469,27 +15516,35 @@ watch(mesesNatillera, () => nextTick(() => {
 onMounted(async () => {
   const user = authStore.user
   usuarioAutenticado.value = user
-  
+
+  // Primar la config de meses de forma síncrona (caché/store) → el selector sale con los meses
+  // seleccionables de inmediato. Si no hay config en memoria (arranque en frío), cae al skeleton.
+  configCargada.value = primeConfigSync()
+
+  // Primer plano inmediato: abrir el selector de meses de una vez. La carga de cuotas del mes
+  // es independiente y ocurre por detrás (la lista muestra su propio skeleton).
+  modalSelectorRapidoMes.value = true
+
   inicializando.value = true
   const tiempoInicio = performance.now()
-  
-  try {
-    // ── FASE 1: Cargar natillera + cuotas ──
-    // Si el store ya tiene las cuotas de esta natillera, reutilizar los datos en lugar de volver a consultar la BD.
-    const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
 
-    const [natilleraData, cuotasCargadas] = await Promise.all([
-      cargarNatillera(),
-      storeYaTieneDatos
-        ? Promise.resolve(cuotasStore.cuotas)
-        : cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
-    ])
+  try {
+    // ── FASE 1a: Config de natillera (confirma/carga; instantánea si ya venía primada) ──
+    await cargarNatillera()
+    configCargada.value = true
 
     // Si se entró sin :mes en la URL, reemplazarla con el mes seleccionado por defecto
     if (!mesParam.value && mesSeleccionado.value) {
       router.replace(`/natilleras/${id}/cuotas/${mesSeleccionado.value}`)
     }
-    
+
+    // ── FASE 1b: Cuotas en segundo plano ──
+    // Si el store ya tiene las cuotas de esta natillera, reutilizar los datos en lugar de volver a consultar la BD.
+    const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
+    const cuotasCargadas = storeYaTieneDatos
+      ? cuotasStore.cuotas
+      : await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+
     const sociosDelStore = cuotasStore.sociosNatillera
     if (sociosDelStore && sociosDelStore.length > 0) {
       const activos = sociosDelStore.filter(s => s.estado === 'activo')

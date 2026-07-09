@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>NATILLERAPP · PRÉSTAMOS · BRUTALISTA</title>
+
+<!-- Fuentes brutalistas: Archivo Black (títulos/cifras) + Archivo (cuerpo) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+<!-- Vue 3 (global build) — DEBE ir ANTES del script de la app -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+<!-- Tailwind Play CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#111111',
+          crema: '#F5F1E8',
+          amarillo: '#FFE500',
+          azul: '#2E5BFF',
+          rojo: '#FF4D3D',
+          verde: '#12A150',
+          'verde-pale': '#DDF3E4',
+        },
+        fontFamily: {
+          black: ['"Archivo Black"', 'system-ui', 'sans-serif'],
+          body: ['Archivo', 'system-ui', 'sans-serif'],
+        },
+      },
+    },
+  };
+</script>
+
+<!-- Motor financiero (NO se modifica). Debe cargar ANTES de la app. -->
+<script src="./engine.js"></script>
+
+<style>
+  :root {
+    --app-vh: 100vh;
+    --app-vh: 100dvh;
+  }
+  html, body { height: 100%; margin: 0; }
+  body {
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: 100dvh;
+    background: #F5F1E8;
+    font-family: 'Archivo', system-ui, sans-serif;
+    color: #111111;
+  }
+  .font-black { font-family: 'Archivo Black', system-ui, sans-serif; }
+
+  /* Inputs a >=16px para evitar zoom en iOS */
+  input, select, textarea, button { font-size: 16px; font-family: 'Archivo', system-ui, sans-serif; }
+  button { touch-action: manipulation; }
+
+  /* Scroll-lock del body con modal abierto */
+  body.no-scroll { overflow: hidden; }
+
+  /* ===== BRUTALISMO: bordes duros + sombras sin blur ===== */
+  .brut { border: 3px solid #111111; }
+  .brut-2 { border: 2px solid #111111; }
+  .sh { box-shadow: 6px 6px 0 #111111; }
+  .sh-sm { box-shadow: 4px 4px 0 #111111; }
+  .sh-xs { box-shadow: 3px 3px 0 #111111; }
+
+  /* Botón brutalista: al activar se hunde */
+  .btn-brut {
+    border: 3px solid #111111;
+    box-shadow: 4px 4px 0 #111111;
+    transition: transform .04s linear, box-shadow .04s linear;
+    text-transform: uppercase;
+    font-family: 'Archivo Black', system-ui, sans-serif;
+    letter-spacing: .3px;
+    min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer;
+  }
+  .btn-brut:active:not(:disabled) { transform: translate3d(4px,4px,0); box-shadow: 0 0 0 #111111; }
+  .btn-brut:disabled { opacity: .45; cursor: not-allowed; box-shadow: 2px 2px 0 #111111; }
+
+  /* Inputs brutalistas */
+  .in-brut {
+    border: 3px solid #111111;
+    background: #fff;
+    padding: 10px 12px;
+    width: 100%;
+    font-weight: 700;
+    outline: none;
+    box-shadow: inset 0 0 0 0 #111;
+  }
+  .in-brut:focus { box-shadow: 4px 4px 0 #FFE500; }
+  select.in-brut { -webkit-appearance: menulist; appearance: menulist; }
+
+  /* Buscador: icono por FLEX (no absolute + translate-y) para no descentrar en iOS al enfocar */
+  .search-wrap { display: flex; align-items: center; gap: 10px; }
+  .search-wrap > svg { flex: none; }
+  .search-wrap > input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; box-shadow: none; padding: 0; font-size: 16px; }
+  .search-wrap:focus-within { box-shadow: 4px 4px 0 #FFE500; }
+
+  /* Chip de estado */
+  .chip {
+    border: 2px solid #111111;
+    font-family: 'Archivo Black', system-ui, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    display: inline-flex; align-items: center; gap: 4px;
+    letter-spacing: .3px;
+  }
+
+  /* Barra de progreso de bloque */
+  .prog-track { border: 3px solid #111; background: #fff; height: 26px; position: relative; overflow: hidden; }
+  .prog-fill { height: 100%; background: #12A150; }
+  .prog-fill.mora { background: #FF4D3D; }
+  .prog-fill.done { background: #111; }
+
+  /* Sello "PAGADO" diagonal estampado */
+  .stamp {
+    position: absolute;
+    top: 44%; left: 50%;
+    transform: translate3d(-50%,-50%,0) rotate(-14deg);
+    -webkit-transform: translate3d(-50%,-50%,0) rotate(-14deg);
+    border: 5px solid #12A150;
+    color: #12A150;
+    font-family: 'Archivo Black', system-ui, sans-serif;
+    font-size: 44px; letter-spacing: 4px;
+    padding: 4px 18px;
+    pointer-events: none;
+    opacity: .85;
+    z-index: 4;
+    white-space: nowrap;
+    background: rgba(245,241,232,.35);
+  }
+  .stamp-sm { font-size: 30px; border-width: 4px; padding: 2px 12px; letter-spacing: 3px; }
+
+  /* Velo de modal: negro sólido semitransparente (sin blur, encaja brutalista) */
+  .veil { background: rgba(17,17,17,.82); }
+
+  /* Modal: full-screen seguro en iOS */
+  .modal-shell {
+    max-height: calc(var(--app-vh) - 24px);
+    max-height: calc(100dvh - 24px);
+  }
+  .modal-scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .safe-bottom { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+
+  /* keyframes con prefijo -webkit- y translate3d para GPU en iOS */
+  @-webkit-keyframes popIn { from { -webkit-transform: translate3d(0,10px,0) scale(.98); opacity:0 } to { -webkit-transform: translate3d(0,0,0) scale(1); opacity:1 } }
+  @keyframes popIn { from { transform: translate3d(0,10px,0) scale(.98); opacity:0 } to { transform: translate3d(0,0,0) scale(1); opacity:1 } }
+  .pop { -webkit-animation: popIn .14s ease-out; animation: popIn .14s ease-out; }
+
+  /* Scrollbar chunky */
+  .modal-scroll::-webkit-scrollbar { width: 12px; }
+  .modal-scroll::-webkit-scrollbar-track { background: #F5F1E8; border-left: 3px solid #111; }
+  .modal-scroll::-webkit-scrollbar-thumb { background: #111; }
+
+  .tabnum { font-variant-numeric: tabular-nums; }
+  .strike { text-decoration: line-through; text-decoration-thickness: 3px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const { createApp, ref, reactive, computed, watch, nextTick } = Vue;
+
+createApp({
+  setup() {
+    // ============================================================
+    // 1. ESTADO REACTIVO — declarado ANTES de computed/watch
+    // ============================================================
+    const S = reactive(PE.initState());          // { fondo, socios, prestamos, reglas }
+    const rol = ref('admin');                     // 'admin' | 'visor'
+    const esAdmin = computed(() => rol.value === 'admin');
+
+    const tab = ref('cobrar');                    // 'cobrar' | 'pagados'
+    const buscar = ref('');
+
+    // Vistas overlay
+    const showCrear = ref(false);
+    const showDetalle = ref(false);
+    const showAbono = ref(false);
+    const showRefi = ref(false);
+    const showEliminar = ref(false);
+    const showCobro = ref(false);
+    const showComprobante = ref(false);
+    const showTelefono = ref(false);
+
+    const prestamoActivoId = ref(null);
+    const comprobante = ref(null);                // objeto genérico para el afiche
+    const telefonoTmp = ref('');
+    const telefonoPendienteAccion = ref(null);
+
+    // Toast simple
+    const toast = ref(null);
+    function flash(msg) {
+      toast.value = msg;
+      setTimeout(() => { if (toast.value === msg) toast.value = null; }, 2600);
+    }
+
+    // ---- scroll lock cuando cualquier modal está abierto ----
+    const algunModal = computed(() =>
+      showCrear.value || showDetalle.value || showAbono.value || showRefi.value ||
+      showEliminar.value || showCobro.value || showComprobante.value || showTelefono.value
+    );
+    watch(algunModal, (v) => {
+      document.body.classList.toggle('no-scroll', v);
+    });
+
+    // ============================================================
+    // 2. DERIVADOS DE LISTA
+    // ============================================================
+    const prestamoActivo = computed(() =>
+      S.prestamos.find(p => p.id === prestamoActivoId.value) || null
+    );
+
+    function nombreSocio(id) { return (PE.socio(id) || {}).nombre || '—'; }
+    function inicial(id) {
+      const n = nombreSocio(id).trim();
+      return n ? n[0].toUpperCase() : '?';
+    }
+
+    const totales = computed(() => PE.totalesModulo(S.prestamos));
+
+    const listaCobrar = computed(() => filtrar(S.prestamos.filter(p => p.estado === 'activo')));
+    const listaPagados = computed(() => filtrar(S.prestamos.filter(p => p.estado === 'pagado')));
+
+    function filtrar(arr) {
+      const q = buscar.value.trim().toLowerCase();
+      if (!q) return arr;
+      return arr.filter(p => nombreSocio(p.socioId).toLowerCase().includes(q));
+    }
+    const listaActual = computed(() => tab.value === 'cobrar' ? listaCobrar.value : listaPagados.value);
+
+    function resumen(p) { return PE.resumenPrestamo(p); }
+    function progreso(p) {
+      const abonado = p.plan.reduce((s, c) => s + c.abonado, 0);
+      return p.total > 0 ? Math.min(100, Math.round(abonado / p.total * 100)) : 0;
+    }
+
+    // ============================================================
+    // 3. CREAR PRÉSTAMO — form + cálculo en vivo + validación
+    // ============================================================
+    const sociosActivos = computed(() => S.socios.filter(s => s.activo));
+
+    const form = reactive({
+      socioId: '',
+      capital: 500000,
+      tasaPct: 2,
+      tipo: 'simple',
+      modalidad: 'normal',
+      nCuotas: 6,
+      periodicidad: 'mensual',
+      fechaPrimeraCuota: PE.isoDate(new Date(2026, 7, 5)),
+      medioEntrega: 'transferencia',
+    });
+
+    function abrirCrear() {
+      form.socioId = sociosActivos.value[0]?.id || '';
+      form.capital = 500000;
+      form.tasaPct = 2;
+      form.tipo = 'simple';
+      form.modalidad = 'normal';
+      form.nCuotas = 6;
+      form.periodicidad = 'mensual';
+      form.fechaPrimeraCuota = PE.isoDate(new Date(2026, 7, 5));
+      form.medioEntrega = 'transferencia';
+      showCrear.value = true;
+    }
+
+    const calcVivo = computed(() => {
+      const capital = Number(form.capital) || 0;
+      const nCuotas = Number(form.nCuotas) || 0;
+      const tasaPct = Number(form.tasaPct) || 0;
+      if (capital <= 0 || nCuotas <= 0) {
+        return { plan: [], interesTotal: 0, total: 0, valorCuota: 0, desembolso: 0 };
+      }
+      const gen = PE.generarPlan({
+        capital, tasaPct, tipo: form.tipo, modalidad: form.modalidad,
+        nCuotas, periodicidad: form.periodicidad,
+        fechaPrimeraCuota: new Date(form.fechaPrimeraCuota),
+      });
+      const des = PE.desembolso({ capital, interesTotal: gen.interesTotal, modalidad: form.modalidad });
+      return { ...gen, desembolso: des };
+    });
+
+    const erroresCrear = computed(() => {
+      return PE.validarPrestamo({
+        capital: Number(form.capital) || 0,
+        tasaPct: Number(form.tasaPct) || 0,
+        tipo: form.tipo,
+        modalidad: form.modalidad,
+        nCuotas: Number(form.nCuotas) || 0,
+        periodicidad: form.periodicidad,
+        medioEntrega: form.medioEntrega,
+        plazoMaximo: S.reglas.plazo_maximo,
+      }, S.fondo);
+    });
+    function errorDe(campo) {
+      const e = erroresCrear.value.find(x => x.campo === campo);
+      return e ? e.msg : null;
+    }
+    const puedeCrear = computed(() => form.socioId && erroresCrear.value.length === 0);
+
+    function confirmarCrear() {
+      if (!puedeCrear.value) return;
+      const p = PE.crearPrestamo({
+        socioId: form.socioId,
+        capital: Number(form.capital),
+        tasaPct: Number(form.tasaPct),
+        tipo: form.tipo,
+        modalidad: form.modalidad,
+        nCuotas: Number(form.nCuotas),
+        periodicidad: form.periodicidad,
+        fechaPrimeraCuota: new Date(form.fechaPrimeraCuota),
+        medioEntrega: form.medioEntrega,
+      });
+      // descontar desembolso del fondo según medio
+      const des = PE.desembolso({ capital: p.capital, interesTotal: p.interesTotal, modalidad: p.modalidad });
+      if (p.medioEntrega === 'efectivo') S.fondo.efectivo -= des;
+      else S.fondo.transferencia -= des;
+      S.prestamos.push(p);
+      showCrear.value = false;
+
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo: 'DESEMBOLSO',
+        color: 'amarillo',
+        socio: soc.nombre,
+        telefono: soc.telefono,
+        prestamoId: p.id,
+        lineas: [
+          ['CAPITAL', PE.fmt(p.capital)],
+          ['TASA', PE.pct(p.tasaPct) + ' · ' + p.tipo.toUpperCase()],
+          ['MODALIDAD', p.modalidad.toUpperCase()],
+          ['CUOTAS', p.nCuotas + ' · ' + p.periodicidad.toUpperCase()],
+          ['INTERÉS', PE.fmt(p.interesTotal)],
+          ['TOTAL A PAGAR', PE.fmt(p.total)],
+          ['VALOR CUOTA', PE.fmt(p.valorCuota)],
+          ['DESEMBOLSADO', PE.fmt(des) + ' · ' + p.medioEntrega.toUpperCase()],
+        ],
+        destacado: ['ENTREGADO', PE.fmt(des)],
+      };
+      showComprobante.value = true;
+      flash('PRÉSTAMO CREADO');
+    }
+
+    // ============================================================
+    // 4. DETALLE
+    // ============================================================
+    function abrirDetalle(p) {
+      prestamoActivoId.value = p.id;
+      showDetalle.value = true;
+    }
+
+    // ============================================================
+    // 5. ABONO
+    // ============================================================
+    const abonoForm = reactive({ monto: 0, fecha: PE.isoDate(PE.HOY), formaPago: 'efectivo' });
+    function abrirAbono() {
+      const p = prestamoActivo.value;
+      abonoForm.monto = p ? Math.min(p.valorCuota, p.saldoActual) : 0;
+      abonoForm.fecha = PE.isoDate(PE.HOY);
+      abonoForm.formaPago = 'efectivo';
+      showAbono.value = true;
+    }
+    const abonoValido = computed(() => {
+      const p = prestamoActivo.value;
+      const m = Number(abonoForm.monto) || 0;
+      return p && m > 0 && m <= p.saldoActual;
+    });
+    function confirmarAbono() {
+      const p = prestamoActivo.value;
+      if (!p || !abonoValido.value) return;
+      const monto = Number(abonoForm.monto);
+      const ab = PE.aplicarAbono(p, monto, { fecha: abonoForm.fecha, formaPago: abonoForm.formaPago });
+      // recomponer fondo (entra dinero)
+      if (abonoForm.formaPago === 'efectivo') S.fondo.efectivo += monto;
+      else S.fondo.transferencia += monto;
+      showAbono.value = false;
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo: 'ABONO',
+        color: 'verde',
+        socio: soc.nombre,
+        telefono: soc.telefono,
+        prestamoId: p.id,
+        lineas: [
+          ['FECHA', PE.fmtFecha(ab.fecha)],
+          ['FORMA PAGO', ab.formaPago.toUpperCase()],
+          ['CUOTAS TOCADAS', ab.cuotas.length ? '#' + ab.cuotas.join(', #') : '—'],
+          ['SALDO ANTERIOR', PE.fmt(ab.saldoAnterior)],
+          ['ABONO', PE.fmt(ab.monto)],
+          ['SALDO NUEVO', PE.fmt(ab.saldoNuevo)],
+        ],
+        destacado: ['NUEVO SALDO', PE.fmt(ab.saldoNuevo)],
+      };
+      showComprobante.value = true;
+      if (p.estado === 'pagado') { flash('¡PRÉSTAMO SALDADO!'); tab.value = 'pagados'; }
+      else flash('ABONO REGISTRADO');
+    }
+
+    // reenviar comprobante de un abono histórico
+    function reenviarAbono(p, ab) {
+      const soc = PE.socio(p.socioId);
+      comprobante.value = {
+        tipo: 'ABONO',
+        color: 'verde',
+        socio: soc.nombre,
+        telefono: soc.telefono,
+        prestamoId: p.id,
+        lineas: [
+          ['FECHA', PE.fmtFecha(ab.fecha)],
+          ['FORMA PAGO', (ab.formaPago || '—').toUpperCase()],
+          ['CUOTAS TOCADAS', ab.cuotas && ab.cuotas.length ? '#' + ab.cuotas.join(', #') : '—'],
+          ['SALDO ANTERIOR', PE.fmt(ab.saldoAnterior)],
+          ['ABONO', PE.fmt(ab.monto)],
+          ['SALDO NUEVO', PE.fmt(ab.saldoNuevo)],
+        ],
+        destacado: ['NUEVO SALDO', PE.fmt(ab.saldoNuevo)],
+      };
+      showComprobante.value = true;
+    }
+
+    // ============================================================
+    // 6. REFINANCIAR
+    // ============================================================
+    const refiForm = reactive({
+      fechaPrimeraCuota: PE.isoDate(new Date(2026, 7, 5)),
+      nCuotas: 6, tasaPct: 2, tipo: 'simple',
+    });
+    function abrirRefi() {
+      const p = prestamoActivo.value;
+      refiForm.fechaPrimeraCuota = PE.isoDate(new Date(2026, 7, 5));
+      refiForm.nCuotas = p ? p.nCuotas : 6;
+      refiForm.tasaPct = p ? p.tasaPct : 2;
+      refiForm.tipo = p ? p.tipo : 'simple';
+      showRefi.value = true;
+    }
+    const refiPreview = computed(() => {
+      const p = prestamoActivo.value;
+      const n = Number(refiForm.nCuotas) || 0;
+      if (!p || n < 1) return null;
+      return PE.generarPlan({
+        capital: p.saldoActual, tasaPct: Number(refiForm.tasaPct) || 0,
+        tipo: refiForm.tipo, modalidad: p.modalidad, nCuotas: n,
+        periodicidad: p.periodicidad, fechaPrimeraCuota: new Date(refiForm.fechaPrimeraCuota),
+      });
+    });
+    const refiValido = computed(() => {
+      const n = Number(refiForm.nCuotas) || 0;
+      return n >= 1 && n <= S.reglas.plazo_maximo;
+    });
+    function confirmarRefi() {
+      const p = prestamoActivo.value;
+      if (!p || !refiValido.value) return;
+      PE.refinanciar(p, {
+        fechaPrimeraCuota: new Date(refiForm.fechaPrimeraCuota),
+        nCuotas: Number(refiForm.nCuotas),
+        tasaPct: Number(refiForm.tasaPct),
+        tipo: refiForm.tipo,
+      });
+      showRefi.value = false;
+      flash('PRÉSTAMO REFINANCIADO');
+    }
+
+    // ============================================================
+    // 7. ELIMINAR
+    // ============================================================
+    function abrirEliminar() { showEliminar.value = true; }
+    function confirmarEliminar() {
+      const p = prestamoActivo.value;
+      if (!p) return;
+      const idx = S.prestamos.findIndex(x => x.id === p.id);
+      if (idx >= 0) S.prestamos.splice(idx, 1);
+      showEliminar.value = false;
+      showDetalle.value = false;
+      prestamoActivoId.value = null;
+      flash('PRÉSTAMO ELIMINADO');
+    }
+
+    // ============================================================
+    // 8. SIMULAR COBRO EN CUOTAS
+    // ============================================================
+    const cobro = reactive({
+      socioId: '',
+      periodicidad: 'mensual',
+      fecha: PE.isoDate(PE.HOY),
+      montoRecibido: 0,
+      sancion: 15000,
+      actividades: 5000,
+      cuotaNatillera: 50000,
+      cuotasSel: {},   // { "prestamoId|n": true }
+    });
+
+    function abrirCobro() {
+      // primer socio con préstamos activos
+      const conActivos = S.socios.filter(s =>
+        S.prestamos.some(p => p.socioId === s.id && p.estado === 'activo')
+      );
+      cobro.socioId = conActivos[0]?.id || sociosActivos.value[0]?.id || '';
+      cobro.periodicidad = 'mensual';
+      cobro.fecha = PE.isoDate(PE.HOY);
+      cobro.sancion = 15000;
+      cobro.actividades = 5000;
+      cobro.cuotaNatillera = 50000;
+      cobro.cuotasSel = {};
+      recalcCuotasCobro();
+      showCobro.value = true;
+    }
+
+    const socioTieneActivos = computed(() =>
+      S.socios.filter(s => S.prestamos.some(p => p.socioId === s.id && p.estado === 'activo'))
+    );
+
+    const periodoCobro = computed(() =>
+      PE.periodoDeFecha(new Date(cobro.fecha), cobro.periodicidad)
+    );
+
+    const cuotasCobro = computed(() => {
+      const delSocio = S.prestamos.filter(p => p.socioId === cobro.socioId && p.estado === 'activo');
+      return PE.cuotasPrestamoParaPeriodo(delSocio, periodoCobro.value);
+    });
+
+    // preseleccionar todas cuando cambian
+    function recalcCuotasCobro() {
+      const sel = {};
+      for (const c of cuotasCobro.value) sel[c.prestamoId + '|' + c.n] = true;
+      cobro.cuotasSel = sel;
+      // monto sugerido = sanción + actividades + suma pendiente cuotas + cuota natillera
+      const sumaP = cuotasCobro.value.reduce((s, c) => s + c.pendiente, 0);
+      cobro.montoRecibido = (cobro.sancion || 0) + (cobro.actividades || 0) + sumaP + (cobro.cuotaNatillera || 0);
+    }
+    watch(() => [cobro.socioId, cobro.fecha, cobro.periodicidad], () => {
+      if (showCobro.value) recalcCuotasCobro();
+    });
+
+    const cuotasSeleccionadas = computed(() =>
+      cuotasCobro.value.filter(c => cobro.cuotasSel[c.prestamoId + '|' + c.n])
+    );
+
+    function keyCuota(c) { return c.prestamoId + '|' + c.n; }
+    function toggleCuota(c) {
+      cobro.cuotasSel[keyCuota(c)] = !cobro.cuotasSel[keyCuota(c)];
+    }
+
+    const repartoCobro = computed(() => {
+      return PE.aplicarPagoCuotas({
+        montoRecibido: Number(cobro.montoRecibido) || 0,
+        sancion: Number(cobro.sancion) || 0,
+        actividades: Number(cobro.actividades) || 0,
+        cuotasPrestamoSel: cuotasSeleccionadas.value,
+        cuotaNatillera: Number(cobro.cuotaNatillera) || 0,
+      });
+    });
+
+    function confirmarCobro() {
+      const rep = repartoCobro.value;
+      // aplicar abonos reales sobre cada préstamo (agrupado por prestamoId)
+      const porPrestamo = {};
+      for (const d of rep.detallePrestamo) {
+        porPrestamo[d.prestamoId] = (porPrestamo[d.prestamoId] || 0) + d.aplicado;
+      }
+      let pasoAPagado = false;
+      for (const pid in porPrestamo) {
+        const p = S.prestamos.find(x => x.id === pid);
+        if (!p) continue;
+        PE.aplicarAbono(p, porPrestamo[pid], { fecha: cobro.fecha, formaPago: 'efectivo' });
+        S.fondo.efectivo += porPrestamo[pid];
+        if (p.estado === 'pagado') pasoAPagado = true;
+      }
+      showCobro.value = false;
+      const soc = PE.socio(cobro.socioId);
+      comprobante.value = {
+        tipo: 'COBRO EN CUOTAS',
+        color: 'azul',
+        socio: soc.nombre,
+        telefono: soc.telefono,
+        lineas: [
+          ['PERÍODO', PE.periodoLabel(periodoCobro.value)],
+          ['RECIBIDO', PE.fmt(rep.sancion + rep.actividades + rep.prestamo + rep.cuota + rep.sobrante)],
+          ['1 · SANCIÓN', PE.fmt(rep.sancion)],
+          ['2 · ACTIVIDADES', PE.fmt(rep.actividades)],
+          ['3 · PRÉSTAMO', PE.fmt(rep.prestamo)],
+          ['4 · CUOTA', PE.fmt(rep.cuota)],
+          ['SOBRANTE', PE.fmt(rep.sobrante)],
+        ],
+        destacado: ['A PRÉSTAMO', PE.fmt(rep.prestamo)],
+      };
+      showComprobante.value = true;
+      flash(pasoAPagado ? '¡COBRO OK · PRÉSTAMO SALDADO!' : 'COBRO APLICADO');
+    }
+
+    // ============================================================
+    // 9. COMPROBANTE — descargar / whatsapp
+    // ============================================================
+    function descargarComprobante() {
+      const c = comprobante.value;
+      if (!c) return;
+      let txt = 'NATILLERAPP — ' + c.tipo + '\n';
+      txt += '================================\n';
+      txt += 'SOCIO: ' + c.socio + '\n';
+      for (const [k, v] of c.lineas) txt += k + ': ' + v + '\n';
+      txt += '================================\n';
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'comprobante-' + c.tipo.toLowerCase().replace(/\s+/g, '-') + '.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      flash('COMPROBANTE DESCARGADO');
+    }
+    function enviarWhatsapp() {
+      const c = comprobante.value;
+      if (!c) return;
+      if (!c.telefono) {
+        telefonoTmp.value = '';
+        telefonoPendienteAccion.value = 'whatsapp';
+        showTelefono.value = true;
+        return;
+      }
+      abrirWhatsappReal(c.telefono);
+    }
+    function abrirWhatsappReal(tel) {
+      const c = comprobante.value;
+      let txt = '*NATILLERAPP — ' + c.tipo + '*%0A';
+      txt += 'Socio: ' + c.socio + '%0A';
+      for (const [k, v] of c.lineas) txt += k + ': ' + v + '%0A';
+      const url = 'https://wa.me/57' + tel.replace(/\D/g, '') + '?text=' + txt;
+      window.open(url, '_blank');
+      flash('WHATSAPP (MOCK) ABIERTO');
+    }
+    function confirmarTelefono() {
+      const tel = telefonoTmp.value.trim();
+      if (!tel) return;
+      // guardar en el socio
+      const c = comprobante.value;
+      const soc = S.socios.find(s => s.nombre === c.socio);
+      if (soc) soc.telefono = tel;
+      if (c) c.telefono = tel;
+      showTelefono.value = false;
+      if (telefonoPendienteAccion.value === 'whatsapp') abrirWhatsappReal(tel);
+    }
+
+    // ============================================================
+    // helpers de presentación
+    // ============================================================
+    const PEfmt = PE.fmt, PEpct = PE.pct, PEfecha = PE.fmtFecha, PEperiodo = PE.periodoLabel;
+    function estadoCuota(c) { return PE.estadoCuota(c); }
+    function labelEstado(g) {
+      return g === 'mora' ? 'EN MORA' : g === 'pagado' ? 'PAGADO' : 'AL DÍA';
+    }
+
+    return {
+      S, rol, esAdmin, tab, buscar,
+      showCrear, showDetalle, showAbono, showRefi, showEliminar, showCobro, showComprobante, showTelefono,
+      prestamoActivo, prestamoActivoId, comprobante, telefonoTmp,
+      toast, flash,
+      nombreSocio, inicial, totales,
+      listaCobrar, listaPagados, listaActual, resumen, progreso,
+      sociosActivos, form, abrirCrear, calcVivo, erroresCrear, errorDe, puedeCrear, confirmarCrear,
+      abrirDetalle,
+      abonoForm, abrirAbono, abonoValido, confirmarAbono, reenviarAbono,
+      refiForm, abrirRefi, refiPreview, refiValido, confirmarRefi,
+      abrirEliminar, confirmarEliminar,
+      cobro, abrirCobro, socioTieneActivos, periodoCobro, cuotasCobro, cuotasSeleccionadas,
+      keyCuota, toggleCuota, repartoCobro, confirmarCobro,
+      descargarComprobante, enviarWhatsapp, confirmarTelefono,
+      PEfmt, PEpct, PEfecha, PEperiodo, estadoCuota, labelEstado,
+    };
+  },
+
+  template: `
+<div class="min-h-screen" style="min-height: var(--app-vh);">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="bg-amarillo brut" style="border-width:0 0 3px 0;">
+    <div class="max-w-6xl mx-auto px-3 sm:px-5 pt-4 pb-4">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-ink brut flex items-center justify-center sh-xs">
+              <!-- icono billete brutalista -->
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFE500" stroke-width="3">
+                <rect x="2" y="6" width="20" height="12"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </div>
+            <h1 class="font-black text-2xl sm:text-3xl leading-none">PRÉSTAMOS</h1>
+          </div>
+          <p class="font-body font-bold text-xs mt-1 uppercase tracking-wide">Natillera · Módulo financiero</p>
+        </div>
+
+        <!-- Toggle de rol -->
+        <div class="flex brut sh-sm bg-white">
+          <button @click="rol='admin'" class="px-3 py-2 font-black text-xs uppercase"
+            :class="rol==='admin' ? 'bg-ink text-amarillo' : 'bg-white text-ink'">
+            Admin/Editor
+          </button>
+          <button @click="rol='visor'" class="px-3 py-2 font-black text-xs uppercase border-l-[3px] border-ink"
+            :class="rol==='visor' ? 'bg-ink text-amarillo' : 'bg-white text-ink'">
+            Visor
+          </button>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-4">
+        <div class="bg-white brut sh-sm p-3">
+          <p class="font-body font-bold text-[10px] uppercase tracking-wide">Total prestado</p>
+          <p class="font-black text-lg sm:text-xl tabnum leading-tight mt-1">{{ PEfmt(totales.totalPrestado) }}</p>
+        </div>
+        <div class="bg-verde text-white brut sh-sm p-3">
+          <p class="font-body font-bold text-[10px] uppercase tracking-wide">Intereses ganados</p>
+          <p class="font-black text-lg sm:text-xl tabnum leading-tight mt-1">{{ PEfmt(totales.interesesGanados) }}</p>
+        </div>
+        <div class="bg-azul text-white brut sh-sm p-3">
+          <p class="font-body font-bold text-[10px] uppercase tracking-wide">Total abonado</p>
+          <p class="font-black text-lg sm:text-xl tabnum leading-tight mt-1">{{ PEfmt(totales.totalAbonado) }}</p>
+        </div>
+      </div>
+
+      <!-- Fondo disponible -->
+      <div class="grid grid-cols-2 gap-2 sm:gap-3 mt-2 sm:mt-3">
+        <div class="bg-crema brut brut-2 p-2 flex items-center justify-between" style="border-width:2px;">
+          <span class="font-body font-bold text-[10px] uppercase">Fondo efectivo</span>
+          <span class="font-black text-sm tabnum">{{ PEfmt(S.fondo.efectivo) }}</span>
+        </div>
+        <div class="bg-crema brut brut-2 p-2 flex items-center justify-between" style="border-width:2px;">
+          <span class="font-body font-bold text-[10px] uppercase">Fondo transfer.</span>
+          <span class="font-black text-sm tabnum">{{ PEfmt(S.fondo.transferencia) }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== BODY ===================== -->
+  <main class="max-w-6xl mx-auto px-3 sm:px-5 py-5 pb-28">
+
+    <!-- Acciones globales -->
+    <div class="flex flex-wrap gap-2 mb-4" v-if="esAdmin">
+      <button @click="abrirCrear" class="btn-brut bg-verde text-white px-4 py-2 text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+        NUEVO PRÉSTAMO
+      </button>
+      <button @click="abrirCobro" class="btn-brut bg-azul text-white px-4 py-2 text-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg>
+        SIMULAR COBRO
+      </button>
+    </div>
+    <div v-else class="mb-4 bg-ink text-amarillo brut sh-sm px-3 py-2 font-black text-xs uppercase inline-flex items-center gap-2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+      Modo Visor · solo lectura
+    </div>
+
+    <!-- PESTAÑAS chunky -->
+    <div class="grid grid-cols-2 gap-2 sm:gap-3 mb-4">
+      <button @click="tab='cobrar'" class="btn-brut px-3 py-4 sm:py-5 text-base sm:text-lg flex-col !gap-1"
+        :class="tab==='cobrar' ? 'bg-rojo text-white' : 'bg-white text-ink'">
+        <span>POR COBRAR</span>
+        <span class="font-black text-2xl sm:text-3xl">{{ listaCobrar.length }}</span>
+      </button>
+      <button @click="tab='pagados'" class="btn-brut px-3 py-4 sm:py-5 text-base sm:text-lg flex-col !gap-1"
+        :class="tab==='pagados' ? 'bg-verde text-white' : 'bg-white text-ink'">
+        <span>PAGADOS</span>
+        <span class="font-black text-2xl sm:text-3xl">{{ listaPagados.length }}</span>
+      </button>
+    </div>
+
+    <!-- Buscador -->
+    <div class="mb-4 in-brut search-wrap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="3"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input v-model="buscar" type="text" placeholder="BUSCAR SOCIO..." class="uppercase placeholder:text-ink/40" />
+    </div>
+
+    <!-- LISTA -->
+    <div v-if="listaActual.length===0" class="brut sh-sm bg-white p-8 text-center">
+      <p class="font-black text-xl uppercase">Sin préstamos</p>
+      <p class="font-body font-bold text-sm mt-1 uppercase opacity-70">Nada aquí en esta pestaña</p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <!-- ===== TARJETA POR COBRAR ===== -->
+      <template v-if="tab==='cobrar'">
+        <article v-for="p in listaActual" :key="p.id"
+          class="bg-white brut sh p-4 relative cursor-pointer active:translate-x-[3px] active:translate-y-[3px]"
+          @click="abrirDetalle(p)">
+
+          <!-- socio + estado -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-10 h-10 bg-amarillo brut flex items-center justify-center font-black text-lg shrink-0">{{ inicial(p.socioId) }}</div>
+              <div class="min-w-0">
+                <p class="font-black text-sm uppercase leading-tight truncate">{{ nombreSocio(p.socioId) }}</p>
+                <p class="font-body font-bold text-[10px] uppercase opacity-70">{{ p.periodicidad }} · {{ p.tipo }}</p>
+              </div>
+            </div>
+            <span class="chip shrink-0"
+              :class="resumen(p).estadoGlobal==='mora' ? 'bg-rojo text-white' : 'bg-verde text-white'">
+              {{ labelEstado(resumen(p).estadoGlobal) }}
+              <template v-if="resumen(p).estadoGlobal==='mora'"> · {{ resumen(p).cuotasVencidas }}</template>
+            </span>
+          </div>
+
+          <!-- SALDO PENDIENTE ENORME -->
+          <div class="mt-3 bg-ink text-amarillo brut p-3">
+            <p class="font-body font-bold text-[10px] uppercase tracking-wide text-white/80">Saldo pendiente</p>
+            <p class="font-black text-3xl sm:text-4xl tabnum leading-none mt-1">{{ PEfmt(p.saldoActual) }}</p>
+          </div>
+
+          <!-- datos -->
+          <div class="grid grid-cols-2 gap-2 mt-3">
+            <div class="brut-2 p-2">
+              <p class="font-body font-bold text-[9px] uppercase opacity-60">Capital</p>
+              <p class="font-black text-sm tabnum">{{ PEfmt(p.capital) }}</p>
+            </div>
+            <div class="brut-2 p-2">
+              <p class="font-body font-bold text-[9px] uppercase opacity-60">Cuota</p>
+              <p class="font-black text-sm tabnum">{{ PEfmt(p.valorCuota) }}</p>
+            </div>
+          </div>
+
+          <!-- progreso -->
+          <div class="mt-3">
+            <div class="flex justify-between font-body font-bold text-[10px] uppercase mb-1">
+              <span>{{ resumen(p).cuotasPagadas }}/{{ p.nCuotas }} cuotas</span>
+              <span>{{ progreso(p) }}%</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" :class="resumen(p).estadoGlobal==='mora' ? 'mora' : ''" :style="{width: progreso(p)+'%'}"></div>
+            </div>
+          </div>
+        </article>
+      </template>
+
+      <!-- ===== TARJETA PAGADOS (diferenciada) ===== -->
+      <template v-else>
+        <article v-for="p in listaActual" :key="p.id"
+          class="brut sh p-4 relative cursor-pointer overflow-hidden active:translate-x-[3px] active:translate-y-[3px]"
+          style="background:#DDF3E4;"
+          @click="abrirDetalle(p)">
+
+          <!-- SELLO PAGADO diagonal -->
+          <div class="stamp stamp-sm">PAGADO</div>
+
+          <div class="flex items-start justify-between gap-2 opacity-90">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-10 h-10 bg-verde text-white brut flex items-center justify-center font-black text-lg shrink-0">{{ inicial(p.socioId) }}</div>
+              <div class="min-w-0">
+                <p class="font-black text-sm uppercase leading-tight truncate">{{ nombreSocio(p.socioId) }}</p>
+                <p class="font-body font-bold text-[10px] uppercase opacity-70">{{ p.periodicidad }} · {{ p.tipo }}</p>
+              </div>
+            </div>
+            <span class="chip bg-verde text-white shrink-0">PAGADO</span>
+          </div>
+
+          <!-- saldo tachado -->
+          <div class="mt-3 bg-white brut p-3 opacity-90">
+            <p class="font-body font-bold text-[10px] uppercase tracking-wide opacity-60">Saldo</p>
+            <p class="font-black text-2xl tabnum leading-none mt-1 strike opacity-70">{{ PEfmt(p.total) }}</p>
+            <p class="font-black text-xs uppercase text-verde mt-1">$0 · SALDADO</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-3 opacity-90">
+            <div class="brut-2 p-2 bg-white">
+              <p class="font-body font-bold text-[9px] uppercase opacity-60">Capital</p>
+              <p class="font-black text-sm tabnum">{{ PEfmt(p.capital) }}</p>
+            </div>
+            <div class="brut-2 p-2 bg-white">
+              <p class="font-body font-bold text-[9px] uppercase opacity-60">Interés</p>
+              <p class="font-black text-sm tabnum">{{ PEfmt(p.interesTotal) }}</p>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <div class="prog-track"><div class="prog-fill done" style="width:100%"></div></div>
+          </div>
+        </article>
+      </template>
+    </div>
+  </main>
+
+  <!-- ===================== TOAST ===================== -->
+  <div v-if="toast" class="fixed left-1/2 -translate-x-1/2 bottom-6 z-[60] pop">
+    <div class="bg-ink text-amarillo brut sh px-5 py-3 font-black text-sm uppercase">{{ toast }}</div>
+  </div>
+
+  <!-- ============================================================
+       MODAL WRAPPER GENÉRICO (inline abajo con distintos contenidos)
+       ============================================================ -->
+
+  <!-- ===== CREAR PRÉSTAMO ===== -->
+  <div v-if="showCrear" class="fixed inset-0 z-50 veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showCrear=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-2xl flex flex-col pop" style="border-width:3px;">
+      <!-- cabecera compacta: móvil fila / desktop centrado -->
+      <div class="bg-verde text-white brut flex items-center gap-3 p-3 sm:flex-col sm:text-center sm:p-4" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-verde brut-2 flex items-center justify-center shrink-0 sm:mx-auto">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+        <div class="flex-1 min-w-0 sm:flex-none">
+          <h2 class="font-black text-lg uppercase leading-none">Nuevo préstamo</h2>
+          <p class="font-body font-bold text-[10px] uppercase opacity-90 mt-0.5">Cálculo en vivo</p>
+        </div>
+        <button @click="showCrear=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <!-- un solo scroll con acciones al final -->
+      <div class="modal-scroll p-4 space-y-3">
+        <div>
+          <label class="font-black text-xs uppercase">Socio</label>
+          <select v-model="form.socioId" class="in-brut mt-1">
+            <option value="">— Elegir socio —</option>
+            <option v-for="s in sociosActivos" :key="s.id" :value="s.id">{{ s.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">Monto</label>
+            <input v-model.number="form.capital" type="number" min="0" step="10000" class="in-brut mt-1 tabnum" />
+            <p v-if="errorDe('capital')" class="font-body font-bold text-[10px] text-rojo uppercase mt-1">⚠ {{ errorDe('capital') }}</p>
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Tasa % mensual</label>
+            <input v-model.number="form.tasaPct" type="number" min="0" step="0.5" class="in-brut mt-1 tabnum" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">Tipo interés</label>
+            <select v-model="form.tipo" class="in-brut mt-1">
+              <option value="simple">SIMPLE</option>
+              <option value="compuesto">COMPUESTO</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Modalidad</label>
+            <select v-model="form.modalidad" class="in-brut mt-1">
+              <option value="normal">NORMAL</option>
+              <option value="anticipado">ANTICIPADO</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ayuda contextual modalidad -->
+        <div class="brut-2 bg-amarillo p-2 font-body font-bold text-[11px] uppercase leading-snug">
+          <template v-if="form.modalidad==='anticipado'">
+            ⚡ ANTICIPADO: el interés se descuenta al desembolsar. Se entrega capital − interés.
+          </template>
+          <template v-else>
+            ⚡ NORMAL: se desembolsa el capital completo. Interés decreciente en el plan.
+          </template>
+        </div>
+        <p v-if="errorDe('anticipado')" class="font-body font-bold text-[10px] text-rojo uppercase">⚠ {{ errorDe('anticipado') }}</p>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">N° cuotas (1–{{ S.reglas.plazo_maximo }})</label>
+            <input v-model.number="form.nCuotas" type="number" min="1" :max="S.reglas.plazo_maximo" class="in-brut mt-1 tabnum" />
+            <p v-if="errorDe('nCuotas')" class="font-body font-bold text-[10px] text-rojo uppercase mt-1">⚠ {{ errorDe('nCuotas') }}</p>
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Periodicidad</label>
+            <select v-model="form.periodicidad" class="in-brut mt-1">
+              <option value="mensual">MENSUAL</option>
+              <option value="quincenal">QUINCENAL</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">Fecha 1ª cuota</label>
+            <input v-model="form.fechaPrimeraCuota" type="date" class="in-brut mt-1" />
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Medio entrega</label>
+            <select v-model="form.medioEntrega" class="in-brut mt-1">
+              <option value="efectivo">EFECTIVO</option>
+              <option value="transferencia">TRANSFERENCIA</option>
+            </select>
+          </div>
+        </div>
+        <p v-if="errorDe('fondo')" class="font-body font-bold text-[10px] text-rojo uppercase">⚠ {{ errorDe('fondo') }}</p>
+
+        <!-- CÁLCULO EN VIVO -->
+        <div class="brut bg-ink text-white p-3 mt-1">
+          <p class="font-black text-xs uppercase text-amarillo mb-2">Cálculo en vivo</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Interés total</p><p class="font-black tabnum">{{ PEfmt(calcVivo.interesTotal) }}</p></div>
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Total a pagar</p><p class="font-black tabnum">{{ PEfmt(calcVivo.total) }}</p></div>
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Valor cuota</p><p class="font-black tabnum text-amarillo">{{ PEfmt(calcVivo.valorCuota) }}</p></div>
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Desembolso</p><p class="font-black tabnum text-verde">{{ PEfmt(calcVivo.desembolso) }}</p></div>
+          </div>
+        </div>
+
+        <!-- preview plan -->
+        <div v-if="calcVivo.plan.length" class="brut-2 bg-white">
+          <div class="bg-ink text-white font-black text-[10px] uppercase px-2 py-1">Preview plan ({{ calcVivo.plan.length }} cuotas)</div>
+          <div class="max-h-40 overflow-y-auto">
+            <table class="w-full text-[11px]">
+              <thead class="bg-crema">
+                <tr class="font-black uppercase text-[9px]">
+                  <th class="text-left p-1.5">#</th><th class="text-left p-1.5">Fecha</th>
+                  <th class="text-right p-1.5">Cuota</th><th class="text-right p-1.5">Interés</th><th class="text-right p-1.5">Saldo</th>
+                </tr>
+              </thead>
+              <tbody class="tabnum font-bold">
+                <tr v-for="c in calcVivo.plan" :key="c.n" class="border-t-2 border-ink/20">
+                  <td class="p-1.5">{{ c.n }}</td>
+                  <td class="p-1.5">{{ PEfecha(c.fecha) }}</td>
+                  <td class="p-1.5 text-right">{{ PEfmt(c.valor) }}</td>
+                  <td class="p-1.5 text-right">{{ PEfmt(c.interes) }}</td>
+                  <td class="p-1.5 text-right">{{ PEfmt(c.saldoProyectado) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- acciones al final -->
+        <div class="flex gap-2 pt-2 safe-bottom">
+          <button @click="showCrear=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarCrear" :disabled="!puedeCrear" class="btn-brut bg-verde text-white flex-[2] py-3 text-sm">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DETALLE ===== -->
+  <div v-if="showDetalle && prestamoActivo" class="fixed inset-0 z-50 veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showDetalle=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-3xl flex flex-col pop">
+      <div class="brut flex items-center gap-3 p-3 sm:flex-col sm:text-center sm:p-4"
+        :class="prestamoActivo.estado==='pagado' ? 'bg-verde text-white' : (resumen(prestamoActivo).estadoGlobal==='mora' ? 'bg-rojo text-white' : 'bg-ink text-amarillo')"
+        style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-ink brut-2 flex items-center justify-center font-black shrink-0 sm:mx-auto">{{ inicial(prestamoActivo.socioId) }}</div>
+        <div class="flex-1 min-w-0 sm:flex-none">
+          <h2 class="font-black text-lg uppercase leading-none truncate">{{ nombreSocio(prestamoActivo.socioId) }}</h2>
+          <p class="font-body font-bold text-[10px] uppercase opacity-90 mt-0.5">{{ labelEstado(resumen(prestamoActivo).estadoGlobal) }} · {{ prestamoActivo.id }}</p>
+        </div>
+        <button @click="showDetalle=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="modal-scroll p-4 space-y-4">
+        <!-- datos principales -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Capital</p><p class="font-black tabnum">{{ PEfmt(prestamoActivo.capital) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Saldo</p><p class="font-black tabnum" :class="prestamoActivo.estado==='pagado' ? 'strike opacity-60' : 'text-rojo'">{{ PEfmt(prestamoActivo.saldoActual) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Cuota</p><p class="font-black tabnum">{{ PEfmt(prestamoActivo.valorCuota) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Tasa</p><p class="font-black tabnum">{{ PEpct(prestamoActivo.tasaPct) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Tipo</p><p class="font-black uppercase text-sm">{{ prestamoActivo.tipo }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Modalidad</p><p class="font-black uppercase text-sm">{{ prestamoActivo.modalidad }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Interés total</p><p class="font-black tabnum">{{ PEfmt(prestamoActivo.interesTotal) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Total</p><p class="font-black tabnum">{{ PEfmt(prestamoActivo.total) }}</p></div>
+          <div class="brut-2 bg-white p-2"><p class="text-[9px] uppercase font-bold opacity-60">Medio</p><p class="font-black uppercase text-sm">{{ prestamoActivo.medioEntrega }}</p></div>
+        </div>
+
+        <!-- PLAN DE PAGOS -->
+        <div class="brut-2 bg-white">
+          <div class="bg-ink text-white font-black text-xs uppercase px-3 py-2">Plan de pagos</div>
+          <div class="max-h-60 overflow-y-auto">
+            <table class="w-full text-[11px]">
+              <thead class="bg-crema sticky top-0">
+                <tr class="font-black uppercase text-[9px]">
+                  <th class="text-left p-2">#</th><th class="text-left p-2">Fecha</th>
+                  <th class="text-right p-2">Cuota</th><th class="text-right p-2">Abonado</th><th class="text-center p-2">Estado</th>
+                </tr>
+              </thead>
+              <tbody class="tabnum font-bold">
+                <tr v-for="c in prestamoActivo.plan" :key="c.n" class="border-t-2 border-ink/15">
+                  <td class="p-2">{{ c.n }}</td>
+                  <td class="p-2">{{ PEfecha(c.fecha) }}</td>
+                  <td class="p-2 text-right">{{ PEfmt(c.valor) }}</td>
+                  <td class="p-2 text-right">{{ PEfmt(c.abonado) }}</td>
+                  <td class="p-2 text-center">
+                    <span class="chip !text-[9px] !py-0.5"
+                      :class="{
+                        'bg-verde text-white': estadoCuota(c)==='pagada',
+                        'bg-amarillo text-ink': estadoCuota(c)==='pendiente',
+                        'bg-azul text-white': estadoCuota(c)==='parcial',
+                        'bg-rojo text-white': estadoCuota(c)==='vencida',
+                      }">{{ estadoCuota(c) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- HISTORIAL ABONOS -->
+        <div class="brut-2 bg-white">
+          <div class="bg-ink text-white font-black text-xs uppercase px-3 py-2">Historial de abonos ({{ (prestamoActivo.abonos||[]).length }})</div>
+          <div v-if="!(prestamoActivo.abonos||[]).length" class="p-3 font-body font-bold text-xs uppercase opacity-60">Sin abonos aún</div>
+          <div v-for="ab in prestamoActivo.abonos" :key="ab.id" class="flex items-center justify-between gap-2 p-2 border-t-2 border-ink/15">
+            <div>
+              <p class="font-black text-sm tabnum">{{ PEfmt(ab.monto) }}</p>
+              <p class="font-body font-bold text-[10px] uppercase opacity-70">{{ PEfecha(ab.fecha) }} · {{ ab.formaPago }}</p>
+            </div>
+            <button @click="reenviarAbono(prestamoActivo, ab)" class="btn-brut bg-white text-ink px-2 py-1.5 !text-[10px]">Reenviar</button>
+          </div>
+        </div>
+
+        <!-- HISTORIAL REFINANCIACIONES -->
+        <div v-if="(prestamoActivo.refinanciaciones||[]).length" class="brut-2 bg-white">
+          <div class="bg-azul text-white font-black text-xs uppercase px-3 py-2">Refinanciaciones ({{ prestamoActivo.refinanciaciones.length }})</div>
+          <div v-for="(r,i) in prestamoActivo.refinanciaciones" :key="i" class="p-2 border-t-2 border-ink/15 font-body font-bold text-[11px] uppercase">
+            {{ PEfecha(r.fecha) }} · saldo base {{ PEfmt(r.saldoBase) }} → {{ r.nCuotas }} cuotas · interés {{ PEfmt(r.interesNuevo) }}
+          </div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div v-if="esAdmin && prestamoActivo.estado==='activo'" class="grid grid-cols-3 gap-2 safe-bottom">
+          <button @click="abrirAbono" class="btn-brut bg-verde text-white py-3 !text-xs">Abonar</button>
+          <button @click="abrirRefi" class="btn-brut bg-azul text-white py-3 !text-xs">Refinanciar</button>
+          <button @click="abrirEliminar" class="btn-brut bg-rojo text-white py-3 !text-xs">Eliminar</button>
+        </div>
+        <div v-else-if="esAdmin" class="grid grid-cols-1 gap-2 safe-bottom">
+          <button @click="abrirEliminar" class="btn-brut bg-rojo text-white py-3 !text-xs">Eliminar</button>
+        </div>
+        <div v-else class="safe-bottom"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ABONO ===== -->
+  <div v-if="showAbono && prestamoActivo" class="fixed inset-0 z-[55] veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showAbono=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-md flex flex-col pop">
+      <div class="bg-verde text-white brut flex items-center gap-3 p-3 sm:flex-col sm:text-center sm:p-4" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-verde brut-2 flex items-center justify-center shrink-0 sm:mx-auto">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="flex-1 min-w-0 sm:flex-none">
+          <h2 class="font-black text-lg uppercase leading-none">Registrar abono</h2>
+          <p class="font-body font-bold text-[10px] uppercase opacity-90 mt-0.5 truncate">{{ nombreSocio(prestamoActivo.socioId) }}</p>
+        </div>
+        <button @click="showAbono=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="modal-scroll p-4 space-y-3">
+        <div class="brut bg-ink text-amarillo p-3">
+          <p class="text-[10px] uppercase font-bold text-white/80">Saldo actual</p>
+          <p class="font-black text-2xl tabnum">{{ PEfmt(prestamoActivo.saldoActual) }}</p>
+        </div>
+        <div>
+          <label class="font-black text-xs uppercase">Monto abono</label>
+          <input v-model.number="abonoForm.monto" type="number" min="0" step="10000" class="in-brut mt-1 tabnum" />
+          <p v-if="!abonoValido" class="font-body font-bold text-[10px] text-rojo uppercase mt-1">⚠ Monto entre $1 y el saldo</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">Fecha</label>
+            <input v-model="abonoForm.fecha" type="date" class="in-brut mt-1" />
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Forma pago</label>
+            <select v-model="abonoForm.formaPago" class="in-brut mt-1">
+              <option value="efectivo">EFECTIVO</option>
+              <option value="transferencia">TRANSFERENCIA</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex gap-2 pt-1 safe-bottom">
+          <button @click="showAbono=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarAbono" :disabled="!abonoValido" class="btn-brut bg-verde text-white flex-[2] py-3 text-sm">Abonar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REFINANCIAR ===== -->
+  <div v-if="showRefi && prestamoActivo" class="fixed inset-0 z-[55] veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showRefi=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-lg flex flex-col pop">
+      <div class="bg-azul text-white brut flex items-center gap-3 p-3 sm:flex-col sm:text-center sm:p-4" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-azul brut-2 flex items-center justify-center shrink-0 sm:mx-auto">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        </div>
+        <div class="flex-1 min-w-0 sm:flex-none">
+          <h2 class="font-black text-lg uppercase leading-none">Refinanciar</h2>
+          <p class="font-body font-bold text-[10px] uppercase opacity-90 mt-0.5">Saldo base {{ PEfmt(prestamoActivo.saldoActual) }}</p>
+        </div>
+        <button @click="showRefi=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="modal-scroll p-4 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">N° cuotas</label>
+            <input v-model.number="refiForm.nCuotas" type="number" min="1" :max="S.reglas.plazo_maximo" class="in-brut mt-1 tabnum" />
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Tasa %</label>
+            <input v-model.number="refiForm.tasaPct" type="number" min="0" step="0.5" class="in-brut mt-1 tabnum" />
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Tipo</label>
+            <select v-model="refiForm.tipo" class="in-brut mt-1">
+              <option value="simple">SIMPLE</option>
+              <option value="compuesto">COMPUESTO</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Fecha 1ª cuota</label>
+            <input v-model="refiForm.fechaPrimeraCuota" type="date" class="in-brut mt-1" />
+          </div>
+        </div>
+
+        <div v-if="refiPreview" class="brut bg-ink text-white p-3">
+          <p class="font-black text-xs uppercase text-amarillo mb-2">Nuevo plan</p>
+          <div class="grid grid-cols-3 gap-2">
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Interés</p><p class="font-black tabnum">{{ PEfmt(refiPreview.interesTotal) }}</p></div>
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Total</p><p class="font-black tabnum">{{ PEfmt(refiPreview.total) }}</p></div>
+            <div><p class="text-[9px] uppercase opacity-70 font-bold">Cuota</p><p class="font-black tabnum text-amarillo">{{ PEfmt(refiPreview.valorCuota) }}</p></div>
+          </div>
+        </div>
+        <p v-if="!refiValido" class="font-body font-bold text-[10px] text-rojo uppercase">⚠ N° cuotas entre 1 y {{ S.reglas.plazo_maximo }}</p>
+
+        <div class="flex gap-2 pt-1 safe-bottom">
+          <button @click="showRefi=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarRefi" :disabled="!refiValido" class="btn-brut bg-azul text-white flex-[2] py-3 text-sm">Refinanciar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ELIMINAR (destructivo) ===== -->
+  <div v-if="showEliminar && prestamoActivo" class="fixed inset-0 z-[56] veil flex items-center justify-center p-4" @click.self="showEliminar=false">
+    <div class="bg-crema brut sh w-full max-w-sm flex flex-col pop">
+      <div class="bg-rojo text-white brut flex items-center gap-3 p-3" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-rojo brut-2 flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+        </div>
+        <h2 class="font-black text-lg uppercase leading-none flex-1">Eliminar</h2>
+        <button @click="showEliminar=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-4 space-y-3 safe-bottom">
+        <p class="font-body font-bold text-sm uppercase leading-snug">¿Eliminar el préstamo de <span class="font-black">{{ nombreSocio(prestamoActivo.socioId) }}</span>? Esta acción no se puede deshacer.</p>
+        <div class="flex gap-2">
+          <button @click="showEliminar=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarEliminar" class="btn-brut bg-rojo text-white flex-1 py-3 text-sm">Sí, eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SIMULAR COBRO EN CUOTAS ===== -->
+  <div v-if="showCobro" class="fixed inset-0 z-50 veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showCobro=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-2xl flex flex-col pop">
+      <div class="bg-azul text-white brut flex items-center gap-3 p-3 sm:flex-col sm:text-center sm:p-4" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-azul brut-2 flex items-center justify-center shrink-0 sm:mx-auto">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg>
+        </div>
+        <div class="flex-1 min-w-0 sm:flex-none">
+          <h2 class="font-black text-lg uppercase leading-none">Cobro en cuotas</h2>
+          <p class="font-body font-bold text-[10px] uppercase opacity-90 mt-0.5">Prioridad 1 sanción → 4 cuota</p>
+        </div>
+        <button @click="showCobro=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="modal-scroll p-4 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-black text-xs uppercase">Socio</label>
+            <select v-model="cobro.socioId" class="in-brut mt-1">
+              <option v-for="s in socioTieneActivos" :key="s.id" :value="s.id">{{ s.nombre }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-black text-xs uppercase">Periodicidad</label>
+            <select v-model="cobro.periodicidad" class="in-brut mt-1">
+              <option value="mensual">MENSUAL</option>
+              <option value="quincenal">QUINCENAL</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="font-black text-xs uppercase">Fecha / período</label>
+          <input v-model="cobro.fecha" type="date" class="in-brut mt-1" />
+          <p class="font-body font-bold text-[10px] uppercase mt-1 opacity-70">Período: {{ PEperiodo(periodoCobro) }}</p>
+        </div>
+
+        <!-- cuotas de préstamo preseleccionadas -->
+        <div class="brut-2 bg-white">
+          <div class="bg-ink text-white font-black text-xs uppercase px-3 py-2">Cuotas de préstamo del período</div>
+          <div v-if="!cuotasCobro.length" class="p-3 font-body font-bold text-xs uppercase opacity-60">Sin cuotas programadas</div>
+          <label v-for="c in cuotasCobro" :key="keyCuota(c)" class="flex items-center gap-3 p-2 border-t-2 border-ink/15 cursor-pointer">
+            <input type="checkbox" :checked="cobro.cuotasSel[keyCuota(c)]" @change="toggleCuota(c)"
+              class="w-6 h-6 brut-2 accent-azul shrink-0" style="min-width:24px;min-height:24px;" />
+            <div class="flex-1 min-w-0">
+              <p class="font-black text-sm">Cuota #{{ c.n }} <span class="font-body text-[10px] uppercase opacity-70">{{ PEperiodo(c.periodo) }}</span></p>
+              <p class="font-body font-bold text-[10px] uppercase">Pendiente {{ PEfmt(c.pendiente) }}</p>
+            </div>
+            <span v-if="c.vencida" class="chip bg-rojo text-white shrink-0">VENCIDA</span>
+          </label>
+        </div>
+
+        <!-- montos -->
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="font-black text-xs uppercase">Sanción</label><input v-model.number="cobro.sancion" type="number" min="0" class="in-brut mt-1 tabnum" /></div>
+          <div><label class="font-black text-xs uppercase">Actividades</label><input v-model.number="cobro.actividades" type="number" min="0" class="in-brut mt-1 tabnum" /></div>
+          <div><label class="font-black text-xs uppercase">Cuota natillera</label><input v-model.number="cobro.cuotaNatillera" type="number" min="0" class="in-brut mt-1 tabnum" /></div>
+          <div><label class="font-black text-xs uppercase">Monto recibido</label><input v-model.number="cobro.montoRecibido" type="number" min="0" class="in-brut mt-1 tabnum" /></div>
+        </div>
+
+        <!-- REPARTO por prioridad -->
+        <div class="brut bg-ink text-white p-3">
+          <p class="font-black text-xs uppercase text-amarillo mb-2">Reparto (orden de prioridad)</p>
+          <div class="space-y-1 font-bold text-sm">
+            <div class="flex justify-between"><span>1 · Sanción</span><span class="tabnum">{{ PEfmt(repartoCobro.sancion) }}</span></div>
+            <div class="flex justify-between"><span>2 · Actividades</span><span class="tabnum">{{ PEfmt(repartoCobro.actividades) }}</span></div>
+            <div class="flex justify-between text-verde"><span>3 · Préstamo</span><span class="tabnum">{{ PEfmt(repartoCobro.prestamo) }}</span></div>
+            <div class="flex justify-between"><span>4 · Cuota natillera</span><span class="tabnum">{{ PEfmt(repartoCobro.cuota) }}</span></div>
+            <div class="flex justify-between text-amarillo border-t-2 border-white/30 pt-1 mt-1"><span>Sobrante</span><span class="tabnum">{{ PEfmt(repartoCobro.sobrante) }}</span></div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-1 safe-bottom">
+          <button @click="showCobro=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarCobro" :disabled="repartoCobro.prestamo<=0" class="btn-brut bg-azul text-white flex-[2] py-3 text-sm">Aplicar cobro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COMPROBANTE (afiche brutalista) ===== -->
+  <div v-if="showComprobante && comprobante" class="fixed inset-0 z-[57] veil flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="showComprobante=false">
+    <div class="modal-shell bg-crema brut sh w-full sm:max-w-md flex flex-col pop">
+      <div class="brut flex items-center gap-3 p-3"
+        :class="{
+          'bg-amarillo text-ink': comprobante.color==='amarillo',
+          'bg-verde text-white': comprobante.color==='verde',
+          'bg-azul text-white': comprobante.color==='azul',
+        }" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-ink text-amarillo brut-2 flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/></svg>
+        </div>
+        <h2 class="font-black text-lg uppercase leading-none flex-1">Comprobante</h2>
+        <button @click="showComprobante=false" class="w-9 h-9 bg-ink text-amarillo brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+
+      <div class="modal-scroll p-4 space-y-3">
+        <!-- cabecera afiche -->
+        <div class="brut bg-white p-3 relative overflow-hidden">
+          <div class="stamp stamp-sm" style="border-color:#111;color:#111;top:50%;">{{ comprobante.tipo }}</div>
+          <p class="font-black text-xl uppercase leading-none">NATILLERAPP</p>
+          <p class="font-body font-bold text-[11px] uppercase mt-1">{{ comprobante.tipo }}</p>
+          <p class="font-black text-sm uppercase mt-2">{{ comprobante.socio }}</p>
+        </div>
+
+        <!-- destacado -->
+        <div class="brut bg-ink text-amarillo p-3 text-center">
+          <p class="text-[10px] uppercase font-bold text-white/70">{{ comprobante.destacado[0] }}</p>
+          <p class="font-black text-3xl tabnum leading-none mt-1">{{ comprobante.destacado[1] }}</p>
+        </div>
+
+        <!-- líneas -->
+        <div class="brut-2 bg-white">
+          <div v-for="(l,i) in comprobante.lineas" :key="i" class="flex justify-between gap-3 px-3 py-1.5" :class="i? 'border-t-2 border-ink/15':''">
+            <span class="font-body font-bold text-[11px] uppercase opacity-70">{{ l[0] }}</span>
+            <span class="font-black text-sm tabnum text-right">{{ l[1] }}</span>
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-1 safe-bottom">
+          <button @click="descargarComprobante" class="btn-brut bg-white text-ink flex-1 py-3 !text-xs">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+            Descargar
+          </button>
+          <button @click="enviarWhatsapp" class="btn-brut bg-verde text-white flex-1 py-3 !text-xs">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 20l1.5-4A8 8 0 1 1 9 19.5z"/></svg>
+            WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PEDIR TELÉFONO ===== -->
+  <div v-if="showTelefono" class="fixed inset-0 z-[58] veil flex items-center justify-center p-4" @click.self="showTelefono=false">
+    <div class="bg-crema brut sh w-full max-w-sm flex flex-col pop">
+      <div class="bg-verde text-white brut flex items-center gap-3 p-3" style="border-width:0 0 3px 0;">
+        <div class="w-9 h-9 bg-white text-verde brut-2 flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 4h4l2 5-3 2a11 11 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>
+        </div>
+        <h2 class="font-black text-lg uppercase leading-none flex-1">Falta teléfono</h2>
+        <button @click="showTelefono=false" class="w-9 h-9 bg-white text-ink brut-2 font-black shrink-0 flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-4 space-y-3 safe-bottom">
+        <p class="font-body font-bold text-xs uppercase">Este socio no tiene teléfono. Escríbelo para enviar el comprobante.</p>
+        <input v-model="telefonoTmp" type="tel" inputmode="numeric" placeholder="3001234567" class="in-brut tabnum" />
+        <div class="flex gap-2">
+          <button @click="showTelefono=false" class="btn-brut bg-white text-ink flex-1 py-3 text-sm">Cancelar</button>
+          <button @click="confirmarTelefono" :disabled="!telefonoTmp.trim()" class="btn-brut bg-verde text-white flex-1 py-3 text-sm">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+  `,
+}).mount('#app');
+</script>
+</body>
+</html>

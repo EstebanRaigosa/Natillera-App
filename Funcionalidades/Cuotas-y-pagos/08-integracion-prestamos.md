@@ -1,5 +1,7 @@
 # 08 — Integración con préstamos y plan de pagos
 
+> **Descripción funcional del módulo de préstamos** (incluye el flujo de cobro conjunto con las cuotas): [Prestamos/prestamos-funcional.md](../Prestamos/prestamos-funcional.md).
+
 ## Tablas
 
 - **`prestamos`:** préstamo por socio (`socio_natillera_id`, `estado`, `periodicidad`, …).
