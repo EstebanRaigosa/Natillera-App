@@ -56,6 +56,9 @@
           class="flex-1 p-4 space-y-4 overflow-y-auto"
           :class="natilleraIdRuta ? 'pb-[8.25rem]' : 'pb-24'"
         >
+          <!-- Instalar PWA: solo visible si la app se puede instalar y no lo está -->
+          <InstallPwaButton variant="sidebar" />
+
           <!-- Menú (solo escritorio): vistas de la natillera actual; “Cambiar de Natillera” va en el panel inferior -->
           <div v-if="natilleraIdRuta" class="sidebar-section hidden lg:block space-y-1">
             <p class="sidebar-section-heading">Menú</p>
@@ -69,6 +72,7 @@
                 <span class="sidebar-option-label">Inicio</span>
               </button>
               <button
+                id="tour-sidebar-socios"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
                 :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/socios') }"
@@ -78,6 +82,7 @@
                 <span class="sidebar-option-label">Socios</span>
               </button>
               <button
+                id="tour-sidebar-cuotas"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
                 :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/cuotas') }"
@@ -328,11 +333,11 @@
             >
               <Bars3Icon class="w-6 h-6" />
             </button>
-            <div class="flex items-center gap-0 min-w-0 justify-center">
+            <div class="flex items-center gap-1.5 min-w-0 justify-center">
               <img
-                src="/isotipo.png"
+                src="/favicon-512x512.png"
                 alt=""
-                class="h-9 w-9 object-contain shrink-0 sm:h-10 sm:w-10"
+                class="h-9 w-9 rounded-full object-contain shrink-0 sm:h-10 sm:w-10"
                 width="36"
                 height="36"
                 decoding="async"
@@ -342,7 +347,9 @@
                 <AppBrand />
               </h1>
             </div>
-            <div class="w-10 shrink-0" aria-hidden="true"></div>
+            <div class="w-11 shrink-0 flex justify-end">
+              <InstallPwaButton variant="header" />
+            </div>
           </div>
         </header>
 
@@ -425,6 +432,7 @@ import { useScrollRestoration } from '../composables/useScrollRestoration'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import AppBrand from '../components/AppBrand.vue'
+import InstallPwaButton from '../components/InstallPwaButton.vue'
 import logoIconSrc from '../../assets/logo_icon.png'
 
 const router = useRouter()
@@ -441,6 +449,7 @@ const supportStore = useSupportStore()
 const notificationStore = useNotificationStore()
 const sidebarOpen = ref(false)
 const sidebarHover = ref(false) // Para controlar el hover en pantallas lg (1024px)
+const sidebarTourLock = ref(false) // Ancla la barra abierta durante un recorrido guiado
 const hoverAreaActive = ref(false) // Para mostrar el indicador cuando el mouse está cerca
 const previousUnreadCount = ref(0)
 const isLgScreen = ref(false) // Detecta si estamos en breakpoint lg (1024px)
@@ -636,7 +645,9 @@ function abrirSidebarMobile() {
 
 provide('dashboardSidebar', {
   openMobile: abrirSidebarMobile,
-  closeMobile: cerrarSidebar
+  closeMobile: cerrarSidebar,
+  prepareSidebarForTour,
+  clearSidebarAfterTour
 })
 
 /** Navegación SPA desde el menú lateral: sin depender del `<a>` interno de RouterLink (evita choques con el historial). */
@@ -700,12 +711,33 @@ function clearSidebarTimeout() {
 
 function startSidebarTimeout() {
   clearSidebarTimeout()
+  // Durante un recorrido guiado la barra queda anclada abierta: ignorar el auto-cierre.
+  if (sidebarTourLock.value) return
   // Pequeño delay antes de cerrar para permitir movimiento del mouse entre sidebar y panel de usuario
   sidebarHoverTimeout = setTimeout(() => {
-    if (isLgScreen.value) {
+    if (isLgScreen.value && !sidebarTourLock.value) {
       sidebarHover.value = false
     }
   }, 150) // 150ms de delay
+}
+
+/**
+ * Fuerza la barra lateral visible en escritorio (lg 1024–1279) mientras corre un tour guiado
+ * que resalta ítems del menú (Socios, Cuotas…). En xl (>=1280) ya es estática y visible.
+ */
+function prepareSidebarForTour() {
+  if (typeof window === 'undefined' || window.innerWidth < 1024) return
+  sidebarTourLock.value = true
+  clearSidebarTimeout()
+  sidebarHover.value = true
+}
+
+/** Libera el anclaje tras el tour y deja que la barra vuelva a su comportamiento por hover. */
+function clearSidebarAfterTour() {
+  sidebarTourLock.value = false
+  if (isLgScreen.value) {
+    sidebarHover.value = false
+  }
 }
 
 function handleUserPanelMouseEnter() {

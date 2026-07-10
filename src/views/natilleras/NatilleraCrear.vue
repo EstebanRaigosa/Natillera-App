@@ -757,14 +757,31 @@
                 <div class="relative">
                   <label class="label text-gray-900 font-semibold">Plazo máximo (meses)</label>
                   <div class="relative">
-                    <input 
+                    <input
                       v-model.number="wizardForm.plazo_maximo"
-                      type="number" 
+                      type="number"
                       class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
                       placeholder="6"
                       min="1"
                     />
                   </div>
+                </div>
+                <div class="relative sm:col-span-2">
+                  <label class="label text-gray-900 font-semibold">Tasa de mora (% mensual)</label>
+                  <div class="relative">
+                    <input
+                      v-model.number="wizardForm.tasa_mora"
+                      type="number"
+                      class="input-field bg-white border-gray-200 focus:border-natillera-500 focus:ring-natillera-500/25 rounded-xl"
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                    />
+                  </div>
+                  <p class="mt-1.5 text-xs text-gray-500">
+                    Interés por atraso, sobre el capital pendiente y proporcional a los días de mora. Déjalo en 0 si no cobras mora.
+                  </p>
                 </div>
               </div>
             </Transition>
@@ -1033,7 +1050,8 @@ const wizardForm = reactive({
   // Préstamos
   prestamos_activos: true,
   interes_prestamo: 2,
-  plazo_maximo: 6
+  plazo_maximo: 6,
+  tasa_mora: 0
 })
 
 const nombreCharCount = computed(() => String(wizardForm.nombre ?? '').length)
@@ -1205,7 +1223,8 @@ async function handleSubmit() {
     reglas_interes: wizardForm.prestamos_activos ? {
       activo: true,
       porcentaje: wizardForm.interes_prestamo,
-      plazo_maximo: wizardForm.plazo_maximo
+      plazo_maximo: wizardForm.plazo_maximo,
+      tasa_mora: wizardForm.tasa_mora || 0
     } : { activo: false }
   }
 

@@ -5,6 +5,11 @@ import router from './router'
 import App from './App.vue'
 import './style.css'
 import 'driver.js/dist/driver.css'
+import { setupPwaInstall } from './composables/usePwaInstall'
+
+// Capturar el evento beforeinstallprompt lo antes posible (se dispara una sola
+// vez y muy temprano). Debe registrarse antes de montar la app.
+setupPwaInstall()
 
 // Detectar si estamos en modo desarrollo
 const isDev = import.meta.env.DEV

@@ -387,20 +387,22 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const nuevasFechasInicioMora = {} // fecha_inicio_mora para cuotas nuevas en mora (persistir)
 
       function obtenerFechaInicioMora(cuota, diasGraciaVal) {
-        // Cuota mensual en natillera quincenal: la mora se cuenta desde la Q1 VIRTUAL (día 15 del mes).
-        // Internamente la cuota cubre 2 quincenas, y la primera ya habría estado en mora a mitad de mes.
+        // Cuota mensual en natillera quincenal: la mora se cuenta desde el vencimiento de la
+        // SEGUNDA quincena (fin de mes = fecha_limite) + días de gracia + 1. El plazo real de una
+        // cuota mensual vence a fin de mes, no a mitad (antes se anclaba en la Q1 virtual del día 15,
+        // lo que adelantaba la mora ~15 días e inflaba los intereses).
         const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
           (cuota.quincena === 0 || cuota.quincena == null)
         if (esMensualEnQuincenal) {
           const fl = cuota.fecha_limite
           if (!fl) return null
           const str = String(fl).substring(0, 10)
-          const [anio, mes] = str.split('-').map(Number)
-          if (Number.isNaN(anio) || Number.isNaN(mes)) return null
-          const fechaQ1 = new Date(anio, mes - 1, 15)
-          fechaQ1.setDate(fechaQ1.getDate() + (diasGraciaVal || 0) + 1)
-          fechaQ1.setHours(0, 0, 0, 0)
-          return fechaQ1.toISOString().split('T')[0]
+          const [anio, mes, dia] = str.split('-').map(Number)
+          if (Number.isNaN(anio) || Number.isNaN(mes) || Number.isNaN(dia)) return null
+          const fechaMora = new Date(anio, mes - 1, dia)
+          fechaMora.setDate(fechaMora.getDate() + (diasGraciaVal || 0) + 1)
+          fechaMora.setHours(0, 0, 0, 0)
+          return fechaMora.toISOString().split('T')[0]
         }
         if (cuota.fecha_vencimiento) {
           const str = String(cuota.fecha_vencimiento).substring(0, 10)
@@ -853,19 +855,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const fechaInicioMoraCalculada = new Map() // Map<cuotaId, fecha_inicio_mora YYYY-MM-DD>
 
         function obtenerFechaInicioMoraMora(cuota, diasGraciaVal) {
-          // Cuota mensual en natillera quincenal: la mora se cuenta desde la Q1 VIRTUAL (día 15 del mes).
+          // Cuota mensual en natillera quincenal: la mora se cuenta desde el vencimiento de la
+          // SEGUNDA quincena (fin de mes = fecha_limite) + días de gracia + 1, no desde la Q1 (día 15).
           const esMensualEnQuincenal = periodicidadNatillera === 'quincenal' &&
             (cuota.quincena === 0 || cuota.quincena == null)
           if (esMensualEnQuincenal) {
             const fl = cuota.fecha_limite
             if (!fl) return null
             const str = String(fl).substring(0, 10)
-            const [anio, mes] = str.split('-').map(Number)
-            if (Number.isNaN(anio) || Number.isNaN(mes)) return null
-            const fechaQ1 = new Date(anio, mes - 1, 15)
-            fechaQ1.setDate(fechaQ1.getDate() + (diasGraciaVal || 0) + 1)
-            fechaQ1.setHours(0, 0, 0, 0)
-            return fechaQ1.toISOString().split('T')[0]
+            const [anio, mes, dia] = str.split('-').map(Number)
+            if (Number.isNaN(anio) || Number.isNaN(mes) || Number.isNaN(dia)) return null
+            const fechaMora = new Date(anio, mes - 1, dia)
+            fechaMora.setDate(fechaMora.getDate() + (diasGraciaVal || 0) + 1)
+            fechaMora.setHours(0, 0, 0, 0)
+            return fechaMora.toISOString().split('T')[0]
           }
           if (cuota.fecha_vencimiento) {
             const str = String(cuota.fecha_vencimiento).substring(0, 10)
@@ -1738,10 +1741,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
               const str = String(fl).substring(0, 10)
               const [anio, mes, dia] = str.split('-').map(Number)
               if (Number.isNaN(anio) || Number.isNaN(mes) || Number.isNaN(dia)) return null
-              // Mensual en natillera quincenal: usar día 15 del mes (Q1 virtual)
-              const fechaBase = esMensualEnQuincenal
-                ? new Date(anio, mes - 1, 15)
-                : new Date(anio, mes - 1, dia)
+              // Mensual en natillera quincenal: la mora arranca a fin de mes (2ª quincena = fecha_limite), no en la Q1 del día 15.
+              const fechaBase = new Date(anio, mes - 1, dia)
               fechaBase.setDate(fechaBase.getDate() + (diasGracia || 0) + 1)
               fechaBase.setHours(0, 0, 0, 0)
               return fechaBase.toISOString().split('T')[0]
@@ -1807,10 +1808,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
               fechaLimiteCuota.setHours(0, 0, 0, 0)
               const hoy = new Date()
               hoy.setHours(0, 0, 0, 0)
-              // Mensual en natillera quincenal: la mora cuenta desde la Q1 virtual (día 15 del mes).
-              const primeraDiaMora = esMensualEnQuincenal
-                ? new Date(anio, mes, 15)
-                : new Date(fechaLimiteCuota)
+              // Mensual en natillera quincenal: la mora cuenta desde fin de mes (2ª quincena = fecha_limite), no desde la Q1 del día 15.
+              const primeraDiaMora = new Date(fechaLimiteCuota)
               primeraDiaMora.setDate(primeraDiaMora.getDate() + diasGracia + 1)
               let finTramo = hoy
               if (indiceCuota !== -1 && cuotasMoraSocio && indiceCuota + 1 < cuotasMoraSocio.length) {

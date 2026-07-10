@@ -1,5 +1,5 @@
 import { driver } from 'driver.js'
-import { TOURS_ENABLED } from '../config/toursEnabled'
+import { isTourEnabled } from '../config/toursEnabled'
 import { peekPendingCuotasDetalleTour } from './usePrimerSocioCuotasMesTour'
 
 /** Misma clave base que useNatilleraMenuTour: indica que terminó el recorrido inicial en Socios / menú móvil. */
@@ -23,7 +23,7 @@ function hasPendingCuotasMesIntro(natilleraId) {
  * @param {{ natilleraId: string, userId: string, userCreatedAt?: string | null, natilleraCreatedAt?: string | null }} ctx - fechas opcionales conservadas por compatibilidad con llamadas existentes
  */
 export function shouldShowNatilleraDetalleNavTour(ctx) {
-  if (!TOURS_ENABLED) return false
+  if (!isTourEnabled('natilleraDetalleNav')) return false
   const { natilleraId, userId } = ctx || {}
   if (typeof window === 'undefined' || !natilleraId || !userId) return false
   try {
@@ -64,7 +64,7 @@ export function startNatilleraDetalleNavTour(opts) {
     onTourStart,
     onTourEnd
   } = opts || {}
-  if (!TOURS_ENABLED) {
+  if (!isTourEnabled('natilleraDetalleNav')) {
     onTourEnd?.({ started: false })
     return false
   }

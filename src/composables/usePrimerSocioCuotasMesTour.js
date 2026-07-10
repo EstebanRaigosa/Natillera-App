@@ -1,5 +1,5 @@
 import { driver } from 'driver.js'
-import { TOURS_ENABLED } from '../config/toursEnabled'
+import { isTourEnabled } from '../config/toursEnabled'
 
 /** Clave antigua (un solo tour): si existe, no se muestran ni el grid ni el detalle. */
 const LEGACY_STORAGE = (id) => `primer_socio_cuotas_mes_tour_v1_${id}`
@@ -85,6 +85,16 @@ export function setPendingPrimerSocioCuotasMesTour(natilleraId) {
   }
 }
 
+/** Devuelve true si hay marca pendiente sin consumirla (para decidir estado inicial de la vista). */
+export function peekPendingPrimerSocioCuotasMesTour(natilleraId) {
+  if (!natilleraId) return false
+  try {
+    return sessionStorage.getItem(SESSION_PENDING(String(natilleraId))) === '1'
+  } catch {
+    return false
+  }
+}
+
 /** Devuelve true si había marca pendiente y la elimina (tras crear socio y tour de Socios). */
 export function consumePendingPrimerSocioCuotasMesTour(natilleraId) {
   if (!natilleraId) return false
@@ -99,7 +109,7 @@ export function consumePendingPrimerSocioCuotasMesTour(natilleraId) {
 }
 
 export function shouldShowPrimerSocioCuotasMesTour(natilleraId) {
-  if (!TOURS_ENABLED) return false
+  if (!isTourEnabled('primerSocioCuotasNav')) return false
   if (typeof window === 'undefined' || !natilleraId) return false
   try {
     const id = String(natilleraId)
@@ -126,7 +136,7 @@ export function markPrimerSocioCuotasMesTourDone(natilleraId) {
 }
 
 export function shouldShowPrimerCuotasDetalleSocioTour(natilleraId) {
-  if (!TOURS_ENABLED) return false
+  if (!isTourEnabled('cuotasDetalleSocio')) return false
   if (typeof window === 'undefined' || !natilleraId) return false
   try {
     const id = String(natilleraId)
@@ -227,7 +237,7 @@ export function startPrimerSocioCuotasMesTour(opts) {
     onMesesGridTourFinished
   } = opts || {}
 
-  if (!TOURS_ENABLED) return
+  if (!isTourEnabled('primerSocioCuotasNav')) return
   if (typeof window === 'undefined' || !natilleraId) return
 
   const isDesktopNav = window.innerWidth >= 1024
@@ -272,6 +282,29 @@ export function startPrimerSocioCuotasMesTour(opts) {
       })
     }
 
+    // Segundo paso: resaltar el botón «Registrar Pago» (el visible según viewport: móvil o escritorio).
+    const btnPagoMobile = document.querySelector('#tour-cuotas-registrar-pago-mobile')
+    const btnPagoDesktop = document.querySelector('#tour-cuotas-registrar-pago-desktop')
+    const pagoVisible = (el) => el && el.getClientRects().length > 0
+    const btnPagoSelector = pagoVisible(btnPagoMobile)
+      ? '#tour-cuotas-registrar-pago-mobile'
+      : pagoVisible(btnPagoDesktop)
+        ? '#tour-cuotas-registrar-pago-desktop'
+        : null
+
+    if (btnPagoSelector) {
+      steps.push({
+        element: btnPagoSelector,
+        popover: {
+          title: 'Registrar un pago',
+          description:
+            'Con «Registrar Pago» eliges al socio y registras su aporte del mes: cuota, actividades y otros conceptos según corresponda.',
+          side: 'bottom',
+          align: 'center'
+        }
+      })
+    }
+
     const d = driver({
       animate: true,
       allowClose: true,
@@ -311,7 +344,7 @@ export function startPrimerSocioCuotasMesTour(opts) {
  */
 export function startPrimerCuotasDetalleSocioTour(opts) {
   const { natilleraId, onDone, puedeDemoCambioMes } = opts || {}
-  if (!TOURS_ENABLED) return
+  if (!isTourEnabled('cuotasDetalleSocio')) return
   if (typeof window === 'undefined' || !natilleraId) return
 
   const run = (attempt = 0) => {

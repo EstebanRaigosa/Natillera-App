@@ -168,6 +168,7 @@
             <span>Generar Cuotas</span>
           </button>
           <button
+            id="tour-cuotas-registrar-pago-desktop"
             v-if="!esVisor && mostrarBotonRegistrarPago"
             type="button"
             class="ds-btn ds-btn--primary"
@@ -192,6 +193,7 @@
 
       <!-- Móvil: botón registrar pago a ancho completo dentro del header (sm+ usa el bloque de actions) -->
       <button
+        id="tour-cuotas-registrar-pago-mobile"
         v-if="!esVisor && mostrarBotonRegistrarPago"
         type="button"
         class="ds-btn ds-btn--primary sm:hidden w-full mt-3"
@@ -6368,7 +6370,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCuotasStore } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
@@ -6429,7 +6431,7 @@ import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
 import LoadingBox from '../../components/LoadingBox.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
-import { TOURS_ENABLED } from '../../config/toursEnabled'
+import { isTourEnabled } from '../../config/toursEnabled'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
 let XLSX = null
@@ -6449,7 +6451,11 @@ import {
   getPrimerFlujoSocioNatilleraId,
   startPrimerCuotasDetalleSocioTour,
   markPrimerCuotasDetalleSocioTourDone,
-  clearPrimerFlujoSocioNatilleraId
+  clearPrimerFlujoSocioNatilleraId,
+  consumePendingPrimerSocioCuotasMesTour,
+  peekPendingPrimerSocioCuotasMesTour,
+  shouldShowPrimerSocioCuotasMesTour,
+  startPrimerSocioCuotasMesTour
 } from '../../composables/usePrimerSocioCuotasMesTour'
 const props = defineProps({
   id: String,
@@ -6463,6 +6469,7 @@ const sociosStore = useSociosStore()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
 const authStore = useAuthStore()
+const dashboardSidebar = inject('dashboardSidebar', null)
 
 // Verificar si el usuario es raigo.16@gmail.com
 const esUsuarioAdmin = computed(() => {
@@ -7089,6 +7096,10 @@ const mesInicio = ref(1)
 const mesFin = ref(11)
 const anioNatillera = ref(new Date().getFullYear())
 const mesSeleccionado = ref(null)
+// Se activa cuando el usuario elige un mes manualmente (selector/carrusel). Impide que
+// elegirMesInicial() —que corre en cargarNatillera tras la consulta de red— pise esa
+// selección volviendo al mes actual durante un arranque en frío.
+const seleccionMesManual = ref(false)
 const inicializando = ref(true) // Flag para evitar que el watch se dispare durante la inicialización
 const generandoCuotas = ref(false) // Flag para evitar ejecuciones paralelas de generación
 const filtroEstado = ref('todos')
@@ -8653,12 +8664,84 @@ watch(vistaAgrupada, async (nuevaVista) => {
   }
 })
 
-watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
-  // Ignorar durante la inicialización para evitar múltiples cargas
-  if (inicializando.value) {
-    console.log('⏭️ Watch ignorado - inicialización en curso')
+// Token para cancelar el procesamiento de un mes cuando el usuario elige otro mientras
+// el anterior aún se genera/carga. Cada llamada toma un token; si tras un await el token
+// dejó de ser el vigente, la ejecución aborta y cede el control a la selección más reciente.
+// Esto permite INTERRUMPIR la carga del mes por defecto y saltar al mes que el usuario elija.
+let mesProcesoToken = 0
+
+// Genera las cuotas faltantes del mes (si aplica) y recalcula sanciones, ocultando el
+// skeleton al terminar. Interrumpible: seleccionar otro mes invalida esta ejecución.
+async function procesarMesSeleccionado(mes, opts = {}) {
+  const { esperarSanciones = true } = opts
+  const token = ++mesProcesoToken
+
+  if (!mes) {
+    cambiandoMes.value = false
     return
   }
+
+  const anioCorrecto = calcularAnioMes(mes, mesInicio.value, mesFin.value, anioNatillera.value)
+  const faltanCuotas = verificarCuotasFaltantes(cuotasStore.cuotas, mes, anioCorrecto)
+
+  if (faltanCuotas) {
+    try {
+      generandoCuotas.value = true
+      const sociosActivos = cuotasStore.sociosNatillera.filter(s => s.estado === 'activo')
+      const result = await cuotasStore.generarCuotasFaltantes(id, mes, anioCorrecto, {
+        configNatilleraCache: natilleraConfigCache,
+        sociosCargados: sociosActivos.length > 0 ? sociosActivos : null
+      })
+      // Refrescar el store aunque otra selección nos haya superado: son datos del período
+      // completo y conviene dejarlos frescos para cuando se vuelva a este mes.
+      if (result.success && result.cuotasGeneradas > 0) {
+        await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+      }
+    } catch (error) {
+      console.error('Error en generación automática:', error)
+    } finally {
+      // Solo gestionar el spinner si seguimos siendo la selección vigente; si nos
+      // superaron, el flag lo controla la nueva selección.
+      if (token === mesProcesoToken) generandoCuotas.value = false
+    }
+  } else {
+    // El mes ya tiene cuotas: limpiar el spinner de una generación anterior interrumpida.
+    generandoCuotas.value = false
+  }
+
+  // A partir de aquí es trabajo específico de la vista del mes: si otra selección tomó el
+  // control (el usuario cambió de mes), abortar sin tocar la UI del mes nuevo.
+  if (token !== mesProcesoToken) return
+
+  // Recalcular sanciones. En el primer render no bloqueamos la aparición de la lista por
+  // este cálculo (va en segundo plano); en cambios de mes SÍ esperamos, para no mostrar la
+  // vista con datos a medias que "aparecen" después.
+  if (esperarSanciones) {
+    try {
+      await recalcularSancionesMes()
+    } catch (error) {
+      console.error('Error recalculando sanciones:', error)
+    }
+    if (token !== mesProcesoToken) return
+  } else {
+    recalcularSancionesMes().catch(error => console.error('Error recalculando sanciones:', error))
+  }
+
+  // Ocultar el skeleton una vez que la data del mes está lista. nextTick pinta el skeleton;
+  // el rAF garantiza al menos un frame antes de renderizar la lista pesada (sin flash).
+  await nextTick()
+  await new Promise((resolve) => {
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve())
+    else resolve()
+  })
+  if (token !== mesProcesoToken) return
+  cambiandoMes.value = false
+}
+
+watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
+  // Ignorar durante la inicialización: el store de cuotas aún puede no estar listo. El mes
+  // que el usuario elija durante la carga lo procesa el flujo de onMounted al terminar el fetch.
+  if (inicializando.value) return
 
   if (modalRegistrarPagoSelector.value) {
     cerrarModalRegistrarPagoSelector()
@@ -8668,63 +8751,10 @@ watch(mesSeleccionado, async (nuevoMes, mesAnterior) => {
     formCuotas.mes = nuevoMes
     filtroPeriodicidad.value = 'todos' // Resetear filtro de periodicidad
     filtroTipoPago.value = 'todos' // Resetear filtro de tipo de pago
-
-    // Evitar ejecuciones paralelas de generación de cuotas
-    if (generandoCuotas.value) {
-      console.log('⏭️ Generación de cuotas ya en curso, ignorando...')
-      cambiandoMes.value = false
-      return
-    }
-
-    // Generar cuotas automáticamente para el mes seleccionado si faltan
-    try {
-      generandoCuotas.value = true
-      // Calcular el año correcto para este mes basándose en el período de la natillera
-      const anioCorrecto = calcularAnioMes(
-        nuevoMes,
-        mesInicio.value,
-        mesFin.value,
-        anioNatillera.value
-      )
-      // Verificar primero con datos locales si faltan cuotas
-      const cuotasActuales = cuotasStore.cuotas
-      const faltanCuotas = verificarCuotasFaltantes(cuotasActuales, nuevoMes, anioCorrecto)
-
-      if (faltanCuotas) {
-        const result = await cuotasStore.generarCuotasFaltantes(id, nuevoMes, anioCorrecto, {
-          configNatilleraCache: natilleraConfigCache
-        })
-        if (result.success && result.cuotasGeneradas > 0) {
-          await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
-        }
-      }
-    } catch (error) {
-      console.error('Error en generación automática:', error)
-    } finally {
-      generandoCuotas.value = false
-    }
-
-    // Recalcular sanciones y ESPERAR: el skeleton (cambiandoMes) se mantiene visible
-    // hasta que la info del mes —incluidas sanciones/intereses por día— esté lista,
-    // para no mostrar la vista con datos a medias que "aparecen" después.
-    if (sancionesActivas.value) {
-      try {
-        await recalcularSancionesMes()
-      } catch (error) {
-        console.error('Error recalculando sanciones:', error)
-      }
-    }
+    await procesarMesSeleccionado(nuevoMes)
+  } else {
+    cambiandoMes.value = false
   }
-
-  // Ocultar el skeleton una vez que la data final del mes ya está calculada.
-  // nextTick pinta el skeleton; el rAF garantiza que se muestre al menos un frame
-  // antes de renderizar (y recalcular) la lista pesada, evitando un flash abrupto.
-  await nextTick()
-  await new Promise((resolve) => {
-    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => resolve())
-    else resolve()
-  })
-  cambiandoMes.value = false
 })
 
 // Cuando cambia el mes en el formulario, buscar fechas existentes
@@ -9988,9 +10018,10 @@ async function cargarActividadesPendientesPorSocio() {
       
       if (!actividad) return
       
-      if (actividad.estado && actividad.estado !== 'en_curso' && sa.estado !== 'pagada' && sa.estado !== 'pagado') {
-        return
-      }
+      // Incluir la actividad aunque esté liquidada: si el socio aún tiene saldo
+      // pendiente, debe seguir contando (consistente con cargarActividadesPendientes / modal de pago).
+      // Solo se omite si ya no hay saldo por pagar.
+      if ((parseFloat(sa.valor_asignado || 0) - parseFloat(sa.valor_pagado || 0)) <= 0) return
 
       if (!sa.mes_pago || !sa.anio_pago) return
       
@@ -14861,6 +14892,10 @@ async function reenviarComprobante(cuota) {
 let natilleraConfigCache = null
 
 function elegirMesInicial() {
+  // Si el usuario ya eligió un mes manualmente, no pisar su selección (evita que la
+  // consulta de red de cargarNatillera "regrese" al mes actual en un arranque en frío).
+  if (seleccionMesManual.value) return
+
   const mesesDisponibles = mesesNatillera.value.map(m => m.value)
   const mesHoy = mesesDisponibles.find(m => esMesActualHoy(m))
 
@@ -15212,7 +15247,11 @@ function esMesActualHoy(mes) {
 }
 
 function seleccionarMes(mesValue) {
-  if (!mesValue || mesSeleccionado.value === mesValue) return
+  if (!mesValue) return
+  // Marcar selección manual: aunque sea el mismo mes, el usuario ya decidió y
+  // elegirMesInicial() no debe reponer el mes actual durante el arranque en frío.
+  seleccionMesManual.value = true
+  if (mesSeleccionado.value === mesValue) return
   // Mostrar skeleton mientras se recalcula/renderiza la info del nuevo mes.
   // El watcher de mesSeleccionado lo apaga tras pintar el skeleton (doble rAF).
   cambiandoMes.value = true
@@ -15462,9 +15501,49 @@ function esPrimerFlujoSocioCuota(cuota) {
   )
 }
 
+/**
+ * Recorrido guiado tras crear el primer socio: al aterrizar en Cuotas resalta el ítem «Cuotas»
+ * de la navegación (barra lateral en escritorio, barra inferior en móvil) e indica que desde ahí
+ * se gestionan y registran los pagos. Al cerrarse encadena con el tour de detalle del socio.
+ * @returns {boolean} true si tomó el control del flujo guiado (evita lanzar el de detalle en paralelo).
+ */
+function schedulePrimerSocioCuotasNavTour() {
+  if (!id) return false
+  if (!isTourEnabled('primerSocioCuotasNav')) return false
+  if (!consumePendingPrimerSocioCuotasMesTour(id)) return false
+  // Ya se vio antes el paso de navegación: continuar directo con el detalle si corresponde.
+  if (!shouldShowPrimerSocioCuotasMesTour(id)) return false
+
+  // Cerrar el selector rápido de mes para que el resalte de la navegación quede limpio.
+  modalSelectorRapidoMes.value = false
+
+  const mesActualLabel = mesSeleccionadoLabel.value || ''
+
+  // Anclar la barra lateral abierta cuanto antes (lg 1024–1279) para que driver mida
+  // el ítem ya visible; el propio tour la vuelve a preparar y la libera al cerrarse.
+  dashboardSidebar?.prepareSidebarForTour?.()
+
+  nextTick(() => {
+    setTimeout(() => {
+      startPrimerSocioCuotasMesTour({
+        natilleraId: id,
+        firstMonthLabel: mesActualLabel,
+        firstMonthValue: mesSeleccionado.value,
+        prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+        clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
+        // Al terminar el paso de navegación, continuar con el detalle del socio (Pagar, etc.).
+        onMesesGridTourFinished: () => {
+          schedulePrimerCuotasDetalleSocioTour()
+        }
+      })
+    }, 450)
+  })
+  return true
+}
+
 function schedulePrimerCuotasDetalleSocioTour() {
   if (!id) return
-  if (!TOURS_ENABLED) return
+  if (!isTourEnabled('cuotasDetalleSocio')) return
   if (!peekPendingCuotasDetalleTour(id)) return
   if (!shouldShowPrimerCuotasDetalleSocioTour(id)) {
     clearPendingCuotasDetalleTour(id)
@@ -15523,7 +15602,15 @@ onMounted(async () => {
 
   // Primer plano inmediato: abrir el selector de meses de una vez. La carga de cuotas del mes
   // es independiente y ocurre por detrás (la lista muestra su propio skeleton).
-  modalSelectorRapidoMes.value = true
+  // Excepción: si venimos del recorrido guiado del primer socio, NO abrir la modal; el tour
+  // resalta la navegación y el botón de pago sobre la lista, sin la modal encima.
+  const enRecorridoPrimerSocioCuotas =
+    isTourEnabled('primerSocioCuotasNav') &&
+    peekPendingPrimerSocioCuotasMesTour(id) &&
+    shouldShowPrimerSocioCuotasMesTour(id)
+  if (!enRecorridoPrimerSocioCuotas) {
+    modalSelectorRapidoMes.value = true
+  }
 
   inicializando.value = true
   const tiempoInicio = performance.now()
@@ -15541,9 +15628,9 @@ onMounted(async () => {
     // ── FASE 1b: Cuotas en segundo plano ──
     // Si el store ya tiene las cuotas de esta natillera, reutilizar los datos en lugar de volver a consultar la BD.
     const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
-    const cuotasCargadas = storeYaTieneDatos
-      ? cuotasStore.cuotas
-      : await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+    if (!storeYaTieneDatos) {
+      await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+    }
 
     const sociosDelStore = cuotasStore.sociosNatillera
     if (sociosDelStore && sociosDelStore.length > 0) {
@@ -15564,53 +15651,31 @@ onMounted(async () => {
       }
     }
     
-    // ── FASE 2: Verificar cuotas faltantes (datos locales, sin query extra) ──
+    // ── FASE 2: Liberar la vista y procesar el mes ──
+    // Ya tenemos las cuotas del período: liberamos el gate de carga para que la vista y el
+    // selector de meses respondan de inmediato. La generación de cuotas faltantes del mes y
+    // el cálculo de sanciones se hacen a continuación mostrando solo el skeleton de la lista,
+    // y son INTERRUMPIBLES: si el usuario elige otro mes en el selector, se cancela el trabajo
+    // del mes por defecto y saltamos directo al mes elegido (ver procesarMesSeleccionado).
+    inicializando.value = false
+
     if (mesSeleccionado.value) {
-      const anioCorrecto = calcularAnioMes(
-        mesSeleccionado.value,
-        mesInicio.value,
-        mesFin.value,
-        anioNatillera.value
-      )
-      
-      const faltanCuotas = verificarCuotasFaltantes(cuotasCargadas, mesSeleccionado.value, anioCorrecto)
-      
-      if (faltanCuotas) {
-        try {
-          generandoCuotas.value = true
-          const sociosActivos = cuotasStore.sociosNatillera.filter(s => s.estado === 'activo')
-          const result = await cuotasStore.generarCuotasFaltantes(id, mesSeleccionado.value, anioCorrecto, {
-            configNatilleraCache: natilleraConfigCache,
-            sociosCargados: sociosActivos.length > 0 ? sociosActivos : null
-          })
-          if (result.success && result.cuotasGeneradas > 0) {
-            await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
-          }
-        } catch (error) {
-          console.error('Error en generación automática:', error)
-        } finally {
-          generandoCuotas.value = false
-        }
-      }
+      cambiandoMes.value = true
+      await procesarMesSeleccionado(mesSeleccionado.value, { esperarSanciones: false })
     }
-    
+
     const tiempoFin = performance.now()
     console.log(`✅ Cuotas visibles en ${(tiempoFin - tiempoInicio).toFixed(0)}ms`)
-    
+
   } finally {
     inicializando.value = false
   }
 
-  // ── FASE 3: Background — mora, sanciones, actividades, préstamos ──
+  // ── FASE 3: Background — mora, actividades, préstamos ──
+  // (Las sanciones del mes ya las dispara procesarMesSeleccionado.)
   cuotasStore.actualizarEstadoMoraAutomatico(cuotasStore.cuotas, id, natilleraConfigCache).catch(err =>
     console.error('Error actualizando mora:', err)
   )
-
-  if (sancionesActivas.value) {
-    recalcularSancionesMes()
-  } else {
-    sancionesDinamicas.value = {}
-  }
 
   Promise.all([
     cargarActividadesPendientesPorSocio(),
@@ -15622,7 +15687,11 @@ onMounted(async () => {
   actualizarFlechasDesktop()
   actualizarIndicadoresMobile()
   window.addEventListener('resize', onResizeCarrusel)
-  schedulePrimerCuotasDetalleSocioTour()
+  // Recorrido guiado del primer socio: primero el paso de navegación (resalta «Cuotas»);
+  // ese tour encadena luego el detalle. Si no aplica, se intenta el detalle directamente.
+  if (!schedulePrimerSocioCuotasNavTour()) {
+    schedulePrimerCuotasDetalleSocioTour()
+  }
 
   document.addEventListener('click', handleClickOutside)
 })

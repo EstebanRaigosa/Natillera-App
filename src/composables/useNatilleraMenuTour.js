@@ -1,5 +1,5 @@
 import { driver } from 'driver.js'
-import { TOURS_ENABLED } from '../config/toursEnabled'
+import { isTourEnabled } from '../config/toursEnabled'
 
 const storageKey = (natilleraId) => `natillera_menu_acciones_tour_v3_${natilleraId}`
 
@@ -7,7 +7,7 @@ const storageKey = (natilleraId) => `natillera_menu_acciones_tour_v3_${natillera
  * Tour corto (móvil) tras el primer socio: menú ☰, acciones, barra inferior y Totales (estado).
  */
 export function shouldShowNatilleraMenuTour(natilleraId) {
-  if (!TOURS_ENABLED) return false
+  if (!isTourEnabled('natilleraMenu')) return false
   if (typeof window === 'undefined' || !natilleraId) return false
   if (window.innerWidth >= 1024) return false
   try {
@@ -30,7 +30,7 @@ export function markNatilleraMenuTourDone(natilleraId) {
  * @param {{ natilleraId: string, openSidebar?: () => void, closeSidebar?: () => void }} opts
  */
 export function startNatilleraMenuTour(opts) {
-  if (!TOURS_ENABLED) return
+  if (!isTourEnabled('natilleraMenu')) return
   const { natilleraId, openSidebar, closeSidebar } = opts || {}
   if (typeof window === 'undefined' || !natilleraId) return
 

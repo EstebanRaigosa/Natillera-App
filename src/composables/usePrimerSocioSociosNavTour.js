@@ -1,5 +1,5 @@
 import { driver } from 'driver.js'
-import { TOURS_ENABLED } from '../config/toursEnabled'
+import { isTourEnabled } from '../config/toursEnabled'
 import { markNatilleraMenuTourDone } from './useNatilleraMenuTour'
 
 const STORAGE_DONE = (id) => `primer_socio_socios_nav_tour_v1_${id}`
@@ -29,7 +29,7 @@ export function consumePendingPrimerSocioNavTour(natilleraId) {
 }
 
 export function shouldShowPrimerSocioSociosNavTour(natilleraId) {
-  if (!TOURS_ENABLED) return false
+  if (!isTourEnabled('primerSocioSociosNav')) return false
   if (typeof window === 'undefined' || !natilleraId) return false
   try {
     return !localStorage.getItem(STORAGE_DONE(String(natilleraId)))
@@ -52,7 +52,7 @@ export function markPrimerSocioSociosNavTourDone(natilleraId) {
  * @param {{ natilleraId: string, prepareSidebarForTour?: () => void, clearSidebarAfterTour?: () => void, onSociosTourClosed?: (natilleraId: string) => void }} opts
  */
 export function startPrimerSocioSociosNavTour(opts) {
-  if (!TOURS_ENABLED) return
+  if (!isTourEnabled('primerSocioSociosNav')) return
   const { natilleraId, prepareSidebarForTour, clearSidebarAfterTour, onSociosTourClosed } = opts || {}
   if (typeof window === 'undefined' || !natilleraId) return
 

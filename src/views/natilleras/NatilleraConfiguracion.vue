@@ -1,20 +1,20 @@
 <template>
   <div class="max-w-4xl mx-auto space-y-6">
-    <!-- Header unificado -->
-    <div>
-      <div class="bg-gradient-to-br from-white via-emerald-50/50 to-teal-100/70 rounded-2xl p-4 sm:p-6 border border-gray-200/80 shadow-sm">
-        <div class="flex items-center gap-3">
+    <!-- Page header (DS) -->
+    <header class="ds-page-header">
+      <div class="ds-page-header__row">
+        <div class="ds-page-header__lead">
           <BackButton :to="`/natilleras/${id}`" :inline="true" />
-          <div class="w-11 h-11 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Cog6ToothIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div class="ds-page-header__icon">
+            <Cog6ToothIcon class="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
-          <div class="min-w-0">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Configuración</h1>
-            <p class="text-gray-500 mt-0.5 text-sm">Configura el período, días de gracia y mensajes para esta natillera</p>
+          <div class="min-w-0 flex-1">
+            <h1 class="ds-page-header__title">Configuración</h1>
+            <p class="ds-page-header__sub hidden sm:block">Configura el período, días de gracia y mensajes para esta natillera</p>
           </div>
         </div>
       </div>
-    </div>
+    </header>
 
     <!-- Opciones de configuración con contenido expandible -->
     <div class="space-y-4">
@@ -24,17 +24,17 @@
       <button
         @click="seccionActiva = seccionActiva === 'basica' ? null : 'basica'"
         :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
           seccionActiva === 'basica'
-              ? 'bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-500 border-natillera-400 shadow-natillera-500/30'
-              : 'bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/40 border-natillera-100/50 shadow-natillera-500/10 hover:border-natillera-300 hover:shadow-xl'
+              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
+              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-gradient-to-br from-natillera-500 to-emerald-500']">
-              <CurrencyDollarIcon class="w-6 h-6 text-white" />
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-[var(--brand-primary-soft)]']">
+              <CurrencyDollarIcon :class="['w-6 h-6', seccionActiva === 'basica' ? 'text-white' : 'text-[var(--brand-primary)]']" />
           </div>
-            <div class="flex-1 text-left">
+            <div class="flex-1 text-left min-w-0">
               <h3 :class="['text-lg font-display font-bold', seccionActiva === 'basica' ? 'text-white' : 'text-gray-800']">
             Configuración General
           </h3>
@@ -42,8 +42,8 @@
                 Período, cierre, sanciones y datos básicos
           </p>
           </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-natillera-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'basica' ? 'text-white rotate-180' : 'text-natillera-600']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'basica' ? 'bg-white/20' : 'bg-gray-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'basica' ? 'text-white rotate-180' : 'text-gray-500']" />
           </div>
         </div>
       </button>
@@ -57,8 +57,8 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-natillera-500/10 border-2 border-natillera-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-natillera-500 to-emerald-500"></div>
+          <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6 space-y-4">
               <!-- Pantalla de carga al guardar -->
               <ModalWrapper
@@ -115,6 +115,20 @@
                     <CalendarDaysIcon class="w-4 h-4 flex-shrink-0" />
                     <span class="sm:hidden">Período</span>
                     <span class="hidden sm:inline">Período</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="tabGeneralActiva = 'prestamos'"
+                    :class="[
+                      'flex-shrink-0 px-3 sm:px-4 py-2.5 text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-t-lg sm:rounded-b-none border sm:border-b-0',
+                      tabGeneralActiva === 'prestamos'
+                        ? 'bg-white text-natillera-700 border-natillera-300 sm:border-b-white -mb-px shadow-sm z-10'
+                        : 'bg-gray-50/80 text-gray-500 border-gray-200 sm:border-transparent hover:text-gray-700 hover:bg-gray-100'
+                    ]"
+                  >
+                    <BanknotesIcon class="w-4 h-4 flex-shrink-0" />
+                    <span class="sm:hidden">Préstamos</span>
+                    <span class="hidden sm:inline">Préstamos</span>
                   </button>
                   <button
                     type="button"
@@ -268,6 +282,96 @@
                     </p>
                   </div>
                 </section>
+              </div>
+
+              <!-- Tab Reglas de préstamos -->
+              <div v-if="tabGeneralActiva === 'prestamos'" class="p-3 sm:p-6">
+                <!-- Activar/Desactivar préstamos -->
+                <div class="mb-4 sm:mb-5">
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <div class="relative">
+                      <input type="checkbox" v-model="configPrestamos.activo" class="sr-only peer" :disabled="esVisor" />
+                      <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-natillera-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-natillera-500"></div>
+                    </div>
+                    <span class="font-semibold text-gray-700 text-sm sm:text-base">Permitir préstamos en esta natillera</span>
+                  </label>
+                </div>
+
+                <div v-if="configPrestamos.activo" class="space-y-4">
+                  <section class="rounded-xl border border-natillera-200/60 bg-natillera-50/30 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-natillera-200/60 bg-natillera-100/40">
+                      <h3 class="text-sm font-bold text-natillera-800 flex items-center gap-2">
+                        <BanknotesIcon class="w-4 h-4" />
+                        Condiciones del préstamo
+                      </h3>
+                      <p class="text-xs text-natillera-700/90 mt-0.5">Valores por defecto al crear un préstamo nuevo.</p>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label class="label font-semibold text-gray-700">Interés mensual (%)</label>
+                        <input
+                          v-model.number="configPrestamos.porcentaje"
+                          type="number"
+                          class="input-field"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          :disabled="esVisor"
+                        />
+                      </div>
+                      <div>
+                        <label class="label font-semibold text-gray-700">Plazo máximo (meses)</label>
+                        <input
+                          v-model.number="configPrestamos.plazo_maximo"
+                          type="number"
+                          class="input-field"
+                          min="1"
+                          :disabled="esVisor"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="rounded-xl border border-rose-200/60 bg-rose-50/30 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-rose-200/60 bg-rose-100/40">
+                      <h3 class="text-sm font-bold text-rose-800 flex items-center gap-2">
+                        <ExclamationTriangleIcon class="w-4 h-4" />
+                        Interés de mora
+                      </h3>
+                      <p class="text-xs text-rose-700/90 mt-0.5">Se cobra por atraso, sobre el capital pendiente y proporcional a los días de mora (base de 30 días). No se capitaliza al saldo.</p>
+                    </div>
+                    <div class="p-4 space-y-2">
+                      <label class="label font-semibold text-gray-700">Tasa de mora (% mensual)</label>
+                      <input
+                        v-model.number="configPrestamos.tasa_mora"
+                        type="number"
+                        class="input-field sm:max-w-[12rem]"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        :disabled="esVisor"
+                      />
+                      <p class="text-sm text-gray-600">
+                        <template v-if="configPrestamos.tasa_mora > 0">
+                          Mora diaria ≈ <strong>{{ (configPrestamos.tasa_mora / 30).toFixed(3) }}%</strong> del capital pendiente por día de atraso.
+                        </template>
+                        <template v-else>
+                          En <strong>0</strong> no se cobra interés de mora.
+                        </template>
+                      </p>
+                    </div>
+                  </section>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-gray-200 mt-4">
+                  <button
+                    @click="guardarConfigPrestamos"
+                    :disabled="guardandoPrestamos || esVisor"
+                    class="ds-btn ds-btn--primary"
+                  >
+                    {{ guardandoPrestamos ? 'Guardando...' : 'Guardar reglas de préstamos' }}
+                  </button>
+                </div>
               </div>
 
               <!-- Tab Sanciones por mora -->
@@ -1207,11 +1311,11 @@
                 </div>
                 </div>
 
-              <div class="flex justify-end pt-4 border-t border-natillera-200 mt-4">
-          <button 
+              <div class="flex justify-end pt-4 border-t border-gray-200 mt-4">
+          <button
             @click="guardarConfigBasica"
             :disabled="guardandoBasica || esVisor"
-            class="btn-primary text-sm bg-gradient-to-r from-natillera-500 to-emerald-600"
+            class="ds-btn ds-btn--primary"
           >
             {{ guardandoBasica ? 'Guardando...' : 'Guardar toda la configuración' }}
           </button>
@@ -1226,17 +1330,17 @@
       <button
         @click="seccionActiva = seccionActiva === 'mensajes' ? null : 'mensajes'"
         :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
           seccionActiva === 'mensajes'
-              ? 'bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 border-green-400 shadow-green-500/30'
-              : 'bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 border-green-100/50 shadow-green-500/10 hover:border-green-300 hover:shadow-xl'
+              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
+              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-gradient-to-br from-green-500 to-emerald-500']">
-              <ChatBubbleLeftRightIcon class="w-6 h-6 text-white" />
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-[var(--brand-primary-soft)]']">
+              <ChatBubbleLeftRightIcon :class="['w-6 h-6', seccionActiva === 'mensajes' ? 'text-white' : 'text-[var(--brand-primary)]']" />
           </div>
-            <div class="flex-1 text-left">
+            <div class="flex-1 text-left min-w-0">
               <h3 :class="['text-lg font-display font-bold', seccionActiva === 'mensajes' ? 'text-white' : 'text-gray-800']">
             Mensajes
           </h3>
@@ -1244,8 +1348,8 @@
                 Personaliza los mensajes de WhatsApp
           </p>
           </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-green-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'mensajes' ? 'text-white rotate-180' : 'text-green-600']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'mensajes' ? 'bg-white/20' : 'bg-gray-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'mensajes' ? 'text-white rotate-180' : 'text-gray-500']" />
           </div>
         </div>
       </button>
@@ -1259,8 +1363,8 @@
       leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-gradient-to-br from-white via-green-50/30 to-emerald-50/40 rounded-2xl shadow-xl shadow-green-500/10 border-2 border-green-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-green-500 to-emerald-500"></div>
+          <div v-if="seccionActiva === 'mensajes'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6">
               <!-- Tabs para tipos de mensajes - Destacado -->
               <div class="mb-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl border-2 border-gray-200 shadow-lg p-4">
@@ -1584,15 +1688,15 @@
               </div>
 
               <!-- Botones -->
-              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-green-200">
-                <button @click="restaurarDefectoMensajes" :disabled="esVisor" class="btn-secondary text-sm">
+              <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
+                <button @click="restaurarDefectoMensajes" :disabled="esVisor" class="ds-btn ds-btn--secondary">
             <ArrowPathIcon class="w-4 h-4" />
                   Restaurar
           </button>
-          <button 
+          <button
             @click="guardarMensajes"
             :disabled="guardandoMensajes || esVisor"
-                  class="btn-primary flex-1 sm:flex-none text-sm bg-gradient-to-r from-green-500 to-emerald-600"
+                  class="ds-btn ds-btn--primary flex-1 sm:flex-none"
           >
             {{ guardandoMensajes ? 'Guardando...' : 'Guardar Mensajes' }}
           </button>
@@ -1608,17 +1712,17 @@
         <button
           @click="seccionActiva = seccionActiva === 'reasignar' ? null : 'reasignar'"
           :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
             seccionActiva === 'reasignar'
-              ? 'bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 border-purple-400 shadow-purple-500/30'
-              : 'bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/40 border-purple-100/50 shadow-purple-500/10 hover:border-purple-300 hover:shadow-xl'
+              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
+              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-gradient-to-br from-purple-500 to-indigo-500']">
-              <UserIcon class="w-6 h-6 text-white" />
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-[var(--brand-primary-soft)]']">
+              <UserIcon :class="['w-6 h-6', seccionActiva === 'reasignar' ? 'text-white' : 'text-[var(--brand-primary)]']" />
             </div>
-            <div class="flex-1 text-left">
+            <div class="flex-1 text-left min-w-0">
               <h3 :class="['text-lg font-display font-bold', seccionActiva === 'reasignar' ? 'text-white' : 'text-gray-800']">
                 Reasignar Administrador
               </h3>
@@ -1626,8 +1730,8 @@
                 Cambiar el administrador de esta natillera
               </p>
             </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-purple-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'reasignar' ? 'text-white rotate-180' : 'text-purple-600']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'reasignar' ? 'bg-white/20' : 'bg-gray-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'reasignar' ? 'text-white rotate-180' : 'text-gray-500']" />
             </div>
           </div>
         </button>
@@ -1641,8 +1745,8 @@
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-gradient-to-br from-white via-purple-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-purple-500/10 border-2 border-purple-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-purple-500 to-indigo-500"></div>
+          <div v-if="seccionActiva === 'reasignar'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6">
               <div class="mb-6">
                 <h4 class="text-lg font-bold text-gray-800 mb-2">Administrador Actual</h4>
@@ -1662,7 +1766,7 @@
                     v-model="busquedaUsuario"
                     type="text"
                     placeholder="Buscar usuario por email o nombre (o ver todos los usuarios abajo)..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
                     @input="buscarUsuarios"
                   />
                   <MagnifyingGlassIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -1670,7 +1774,7 @@
 
                 <!-- Lista de usuarios -->
                 <div v-if="buscandoUsuarios && !usuariosCargados" class="mt-4 text-center py-8">
-                  <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-2"></div>
                   <p class="text-sm text-gray-500">Cargando usuarios...</p>
                 </div>
 
@@ -1685,19 +1789,19 @@
                     :key="usuario.id"
                     @click="seleccionarUsuario(usuario)"
                     :class="[
-                      'w-full p-4 text-left hover:bg-purple-50 transition-colors border-b border-gray-100 last:border-b-0',
-                      usuarioSeleccionado?.id === usuario.id ? 'bg-purple-100 border-purple-300' : ''
+                      'w-full p-4 text-left hover:bg-natillera-50 transition-colors border-b border-gray-100 last:border-b-0',
+                      usuarioSeleccionado?.id === usuario.id ? 'bg-natillera-100 border-natillera-300' : ''
                     ]"
                   >
                     <div class="flex items-center gap-3">
-                      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                      <div class="w-10 h-10 rounded-full bg-[var(--brand-primary)] flex items-center justify-center text-white font-semibold">
                         {{ (usuario.nombre || usuario.email || 'U').charAt(0).toUpperCase() }}
                       </div>
                       <div class="flex-1">
                         <p class="font-semibold text-gray-800">{{ usuario.nombre || 'Sin nombre' }}</p>
                         <p class="text-sm text-gray-500">{{ usuario.email }}</p>
                       </div>
-                      <CheckCircleIcon v-if="usuarioSeleccionado?.id === usuario.id" class="w-6 h-6 text-purple-600" />
+                      <CheckCircleIcon v-if="usuarioSeleccionado?.id === usuario.id" class="w-6 h-6 text-[var(--brand-primary)]" />
                     </div>
                   </button>
                 </div>
@@ -1706,17 +1810,17 @@
                   <p class="text-sm">No se encontraron usuarios con ese criterio de búsqueda</p>
                   <button
                     @click="busquedaUsuario = ''; filtrarUsuarios()"
-                    class="mt-2 text-sm text-purple-600 hover:text-purple-700 underline"
+                    class="mt-2 text-sm text-natillera-700 hover:text-natillera-800 underline"
                   >
                     Ver todos los usuarios
                   </button>
                 </div>
               </div>
 
-              <div v-if="usuarioSeleccionado" class="mb-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
-                <p class="text-sm font-semibold text-purple-700 mb-2">Nuevo Administrador Seleccionado:</p>
+              <div v-if="usuarioSeleccionado" class="mb-6 p-4 bg-natillera-50 border-2 border-natillera-200 rounded-xl">
+                <p class="text-sm font-semibold text-natillera-700 mb-2">Nuevo Administrador Seleccionado:</p>
                 <div class="flex items-center gap-3">
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg">
+                  <div class="w-12 h-12 rounded-full bg-[var(--brand-primary)] flex items-center justify-center text-white font-bold text-lg">
                     {{ (usuarioSeleccionado.nombre || usuarioSeleccionado.email || 'U').charAt(0).toUpperCase() }}
                   </div>
                   <div>
@@ -1729,14 +1833,14 @@
               <div class="flex gap-3">
                 <button
                   @click="cancelarReasignacion"
-                  class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-colors"
+                  class="ds-btn ds-btn--secondary flex-1"
                 >
                   Cancelar
                 </button>
                 <button
                   @click="confirmarReasignacion"
                   :disabled="!usuarioSeleccionado || guardandoReasignacion"
-                  class="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  class="ds-btn ds-btn--primary flex-1"
                 >
                   {{ guardandoReasignacion ? 'Reasignando...' : 'Reasignar Natillera' }}
                 </button>
@@ -1751,17 +1855,17 @@
         <button
           @click="seccionActiva = seccionActiva === 'colaboradores' ? null : 'colaboradores'"
           :class="[
-            'w-full relative overflow-hidden rounded-2xl shadow-lg border-2 transition-all duration-300',
+            'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
             seccionActiva === 'colaboradores'
-              ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 border-blue-400 shadow-blue-500/30'
-              : 'bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 border-blue-100/50 shadow-blue-500/10 hover:border-blue-300 hover:shadow-xl'
+              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
+              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
           ]"
         >
           <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center shadow-md', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-gradient-to-br from-blue-500 to-indigo-500']">
-              <UserGroupIcon class="w-6 h-6 text-white" />
+            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-[var(--brand-primary-soft)]']">
+              <UserGroupIcon :class="['w-6 h-6', seccionActiva === 'colaboradores' ? 'text-white' : 'text-[var(--brand-primary)]']" />
             </div>
-            <div class="flex-1 text-left">
+            <div class="flex-1 text-left min-w-0">
               <h3 :class="['text-lg font-display font-bold', seccionActiva === 'colaboradores' ? 'text-white' : 'text-gray-800']">
                 Colaboradores
               </h3>
@@ -1769,8 +1873,8 @@
                 Gestiona quién puede acceder a esta natillera
               </p>
             </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-blue-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'colaboradores' ? 'text-white rotate-180' : 'text-blue-600']" />
+            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-gray-100']">
+              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'colaboradores' ? 'text-white rotate-180' : 'text-gray-500']" />
             </div>
           </div>
         </button>
@@ -1784,8 +1888,8 @@
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 -translate-y-2"
         >
-          <div v-if="seccionActiva === 'colaboradores'" class="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/40 rounded-2xl shadow-xl shadow-blue-500/10 border-2 border-blue-200/50 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+          <div v-if="seccionActiva === 'colaboradores'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
+            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6">
               <ColaboradoresManager
                 :natillera-id="id"
@@ -1819,6 +1923,7 @@ import { useConfiguracionStore } from '../../stores/configuracion'
 import { useUsersStore } from '../../stores/users'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useCuotasStore } from '../../stores/cuotas'
+import { parseReglasInteresPrestamo } from '../../utils/natilleraPrestamos'
 import { supabase } from '../../lib/supabase'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 
@@ -1864,6 +1969,7 @@ const guardandoPeriodo = ref(false)
 const guardandoDiasGracia = ref(false)
 const guardandoMensajes = ref(false)
 const guardandoSanciones = ref(false)
+const guardandoPrestamos = ref(false)
 const guardandoReasignacion = ref(false)
 const mensaje = ref(null)
 const textareaIndividual = ref(null)
@@ -2017,6 +2123,9 @@ const cantidadMesesPeriodo = computed(() => {
 const configDiasGracia = ref({
   dias_gracia: 3
 })
+
+// Reglas de préstamos (reglas_interes): interés, plazo máximo y tasa de mora
+const configPrestamos = ref(parseReglasInteresPrestamo(null))
 
 // Configuración de cuotas automáticas
 const configCuotasAuto = ref({
@@ -2315,6 +2424,33 @@ async function guardarConfigSanciones() {
   guardandoSanciones.value = false
 }
 
+async function guardarConfigPrestamos() {
+  guardandoPrestamos.value = true
+  mensaje.value = null
+
+  const c = configPrestamos.value
+  const result = await natillerasStore.actualizarNatillera(id.value, {
+    reglas_interes: {
+      activo: c.activo !== false,
+      porcentaje: Number(c.porcentaje) >= 0 ? Number(c.porcentaje) : 0,
+      plazo_maximo: Number(c.plazo_maximo) >= 1 ? Math.floor(Number(c.plazo_maximo)) : 1,
+      tasa_mora: Number(c.tasa_mora) >= 0 ? Number(c.tasa_mora) : 0
+    }
+  })
+
+  if (result.success) {
+    mensaje.value = { tipo: 'exito', texto: 'Reglas de préstamos guardadas correctamente' }
+    await natillerasStore.fetchNatillera(id.value)
+  } else {
+    mensaje.value = { tipo: 'error', texto: result.error || 'Error al guardar las reglas de préstamos' }
+  }
+
+  setTimeout(() => {
+    mensaje.value = null
+  }, 5000)
+  guardandoPrestamos.value = false
+}
+
 // Vista previa del mensaje individual con datos de ejemplo
 const vistaPreviewIndividual = computed(() => {
   return mensajeIndividual.value
@@ -2479,7 +2615,10 @@ function actualizarValoresDesdeNatillera() {
     configDiasGracia.value = {
       dias_gracia: reglasMultas.dias_gracia || 3
     }
-    
+
+    // Cargar reglas de préstamos (interés, plazo, tasa de mora)
+    configPrestamos.value = parseReglasInteresPrestamo(natillera.value.reglas_interes)
+
     // Cargar configuración de cuotas automáticas
     configCuotasAuto.value = {
       activo: natillera.value.cuotas_automaticas !== false // Por defecto true

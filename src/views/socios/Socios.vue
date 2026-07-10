@@ -2852,7 +2852,7 @@ import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
-import { TOURS_ENABLED } from '../../config/toursEnabled'
+import { isTourEnabled } from '../../config/toursEnabled'
 import { shouldShowNatilleraMenuTour, startNatilleraMenuTour } from '../../composables/useNatilleraMenuTour'
 import {
   shouldShowPrimerSocioSociosNavTour,
@@ -2861,7 +2861,8 @@ import {
 } from '../../composables/usePrimerSocioSociosNavTour'
 import {
   setPendingPrimerSocioCuotasMesTour,
-  setPrimerFlujoSocioNatilleraId
+  setPrimerFlujoSocioNatilleraId,
+  shouldShowPrimerSocioCuotasMesTour
 } from '../../composables/usePrimerSocioCuotasMesTour'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -4121,10 +4122,11 @@ async function abrirSelectorContactos() {
 }
 
 function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
-  if (!TOURS_ENABLED) return
   if (!eraListaVaciaAntes || !natilleraId) return
 
   const veniaDeModalSinSocios = consumePendingPrimerSocioNavTour(natilleraId)
+
+  // Caso A: recorrido de «Socios» habilitado → resalta Socios y encadena a Cuotas al cerrarse.
   if (veniaDeModalSinSocios && shouldShowPrimerSocioSociosNavTour(natilleraId)) {
     nextTick(() => {
       setTimeout(() => {
@@ -4140,6 +4142,16 @@ function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId
         })
       }, 900)
     })
+    return
+  }
+
+  // Caso B: recorrido de «Cuotas» habilitado (sin el de «Socios») → al crear el primer socio,
+  // ir directo a Cuotas dejando la marca pendiente; el resalte de «Cuotas» se muestra al
+  // aterrizar en esa vista. No exige venir de la modal «Sin socios»: basta que sea el primer
+  // socio (garantizado por `eraListaVaciaAntes`).
+  if (shouldShowPrimerSocioCuotasMesTour(natilleraId)) {
+    setPendingPrimerSocioCuotasMesTour(natilleraId)
+    router.push(`/natilleras/${natilleraId}/cuotas`)
     return
   }
 

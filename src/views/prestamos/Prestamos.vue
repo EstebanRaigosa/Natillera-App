@@ -947,6 +947,14 @@
                   <dt class="text-gray-600">Saldo actual</dt>
                   <dd class="font-bold text-emerald-800 tabular-nums">${{ formatMoney(prestamoSeleccionado?.saldo_actual) }}</dd>
                 </div>
+                <div v-if="moraPrestamoAbono > 0" class="flex justify-between gap-3">
+                  <dt class="text-rose-600">Interés de mora</dt>
+                  <dd class="font-bold text-rose-700 tabular-nums">${{ formatMoney(moraPrestamoAbono) }}</dd>
+                </div>
+                <div v-if="moraPrestamoAbono > 0" class="flex justify-between gap-3 border-t border-emerald-200/70 pt-2">
+                  <dt class="text-gray-800 font-semibold">Total a pagar</dt>
+                  <dd class="font-bold text-gray-900 tabular-nums">${{ formatMoney(totalAPagarConMora) }}</dd>
+                </div>
                 <div class="grid grid-cols-2 gap-2 pt-1">
                   <div class="rounded-lg border border-white/80 bg-white/70 px-3 py-2">
                     <p class="text-[10px] font-medium uppercase tracking-wide text-gray-500">Cuota</p>
@@ -985,13 +993,21 @@
                 v-if="prestamoSeleccionado?.saldo_actual && formAbono.valor"
                 class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3"
               >
+                <div v-if="moraPagadaAbono > 0" class="flex items-center justify-between gap-2 pb-2 mb-2 border-b border-emerald-200/70">
+                  <span class="text-sm text-rose-600">Se cobra de mora</span>
+                  <span class="text-sm font-bold tabular-nums text-rose-700">${{ formatMoney(moraPagadaAbono) }}</span>
+                </div>
+                <div v-if="moraPagadaAbono > 0" class="flex items-center justify-between gap-2 mb-2">
+                  <span class="text-sm text-gray-600">Abono al préstamo</span>
+                  <span class="text-sm font-bold tabular-nums text-gray-800">${{ formatMoney(abonoACapitalAbono) }}</span>
+                </div>
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-sm font-medium text-gray-700">Saldo después del abono</span>
                   <span class="text-base font-bold tabular-nums text-emerald-800">
-                    ${{ formatMoney(Math.max(0, (prestamoSeleccionado?.saldo_actual || 0) - (formAbono.valor || 0))) }}
+                    ${{ formatMoney(saldoDespuesAbono) }}
                   </span>
                 </div>
-                <div v-if="(prestamoSeleccionado?.saldo_actual || 0) - (formAbono.valor || 0) <= 0" class="mt-2 pt-2 border-t border-emerald-200/80">
+                <div v-if="saldoDespuesAbono <= 0" class="mt-2 pt-2 border-t border-emerald-200/80">
                   <p class="text-xs font-semibold text-emerald-800 flex items-center gap-1">
                     <CheckCircleIcon class="w-4 h-4 flex-shrink-0" />
                     El préstamo quedará pagado
@@ -1002,8 +1018,8 @@
               <div v-if="formAbono.valor && formAbono.valor < 1000" class="mt-2 text-xs text-amber-600 font-medium">
                 El valor mínimo del abono es $1.000
               </div>
-              <div v-if="formAbono.valor && prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual)" class="mt-2 text-xs text-red-600 font-medium">
-                El abono no puede superar el saldo (máx. ${{ formatMoney(prestamoSeleccionado?.saldo_actual || 0) }})
+              <div v-if="formAbono.valor && parseFloat(formAbono.valor) > totalAPagarConMora" class="mt-2 text-xs text-red-600 font-medium">
+                El abono no puede superar el total a pagar (máx. ${{ formatMoney(totalAPagarConMora) }})
               </div>
             </div>
 
@@ -1057,7 +1073,7 @@
                   type="button"
                   @click="handleRegistrarAbono"
                   class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || (prestamoSeleccionado?.saldo_actual && parseFloat(formAbono.valor) > parseFloat(prestamoSeleccionado.saldo_actual))"
+                  :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || parseFloat(formAbono.valor) > totalAPagarConMora || abonoACapitalAbono <= 0"
                 >
                   <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <CurrencyDollarIcon v-else class="w-5 h-5" />
@@ -1205,6 +1221,19 @@
                 <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Fecha</span>
                 <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">{{ comprobanteAbono.fecha }}</span>
               </div>
+              <!-- Desglose si el pago incluyó mora -->
+              <template v-if="comprobanteAbono.moraPagada > 0">
+                <div style="height: 1px; background: #eef2ee;"></div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
+                  <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Abono al préstamo</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">${{ formatMoney(comprobanteAbono.abonoAPrestamo) }}</span>
+                </div>
+                <div style="height: 1px; background: #eef2ee;"></div>
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
+                  <span style="font-size: 12px; font-weight: 600; color: #b91c1c;">Interés de mora</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: right;">${{ formatMoney(comprobanteAbono.moraPagada) }}</span>
+                </div>
+              </template>
 
               <!-- Saldos -->
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
@@ -2186,6 +2215,27 @@
                   <p class="text-xs text-gray-500 mb-1">Saldo pendiente</p>
                   <p class="font-bold text-red-600">${{ formatMoney(prestamoDetalle?.saldo_actual) }}</p>
                 </div>
+              </div>
+              <!-- Interés de mora acumulado (solo si hay mora y tasa configurada) -->
+              <div
+                v-if="prestamoDetalle?.moraAcumulada > 0"
+                class="mt-3 flex items-center justify-between gap-2 rounded-lg bg-rose-50 border border-rose-100 px-3 py-2"
+              >
+                <span class="text-xs font-semibold text-rose-700 flex items-center gap-1.5">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Interés de mora acumulado
+                </span>
+                <span class="text-sm font-bold text-rose-700 whitespace-nowrap">${{ formatMoney(prestamoDetalle.moraAcumulada) }}</span>
+              </div>
+              <!-- Total a pagar (saldo + mora) -->
+              <div
+                v-if="prestamoDetalle?.moraAcumulada > 0"
+                class="mt-2 flex items-center justify-between gap-2 rounded-lg bg-gray-900 px-3 py-2.5"
+              >
+                <span class="text-xs font-semibold text-white/80 uppercase tracking-wide">Total a pagar</span>
+                <span class="text-base font-bold text-white whitespace-nowrap">${{ formatMoney((parseFloat(prestamoDetalle?.saldo_actual) || 0) + (prestamoDetalle.moraAcumulada || 0)) }}</span>
               </div>
             </div>
 
@@ -3186,6 +3236,10 @@
                     <span style="font-size: 12.5px; font-weight: 600; color: #6b7280;">Fecha de creación</span>
                     <span style="font-size: 15px; font-weight: 800; color: #1f2937; letter-spacing: -0.2px;">{{ formatDate(prestamoDetalle?.created_at) }}</span>
                   </div>
+                  <div v-if="prestamoDetalle?.moraAcumulada > 0" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #eef2ee;">
+                    <span style="font-size: 12.5px; font-weight: 600; color: #b91c1c;">Interés de mora</span>
+                    <span style="font-size: 15px; font-weight: 800; color: #dc2626; letter-spacing: -0.2px;">${{ formatMoney(prestamoDetalle.moraAcumulada) }}</span>
+                  </div>
                 </div>
 
                 <!-- Refinanciamiento -->
@@ -3242,19 +3296,31 @@
                         >
                           <td style="padding: 5px 4px; color: #6b7280; font-weight: 700;">{{ cuota.numero_cuota }}</td>
                           <td style="padding: 5px 4px; color: #374151;">{{ formatDate(cuota.fecha_proyectada) }}</td>
-                          <td style="padding: 5px 4px; text-align: right; font-weight: 700; color: #1f2937;">${{ formatMoney(cuota.valor_cuota) }}</td>
+                          <td style="padding: 5px 4px; text-align: right; font-weight: 700; color: #1f2937; vertical-align: top;">
+                            <span>${{ formatMoney(cuota.valor_cuota) }}</span>
+                            <span v-if="moraCuotaComprobante(cuota) > 0" style="display: block; font-size: 8.5px; font-weight: 700; color: #dc2626;">+${{ formatMoney(moraCuotaComprobante(cuota)) }} mora</span>
+                          </td>
                           <td
-                            style="padding: 5px 4px; text-align: right; font-weight: 700;"
+                            style="padding: 5px 4px; text-align: right; font-weight: 700; vertical-align: top;"
                             :style="{ color: parseFloat(cuota.valor_pagado || 0) > 0 ? '#1B5E37' : '#9ca3af' }"
                           >
                             ${{ formatMoney(cuota.valor_pagado || 0) }}
                           </td>
-                          <td style="padding: 5px 4px; text-align: center; vertical-align: middle;">
+                          <td style="padding: 5px 4px; text-align: center; vertical-align: top;">
                             <span :style="estiloBadgeEstadoCuotaComprobante(cuota)">{{ etiquetaEstadoCuotaComprobante(cuota) }}</span>
                           </td>
                         </tr>
                       </tbody>
                     </table>
+                  </div>
+
+                  <!-- Total a pagar con mora (si hay mora acumulada) -->
+                  <div v-if="prestamoDetalle?.moraAcumulada > 0" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fef2f2; border: 1px solid #fbcfcf; border-radius: 10px; padding: 9px 12px;">
+                    <div>
+                      <p style="margin: 0; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; color: #b91c1c;">Total a pagar con mora</p>
+                      <p style="margin: 2px 0 0; font-size: 9px; font-weight: 600; color: #9aa3af;">Saldo ${{ formatMoney(prestamoDetalle?.saldo_actual) }} + mora ${{ formatMoney(prestamoDetalle.moraAcumulada) }}</p>
+                    </div>
+                    <p style="margin: 0; font-size: 16px; font-weight: 800; color: #dc2626; letter-spacing: -0.4px; white-space: nowrap;">${{ formatMoney((parseFloat(prestamoDetalle?.saldo_actual) || 0) + (prestamoDetalle.moraAcumulada || 0)) }}</p>
                   </div>
                 </div>
 
@@ -3758,7 +3824,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
-import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
+import { natilleraPrestamosDeshabilitados, parseReglasInteresPrestamo } from '../../utils/natilleraPrestamos'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -3988,18 +4054,7 @@ const toggleMoraInfo = (prestamoId) => {
   }
 }
 
-function parseReglasInteresPrestamo(raw) {
-  const fallback = { activo: false, porcentaje: 2, plazo_maximo: 36 }
-  if (!raw || typeof raw !== 'object') return { ...fallback }
-  const plazo = Number(raw.plazo_maximo)
-  const pct = Number(raw.porcentaje)
-  return {
-    activo: raw.activo !== false,
-    porcentaje: Number.isFinite(pct) && pct >= 0 ? pct : fallback.porcentaje,
-    plazo_maximo: Number.isFinite(plazo) && plazo >= 1 ? Math.floor(plazo) : fallback.plazo_maximo
-  }
-}
-
+// parseReglasInteresPrestamo se importa desde utils/natilleraPrestamos (incluye tasa_mora)
 const reglasInteresNatillera = ref(parseReglasInteresPrestamo(null))
 
 const plazoMaximoCuotasCrear = computed(() => reglasInteresNatillera.value.plazo_maximo)
@@ -4239,6 +4294,25 @@ const valorAbonoFormateado = ref('')
 const valorAbonoEditadoFormateado = ref('')
 const inputValorAbonoRef = ref(null)
 const comprobanteAbono = ref(null)
+
+// ── Mora en el abono ───────────────────────────────────────────────
+// El pago cubre PRIMERO la mora acumulada (va al fondo) y el resto baja el saldo
+// de capital+interés. El saldo nunca capitaliza la mora.
+const moraPrestamoAbono = computed(() => prestamoSeleccionado.value?.moraAcumulada || 0)
+const saldoPrestamoAbono = computed(() => parseFloat(prestamoSeleccionado.value?.saldo_actual) || 0)
+// Total a pagar (dinámico): saldo pendiente + mora acumulada a hoy
+const totalAPagarConMora = computed(() => saldoPrestamoAbono.value + moraPrestamoAbono.value)
+// Desglose del abono: la mora se cobra PROPORCIONAL a la(s) cuota(s) que se pagan
+// (recorriendo las vencidas de la más antigua a la más nueva), no toda de golpe.
+const desgloseAbono = computed(() => desglosarAbonoConMora(
+  formAbono.valor,
+  prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
+  reglasInteresNatillera.value.tasa_mora,
+  new Date()
+))
+const moraPagadaAbono = computed(() => desgloseAbono.value.moraPagada)
+const abonoACapitalAbono = computed(() => desgloseAbono.value.abonoAPrestamo)
+const saldoDespuesAbono = computed(() => Math.max(0, saldoPrestamoAbono.value - abonoACapitalAbono.value))
 const generandoImagenComprobante = ref(false)
 const comprobanteRef = ref(null)
 
@@ -4905,6 +4979,11 @@ function etiquetaEstadoCuotaComprobante(cuota) {
   return 'Pendiente'
 }
 
+// Mora acumulada a hoy de UNA cuota del plan (para mostrarla en el comprobante).
+function moraCuotaComprobante(cuota) {
+  return Math.round(calcularMoraCuota(cuota, reglasInteresNatillera.value.tasa_mora, new Date()))
+}
+
 function estiloBadgeEstadoCuotaComprobante(cuota) {
   const e = etiquetaEstadoCuotaComprobante(cuota)
   const base = {
@@ -5094,6 +5173,121 @@ function porcentajePagadoPrestamo(prestamo) {
   return Math.max(0, Math.min(100, Math.round((pagado / total) * 100)))
 }
 
+// ── Interés de mora ────────────────────────────────────────────────
+// Mora de UNA cuota vencida: solo sobre el capital pendiente de esa cuota
+// (no sobre el interés → sin anatocismo), proporcional a los días de atraso
+// con base de 30 días. diasMora se cuenta desde el día siguiente al
+// vencimiento hasta `fechaCorte` (hoy, o la fecha de pago al liquidar).
+//   moraCuota = capitalPendienteCuota × (tasaMoraMensual/100/30) × diasMora
+function calcularMoraCuota(cuota, tasaMora, fechaCorte) {
+  const tasa = Number(tasaMora) || 0
+  if (tasa <= 0 || !cuota) return 0
+  const valorCuota = parseFloat(cuota.valor_cuota || 0)
+  if (valorCuota <= 0) return 0
+  const pendiente = Math.max(0, valorCuota - parseFloat(cuota.valor_pagado || 0))
+  if (pendiente <= 0) return 0
+  // Proporción de capital aún debida en esta cuota (excluye el interés)
+  const capitalPendiente = parseFloat(cuota.capital || 0) * (pendiente / valorCuota)
+  if (capitalPendiente <= 0) return 0
+  const fv = parseDateLocal(cuota.fecha_proyectada)
+  fv.setHours(0, 0, 0, 0)
+  const corte = new Date(fechaCorte)
+  corte.setHours(0, 0, 0, 0)
+  const diasMora = Math.floor((corte - fv) / 86400000) // día siguiente al vencimiento = 1
+  if (diasMora <= 0) return 0
+  return capitalPendiente * (tasa / 100 / 30) * diasMora
+}
+
+// Mora acumulada de un préstamo = suma de la mora de sus cuotas vencidas.
+function calcularMoraPrestamo(cuotasVencidasArray, tasaMora, fechaCorte) {
+  return (cuotasVencidasArray || []).reduce(
+    (sum, c) => sum + calcularMoraCuota(c, tasaMora, fechaCorte),
+    0
+  )
+}
+
+// Desglosa un abono en (mora, capital+interés) recorriendo las cuotas vencidas de la
+// más antigua a la más nueva. Cada cuota "cuesta" pendiente + su mora; el pago cubre
+// ese costo cuota por cuota (parcial proporcional en la última cuota alcanzada). Así la
+// mora cobrada es PROPORCIONAL a la(s) cuota(s) que se pagan y coincide con el plan de
+// pagos (pagar «valor_cuota + mora» de una cuota la liquida exacto). El excedente sobre
+// las cuotas vencidas va al préstamo (cuotas futuras), sin mora.
+function desglosarAbonoConMora(valor, cuotasVencidasOrdenadas, tasaMora, fechaCorte) {
+  const total = parseFloat(valor) || 0
+  let restante = total
+  let mora = 0
+  for (const c of (cuotasVencidasOrdenadas || [])) {
+    if (restante <= 0) break
+    const pendiente = Math.max(0, parseFloat(c.valor_cuota || 0) - parseFloat(c.valor_pagado || 0))
+    if (pendiente <= 0) continue
+    const moraC = calcularMoraCuota(c, tasaMora, fechaCorte)
+    const costo = pendiente + moraC
+    if (costo <= 0) continue
+    if (restante >= costo) {
+      mora += moraC
+      restante -= costo
+    } else {
+      mora += moraC * (restante / costo)
+      restante = 0
+    }
+  }
+  const moraPagada = Math.round(mora)
+  return { moraPagada, abonoAPrestamo: Math.max(0, Math.round(total - moraPagada)) }
+}
+
+// Registra en el fondo común (utilidades_clasificadas) el interés de mora COBRADO
+// en un abono. Rubro separado (subtipo='mora', id_actividad=null → no se mezcla con
+// el interés por préstamo ni con «Intereses ganados»). Se acumula por forma de pago
+// (respetando el índice único de la tabla). NO modifica el saldo (no capitaliza).
+async function registrarMoraCobradaEnFondo(natilleraId, montoMora, formaPago) {
+  try {
+    if (!natilleraId || !montoMora || montoMora <= 0) return
+    const monto = Math.round(montoMora)
+
+    const fpNorm = ['efectivo', 'transferencia', 'mixto'].includes((formaPago || '').toLowerCase())
+      ? (formaPago || '').toLowerCase()
+      : null
+
+    let query = supabase
+      .from('utilidades_clasificadas')
+      .select('id, monto, detalles')
+      .eq('natillera_id', natilleraId)
+      .eq('tipo', 'prestamos')
+      .is('id_actividad', null)
+      .filter('detalles->>subtipo', 'eq', 'mora')
+      .is('fecha_cierre', null)
+    query = fpNorm != null ? query.eq('forma_pago', fpNorm) : query.is('forma_pago', null)
+    const { data: filaMora } = await query.maybeSingle()
+
+    if (filaMora) {
+      await supabase
+        .from('utilidades_clasificadas')
+        .update({
+          monto: parseFloat(filaMora.monto || 0) + monto,
+          descripcion: 'Interés de mora de préstamos',
+          detalles: { ...(filaMora.detalles || {}), subtipo: 'mora' },
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', filaMora.id)
+    } else {
+      await supabase
+        .from('utilidades_clasificadas')
+        .insert({
+          natillera_id: natilleraId,
+          tipo: 'prestamos',
+          id_actividad: null,
+          monto,
+          fecha_cierre: null,
+          forma_pago: fpNorm,
+          descripcion: 'Interés de mora de préstamos',
+          detalles: { subtipo: 'mora' }
+        })
+    }
+  } catch (e) {
+    console.error('Error registrando mora cobrada en el fondo:', e)
+  }
+}
+
 // Calcular cuotas restantes
 function calcularCuotasRestantes(prestamo) {
   if (!prestamo) return 0
@@ -5179,6 +5373,11 @@ async function recargarTodosLosPlanesPagos() {
 async function fetchPrestamos() {
   loading.value = true
   try {
+    // Total de intereses del fondo: solo necesita el id de la natillera, así que se
+    // dispara en paralelo con el resto de la cadena (no suma su latencia). No rechaza
+    // (obtenerTotalInteresesPrestamos captura sus errores y devuelve 0).
+    const totalInteresesPromise = obtenerTotalInteresesPrestamos(id)
+
     // Primero obtener los IDs de socios_natillera de esta natillera
     const { data: sociosNatillera } = await supabase
       .from('socios_natillera')
@@ -5187,6 +5386,7 @@ async function fetchPrestamos() {
 
     if (!sociosNatillera || sociosNatillera.length === 0) {
       prestamos.value = []
+      interesesGanadosUtilidades.value = await totalInteresesPromise
       return
     }
 
@@ -5203,46 +5403,41 @@ async function fetchPrestamos() {
     // Obtener IDs de préstamos para cargar el plan de pagos
     const prestamoIds = (data || []).map(p => p.id)
     
-    // Cargar el plan de pagos para todos los préstamos en una sola consulta
+    // Plan de pagos e historial de refinanciaciones EN PARALELO: ambos solo dependen
+    // de prestamoIds. Antes eran dos round-trips secuenciales.
     let planPagosMap = {}
+    let historialRefinanciacionesMap = {}
+    todosLosPlanesPagos.value = []
     if (prestamoIds.length > 0) {
-      const { data: planPagos, error: planError } = await supabase
-        .from('plan_pagos_prestamo')
-        .select('*')
-        .in('prestamo_id', prestamoIds)
+      const [planRes, historialRes] = await Promise.all([
+        supabase
+          .from('plan_pagos_prestamo')
+          .select('*')
+          .in('prestamo_id', prestamoIds),
+        supabase
+          .from('historial_refinanciaciones')
+          .select('*')
+          .in('prestamo_id', prestamoIds)
+          .order('fecha_refinanciacion', { ascending: true }) // ascendente → primer registro = primera refinanciación
+      ])
 
-      if (!planError && planPagos) {
+      const planPagos = !planRes.error ? planRes.data : null
+      if (planPagos) {
         // Guardar todos los planes de pagos para calcular total pagado
         todosLosPlanesPagos.value = planPagos
-        
-        // Crear un mapa por prestamo_id
+        // Mapa por prestamo_id
         planPagosMap = planPagos.reduce((acc, cuota) => {
-          if (!acc[cuota.prestamo_id]) {
-            acc[cuota.prestamo_id] = []
-          }
+          if (!acc[cuota.prestamo_id]) acc[cuota.prestamo_id] = []
           acc[cuota.prestamo_id].push(cuota)
           return acc
         }, {})
-      } else {
-        todosLosPlanesPagos.value = []
       }
-    }
-    
-    // Cargar historial de refinanciaciones para obtener el interés original cuando hay refinanciación
-    let historialRefinanciacionesMap = {}
-    if (prestamoIds.length > 0) {
-      const { data: historialRefinanciaciones, error: historialError } = await supabase
-        .from('historial_refinanciaciones')
-        .select('*')
-        .in('prestamo_id', prestamoIds)
-        .order('fecha_refinanciacion', { ascending: true }) // Ordenar por fecha ascendente para obtener el primero
 
-      if (!historialError && historialRefinanciaciones) {
-        // Crear un mapa por prestamo_id, guardando solo el primer registro (la primera refinanciación)
+      const historialRefinanciaciones = !historialRes.error ? historialRes.data : null
+      if (historialRefinanciaciones) {
+        // Mapa por prestamo_id, guardando solo el primer registro (primera refinanciación)
         historialRefinanciacionesMap = historialRefinanciaciones.reduce((acc, historial) => {
-          if (!acc[historial.prestamo_id]) {
-            acc[historial.prestamo_id] = historial
-          }
+          if (!acc[historial.prestamo_id]) acc[historial.prestamo_id] = historial
           return acc
         }, {})
       }
@@ -5254,7 +5449,7 @@ async function fetchPrestamos() {
 
     // Cargar el monto total de utilidades_clasificadas para préstamos
     // Sumar todos los registros individuales por préstamo
-    const totalIntereses = await obtenerTotalInteresesPrestamos(id)
+    const totalIntereses = await totalInteresesPromise
     interesesGanadosUtilidades.value = totalIntereses
 
     prestamos.value = (data || []).map(prestamo => {
@@ -5331,6 +5526,15 @@ async function fetchPrestamos() {
         interesesCuotasPagadas = cuotasPagadas.reduce((sum, cuota) => sum + (parseFloat(cuota.interes || 0)), 0)
       }
 
+      // Interés de mora acumulado a hoy (solo capital pendiente, por cuota vencida)
+      const moraAcumulada = Math.round(
+        calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual)
+      )
+      // Cuotas vencidas (de la más antigua a la más nueva) para desglosar el abono con mora
+      const cuotasVencidasOrdenadas = [...cuotasVencidasArray]
+        .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
+        .map(c => ({ valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada }))
+
       return {
         ...prestamo,
         socio_natillera: socioNatillera,
@@ -5338,6 +5542,8 @@ async function fetchPrestamos() {
         cuotasVencidas,
         diasMora,
         valorCuotasEnDeuda,
+        moraAcumulada,
+        cuotasVencidasOrdenadas,
         valorUnaCuotaVencida,
         fechaPagoCuotaVencida,
         // Guardar el interés total original para el cálculo de intereses ganados
@@ -5501,6 +5707,12 @@ async function actualizarPrestamoEnLista(prestamoId) {
         cuotasVencidas,
         diasMora,
         valorCuotasEnDeuda,
+        moraAcumulada: Math.round(
+          calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual)
+        ),
+        cuotasVencidasOrdenadas: [...cuotasVencidasArray]
+          .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
+          .map(c => ({ valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada })),
         valorUnaCuotaVencida,
         fechaPagoCuotaVencida,
         // Guardar el interés total original para el cálculo de intereses ganados
@@ -5518,10 +5730,19 @@ async function actualizarPrestamoEnLista(prestamoId) {
 
 function abrirModalAbono(prestamo) {
   prestamoSeleccionado.value = prestamo
-  // Cargar el valor de la cuota por defecto
-  const valorCuota = calcularCuotaMensualDetalle(prestamo)
-  // Si el valor de la cuota es mayor al saldo, usar el saldo
-  const valorInicial = valorCuota > prestamo.saldo_actual ? prestamo.saldo_actual : valorCuota
+  // Valor sugerido: si hay cuotas vencidas, la más antigua (pendiente + su mora) para
+  // liquidarla exacto según el plan; si no, la cuota estándar acotada al saldo.
+  const overdue = prestamo.cuotasVencidasOrdenadas || []
+  let valorInicial
+  if (overdue.length > 0) {
+    const c0 = overdue[0]
+    const pend = Math.max(0, (parseFloat(c0.valor_cuota) || 0) - (parseFloat(c0.valor_pagado) || 0))
+    const mora0 = calcularMoraCuota(c0, reglasInteresNatillera.value.tasa_mora, new Date())
+    valorInicial = Math.round(pend + mora0)
+  } else {
+    const valorCuota = calcularCuotaMensualDetalle(prestamo)
+    valorInicial = Math.round(valorCuota > prestamo.saldo_actual ? prestamo.saldo_actual : valorCuota)
+  }
   formAbono.valor = valorInicial
   formAbono.fecha_pago = getCurrentDateISO() // Fecha actual por defecto
   valorAbonoFormateado.value = formatMoney(valorInicial)
@@ -7764,7 +7985,19 @@ async function handleRegistrarAbono() {
   loading.value = true
 
   try {
-    const nuevoSaldo = prestamoSeleccionado.value.saldo_actual - formAbono.valor
+    // Split: la mora se cobra PROPORCIONAL a la(s) cuota(s) que se pagan (recorriendo
+    // las vencidas de la más antigua a la más nueva); va al fondo, no baja el saldo. El
+    // resto es el abono al préstamo (capital+interés) que sí reduce el saldo.
+    const desgloseAbonoReg = desglosarAbonoConMora(
+      formAbono.valor,
+      prestamoSeleccionado.value.cuotasVencidasOrdenadas,
+      reglasInteresNatillera.value.tasa_mora,
+      new Date()
+    )
+    const moraPagada = desgloseAbonoReg.moraPagada
+    const abonoAPrestamo = desgloseAbonoReg.abonoAPrestamo
+
+    const nuevoSaldo = prestamoSeleccionado.value.saldo_actual - abonoAPrestamo
     const nuevoEstado = nuevoSaldo <= 0 ? 'pagado' : 'activo'
 
     // Verificar que el préstamo existe y pertenece al usuario antes de insertar
@@ -7825,7 +8058,9 @@ async function handleRegistrarAbono() {
     const fechaPago = formAbono.fecha_pago || formatDateToLocalISO(new Date())
     
     const fp = (formAbono.tipo_pago || 'efectivo').toLowerCase()
-    const v = parseFloat(formAbono.valor)
+    // El pago registrado al préstamo es SOLO la porción de capital+interés (sin mora):
+    // así el plan de pagos y el saldo reflejan únicamente la deuda del préstamo.
+    const v = abonoAPrestamo
     const natilleraAbono = await natillerasStore.fetchNatillera(id)
     const datosPago = {
       prestamo_id: prestamoSeleccionado.value.id,
@@ -7942,6 +8177,10 @@ async function handleRegistrarAbono() {
     // Actualizar el préstamo en la lista DESPUÉS de actualizar el plan de pagos
     // para que use los datos actualizados del plan de pagos (con valor_pagado actualizado)
     await actualizarPrestamoEnLista(prestamoIdAbonado)
+
+    // Registrar en el fondo la mora COBRADA en este abono (rubro separado, no capitaliza
+    // al saldo). Fire-and-forget.
+    if (moraPagada > 0) registrarMoraCobradaEnFondo(natilleraId, moraPagada, fp)
     
     // Si estaba viendo el detalle, recargar los datos
     if (estabaEnDetalle) {
@@ -7975,7 +8214,9 @@ async function handleRegistrarAbono() {
     comprobanteAbono.value = {
       pagoPrestamoId: pagoInsertado[0].id, // ID del pago de préstamo para auditoría
       prestamoId: prestamoSeleccionado.value.id, // ID del préstamo para auditoría
-      valor: formAbono.valor,
+      valor: formAbono.valor, // total recibido (abono a préstamo + mora)
+      moraPagada, // porción de mora cobrada
+      abonoAPrestamo, // porción que baja el saldo
       codigoComprobante: codigoComprobante,
       socioNombre: nombreSocio,
       socioTelefono: socioTelefono,
