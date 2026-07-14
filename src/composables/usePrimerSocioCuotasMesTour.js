@@ -223,66 +223,101 @@ export function consumePendingCuotasDetalleTour(natilleraId) {
 }
 
 /**
- * Tour en CuotasMeses: (1) ítem Cuotas en navegación, (2) primer mes del grid.
- * Al cerrar con «Entendido», marca el grid como hecho, deja pendiente el tour de detalle y navega al mes si se indica.
- * @param {{ natilleraId: string, firstMonthLabel: string, firstMonthValue?: number, prepareSidebarForTour?: () => void, clearSidebarAfterTour?: () => void, onMesesGridTourFinished?: (p: { natilleraId: string, firstMonthValue?: number }) => void }} opts
+ * En la vista de Socios, tras crear el primer socio: resalta «Cuotas» en la navegación
+ * (barra lateral en escritorio, inferior en móvil) y espera a que el usuario la toque.
+ * No navega solo ni muestra «Siguiente»: la única acción es tocar «Cuotas», que navega de
+ * forma nativa. El recorrido continúa al aterrizar en la vista de Cuotas (Registrar Pago).
+ * @param {{ natilleraId: string, prepareSidebarForTour?: () => void, clearSidebarAfterTour?: () => void }} opts
+ */
+export function startPrimerSocioCuotasNavHighlight(opts) {
+  const { natilleraId, prepareSidebarForTour, clearSidebarAfterTour } = opts || {}
+  if (!isTourEnabled('primerSocioCuotasNav')) return
+  if (typeof window === 'undefined' || !natilleraId) return
+
+  const isDesktop = window.innerWidth >= 1024
+  const cuotasSelector = isDesktop ? '#tour-sidebar-cuotas' : '#tour-bottom-nav-cuotas'
+
+  const run = (attempt = 0) => {
+    if (isDesktop) prepareSidebarForTour?.()
+    const el = document.querySelector(cuotasSelector)
+    if (!el || el.getClientRects().length === 0) {
+      if (attempt < 12) {
+        window.setTimeout(() => run(attempt + 1), 200)
+        return
+      }
+      clearSidebarAfterTour?.()
+      return
+    }
+
+    const d = driver({
+      animate: true,
+      allowClose: true,
+      disableActiveInteraction: true,
+      overlayColor: '#14532d',
+      overlayOpacity: 0.8,
+      stagePadding: 10,
+      stageRadius: 14,
+      smoothScroll: true,
+      showProgress: false,
+      popoverClass: 'driver-popover-natillera',
+      onDestroyed: () => {
+        clearSidebarAfterTour?.()
+      },
+      steps: [
+        {
+          element: cuotasSelector,
+          // Dejar que el clic llegue al ítem real para que navegue a Cuotas.
+          disableActiveInteraction: false,
+          onHighlighted: () => {
+            const target = document.querySelector(cuotasSelector)
+            if (!target) return
+            const handler = () => {
+              target.removeEventListener('click', handler)
+              // La navegación la hace el propio ítem «Cuotas»; solo cerramos el resalte.
+              try {
+                d.destroy()
+              } catch {
+                /* ignore */
+              }
+            }
+            target.addEventListener('click', handler, { once: true })
+          },
+          popover: {
+            title: isDesktop ? 'Abre «Cuotas»' : 'Toca «Cuotas»',
+            description: isDesktop
+              ? 'Ya creaste tu primer socio. Ahora haz clic en «Cuotas» en el menú lateral para registrar su primer pago.'
+              : 'Ya creaste tu primer socio. Ahora toca «Cuotas» en la barra inferior para registrar su primer pago.',
+            side: isDesktop ? 'right' : 'top',
+            align: 'center',
+            // Forzar la acción: sin «Siguiente», solo se avanza tocando «Cuotas» (o se cierra con la X).
+            showButtons: ['close']
+          }
+        }
+      ]
+    })
+
+    d.drive(0)
+  }
+
+  window.requestAnimationFrame(() => {
+    setTimeout(() => run(0), isDesktop ? 150 : 300)
+  })
+}
+
+/**
+ * Tour en la vista de Cuotas tras crear el primer socio: resalta el botón «Registrar Pago»
+ * y espera a que el usuario lo toque para abrir el registro. No hay botón «Siguiente»: la
+ * única acción es tocar «Registrar Pago» (o cerrar con la X).
+ * @param {{ natilleraId: string, clearSidebarAfterTour?: () => void }} opts
  */
 export function startPrimerSocioCuotasMesTour(opts) {
-  const {
-    natilleraId,
-    firstMonthLabel,
-    firstMonthValue,
-    prepareSidebarForTour,
-    clearSidebarAfterTour,
-    onMesesGridTourFinished
-  } = opts || {}
+  const { natilleraId, clearSidebarAfterTour } = opts || {}
 
   if (!isTourEnabled('primerSocioCuotasNav')) return
   if (typeof window === 'undefined' || !natilleraId) return
 
-  const isDesktopNav = window.innerWidth >= 1024
-  const navSelector = isDesktopNav ? '#tour-sidebar-cuotas' : '#tour-bottom-nav-cuotas'
-  const mesEjemplo = firstMonthLabel || 'ese mes'
-
-  const run = () => {
-    const elNav = document.querySelector(navSelector)
-    if (!elNav) {
-      clearSidebarAfterTour?.()
-      markPrimerSocioCuotasMesGridTourDone(natilleraId)
-      return
-    }
-
-    prepareSidebarForTour?.()
-
-    const elPrimerMes = document.querySelector('#tour-cuotas-meses-primer-mes')
-
-    const steps = [
-      {
-        element: navSelector,
-        popover: {
-          title: isDesktopNav ? 'Cuotas en el menú lateral' : 'Cuotas en la barra inferior',
-          description: isDesktopNav
-            ? '«Cuotas» es donde gestionas los aportes: revisas el estado de cada cuota y registras los pagos de los socios. Es la entrada a esta sección de cuotas y pagos de la natillera.'
-            : '«Cuotas» en la barra inferior te lleva a los aportes y al registro de pagos. Úsalo para entrar siempre que vayas a cobrar o revisar cuotas.',
-          side: isDesktopNav ? 'right' : 'top',
-          align: 'center'
-        }
-      }
-    ]
-
-    if (elPrimerMes) {
-      steps.push({
-        element: '#tour-cuotas-meses-primer-mes',
-        popover: {
-          title: 'Elige un mes',
-          description: `Toca un mes de la cuadrícula para abrir el detalle de ese período. Por ejemplo, al elegir «${mesEjemplo}» verás la información de los socios y podrás registrar pagos correspondientes a ${mesEjemplo}.`,
-          side: 'top',
-          align: 'center'
-        }
-      })
-    }
-
-    // Segundo paso: resaltar el botón «Registrar Pago» (el visible según viewport: móvil o escritorio).
+  const run = (attempt = 0) => {
+    // Resaltar el botón «Registrar Pago» visible según viewport (móvil o escritorio).
     const btnPagoMobile = document.querySelector('#tour-cuotas-registrar-pago-mobile')
     const btnPagoDesktop = document.querySelector('#tour-cuotas-registrar-pago-desktop')
     const pagoVisible = (el) => el && el.getClientRects().length > 0
@@ -292,17 +327,15 @@ export function startPrimerSocioCuotasMesTour(opts) {
         ? '#tour-cuotas-registrar-pago-desktop'
         : null
 
-    if (btnPagoSelector) {
-      steps.push({
-        element: btnPagoSelector,
-        popover: {
-          title: 'Registrar un pago',
-          description:
-            'Con «Registrar Pago» eliges al socio y registras su aporte del mes: cuota, actividades y otros conceptos según corresponda.',
-          side: 'bottom',
-          align: 'center'
-        }
-      })
+    if (!btnPagoSelector) {
+      // El botón aún no está visible (vista cargando): reintentar antes de rendirse.
+      if (attempt < 12) {
+        window.setTimeout(() => run(attempt + 1), 250)
+        return
+      }
+      clearSidebarAfterTour?.()
+      markPrimerSocioCuotasMesGridTourDone(natilleraId)
+      return
     }
 
     const d = driver({
@@ -310,30 +343,53 @@ export function startPrimerSocioCuotasMesTour(opts) {
       allowClose: true,
       disableActiveInteraction: true,
       overlayColor: '#14532d',
-      overlayOpacity: 0.68,
+      overlayOpacity: 0.8,
       stagePadding: 10,
       stageRadius: 14,
       smoothScroll: true,
-      showProgress: steps.length > 1,
-      progressText: '{{current}} de {{total}}',
-      nextBtnText: 'Siguiente',
-      prevBtnText: 'Atrás',
-      doneBtnText: 'Entendido',
+      showProgress: false,
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
         clearSidebarAfterTour?.()
         markPrimerSocioCuotasMesGridTourDone(natilleraId)
-        setPendingCuotasDetalleTour(natilleraId)
-        onMesesGridTourFinished?.({ natilleraId: String(natilleraId), firstMonthValue })
       },
-      steps
+      steps: [
+        {
+          element: btnPagoSelector,
+          // Dejar que el clic llegue al botón real para que abra el registro de pago.
+          disableActiveInteraction: false,
+          onHighlighted: () => {
+            const btn = document.querySelector(btnPagoSelector)
+            if (!btn) return
+            const handler = () => {
+              btn.removeEventListener('click', handler)
+              // El botón abre el registro de pago; solo cerramos el resalte.
+              try {
+                d.destroy()
+              } catch {
+                /* ignore */
+              }
+            }
+            btn.addEventListener('click', handler, { once: true })
+          },
+          popover: {
+            title: 'Registra el primer pago',
+            description:
+              'Toca «Registrar Pago» para abrir el registro: elegirás al socio y anotarás su aporte del mes (cuota, actividades y otros conceptos según corresponda).',
+            side: 'bottom',
+            align: 'center',
+            // Forzar la acción: sin «Siguiente», solo se avanza tocando «Registrar Pago» (o se cierra con la X).
+            showButtons: ['close']
+          }
+        }
+      ]
     })
 
     d.drive(0)
   }
 
   window.requestAnimationFrame(() => {
-    setTimeout(run, isDesktopNav ? 150 : 300)
+    setTimeout(() => run(0), 300)
   })
 }
 
@@ -452,7 +508,7 @@ export function startPrimerCuotasDetalleSocioTour(opts) {
       allowClose: true,
       disableActiveInteraction: true,
       overlayColor: '#14532d',
-      overlayOpacity: 0.68,
+      overlayOpacity: 0.8,
       stagePadding: 10,
       stageRadius: 14,
       smoothScroll: true,

@@ -4,7 +4,7 @@
     <div class="auth-beta-badge">
       <div class="auth-beta-pill flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full">
         <span class="auth-beta-pill__dot" aria-hidden="true" />
-        BETA V0.6
+        BETA V0.8
       </div>
     </div>
 

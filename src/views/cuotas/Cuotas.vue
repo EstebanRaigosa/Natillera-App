@@ -10,6 +10,9 @@
     :aria-label="ariaLoadingBoxCarga"
   />
 
+  <!-- Guía rápida de Cuotas (se muestra sola la primera vez) -->
+  <CuotasAyudaModal :show="!!modalAyudaCuotas" @close="requestCloseTopModal" />
+
   <!-- Modal Selector Rápido de Mes — natillerapp-modals.
        Fuera del gate de carga: se abre de inmediato al entrar mientras las cuotas cargan
        por detrás. La cuadrícula muestra su propio skeleton hasta que la config de la
@@ -23,7 +26,7 @@
     backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
     card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
     card-max-width="28rem"
-    @close="modalSelectorRapidoMes = false"
+    @close="requestCloseTopModal"
   >
     <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
       <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
@@ -38,7 +41,7 @@
           type="button"
           class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
           aria-label="Cerrar"
-          @click="modalSelectorRapidoMes = false"
+          @click="requestCloseTopModal"
         >
           <XMarkIcon class="h-6 w-6" />
         </button>
@@ -58,7 +61,7 @@
           type="button"
           class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
           aria-label="Cerrar"
-          @click="modalSelectorRapidoMes = false"
+          @click="requestCloseTopModal"
         >
           <XMarkIcon class="h-6 w-6" />
         </button>
@@ -66,7 +69,7 @@
     </div>
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
       <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden" aria-hidden="true" />
-      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:pt-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
         <!-- Cuadrícula de meses (config lista) -->
         <div v-if="configCargada" class="grid grid-cols-3 gap-2.5">
           <button
@@ -75,22 +78,23 @@
             type="button"
             @click="seleccionarMesRapido(mes.value)"
             :class="[
-              'relative flex flex-col items-start text-left p-3 rounded-xl border transition-all touch-manipulation',
+              'group relative flex flex-col items-start text-left p-3 rounded-xl border shadow-sm transition-all duration-200 touch-manipulation hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm',
               mesSeleccionado === mes.value
-                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/50'
-                : 'bg-white border-gray-200 active:bg-gray-50'
+                ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-400/60 shadow-md'
+                : claseCardMes(mes.value),
+              esMesActualHoy(mes.value) && mesSeleccionado !== mes.value ? 'ring-1 ring-emerald-300/70' : ''
             ]"
           >
             <span
-              class="absolute top-2 right-2 w-2 h-2 rounded-full ring-2 ring-white/80"
+              class="absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-white shadow-sm"
               :class="dotColorMes(mes.value)"
               aria-hidden="true"
             />
             <p
-              class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-3"
+              class="text-sm font-bold leading-tight flex items-center gap-1.5 pr-4"
               :class="mesSeleccionado === mes.value ? 'text-emerald-700' : 'text-gray-800'"
             >
-              <span class="text-sm leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
+              <span class="text-lg leading-none" aria-hidden="true">{{ getMesEmoji(mes.value) }}</span>
               <span class="truncate">{{ mes.label }}</span>
             </p>
             <p class="text-[11px] text-gray-500 mt-0.5">{{ anioParaMes(mes.value) }}</p>
@@ -121,7 +125,7 @@
           <div
             v-for="n in 6"
             :key="`mes-rapido-skel-${n}`"
-            class="flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-white"
+            class="flex flex-col gap-2 p-3 rounded-xl border border-gray-200 bg-white shadow-sm"
           >
             <div class="h-4 w-16 rounded bg-gray-200 animate-pulse"></div>
             <div class="h-3 w-10 rounded bg-gray-100 animate-pulse"></div>
@@ -1027,8 +1031,8 @@
                 class="rounded-lg border px-2.5 py-2"
                 :class="[
                   (cuota.estadoReal || cuota.estado) === 'pagada' ? 'bg-green-50/70 border-green-200' :
-                  tienePagoParcialCuota(cuota) ? 'bg-amber-50/80 border-amber-300' :
                   (cuota.estadoReal || cuota.estado) === 'mora' ? 'bg-red-50/70 border-red-200' :
+                  tienePagoParcialCuota(cuota) ? 'bg-amber-50/80 border-amber-300' :
                   'bg-gray-50 border-gray-200'
                 ]"
               >
@@ -1038,19 +1042,19 @@
                     class="inline-flex items-center gap-1.5 text-xs font-semibold"
                     :class="[
                       (cuota.estadoReal || cuota.estado) === 'pagada' ? 'text-green-800' :
-                      tienePagoParcialCuota(cuota) ? 'text-amber-800' :
-                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' : 'text-gray-700'
+                      (cuota.estadoReal || cuota.estado) === 'mora' ? 'text-red-700' :
+                      tienePagoParcialCuota(cuota) ? 'text-amber-800' : 'text-gray-700'
                     ]"
                   >
                     <CheckCircleIcon v-if="(cuota.estadoReal || cuota.estado) === 'pagada'" class="w-4 h-4 flex-shrink-0" />
-                    <CurrencyDollarIcon v-else-if="tienePagoParcialCuota(cuota)" class="w-4 h-4 flex-shrink-0" />
                     <ExclamationCircleIcon v-else-if="(cuota.estadoReal || cuota.estado) === 'mora'" class="w-4 h-4 flex-shrink-0" />
+                    <CurrencyDollarIcon v-else-if="tienePagoParcialCuota(cuota)" class="w-4 h-4 flex-shrink-0" />
                     <ClockIcon v-else class="w-4 h-4 flex-shrink-0" />
                     {{ getPeriodoCuotaCorto(cuota) }}
                     <span class="font-normal text-[11px] text-gray-500">
                       · {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
-                            tienePagoParcialCuota(cuota) ? ((cuota.estadoReal || cuota.estado) === 'mora' ? 'Parcial · vencida' : 'Parcial') :
-                            (cuota.estadoReal || cuota.estado) === 'mora' ? 'En mora' :
+                            (cuota.estadoReal || cuota.estado) === 'mora' ? (tienePagoParcialCuota(cuota) ? 'En mora · parcial' : 'En mora') :
+                            tienePagoParcialCuota(cuota) ? 'Parcial' :
                             (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 'Pendiente' }}
                     </span>
                   </span>
@@ -1496,7 +1500,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="modalConfirmarBorrar = false"
+      @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
@@ -1511,7 +1515,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalConfirmarBorrar = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -1531,7 +1535,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalConfirmarBorrar = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -1559,7 +1563,7 @@
             type="button"
             class="btn-modal-secondary flex-1"
             :disabled="cuotasStore.loading"
-            @click="modalConfirmarBorrar = false"
+            @click="requestCloseTopModal"
           >
             Cancelar
           </button>
@@ -2066,7 +2070,7 @@
             <button
             type="button"
             v-if="(cuotaDetalle?.estadoReal || cuotaDetalle?.estado) !== 'pagada'"
-            @click="cerrarModalDetalleCuota(); abrirModalPago(cuotaDetalle)"
+            @click="abrirModalPago(cuotaDetalle)"
             class="btn-modal-primary flex-1"
           >
             Registrar Pago
@@ -2185,8 +2189,8 @@
             class="rounded-xl border border-gray-200 bg-white p-3.5 border-l-[5px]"
             :class="[
               (cuota.estadoReal || cuota.estado) === 'pagada' ? 'border-l-green-500 bg-green-50/40' :
-              tienePagoParcialCuota(cuota) ? 'border-l-amber-500 bg-amber-50/50' :
               (cuota.estadoReal || cuota.estado) === 'mora' ? 'border-l-red-500 bg-red-50/50' :
+              tienePagoParcialCuota(cuota) ? 'border-l-amber-500 bg-amber-50/50' :
               (cuota.estadoReal || cuota.estado) === 'programada' ? 'border-l-slate-400 bg-slate-50/60' :
               'border-l-orange-500 bg-orange-50/40',
               !esVisor ? 'cursor-pointer hover:shadow-sm transition-shadow' : ''
@@ -2208,15 +2212,15 @@
                   class="ds-badge"
                   :class="[
                     (cuota.estadoReal || cuota.estado) === 'pagada' ? 'ds-badge--success' :
-                    tienePagoParcialCuota(cuota) ? 'ds-badge--warning' :
                     (cuota.estadoReal || cuota.estado) === 'mora' ? 'ds-badge--danger' :
+                    tienePagoParcialCuota(cuota) ? 'ds-badge--warning' :
                     (cuota.estadoReal || cuota.estado) === 'programada' ? 'ds-badge--muted' :
                     'ds-badge--warning'
                   ]"
                 >
                   {{ (cuota.estadoReal || cuota.estado) === 'pagada' ? 'Pagada' :
-                     tienePagoParcialCuota(cuota) ? ((cuota.estadoReal || cuota.estado) === 'mora' ? 'Parcial · vencida' : 'Parcial') :
-                     (cuota.estadoReal || cuota.estado) === 'mora' ? 'En Mora' :
+                     (cuota.estadoReal || cuota.estado) === 'mora' ? (tienePagoParcialCuota(cuota) ? 'En mora · parcial' : 'En Mora') :
+                     tienePagoParcialCuota(cuota) ? 'Parcial' :
                      (cuota.estadoReal || cuota.estado) === 'programada' ? 'Programada' : 'Pendiente' }}
                 </span>
                 <ChevronRightIcon
@@ -2392,7 +2396,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="42rem"
-      @close="modalGenerarCuotas = false"
+      @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
@@ -2407,7 +2411,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalGenerarCuotas = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -2427,7 +2431,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalGenerarCuotas = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -2727,7 +2731,7 @@
           <button
             type="button"
             class="btn-modal-secondary flex-1"
-            @click="modalGenerarCuotas = false"
+            @click="requestCloseTopModal"
           >
             Cancelar
           </button>
@@ -3320,7 +3324,6 @@
                   @input="handleValorPagoInput($event)"
                   @blur="handleValorPagoBlur"
                   @focus="seleccionarValorPago"
-                  @click="seleccionarValorPago"
                   @keydown.enter.prevent="mostrarConfirmacionPago"
                   type="text"
                   inputmode="decimal"
@@ -3694,7 +3697,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-2xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="42rem"
-      @close="modalHistorialAjustes = false"
+      @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
@@ -3709,7 +3712,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalHistorialAjustes = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -3729,7 +3732,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalHistorialAjustes = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -3864,7 +3867,7 @@
           <button
             type="button"
             class="btn-modal-secondary w-full"
-            @click="modalHistorialAjustes = false"
+            @click="requestCloseTopModal"
           >
             Cerrar
           </button>
@@ -3882,7 +3885,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="28rem"
-      @close="modalConfirmarPago = false"
+      @close="requestCloseTopModal"
     >
       <!-- Cabecera móvil: fila — icono | títulos | X -->
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
@@ -3902,7 +3905,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
             aria-label="Cerrar"
-            @click="modalConfirmarPago = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -3927,7 +3930,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 active:bg-white/20 [-webkit-tap-highlight-color:transparent] touch-manipulation"
             aria-label="Cerrar"
-            @click="modalConfirmarPago = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -4155,7 +4158,7 @@
         <button
           type="button"
           class="btn-modal-secondary w-full"
-          @click="modalConfirmarPago = false"
+          @click="requestCloseTopModal"
         >
           Cancelar
         </button>
@@ -4588,7 +4591,7 @@
       overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-2 sm:p-4"
       card-class="relative max-w-lg w-full bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[95vh] sm:max-h-[90vh] flex flex-col"
       card-max-width="32rem"
-      @close="modalModificacion = false"
+      @close="requestCloseTopModal"
     >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-4 sm:p-6 text-white relative overflow-hidden flex-shrink-0">
@@ -4614,7 +4617,7 @@
             </div>
             <button
               type="button"
-              @click="modalModificacion = false"
+              @click="requestCloseTopModal"
               class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors"
               aria-label="Cerrar"
             >
@@ -4845,7 +4848,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="32rem"
-      @close="modalExportar = false"
+      @close="requestCloseTopModal"
     >
       <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
         <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
@@ -4860,7 +4863,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalExportar = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -4880,7 +4883,7 @@
             type="button"
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
             aria-label="Cerrar"
-            @click="modalExportar = false"
+            @click="requestCloseTopModal"
           >
             <XMarkIcon class="h-6 w-6" />
           </button>
@@ -4936,7 +4939,7 @@
         <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <div class="flex gap-3">
             <button 
-              @click="modalExportar = false"
+              @click="requestCloseTopModal"
               type="button"
               class="btn-modal-secondary flex-1"
             >
@@ -6110,7 +6113,7 @@
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-4"
       card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
-      @close="modalDetalleSocio = false"
+      @close="requestCloseTopModal"
     >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
@@ -6134,7 +6137,7 @@
                 </div>
               </div>
               <button 
-                @click="modalDetalleSocio = false"
+                @click="requestCloseTopModal"
                 class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
               >
                 <XMarkIcon class="w-5 h-5" />
@@ -6207,7 +6210,7 @@
                 </p>
                 <router-link 
                   :to="`/natilleras/${id}/socios`"
-                  @click="modalDetalleSocio = false"
+                  @click="requestCloseTopModal"
                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-natillera-500/25 hover:shadow-xl"
                 >
                   <UsersIcon class="w-5 h-5" />
@@ -6222,7 +6225,7 @@
         <!-- Footer -->
         <div class="p-6 border-t border-gray-200 bg-gray-50">
           <button 
-            @click="modalDetalleSocio = false"
+            @click="requestCloseTopModal"
             class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
             Cerrar
@@ -6239,7 +6242,7 @@
     overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center overflow-hidden overscroll-contain p-0 sm:p-4"
     card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-3xl sm:rounded-3xl border border-gray-200 bg-white shadow-2xl overflow-hidden"
     card-max-width="32rem"
-    @close="modalDesgloseRecaudacion = false"
+    @close="requestCloseTopModal"
   >
         <!-- Header con gradiente -->
         <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
@@ -6264,7 +6267,7 @@
               </div>
             </div>
             <button 
-              @click="modalDesgloseRecaudacion = false"
+              @click="requestCloseTopModal"
               class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
             >
               <XMarkIcon class="w-5 h-5" />
@@ -6360,7 +6363,7 @@
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
           <button 
-            @click="modalDesgloseRecaudacion = false"
+            @click="requestCloseTopModal"
             class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
           >
             Cerrar
@@ -6378,6 +6381,7 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
+import { normalizeText } from '../../utils/normalizeText.js'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { toPng } from 'html-to-image'
 import { 
@@ -6431,6 +6435,7 @@ import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
 import LoadingBox from '../../components/LoadingBox.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import CuotasAyudaModal from '../../components/CuotasAyudaModal.vue'
 import { isTourEnabled } from '../../config/toursEnabled'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
@@ -6442,6 +6447,7 @@ async function ensureXLSX() {
   }
 }
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useModalStack, __modalStackSync } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
 import {
   peekPendingCuotasDetalleTour,
@@ -6611,7 +6617,6 @@ const modalCuotasSocio = ref(false)
 const socioCuotasSelId = ref(null)
 const contenidoScrollCuotasSocioRef = ref(null)
 const sancionDetalleAbierta = ref(null) // id de la cuota cuyo desglose de sanción está expandido
-const volverASocioTrasPago = ref(false) // reabrir la modal del socio al cerrar el pago por «atrás»
 const hayNatiscrollModalCuotasSocio = ref(false)
 let rafNatiscrollModalCuotasSocio = null
 function actualizarNatiscrollModalCuotasSocio() {
@@ -6652,25 +6657,20 @@ function cerrarModalCuotasSocio() {
   modalCuotasSocio.value = false
   socioCuotasSelId.value = null
   sancionDetalleAbierta.value = null
-  volverASocioTrasPago.value = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 /**
- * Abre el registro de pago de una cuota. Cierra primero la modal del socio para que el
- * scroll se restaure bien (handoff secuencial del lock); al volver atrás reabre la del socio.
+ * Abre el registro de pago de una cuota desde la modal del socio. No cierra la modal del
+ * socio manualmente: useModalStack la oculta y la apila; al cerrar el pago (X/atrás) se
+ * restaura la modal del socio automáticamente.
  */
 async function abrirPagoCuotaDesdeSocio(cuota) {
   if (!cuota) return
-  volverASocioTrasPago.value = true
-  modalCuotasSocio.value = false
-  await nextTick() // deja que el unlock restaure el scroll antes de relockear con el pago
   abrirModalPago(cuota)
 }
 /** Edita el pago existente de una cuota desde el modal del socio (reabre el modal al cerrar). */
 async function abrirEdicionCuotaDesdeSocio(cuota) {
   if (!cuota) return
-  volverASocioTrasPago.value = true
-  modalCuotasSocio.value = false
-  await nextTick()
   abrirModalEditar(cuota)
 }
 /** Clic en una cuota del modal del socio: si ya tiene algún pago → editar; si no → registrar pago. */
@@ -6696,24 +6696,8 @@ function abrirRegistrarPagoDesdeModalSocio() {
     grupo.cuotas?.[0]
   if (cuota) abrirPagoCuotaDesdeSocio(cuota)
 }
-// Al cerrar el pago por «atrás»/cancelar (no por éxito → comprobante), reabrir la modal del socio.
-watch(modalPago, async (abierto) => {
-  if (abierto || !volverASocioTrasPago.value) return
-  volverASocioTrasPago.value = false
-  await nextTick()
-  if (!modalConfirmacion.value && socioCuotasSelId.value) {
-    modalCuotasSocio.value = true
-  }
-})
-// Igual que el pago: al cerrar la edición por «atrás»/cancelar, reabrir la modal del socio.
-watch(modalEditarCuota, async (abierto) => {
-  if (abierto || !volverASocioTrasPago.value) return
-  volverASocioTrasPago.value = false
-  await nextTick()
-  if (!modalModificacion.value && !modalConfirmacion.value && socioCuotasSelId.value) {
-    modalCuotasSocio.value = true
-  }
-})
+// El reapilado de la modal del socio al cerrar pago/edición lo gestiona useModalStack
+// (la del socio queda oculta en la pila y se restaura al cerrar la superior).
 /** Estado global del grupo de cuotas de un socio (para color de la fila/modal). */
 function getEstadoGrupoSocio(grupo) {
   const cuotas = grupo?.cuotas || []
@@ -6843,6 +6827,8 @@ const tourGuiadoCuotasDetalleActivo = ref(false)
 const desplegableYaAbonadoOpen = ref(false)
 // Selector rápido de mes (móvil): hoja inferior con grilla de meses
 const modalSelectorRapidoMes = ref(false)
+const modalAyudaCuotas = ref(false) // Guía rápida (se muestra sola la 1ª vez)
+const AYUDA_CUOTAS_KEY = 'natillerapp_ayuda_cuotas_v1'
 // Config de la natillera lista (meses + año). Hasta entonces el selector muestra skeleton.
 const configCargada = ref(false)
 // Refs del carrusel de meses (desktop + móvil) para centrar el mes seleccionado
@@ -7029,6 +7015,7 @@ function cerrarModalEditarCuota() {
   formEditarCuota.valor = 0
   formEditarCuota.tipo_pago = 'efectivo'
   formEditarCuota.aplicaImpuesto4x1000 = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 watch(modalEditarCuota, async (abierto) => {
   if (abierto) {
@@ -7413,9 +7400,9 @@ const exportarAExcel = async () => {
     
     // Descargar el archivo
     XLSX.writeFile(wb, nombreArchivo)
-    
-    // Cerrar el modal
-    modalExportar.value = false
+
+    // Cerrar el modal (equilibra el historial vía useModalStack)
+    requestCloseTopModal()
     
     // Mostrar mensaje de éxito (opcional)
     setTimeout(() => {
@@ -7441,48 +7428,145 @@ const checkMobileView = () => {
   }
 }
 
-// Manejo del historial para modales
-let modalHistoryState = null
-
-function handleModalBack(modalRef, modalName) {
-  watch(modalRef, (isOpen) => {
-    if (isOpen) {
-      // Verificar si hay otras modales abiertas
-      const hayOtrasModales = modalPago.value || modalEditarCuota.value || 
-                              modalDetalleSocio.value || modalHistorialAjustes.value ||
-                              modalEditarSocio.value || modalGenerarCuotas.value ||
-                              modalConfirmacion.value || modalConfirmarBorrar.value ||
-                              modalExportar.value
-      
-      // Si es la primera modal que se abre (no hay otras modales), agregar primero
-      // una entrada al historial que represente el estado "sin modales"
-      if (!hayOtrasModales) {
-        history.pushState({ modal: null }, '', window.location.href)
-      }
-      
-      // Agregar entrada al historial cuando se abre la modal
-      modalHistoryState = { modal: modalName }
-      history.pushState(modalHistoryState, '', window.location.href)
+// Manejo del historial para modales: pila unificada (useModalStack).
+// «Atrás» del navegador/Android cierra la modal superior y permanece en la vista.
+// Cada modal expone hide/show (togglers puros para apilar) y dismiss (cierre real
+// con reset de estado). Los botones X / Cancelar y @close llaman requestCloseTopModal.
+// Los cierres programáticos (éxito) llaman su cerrarModalX(), que hace afterDismiss.
+const { requestCloseTop: requestCloseTopModal, replaceTop: replaceTopModal } = useModalStack({
+  selectorRapidoMes: {
+    isOpen: computed(() => !!modalSelectorRapidoMes.value),
+    hide: () => { modalSelectorRapidoMes.value = false },
+    show: () => { modalSelectorRapidoMes.value = true },
+    dismiss: () => {
+      modalSelectorRapidoMes.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     }
-  })
-}
-
-// Listener para el botón atrás del navegador
-function handlePopState(event) {
-  // Modal de detalle de cuota
-  if (modalDetalleCuota.value) {
-    modalDetalleCuota.value = false
-    // Si hay otra modal abierta debajo, no hacer nada más
-    // La modal inferior ya tiene su entrada en el historial (fue agregada cuando se abrió)
-    // El siguiente "atrás" naturalmente cerrará esa modal
-    // Si no hay otras modales, no hacer nada más porque ya hay una entrada en el historial
-    // que representa el estado "sin modales" (fue agregada cuando se abrió esta modal)
-    return
+  },
+  ayudaCuotas: {
+    isOpen: computed(() => !!modalAyudaCuotas.value),
+    hide: () => { modalAyudaCuotas.value = false },
+    show: () => { modalAyudaCuotas.value = true },
+    dismiss: () => {
+      modalAyudaCuotas.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  cuotasSocio: {
+    isOpen: computed(() => !!modalCuotasSocio.value),
+    hide: () => { modalCuotasSocio.value = false },
+    show: () => { modalCuotasSocio.value = true },
+    dismiss: cerrarModalCuotasSocio
+  },
+  detalleCuota: {
+    isOpen: computed(() => !!modalDetalleCuota.value),
+    hide: () => { modalDetalleCuota.value = false },
+    show: () => { modalDetalleCuota.value = true },
+    dismiss: cerrarModalDetalleCuota
+  },
+  detalleSocio: {
+    isOpen: computed(() => !!modalDetalleSocio.value),
+    hide: () => { modalDetalleSocio.value = false },
+    show: () => { modalDetalleSocio.value = true },
+    dismiss: () => {
+      modalDetalleSocio.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  historialAjustes: {
+    isOpen: computed(() => !!modalHistorialAjustes.value),
+    hide: () => { modalHistorialAjustes.value = false },
+    show: () => { modalHistorialAjustes.value = true },
+    dismiss: () => {
+      modalHistorialAjustes.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  registrarPagoSelector: {
+    isOpen: computed(() => !!modalRegistrarPagoSelector.value),
+    hide: () => { modalRegistrarPagoSelector.value = false },
+    show: () => { modalRegistrarPagoSelector.value = true },
+    dismiss: cerrarModalRegistrarPagoSelector
+  },
+  pago: {
+    isOpen: computed(() => !!modalPago.value),
+    hide: () => { modalPago.value = false },
+    show: () => { modalPago.value = true },
+    dismiss: cerrarModalPago
+  },
+  confirmarPago: {
+    isOpen: computed(() => !!modalConfirmarPago.value),
+    hide: () => { modalConfirmarPago.value = false },
+    show: () => { modalConfirmarPago.value = true },
+    dismiss: () => {
+      modalConfirmarPago.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  editarCuota: {
+    isOpen: computed(() => !!modalEditarCuota.value),
+    hide: () => { modalEditarCuota.value = false },
+    show: () => { modalEditarCuota.value = true },
+    dismiss: cerrarModalEditarCuota
+  },
+  editarSocio: {
+    isOpen: computed(() => !!modalEditarSocio.value),
+    hide: () => { modalEditarSocio.value = false },
+    show: () => { modalEditarSocio.value = true },
+    dismiss: cerrarModalEditarSocio
+  },
+  confirmacion: {
+    isOpen: computed(() => !!modalConfirmacion.value),
+    hide: () => { modalConfirmacion.value = false },
+    show: () => { modalConfirmacion.value = true },
+    dismiss: cerrarConfirmacion
+  },
+  modificacion: {
+    isOpen: computed(() => !!modalModificacion.value),
+    hide: () => { modalModificacion.value = false },
+    show: () => { modalModificacion.value = true },
+    dismiss: () => {
+      modalModificacion.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  generarCuotas: {
+    isOpen: computed(() => !!modalGenerarCuotas.value),
+    hide: () => { modalGenerarCuotas.value = false },
+    show: () => { modalGenerarCuotas.value = true },
+    dismiss: () => {
+      modalGenerarCuotas.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  confirmarBorrar: {
+    isOpen: computed(() => !!modalConfirmarBorrar.value),
+    hide: () => { modalConfirmarBorrar.value = false },
+    show: () => { modalConfirmarBorrar.value = true },
+    dismiss: () => {
+      modalConfirmarBorrar.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  exportar: {
+    isOpen: computed(() => !!modalExportar.value),
+    hide: () => { modalExportar.value = false },
+    show: () => { modalExportar.value = true },
+    dismiss: () => {
+      modalExportar.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  desgloseRecaudacion: {
+    isOpen: computed(() => !!modalDesgloseRecaudacion.value),
+    hide: () => { modalDesgloseRecaudacion.value = false },
+    show: () => { modalDesgloseRecaudacion.value = true },
+    dismiss: () => {
+      modalDesgloseRecaudacion.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
   }
-}
-
-// Registrar watcher para la modal de detalle de cuota
-handleModalBack(modalDetalleCuota, 'detalleCuota')
+})
 
 onMounted(() => {
   checkMobileView()
@@ -7497,8 +7581,7 @@ onMounted(() => {
     // Revisar de nuevo tras pintar (por si el scroll está en main y aún no ha habido evento)
     setTimeout(handleScrollArriba, 100)
   })
-  // Agregar listener para el botón atrás
-  window.addEventListener('popstate', handlePopState)
+  // El botón «atrás» lo gestiona useModalStack (popstate) — ver requestCloseTopModal.
 })
 
 onUnmounted(() => {
@@ -7509,8 +7592,6 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScrollArriba)
   document.removeEventListener('click', handleClickOutside)
   scrollContainerMain = null
-  // Remover listener para el botón atrás
-  window.removeEventListener('popstate', handlePopState)
 })
 
 // Lista de todos los meses
@@ -7646,15 +7727,15 @@ const cuotasFiltradas = computed(() => {
 
   // Filtro por búsqueda
   if (busquedaCuotas.value.trim()) {
-    const busqueda = busquedaCuotas.value.toLowerCase().trim()
+    const busqueda = normalizeText(busquedaCuotas.value)
     filtradas = filtradas.filter(c => {
-      const nombreSocio = c.socio_natillera?.socio?.nombre?.toLowerCase() || ''
-      const descripcion = c.descripcion?.toLowerCase() || ''
-      const documento = c.socio_natillera?.socio?.documento?.toLowerCase() || ''
-      const telefono = c.socio_natillera?.socio?.telefono?.toLowerCase() || ''
-      
-      return nombreSocio.includes(busqueda) || 
-             descripcion.includes(busqueda) || 
+      const nombreSocio = normalizeText(c.socio_natillera?.socio?.nombre)
+      const descripcion = normalizeText(c.descripcion)
+      const documento = normalizeText(c.socio_natillera?.socio?.documento)
+      const telefono = normalizeText(c.socio_natillera?.socio?.telefono)
+
+      return nombreSocio.includes(busqueda) ||
+             descripcion.includes(busqueda) ||
              documento.includes(busqueda) ||
              telefono.includes(busqueda)
     })
@@ -7715,13 +7796,13 @@ const sociosRegistrarPagoTrasFiltroEstado = computed(() => {
 })
 
 const sociosFiltradosRegistrarPago = computed(() => {
-  const q = busquedaRegistrarPagoSocio.value.toLowerCase().trim()
+  const q = normalizeText(busquedaRegistrarPagoSocio.value)
   const base = sociosRegistrarPagoTrasFiltroEstado.value
   if (!q) return base
   return base.filter((item) => {
-    const n = item.socio_natillera?.socio?.nombre?.toLowerCase() || ''
-    const doc = item.socio_natillera?.socio?.documento?.toLowerCase() || ''
-    const tel = item.socio_natillera?.socio?.telefono?.toLowerCase() || ''
+    const n = normalizeText(item.socio_natillera?.socio?.nombre)
+    const doc = normalizeText(item.socio_natillera?.socio?.documento)
+    const tel = normalizeText(item.socio_natillera?.socio?.telefono)
     return n.includes(q) || doc.includes(q) || tel.includes(q)
   })
 })
@@ -7996,9 +8077,10 @@ const resumenMesActual = computed(() => {
   
   return {
     pagadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'pagada').length,
-    parciales: cuotasConEstadoReal.filter(c => c.estadoReal !== 'pagada' && tienePagoParcialCuota(c)).length,
+    // Mora tiene prioridad: una parcial ya vencida cuenta como mora, no como parcial (no son excluyentes, pero mora manda).
+    parciales: cuotasConEstadoReal.filter(c => c.estadoReal !== 'pagada' && c.estadoReal !== 'mora' && tienePagoParcialCuota(c)).length,
     pendientes: cuotasConEstadoReal.filter(c => c.estadoReal === 'pendiente' && !tienePagoParcialCuota(c)).length,
-    enMora: cuotasConEstadoReal.filter(c => c.estadoReal === 'mora' && !tienePagoParcialCuota(c)).length,
+    enMora: cuotasConEstadoReal.filter(c => c.estadoReal === 'mora').length,
     programadas: cuotasConEstadoReal.filter(c => c.estadoReal === 'programada').length,
     total: cuotasConEstadoReal.length,
     porcentajeRecaudado: isNaN(porcentajeRecaudado) ? 0 : porcentajeRecaudado,
@@ -8173,9 +8255,9 @@ const sociosFiltradosCuotas = computed(() => {
   if (!busquedaSocioCuotas.value.trim()) {
     return sociosActivos.value
   }
-  const busqueda = busquedaSocioCuotas.value.toLowerCase().trim()
-  return sociosActivos.value.filter(socio => 
-    socio.socio?.nombre?.toLowerCase().includes(busqueda)
+  const busqueda = normalizeText(busquedaSocioCuotas.value)
+  return sociosActivos.value.filter(socio =>
+    normalizeText(socio.socio?.nombre).includes(busqueda)
   )
 })
 
@@ -8201,6 +8283,7 @@ function cerrarModalPago() {
   formPago.tipo_pago = 'efectivo'
   formPago.aplicaImpuesto4x1000 = false
   mostrandoAnimacionPago.value = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 const formEditarCuota = reactive({
@@ -9737,6 +9820,7 @@ async function abrirModalDetalleCuota(cuota) {
 function cerrarModalDetalleCuota() {
   modalDetalleCuota.value = false
   restaurarScrollMain()
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 async function cargarHistorialPagosCuota(cuotaId) {
@@ -10310,6 +10394,7 @@ function cerrarModalRegistrarPagoSelector() {
   busquedaRegistrarPagoSocio.value = ''
   soloPendientesOMoraRegistrarPago.value = false
   socioNatilleraIdRegistrarPago.value = null
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 function abrirModalRegistrarPagoSelector() {
@@ -10330,8 +10415,8 @@ function volverPasoSociosRegistrarPago() {
 }
 
 async function seleccionarCuotaYAbrirModalPago(cuota) {
-  cerrarModalRegistrarPagoSelector()
-  await nextTick()
+  // No cerrar el selector: useModalStack lo oculta y lo apila bajo el pago.
+  // Al cerrar el pago (X/atrás) se restaura el selector en el paso de cuotas.
   abrirModalPago(cuota)
 }
 
@@ -11548,6 +11633,7 @@ function editarSocio(sn) {
 function cerrarModalEditarSocio() {
   modalEditarSocio.value = false
   restaurarScrollMain()
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
   socioEditando.value = null
   errorSocio.value = ''
   estadoGuardadoSocio.value = ''
@@ -12410,14 +12496,15 @@ async function guardarEdicionCuota() {
           motivo: estaPagada ? 'Edición de cuota pagada' : (tienePagoParcial ? 'Edición de pago parcial' : 'Actualización de pago')
         }
         
-      modalEditarCuota.value = false
+        // Cerrar edición vía useModalStack (equilibra el historial) y abrir el comprobante de modificación encima
+        cerrarModalEditarCuota()
         // Esperar un momento para que el modal se cierre antes de abrir el nuevo
         await nextTick()
         setTimeout(() => {
           modalModificacion.value = true
         }, 300)
       } else {
-        modalEditarCuota.value = false
+        cerrarModalEditarCuota()
       }
       
       cuotaEditando.value = null
@@ -12528,7 +12615,7 @@ async function handleGenerarCuotas() {
   )
 
   if (result.success) {
-    modalGenerarCuotas.value = false
+    requestCloseTopModal()
     formCuotas.fecha_quincena1 = ''
     formCuotas.fecha_quincena2 = ''
     // Cambiar al mes generado
@@ -12670,9 +12757,10 @@ function mostrarConfirmacionPago() {
 
 // Función para confirmar y ejecutar el registro del pago
 async function confirmarYRegistrarPago() {
-  // Cerrar el modal de confirmación
+  // Cerrar el modal de confirmación (equilibra el historial vía useModalStack; restaura el pago debajo)
   modalConfirmarPago.value = false
-  
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+
   // Ejecutar el registro del pago
   await handleRegistrarPago()
 }
@@ -13109,11 +13197,14 @@ async function handleRegistrarPago() {
       historialPagos
     }
     
-    // Cerrar modal de pago y mostrar comprobante INMEDIATAMENTE (UI optimista)
-    modalPago.value = false
+    // Cerrar modal de pago y mostrar comprobante INMEDIATAMENTE (UI optimista).
+    // replaceTopModal reemplaza el pago por el comprobante EN SU SITIO: el comprobante hereda
+    // la misma capa de history del pago, sin history.back()+pushState síncrono (que descuadraba
+    // el historial y al cerrar la modal del socio salía a la página de la natillera). El modal
+    // del socio queda intacto debajo y se restaura al cerrar el comprobante.
+    replaceTopModal('confirmacion')
     mostrandoAnimacionPago.value = false
-    modalConfirmacion.value = true
-    
+
     // Capturar ID antes de limpiar cuotaSeleccionada (necesario para background tasks)
     const cuotaIdParaBg = cuotaSeleccionada.value?.id
     cuotaSeleccionada.value = null
@@ -14349,6 +14440,7 @@ function cerrarConfirmacion() {
   modalConfirmacion.value = false
   pagoRegistrado.value = null
   mostrarIndicadorScroll.value = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
 function verificarScrollComprobante() {
@@ -15241,6 +15333,15 @@ function dotColorMes(mes) {
   return 'bg-gray-300'
 }
 
+// Clases de la tarjeta de mes según su estado (le da relieve/color en el selector de mes)
+function claseCardMes(mes) {
+  const r = resumenMesCarrusel(mes)
+  if (r.enMora > 0) return 'bg-gradient-to-br from-red-50 to-white border-red-200 hover:border-red-300'
+  if (r.pendientes > 0) return 'bg-gradient-to-br from-amber-50 to-white border-amber-200 hover:border-amber-300'
+  if (r.pagadas > 0) return 'bg-gradient-to-br from-emerald-50 to-white border-emerald-200 hover:border-emerald-300'
+  return 'bg-white border-gray-200 hover:border-gray-300'
+}
+
 function esMesActualHoy(mes) {
   const now = new Date()
   return mes === now.getMonth() + 1 && anioParaMes(mes) === now.getFullYear()
@@ -15263,7 +15364,7 @@ function seleccionarMes(mesValue) {
 }
 
 function seleccionarMesRapido(mesValue) {
-  modalSelectorRapidoMes.value = false
+  requestCloseTopModal()
   seleccionarMes(mesValue)
 }
 
@@ -15473,11 +15574,11 @@ async function borrarCuotasMes() {
     
     // Recalcular sanciones dinámicas después de borrar cuotas
     await recalcularSancionesMes()
-    
-    modalConfirmarBorrar.value = false
+
+    requestCloseTopModal()
   } catch (error) {
     console.error('Error borrando cuotas:', error)
-    modalConfirmarBorrar.value = false
+    requestCloseTopModal()
     alert('Error al borrar las cuotas: ' + error.message)
   } finally {
     cuotasStore.loading = false
@@ -15502,39 +15603,25 @@ function esPrimerFlujoSocioCuota(cuota) {
 }
 
 /**
- * Recorrido guiado tras crear el primer socio: al aterrizar en Cuotas resalta el ítem «Cuotas»
- * de la navegación (barra lateral en escritorio, barra inferior en móvil) e indica que desde ahí
- * se gestionan y registran los pagos. Al cerrarse encadena con el tour de detalle del socio.
- * @returns {boolean} true si tomó el control del flujo guiado (evita lanzar el de detalle en paralelo).
+ * Recorrido guiado tras crear el primer socio: al aterrizar en Cuotas (el usuario llegó
+ * tocando «Cuotas» él mismo) resalta el botón «Registrar Pago» y espera a que lo toque
+ * para abrir el registro. No hay botón «Siguiente»: la única acción es tocar el botón.
+ * @returns {boolean} true si tomó el control del flujo guiado.
  */
 function schedulePrimerSocioCuotasNavTour() {
   if (!id) return false
   if (!isTourEnabled('primerSocioCuotasNav')) return false
   if (!consumePendingPrimerSocioCuotasMesTour(id)) return false
-  // Ya se vio antes el paso de navegación: continuar directo con el detalle si corresponde.
   if (!shouldShowPrimerSocioCuotasMesTour(id)) return false
 
-  // Cerrar el selector rápido de mes para que el resalte de la navegación quede limpio.
-  modalSelectorRapidoMes.value = false
-
-  const mesActualLabel = mesSeleccionadoLabel.value || ''
-
-  // Anclar la barra lateral abierta cuanto antes (lg 1024–1279) para que driver mida
-  // el ítem ya visible; el propio tour la vuelve a preparar y la libera al cerrarse.
-  dashboardSidebar?.prepareSidebarForTour?.()
+  // Cerrar el selector rápido de mes para que el resalte quede limpio.
+  if (modalSelectorRapidoMes.value) requestCloseTopModal()
 
   nextTick(() => {
     setTimeout(() => {
       startPrimerSocioCuotasMesTour({
         natilleraId: id,
-        firstMonthLabel: mesActualLabel,
-        firstMonthValue: mesSeleccionado.value,
-        prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
-        clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour,
-        // Al terminar el paso de navegación, continuar con el detalle del socio (Pagar, etc.).
-        onMesesGridTourFinished: () => {
-          schedulePrimerCuotasDetalleSocioTour()
-        }
+        clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour
       })
     }, 450)
   })
@@ -15610,6 +15697,22 @@ onMounted(async () => {
     shouldShowPrimerSocioCuotasMesTour(id)
   if (!enRecorridoPrimerSocioCuotas) {
     modalSelectorRapidoMes.value = true
+  }
+
+  // Guía rápida. Disparador de prueba: entrar con ?ayuda=1 en la URL la fuerza SIEMPRE y no
+  // marca el flag (repetible para probar). Si no, se muestra solo la 1ª vez (localStorage) y
+  // se apila ENCIMA del selector de mes (useModalStack lo restaura al cerrar la guía). No
+  // aplica durante los recorridos guiados del primer socio.
+  const forzarAyuda = route.query.ayuda === '1' || route.query.ayuda === 'true'
+  const enRecorridoDetalleSocio =
+    isTourEnabled('cuotasDetalleSocio') &&
+    peekPendingCuotasDetalleTour(id) &&
+    shouldShowPrimerCuotasDetalleSocioTour(id)
+  if (forzarAyuda) {
+    modalAyudaCuotas.value = true
+  } else if (!enRecorridoPrimerSocioCuotas && !enRecorridoDetalleSocio && debeMostrarAyudaCuotas()) {
+    modalAyudaCuotas.value = true
+    try { localStorage.setItem(AYUDA_CUOTAS_KEY, '1') } catch (e) { /* ignore */ }
   }
 
   inicializando.value = true
@@ -15695,6 +15798,19 @@ onMounted(async () => {
 
   document.addEventListener('click', handleClickOutside)
 })
+
+/**
+ * ¿Debe mostrarse la guía rápida de Cuotas? Solo la primera vez (recordado en
+ * localStorage) y no a visores.
+ */
+function debeMostrarAyudaCuotas() {
+  if (esVisor.value) return false
+  try {
+    return !localStorage.getItem(AYUDA_CUOTAS_KEY)
+  } catch (e) {
+    return false
+  }
+}
 
 function onResizeCarrusel() {
   actualizarFlechasDesktop()

@@ -2849,6 +2849,7 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
 import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
+import { normalizeText } from '../../utils/normalizeText.js'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -2862,7 +2863,8 @@ import {
 import {
   setPendingPrimerSocioCuotasMesTour,
   setPrimerFlujoSocioNatilleraId,
-  shouldShowPrimerSocioCuotasMesTour
+  shouldShowPrimerSocioCuotasMesTour,
+  startPrimerSocioCuotasNavHighlight
 } from '../../composables/usePrimerSocioCuotasMesTour'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -3398,13 +3400,13 @@ watch(itemsPorPagina, (nv) => {
 
 const sociosFiltrados = computed(() => {
   let res = sociosStore.sociosNatillera
-  const termino = busqueda.value.trim().toLowerCase()
+  const termino = normalizeText(busqueda.value)
   if (termino) {
     res = res.filter(sn =>
-      sn.socio?.nombre?.toLowerCase().includes(termino) ||
-      sn.socio?.documento?.toLowerCase().includes(termino) ||
-      sn.socio?.telefono?.includes(termino) ||
-      sn.socio?.email?.toLowerCase().includes(termino)
+      normalizeText(sn.socio?.nombre).includes(termino) ||
+      normalizeText(sn.socio?.documento).includes(termino) ||
+      normalizeText(sn.socio?.telefono).includes(termino) ||
+      normalizeText(sn.socio?.email).includes(termino)
     )
   }
   if (filtroEstado.value !== 'todos') {
@@ -4145,13 +4147,21 @@ function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId
     return
   }
 
-  // Caso B: recorrido de «Cuotas» habilitado (sin el de «Socios») → al crear el primer socio,
-  // ir directo a Cuotas dejando la marca pendiente; el resalte de «Cuotas» se muestra al
-  // aterrizar en esa vista. No exige venir de la modal «Sin socios»: basta que sea el primer
-  // socio (garantizado por `eraListaVaciaAntes`).
+  // Caso B: recorrido de «Cuotas» habilitado (sin el de «Socios») → al crear el primer socio
+  // NO se navega solo: se deja la marca pendiente y se resalta «Cuotas» en la navegación
+  // (barra lateral en escritorio, inferior en móvil). El usuario debe tocar «Cuotas»; al
+  // aterrizar en esa vista el recorrido continúa resaltando «Registrar Pago».
   if (shouldShowPrimerSocioCuotasMesTour(natilleraId)) {
     setPendingPrimerSocioCuotasMesTour(natilleraId)
-    router.push(`/natilleras/${natilleraId}/cuotas`)
+    nextTick(() => {
+      setTimeout(() => {
+        startPrimerSocioCuotasNavHighlight({
+          natilleraId,
+          prepareSidebarForTour: dashboardSidebar?.prepareSidebarForTour,
+          clearSidebarAfterTour: dashboardSidebar?.clearSidebarAfterTour
+        })
+      }, 900)
+    })
     return
   }
 

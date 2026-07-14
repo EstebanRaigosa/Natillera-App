@@ -2294,11 +2294,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
   function calcularResumenCuotas(cuotasFiltradas = null) {
     const lista = cuotasFiltradas || cuotas.value
-    const pendientes = lista.filter(c => c.estado === 'pendiente' || c.estado === 'parcial')
-    const pagadas = lista.filter(c => c.estado === 'pagada')
-    const parciales = lista.filter(c => c.estado === 'parcial')
-    const enMora = lista.filter(c => c.estado === 'mora')
-    const programadas = lista.filter(c => c.estado === 'programada')
+    // Usar estado real (por fecha): una parcial ya vencida se prioriza como mora, no como parcial
+    // (no son excluyentes, pero mora manda). Antes se contaba c.estado crudo de BD y la parcial tapaba la mora.
+    const estados = lista.map(c => ({ c, er: calcularEstadoRealCuotaStore(c) }))
+    const pagadas = estados.filter(x => x.er === 'pagada')
+    const enMora = estados.filter(x => x.er === 'mora')
+    const programadas = estados.filter(x => x.er === 'programada')
+    const pendientes = estados.filter(x => x.er !== 'pagada' && x.er !== 'mora' && x.er !== 'programada')
+    const parciales = pendientes.filter(x => (x.c.valor_pagado || 0) > 0)
 
     const totalRecaudado = lista.reduce((sum, c) => sum + (c.valor_pagado || 0), 0)
     const totalEsperado = lista.reduce((sum, c) => sum + c.valor_cuota, 0)

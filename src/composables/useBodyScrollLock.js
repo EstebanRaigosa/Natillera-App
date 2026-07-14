@@ -81,11 +81,10 @@ function applyLock() {
 
     const main = document.querySelector('main')
     if (main) {
-      main.style.position = 'fixed'
-      main.style.top = `-${savedScrollYMain}px`
-      main.style.left = '0'
-      main.style.right = '0'
-      main.style.width = '100%'
+      // NO usar position:fixed/width en <main>: en desktop rompe layouts con sidebar
+      // (main pierde su offset y se va a ancho completo, quedando bajo el menú → fondo
+      // "desmaquetado"). overflow:hidden conserva el scrollTop y desactiva el scroll sin
+      // sacar a main del flujo, así el layout no se altera.
       main.style.overflow = 'hidden'
     }
   }
@@ -136,11 +135,6 @@ function applyUnlock() {
 
     const main = document.querySelector('main')
     if (main) {
-      main.style.position = ''
-      main.style.top = ''
-      main.style.left = ''
-      main.style.right = ''
-      main.style.width = ''
       main.style.overflow = ''
       main.scrollTop = savedScrollYMain
     }

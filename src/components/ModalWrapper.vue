@@ -48,7 +48,45 @@
 </template>
 
 <script setup>
+import { watch, onBeforeUnmount } from 'vue'
 import { useIsIos } from '../composables/useIsIos'
+
+/**
+ * Pila global de modales abiertas (ModalWrapper). Permite que la tecla Esc
+ * cierre solo la modal superior cuando hay varias apiladas y registrar un
+ * único listener de teclado compartido para toda la app.
+ */
+const modalStack = []
+let escListenerActive = false
+
+function handleEscKeydown(e) {
+  if (e.key !== 'Escape' && e.key !== 'Esc') return
+  const top = modalStack[modalStack.length - 1]
+  if (top) {
+    e.stopPropagation()
+    top()
+  }
+}
+
+function ensureEscListener() {
+  if (escListenerActive || typeof document === 'undefined') return
+  document.addEventListener('keydown', handleEscKeydown)
+  escListenerActive = true
+}
+
+function pushModal(closeFn) {
+  modalStack.push(closeFn)
+  ensureEscListener()
+}
+
+function popModal(closeFn) {
+  const idx = modalStack.lastIndexOf(closeFn)
+  if (idx !== -1) modalStack.splice(idx, 1)
+  if (modalStack.length === 0 && escListenerActive && typeof document !== 'undefined') {
+    document.removeEventListener('keydown', handleEscKeydown)
+    escListenerActive = false
+  }
+}
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -76,6 +114,31 @@ function tryClose() {
     emit('close')
   }
 }
+
+// Cierre con tecla Esc en desktop (Esc solo lo emite un teclado físico).
+// Respeta `persistent` vía tryClose y, con modales apiladas, cierra solo la superior.
+let registered = false
+function register() {
+  if (registered) return
+  pushModal(tryClose)
+  registered = true
+}
+function unregister() {
+  if (!registered) return
+  popModal(tryClose)
+  registered = false
+}
+
+watch(
+  () => props.show,
+  (visible) => {
+    if (visible) register()
+    else unregister()
+  },
+  { immediate: true }
+)
+
+onBeforeUnmount(unregister)
 
 const isIos = useIsIos()
 </script>

@@ -157,6 +157,25 @@ export function useModalStack(modalsConfig, options = {}) {
     }
   }
 
+  /**
+   * Reemplaza el modal superior por otro SIN tocar history ni la pila: el nuevo modal hereda
+   * la capa de history del que se oculta. Úsalo cuando una misma acción cierra un modal y abre
+   * otro encima (p. ej. cerrar «registrar pago» y mostrar el comprobante), evitando el
+   * history.back()+pushState síncrono que descuadra la profundidad del historial y hace que
+   * «atrás» salga una capa de más.
+   */
+  function replaceTop(toId) {
+    if (!normalized[toId]) return
+    suppress++
+    try {
+      normalized[toId].show()
+      currentModalId.value = toId
+      hideOthersExcept(toId)
+    } finally {
+      suppress--
+    }
+  }
+
   function requestCloseTop() {
     const id = resolveTopModalId()
     if (!id) return false
@@ -188,6 +207,7 @@ export function useModalStack(modalsConfig, options = {}) {
 
   const injectValue = {
     requestCloseTop,
+    replaceTop,
     hasOpenModal
   }
 
@@ -197,6 +217,7 @@ export function useModalStack(modalsConfig, options = {}) {
     currentModalId,
     stack,
     requestCloseTop,
+    replaceTop,
     hasOpenModal,
     afterProgrammaticDismiss
   }
