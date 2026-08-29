@@ -131,3 +131,26 @@ export function formatDateWithTime(date) {
   return `${day}/${month}/${year} ${hours}:${minutes}`
 }
 
+
+/**
+ * Convierte una fecha elegida por el usuario (YYYY-MM-DD) en un timestamp ISO
+ * apto para columnas `timestamptz` (cuotas.fecha_pago, historial_pagos_cuota.fecha_pago,
+ * pagos_prestamo.fecha).
+ *
+ * - Sin fecha, o si es la de hoy: se usa el instante actual, para conservar la hora real
+ *   del registro (comportamiento histórico de la app).
+ * - Fecha distinta a hoy: se ancla a las 12:00 hora local (igual que `parseDateLocal`),
+ *   de modo que al convertir a UTC en zonas negativas como Colombia (UTC-5) el día
+ *   nunca se desplaza. Ver SOLUCION_FECHAS_ZONA_HORARIA.md.
+ *
+ * @param {string|Date|null} fecha - YYYY-MM-DD, Date o null
+ * @returns {string} Timestamp ISO
+ */
+export function fechaPagoAIso(fecha) {
+  if (!fecha) return new Date().toISOString()
+  const ymd = formatDateToLocalISO(fecha)
+  if (!ymd || ymd === getCurrentDateISO()) return new Date().toISOString()
+  const d = parseDateLocal(ymd)
+  if (!d || isNaN(d.getTime())) return new Date().toISOString()
+  return d.toISOString()
+}

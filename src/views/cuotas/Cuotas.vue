@@ -840,6 +840,18 @@
                             <ArrowPathIcon class="w-4 h-4" />
                             <span class="hidden lg:inline">Reenviar</span>
                           </button>
+                          <!-- Eliminar un pago registrado (solo admin) -->
+                          <button
+                            v-if="puedeEliminarPago(cuota)"
+                            type="button"
+                            @click.stop="abrirModalEliminarPago(cuota)"
+                            class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                            style="touch-action: manipulation;"
+                            title="Eliminar un pago registrado"
+                            aria-label="Eliminar un pago registrado"
+                          >
+                            <TrashIcon class="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
                     </template>
@@ -873,6 +885,18 @@
                           <ArrowPathIcon class="w-4 h-4" />
                           <span>Reenviar</span>
                         </button>
+                        <!-- Eliminar un pago registrado (solo admin) -->
+                        <button
+                          v-if="puedeEliminarPago(cuota)"
+                          type="button"
+                          @click.stop="abrirModalEliminarPago(cuota)"
+                          class="hidden sm:flex min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                          style="touch-action: manipulation;"
+                          title="Eliminar un pago registrado"
+                          aria-label="Eliminar un pago registrado"
+                        >
+                          <TrashIcon class="w-4 h-4" />
+                        </button>
                         </template>
                       </div>
                     </template>
@@ -905,6 +929,18 @@
                         <ArrowPathIcon class="w-4 h-4" />
                         <span>Reenviar</span>
                       </button>
+                      <!-- Eliminar un pago registrado (solo admin) -->
+                      <button
+                        v-if="puedeEliminarPago(cuota)"
+                        type="button"
+                        @click.stop="abrirModalEliminarPago(cuota)"
+                        class="flex-shrink-0 min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl flex items-center justify-center"
+                        style="touch-action: manipulation;"
+                        title="Eliminar un pago registrado"
+                        aria-label="Eliminar un pago registrado"
+                      >
+                        <TrashIcon class="w-4 h-4" />
+                      </button>
                     </div>
                   </template>
                   <button 
@@ -930,6 +966,17 @@
                   >
                     <ArrowPathIcon class="w-5 h-5" />
                     <span>Reenviar Comprobante</span>
+                  </button>
+                  <!-- Eliminar un pago registrado (solo admin) -->
+                  <button
+                    v-if="puedeEliminarPago(cuota)"
+                    type="button"
+                    @click.stop="abrirModalEliminarPago(cuota)"
+                    class="w-full min-h-[44px] px-6 py-3.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 font-semibold rounded-xl text-sm flex items-center justify-center gap-2"
+                    style="touch-action: manipulation;"
+                  >
+                    <TrashIcon class="w-5 h-5" />
+                    <span>Eliminar pago</span>
                   </button>
                   </template>
                 </div>
@@ -1433,6 +1480,17 @@
                     <ArrowPathIcon class="w-3 h-3" />
                     Reenviar
                   </button>
+                  <!-- Eliminar un pago registrado (solo admin) -->
+                  <button
+                    v-if="puedeEliminarPago(cuota)"
+                    type="button"
+                    @click.stop="abrirModalEliminarPago(cuota)"
+                    class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-lg transition-all flex items-center"
+                    title="Eliminar un pago registrado"
+                    aria-label="Eliminar un pago registrado"
+                  >
+                    <TrashIcon class="w-3 h-3" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -1578,6 +1636,231 @@
         </div>
       </div>
     </ModalWrapper>
+
+    <!-- Modal: eliminar un pago registrado — natillerapp-modals -->
+    <ModalWrapper
+      :show="!!modalEliminarPago"
+      :z-index="50"
+      align="bottom"
+      :persistent="true"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
+      @close="requestCloseTopModal"
+    >
+      <!-- Cabecera móvil: una sola fila -->
+      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
+        <div class="flex items-center gap-2 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+            <TrashIcon class="h-5 w-5 text-[#B91C1C]" />
+          </div>
+          <div class="min-w-0 flex-1 text-left">
+            <h3 class="font-display text-base font-bold leading-tight text-white">Eliminar pago</h3>
+            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">Se revierte el dinero de la cuota</p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
+            aria-label="Cerrar"
+            @click="requestCloseTopModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+      <!-- Cabecera desktop: icono arriba, textos centrados, X en flex -->
+      <div class="hidden sm:block flex-shrink-0 bg-[#1B5E37] text-white">
+        <div class="flex items-start px-3 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div class="w-11 shrink-0" aria-hidden="true" />
+          <div class="flex min-w-0 flex-1 flex-col items-center px-2 text-center">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+              <TrashIcon class="h-6 w-6 text-[#B91C1C]" />
+            </div>
+            <h3 class="mt-2 font-display text-lg font-bold leading-tight text-white">Eliminar pago</h3>
+            <p class="mt-1 text-xs leading-snug text-white/90">Se revierte el dinero de la cuota</p>
+          </div>
+          <button
+            type="button"
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white transition hover:bg-white/15 touch-manipulation"
+            aria-label="Cerrar"
+            @click="requestCloseTopModal"
+          >
+            <XMarkIcon class="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Cuerpo scrolleable + natiscroll -->
+      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="contenidoScrollEliminarPagoRef"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 pt-5 pb-4 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
+          @scroll.passive="programarNatiscrollModalEliminarPago"
+        >
+          <!-- Socio y periodo de la cuota -->
+          <div v-if="cuotaEliminarPago" class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <p class="text-sm font-bold text-gray-800 truncate">
+              {{ cuotaEliminarPago.socio_natillera?.socio?.nombre || cuotaEliminarPago.nombre_socio || 'Socio' }}
+            </p>
+            <p class="mt-0.5 text-xs text-gray-600">
+              {{ cuotaEliminarPago.descripcion || 'Cuota' }}
+            </p>
+          </div>
+
+          <!-- Cargando transacciones -->
+          <div v-if="cargandoTransaccionesEliminar" class="flex flex-col items-center justify-center gap-3 py-8">
+            <div class="inline-block h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-[#1B5E37]"></div>
+            <p class="text-sm font-medium text-gray-600">Cargando pagos registrados...</p>
+          </div>
+
+          <!-- Sin transacciones que eliminar -->
+          <div v-else-if="transaccionesEliminarPago.length === 0" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+            <p class="text-sm font-semibold text-amber-800">No hay pagos que eliminar</p>
+            <p class="mt-1 text-xs text-amber-700">
+              Esta cuota tiene dinero registrado, pero no hay transacciones individuales guardadas
+              (son pagos anteriores al registro por transacción). Para corregirla, usa «Editar pago».
+            </p>
+          </div>
+
+          <template v-else>
+            <!-- Selección de la transacción a eliminar -->
+            <div v-if="transaccionesEliminarPago.length > 1">
+              <p class="mb-2 text-sm font-semibold text-gray-700">¿Cuál pago quieres eliminar?</p>
+              <div class="space-y-2">
+                <button
+                  v-for="t in transaccionesEliminarPago"
+                  :key="t.id"
+                  type="button"
+                  @click="seleccionarTransaccionEliminar(t)"
+                  :class="[
+                    'w-full min-h-[44px] rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation',
+                    transaccionSeleccionadaEliminar === t.id
+                      ? 'border-red-400 bg-red-50 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  ]"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                      <p class="text-sm font-bold text-gray-800 tabular-nums">${{ formatMoney(t.valor_total || 0) }}</p>
+                      <p class="mt-0.5 text-xs text-gray-600">
+                        {{ formatDate(t.fecha_pago) }} · {{ (t.forma_pago || 'efectivo') }}
+                      </p>
+                    </div>
+                    <CheckCircleIcon
+                      v-if="transaccionSeleccionadaEliminar === t.id"
+                      class="h-5 w-5 flex-shrink-0 text-red-600"
+                    />
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Impacto de la eliminación -->
+            <div v-if="cargandoPreviewEliminar" class="flex items-center justify-center gap-3 py-6">
+              <div class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-[#1B5E37]"></div>
+              <p class="text-sm text-gray-600">Calculando qué se revertirá...</p>
+            </div>
+
+            <div v-else-if="previewEliminarPago" class="space-y-3">
+              <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                <p class="text-sm font-semibold text-red-800">Se revertirá este dinero</p>
+                <div class="mt-2 space-y-1.5">
+                  <div v-if="previewEliminarPago.valorCuota > 0" class="flex justify-between gap-2 text-xs">
+                    <span class="text-gray-700">Cuota</span>
+                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorCuota) }}</span>
+                  </div>
+                  <div v-if="previewEliminarPago.valorSancion > 0" class="flex justify-between gap-2 text-xs">
+                    <span class="text-gray-700">Sanción (vuelve a quedar pendiente)</span>
+                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorSancion) }}</span>
+                  </div>
+                  <div v-if="previewEliminarPago.valorActividades > 0" class="flex justify-between gap-2 text-xs">
+                    <span class="text-gray-700">Actividades</span>
+                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorActividades) }}</span>
+                  </div>
+                  <div v-if="previewEliminarPago.valorPrestamos > 0" class="flex justify-between gap-2 text-xs">
+                    <span class="text-gray-700">Cuotas de préstamo</span>
+                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.valorPrestamos) }}</span>
+                  </div>
+                  <div v-if="previewEliminarPago.impuesto4x1000 > 0" class="flex justify-between gap-2 text-xs">
+                    <span class="text-gray-700">4×1000</span>
+                    <span class="font-semibold tabular-nums text-gray-900">${{ formatMoney(previewEliminarPago.impuesto4x1000) }}</span>
+                  </div>
+                  <div class="flex justify-between gap-2 border-t border-red-200 pt-2 text-sm">
+                    <span class="font-bold text-red-800">Total</span>
+                    <span class="font-bold tabular-nums text-red-800">${{ formatMoney(previewEliminarPago.valorTotal) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Cómo queda la cuota -->
+              <div class="rounded-xl border border-gray-200 bg-white px-4 py-3">
+                <div class="flex items-center justify-between gap-3 text-xs">
+                  <span class="text-gray-600">Pagado en la cuota</span>
+                  <span class="font-semibold tabular-nums text-gray-900">
+                    ${{ formatMoney(previewEliminarPago.valorPagadoCuotaActual) }}
+                    <span class="text-gray-400">→</span>
+                    ${{ formatMoney(Math.max(0, previewEliminarPago.valorPagadoCuotaActual - previewEliminarPago.valorCuota)) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Avisos de reversión no exacta -->
+              <div
+                v-for="(aviso, i) in previewEliminarPago.avisos"
+                :key="'aviso-' + i"
+                class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+              >
+                <p class="text-xs leading-relaxed text-amber-800">{{ aviso }}</p>
+              </div>
+
+              <p class="text-xs font-medium text-gray-500">
+                Esta acción no se puede deshacer. Queda registrada en Auditoría.
+              </p>
+            </div>
+          </template>
+        </div>
+
+        <!-- Natiscroll: velo + «Desliza para ver más» -->
+        <div
+          v-show="hayNatiscrollModalEliminarPago"
+          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          aria-hidden="true"
+        >
+          <div class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/88 via-white/40 to-transparent"></div>
+          <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
+            <span class="rounded-full bg-white/90 px-3 py-1 font-display text-[0.6875rem] font-semibold text-[#1B5E37] shadow-sm">
+              Desliza para ver más
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer de acciones fijo -->
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex gap-3">
+          <button
+            type="button"
+            class="btn-modal-secondary flex-1"
+            :disabled="eliminandoPago"
+            @click="requestCloseTopModal"
+          >
+            Cancelar
+          </button>
+          <!-- Acción destructiva: rojo en lugar del verde marca -->
+          <button
+            type="button"
+            class="min-h-[48px] flex-1 rounded-full bg-gradient-to-r from-red-500 to-red-600 px-4 py-3 font-semibold text-white shadow-lg shadow-red-500/25 transition-all hover:from-red-600 hover:to-red-700 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation"
+            :disabled="eliminandoPago || !transaccionSeleccionadaEliminar || cargandoPreviewEliminar"
+            @click="confirmarEliminarPago"
+          >
+            {{ eliminandoPago ? 'Eliminando...' : 'Sí, eliminar' }}
+          </button>
+        </div>
+      </div>
+    </ModalWrapper>
+
 
     <!-- Modal Detalle de Cuota — natillerapp-modals -->
     <ModalWrapper
@@ -2083,6 +2366,17 @@
           >
             Reenviar Comprobante
           </button>
+          <!-- Eliminar un pago registrado (solo admin). Acción destructiva: rojo, no verde marca. -->
+          <button
+            type="button"
+            v-if="cuotaDetalle && puedeEliminarPago(cuotaDetalle)"
+            @click="abrirModalEliminarPago(cuotaDetalle)"
+            class="min-h-[48px] min-w-[48px] px-4 rounded-full border border-red-200 bg-red-50 font-semibold text-red-700 transition-all hover:bg-red-100 active:bg-red-200 flex items-center justify-center touch-manipulation"
+            title="Eliminar un pago registrado"
+            aria-label="Eliminar un pago registrado"
+          >
+            <TrashIcon class="w-5 h-5" />
+          </button>
         </div>
     </ModalWrapper>
 
@@ -2346,6 +2640,19 @@
               >
                 <ArrowPathIcon class="w-4 h-4" />
                 <span>Reenviar</span>
+              </button>
+
+              <!-- Eliminar un pago registrado (solo admin) -->
+              <button
+                v-if="puedeEliminarPago(cuota)"
+                type="button"
+                @click.stop="abrirModalEliminarPago(cuota)"
+                class="min-h-[44px] min-w-[44px] px-3 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-700 border border-red-200 text-sm font-semibold rounded-xl flex items-center justify-center flex-shrink-0"
+                style="touch-action: manipulation;"
+                title="Eliminar un pago registrado"
+                aria-label="Eliminar un pago registrado"
+              >
+                <TrashIcon class="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -3210,6 +3517,23 @@
           </div>
 
           <div class="space-y-5">
+            <!-- Fecha del pago: cuándo se recibió realmente el dinero. Solo registro contable;
+                 la mora y la sanción se siguen calculando contra la fecha de hoy. -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                Fecha del pago <span class="text-red-500">*</span>
+              </label>
+              <DatePicker
+                v-model="formPago.fecha_pago"
+                placeholder="Seleccionar fecha"
+                :max-date="hoyISO"
+                input-class="bg-white border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-natillera-200 focus:border-natillera-500"
+              />
+              <p v-if="formPago.fecha_pago && formPago.fecha_pago !== hoyISO" class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Se registrará con fecha {{ formatDate(formPago.fecha_pago) }}. La sanción por mora no cambia: se calcula al día de hoy.
+              </p>
+            </div>
+
             <!-- Campo de tipo de pago -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -6429,6 +6753,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { UserIcon as UserIconSolid } from '@heroicons/vue/24/solid'
 import DatePicker from '../../components/DatePicker.vue'
+import { getCurrentDateISO, fechaPagoAIso } from '../../utils/formatDate'
 
 import BackButton from '../../components/BackButton.vue'
 import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
@@ -6488,6 +6813,49 @@ const preparandoModalPago = ref(false) // Pantalla de carga mientras se prepara 
 const modalConfirmacion = ref(false)
 const cargandoComprobanteReenvio = ref(false)
 const modalConfirmarBorrar = ref(false)
+
+/* ── Eliminar un pago registrado ────────────────────────────────────────────────
+   Solo admin. Se listan las transacciones de la cuota (historial_pagos_cuota) y se
+   elimina la elegida, revirtiendo cuota, sanción, actividades y abonos a préstamo. */
+const modalEliminarPago = ref(false)
+const cuotaEliminarPago = ref(null)
+const transaccionesEliminarPago = ref([])
+const cargandoTransaccionesEliminar = ref(false)
+const transaccionSeleccionadaEliminar = ref(null)
+const previewEliminarPago = ref(null)
+const cargandoPreviewEliminar = ref(false)
+const eliminandoPago = ref(false)
+/** Natiscroll — modal Eliminar pago (velo + «Desliza para ver más») */
+const contenidoScrollEliminarPagoRef = ref(null)
+const hayNatiscrollModalEliminarPago = ref(false)
+let rafNatiscrollModalEliminarPago = null
+function actualizarNatiscrollModalEliminarPago() {
+  const el = contenidoScrollEliminarPagoRef.value
+  if (!el) {
+    hayNatiscrollModalEliminarPago.value = false
+    return
+  }
+  const umbral = 10
+  hayNatiscrollModalEliminarPago.value =
+    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
+}
+function programarNatiscrollModalEliminarPago() {
+  if (rafNatiscrollModalEliminarPago != null) cancelAnimationFrame(rafNatiscrollModalEliminarPago)
+  rafNatiscrollModalEliminarPago = requestAnimationFrame(() => {
+    rafNatiscrollModalEliminarPago = null
+    actualizarNatiscrollModalEliminarPago()
+  })
+}
+// El cuerpo cambia de alto al elegir transacción (aparece el detalle de la reversión):
+// hay que volver a medir o el velo queda visible sin overflow real.
+watch([modalEliminarPago, transaccionesEliminarPago, previewEliminarPago, cargandoPreviewEliminar], async () => {
+  if (!modalEliminarPago.value) {
+    hayNatiscrollModalEliminarPago.value = false
+    return
+  }
+  await nextTick()
+  programarNatiscrollModalEliminarPago()
+}, { flush: 'post' })
 const modalExportar = ref(false)
 const modalConfirmarPago = ref(false) // Modal de confirmación antes de registrar el pago
 const desglosePagoConfirmacion = ref(null) // Desglose del pago para mostrar en confirmación
@@ -6902,6 +7270,7 @@ useBodyScrollLock(modalConfirmarPago)
 useBodyScrollLock(modalConfirmacion)
 useBodyScrollLock(cargandoComprobanteReenvio)
 useBodyScrollLock(modalConfirmarBorrar)
+useBodyScrollLock(modalEliminarPago)
 useBodyScrollLock(modalExportar)
 useBodyScrollLock(modalEditarCuota)
 useBodyScrollLock(modalDesgloseRecaudacion)
@@ -7548,6 +7917,12 @@ const { requestCloseTop: requestCloseTopModal, replaceTop: replaceTopModal } = u
       if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     }
   },
+  eliminarPago: {
+    isOpen: computed(() => !!modalEliminarPago.value),
+    hide: () => { modalEliminarPago.value = false },
+    show: () => { modalEliminarPago.value = true },
+    dismiss: cerrarModalEliminarPago
+  },
   exportar: {
     isOpen: computed(() => !!modalExportar.value),
     hide: () => { modalExportar.value = false },
@@ -7592,6 +7967,12 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScrollArriba)
   document.removeEventListener('click', handleClickOutside)
   scrollContainerMain = null
+  // Natiscroll del modal «Eliminar pago»: cancelar el RAF pendiente si la vista se
+  // desmonta con el modal abierto (evita trabajo huérfano).
+  if (rafNatiscrollModalEliminarPago != null) {
+    cancelAnimationFrame(rafNatiscrollModalEliminarPago)
+    rafNatiscrollModalEliminarPago = null
+  }
 })
 
 // Lista de todos los meses
@@ -8270,11 +8651,17 @@ const socioSeleccionadoEsMensual = computed(() => {
   return socio?.periodicidad === 'mensual'
 })
 
+/** Hoy en YYYY-MM-DD; tope del selector de fecha de pago. Se refresca al abrir el modal
+ *  para que una sesión abierta más de un día no quede con el tope del día anterior. */
+const hoyISO = ref(getCurrentDateISO())
+
 const formPago = reactive({
   valor: 0,
   tipo_pago: 'efectivo', // efectivo | transferencia
   /** Solo transferencia: suma 4×1000 sobre el valor neto del campo (opcional). */
   aplicaImpuesto4x1000: false,
+  /** Fecha real en que se recibió el dinero (YYYY-MM-DD). Solo registro: no altera mora ni sanción. */
+  fecha_pago: getCurrentDateISO(),
 })
 
 function cerrarModalPago() {
@@ -8282,6 +8669,7 @@ function cerrarModalPago() {
   formPago.valor = 0
   formPago.tipo_pago = 'efectivo'
   formPago.aplicaImpuesto4x1000 = false
+  formPago.fecha_pago = getCurrentDateISO()
   mostrandoAnimacionPago.value = false
   if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
@@ -9817,6 +10205,119 @@ async function abrirModalDetalleCuota(cuota) {
   }
 }
 
+/* ── Eliminar un pago registrado ─────────────────────────────────────────────── */
+
+/** ¿Se puede ofrecer "eliminar pago" en esta cuota? Solo admin y solo si hay dinero pagado. */
+function puedeEliminarPago(cuota) {
+  if (!esAdmin.value || esVisor.value) return false
+  return (parseFloat(cuota?.valor_pagado) || 0) > 0
+    || (parseFloat(cuota?.valor_pagado_sancion) || 0) > 0
+    || (parseFloat(cuota?.valor_pagado_actividades) || 0) > 0
+}
+
+async function abrirModalEliminarPago(cuota) {
+  if (!cuota || !puedeEliminarPago(cuota)) return
+  cuotaEliminarPago.value = cuota
+  transaccionesEliminarPago.value = []
+  transaccionSeleccionadaEliminar.value = null
+  previewEliminarPago.value = null
+  cargandoTransaccionesEliminar.value = true
+  asignarScrollAntesDeAbrirModal()
+  modalEliminarPago.value = true
+
+  try {
+    const { data, error } = await supabase
+      .from('historial_pagos_cuota')
+      .select('id, fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000')
+      .eq('cuota_id', cuota.id)
+      .order('fecha_pago', { ascending: false })
+    if (error) throw error
+    transaccionesEliminarPago.value = data || []
+    // Con una sola transacción, preseleccionarla: no hay nada que elegir.
+    if (transaccionesEliminarPago.value.length === 1) {
+      await seleccionarTransaccionEliminar(transaccionesEliminarPago.value[0])
+    }
+  } catch (e) {
+    console.error('No se pudieron cargar los pagos de la cuota:', e)
+    alert('No se pudieron cargar los pagos de esta cuota: ' + (e.message || 'error desconocido'))
+  } finally {
+    cargandoTransaccionesEliminar.value = false
+  }
+}
+
+async function seleccionarTransaccionEliminar(transaccion) {
+  if (!transaccion?.id) return
+  transaccionSeleccionadaEliminar.value = transaccion.id
+  previewEliminarPago.value = null
+  cargandoPreviewEliminar.value = true
+  try {
+    const res = await cuotasStore.previsualizarEliminacionPago(transaccion.id)
+    if (res.success) previewEliminarPago.value = res.resumen
+    else alert('No se pudo calcular el impacto de la eliminación: ' + (res.error || 'error desconocido'))
+  } finally {
+    cargandoPreviewEliminar.value = false
+  }
+}
+
+function cerrarModalEliminarPago() {
+  modalEliminarPago.value = false
+  cuotaEliminarPago.value = null
+  transaccionesEliminarPago.value = []
+  transaccionSeleccionadaEliminar.value = null
+  previewEliminarPago.value = null
+  eliminandoPago.value = false
+  if (rafNatiscrollModalEliminarPago != null) {
+    cancelAnimationFrame(rafNatiscrollModalEliminarPago)
+    rafNatiscrollModalEliminarPago = null
+  }
+  restaurarScrollMain()
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+}
+
+async function confirmarEliminarPago() {
+  const historialId = transaccionSeleccionadaEliminar.value
+  const cuota = cuotaEliminarPago.value
+  if (!historialId || !cuota || eliminandoPago.value) return
+
+  eliminandoPago.value = true
+  try {
+    const res = await cuotasStore.eliminarPagoHistorial(historialId, {
+      _natilleraId: id,
+      _natilleraNombre: natilleraNombre.value || null,
+      _socioNombre: cuota.socio_natillera?.socio?.nombre || cuota.nombre_socio || null,
+    })
+
+    if (!res.success) {
+      alert('No se pudo eliminar el pago: ' + (res.error || 'error desconocido'))
+      return
+    }
+
+    // Refrescar lo que el usuario tiene a la vista
+    // Recarga completa: al devolver la deuda, la mora y las sanciones deben recalcularse.
+    await cuotasStore.fetchCuotasNatillera(id)
+    if (cuotaDetalle.value?.id === cuota.id) {
+      const actualizada = cuotasStore.cuotas.find(c => c.id === cuota.id)
+      if (actualizada) cuotaDetalle.value = actualizada
+      await cargarHistorialPagosCuota(cuota.id)
+    }
+
+    const problemas = res.problemas || []
+    if (problemas.length > 0) {
+      alert(
+        'El pago se eliminó, pero algunos conceptos necesitan revisión manual:\n\n• ' +
+        problemas.join('\n• ')
+      )
+    }
+
+    cerrarModalEliminarPago()
+  } catch (e) {
+    console.error('Error eliminando el pago:', e)
+    alert('Error al eliminar el pago: ' + (e.message || 'error desconocido'))
+  } finally {
+    eliminandoPago.value = false
+  }
+}
+
 function cerrarModalDetalleCuota() {
   modalDetalleCuota.value = false
   restaurarScrollMain()
@@ -10438,6 +10939,8 @@ async function abrirModalPago(cuota) {
   cuotasPrestamosDeLaCuotaActual.value = new Set()
 
   // Abrir modal de inmediato; las secciones internas ya muestran skeleton via cargandoActividades / cargandoCuotasPrestamos
+  hoyISO.value = getCurrentDateISO()
+  formPago.fecha_pago = hoyISO.value
   asignarScrollAntesDeAbrirModal() // que applyLock use la posición guardada al hacer clic (evita salto al abrir)
   modalPago.value = true
   nextTick(() => {
@@ -10755,10 +11258,23 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
     // Si el valor total es mayor o igual al total de cuotas, pagar todas completamente
     // Si es menor, distribuir proporcionalmente
     let valorRestante = valorTotalCuotasPrestamos
-    const fechaPago = new Date().toISOString()
+    // Fecha elegida en el modal de pago (o ahora, si no se indicó). Mantiene pagos_prestamo y
+    // plan_pagos_prestamo alineados con cuotas.fecha_pago e historial_pagos_cuota.fecha_pago.
+    const fechaPago = fechaPagoAIso(options.fechaPago)
 
     // Procesar todos los préstamos en paralelo
     const prestamoIds = Object.keys(pagosPorPrestamo)
+
+    // Id de la transacción en historial_pagos_cuota que origina estos abonos. Se enlaza en
+    // pagos_prestamo.historial_pago_cuota_id (migración 019) para poder revertir el abono exacto
+    // si más tarde se elimina el pago. El insert del historial corre en segundo plano dentro del
+    // store, así que se espera con tope: si tarda o falla, el abono se registra igual sin enlace.
+    const historialPagoCuotaId = options.historialPagoIdPromise
+      ? await Promise.race([
+          options.historialPagoIdPromise.catch(() => null),
+          new Promise(resolve => setTimeout(() => resolve(null), 4000)),
+        ])
+      : null
 
     // Pre-obtener saldos de todos los préstamos en una sola query
     const { data: prestamosData } = await supabase
@@ -10803,6 +11319,7 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
         numeros_cuota: numerosCuotaTocados.length > 0 ? numerosCuotaTocados : null,
         origen: 'cuota_natillera'
       }
+      if (historialPagoCuotaId) datosPago.historial_pago_cuota_id = historialPagoCuotaId
 
       // Insertar pago + actualizar préstamo en paralelo
       const prestamo = prestamosMap.get(prestamoId)
@@ -10811,10 +11328,20 @@ async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago
       let nuevoEstado = prestamo?.estado || 'activo'
       if (nuevoSaldo <= 0 && nuevoEstado === 'activo') nuevoEstado = 'pagado'
 
-      const [pagoRes] = await Promise.all([
+      const [pagoResInicial] = await Promise.all([
         supabase.from('pagos_prestamo').insert(datosPago).select().single(),
         supabase.from('prestamos').update({ saldo_actual: nuevoSaldo, estado: nuevoEstado }).eq('id', prestamoId)
       ])
+
+      // Si la migración 019 aún no se aplicó, la columna de enlace no existe: reintentar sin ella
+      // para no perder el abono (el pago se registra igual, solo sin trazabilidad para revertirlo).
+      let pagoRes = pagoResInicial
+      if (pagoRes.error && datosPago.historial_pago_cuota_id
+          && String(pagoRes.error.message || '').includes('historial_pago_cuota_id')) {
+        console.warn('pagos_prestamo: falta la columna historial_pago_cuota_id (migración 019). Registrando el abono sin enlace.')
+        const { historial_pago_cuota_id: _omitido, ...datosPagoSinEnlace } = datosPago
+        pagoRes = await supabase.from('pagos_prestamo').insert(datosPagoSinEnlace).select().single()
+      }
 
       if (pagoRes.error) {
         console.error(`Error insertando pago de préstamo ${prestamoId}:`, pagoRes.error)
@@ -12860,6 +13387,8 @@ async function handleRegistrarPago() {
     ? actividadesPendientes.value
         .filter(a => actividadesSeleccionadas.value.has(a.id))
         .map(a => ({
+          // socio_actividad_id permite revertir la fila exacta si el pago se elimina (migración 019).
+          socio_actividad_id: a.id,
           nombre: a.actividad?.descripcion || 'Actividad',
           tipo: a.actividad?.tipo || 'otro',
           valor: parseFloat(a.valor_pendiente || 0)
@@ -12886,6 +13415,7 @@ async function handleRegistrarPago() {
       valorEfectivo,
       valorTransferencia,
       impuesto4x1000: impuesto4x1000Pago,
+      fechaPago: formPago.fecha_pago,
       valorCuotasPrestamos: valorCuotasPrestamosPagado,
       detalleActividades,
       totalAPagar: totalAdeudadoPago,
@@ -12920,7 +13450,7 @@ async function handleRegistrarPago() {
   
   if (result.success && totalActividades > 0 && valorActividadesPagadoReal > 0) {
     promesasConceptos.push(
-      registrarPagosActividades(valorActividadesPagadoReal, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
+      registrarPagosActividades(valorActividadesPagadoReal, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado, fechaPago: formPago.fecha_pago })
         .then(async () => {
           if (actividadesPagadas.length > 0) {
             try {
@@ -12947,7 +13477,7 @@ async function handleRegistrarPago() {
   let detalleCuotasPrestamosPagadas = []
   if (result.success && totalCuotasPrestamos > 0 && valorCuotasPrestamosPagado > 0) {
     promesasConceptos.push(
-      registrarPagosCuotasPrestamos(valorCuotasPrestamosPagado, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado })
+      registrarPagosCuotasPrestamos(valorCuotasPrestamosPagado, formPago.tipo_pago, { valorEfectivo, valorTransferencia, valorPagado, fechaPago: formPago.fecha_pago, historialPagoIdPromise: result.historialPagoIdPromise })
         .then(res => { detalleCuotasPrestamosPagadas = res || [] })
     )
   }
