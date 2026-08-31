@@ -58,6 +58,61 @@ export const useCuotasStore = defineStore('cuotas', () => {
   // Mapa para rastrear qué natilleras están generando cuotas (evitar ejecuciones paralelas)
   const generandoCuotasPorNatillera = new Map()
 
+  // Memo del último cálculo de sanciones (ver calcularSancionesTotales). Guarda la firma de
+  // los datos con los que se calculó y el resultado devuelto, para no repetir el cálculo NI
+  // sus escrituras cuando nada que influya en el resultado ha cambiado —el caso típico es
+  // cambiar de mes en la vista de Cuotas, que recalcula sobre las mismas cuotas en mora.
+  let sancionesUltimaFirma = null
+  let sancionesUltimoResultado = null
+
+  function invalidarMemoSanciones() {
+    sancionesUltimaFirma = null
+    sancionesUltimoResultado = null
+  }
+
+  /**
+   * Huella de todo lo que influye en el resultado de calcularSancionesTotales: la natillera,
+   * el día de hoy (los intereses se acumulan por días), la configuración de sanciones y el
+   * estado de cada cuota en mora que entra en el cálculo.
+   *
+   * Se ordena por id para que la huella no dependa del orden en que la vista arme la lista
+   * (al cambiar de mes las cuotas llegan en otro orden, pero el conjunto es el mismo).
+   *
+   * Al derivarse de los datos vivos, cualquier cambio real —un pago, una cuota nueva, una
+   * cuota que entra en mora, el cambio de día— produce otra huella y fuerza el recálculo.
+   * Por eso no hace falta invalidar a mano desde cada operación que toca cuotas.
+   */
+  function firmaCalculoSanciones(natilleraId, cuotasMoraLista, configSanciones, interesesConfig) {
+    const hoy = new Date()
+    const diaActual = `${hoy.getFullYear()}-${hoy.getMonth() + 1}-${hoy.getDate()}`
+    const porCuota = cuotasMoraLista
+      .map(c => [
+        c.id,
+        c.estado ?? '',
+        c.valor_pagado ?? '',
+        c.valor_pagado_sancion ?? '',
+        c.valor_cuota ?? '',
+        c.fecha_limite ?? '',
+        c.fecha_vencimiento ?? '',
+        c.quincena ?? '',
+        c.no_calcular_multa ? 1 : 0,
+        c.mora_orden ?? '',
+        c.valor_multa ?? '',
+        c.valor_multa_base ?? '',
+        c.valor_multa_intereses ?? '',
+        c.fecha_inicio_mora ? String(c.fecha_inicio_mora).substring(0, 10) : ''
+      ].join('|'))
+      .sort()
+    return [
+      natilleraId ?? '',
+      diaActual,
+      JSON.stringify(configSanciones ?? null),
+      JSON.stringify(interesesConfig ?? null),
+      porCuota.length,
+      porCuota.join(';')
+    ].join('::')
+  }
+
   function hasCuotasForNatillera(natilleraId) {
     return lastFetchedNatilleraId.value === natilleraId && cuotas.value.length > 0
   }
@@ -209,9 +264,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return 0
   }
 
-  // Función para calcular la multa dinámica de una cuota considerando la fecha actual
-  // y la configuración de intereses adicionales por días de mora
-  function calcularMultaDinamica(cuota, configSanciones, cantidadCuotasMoraSocio = 1) {
+  // Multa de una cuota medida HASTA UNA FECHA (por defecto, hoy).
+  //
+  // `fechaReferencia` (Date o 'YYYY-MM-DD') permite preguntar «¿cuánta sanción debía este socio el
+  // día que entregó el dinero?», que es lo que decide cuánto se le cobra al registrar un pago con
+  // fecha retroactiva, y lo que el modal de pago muestra en vivo al cambiarla.
+  function calcularMultaDinamica(cuota, configSanciones, cantidadCuotasMoraSocio = 1, fechaReferencia = null) {
     if (!configSanciones || !configSanciones.activa) {
       return 0
     }
@@ -233,8 +291,33 @@ export const useCuotasStore = defineStore('cuotas', () => {
     const fechaLimite = new Date(anio, mes - 1, dia)
     fechaLimite.setHours(0, 0, 0, 0)
     
-    const hoy = new Date()
+    // El corte del cálculo: la fecha indicada o, si no viene, hoy.
+    let hoy
+    if (fechaReferencia instanceof Date) {
+      hoy = new Date(fechaReferencia)
+    } else if (typeof fechaReferencia === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fechaReferencia)) {
+      const [rAnio, rMes, rDia] = fechaReferencia.substring(0, 10).split('-').map(Number)
+      hoy = new Date(rAnio, rMes - 1, rDia)
+    } else {
+      hoy = new Date()
+    }
     hoy.setHours(0, 0, 0, 0)
+
+    // Si el corte cae antes de que empezara la mora, ese día no había nada que cobrar.
+    // La mora arranca DESPUÉS del vencimiento (fecha límite + días de gracia).
+    const vencimientoStrMulta = cuota.fecha_vencimiento
+      ? String(cuota.fecha_vencimiento).substring(0, 10)
+      : null
+    if (vencimientoStrMulta) {
+      const [vA, vM, vD] = vencimientoStrMulta.split('-').map(Number)
+      if (!Number.isNaN(vA) && !Number.isNaN(vM) && !Number.isNaN(vD)) {
+        const venc = new Date(vA, vM - 1, vD)
+        venc.setHours(0, 0, 0, 0)
+        if (hoy.getTime() <= venc.getTime()) return 0
+      }
+    } else if (hoy.getTime() < fechaLimite.getTime()) {
+      return 0
+    }
 
     // Sanción diaria: valorPorDia * días desde primer día en mora + intereses adicionales (si están configurados)
     if (configSanciones.tipo === 'diaria') {
@@ -290,8 +373,92 @@ export const useCuotasStore = defineStore('cuotas', () => {
     return multaBase + interesesAdicionales
   }
 
+  /**
+   * Sanción TOTAL de una cuota medida hasta una fecha dada, siguiendo el mismo modelo que
+   * `calcularSancionesTotales`:
+   *
+   *   sanción = valor_multa_base (SNAPSHOT, asignado una sola vez según mora_orden y que
+   *             NUNCA se recalcula)  +  intereses (que sí dependen de los días transcurridos)
+   *
+   * Por eso mover la fecha no cambia la base de una sanción simple o escalonada: solo mueve los
+   * intereses. En el tipo `diaria` no hay snapshot — la propia base son días — y se recalcula.
+   *
+   * Se usa para responder «¿cuánta multa debía este socio el día que entregó el dinero?» sin
+   * tocar la base ya asignada, que es el error que produce cifras infladas.
+   *
+   * @param {object} cuota
+   * @param {object} configSanciones - reglas_multas.sanciones
+   * @param {string} fechaISO - 'YYYY-MM-DD' hasta la que medir
+   * @param {number} diasGraciaVal
+   * @returns {number} sanción total a esa fecha (sin descontar lo ya pagado)
+   */
+  function calcularSancionCuotaAFecha(cuota, configSanciones, fechaISO, diasGraciaVal = 3) {
+    if (!cuota || !configSanciones?.activa || cuota.no_calcular_multa) return 0
+    if (!fechaISO) return 0
+
+    const [fA, fM, fD] = String(fechaISO).substring(0, 10).split('-').map(Number)
+    if (Number.isNaN(fA) || Number.isNaN(fM) || Number.isNaN(fD)) return 0
+    const corte = new Date(fA, fM - 1, fD)
+    corte.setHours(0, 0, 0, 0)
+
+    // Primer día en mora: el siguiente al vencimiento; si no hay vencimiento, límite + gracia + 1.
+    const parse = (v) => {
+      if (!v) return null
+      const [a, m, d] = String(v).substring(0, 10).split('-').map(Number)
+      if (Number.isNaN(a) || Number.isNaN(m) || Number.isNaN(d)) return null
+      const x = new Date(a, m - 1, d)
+      x.setHours(0, 0, 0, 0)
+      return x
+    }
+
+    let inicioMora = parse(cuota.fecha_inicio_mora)
+    if (!inicioMora) {
+      const venc = parse(cuota.fecha_vencimiento)
+      if (venc) {
+        inicioMora = new Date(venc)
+        inicioMora.setDate(inicioMora.getDate() + 1)
+      } else {
+        const lim = parse(cuota.fecha_limite)
+        if (!lim) return 0
+        inicioMora = new Date(lim)
+        inicioMora.setDate(inicioMora.getDate() + (diasGraciaVal || 0) + 1)
+      }
+    }
+
+    // Antes del primer día en mora no se debía nada.
+    if (corte.getTime() < inicioMora.getTime()) return 0
+
+    const diasEnMora = Math.floor((corte.getTime() - inicioMora.getTime()) / 86400000) + 1
+
+    let interesesConfig = configSanciones.interesesAdicionales ?? configSanciones.intereses_adicionales
+    interesesConfig = interesesConfig && typeof interesesConfig === 'object' ? interesesConfig : {}
+    const interesesActivo = interesesConfig.activo === true || interesesConfig.activo === 'true' || interesesConfig.activo === 1
+    const interesesDias = Math.max(1, Number(interesesConfig.dias) || 2)
+    const interesesValor = Number(interesesConfig.valor) || 0
+    const intereses = (interesesActivo && interesesValor > 0)
+      ? Math.floor(diasEnMora / interesesDias) * interesesValor
+      : 0
+
+    if (configSanciones.tipo === 'diaria') {
+      return (Number(configSanciones.valorPorDia) || 0) * diasEnMora + intereses
+    }
+
+    // Simple / escalonada: la base es el snapshot ya asignado a la cuota. Solo si no existe todavía
+    // se deduce del tipo, sin inventar una posición distinta a la que la cuota ya tiene.
+    let base = Number(cuota.valor_multa_base) || 0
+    if (base <= 0) {
+      const posicion = Number(cuota.mora_orden) > 0 ? Number(cuota.mora_orden) : 1
+      base = configSanciones.tipo === 'escalonada'
+        ? obtenerValorSancionPorPosicion(configSanciones, posicion)
+        : (Number(configSanciones.valorFijo) || 0)
+    }
+
+    return base + intereses
+  }
+
   // Función para calcular el total de sanciones de un conjunto de cuotas
-  async function calcularSancionesTotales(natilleraId, cuotasLista = null, configNatilleraCache = null) {
+  async function calcularSancionesTotales(natilleraId, cuotasLista = null, configNatilleraCache = null, opciones = {}) {
+    const { forzar = false } = opciones
     try {
       let reglasMultas, periodicidadNatillera
 
@@ -340,9 +507,24 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const cuotasMora = lista.filter(c =>
         c.estado === 'mora' || calcularEstadoRealCuotaStore(c, diasGracia) === 'mora'
       )
+
+      // Atajo: si las cuotas en mora, la configuración y el día son exactamente los mismos que
+      // en el último cálculo, el resultado también lo sería. Devolver el anterior evita repetir
+      // el cálculo y, sobre todo, las escrituras a BD que persisten los mismos valores.
+      // La huella se toma solo sobre las cuotas en mora: las demás no intervienen en el cálculo,
+      // así que cambiar de mes en la vista no invalida el memo.
+      const firmaEntrada = firmaCalculoSanciones(natilleraId, cuotasMora, configSanciones, interesesConfig)
+      if (!forzar && sancionesUltimoResultado && sancionesUltimaFirma === firmaEntrada) {
+        return sancionesUltimoResultado
+      }
+
       // Excluir cuotas marcadas con no_calcular_multa (no aplicar sanciones a esa cuota)
       const cuotasMoraConMulta = cuotasMora.filter(c => !c.no_calcular_multa)
       const cuotasMoraSinMulta = cuotasMora.filter(c => c.no_calcular_multa)
+
+      // Si alguna escritura falla, el estado en BD queda a medias: no se memoriza el cálculo
+      // para que el siguiente intento vuelva a ejecutarlo y termine de persistirlo.
+      let huboErroresEscritura = false
 
       // Poner a 0 las sanciones de las cuotas en mora con no_calcular_multa (batch con .in)
       if (cuotasMoraSinMulta.length > 0) {
@@ -352,6 +534,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           .update({ valor_multa: 0, valor_multa_base: 0, valor_multa_intereses: 0 })
           .in('id', idsSinMulta)
         if (errCero) {
+          huboErroresEscritura = true
           console.warn('📋 [Sanciones] Error poniendo a 0 cuotas no_calcular_multa:', errCero)
         }
         cuotasMoraSinMulta.forEach(c => {
@@ -582,6 +765,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           const results = await Promise.all(updates)
           const errores = results.filter(r => r.error)
           if (errores.length > 0) {
+            huboErroresEscritura = true
             console.warn('Algunas actualizaciones de sanciones fallaron:', errores)
           }
         }
@@ -602,13 +786,26 @@ export const useCuotasStore = defineStore('cuotas', () => {
         })
       }
 
-      return { 
-        success: true, 
+      const resultado = {
+        success: true,
         sanciones,
         configSanciones,
         configActiva: true
       }
+
+      // Memorizar con la huella tomada DESPUÉS de aplicar los valores calculados a las cuotas:
+      // es el estado con el que se encontrará la próxima llamada si nada más cambia, y así
+      // coincide y devuelve este mismo resultado sin repetir trabajo.
+      if (huboErroresEscritura) {
+        invalidarMemoSanciones()
+      } else {
+        sancionesUltimaFirma = firmaCalculoSanciones(natilleraId, cuotasMora, configSanciones, interesesConfig)
+        sancionesUltimoResultado = resultado
+      }
+
+      return resultado
     } catch (e) {
+      invalidarMemoSanciones()
       console.error('Error calculando sanciones:', e)
       return { success: false, error: e.message, sanciones: {} }
     }
@@ -655,24 +852,31 @@ export const useCuotasStore = defineStore('cuotas', () => {
         const fechaLimiteStr = fechaLimiteDate.toISOString().split('T')[0]
         const fechaVencimientoStr = fechaVencimientoDate.toISOString().split('T')[0]
 
-        // Corregir estado según las reglas, considerando pagos parciales:
-        // - Pendiente/Parcial -> Programada si fecha_actual < fecha_limite
-        // - Programada -> Pendiente si fecha_actual >= fecha_limite
-        // - Pendiente/Parcial -> Mora si fecha_actual > fecha_vencimiento
-        
-        // Pendiente/Parcial -> Programada: si fecha_actual < fecha_limite
-        // (aplica tanto para cuotas sin pago como con pago parcial)
-        if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr < fechaLimiteStr) {
+        // El estado sale SOLO de las fechas (REGLAS.md), nunca del estado previo:
+        //   hoy <  fecha_limite                    -> programada
+        //   fecha_limite <= hoy <= vencimiento     -> pendiente
+        //   hoy >  fecha_vencimiento               -> mora
+        //
+        // Antes cada rama exigía además un estado de partida concreto, y eso dejaba un hueco:
+        // una cuota 'programada' que pasaba su vencimiento sin que nadie abriera la app en la
+        // ventana de gracia no encajaba en ninguna rama y se quedaba 'programada' para siempre
+        // — con lo que tampoco entraba nunca en el cálculo de la sanción por mora.
+        const estadoSegunFechas =
+          fechaActualStr < fechaLimiteStr ? 'programada'
+          : fechaActualStr <= fechaVencimientoStr ? 'pendiente'
+          : 'mora'
+
+        // 'parcial' es una marca de pago, no una fase del calendario: la conserva quien ya la
+        // tiene mientras siga dentro de plazo, para no borrar información que la UI usa.
+        const conservaParcial = cuota.estado === 'parcial' && estadoSegunFechas !== 'mora'
+
+        if (estadoSegunFechas === cuota.estado || conservaParcial) {
+          // Ya está en el estado que le toca.
+        } else if (estadoSegunFechas === 'programada') {
           cuotasAProgramada.push(cuota.id)
-        }
-        // Programada -> Pendiente: cuando fecha_actual >= fecha_limite
-        // (aplica tanto para cuotas sin pago como con pago parcial)
-        else if (cuota.estado === 'programada' && fechaActualStr >= fechaLimiteStr && fechaActualStr <= fechaVencimientoStr) {
+        } else if (estadoSegunFechas === 'pendiente') {
           cuotasAPendiente.push(cuota.id)
-        }
-        // Pendiente/Parcial -> Mora: cuando fecha_actual > fecha_vencimiento
-        // Solo si no está ya en mora (evitar reprocesar)
-        else if ((cuota.estado === 'pendiente' || cuota.estado === 'parcial') && fechaActualStr > fechaVencimientoStr) {
+        } else {
           cuotasAMora.push({
             id: cuota.id,
             socio_natillera_id: cuota.socio_natillera_id,
@@ -1642,10 +1846,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
       loading.value = true
       error.value = null
 
-      // Fecha del pago elegida por quien registra (options.fechaPago, YYYY-MM-DD). Si no viene o es hoy,
-      // se usa el instante actual. Es solo registro: NO altera el cálculo de mora ni de sanciones,
-      // que siguen evaluándose contra la fecha de hoy.
+      // Fecha del pago elegida por quien registra (options.fechaPago, YYYY-MM-DD). Si no viene o es
+      // hoy, se usa el instante actual.
+      //
+      // Esta fecha ES la referencia del cobro: la mora y la sanción se miden hasta el día en que se
+      // recibió el dinero, no hasta hoy. Registrar el 30 un pago recibido el 18 no puede cobrar doce
+      // días de mora que el socio no debía cuando pagó.
       const fechaPagoIso = fechaPagoAIso(options.fechaPago)
+      const fechaCobro = new Date(fechaPagoIso)
+      fechaCobro.setHours(0, 0, 0, 0)
 
       // Paralelizar: obtener cuota + socio_natillera en una sola ronda
       const [cuotaRes, socioRes] = await Promise.all([
@@ -1679,9 +1888,26 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       const tieneNoCalcularMulta = cuotaActual.no_calcular_multa || false
-      
-      let sancionDinamica = tieneNoCalcularMulta ? 0 : (cuotaActual.valor_multa || 0)
-      if (cuotaActual.estado === 'mora' && !tieneNoCalcularMulta) {
+
+      // ¿El socio estaba dentro de plazo el día que entregó el dinero? Si el pago se recibió antes
+      // del vencimiento, no hubo mora ese día y no se le puede cobrar sanción, aunque la cuota esté
+      // vencida hoy (registro tardío de un pago puntual). Sin fecha_vencimiento no se puede afirmar,
+      // así que se mantiene el cálculo normal.
+      const vencimientoStr = cuotaActual.fecha_vencimiento
+        ? String(cuotaActual.fecha_vencimiento).substring(0, 10)
+        : null
+      let pagoDentroDePlazo = false
+      if (vencimientoStr) {
+        const [vAnio, vMes, vDia] = vencimientoStr.split('-').map(Number)
+        if (!Number.isNaN(vAnio) && !Number.isNaN(vMes) && !Number.isNaN(vDia)) {
+          const vencimiento = new Date(vAnio, vMes - 1, vDia)
+          vencimiento.setHours(0, 0, 0, 0)
+          pagoDentroDePlazo = fechaCobro.getTime() <= vencimiento.getTime()
+        }
+      }
+
+      let sancionDinamica = (tieneNoCalcularMulta || pagoDentroDePlazo) ? 0 : (cuotaActual.valor_multa || 0)
+      if (cuotaActual.estado === 'mora' && !tieneNoCalcularMulta && !pagoDentroDePlazo) {
         // Usar cache de natillera si viene en options, sino consultar
         let natilleraConfig = options._natilleraConfig || null
         if (!natilleraConfig) {
@@ -1812,7 +2038,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (!Number.isNaN(anio) && !Number.isNaN(mes) && !Number.isNaN(dia)) {
               const fechaLimiteCuota = new Date(anio, mes, dia)
               fechaLimiteCuota.setHours(0, 0, 0, 0)
-              const hoy = new Date()
+              // El tramo de mora termina el día en que se recibió el dinero (RN: la fecha del pago
+              // manda), no en la fecha en que se está digitando el registro.
+              const hoy = new Date(fechaCobro)
               hoy.setHours(0, 0, 0, 0)
               // Mensual en natillera quincenal: la mora cuenta desde fin de mes (2ª quincena = fecha_limite), no desde la Q1 del día 15.
               const primeraDiaMora = new Date(fechaLimiteCuota)
@@ -1852,10 +2080,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // (al pagar la primera cuota en mora, la lista de mora se reduce y la segunda quedaría como "primera" = sanción 1; pero su valor_multa ya es 2)
       // IMPORTANTE: sancionAPagar debe ser la sanción PENDIENTE (total - ya pagado), no el total
       // IMPORTANTE: Si tiene no_calcular_multa marcado, la sanción debe ser siempre 0
-      const valorMultaGuardado = tieneNoCalcularMulta ? 0 : (parseFloat(cuotaActual.valor_multa) || 0)
-      const sancionPagadaAnterior = tieneNoCalcularMulta ? 0 : (parseFloat(cuotaActual.valor_pagado_sancion) || 0)
-      const sancionTotal = tieneNoCalcularMulta ? 0 : (valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0))
-      const sancionAPagar = tieneNoCalcularMulta ? 0 : Math.max(0, sancionTotal - sancionPagadaAnterior)
+      // `sinSancion` agrupa los dos motivos por los que no se cobra multa: el flag manual de la
+      // cuota y el pago recibido dentro de plazo.
+      const sinSancion = tieneNoCalcularMulta || pagoDentroDePlazo
+      const valorMultaGuardado = sinSancion ? 0 : (parseFloat(cuotaActual.valor_multa) || 0)
+      const sancionPagadaAnterior = sinSancion ? 0 : (parseFloat(cuotaActual.valor_pagado_sancion) || 0)
+      const sancionTotal = sinSancion ? 0 : (valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0))
+      const sancionAPagar = sinSancion ? 0 : Math.max(0, sancionTotal - sancionPagadaAnterior)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0
       const valorActividadesPendientes = parseFloat(valorActividades) || 0
@@ -2050,6 +2281,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
         updateData.valor_multa_base = 0
         updateData.valor_multa_intereses = 0
         updateData.valor_pagado_sancion = 0
+      } else if (pagoDentroDePlazo) {
+        // El dinero entró antes del vencimiento: la multa que se había calculado contra la fecha de
+        // hoy no corresponde y se borra, o la cuota seguiría mostrando una deuda que no existe.
+        updateData.valor_multa = 0
+        updateData.valor_multa_base = 0
+        updateData.valor_multa_intereses = 0
       } else {
         // Solo quitar la sanción cuando la cuota esté completamente pagada
         if (nuevaEstado === 'pagada' && sancionQuitada) {
@@ -2249,15 +2486,28 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (valorPagadoAnterior > 0 && totalPagadoDespues > totalPagadoAntes && codigoComprobante) {
         tareasSecundarias.push((async () => {
           try {
-            const { data: insertedHistorial } = await supabase
-              .from('historial_comprobantes')
-              .insert({
-                cuota_id: cuotaId, codigo_comprobante_anterior: codigoComprobante,
-                codigo_comprobante_nuevo: codigoComprobante, valor_pagado_anterior: totalPagadoAntes,
-                valor_pagado_nuevo: totalPagadoDespues, motivo: 'completar_pago_parcial',
-                fecha_actualizacion: new Date().toISOString()
-              })
-              .select('id').single()
+            // Esperar el id de la transacción para enlazar el comprobante con el pago que lo
+            // originó (migración 020). Sin ese enlace, al eliminar el pago esta fila quedaría
+            // huérfana y el detalle seguiría mostrando el comprobante de un pago inexistente.
+            const historialPagoId = await historialPagoIdPromise
+            const insertComprobante = {
+              cuota_id: cuotaId, codigo_comprobante_anterior: codigoComprobante,
+              codigo_comprobante_nuevo: codigoComprobante, valor_pagado_anterior: totalPagadoAntes,
+              valor_pagado_nuevo: totalPagadoDespues, motivo: 'completar_pago_parcial',
+              fecha_actualizacion: new Date().toISOString()
+            }
+            if (historialPagoId) insertComprobante.historial_pago_cuota_id = historialPagoId
+            let insertedHistorial = null
+            const { data, error: errComp } = await supabase
+              .from('historial_comprobantes').insert(insertComprobante).select('id').maybeSingle()
+            insertedHistorial = data
+            // La columna de enlace puede no existir aún (migración 020 sin aplicar): reintentar sin ella.
+            if (errComp && insertComprobante.historial_pago_cuota_id) {
+              delete insertComprobante.historial_pago_cuota_id
+              const { data: dataRetry } = await supabase
+                .from('historial_comprobantes').insert(insertComprobante).select('id').maybeSingle()
+              insertedHistorial = dataRetry
+            }
             if (insertedHistorial?.id) insertedHistorialComprobanteId = insertedHistorial.id
           } catch (e) { console.warn('historial_comprobantes insert:', e.message) }
         })())
@@ -3670,6 +3920,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
       if (updateError) throw updateError
 
       const cantidad = actualizadas?.length ?? 0
+      // La limpieza escribe directamente en BD: descartar el memo del cálculo anterior para
+      // que el próximo recálculo parta del estado real y no del anterior a la limpieza.
+      invalidarMemoSanciones()
       if (cantidad > 0) {
         console.log(`📋 [Sanciones] Limpieza al desactivar: ${cantidad} cuota(s) de natillera ${natilleraId}`)
         const primeraCuota = actualizadas[0]
@@ -3693,6 +3946,77 @@ export const useCuotasStore = defineStore('cuotas', () => {
     }
   }
 
+
+  /**
+   * Natillera dueña de una cuota. La cuota no la guarda; se resuelve por su socio_natillera.
+   * @returns {Promise<string|null>}
+   */
+  async function obtenerNatilleraDeCuota(cuotaActual, natilleraIdSugerida = null) {
+    if (natilleraIdSugerida) return String(natilleraIdSugerida)
+    if (!cuotaActual?.socio_natillera_id) return null
+    try {
+      const { data } = await supabase
+        .from('socios_natillera').select('natillera_id').eq('id', cuotaActual.socio_natillera_id).single()
+      return data?.natillera_id ? String(data.natillera_id) : null
+    } catch (e) {
+      return null
+    }
+  }
+
+  /**
+   * Filas ABIERTAS (sin fecha_cierre) de utilidad por sanciones de una natillera, ordenadas por
+   * prioridad para descontar: primero la de la misma forma de pago que el pago que se revierte,
+   * después la que no tiene forma de pago y por último el resto.
+   *
+   * El registro del pago crea la fila con `forma_pago` solo cuando el tipo de pago era uno de los
+   * tres válidos, mientras que el historial de la transacción siempre guarda algo (por defecto
+   * 'efectivo'); por eso no basta con buscar la coincidencia exacta.
+   *
+   * @returns {Promise<{filas: Array, cerradas: number, error: string|null}>}
+   */
+  async function getUtilidadesSancionAbiertas(natilleraId, formaPago) {
+    if (!natilleraId) return { filas: [], cerradas: 0, error: 'natillera no identificada' }
+    const abiertas = (columnas) => supabase
+      .from('utilidades_clasificadas')
+      .select(columnas)
+      .eq('natillera_id', natilleraId)
+      .eq('tipo', 'sanciones')
+      .is('fecha_cierre', null)
+
+    let conFormaPago = true
+    // La columna forma_pago puede no existir en entornos antiguos: degradar sin romper.
+    let res = await abiertas('id, monto, forma_pago')
+    if (res.error) {
+      conFormaPago = false
+      res = await abiertas('id, monto')
+    }
+    if (res.error) return { filas: [], cerradas: 0, error: res.error.message }
+    let filas = res.data || []
+
+    const prioridad = (fila) => {
+      if (!conFormaPago) return 2
+      if (fila.forma_pago === formaPago) return 0
+      if (fila.forma_pago == null) return 1
+      return 2
+    }
+    filas = filas
+      .filter(f => (Number(f.monto) || 0) > 0)
+      .sort((a, b) => prioridad(a) - prioridad(b) || (Number(b.monto) || 0) - (Number(a.monto) || 0))
+
+    // Solo se consultan las cerradas para poder explicar por qué no hay de dónde descontar.
+    let cerradas = 0
+    if (filas.length === 0) {
+      const resCerradas = await supabase
+        .from('utilidades_clasificadas')
+        .select('id')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', 'sanciones')
+        .not('fecha_cierre', 'is', null)
+      cerradas = (resCerradas.data || []).length
+    }
+
+    return { filas, cerradas, error: null }
+  }
 
   /**
    * Describe qué se revertiría al eliminar una transacción de pago, SIN tocar nada.
@@ -3747,6 +4071,44 @@ export const useCuotasStore = defineStore('cuotas', () => {
         avisos.push('El abono a préstamo de este pago no quedó enlazado a la transacción. Se revertirá usando el detalle guardado (préstamo y número de cuota); conviene revisar el préstamo después.')
       }
 
+      // La sanción cobrada se sumó a las utilidades del fondo: hay que devolverla de ahí o el
+      // cierre repartiría dinero que nadie pagó. Se avisa cuando no se va a poder.
+      const valorSancion = Number(h.valor_sancion) || 0
+      let utilidadSancion = null
+      if (valorSancion > 0 && !cuota?.no_calcular_multa) {
+        const natilleraId = await obtenerNatilleraDeCuota(cuota)
+        const { filas, cerradas, error: errUtil } = await getUtilidadesSancionAbiertas(
+          natilleraId, String(h.forma_pago || '').toLowerCase()
+        )
+        const disponible = filas.reduce((acc, f) => acc + (Number(f.monto) || 0), 0)
+        utilidadSancion = { valor: valorSancion, disponible, filas: filas.length, cerradas }
+        if (errUtil) {
+          avisos.push('No se pudo consultar la utilidad por sanciones; revisa las utilidades del fondo después de eliminar el pago.')
+        } else if (filas.length === 0 && cerradas > 0) {
+          avisos.push('La utilidad de esta sanción ya fue cerrada y no se puede modificar: pertenece a un ciclo liquidado. La sanción volverá a ser deuda del socio, pero seguirá contada como utilidad de ese cierre.')
+        } else if (disponible < valorSancion) {
+          avisos.push('La utilidad por sanciones registrada es menor que la sanción de este pago. Se descontará lo que haya y conviene revisar las utilidades del fondo.')
+        }
+      }
+
+      // Comprobante nacido de este pago (solo el de "completar pago parcial"; los de edición son otra cosa).
+      let comprobantesEnlazados = 0
+      let comprobantesSinEnlace = 0
+      try {
+        const { data: comps } = await supabase
+          .from('historial_comprobantes')
+          .select('id, historial_pago_cuota_id, motivo')
+          .eq('cuota_id', h.cuota_id)
+          .eq('motivo', 'completar_pago_parcial')
+        comprobantesEnlazados = (comps || []).filter(c => c.historial_pago_cuota_id === historialId).length
+        comprobantesSinEnlace = (comps || []).filter(c => !c.historial_pago_cuota_id).length
+      } catch (e) {
+        comprobantesEnlazados = 0
+      }
+      if (comprobantesEnlazados === 0 && comprobantesSinEnlace > 0) {
+        avisos.push('Esta cuota tiene un comprobante de pago completado sin enlace a la transacción. No se borrará automáticamente para no eliminar el equivocado; conviene revisarlo en el historial de la cuota.')
+      }
+
       return {
         success: true,
         resumen: {
@@ -3763,6 +4125,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
           detalleActividades,
           detallePrestamos,
           abonosPrestamoEnlazados: abonosPrestamoEnlazados.length,
+          utilidadSancion,
+          comprobantesEnlazados,
           valorPagadoCuotaActual: Number(cuota?.valor_pagado) || 0,
           estadoActual: cuota?.estado || null,
           avisos,
@@ -3789,7 +4153,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
    * @param {object} options - { _natilleraId, _socioNombre, _natilleraNombre }
    */
   async function eliminarPagoHistorial(historialId, options = {}) {
-    const revertido = { actividades: 0, abonosPrestamo: 0, cuota: false }
+    const revertido = { actividades: 0, abonosPrestamo: 0, cuota: false, utilidadSancion: 0, comprobantes: 0 }
     const problemas = []
 
     try {
@@ -3994,7 +4358,55 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
       }
 
-      // ── 3. Revertir la propia cuota ──────────────────────────────────────────
+      // ── 3. Devolver la sanción de las utilidades del fondo ───────────────────
+      // La sanción cobrada se sumó a utilidades_clasificadas al registrar el pago. Si no se
+      // resta aquí, vuelve a ser deuda del socio pero sigue contada como utilidad, y el cierre
+      // reparte dinero que nadie pagó. El fallo no aborta la reversión: se acumula en `problemas`.
+      if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+        try {
+          const natilleraId = await obtenerNatilleraDeCuota(cuotaActual, options._natilleraId)
+          if (!natilleraId) {
+            problemas.push('No se pudo identificar la natillera: la sanción sigue contada como utilidad del fondo')
+          } else {
+            const { filas, cerradas, error: errUtil } = await getUtilidadesSancionAbiertas(natilleraId, formaPago)
+            if (errUtil) {
+              problemas.push(`Utilidad por sanciones: ${errUtil}`)
+            } else if (filas.length === 0) {
+              problemas.push(
+                cerradas > 0
+                  ? 'La utilidad de esta sanción pertenece a un cierre ya liquidado y no se modificó'
+                  : 'No se encontró la utilidad por sanciones para devolver el monto de la multa'
+              )
+            } else {
+              // Descuento en cascada: nunca deja un monto negativo.
+              let restante = vSancion
+              for (const fila of filas) {
+                if (restante <= 0) break
+                const montoActual = Number(fila.monto) || 0
+                const quitar = Math.min(montoActual, restante)
+                if (quitar <= 0) continue
+                const { error: eUtil } = await supabase
+                  .from('utilidades_clasificadas')
+                  .update({ monto: montoActual - quitar, updated_at: new Date().toISOString() })
+                  .eq('id', fila.id)
+                if (eUtil) {
+                  problemas.push(`Utilidad por sanciones: ${eUtil.message}`)
+                  break
+                }
+                restante -= quitar
+                revertido.utilidadSancion += quitar
+              }
+              if (restante > 0) {
+                problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de sanción contados como utilidad: revisa las utilidades del fondo`)
+              }
+            }
+          }
+        } catch (e) {
+          problemas.push(`Utilidad por sanciones: ${e.message}`)
+        }
+      }
+
+      // ── 4. Revertir la propia cuota ──────────────────────────────────────────
       const nuevoValorPagado = Math.max(0, (Number(cuotaActual.valor_pagado) || 0) - vCuota)
       const nuevaSancionPagada = Math.max(0, (Number(cuotaActual.valor_pagado_sancion) || 0) - vSancion)
       const nuevoPagadoActividades = Math.max(0, (Number(cuotaActual.valor_pagado_actividades) || 0) - vActividades)
@@ -4067,17 +4479,59 @@ export const useCuotasStore = defineStore('cuotas', () => {
         cuotas.value[index] = { ...cuotas.value[index], ...cuotaActualizada }
       }
 
-      // ── 4. Borrar la transacción del historial ───────────────────────────────
+      // ── 5. Borrar el comprobante que nació de este pago ──────────────────────
+      // Solo el de 'completar_pago_parcial' y solo si está enlazado a ESTA transacción: las
+      // filas de 'edicion_cuota_pagada' / 'actualizacion_pago' nacen de editar la cuota, no de
+      // pagarla, y no se tocan. Sin enlace no se borra nada: coincidir por monto sería adivinar.
+      try {
+        // Supabase NO lanza excepción en errores de BD (columna inexistente, RLS): los devuelve
+        // en `{ error }`. Hay que revisarlo o el fallo queda mudo.
+        const { data: compsEnlazados, error: eBuscar } = await supabase
+          .from('historial_comprobantes')
+          .select('id')
+          .eq('historial_pago_cuota_id', historialId)
+        if (eBuscar) {
+          problemas.push('No se pudo revisar el historial de comprobantes (¿falta aplicar la migración 020?)')
+        } else {
+          const ids = (compsEnlazados || []).map(c => c.id)
+          if (ids.length > 0) {
+            // Se pide el resultado del DELETE: sin política de borrado la operación "tiene éxito"
+            // sin borrar nada, y el comprobante quedaría huérfano en silencio.
+            const { data: borrados, error: eComp } = await supabase
+              .from('historial_comprobantes').delete().in('id', ids).select('id')
+            if (eComp) problemas.push(`Comprobante del pago: ${eComp.message}`)
+            else if ((borrados || []).length === 0) {
+              problemas.push('No se pudo borrar el comprobante de este pago: quedará en el historial de la cuota')
+            } else {
+              revertido.comprobantes = (borrados || []).length
+            }
+          } else {
+            const { data: sinEnlace } = await supabase
+              .from('historial_comprobantes')
+              .select('id')
+              .eq('cuota_id', h.cuota_id)
+              .eq('motivo', 'completar_pago_parcial')
+              .is('historial_pago_cuota_id', null)
+            if ((sinEnlace || []).length > 0) {
+              problemas.push('Quedó un comprobante de pago sin enlazar en el historial de la cuota: revísalo a mano')
+            }
+          }
+        }
+      } catch (e) {
+        problemas.push(`Historial de comprobantes: ${e.message}`)
+      }
+
+      // ── 6. Borrar la transacción del historial ───────────────────────────────
       const { error: delError } = await supabase
         .from('historial_pagos_cuota').delete().eq('id', historialId)
       if (delError) throw delError
 
-      // ── 5. Auditoría (segundo plano) ─────────────────────────────────────────
+      // ── 7. Auditoría (segundo plano) ─────────────────────────────────────────
       try {
         const auditoria = useAuditoria()
         const nombreSocio = options._socioNombre || cuotaActual.nombre_socio || 'Socio'
         const total = Number(h.valor_total) || 0
-        const descripcion = `Se eliminó un pago de $${total.toLocaleString('es-CO')} de ${nombreSocio} (cuota, sanción, actividades y abonos a préstamo revertidos)`
+        const descripcion = `Se eliminó un pago de $${total.toLocaleString('es-CO')} de ${nombreSocio} (cuota, sanción, actividades, abonos a préstamo y utilidad por sanción revertidos)`
         registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
           'historial_pagos_cuota', historialId, descripcion, h,
           options._natilleraId ? String(options._natilleraId) : null,
@@ -4096,6 +4550,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
             estado_nuevo: updateData.estado,
             actividades_revertidas: revertido.actividades,
             abonos_prestamo_revertidos: revertido.abonosPrestamo,
+            utilidad_sancion_revertida: revertido.utilidadSancion,
+            comprobantes_eliminados: revertido.comprobantes,
             problemas,
           },
           options._natilleraNombre || null
@@ -4105,6 +4561,398 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // Recalcular mora tras devolver la deuda
+      actualizarEstadoMoraAutomatico().catch(e => console.warn('actualizarEstadoMoraAutomatico:', e.message))
+
+      return { success: true, cuota: cuotaActualizada, revertido, problemas }
+    } catch (e) {
+      error.value = e.message
+      return { success: false, error: e.message, revertido, problemas }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * Forma de pago deducida del desglose de la propia cuota, para pagos que no dejaron transacción.
+   */
+  function deducirFormaPagoCuota(cuota) {
+    const ef = Number(cuota?.valor_pagado_efectivo) || 0
+    const tr = Number(cuota?.valor_pagado_transferencia) || 0
+    if (ef > 0 && tr > 0) return 'mixto'
+    if (tr > 0) return 'transferencia'
+    return 'efectivo'
+  }
+
+  /**
+   * Describe la reversión de un pago que NO dejó fila en historial_pagos_cuota, SIN tocar nada.
+   *
+   * Son pagos anteriores al registro por transacción. El dinero está en la propia cuota y el
+   * `codigo_comprobante` sirve de enlace real con las actividades (`socios_actividad`) y los
+   * abonos a préstamo (`pagos_prestamo.origen = 'cuota_natillera'`), que lo guardan al pagarse
+   * desde la cuota. No se empareja por monto ni por fecha: sin código no se toca nada.
+   *
+   * Revierte el pago COMPLETO de la cuota, porque sin transacciones no hay pagos separables.
+   */
+  async function previsualizarEliminacionPagoDirecto(cuotaId) {
+    try {
+      const { data: cuota, error: cError } = await supabase
+        .from('cuotas').select('*').eq('id', cuotaId).single()
+      if (cError) throw cError
+      if (!cuota) throw new Error('No se encontró la cuota')
+
+      const codigo = cuota.codigo_comprobante || null
+      const valorCuota = Number(cuota.valor_pagado) || 0
+      const valorSancion = Number(cuota.valor_pagado_sancion) || 0
+      const valorActividades = Number(cuota.valor_pagado_actividades) || 0
+      const gmf = Number(cuota.impuesto_4x1000) || 0
+
+      // Actividades y abonos enlazados por el código de comprobante de la cuota.
+      let actividades = []
+      let abonosPrestamo = []
+      if (codigo) {
+        const { data: acts } = await supabase
+          .from('socios_actividad')
+          .select('id, valor_pagado, valor_asignado, actividad:actividades(descripcion)')
+          .eq('socio_natillera_id', cuota.socio_natillera_id)
+          .eq('codigo_comprobante', codigo)
+          .gt('valor_pagado', 0)
+        actividades = acts || []
+
+        const { data: abonos } = await supabase
+          .from('pagos_prestamo')
+          .select('id, prestamo_id, valor, numeros_cuota')
+          .eq('codigo_comprobante', codigo)
+          .eq('origen', 'cuota_natillera')
+        abonosPrestamo = abonos || []
+      }
+      const valorPrestamos = abonosPrestamo.reduce((acc, a) => acc + (Number(a.valor) || 0), 0)
+
+      const avisos = [
+        'Este pago no quedó guardado como transacción, así que se revierte el pago COMPLETO de la cuota: no hay abonos separables.',
+      ]
+      if (!codigo) {
+        if (valorActividades > 0 || valorPrestamos > 0) {
+          avisos.push('La cuota no tiene código de comprobante, así que no se pueden identificar sus actividades ni sus abonos a préstamo. Solo se revertirá la cuota; revisa Actividades y Préstamos después.')
+        }
+      } else {
+        if (valorActividades > 0 && actividades.length === 0) {
+          avisos.push('No se encontraron actividades con el código de comprobante de esta cuota. El dinero de actividades se descontará de la cuota, pero conviene revisarlas en el módulo de Actividades.')
+        }
+        if (actividades.length > 0) {
+          avisos.push(`Se revertirán ${actividades.length} actividad(es) enlazadas por el código ${codigo}.`)
+        }
+        if (abonosPrestamo.length > 0) {
+          avisos.push(`Se revertirán ${abonosPrestamo.length} abono(s) a préstamo enlazados por el código ${codigo}.`)
+        }
+      }
+
+      // La sanción cobrada también salió a utilidades del fondo (RF-09).
+      let utilidadSancion = null
+      if (valorSancion > 0 && !cuota.no_calcular_multa) {
+        const natilleraId = await obtenerNatilleraDeCuota(cuota)
+        const { filas, cerradas } = await getUtilidadesSancionAbiertas(
+          natilleraId, deducirFormaPagoCuota(cuota)
+        )
+        const disponible = filas.reduce((acc, f) => acc + (Number(f.monto) || 0), 0)
+        utilidadSancion = { valor: valorSancion, disponible, filas: filas.length, cerradas }
+        if (filas.length === 0 && cerradas > 0) {
+          avisos.push('La utilidad de esta sanción ya fue cerrada y no se puede modificar: pertenece a un ciclo liquidado.')
+        }
+      }
+
+      return {
+        success: true,
+        resumen: {
+          modoDirecto: true,
+          cuotaId,
+          fechaPago: cuota.fecha_pago,
+          formaPago: deducirFormaPagoCuota(cuota),
+          codigoComprobante: codigo,
+          valorTotal: valorCuota + valorSancion + valorActividades + valorPrestamos,
+          valorCuota,
+          valorSancion,
+          valorActividades,
+          valorPrestamos,
+          impuesto4x1000: gmf,
+          detalleActividades: actividades.map(a => ({
+            nombre: a.actividad?.descripcion || 'Actividad', valor: Number(a.valor_pagado) || 0,
+          })),
+          detallePrestamos: [],
+          abonosPrestamoEnlazados: abonosPrestamo.length,
+          utilidadSancion,
+          comprobantesEnlazados: 0,
+          valorPagadoCuotaActual: valorCuota,
+          estadoActual: cuota.estado || null,
+          avisos,
+        },
+      }
+    } catch (e) {
+      return { success: false, error: e.message }
+    }
+  }
+
+  /**
+   * Revierte el pago COMPLETO de una cuota que no dejó transacción en historial_pagos_cuota.
+   *
+   * Mismo orden deliberado que `eliminarPagoHistorial` (RN-08): primero los efectos externos,
+   * después la cuota. Si algo falla a mitad, la cuota todavía refleja el pago y se puede reintentar.
+   */
+  async function eliminarPagoDirectoCuota(cuotaId, options = {}) {
+    const revertido = { actividades: 0, abonosPrestamo: 0, cuota: false, utilidadSancion: 0, comprobantes: 0 }
+    const problemas = []
+
+    try {
+      loading.value = true
+      error.value = null
+
+      const { data: cuotaActual, error: cError } = await supabase
+        .from('cuotas').select('*').eq('id', cuotaId).single()
+      if (cError) throw cError
+      if (!cuotaActual) throw new Error('No se encontró la cuota')
+
+      const codigo = cuotaActual.codigo_comprobante || null
+      const vCuota = Number(cuotaActual.valor_pagado) || 0
+      const vSancion = Number(cuotaActual.valor_pagado_sancion) || 0
+      const vActividades = Number(cuotaActual.valor_pagado_actividades) || 0
+      const formaPago = deducirFormaPagoCuota(cuotaActual)
+
+      if (vCuota <= 0 && vSancion <= 0 && vActividades <= 0) {
+        throw new Error('Esta cuota no tiene pagos que revertir')
+      }
+
+      // ── 1. Actividades enlazadas por el código de comprobante ────────────────
+      if (vActividades > 0 && codigo) {
+        try {
+          const { data: acts } = await supabase
+            .from('socios_actividad')
+            .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia')
+            .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
+            .eq('codigo_comprobante', codigo)
+            .gt('valor_pagado', 0)
+          let restante = vActividades
+          for (const fila of acts || []) {
+            if (restante <= 0) break
+            const pagado = Number(fila.valor_pagado) || 0
+            const quitar = Math.min(pagado, restante)
+            const nuevoPagado = Math.max(0, pagado - quitar)
+            const datos = { valor_pagado: nuevoPagado }
+            if (nuevoPagado < (Number(fila.valor_asignado) || 0)) datos.codigo_comprobante = null
+            if (nuevoPagado === 0) {
+              datos.valor_pagado_efectivo = 0
+              datos.valor_pagado_transferencia = 0
+            } else {
+              const ef = Number(fila.valor_pagado_efectivo) || 0
+              const tr = Number(fila.valor_pagado_transferencia) || 0
+              if (formaPago === 'efectivo') datos.valor_pagado_efectivo = Math.max(0, ef - quitar)
+              else if (formaPago === 'transferencia') datos.valor_pagado_transferencia = Math.max(0, tr - quitar)
+              else {
+                const total = ef + tr
+                const quitarEf = total > 0 ? Math.round(quitar * (ef / total)) : quitar
+                datos.valor_pagado_efectivo = Math.max(0, ef - quitarEf)
+                datos.valor_pagado_transferencia = Math.max(0, tr - (quitar - quitarEf))
+              }
+            }
+            const { error: eAct } = await supabase.from('socios_actividad').update(datos).eq('id', fila.id)
+            if (eAct) problemas.push(`Actividad ${fila.id}: ${eAct.message}`)
+            else { revertido.actividades += 1; restante -= quitar }
+          }
+          if (restante > 0) {
+            problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de actividades sin revertir: revísalas en el módulo de Actividades`)
+          }
+        } catch (e) {
+          problemas.push(`Actividades: ${e.message}`)
+        }
+      } else if (vActividades > 0 && !codigo) {
+        problemas.push('La cuota no tiene código de comprobante: sus actividades no se pudieron identificar ni revertir')
+      }
+
+      // ── 2. Abonos a préstamo enlazados por el código de comprobante ──────────
+      if (codigo) {
+        try {
+          const { data: abonos } = await supabase
+            .from('pagos_prestamo')
+            .select('id, prestamo_id, valor, numeros_cuota')
+            .eq('codigo_comprobante', codigo)
+            .eq('origen', 'cuota_natillera')
+
+          for (const abono of abonos || []) {
+            // Deshacer lo último primero: se descuenta de las cuotas del plan que cubrió el abono.
+            const numeros = Array.isArray(abono.numeros_cuota) ? [...abono.numeros_cuota] : []
+            numeros.sort((a, b) => b - a)
+            let restante = Number(abono.valor) || 0
+            for (const num of numeros) {
+              if (restante <= 0) break
+              const { data: filas } = await supabase
+                .from('plan_pagos_prestamo')
+                .select('id, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia')
+                .eq('prestamo_id', abono.prestamo_id)
+                .eq('numero_cuota', num)
+                .limit(1)
+              const fila = (filas || [])[0]
+              if (!fila) { problemas.push(`No se encontró la cuota #${num} del préstamo para revertir`); continue }
+              const pagado = Number(fila.valor_pagado) || 0
+              const quitar = Math.min(pagado, restante)
+              const nuevoPagado = Math.max(0, pagado - quitar)
+              const ef = Number(fila.valor_pagado_efectivo) || 0
+              const tr = Number(fila.valor_pagado_transferencia) || 0
+              let nuevoEf = ef
+              let nuevoTr = tr
+              if (nuevoPagado === 0) { nuevoEf = 0; nuevoTr = 0 }
+              else if (formaPago === 'efectivo') nuevoEf = Math.max(0, ef - quitar)
+              else if (formaPago === 'transferencia') nuevoTr = Math.max(0, tr - quitar)
+              else {
+                const total = ef + tr
+                const quitarEf = total > 0 ? Math.round(quitar * (ef / total)) : quitar
+                nuevoEf = Math.max(0, ef - quitarEf)
+                nuevoTr = Math.max(0, tr - (quitar - quitarEf))
+              }
+              const datos = { valor_pagado: nuevoPagado, valor_pagado_efectivo: nuevoEf, valor_pagado_transferencia: nuevoTr }
+              if (nuevoPagado < (Number(fila.valor_cuota) || 0)) { datos.pagada = false; datos.fecha_pago = null }
+              const { error: ePlan } = await supabase.from('plan_pagos_prestamo').update(datos).eq('id', fila.id)
+              if (ePlan) problemas.push(`Cuota de préstamo #${num}: ${ePlan.message}`)
+              else restante -= quitar
+            }
+
+            // Devolver el saldo y reabrir el préstamo si había quedado pagado.
+            const monto = Number(abono.valor) || 0
+            if (monto > 0 && abono.prestamo_id) {
+              const { data: prestamo } = await supabase
+                .from('prestamos').select('id, saldo_actual, estado').eq('id', abono.prestamo_id).single()
+              if (prestamo) {
+                const datos = { saldo_actual: (Number(prestamo.saldo_actual) || 0) + monto }
+                if (prestamo.estado === 'pagado') datos.estado = 'activo'
+                const { error: ePres } = await supabase.from('prestamos').update(datos).eq('id', prestamo.id)
+                if (ePres) problemas.push(`Préstamo ${prestamo.id}: ${ePres.message}`)
+              }
+            }
+          }
+
+          const ids = (abonos || []).map(a => a.id)
+          if (ids.length > 0) {
+            const { data: borrados, error: eDel } = await supabase
+              .from('pagos_prestamo').delete().in('id', ids).select('id')
+            if (eDel) problemas.push(`Abonos a préstamo: ${eDel.message}`)
+            else revertido.abonosPrestamo = (borrados || []).length
+          }
+        } catch (e) {
+          problemas.push(`Préstamos: ${e.message}`)
+        }
+      }
+
+      // ── 3. Devolver la sanción de las utilidades del fondo (RF-09) ───────────
+      if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+        try {
+          const natilleraId = await obtenerNatilleraDeCuota(cuotaActual, options._natilleraId)
+          if (!natilleraId) {
+            problemas.push('No se pudo identificar la natillera: la sanción sigue contada como utilidad del fondo')
+          } else {
+            const { filas, cerradas, error: errUtil } = await getUtilidadesSancionAbiertas(natilleraId, formaPago)
+            if (errUtil) problemas.push(`Utilidad por sanciones: ${errUtil}`)
+            else if (filas.length === 0) {
+              problemas.push(
+                cerradas > 0
+                  ? 'La utilidad de esta sanción pertenece a un cierre ya liquidado y no se modificó'
+                  : 'No se encontró la utilidad por sanciones para devolver el monto de la multa'
+              )
+            } else {
+              let restante = vSancion
+              for (const fila of filas) {
+                if (restante <= 0) break
+                const montoActual = Number(fila.monto) || 0
+                const quitar = Math.min(montoActual, restante)
+                if (quitar <= 0) continue
+                const { error: eUtil } = await supabase
+                  .from('utilidades_clasificadas')
+                  .update({ monto: montoActual - quitar, updated_at: new Date().toISOString() })
+                  .eq('id', fila.id)
+                if (eUtil) { problemas.push(`Utilidad por sanciones: ${eUtil.message}`); break }
+                restante -= quitar
+                revertido.utilidadSancion += quitar
+              }
+              if (restante > 0) {
+                problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de sanción contados como utilidad: revisa las utilidades del fondo`)
+              }
+            }
+          }
+        } catch (e) {
+          problemas.push(`Utilidad por sanciones: ${e.message}`)
+        }
+      }
+
+      // ── 4. Dejar la cuota sin pagos ──────────────────────────────────────────
+      // La sanción vuelve a ser deuda: `valor_multa` guarda el total, no lo pendiente (RN-07).
+      const multaActual = Number(cuotaActual.valor_multa) || 0
+      const nuevaMulta = cuotaActual.no_calcular_multa ? 0 : (multaActual > 0 ? multaActual : vSancion)
+
+      const updateData = {
+        valor_pagado: 0,
+        valor_pagado_sancion: 0,
+        valor_pagado_actividades: 0,
+        valor_pagado_efectivo: 0,
+        valor_pagado_transferencia: 0,
+        impuesto_4x1000: 0,
+        valor_multa: nuevaMulta,
+        fecha_pago: null,
+        codigo_comprobante: null,
+        tipo_pago: null,
+        estado: calcularEstadoRealCuotaStore({ ...cuotaActual, valor_pagado: 0 }, undefined),
+      }
+
+      const { data: cuotaActualizada, error: updateError } = await supabase
+        .from('cuotas').update(updateData).eq('id', cuotaId).select('*').maybeSingle()
+      if (updateError) throw updateError
+      revertido.cuota = true
+
+      const index = cuotas.value.findIndex(c => c.id === cuotaId)
+      if (index !== -1) cuotas.value[index] = { ...cuotas.value[index], ...cuotaActualizada }
+
+      // ── 5. Comprobantes de la cuota ──────────────────────────────────────────
+      // Se revirtió el pago completo, así que los snapshots de "completar pago parcial" ya no
+      // describen nada existente.
+      try {
+        const { data: borrados, error: eComp } = await supabase
+          .from('historial_comprobantes')
+          .delete()
+          .eq('cuota_id', cuotaId)
+          .eq('motivo', 'completar_pago_parcial')
+          .select('id')
+        if (eComp) problemas.push(`Comprobantes: ${eComp.message}`)
+        else revertido.comprobantes = (borrados || []).length
+      } catch (e) {
+        problemas.push(`Historial de comprobantes: ${e.message}`)
+      }
+
+      // ── 6. Auditoría ─────────────────────────────────────────────────────────
+      try {
+        const auditoria = useAuditoria()
+        const nombreSocio = options._socioNombre || cuotaActual.nombre_socio || 'Socio'
+        const total = vCuota + vSancion + vActividades
+        const descripcion = `Se eliminó el pago completo de $${total.toLocaleString('es-CO')} de ${nombreSocio} (pago antiguo sin transacción registrada)`
+        registrarAuditoriaEnSegundoPlano(auditoria.registrarEliminacion(
+          'cuotas', cuotaId, descripcion, cuotaActual,
+          options._natilleraId ? String(options._natilleraId) : null,
+          {
+            modo: 'pago_directo_sin_transaccion',
+            socio_nombre: nombreSocio,
+            codigo_comprobante: codigo,
+            valor_total: total,
+            valor_cuota: vCuota,
+            valor_sancion: vSancion,
+            valor_actividades: vActividades,
+            estado_anterior: cuotaActual.estado,
+            estado_nuevo: updateData.estado,
+            actividades_revertidas: revertido.actividades,
+            abonos_prestamo_revertidos: revertido.abonosPrestamo,
+            utilidad_sancion_revertida: revertido.utilidadSancion,
+            comprobantes_eliminados: revertido.comprobantes,
+            problemas,
+          },
+          options._natilleraNombre || null
+        ))
+      } catch (e) {
+        console.warn('Auditoría de eliminación de pago directo:', e.message)
+      }
+
       actualizarEstadoMoraAutomatico().catch(e => console.warn('actualizarEstadoMoraAutomatico:', e.message))
 
       return { success: true, cuota: cuotaActualizada, revertido, problemas }
@@ -4131,7 +4979,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     actualizarEstadoMoraAutomatico,
     recalcularMultasCuotasMora,
     calcularMultaDinamica,
+    calcularSancionCuotaAFecha,
     calcularSancionesTotales,
+    invalidarMemoSanciones,
     limpiarSancionesNatillera,
     calcularResumenCuotas,
     getCuotasPorMes,
@@ -4145,7 +4995,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     actualizarCuotasPorCambioValorCuota,
     eliminarTodasLasCuotasSocio,
     previsualizarEliminacionPago,
-    eliminarPagoHistorial
+    eliminarPagoHistorial,
+    previsualizarEliminacionPagoDirecto,
+    eliminarPagoDirectoCuota
   }
 }, {
   // Cache para pintado instantáneo tras el reload por descarte de pestaña (móvil).
