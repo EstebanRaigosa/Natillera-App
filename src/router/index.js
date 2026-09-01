@@ -27,6 +27,7 @@ const Actividades = () => import('../views/actividades/Actividades.vue')
 const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
 const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
 const Configuracion = () => import('../views/configuracion/Configuracion.vue')
+const MiCuenta = () => import('../views/usuario/MiCuenta.vue')
 const Auditoria = () => import('../views/auditoria/Auditoria.vue')
 const DataAdmin = () => import('../views/admin/DataAdmin.vue')
 const AceptarInvitacion = () => import('../views/invitaciones/AceptarInvitacion.vue')
@@ -164,6 +165,14 @@ const routes = [
         name: 'Configuracion',
         component: Configuracion,
         meta: { title: 'Configuración' }
+      },
+      {
+        // Preferencias de la persona, no de la natillera: avisos push y botón
+        // de soporte. `/configuracion` guarda los ajustes compartidos.
+        path: 'mi-cuenta',
+        name: 'MiCuenta',
+        component: MiCuenta,
+        meta: { title: 'Mi cuenta' }
       },
       {
         path: 'auditoria',

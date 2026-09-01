@@ -10,12 +10,6 @@
       </p>
     </div>
 
-    <!-- Avisos de soporte (RF-13): el permiso se pide solo desde aquí -->
-    <AjustesNotificaciones />
-
-    <!-- Botón flotante: mostrarlo, ocultarlo y devolverlo a su sitio -->
-    <AjustesBotonSoporte />
-
     <!-- Mensajes por Defecto -->
     <div class="card">
       <div class="flex items-center gap-3 mb-6">
@@ -396,8 +390,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useConfiguracionStore } from '../../stores/configuracion'
-import AjustesNotificaciones from '../../components/soporte/AjustesNotificaciones.vue'
-import AjustesBotonSoporte from '../../components/soporte/AjustesBotonSoporte.vue'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useRoute } from 'vue-router'
 import { 

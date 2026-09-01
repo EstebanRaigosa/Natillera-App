@@ -288,6 +288,22 @@
             <p class="user-panel-user-email">{{ authStore.userEmail }}</p>
           </div>
 
+          <!--
+            Ajustes de la persona. Van junto al avatar porque es donde se
+            buscan, y a una pantalla propia (`/mi-cuenta`) porque
+            `/configuracion` guarda los mensajes por defecto, el periodo y los
+            días de gracia: ajustes de la natillera, compartidos, no personales.
+          -->
+          <button
+            type="button"
+            class="logout-btn group/btn"
+            title="Mi cuenta"
+            aria-label="Mi cuenta"
+            @click="abrirRutaDesdeSidebar('/mi-cuenta')"
+          >
+            <Cog6ToothIcon class="logout-btn__icon" />
+          </button>
+
           <button
             type="button"
             class="logout-btn group/btn"
