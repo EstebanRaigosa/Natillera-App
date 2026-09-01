@@ -4799,60 +4799,52 @@
               </div>
             </div>
 
-            <!-- SECCIÓN 2B: HISTORIAL DE PAGOS (solo si hay más de un registro en historial_pagos_cuota; 4×1000 por fila si aplica) -->
-            <div v-if="(pagoRegistrado?.historialPagos?.length || 0) > 1" class="overflow-hidden rounded-xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/70 shadow-sm" style="margin-bottom: 12px; padding: 12px 14px; box-shadow: 0 2px 12px rgba(5, 150, 105, 0.08);">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-600" style="font-size: 11px; font-weight: 800;">📋</span>
-                <div class="flex flex-col min-w-0">
-                  <p class="m-0 text-xs font-bold uppercase tracking-wider" style="color: #047857; letter-spacing: 0.8px;">Historial de pagos</p>
-                  <p class="m-0 text-[10px] font-medium text-emerald-700/90">Varios abonos a esta cuota</p>
-                </div>
+            <!-- SECCIÓN 2B: ABONOS DE ESTA CUOTA.
+                 Aparece cuando el socio pagó en varias veces: una fila por abono con su fecha y su
+                 monto, y el total abonado al cierre. Sin emoji ni gradientes: esto se convierte en
+                 imagen para WhatsApp y debe imprimir limpio. -->
+            <div
+              v-if="abonosComprobante.length > 1"
+              style="margin-bottom: 12px; background: #ffffff; border: 1px solid #d1fae5; border-radius: 12px; overflow: hidden;"
+            >
+              <div style="background: #ecfdf5; padding: 8px 12px; border-bottom: 1px solid #d1fae5;">
+                <p style="margin: 0; color: #047857; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;">
+                  Abonos de esta cuota
+                </p>
+                <p style="margin: 2px 0 0 0; color: #059669; font-size: 10px; font-weight: 500;">
+                  {{ abonosComprobante.length }} pagos registrados
+                </p>
               </div>
-              <div class="flex flex-col gap-3">
-                <div 
-                  v-for="(item, idx) in pagoRegistrado.historialPagos" 
+
+              <div style="padding: 4px 12px 8px;">
+                <div
+                  v-for="(abono, idx) in abonosComprobante"
                   :key="idx"
-                  class="relative overflow-hidden rounded-lg border border-emerald-100 bg-white/90 shadow-sm"
-                  style="padding: 10px 12px; padding-left: 14px; border-left: 3px solid #10b981;"
+                  :style="'display: flex; align-items: flex-start; gap: 10px; padding: 9px 0;' + (idx > 0 ? ' border-top: 1px dashed #d1fae5;' : '')"
                 >
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <div class="flex items-center gap-1.5">
-                      <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold">
-                        {{ item.pago }}° Pago
-                      </span>
-                      <!-- Badge forma de pago diferenciada -->
-                      <span
-                        v-if="item.formaPagoTexto"
-                        class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold border"
-                        :style="(item.formaPago || 'efectivo') === 'transferencia'
-                          ? 'background: #dbeafe; color: #1e40af; border-color: #93c5fd;'
-                          : (item.formaPago || '').toLowerCase() === 'tarjeta'
-                          ? 'background: #f1f5f9; color: #475569; border-color: #cbd5e1;'
-                          : 'background: #d1fae5; color: #047857; border-color: #6ee7b7;'"
-                      >
-                        <span v-if="(item.formaPago || 'efectivo') === 'transferencia'" style="font-size: 10px;">💳</span>
-                        <span v-else-if="(item.formaPago || '').toLowerCase() === 'tarjeta'" style="font-size: 10px;">💳</span>
-                        <span v-else style="font-size: 10px;">💵</span>
-                        {{ item.formaPagoTexto }}
-                      </span>
-                    </div>
-                    <span class="text-xs font-medium" style="color: #64748b;">{{ item.fecha }}</span>
+                  <span style="flex-shrink: 0; width: 20px; height: 20px; border-radius: 999px; background: #d1fae5; color: #047857; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-top: 1px;">
+                    {{ abono.n }}
+                  </span>
+
+                  <div style="flex-grow: 1; min-width: 0;">
+                    <p style="margin: 0; color: #111827; font-size: 11.5px; font-weight: 700; line-height: 1.3;">
+                      {{ abono.fecha }}
+                    </p>
+                    <p style="margin: 1px 0 0 0; color: #6b7280; font-size: 10px; font-weight: 500; line-height: 1.35;">
+                      {{ abono.detalle }}
+                    </p>
                   </div>
-                  <!-- Conceptos siempre en una columna (todos los anchos) -->
-                  <div class="flex flex-col gap-1.5 mb-2 w-full">
-                    <span 
-                      v-for="(c, i) in item.conceptos" 
-                      :key="i"
-                      class="text-sm block w-full"
-                      style="color: #475569;"
-                    >
-                      <span class="font-medium" style="color: #64748b;">{{ c.nombre }}:</span>
-                      <strong class="ml-0.5 font-semibold" style="color: #0f766e;">${{ formatMoney(c.valor) }}</strong>
-                    </span>
-                  </div>
-                  <div class="flex items-center justify-end border-t border-emerald-100/80 pt-2 mt-1">
-                    <span class="text-sm font-bold" style="color: #059669;">Total: ${{ formatMoney(item.total) }}</span>
-                  </div>
+
+                  <span style="flex-shrink: 0; color: #047857; font-size: 12.5px; font-weight: 800; text-align: right;">
+                    ${{ formatMoney(abono.total) }}
+                  </span>
+                </div>
+
+                <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px; border-top: 1.5px solid #047857; padding-top: 8px; margin-top: 4px;">
+                  <span style="color: #065f46; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Total abonado</span>
+                  <span style="color: #047857; font-size: 14px; font-weight: 800;">
+                    ${{ formatMoney(abonosComprobante.reduce((s, a) => s + (Number(a.total) || 0), 0)) }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -8875,6 +8867,45 @@ function esNombreConceptoGmfComprobante(nombre) {
     s.includes('por mil')
   )
 }
+
+/**
+ * Abonos que muestra el comprobante cuando la cuota se pagó en varias veces.
+ *
+ * La fuente preferida es `historial_pagos_cuota` (una fila por transacción, con su fecha y sus
+ * conceptos). Pero ese registro es *best-effort*: los pagos antiguos —y cualquiera cuyo insert
+ * fallara— no dejaron fila, y entonces el comprobante se quedaba sin sección aunque el socio sí
+ * hubiera abonado antes. En ese caso se reconstruye lo que sí se conoce: cuánto llevaba pagado y
+ * cuánto entró ahora.
+ */
+const abonosComprobante = computed(() => {
+  const reg = pagoRegistrado.value
+  if (!reg) return []
+
+  const desdeHistorial = Array.isArray(reg.historialPagos) ? reg.historialPagos : []
+  if (desdeHistorial.length > 1) {
+    return desdeHistorial.map((item, i) => ({
+      n: item.pago || i + 1,
+      fecha: item.fecha || 'Sin fecha',
+      detalle: [
+        item.formaPagoTexto || 'Efectivo',
+        (item.conceptos || []).map(c => c.nombre).join(' + ')
+      ].filter(Boolean).join(' · '),
+      total: Number(item.total) || 0
+    }))
+  }
+
+  // Sin historial suficiente: al menos separar lo abonado antes de lo que se acaba de pagar.
+  const anterior = Number(reg.valorPagadoAnteriorTotal) || 0
+  if (anterior <= 0) return []
+  const acumulado = Number(reg.valorPagadoTotal) || 0
+  const estaVez = Math.max(0, acumulado - anterior)
+  if (estaVez <= 0) return []
+
+  return [
+    { n: 1, fecha: reg.fechaPagoAnterior || 'Abono anterior', detalle: 'Abonado antes de este pago', total: anterior },
+    { n: 2, fecha: reg.fecha || reg.fechaCorta || 'Hoy', detalle: reg.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo', total: estaVez }
+  ]
+})
 
 /** Suma montos de líneas 4×1000 / GMF en un arreglo tipo historialPagos del comprobante. */
 function sumarGmfEnConceptosHistorialPagos(items) {
@@ -13338,7 +13369,9 @@ function mostrarConfirmacionPago() {
 
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
-  const sancion = getSancionCuota(cuotaSeleccionada.value)
+  // La sanción del reparto es la MEDIDA HASTA LA FECHA DEL PAGO, la misma que muestra el modal.
+  // Con getSancionCuota (la de hoy) se repartía dinero a una multa que a esa fecha no existía.
+  const sancion = sancionSegunFechaPago.value
   const valorCuota = cuotaSeleccionada.value.valor_cuota || 0
   const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
   const valorCuotaPendiente = valorCuota - valorPagadoAnterior
@@ -13470,7 +13503,9 @@ async function handleRegistrarPago() {
 
   const totalActividades = getTotalActividadesSeleccionadas()
   const totalCuotasPrestamos = getTotalCuotasPrestamosSeleccionadas()
-  const sancion = getSancionCuota(cuotaSeleccionada.value)
+  // La sanción del reparto es la MEDIDA HASTA LA FECHA DEL PAGO, la misma que muestra el modal.
+  // Con getSancionCuota (la de hoy) se repartía dinero a una multa que a esa fecha no existía.
+  const sancion = sancionSegunFechaPago.value
   const valorCuota = cuotaSeleccionada.value.valor_cuota || 0
   const valorPagadoAnterior = cuotaSeleccionada.value.valor_pagado || 0
   const valorCuotaPendiente = valorCuota - valorPagadoAnterior
@@ -13590,6 +13625,10 @@ async function handleRegistrarPago() {
       detalleActividades,
       totalAPagar: totalAdeudadoPago,
       detalleCuotasPrestamos,
+      // Sanción medida hasta la fecha del pago: es la que se mostró en el modal, y la que el
+      // store debe cobrar. Sin esto el store recalculaba contra hoy y cobraba una multa distinta
+      // de la que el usuario acababa de ver.
+      sancionAFecha: sancion,
       _socioNombre: socioNombre,
       _natilleraNombre: natilleraNombre.value || null,
       _natilleraConfig: natilleraConfigCache || null,
@@ -13652,13 +13691,19 @@ async function handleRegistrarPago() {
     )
   }
   
-  // Lanzar query de historial EN PARALELO con conceptos (no esperar secuencialmente)
+  // Historial de pagos para el comprobante. La fila del pago que se acaba de registrar se inserta
+  // en una tarea secundaria del store, así que hay que esperarla ANTES de consultar: si no, el
+  // comprobante lista los abonos anteriores pero no el que el socio acaba de hacer (y con un solo
+  // registro la sección ni siquiera se mostraba). Se encadena, no se bloquea: sigue corriendo en
+  // paralelo con el resto de los conceptos.
   const historialPromise = result.success
-    ? supabase
-        .from('historial_pagos_cuota')
-        .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades')
-        .eq('cuota_id', cuotaSeleccionada.value.id)
-        .order('fecha_pago', { ascending: true })
+    ? Promise.resolve(result._bgPromise)
+        .catch(() => null)
+        .then(() => supabase
+          .from('historial_pagos_cuota')
+          .select('fecha_pago, forma_pago, valor_total, valor_cuota, valor_sancion, valor_actividades, valor_cuotas_prestamo, impuesto_4x1000, detalle_actividades')
+          .eq('cuota_id', cuotaSeleccionada.value.id)
+          .order('fecha_pago', { ascending: true }))
     : null
 
   // Esperar conceptos en paralelo
@@ -13826,6 +13871,15 @@ async function handleRegistrarPago() {
     let abonosPrestamoPeriodo = { abonos: [], total: 0 }
     try { abonosPrestamoPeriodo = await obtenerAbonosPrestamoPeriodoCuota(cuotaSeleccionada.value) } catch (e) { void e }
 
+    // Fecha que va en el comprobante: la elegida en el formulario, construida con partes locales
+    // para que un 'YYYY-MM-DD' no se corra un día al interpretarlo como UTC.
+    const fechaComprobantePago = (() => {
+      const iso = String(formPago.fecha_pago || '').substring(0, 10)
+      const [cA, cM, cD] = iso.split('-').map(Number)
+      if (Number.isNaN(cA) || Number.isNaN(cM) || Number.isNaN(cD)) return new Date()
+      return new Date(cA, cM - 1, cD)
+    })()
+
     // Guardar info del pago para el modal de confirmación
     pagoRegistrado.value = {
       cuotaId: cuotaSeleccionada.value.id, // ID de la cuota para auditoría
@@ -13850,12 +13904,15 @@ async function handleRegistrarPago() {
       valorTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : 0, // Bruto consignado (incluye GMF si lo pagó)
       impuesto4x1000: impuesto4x1000Final,
       valorConsignadoTransferencia: esPagoTransferencia ? valorConsignadoTransferenciaPago : null,
-      fecha: new Date().toLocaleDateString('es-CO', {
+      // El comprobante lleva la FECHA DEL PAGO elegida en el formulario, no la del momento en que
+      // se digita: es la fecha en que el socio entregó el dinero y la que se guarda en la cuota.
+      // Se arma con partes locales para que un 'YYYY-MM-DD' no se corra un día por zona horaria.
+      fecha: fechaComprobantePago.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       }),
-      fechaCorta: new Date().toLocaleDateString('es-CO', {
+      fechaCorta: fechaComprobantePago.toLocaleDateString('es-CO', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'

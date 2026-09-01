@@ -28,10 +28,12 @@ const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
 const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
 const Configuracion = () => import('../views/configuracion/Configuracion.vue')
 const Auditoria = () => import('../views/auditoria/Auditoria.vue')
-const ChatAdmin = () => import('../views/admin/ChatAdmin.vue')
 const DataAdmin = () => import('../views/admin/DataAdmin.vue')
 const AceptarInvitacion = () => import('../views/invitaciones/AceptarInvitacion.vue')
 const DesignSystemDemo = () => import('../views/demo/DesignSystemDemo.vue')
+// Soporte: carga diferida para que el módulo no engorde el arranque (RNF-12)
+const Soporte = () => import('../views/soporte/Soporte.vue')
+const SoporteAdmin = () => import('../views/admin/SoporteAdmin.vue')
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -170,16 +172,27 @@ const routes = [
         meta: { title: 'Auditoría' }
       },
       {
-        path: 'admin/chat',
-        name: 'ChatAdmin',
-        component: ChatAdmin,
-        meta: { title: 'Chat Admin' }
-      },
-      {
         path: 'admin/data',
         name: 'DataAdmin',
         component: DataAdmin,
         meta: { title: 'Data Admin' }
+      },
+      // ── Soporte ──────────────────────────────────────────────────────────
+      {
+        path: 'soporte/:conversacionId?',
+        name: 'Soporte',
+        component: Soporte,
+        // Sin `props: true`: la vista lee el parámetro con useRoute y así puede
+        // reaccionar a que la ruta cambie sin remontarse.
+        meta: { title: 'Soporte' }
+      },
+      {
+        // El guard es comodidad de interfaz: aunque alguien fuerce la ruta,
+        // RLS no le devuelve ninguna fila (RF-16, CA-14).
+        path: 'admin/soporte/:conversacionId?',
+        name: 'SoporteAdmin',
+        component: SoporteAdmin,
+        meta: { title: 'Panel de soporte', requiresSuperAdmin: true }
       },
       {
         path: 'invitacion/:token',
@@ -265,6 +278,20 @@ router.beforeEach(async (to, from, next) => {
         next({ name: 'Login' })
         return
       }
+    }
+  }
+
+  // Panel de soporte: solo superadministrador (RF-16). La autoridad se resuelve
+  // en la base de datos con es_super_admin(), nunca comparando un correo aquí.
+  if (to.matched.some(record => record.meta.requiresSuperAdmin)) {
+    const { useSoporteStore } = await import('../stores/soporte')
+    const soporteStore = useSoporteStore()
+    // Forzado: entrar al panel es justo el momento de preguntar de nuevo, no de
+    // fiarse de una respuesta cacheada de antes de que cambiara el rol.
+    const autorizado = await soporteStore.comprobarRol({ forzar: true })
+    if (!autorizado) {
+      next({ name: 'Dashboard' })
+      return
     }
   }
 

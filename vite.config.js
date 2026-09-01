@@ -52,8 +52,16 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
+      // injectManifest y no generateSW: el service worker se escribe a mano en
+      // src/sw.js porque necesita manejadores propios de `push` y
+      // `notificationclick` para las notificaciones del soporte (RNF-06 de
+      // Especificaciones/chat-soporte/especificacion.md). El precache sigue
+      // siendo el mismo, solo que declarado dentro de src/sw.js.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
       // SW desactivado en desarrollo para no interferir con HMR.
-      devOptions: { enabled: false },
+      devOptions: { enabled: false, type: 'module' },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Natillerapp',
@@ -71,18 +79,18 @@ export default defineConfig({
           { src: '/android-chrome-512x512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      workbox: {
-        // SPA: navegaciones offline/sin cache caen al shell (index.html).
-        navigateFallback: '/index.html',
-        // Nunca redirigir a la SPA peticiones a Supabase ni recursos no-HTML.
-        navigateFallbackDenylist: [/^\/api-/, /supabase\.co/],
+      // Con injectManifest, aquí solo se decide QUÉ entra en el precache; el
+      // cómo (navigateFallback, cleanupOutdatedCaches, skipWaiting, no tocar
+      // Supabase) vive ahora en src/sw.js.
+      injectManifest: {
         // Chunks pesados (p. ej. xlsx) se cargan bajo demanda; no es necesario precachearlos.
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        // No interceptamos llamadas a Supabase: deben ir siempre a la red (datos frescos + auth).
-        // Sin runtimeCaching, Workbox solo precachea los assets del build (mismo origen).
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        // Service worker clásico, no módulo ES. `generateSW` producía uno
+        // clásico y el registro actual no pide `{ type: 'module' }`; un SW en
+        // formato ES exige soporte de módulos en el worker y dejaría sin
+        // precache a los navegadores que no lo tienen.
+        rollupFormat: 'iife',
       },
     }),
   ],

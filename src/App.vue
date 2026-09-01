@@ -1,6 +1,5 @@
 <template>
   <router-view />
-  <!-- <ChatWidget /> -->
   <NatiNotificacion />
   <UsernameModal 
     :show="showUsernameModal" 
@@ -13,7 +12,6 @@
 import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-// import ChatWidget from './components/ChatWidget.vue'
 import NatiNotificacion from './components/NatiNotificacion.vue'
 import UsernameModal from './components/UsernameModal.vue'
 import { useSessionTimeout } from './composables/useSessionTimeout'

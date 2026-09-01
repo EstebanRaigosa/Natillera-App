@@ -174,6 +174,13 @@
             </button>
           </div>
 
+          <!--
+            El acceso al soporte es el botón flotante (BotonSoporte.vue), no una
+            entrada del menú: se quitó a petición expresa. Si alguien oculta el
+            botón, Configuración → «Botón de soporte» lo devuelve y ofrece un
+            enlace directo, para que no exista un estado sin ninguna vía.
+          -->
+
           <!-- Invitaciones pendientes -->
           <div v-if="hayInvitacionesPendientes" class="sidebar-section space-y-2">
             <div class="flex items-center justify-between gap-2 px-1">
@@ -199,32 +206,6 @@
             </button>
             <button
               type="button"
-              class="nav-link nav-link-option relative w-full text-left"
-              :class="{ 'nav-link-active': route.path === '/admin/chat' }"
-              @click="supportStore.resetUnreadCount(); abrirRutaDesdeSidebar('/admin/chat')"
-            >
-              <ChatBubbleLeftRightIcon class="w-5 h-5 shrink-0" />
-              <span class="sidebar-option-label">Soporte</span>
-              <Transition
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="opacity-0 scale-0"
-                enter-to-class="opacity-100 scale-100"
-                leave-active-class="transition duration-200 ease-in"
-                leave-from-class="opacity-100 scale-100"
-                leave-to-class="opacity-0 scale-0"
-                mode="out-in"
-              >
-                <span
-                  v-if="supportStore.hasUnreadMessages && route.path !== '/admin/chat'"
-                  :key="`badge-${supportStore.unreadCount}`"
-                  class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-pulse"
-                >
-                  {{ supportStore.unreadCount > 99 ? '99+' : supportStore.unreadCount }}
-                </span>
-              </Transition>
-            </button>
-            <button
-              type="button"
               class="nav-link nav-link-option w-full text-left"
               :class="{ 'nav-link-active': route.path === '/admin/data' }"
               @click="abrirRutaDesdeSidebar('/admin/data')"
@@ -232,6 +213,8 @@
               <CircleStackIcon class="w-5 h-5 shrink-0" />
               <span class="sidebar-option-label">Datos Db</span>
             </button>
+            <!-- El panel de soporte se abre desde el botón flotante (dos
+                 destinos: «Mis mensajes» y «Panel de soporte»), no desde aquí. -->
           </div>
         </nav>
 
@@ -255,7 +238,14 @@
         <!-- Efecto de brillo animado en hover -->
         <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
 
-        <template v-if="natilleraIdRuta">
+        <!--
+          Cambiar o elegir natillera. Antes solo aparecía dentro de una
+          natillera, así que en las pantallas transversales —panel de soporte,
+          configuración, auditoría— no había forma de saltar a una sin pasar por
+          el dashboard. En el propio dashboard se oculta: ahí la elección ya
+          está en el contenido.
+        -->
+        <template v-if="mostrarSelectorNatillera">
           <button
             type="button"
             class="cambiar-natillera-btn relative z-[1] w-full text-left"
@@ -265,12 +255,14 @@
               <ArrowsRightLeftIcon class="cambiar-natillera-btn__icon" />
             </span>
             <span class="cambiar-natillera-btn__text">
-              <span class="cambiar-natillera-btn__title">Cambiar natillera</span>
+              <span class="cambiar-natillera-btn__title">
+                {{ natilleraIdRuta ? 'Cambiar natillera' : 'Seleccionar natillera' }}
+              </span>
               <span
                 class="cambiar-natillera-btn__hint w-full min-w-0 truncate"
-                :title="textoActualNatilleraSidebar"
+                :title="textoSelectorNatillera"
               >
-                {{ textoActualNatilleraSidebar }}
+                {{ textoSelectorNatillera }}
               </span>
             </span>
           </button>
@@ -377,6 +369,17 @@
     <!-- Navegación inferior móvil (oculta mientras el cajón lateral está abierto) -->
     <MobileBottomNav :force-hidden="sidebarOpen && esViewportMovil" />
 
+    <!-- Acceso flotante al soporte: se le dice si hay barra inferior para que
+         mantenga su zona segura por encima de ella. El botón no navega: abre el
+         chat sobre la pantalla en la que estés, sin perder lo que estabas
+         haciendo. -->
+    <BotonSoporte
+      :hay-barra-inferior="!!natilleraIdRuta"
+      @abrir="chatSoporteAbierto = true"
+      @abrir-panel="abrirPanelSoporte"
+    />
+    <ChatSoporteFlotante :show="chatSoporteAbierto" @cerrar="chatSoporteAbierto = false" />
+
     <!-- Indicador de modo desarrollo -->
     <div 
       v-if="isDevMode"
@@ -400,8 +403,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useColaboradoresStore } from '../stores/colaboradores'
-import { useSupportStore } from '../stores/support'
 import { useNotificationStore } from '../stores/notifications'
+import { useSoporteStore } from '../stores/soporte'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { isDev, isLocalhost } from '../config/environment'
 import { requestNatilleraSidebarAction } from '../composables/useNatilleraSidebarActions'
@@ -431,6 +434,8 @@ import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import { useScrollRestoration } from '../composables/useScrollRestoration'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
+import BotonSoporte from '../components/soporte/BotonSoporte.vue'
+import ChatSoporteFlotante from '../components/soporte/ChatSoporteFlotante.vue'
 import AppBrand from '../components/AppBrand.vue'
 import InstallPwaButton from '../components/InstallPwaButton.vue'
 import logoIconSrc from '../../assets/logo_icon.png'
@@ -445,13 +450,13 @@ useScrollRestoration(() => document.querySelector('main.overflow-y-auto'))
 const authStore = useAuthStore()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
-const supportStore = useSupportStore()
 const notificationStore = useNotificationStore()
+const soporteStore = useSoporteStore()
+const chatSoporteAbierto = ref(false)
 const sidebarOpen = ref(false)
 const sidebarHover = ref(false) // Para controlar el hover en pantallas lg (1024px)
 const sidebarTourLock = ref(false) // Ancla la barra abierta durante un recorrido guiado
 const hoverAreaActive = ref(false) // Para mostrar el indicador cuando el mouse está cerca
-const previousUnreadCount = ref(0)
 const isLgScreen = ref(false) // Detecta si estamos en breakpoint lg (1024px)
 /** Viewport &lt; 1024px: barra inferior móvil y overlay del menú */
 const esViewportMovil = ref(false)
@@ -498,6 +503,16 @@ const textoActualNatilleraSidebar = computed(() => {
   }
   return 'Actual: …'
 })
+
+/*
+ * El selector se ofrece siempre salvo en el dashboard, que es justo la pantalla
+ * a la que lleva: ahí la lista de natilleras ya es el contenido principal.
+ */
+const mostrarSelectorNatillera = computed(() =>
+  !!natilleraIdRuta.value || route.path !== '/dashboard')
+
+const textoSelectorNatillera = computed(() =>
+  natilleraIdRuta.value ? textoActualNatilleraSidebar.value : 'Elige con cuál trabajar')
 
 const isSuperAdmin = computed(() => {
   return (authStore.userEmail || '').toLowerCase().trim() === 'raigo.16@gmail.com'
@@ -688,20 +703,6 @@ async function handleLogout() {
   router.push('/auth/login')
 }
 
-// Watch para detectar nuevos mensajes y mostrar notificación
-watch(() => supportStore.unreadCount, (newCount, oldCount) => {
-  // Solo mostrar notificación si hay nuevos mensajes (aumentó el contador)
-  // y no es la primera carga (oldCount > 0)
-  if (newCount > oldCount && oldCount > 0 && isSuperAdmin.value) {
-    notificationStore.info(
-      `Tienes ${newCount} ${newCount === 1 ? 'mensaje' : 'mensajes'} sin responder en soporte`,
-      'Nuevos mensajes',
-      8000
-    )
-  }
-  previousUnreadCount.value = newCount
-})
-
 function clearSidebarTimeout() {
   if (sidebarHoverTimeout) {
     clearTimeout(sidebarHoverTimeout)
@@ -775,21 +776,61 @@ onMounted(async () => {
   // fetchTodasLasNatilleras tiene deduplicación interna (5s cooldown + promesa en vuelo),
   // así que si el login ya precargó o la vista hija llama primero, este no-op.
   natillerasStore.fetchTodasLasNatilleras()
-  
-  if (isSuperAdmin.value) {
-    supportStore.startChecking()
-    previousUnreadCount.value = supportStore.unreadCount
+
+  // Soporte: rol e insignia de mensajes sin leer. Ambas llamadas son baratas
+  // (una función SQL cada una) y no bloquean el primer pintado.
+  soporteStore.comprobarRol()
+  soporteStore.refrescarNoLeidos()
+  // La insignia se mueve en vivo desde cualquier pantalla, no solo con el chat
+  // abierto: el canal vive mientras dure la sesión en el dashboard.
+  soporteStore.escucharInsignia()
+  document.addEventListener('visibilitychange', refrescarSoporteAlVolver)
+
+  // Al pulsar una notificación push, el service worker avisa a la pestaña ya
+  // abierta y la app navega con el router en vez de abrir otra ventana.
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', abrirDesdeNotificacion)
   }
 })
 
+function refrescarSoporteAlVolver() {
+  if (document.visibilityState !== 'visible') return
+  soporteStore.refrescarNoLeidos()
+  // También el rol: si cambia en la base con la app abierta, la entrada del
+  // panel debe aparecer (o desaparecer) sin obligar a recargar la página.
+  soporteStore.comprobarRol({ forzar: true })
+}
+
+/*
+ * La bandeja del soporte va a su pantalla y no a un panel flotante: tiene
+ * filtros, búsqueda, paginación y el hilo al lado. Es una herramienta de
+ * trabajo, no una consulta rápida.
+ */
+function abrirPanelSoporte() {
+  chatSoporteAbierto.value = false
+  router.push('/admin/soporte')
+}
+
+function abrirDesdeNotificacion(evento) {
+  if (evento.data?.tipo !== 'soporte-abrir' || !evento.data.url) return
+  // Se cierra el panel flotante si estaba abierto: la notificación apunta a una
+  // conversación concreta, y esa tiene su propia dirección.
+  chatSoporteAbierto.value = false
+  router.push(evento.data.url)
+  soporteStore.refrescarNoLeidos()
+}
+
 onUnmounted(() => {
-  // Detener verificación al desmontar
-  supportStore.stopChecking()
   // Limpiar timeout
   clearSidebarTimeout()
   // Remover listeners
   window.removeEventListener('resize', actualizarTamañoPantalla)
   window.removeEventListener('popstate', handleSidebarPopState)
+  soporteStore.dejarDeEscucharInsignia()
+  document.removeEventListener('visibilitychange', refrescarSoporteAlVolver)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.removeEventListener('message', abrirDesdeNotificacion)
+  }
 })
 </script>
 

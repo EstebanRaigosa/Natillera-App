@@ -2085,7 +2085,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const sinSancion = tieneNoCalcularMulta || pagoDentroDePlazo
       const valorMultaGuardado = sinSancion ? 0 : (parseFloat(cuotaActual.valor_multa) || 0)
       const sancionPagadaAnterior = sinSancion ? 0 : (parseFloat(cuotaActual.valor_pagado_sancion) || 0)
-      const sancionTotal = sinSancion ? 0 : (valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0))
+
+      // Si quien registra el pago ya calculó la sanción a la fecha elegida (la que se le mostró en
+      // el modal), esa es la que manda: cobrar una distinta de la que el usuario acaba de aprobar
+      // es lo que hacía que la multa reapareciera después de pagar.
+      const sancionAFechaRecibida = Number.isFinite(Number(options.sancionAFecha))
+        ? Math.max(0, Number(options.sancionAFecha))
+        : null
+
+      const sancionTotal = sinSancion
+        ? 0
+        : (sancionAFechaRecibida != null
+            ? sancionAFechaRecibida + sancionPagadaAnterior
+            : (valorMultaGuardado > 0 ? valorMultaGuardado : (sancionDinamica > 0 ? sancionDinamica : 0)))
       const sancionAPagar = sinSancion ? 0 : Math.max(0, sancionTotal - sancionPagadaAnterior)
       const valorCuota = cuotaActual.valor_cuota || 0
       const valorPagadoAnterior = cuotaActual.valor_pagado || 0

@@ -153,13 +153,6 @@ const breadcrumbs = computed(() => {
     })
   }
   // Admin - Chat
-  else if (path.includes('/admin/chat')) {
-    crumbs.push({
-      label: 'Chat Admin',
-      to: null
-    })
-  }
-  // Admin - Data
   else if (path.includes('/admin/data')) {
     crumbs.push({
       label: 'Data Admin',
