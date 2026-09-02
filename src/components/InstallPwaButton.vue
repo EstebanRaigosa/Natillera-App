@@ -100,6 +100,12 @@
           En iPhone/iPad la instalación se hace desde <strong class="text-gray-800">Safari</strong> en 3 pasos:
         </p>
 
+        <!-- El gesto dibujado: en iOS no hay prompt nativo y verlo se entiende
+             antes que leerlo. Los pasos de abajo lo repiten en texto. -->
+        <div class="mt-4">
+          <InstalarIosAnimacion />
+        </div>
+
         <ol class="mt-4 space-y-3">
           <li class="flex items-start gap-3">
             <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-sm font-bold text-[#1B5E37]">1</span>
@@ -164,6 +170,7 @@ import ModalWrapper from './ModalWrapper.vue'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { usePwaInstall } from '../composables/usePwaInstall'
 import ShareIosGlyph from './icons/ShareIosGlyph.vue'
+import InstalarIosAnimacion from './InstalarIosAnimacion.vue'
 
 const props = defineProps({
   // 'header' → pill compacto; 'sidebar' → fila ancha

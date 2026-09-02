@@ -1377,6 +1377,55 @@
                     </p>
                   </div>
                 </div>
+
+                <!-- Eliminar el pago del socio. La confirmación es en línea (no abre otro modal):
+                     este bloque vive dentro del modal de detalle y anidar overlays rompe iOS. -->
+                <div v-if="getValorPagadoSocio(socioAct) > 0" class="mt-2.5">
+                  <button
+                    v-if="pagoAEliminar !== socioAct.id"
+                    type="button"
+                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[13px] font-semibold text-red-700 transition-colors hover:bg-red-100 touch-manipulation"
+                    @click="pedirConfirmacionEliminarPago(socioAct)"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                    Eliminar pago
+                  </button>
+
+                  <div v-else class="rounded-xl border border-red-200 bg-red-50 p-3">
+                    <p v-if="cargandoPreviewPago" class="text-[13px] text-red-800">Calculando el impacto…</p>
+                    <template v-else>
+                      <p class="text-[13px] font-bold text-red-800">
+                        Se revertirán ${{ formatMoney(previewPago?.valorTotal || getValorPagadoSocio(socioAct)) }}
+                      </p>
+                      <ul v-if="previewPago?.avisos?.length" class="mt-2 space-y-1">
+                        <li v-for="(aviso, i) in previewPago.avisos" :key="i" class="flex gap-1.5 text-[11px] leading-snug text-red-700">
+                          <span class="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-red-500"></span>
+                          <span>{{ aviso }}</span>
+                        </li>
+                      </ul>
+                      <p class="mt-2 text-[11px] text-red-600">La actividad volverá a quedar pendiente para este socio.</p>
+                    </template>
+                    <div class="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        :disabled="eliminandoPagoActividad"
+                        class="flex-1 min-h-[44px] rounded-xl border border-gray-300 bg-white px-3 text-[13px] font-semibold text-gray-700 disabled:opacity-50 touch-manipulation"
+                        @click="cancelarEliminarPago()"
+                      >
+                        Cancelar
+                      </button>
+                      <!-- Acción destructiva → rojo (excepción a btn-modal-primary) -->
+                      <button
+                        type="button"
+                        :disabled="eliminandoPagoActividad || cargandoPreviewPago"
+                        class="flex-1 min-h-[44px] rounded-xl bg-red-600 px-3 text-[13px] font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50 touch-manipulation"
+                        @click="confirmarEliminarPagoActividad(socioAct)"
+                      >
+                        {{ eliminandoPagoActividad ? 'Eliminando…' : 'Sí, eliminar' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               <!-- Faltantes (solo para rifa automática) -->
@@ -2997,6 +3046,7 @@ import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
+import { useEliminarPagoActividad } from '../../composables/useEliminarPagoActividad'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'
@@ -3078,6 +3128,12 @@ const dropdownTipoActividadStyle = ref({})
 const modalDetalleActividad = ref(false)
 const actividadSeleccionada = ref(null)
 const sociosActividad = ref([])
+// Eliminar el pago de un socio en la actividad (confirmación en línea dentro del modal de detalle)
+const { previsualizarEliminacionPagoActividad, eliminarPagoActividad } = useEliminarPagoActividad()
+const pagoAEliminar = ref(null)      // id de socios_actividad en confirmación
+const previewPago = ref(null)        // impacto calculado del borrado
+const cargandoPreviewPago = ref(false)
+const eliminandoPagoActividad = ref(false)
 const socios = ref([])
 const numerosAsignadosPorSocio = ref({}) // { socio_id: [numeros] } para rifa automática
 const faltantes = ref([]) // Array de faltantes para rifa automática
@@ -3499,6 +3555,77 @@ function getEstadoDisplaySocio(socioAct) {
   }
   return socioAct.estado || 'pendiente'
 }
+// Valor efectivamente pagado que ve el usuario en la tarjeta del socio. En rifa aleatoria sale
+// de los números (puede superar a socios_actividad.valor_pagado), en el resto de la fila.
+function getValorPagadoSocio(socioAct) {
+  if (actividadSeleccionada.value?.tipo === 'rifa' && actividadSeleccionada.value?.tipo_rifa === 'aleatoria') {
+    return getValoresSocioRifaAutomatica(socioAct).valorPagado
+  }
+  return Number(socioAct?.valor_pagado) || 0
+}
+
+// Abre la confirmación en línea y calcula el impacto real (utilidades, cuota que lo cobró,
+// números de rifa) para que el usuario vea qué se va a revertir antes de confirmar.
+async function pedirConfirmacionEliminarPago(socioAct) {
+  pagoAEliminar.value = socioAct.id
+  previewPago.value = null
+  cargandoPreviewPago.value = true
+  try {
+    const res = await previsualizarEliminacionPagoActividad(socioAct.id)
+    if (res.success) {
+      previewPago.value = res.resumen
+    } else {
+      notificationStore.error(res.error || 'No se pudo calcular el impacto de la eliminación', 'Error')
+      pagoAEliminar.value = null
+    }
+  } finally {
+    cargandoPreviewPago.value = false
+  }
+}
+
+function cancelarEliminarPago() {
+  pagoAEliminar.value = null
+  previewPago.value = null
+}
+
+async function confirmarEliminarPagoActividad(socioAct) {
+  if (eliminandoPagoActividad.value) return
+  eliminandoPagoActividad.value = true
+  try {
+    const res = await eliminarPagoActividad(socioAct.id, {
+      socioNombre: socioAct.socio_natillera?.socio?.nombre || null,
+      natilleraNombre: null,
+    })
+    if (!res.success) {
+      notificationStore.error(res.error || 'No se pudo eliminar el pago', 'Error')
+      return
+    }
+
+    cancelarEliminarPago()
+    // Recargar: el detalle (valores del socio) y la lista (totales de la actividad).
+    if (actividadSeleccionada.value) await verDetalleActividad(actividadSeleccionada.value)
+    await fetchActividades()
+
+    const problemas = res.problemas || []
+    if (problemas.length > 0) {
+      notificationStore.warning(
+        'El pago se eliminó, pero hay cosas por revisar:\n• ' + problemas.join('\n• '),
+        'Revisar'
+      )
+    } else {
+      notificationStore.success(
+        `Se eliminó el pago de $${formatMoney(res.valorRevertido || 0)}`,
+        'Pago eliminado'
+      )
+    }
+  } catch (e) {
+    console.error('Error eliminando el pago de la actividad:', e)
+    notificationStore.error(e.message || 'No se pudo eliminar el pago', 'Error')
+  } finally {
+    eliminandoPagoActividad.value = false
+  }
+}
+
 // Función para verificar si un socio tiene el número buscado
 function socioTieneNumero(socioAct) {
   if (!busquedaNumero.value) return true
@@ -6507,6 +6634,8 @@ watch(modalDetalleActividad, (isOpen) => {
     modalConfirmarAsignarFaltanteTodosMeses.value = false
     faltanteSeleccionado.value = null
     socioSeleccionadoParaFaltante.value = ''
+    // Nunca dejar una confirmación de borrado abierta para la próxima actividad que se mire.
+    cancelarEliminarPago()
   }
 })
 // Cerrar desplegable cuando se cierra el modal de venta

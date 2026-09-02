@@ -22,7 +22,17 @@ const authStore = useAuthStore()
 const showUsernameModal = ref(false)
 
 // Configurar timeout de sesión por inactividad (15 minutos)
-const sessionTimeout = useSessionTimeout(15)
+/*
+ * Duración de la sesión sin actividad. Cubre los dos relojes: pestaña abierta
+ * sin tocar nada, y app en segundo plano (pantalla bloqueada, otra pestaña).
+ *
+ * Antes eran 15 y 10 minutos, que para una app de uso diario cortaba
+ * constantemente. Es un equilibrio consciente: una sesión larga es más cómoda y
+ * algo menos estricta si alguien deja el dispositivo desbloqueado a mano.
+ */
+const MINUTOS_DE_SESION = 24 * 60
+
+const sessionTimeout = useSessionTimeout(MINUTOS_DE_SESION)
 
 // Función para ocultar el teclado al presionar Enter
 function handleEnterKey(event) {

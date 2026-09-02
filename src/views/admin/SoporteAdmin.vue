@@ -188,9 +188,11 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
+              <!-- text-base obligatorio: con menos de 16 px iOS hace zoom al
+                   enfocar el campo (regla 4 de CLAUDE.md) -->
               <select
                 :value="conversacionActiva.estado"
-                class="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm outline-none focus:border-[#1B5E37]"
+                class="rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-base outline-none focus:border-[#1B5E37]"
                 :disabled="guardandoEstado"
                 @change="cambiarEstado($event.target.value)"
               >

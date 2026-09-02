@@ -1,5 +1,10 @@
 import { computed, ref } from 'vue'
 import { supabase } from '../lib/supabase'
+// Fuente única de verdad para la detección de iOS. El manual
+// (docs/compatibilidad-ios-safari.md §1) lo dice sin rodeos: nada de duplicar
+// la detección con un regex suelto. El de aquí, además, no cubría el caso de
+// `platform === 'MacIntel'` que sí resuelve este, ni excluía Android.
+import { detectIosPlatform } from './useIsIos'
 
 /**
  * Notificaciones push del navegador para el soporte (RF-13).
@@ -34,13 +39,6 @@ function bytesAB64url(buffer) {
   let bin = ''
   for (const b of bytes) bin += String.fromCharCode(b)
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function esIos() {
-  if (typeof navigator === 'undefined') return false
-  const ua = navigator.userAgent || ''
-  // iPadOS 13+ se presenta como Mac: se distingue por el soporte táctil.
-  return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)
 }
 
 function estaInstalada() {
@@ -89,10 +87,10 @@ export function usePush() {
     if (!soportado.value) {
       // En iOS la Push API solo existe cuando la app está instalada: si no lo
       // está, el diagnóstico útil no es «no soportado» sino «instálala».
-      estado.value = esIos() && !estaInstalada() ? 'requiere_instalar' : 'no_soportado'
+      estado.value = detectIosPlatform() && !estaInstalada() ? 'requiere_instalar' : 'no_soportado'
       return estado.value
     }
-    if (esIos() && !estaInstalada()) {
+    if (detectIosPlatform() && !estaInstalada()) {
       estado.value = 'requiere_instalar'
       return estado.value
     }
@@ -222,5 +220,5 @@ export function usePush() {
     }
   }
 
-  return { estado, ocupado, error, soportado, configurado, comprobar, activar, desactivar, esIos, estaInstalada }
+  return { estado, ocupado, error, soportado, configurado, comprobar, activar, desactivar, estaInstalada }
 }

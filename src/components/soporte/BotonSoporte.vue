@@ -374,6 +374,15 @@ onBeforeUnmount(() => {
     0 8px 18px -6px rgba(0, 0, 0, 0.3);
 }
 
+/*
+ * §6 del manual iOS: los hijos de un botón no reciben el toque. Sin esto, un
+ * tap que caiga justo sobre el icono o sobre la insignia tiene como `target` al
+ * hijo, y en Safari eso se traduce en toques que «no hacen nada».
+ */
+.boton-soporte__pastilla > * {
+  pointer-events: none;
+}
+
 .boton-soporte__insignia {
   position: absolute;
   top: -2px;

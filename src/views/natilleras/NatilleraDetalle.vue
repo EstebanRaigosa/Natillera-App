@@ -50,9 +50,9 @@
       </header>
 
       <!-- ─── Indicadores (paleta: #2D2D2D · #E91E63 · #F58231 · #90D15B · #2EBA74) ─── -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      <div data-guia="indicadores" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <!-- Socios -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-socios" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2D2D2D]/10 text-[#2D2D2D]">
             <UsersIcon class="h-6 w-6" />
           </div>
@@ -62,7 +62,7 @@
           </div>
         </div>
         <!-- Recaudado -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-recaudado" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2EBA74]/18 text-[#1f9a5c]">
             <BanknotesIcon class="h-6 w-6" />
           </div>
@@ -72,7 +72,7 @@
           </div>
         </div>
         <!-- Pendiente -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-pendiente" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F58231]/16 text-[#F58231]">
             <ClipboardDocumentListIcon class="h-6 w-6" />
           </div>
@@ -83,6 +83,7 @@
         </div>
         <!-- Utilidad -->
         <div
+          data-guia="card-utilidad"
           @click="abrirModalDesgloseUtilidades"
           class="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 transition-colors hover:bg-[#90D15B]/14 sm:px-3 sm:py-2 shadow-sm"
         >
@@ -97,7 +98,7 @@
       </div>
 
       <!-- ─── Configuración de la natillera (plegable en todos los tamaños; título corto en móvil) ─── -->
-      <div class="mt-2 sm:mt-3">
+      <div data-guia="configuracion" class="mt-2 sm:mt-3">
         <div class="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-4 lg:px-4 lg:py-3">
           <div
             class="flex items-center justify-between gap-3 lg:!mb-2"
@@ -360,6 +361,7 @@
         <!-- Alertas recientes -->
         <section
           v-if="sociosEnMora.length > 0"
+          data-guia="alertas"
           class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
         >
           <div class="px-5 pt-5 pb-3">
@@ -461,6 +463,7 @@
         <!-- Últimos movimientos -->
         <section
           v-if="ultimosMovimientos.length > 0"
+          data-guia="movimientos"
           class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
         >
           <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-3">
@@ -514,6 +517,7 @@
       <!-- ─── Utilidades por categoría (gráfico) ─── -->
       <section
         v-if="utilidadesCategoriaGrafico.segments.length > 0"
+        data-guia="utilidades"
         class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
       >
         <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-2">
@@ -3910,6 +3914,15 @@
         :es-admin="esAdmin"
       />
     </div>
+    <!--
+      Guía de bienvenida. Se muestra sola las dos primeras visitas a esta
+      pantalla (ver useTourDetalleNatillera.js) y se puede volver a lanzar.
+    -->
+    <TourInteractivo
+      :pasos="pasosGuia"
+      :activo="guiaActiva"
+      @terminar="cerrarGuia"
+    />
 </template>
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
@@ -3947,6 +3960,7 @@ import {
   Squares2X2Icon,
   DocumentCheckIcon,
   ClipboardDocumentListIcon,
+  ArrowsRightLeftIcon,
   BellAlertIcon,
   PencilSquareIcon,
   TrashIcon,
@@ -3974,6 +3988,13 @@ import {
   emailInvitadorDestacado,
 } from '../../utils/invitacionesColaborador'
 import BackButton from '../../components/BackButton.vue'
+import TourInteractivo from '../../components/TourInteractivo.vue'
+import {
+  debeMostrarGuiaDetalle,
+  hayGuiaDetallePendiente,
+  limpiarGuiaDetallePendiente,
+  registrarGuiaDetalleVista,
+} from '../../composables/useTourDetalleNatillera'
 import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -4001,6 +4022,202 @@ const sociosStore = useSociosStore()
 const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
+
+// ─── Guía de bienvenida ────────────────────────────────────────────────────
+const guiaActiva = ref(false)
+
+/*
+ * Los pasos apuntan a marcas `data-guia` del template, no a clases: una clase
+ * de Tailwind cambia con cualquier retoque visual y el foco acabaría señalando
+ * al vacío. Si una sección no está en pantalla —no hay morosos, no hay
+ * movimientos— el paso se salta solo: explicar algo que no se ve confunde.
+ */
+/*
+ * Preparación de la pantalla para los pasos que hablan del menú. Se declaran
+ * fuera del computed a propósito: dos pasos consecutivos comparten así la misma
+ * referencia de función, y el componente reconoce que no debe cerrar el menú
+ * entre uno y otro.
+ */
+const mostrarMenuLateral = () => dashboardSidebar?.prepareSidebarForTour?.()
+const ocultarMenuLateral = () => dashboardSidebar?.clearSidebarAfterTour?.()
+const abrirMenuMovil = () => dashboardSidebar?.openMobile?.()
+const cerrarMenuMovil = () => dashboardSidebar?.closeMobile?.()
+
+const pasosGuia = computed(() => {
+  const existe = (sel) => typeof document !== 'undefined' && !!document.querySelector(sel)
+  const enMovil = typeof window !== 'undefined' && window.innerWidth < 1024
+
+  const pasos = [
+    {
+      icono: SparklesIcon,
+      titulo: `Bienvenido a ${natillera.value?.nombre || 'tu natillera'}`,
+      texto: 'Desde esta pantalla se controla todo. Te enseño en un minuto qué es cada cosa; '
+        + 'puedes saltártela cuando quieras.',
+    },
+
+    // ── Las cuatro tarjetas, una a una ──────────────────────────────────
+    {
+      selector: '[data-guia="card-socios"]',
+      icono: UsersIcon,
+      titulo: 'Socios',
+      texto: 'Cuántas personas están ahorrando aquí. Es la base de todo lo demás: sin socios no '
+        + 'hay cuotas que cobrar.',
+    },
+    {
+      selector: '[data-guia="card-recaudado"]',
+      icono: BanknotesIcon,
+      titulo: 'Recaudado',
+      texto: 'Todo el dinero que ha entrado: cuotas pagadas, multas, actividades y rifas.',
+    },
+    {
+      selector: '[data-guia="card-pendiente"]',
+      icono: ExclamationCircleIcon,
+      titulo: 'Pendiente',
+      texto: 'Lo que falta por cobrar. Si este número crece, la respuesta está en las alertas de '
+        + 'más abajo.',
+    },
+    {
+      selector: '[data-guia="card-utilidad"]',
+      icono: SparklesIcon,
+      titulo: 'Utilidad',
+      texto: 'Las ganancias acumuladas del grupo. Esta tarjeta se puede tocar: se abre el '
+        + 'desglose de dónde viene cada peso.',
+    },
+
+    // ── Secciones de la pantalla ────────────────────────────────────────
+    {
+      selector: '[data-guia="alertas"]',
+      icono: ExclamationTriangleIcon,
+      titulo: 'Alertas',
+      texto: 'Los socios en mora aparecen aquí solos, en cuanto se les pasa la fecha. Tocando uno '
+        + 'vas directo a registrar su pago.',
+    },
+    {
+      selector: '[data-guia="movimientos"]',
+      icono: ClipboardDocumentListIcon,
+      titulo: 'Últimos movimientos',
+      texto: 'Pagos, préstamos y actividades, del más reciente al más antiguo. El primer sitio '
+        + 'donde mirar cuando algo no cuadra.',
+    },
+    {
+      selector: '[data-guia="utilidades"]',
+      icono: ChartPieIcon,
+      titulo: 'Utilidades por categoría',
+      texto: 'De dónde salen las ganancias: intereses, multas, rifas… Para ver qué está aportando '
+        + 'de verdad y qué no.',
+    },
+    {
+      selector: '[data-guia="configuracion"]',
+      icono: Cog6ToothIcon,
+      titulo: 'Configuración',
+      texto: 'Valor de la cuota, sanciones, fechas y cierre. Lo que pongas aquí es lo que la app '
+        + 'usa para calcular todo lo demás.',
+    },
+  ]
+
+  /*
+   * Navegación. Cambia según el tamaño de pantalla, y no por capricho: en
+   * escritorio se navega por la barra lateral, y en móvil esa barra es un cajón
+   * cerrado mientras lo de uso diario vive en la barra inferior. Enseñar la
+   * barra lateral a quien está en el teléfono sería explicarle algo que no ve.
+   */
+  if (!enMovil) {
+    pasos.push(
+      {
+        selector: '[data-guia="menu-lateral"]',
+        icono: Bars3Icon,
+        titulo: 'La barra lateral',
+        texto: 'Inicio, Socios, Cuotas, Préstamos, Actividades y Totales: el índice completo de '
+          + 'la natillera. Desde aquí llegas a cualquier parte sin volver atrás.',
+        // Entre 1024 y 1280 la barra está oculta y solo aparece al pasar el
+        // ratón; el layout expone esto justo para poder enseñarla.
+        antes: mostrarMenuLateral,
+        despues: ocultarMenuLateral,
+      },
+      {
+        selector: '#tour-acciones-natillera',
+        icono: DocumentCheckIcon,
+        titulo: 'Acciones de la natillera',
+        texto: 'Buscar un comprobante, invitar a un colaborador, configurar, notificar por '
+          + 'WhatsApp o cerrar el año. Los atajos que no viven en ninguna pantalla concreta.',
+        antes: mostrarMenuLateral,
+        despues: ocultarMenuLateral,
+      },
+      {
+        selector: '[data-guia="panel-usuario"]',
+        icono: ArrowsRightLeftIcon,
+        titulo: 'Tus natilleras y tu cuenta',
+        texto: 'Abajo del todo: «Cambiar natillera» para saltar entre las tuyas, el engranaje '
+          + 'para tus ajustes —avisos de soporte y botón flotante— y la puerta para cerrar sesión.',
+        antes: mostrarMenuLateral,
+        despues: ocultarMenuLateral,
+      },
+    )
+  } else {
+    pasos.push(
+      {
+        selector: '#tour-mobile-bottom-nav',
+        icono: Squares2X2Icon,
+        titulo: 'La barra de abajo',
+        texto: 'Inicio, Socios, Cuotas y Totales, al alcance del pulgar. Por aquí entrarás el '
+          + 'noventa por ciento de las veces.',
+      },
+      {
+        // El menú se ABRE de verdad: señalar un cajón cerrado y decir «ahí
+        // dentro hay cosas» no enseña nada.
+        selector: '#tour-acciones-natillera',
+        icono: Bars3Icon,
+        titulo: 'El menú lateral, por dentro',
+        texto: 'Esto es lo que hay al abrir el menú: las acciones de la natillera —buscar '
+          + 'comprobante, invitar, configurar, notificar— y, más abajo, cambiar de natillera y los '
+          + 'ajustes de tu cuenta.',
+        antes: abrirMenuMovil,
+        despues: cerrarMenuMovil,
+      },
+      {
+        selector: '[data-guia="panel-usuario"]',
+        icono: ArrowsRightLeftIcon,
+        titulo: 'Tus natilleras y tu cuenta',
+        texto: 'Al fondo del menú: «Cambiar natillera» para saltar entre las tuyas, el engranaje '
+          + 'para tus ajustes —avisos de soporte y botón flotante— y la puerta para cerrar sesión.',
+        antes: abrirMenuMovil,
+        despues: cerrarMenuMovil,
+      },
+    )
+  }
+
+  // ── El soporte, al final: es la red de seguridad ──────────────────────
+  pasos.push({
+    selector: '.boton-soporte',
+    icono: ChatBubbleLeftIcon,
+    titulo: 'Y si algo se atasca, escríbenos',
+    texto: 'Este botón abre el chat de soporte sin sacarte de donde estás. Puedes arrastrarlo a '
+      + 'donde no estorbe, y te respondemos por aquí mismo.',
+  })
+
+  pasos.push({
+    icono: CheckCircleIcon,
+    titulo: 'Eso es todo',
+    texto: 'Ya sabes dónde está cada cosa. Esta guía aparece solo las dos primeras veces, así que '
+      + 'tómate el tiempo que necesites.',
+  })
+
+  // Un paso que apunta a algo que no está en pantalla —sin morosos no hay
+  // alertas, sin movimientos no hay historial— confunde más de lo que enseña.
+  return pasos.filter((paso) => !paso.selector || existe(paso.selector))
+})
+
+function cerrarGuia({ completado } = {}) {
+  guiaActiva.value = false
+  limpiarGuiaDetallePendiente()
+  registrarGuiaDetalleVista(authStore.user?.id, { completado })
+}
+
+/** Para relanzarla a voluntad desde un botón de ayuda, si se añade uno. */
+function abrirGuia() {
+  guiaActiva.value = true
+}
+
 const colaboradoresStore = useColaboradoresStore()
 const notificationStore = useNotificationStore()
 const invitacionARechazarCompacta = ref(null)
@@ -4211,6 +4428,22 @@ const recordatorioEdicionId = ref(null) // uuid al editar, null al crear
 const listRecordatorios = ref([]) // { id, texto }[] desde Supabase
 const loadingRecordatorios = ref(false)
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
+/*
+ * Se espera a que la pantalla tenga datos: arrancar la guía sobre una vista aún
+ * cargando enfocaría esqueletos, o peor, secciones que todavía no existen y que
+ * el filtro de pasos descartaría por error.
+ */
+watch(cargandoNatillera, async (cargando) => {
+  if (cargando || guiaActiva.value) return
+  // `hayGuiaDetallePendiente` gana: viene del alta guiada, donde la guía se
+  // muestra aunque el usuario ya la hubiera visto sus dos veces.
+  if (!hayGuiaDetallePendiente() && !debeMostrarGuiaDetalle(authStore.user?.id)) return
+
+  await nextTick()
+  // Un respiro tras el primer pintado: las tarjetas entran con animación y
+  // medirlas antes deja el foco descuadrado.
+  setTimeout(() => { guiaActiva.value = true }, 650)
+})
 // Mensajes de carga que rotarán
 const mensajesCarga = [
   'Calienta toda la suplencia...',

@@ -60,7 +60,7 @@
           <InstallPwaButton variant="sidebar" />
 
           <!-- Menú (solo escritorio): vistas de la natillera actual; “Cambiar de Natillera” va en el panel inferior -->
-          <div v-if="natilleraIdRuta" class="sidebar-section hidden lg:block space-y-1">
+          <div v-if="natilleraIdRuta" data-guia="menu-lateral" class="sidebar-section hidden lg:block space-y-1">
             <p class="sidebar-section-heading">Menú</p>
               <button
                 type="button"
@@ -234,7 +234,7 @@
         (sidebarOpen || (isLgScreen && sidebarHover)) ? 'translate-x-0' : '-translate-x-full'
       ]"
     >
-      <div class="user-panel group flex flex-col gap-0">
+      <div data-guia="panel-usuario" class="user-panel group flex flex-col gap-0">
         <!-- Efecto de brillo animado en hover -->
         <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-natillera-400/0 via-white/30 to-natillera-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -translate-x-full group-hover:translate-x-full pointer-events-none"></div>
 

@@ -42,7 +42,20 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), {
 // Notificaciones push del soporte (RF-10, RF-11)
 // ---------------------------------------------------------------------------
 
+/*
+ * Dos imágenes con papeles distintos:
+ *
+ *   icon  — se ve a color, grande, en Android y en escritorio.
+ *   badge — la silueta pequeña de la barra de estado en Android. Es una MÁSCARA:
+ *           el sistema toma solo el canal alfa y lo pinta de blanco, así que un
+ *           icono con fondo opaco sale como un cuadrado blanco. Por eso lleva su
+ *           propio PNG monocromo con transparencia.
+ *
+ * iOS ignora las dos y usa siempre el icono de la PWA instalada; no hay forma de
+ * cambiarlo por notificación.
+ */
 const ICONO = '/android-chrome-192x192.png'
+const INSIGNIA = '/badge-notificacion.png'
 
 self.addEventListener('push', (event) => {
   // Un push sin datos legibles no debe romper el manejador: si `showNotification`
@@ -58,7 +71,7 @@ self.addEventListener('push', (event) => {
   const opciones = {
     body: datos.cuerpo || '',
     icon: ICONO,
-    badge: ICONO,
+    badge: INSIGNIA,
     // Varios mensajes de la misma conversación sustituyen la notificación
     // anterior en lugar de apilarse (RF-10).
     tag: datos.tag || 'natillerapp',

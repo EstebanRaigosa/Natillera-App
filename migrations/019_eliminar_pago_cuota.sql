@@ -122,6 +122,7 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
+-- `prestamos` no guarda natillera_id: la natillera se alcanza por socios_natillera.
 CREATE POLICY "pagos_prestamo_delete_admin_or_super"
 ON public.pagos_prestamo
 FOR DELETE
@@ -130,7 +131,8 @@ USING (
   OR EXISTS (
     SELECT 1
     FROM public.prestamos p
-    JOIN public.natilleras n ON n.id = p.natillera_id
+    JOIN public.socios_natillera sn ON sn.id = p.socio_natillera_id
+    JOIN public.natilleras n ON n.id = sn.natillera_id
     WHERE p.id = pagos_prestamo.prestamo_id
       AND n.admin_id = auth.uid()
   )

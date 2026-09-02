@@ -1,0 +1,544 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Guía del detalle de natillera</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#f6f7f5;color:#111827}
+.shell{display:flex;min-height:100vh}
+.lateral{width:240px;flex-shrink:0;background:linear-gradient(170deg,#123a24,#1b5e37);color:#fff;padding:16px 12px;
+  position:fixed;inset:0 auto 0 0;z-index:50;transform:translateX(-100%);transition:transform .3s}
+.lateral.abierto{transform:translateX(0)}
+.lateral h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#a7d7bb;margin:0 0 8px}
+.lateral .op{display:flex;gap:8px;padding:8px 10px;border-radius:10px;font-size:13px;margin-bottom:3px;background:rgba(255,255,255,.06)}
+.lateral .bloque{margin-bottom:18px}
+.pie-lat{position:absolute;left:12px;right:12px;bottom:14px;font-size:11px;color:#a7d7bb}
+@media(min-width:1024px){.lateral{position:static;transform:none} .inferior,.hamb{display:none}}
+.pagina{flex:1;padding:16px;max-width:900px;margin:0 auto;padding-bottom:96px}
+h1{font-size:19px;margin:6px 0 14px}
+.rejilla{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:640px){.rejilla{grid-template-columns:repeat(4,1fr)}}
+.ind{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px}
+.ind b{display:block;font-size:19px;margin-top:2px}.ind span{font-size:11px;color:#6b7280}
+.seccion{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:14px}
+.seccion h2{font-size:16px;margin:0 0 6px}.seccion p{margin:0;color:#6b7280;font-size:14px}
+.hamb{position:fixed;top:10px;left:10px;z-index:55;width:44px;height:44px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;font-size:18px}
+.inferior{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;justify-content:space-around;background:#fff;border-top:1px solid #e5e7eb;padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+.inferior span{font-size:10px;color:#4b5563;text-align:center;flex:1}.inferior i{display:block;font-style:normal;font-size:16px}
+.relanzar{position:fixed;left:14px;bottom:78px;z-index:46;background:#374151;color:#fff;border:0;border-radius:9999px;padding:0 16px;min-height:44px;font-weight:600}
+@media(min-width:1024px){.relanzar{bottom:16px}}
+.aviso{position:fixed;top:8px;right:8px;z-index:46;background:#111827;color:#fff;font-size:11px;padding:6px 10px;border-radius:8px;opacity:.85}
+
+.boton-soporte {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Por debajo de las modales (z-50+) y por encima del contenido y de la barra
+     inferior, de la que además se aparta con la zona segura. */
+  z-index: 45;
+  width: 56px;
+  height: 56px;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  /* Sin esto, arrastrar el botón hace scroll de la página en móvil. */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.boton-soporte--arrastrando {
+  transition: none;
+}
+
+.boton-soporte__pastilla {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;   /* muy por encima del mínimo táctil de 44 px */
+  height: 56px;
+  border-radius: 9999px;
+  color: #fff;
+  background: linear-gradient(145deg, #24784a 0%, #1b5e37 55%, #164b2c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 10px 24px -8px rgba(20, 70, 42, 0.55),
+    0 4px 10px -4px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  /* Fuerza capa propia: el arrastre va fluido también en iOS. */
+  transform: translate3d(0, 0, 0);
+}
+
+.boton-soporte__pastilla:hover {
+  transform: translate3d(0, -1px, 0) scale(1.04);
+  box-shadow:
+    0 14px 30px -8px rgba(20, 70, 42, 0.6),
+    0 6px 14px -4px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.boton-soporte__pastilla:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+.boton-soporte--arrastrando .boton-soporte__pastilla {
+  cursor: grabbing;
+  transform: scale(1.08);
+  box-shadow:
+    0 18px 36px -8px rgba(20, 70, 42, 0.65),
+    0 8px 18px -6px rgba(0, 0, 0, 0.3);
+}
+
+/*
+ * §6 del manual iOS: los hijos de un botón no reciben el toque. Sin esto, un
+ * tap que caiga justo sobre el icono o sobre la insignia tiene como `target` al
+ * hijo, y en Safari eso se traduce en toques que «no hacen nada».
+ */
+.boton-soporte__pastilla > * {
+  pointer-events: none;
+}
+
+.boton-soporte__insignia {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #dc2626;
+  border: 2px solid #fff;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Halo que late solo cuando hay algo sin leer: llama la atención sin ruido. */
+.boton-soporte__pulso {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 2px solid rgba(27, 94, 55, 0.45);
+  animation: boton-soporte-pulso 2.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes boton-soporte-pulso {
+  0%   { transform: scale(1);    opacity: 0.7; }
+  70%  { transform: scale(1.35); opacity: 0; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+@-webkit-keyframes boton-soporte-pulso {
+  0%   { -webkit-transform: scale(1);    opacity: 0.7; }
+  70%  { -webkit-transform: scale(1.35); opacity: 0; }
+  100% { -webkit-transform: scale(1.35); opacity: 0; }
+}
+
+.boton-soporte__menu {
+  position: absolute;
+  bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.boton-soporte__menu.izquierda { left: 0; }
+.boton-soporte__menu.derecha   { right: 0; }
+
+.boton-soporte__accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid rgb(229 231 235);
+  box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.28);
+  color: rgb(55 65 81);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.boton-soporte__accion:hover {
+  background: rgb(249 250 251);
+}
+
+.boton-soporte__cuenta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Entrada y salida */
+.boton-soporte-enter-active,
+.boton-soporte-leave-active {
+  transition: opacity 0.2s ease, scale 0.2s ease;
+}
+
+.boton-soporte-enter-from,
+.boton-soporte-leave-to {
+  opacity: 0;
+  scale: 0.8;
+}
+
+.boton-soporte-menu-enter-active,
+.boton-soporte-menu-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.boton-soporte-menu-enter-from,
+.boton-soporte-menu-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* Quien pide menos movimiento, menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  .boton-soporte,
+  .boton-soporte__pastilla,
+  .boton-soporte-enter-active,
+  .boton-soporte-leave-active {
+    transition: none;
+  }
+  .boton-soporte__pulso {
+    animation: none;
+  }
+}
+
+.tour__bloqueo{position:absolute;inset:0;pointer-events:auto;cursor:pointer}
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  /* El velo lo dibuja la sombra del foco; el contenedor no captura toques. */
+  pointer-events: none;
+}
+
+/* ── Foco ─────────────────────────────────────────────── */
+.tour__foco {
+  position: absolute;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 9999px rgba(11, 26, 18, 0.78);
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  transition:
+    top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Paso sin elemento concreto: se oscurece todo y manda la tarjeta. */
+.tour__foco--centro {
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+.tour__halo {
+  position: absolute;
+  inset: -3px;
+  border-radius: 1.15rem;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  animation: tour-halo 2s ease-out infinite;
+}
+
+@keyframes tour-halo {
+  0%   { transform: scale(1);     opacity: 0.75; }
+  70%  { transform: scale(1.045); opacity: 0; }
+  100% { transform: scale(1.045); opacity: 0; }
+}
+
+@-webkit-keyframes tour-halo {
+  0%   { -webkit-transform: scale(1);     opacity: 0.75; }
+  70%  { -webkit-transform: scale(1.045); opacity: 0; }
+  100% { -webkit-transform: scale(1.045); opacity: 0; }
+}
+
+/* ── Progreso tipo historia ───────────────────────────── */
+.tour__progreso {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 4px;
+  padding: max(0.75rem, env(safe-area-inset-top)) 12px 4px;
+}
+
+.tour__segmento {
+  flex: 1;
+  height: 3px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+  transition: background 0.3s ease;
+}
+
+.tour__segmento.is-hecho { background: rgba(255, 255, 255, 0.75); }
+.tour__segmento.is-actual { background: #6ee7a8; }
+
+/* ── Tarjeta ──────────────────────────────────────────── */
+.tour__tarjeta {
+  position: absolute;
+  left: 50%;
+  width: min(calc(100vw - 2rem), 24rem);
+  transform: translate3d(-50%, 0, 0);
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 24px 48px -20px rgba(0, 0, 0, 0.55), 0 4px 12px -6px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  transition: top 0.45s cubic-bezier(0.22, 1, 0.36, 1), bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tour__cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.tour__cabecera-texto {
+  min-width: 0;
+  flex: 1;
+}
+
+.tour__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  background: #e8f5e9;
+  color: #1b5e37;
+}
+
+.tour__paso-num {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.tour__titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #111827;
+}
+
+.tour__cerrar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -0.5rem -0.5rem 0 0;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  color: #9ca3af;
+  touch-action: manipulation;
+}
+
+.tour__cerrar:hover { background: #f3f4f6; color: #4b5563; }
+.tour__cerrar > * { pointer-events: none; }
+
+.tour__texto {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.tour__acciones {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.tour__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  flex: 1;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  touch-action: manipulation;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.tour__btn > * { pointer-events: none; }
+.tour__btn:active { transform: translateY(1px); }
+
+.tour__btn--principal {
+  background: #1b5e37;
+  color: #fff;
+  box-shadow: 0 6px 16px -6px rgba(27, 94, 55, 0.6);
+}
+
+.tour__btn--principal:hover { background: #155a32; }
+
+.tour__btn--fantasma {
+  background: #fff;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  flex: 0 0 auto;
+  min-width: 6rem;
+}
+
+.tour__btn--fantasma:hover { background: #f9fafb; }
+
+/* ── Entrada / salida ─────────────────────────────────── */
+.tour-fundido-enter-active,
+.tour-fundido-leave-active { transition: opacity 0.3s ease; }
+
+.tour-fundido-enter-from,
+.tour-fundido-leave-to { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour__foco,
+  .tour__tarjeta,
+  .tour-fundido-enter-active,
+  .tour-fundido-leave-active { transition: none; }
+  .tour__halo { animation: none; }
+}
+
+</style></head><body>
+<div class="shell">
+  <aside class="lateral" id="cajon">
+    <div class="bloque" data-guia="menu-lateral">
+      <h3>Menú</h3>
+      <div class="op">🏠 Inicio</div><div class="op">👥 Socios</div><div class="op">💵 Cuotas</div>
+      <div class="op">🏦 Préstamos</div><div class="op">📅 Actividades</div><div class="op">🧮 Totales</div>
+    </div>
+    <div class="bloque" id="tour-acciones-natillera">
+      <h3>Acciones Natillera</h3>
+      <div class="op">🔍 Buscar comprobante</div><div class="op">➕ Invitar colaborador</div>
+      <div class="op">⚙️ Configurar</div><div class="op">📣 Notificar</div>
+    </div>
+    <div class="pie-lat" data-guia="panel-usuario" style="background:rgba(255,255,255,.1);border-radius:12px;padding:8px 10px">
+      <div style="font-size:12px;margin-bottom:6px">⇄ Cambiar natillera</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="width:28px;height:28px;border-radius:50%;background:#fff;display:inline-block"></span>
+        <span style="flex:1;font-size:11px;line-height:1.2">Esteban<br><span style="opacity:.7">tu@correo.com</span></span>
+        <span style="font-size:14px">⚙️</span><span style="font-size:14px">⏻</span>
+      </div>
+    </div>
+  </aside>
+  <div class="pagina">
+    <h1>Detalle de la natillera (simulación)</h1>
+    <div class="rejilla">
+      <div class="ind" data-guia="card-socios"><span>Socios</span><b>12</b></div>
+      <div class="ind" data-guia="card-recaudado"><span>Recaudado</span><b>$4.800.000</b></div>
+      <div class="ind" data-guia="card-pendiente"><span>Pendiente</span><b>$620.000</b></div>
+      <div class="ind" data-guia="card-utilidad"><span>Utilidad</span><b>$310.000</b></div>
+    </div>
+    <div class="seccion" data-guia="configuracion"><h2>Configuración de la natillera</h2><p>Cuota, sanciones, fechas y cierre.</p></div>
+    <div class="seccion" data-guia="alertas"><h2>Alertas</h2><p>3 socios en mora.</p></div>
+    <div class="seccion" data-guia="movimientos"><h2>Últimos movimientos</h2><p>Pago · Préstamo · Actividad · Pago · Rifa</p></div>
+    <div class="seccion" data-guia="utilidades"><h2>Utilidades por categoría</h2><p>Intereses, multas, rifas.</p></div>
+    <div class="seccion"><h2>Relleno</h2><p>Para que haya scroll.</p></div>
+  </div>
+</div>
+<button class="hamb" id="tour-hamburger-btn" onclick="document.getElementById('cajon').classList.toggle('abierto')">☰</button>
+<nav class="inferior" id="tour-mobile-bottom-nav">
+  <span><i>🏠</i>Inicio</span><span><i>👥</i>Socios</span><span><i>💵</i>Cuotas</span><span><i>🧮</i>Totales</span><span><i>⚙️</i>Ajustes</span>
+</nav>
+<div class="boton-soporte" style="transform:translate3d(calc(100vw - 72px),calc(100vh - 150px),0)">
+  <button class="boton-soporte__pastilla">
+    <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px"><path d="M12 3c-5 0-9 3.4-9 7.5 0 2.3 1.3 4.4 3.3 5.7L6 20l3.6-2c.8.2 1.6.3 2.4.3 5 0 9-3.4 9-7.5S17 3 12 3z"/></svg>
+  </button>
+</div>
+<button class="relanzar" onclick="abrir()">Repetir guía</button>
+<div class="aviso" id="aviso"></div>
+<div id="tour"></div>
+<script>
+const BASE = [[null, "Bienvenido a tu natillera", "Desde esta pantalla se controla todo. Te ense\u00f1o en un minuto qu\u00e9 es cada cosa; puedes salt\u00e1rtela cuando quieras."], ["[data-guia=\"card-socios\"]", "Socios", "Cu\u00e1ntas personas est\u00e1n ahorrando aqu\u00ed. Es la base de todo lo dem\u00e1s: sin socios no hay cuotas que cobrar."], ["[data-guia=\"card-recaudado\"]", "Recaudado", "Todo el dinero que ha entrado: cuotas pagadas, multas, actividades y rifas."], ["[data-guia=\"card-pendiente\"]", "Pendiente", "Lo que falta por cobrar. Si este n\u00famero crece, la respuesta est\u00e1 en las alertas de m\u00e1s abajo."], ["[data-guia=\"card-utilidad\"]", "Utilidad", "Las ganancias acumuladas del grupo. Esta tarjeta se puede tocar: se abre el desglose de d\u00f3nde viene cada peso."], ["[data-guia=\"alertas\"]", "Alertas", "Los socios en mora aparecen aqu\u00ed solos, en cuanto se les pasa la fecha. Tocando uno vas directo a registrar su pago."], ["[data-guia=\"movimientos\"]", "\u00daltimos movimientos", "Pagos, pr\u00e9stamos y actividades, del m\u00e1s reciente al m\u00e1s antiguo. El primer sitio donde mirar cuando algo no cuadra."], ["[data-guia=\"utilidades\"]", "Utilidades por categor\u00eda", "De d\u00f3nde salen las ganancias: intereses, multas, rifas\u2026 Para ver qu\u00e9 est\u00e1 aportando de verdad y qu\u00e9 no."], ["[data-guia=\"configuracion\"]", "Configuraci\u00f3n", "Valor de la cuota, sanciones, fechas y cierre. Lo que pongas aqu\u00ed es lo que la app usa para calcular todo lo dem\u00e1s."]];
+const ESC = [["[data-guia=\"menu-lateral\"]", "La barra lateral", "Inicio, Socios, Cuotas, Pr\u00e9stamos, Actividades y Totales: el \u00edndice completo de la natillera. Desde aqu\u00ed llegas a cualquier parte sin volver atr\u00e1s.", null, null], ["#tour-acciones-natillera", "Acciones de la natillera", "Buscar un comprobante, invitar a un colaborador, configurar, notificar por WhatsApp o cerrar el a\u00f1o. Los atajos que no viven en ninguna pantalla concreta.", null, null], ["[data-guia=\"panel-usuario\"]", "Tus natilleras y tu cuenta", "Abajo del todo: «Cambiar natillera» para saltar entre las tuyas, el engranaje para tus ajustes —avisos de soporte y botón flotante— y la puerta para cerrar sesión.", null, null]];
+const MOV = [["#tour-mobile-bottom-nav", "La barra de abajo", "Inicio, Socios, Cuotas y Totales, al alcance del pulgar. Por aqu\u00ed entrar\u00e1s el noventa por ciento de las veces.", null, null], ["#tour-acciones-natillera", "El men\u00fa lateral, por dentro", "Esto es lo que hay al abrir el men\u00fa: las acciones de la natillera \u2014buscar comprobante, invitar, configurar, notificar\u2014 y, m\u00e1s abajo, cambiar de natillera y los ajustes de tu cuenta.", "abrirCajon", null], ["[data-guia=\"panel-usuario\"]", "Tus natilleras y tu cuenta", "Abajo del todo: «Cambiar natillera» para saltar entre las tuyas, el engranaje para tus ajustes —avisos de soporte y botón flotante— y la puerta para cerrar sesión.", "abrirCajon", "cerrarCajon"]];
+const FIN = [[".boton-soporte", "Y si algo se atasca, escr\u00edbenos", "Este bot\u00f3n abre el chat de soporte sin sacarte de donde est\u00e1s. Puedes arrastrarlo a donde no estorbe, y te respondemos por aqu\u00ed mismo.", null, null], [null, "Eso es todo", "Ya sabes d\u00f3nde est\u00e1 cada cosa. Esta gu\u00eda aparece solo las dos primeras veces, as\u00ed que t\u00f3mate el tiempo que necesites.", null, null]];
+const cajon = document.getElementById('cajon')
+const abrirCajon = () => cajon.classList.add('abierto')
+const cerrarCajon = () => cajon.classList.remove('abierto')
+const ACC = { abrirCajon, cerrarCajon }
+
+function pasos() {
+  const nav = innerWidth >= 1024 ? ESC : MOV
+  return BASE.map(p => [p[0], p[1], p[2], null, null]).concat(nav, FIN)
+}
+const MARGEN = 10, ALTO_TARJETA = 210
+let i = 0, abierto = false, P = pasos()
+const raiz = document.getElementById('tour')
+const marcarModo = () => document.getElementById('aviso').textContent =
+  innerWidth >= 1024 ? 'Escritorio · estrecha la ventana para el modo móvil' : 'Móvil · ensancha para el modo escritorio'
+marcarModo()
+
+function pintar() {
+  const [sel, titulo, texto] = P[i], ultimo = i === P.length - 1
+  const el = sel ? document.querySelector(sel) : null
+  const r = el ? el.getBoundingClientRect() : null
+  const foco = r ? `top:${r.top-MARGEN}px;left:${r.left-MARGEN}px;width:${r.width+MARGEN*2}px;height:${r.height+MARGEN*2}px` : 'top:50%;left:50%;width:0;height:0'
+  let tar
+  if (!r) tar = 'bottom:max(1.5rem,env(safe-area-inset-bottom))'
+  else { const abajo = innerHeight - (r.top + r.height)
+    tar = abajo > ALTO_TARJETA + 24 ? `top:${Math.round(r.top+r.height+MARGEN+14)}px`
+                                    : `bottom:${Math.round(Math.max(16, innerHeight - r.top + MARGEN + 14))}px` }
+  raiz.innerHTML = `
+  <div class="tour">
+    <div class="tour__bloqueo" onclick="ir(1)"></div>
+    <div class="tour__foco ${r?'':'tour__foco--centro'}" style="${foco}"><span class="tour__halo"></span></div>
+    <div class="tour__progreso">${P.map((_,j)=>`<span class="tour__segmento ${j<i?'is-hecho':''} ${j===i?'is-actual':''}"></span>`).join('')}</div>
+    <div class="tour__tarjeta" style="${tar}">
+      <div class="tour__cabecera">
+        <span class="tour__icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:20px;height:20px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01" stroke-linecap="round"/></svg></span>
+        <div class="tour__cabecera-texto"><p class="tour__paso-num">Paso ${i+1} de ${P.length}</p><h2 class="tour__titulo">${titulo}</h2></div>
+        <button class="tour__cerrar" onclick="cerrar()">✕</button>
+      </div>
+      <p class="tour__texto">${texto}</p>
+      <div class="tour__acciones">
+        <button class="tour__btn tour__btn--fantasma" onclick="${i>0?'ir(-1)':'cerrar()'}">${i>0?'Atrás':'Saltar'}</button>
+        <button class="tour__btn tour__btn--principal" onclick="${ultimo?'cerrar()':'ir(1)'}">${ultimo?'¡Entendido!':'Siguiente →'}</button>
+      </div>
+    </div>
+  </div>`
+}
+async function ir(d) {
+  const desp = P[i][4]; if (desp && ACC[desp]) ACC[desp]()
+  i = Math.max(0, Math.min(P.length-1, i+d))
+  const antes = P[i][3]; if (antes && ACC[antes]) { ACC[antes](); await new Promise(r=>setTimeout(r,320)) }
+  const sel = P[i][0], el = sel ? document.querySelector(sel) : null
+  if (el) { el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(pintar,420) } else pintar()
+}
+function abrir(){ P = pasos(); abierto = true; i = 0; pintar() }
+function cerrar(){ const desp = P[i][4]; if (desp && ACC[desp]) ACC[desp](); abierto = false; raiz.innerHTML = '' }
+addEventListener('scroll',()=>{if(abierto)pintar()},{passive:true})
+addEventListener('resize',()=>{ marcarModo(); if(abierto){P=pasos(); i=Math.min(i,P.length-1); pintar()} })
+addEventListener('keydown',e=>{ if(!abierto)return; if(e.key==='Escape')cerrar(); else if(e.key==='ArrowRight')ir(1); else if(e.key==='ArrowLeft')ir(-1) })
+abrir()
+</script></body></html>

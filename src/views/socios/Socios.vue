@@ -2866,6 +2866,7 @@ import {
   shouldShowPrimerSocioCuotasMesTour,
   startPrimerSocioCuotasNavHighlight
 } from '../../composables/usePrimerSocioCuotasMesTour'
+import { pedirGuiaDetalle } from '../../composables/useTourDetalleNatillera'
 import { toPng } from 'html-to-image'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -4126,6 +4127,29 @@ async function abrirSelectorContactos() {
 function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
   if (!eraListaVaciaAntes || !natilleraId) return
 
+  /*
+   * Acaba de nacer la natillera: se ha creado y ya tiene su primer socio. Es el
+   * momento de enseñar la pantalla principal, cuando por fin hay algo que
+   * mirar —antes estaba vacía y explicarla no habría servido de nada—.
+   *
+   * Se deja además la marca del recorrido de Cuotas: no se pierde, se retoma
+   * cuando el usuario entre ahí. Encadenar dos guías a la vez sería abrumar.
+   */
+  setPendingPrimerSocioCuotasMesTour(natilleraId)
+  pedirGuiaDetalle()
+  router.push(`/natilleras/${natilleraId}`)
+}
+
+/**
+ * Recorridos anteriores del primer socio (driver.js), que llevaban a Cuotas.
+ *
+ * Ya no se invocan: al crear el primer socio la app va al detalle y muestra
+ * allí la guía nueva. Se conservan enteros, con sus banderas en
+ * `config/toursEnabled.js`, porque el resalte de «Cuotas» sigue siendo útil y
+ * puede volver a encadenarse aquí en cuanto se decida.
+ */
+// eslint-disable-next-line no-unused-vars
+function programarToursAnterioresPrimerSocio(natilleraId) {
   const veniaDeModalSinSocios = consumePendingPrimerSocioNavTour(natilleraId)
 
   // Caso A: recorrido de «Socios» habilitado → resalta Socios y encadena a Cuotas al cerrarse.

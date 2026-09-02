@@ -3,10 +3,21 @@ import { useAuthStore } from '../stores/auth'
 import { supabase } from '../lib/supabase'
 
 /**
- * Composable para manejar el timeout de sesión por inactividad
- * @param {number} timeoutMinutes - Minutos de inactividad antes de cerrar sesión (default: 15)
+ * Composable para manejar el timeout de sesión por inactividad.
+ *
+ * Son dos relojes distintos y conviene no confundirlos:
+ *   · inactividad  — la pestaña está abierta pero nadie toca nada
+ *   · segundo plano — la app quedó oculta (otra pestaña, pantalla bloqueada)
+ *
+ * El segundo estaba fijado en 10 minutos y era el que más cortaba: bloquear el
+ * teléfono un rato bastaba para perder la sesión al volver. Ahora se puede
+ * configurar y por defecto acompaña al de inactividad, porque estar en segundo
+ * plano no es más sospechoso que estar quieto delante de la pantalla.
+ *
+ * @param {number} timeoutMinutes - Minutos de inactividad antes de cerrar sesión
+ * @param {number} backgroundMinutes - Minutos en segundo plano antes de cerrar sesión
  */
-export function useSessionTimeout(timeoutMinutes = 15) {
+export function useSessionTimeout(timeoutMinutes = 15, backgroundMinutes = timeoutMinutes) {
   const authStore = useAuthStore()
   const timeoutId = ref(null)
   const backgroundTimeoutId = ref(null)
@@ -15,8 +26,7 @@ export function useSessionTimeout(timeoutMinutes = 15) {
   const BACKGROUND_TIMESTAMP_KEY = 'natillera_background_timestamp'
   
   const timeoutMs = timeoutMinutes * 60 * 1000
-  // 10 minutos para el timeout de background
-  const backgroundTimeoutMs = 10 * 60 * 1000
+  const backgroundTimeoutMs = backgroundMinutes * 60 * 1000
 
   // Throttle: intervalo mínimo entre resets del timer (evita llamadas excesivas por mousemove, etc.)
   let lastActivityTime = 0

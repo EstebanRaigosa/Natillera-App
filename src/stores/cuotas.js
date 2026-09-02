@@ -3976,7 +3976,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
   }
 
   /**
-   * Filas ABIERTAS (sin fecha_cierre) de utilidad por sanciones de una natillera, ordenadas por
+   * Filas ABIERTAS (sin fecha_cierre) de utilidad de un `tipo` de una natillera, ordenadas por
    * prioridad para descontar: primero la de la misma forma de pago que el pago que se revierte,
    * después la que no tiene forma de pago y por último el resto.
    *
@@ -3984,15 +3984,16 @@ export const useCuotasStore = defineStore('cuotas', () => {
    * tres válidos, mientras que el historial de la transacción siempre guarda algo (por defecto
    * 'efectivo'); por eso no basta con buscar la coincidencia exacta.
    *
+   * @param {string} tipo - tipo de utilidad ('sanciones', 'bingo', 'venta', 'evento', 'otro'...)
    * @returns {Promise<{filas: Array, cerradas: number, error: string|null}>}
    */
-  async function getUtilidadesSancionAbiertas(natilleraId, formaPago) {
+  async function getUtilidadesAbiertasPorTipo(natilleraId, formaPago, tipo = 'sanciones') {
     if (!natilleraId) return { filas: [], cerradas: 0, error: 'natillera no identificada' }
     const abiertas = (columnas) => supabase
       .from('utilidades_clasificadas')
       .select(columnas)
       .eq('natillera_id', natilleraId)
-      .eq('tipo', 'sanciones')
+      .eq('tipo', tipo)
       .is('fecha_cierre', null)
 
     let conFormaPago = true
@@ -4022,12 +4023,155 @@ export const useCuotasStore = defineStore('cuotas', () => {
         .from('utilidades_clasificadas')
         .select('id')
         .eq('natillera_id', natilleraId)
-        .eq('tipo', 'sanciones')
+        .eq('tipo', tipo)
         .not('fecha_cierre', 'is', null)
       cerradas = (resCerradas.data || []).length
     }
 
     return { filas, cerradas, error: null }
+  }
+
+  /** Compatibilidad: utilidades abiertas del tipo 'sanciones'. */
+  function getUtilidadesSancionAbiertas(natilleraId, formaPago) {
+    return getUtilidadesAbiertasPorTipo(natilleraId, formaPago, 'sanciones')
+  }
+
+  /**
+   * Tipo de utilidad al que suma una actividad cuando se cobra desde una cuota.
+   *
+   * `registrarPagosActividades` (Cuotas.vue) suma lo cobrado a `utilidades_clasificadas` con el
+   * tipo de la actividad, salvo las rifas: esas solo suman al liquidarse desde el módulo de
+   * Actividades, así que al revertir un pago no hay nada que devolverles.
+   *
+   * @returns {string|null} tipo de utilidad, o null si la actividad no suma utilidad al cobrarse
+   */
+  function tipoUtilidadDeActividad(tipoActividad) {
+    const t = String(tipoActividad || 'otro').toLowerCase()
+    const tipoUtilidad = t === 'rifa' ? 'rifas' : t
+    return tipoUtilidad === 'rifas' ? null : tipoUtilidad
+  }
+
+  /**
+   * Devuelve `monto` al fondo descontándolo de las filas ABIERTAS de utilidad de ese `tipo`.
+   *
+   * Se usa al eliminar un pago: lo que el pago sumó a utilidades (sanción cobrada, actividades
+   * cobradas) tiene que salir de ahí, o el cierre reparte dinero que ya nadie pagó. El descuento
+   * es en cascada y nunca deja un monto negativo. No aborta la reversión: los fallos se devuelven
+   * en `problemas` para que la UI los muestre.
+   *
+   * @returns {Promise<{descontado: number, problemas: string[]}>}
+   */
+  async function descontarUtilidadPorTipo(natilleraId, tipo, formaPago, monto, etiqueta = null) {
+    const resultado = { descontado: 0, problemas: [] }
+    const objetivo = Math.max(0, Number(monto) || 0)
+    if (objetivo <= 0) return resultado
+    const nombre = etiqueta || tipo
+    if (!natilleraId) {
+      resultado.problemas.push(`No se pudo identificar la natillera: la utilidad de ${nombre} sigue contada en el fondo`)
+      return resultado
+    }
+
+    const { filas, cerradas, error: errUtil } = await getUtilidadesAbiertasPorTipo(natilleraId, formaPago, tipo)
+    if (errUtil) {
+      resultado.problemas.push(`Utilidad de ${nombre}: ${errUtil}`)
+      return resultado
+    }
+    if (filas.length === 0) {
+      resultado.problemas.push(
+        cerradas > 0
+          ? `La utilidad de ${nombre} de este pago pertenece a un ciclo ya liquidado y no se modificó`
+          : `No se encontró la utilidad de ${nombre} para devolver el monto de este pago`
+      )
+      return resultado
+    }
+
+    let restante = objetivo
+    for (const fila of filas) {
+      if (restante <= 0) break
+      const montoActual = Number(fila.monto) || 0
+      const quitar = Math.min(montoActual, restante)
+      if (quitar <= 0) continue
+      const { error: eUtil } = await supabase
+        .from('utilidades_clasificadas')
+        .update({ monto: montoActual - quitar, updated_at: new Date().toISOString() })
+        .eq('id', fila.id)
+      if (eUtil) {
+        resultado.problemas.push(`Utilidad de ${nombre}: ${eUtil.message}`)
+        break
+      }
+      restante -= quitar
+      resultado.descontado += quitar
+    }
+    if (restante > 0) {
+      resultado.problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de ${nombre} contados como utilidad: revisa las utilidades del fondo`)
+    }
+    return resultado
+  }
+
+  /**
+   * Abonos a préstamo nacidos de una cuota que NO guardan el enlace a la transacción (pagos
+   * anteriores a la migración 019, o registrados cuando el insert del historial aún no había
+   * devuelto su id).
+   *
+   * Se acotan por préstamo, origen y DÍA del pago: sin ese cerco solo quedaría adivinar por monto
+   * sobre todo el historial del préstamo. Devuelve los candidatos; quien llama decide cuál borrar.
+   *
+   * @returns {Promise<Array<{id, prestamo_id, valor, numeros_cuota}>>}
+   */
+  async function buscarAbonosPrestamoSinEnlace(prestamoIds, fechaPago) {
+    const ids = [...new Set((prestamoIds || []).filter(Boolean).map(String))]
+    if (ids.length === 0 || !fechaPago) return []
+    const dia = String(fechaPago).slice(0, 10)
+    const consultar = (columnas) => supabase
+      .from('pagos_prestamo')
+      .select(columnas)
+      .in('prestamo_id', ids)
+      .eq('origen', 'cuota_natillera')
+      .gte('fecha', `${dia}T00:00:00`)
+      .lte('fecha', `${dia}T23:59:59.999`)
+
+    // La columna de enlace puede no existir (migración 019 sin aplicar): degradar sin romper.
+    let res = await consultar('id, prestamo_id, valor, numeros_cuota, historial_pago_cuota_id')
+    if (res.error) res = await consultar('id, prestamo_id, valor, numeros_cuota')
+    if (res.error) return []
+    // Nunca tocar un abono que ya pertenece a OTRA transacción.
+    return (res.data || []).filter(a => !a.historial_pago_cuota_id)
+  }
+
+  /**
+   * Actividades candidatas a revertir en un pago que NO dejó transacción.
+   *
+   * OJO: `socios_actividad.codigo_comprobante` NO es el de la cuota — al cobrar una actividad
+   * desde una cuota se genera un código propio para la actividad —, así que emparejar por ese
+   * código no encuentra nada. El único cerco fiable que queda es el socio y el DÍA del pago.
+   *
+   * @returns {Promise<{candidatas: Array, mismoDia: boolean}>} `mismoDia` indica si se pudo
+   *   acotar por la fecha del pago; si no, la selección es por recencia y hay que avisarlo.
+   */
+  async function buscarActividadesPagoDirecto(cuota) {
+    if (!cuota?.socio_natillera_id) return { candidatas: [], mismoDia: false }
+    const { data, error } = await supabase
+      .from('socios_actividad')
+      .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia, codigo_comprobante, fecha_pago, actividad:actividades(descripcion, tipo)')
+      .eq('socio_natillera_id', cuota.socio_natillera_id)
+      .gt('valor_pagado', 0)
+      .order('fecha_pago', { ascending: false })
+    if (error) return { candidatas: [], mismoDia: false }
+
+    const filas = data || []
+    const dia = cuota.fecha_pago ? String(cuota.fecha_pago).slice(0, 10) : null
+    const delDia = dia ? filas.filter(f => String(f.fecha_pago || '').slice(0, 10) === dia) : []
+    return delDia.length > 0 ? { candidatas: delDia, mismoDia: true } : { candidatas: filas, mismoDia: false }
+  }
+
+  /** Abonos a préstamo candidatos a revertir en un pago que NO dejó transacción. */
+  async function buscarAbonosPagoDirecto(cuota) {
+    if (!cuota?.socio_natillera_id || !cuota.fecha_pago) return []
+    const { data: prestamos } = await supabase
+      .from('prestamos').select('id').eq('socio_natillera_id', cuota.socio_natillera_id)
+    const ids = (prestamos || []).map(p => p.id)
+    if (ids.length === 0) return []
+    return await buscarAbonosPrestamoSinEnlace(ids, cuota.fecha_pago)
   }
 
   /**
@@ -4081,6 +4225,15 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
       if (valorPrestamos > 0 && abonosPrestamoEnlazados.length === 0) {
         avisos.push('El abono a préstamo de este pago no quedó enlazado a la transacción. Se revertirá usando el detalle guardado (préstamo y número de cuota); conviene revisar el préstamo después.')
+      }
+
+      // Lo cobrado por actividades también se sumó a las utilidades del fondo y se devuelve al
+      // eliminar el pago. Las rifas no suman al cobrarse (solo al liquidarse), así que no cuentan.
+      const utilidadActividades = detalleActividades.reduce(
+        (acc, d) => acc + (tipoUtilidadDeActividad(d?.tipo) ? (Number(d?.valor) || 0) : 0), 0
+      )
+      if (utilidadActividades > 0) {
+        avisos.push(`Se devolverán $${utilidadActividades.toLocaleString('es-CO')} a las utilidades del fondo por las actividades cobradas en este pago.`)
       }
 
       // La sanción cobrada se sumó a las utilidades del fondo: hay que devolverla de ahí o el
@@ -4165,8 +4318,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
    * @param {object} options - { _natilleraId, _socioNombre, _natilleraNombre }
    */
   async function eliminarPagoHistorial(historialId, options = {}) {
-    const revertido = { actividades: 0, abonosPrestamo: 0, cuota: false, utilidadSancion: 0, comprobantes: 0 }
+    const revertido = {
+      actividades: 0, abonosPrestamo: 0, cuota: false,
+      utilidadSancion: 0, utilidadActividades: 0, comprobantes: 0,
+    }
     const problemas = []
+    // Lo que este pago sumó a `utilidades_clasificadas` por actividades, agrupado por tipo de
+    // utilidad. Se llena al revertir cada actividad y se devuelve al fondo en el paso 3b.
+    const utilidadActividadesPorTipo = {}
 
     try {
       loading.value = true
@@ -4202,10 +4361,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
               .from('socios_actividad')
               .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia, codigo_comprobante')
               .in('id', ids)
-            filasARevertir = (data || []).map(fila => ({
-              fila,
-              valor: Number(conId.find(d => d.socio_actividad_id === fila.id)?.valor) || 0,
-            }))
+            filasARevertir = (data || []).map(fila => {
+              const linea = conId.find(d => d.socio_actividad_id === fila.id)
+              return { fila, valor: Number(linea?.valor) || 0, tipo: linea?.tipo || null }
+            })
           } else if (detalle.length > 0 && cuotaActual.socio_natillera_id) {
             // Pagos anteriores al detalle con id: emparejar por nombre de actividad y valor.
             const { data } = await supabase
@@ -4219,12 +4378,12 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 Number(fila.valor_pagado) >= (Number(d?.valor) || 0) &&
                 !filasARevertir.some(r => r.fila.id === fila.id)
               )
-              if (candidata) filasARevertir.push({ fila: candidata, valor: Number(d?.valor) || 0 })
+              if (candidata) filasARevertir.push({ fila: candidata, valor: Number(d?.valor) || 0, tipo: d?.tipo || null })
               else problemas.push(`No se encontró la actividad "${d?.nombre || 'sin nombre'}" para revertir`)
             }
           }
 
-          for (const { fila, valor } of filasARevertir) {
+          for (const { fila, valor, tipo } of filasARevertir) {
             if (valor <= 0) continue
             const nuevoPagado = Math.max(0, (Number(fila.valor_pagado) || 0) - valor)
             const datos = { valor_pagado: nuevoPagado }
@@ -4248,8 +4407,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
               }
             }
             const { error: eAct } = await supabase.from('socios_actividad').update(datos).eq('id', fila.id)
-            if (eAct) problemas.push(`Actividad ${fila.id}: ${eAct.message}`)
-            else revertido.actividades += 1
+            if (eAct) {
+              problemas.push(`Actividad ${fila.id}: ${eAct.message}`)
+              continue
+            }
+            revertido.actividades += 1
+            // Lo cobrado por esta actividad también se sumó a las utilidades del fondo.
+            const tipoUtil = tipoUtilidadDeActividad(tipo)
+            if (tipoUtil) utilidadActividadesPorTipo[tipoUtil] = (utilidadActividadesPorTipo[tipoUtil] || 0) + valor
           }
         } catch (e) {
           problemas.push(`Actividades: ${e.message}`)
@@ -4358,63 +4523,74 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (ePres) problemas.push(`Préstamo ${prestamoId}: ${ePres.message}`)
           }
 
-          // Borrar los abonos enlazados (ya no existen contablemente)
-          if (abonos.length > 0) {
-            const { error: eDel } = await supabase
-              .from('pagos_prestamo').delete().in('id', abonos.map(a => a.id))
+          // Borrar los abonos que originó esta transacción (ya no existen contablemente).
+          const abonosABorrar = abonos.map(a => a.id)
+          if (abonosABorrar.length === 0) {
+            // Sin enlace: se identifican por préstamo, origen, día del pago y monto exacto. Sin
+            // esto la fila de `pagos_prestamo` sobrevivía y el préstamo seguía mostrando un abono
+            // de un pago que ya no existe (aunque el saldo y el plan sí se hubieran revertido).
+            const candidatos = await buscarAbonosPrestamoSinEnlace(Object.keys(porPrestamo), h.fecha_pago)
+            const yaElegidos = new Set()
+            for (const [prestamoId, monto] of Object.entries(porPrestamo)) {
+              if (monto <= 0) continue
+              const exacto = candidatos.find(c =>
+                !yaElegidos.has(c.id) &&
+                String(c.prestamo_id) === String(prestamoId) &&
+                Math.round(Number(c.valor) || 0) === Math.round(monto)
+              )
+              if (exacto) {
+                yaElegidos.add(exacto.id)
+                abonosABorrar.push(exacto.id)
+              } else {
+                problemas.push(`No se encontró el abono de $${monto.toLocaleString('es-CO')} en el préstamo para borrarlo: el saldo y el plan sí se revirtieron, pero conviene revisar el historial del préstamo`)
+              }
+            }
+          }
+          if (abonosABorrar.length > 0) {
+            // Se pide el resultado del DELETE: sin política de borrado la operación "tiene éxito"
+            // sin borrar nada, y el abono quedaría huérfano en silencio.
+            const { data: borrados, error: eDel } = await supabase
+              .from('pagos_prestamo').delete().in('id', abonosABorrar).select('id')
             if (eDel) problemas.push(`Abonos a préstamo: ${eDel.message}`)
-            else revertido.abonosPrestamo = abonos.length
+            else if ((borrados || []).length === 0) {
+              problemas.push('No se pudo borrar el abono a préstamo de este pago: seguirá apareciendo en el historial del préstamo')
+            } else {
+              revertido.abonosPrestamo = (borrados || []).length
+            }
           }
         } catch (e) {
           problemas.push(`Préstamos: ${e.message}`)
         }
       }
 
-      // ── 3. Devolver la sanción de las utilidades del fondo ───────────────────
-      // La sanción cobrada se sumó a utilidades_clasificadas al registrar el pago. Si no se
-      // resta aquí, vuelve a ser deuda del socio pero sigue contada como utilidad, y el cierre
-      // reparte dinero que nadie pagó. El fallo no aborta la reversión: se acumula en `problemas`.
-      if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+      // ── 3. Devolver a las utilidades del fondo lo que sumó este pago ─────────
+      // Al registrar el pago, la sanción cobrada y lo cobrado por actividades se sumaron a
+      // `utilidades_clasificadas`. Si no se restan aquí, vuelven a ser deuda del socio pero
+      // siguen contadas como utilidad, y el cierre reparte dinero que nadie pagó. Los fallos no
+      // abortan la reversión: se acumulan en `problemas`.
+      const hayUtilidadQueDevolver =
+        (vSancion > 0 && !cuotaActual.no_calcular_multa) ||
+        Object.keys(utilidadActividadesPorTipo).length > 0
+
+      if (hayUtilidadQueDevolver) {
         try {
           const natilleraId = await obtenerNatilleraDeCuota(cuotaActual, options._natilleraId)
-          if (!natilleraId) {
-            problemas.push('No se pudo identificar la natillera: la sanción sigue contada como utilidad del fondo')
-          } else {
-            const { filas, cerradas, error: errUtil } = await getUtilidadesSancionAbiertas(natilleraId, formaPago)
-            if (errUtil) {
-              problemas.push(`Utilidad por sanciones: ${errUtil}`)
-            } else if (filas.length === 0) {
-              problemas.push(
-                cerradas > 0
-                  ? 'La utilidad de esta sanción pertenece a un cierre ya liquidado y no se modificó'
-                  : 'No se encontró la utilidad por sanciones para devolver el monto de la multa'
-              )
-            } else {
-              // Descuento en cascada: nunca deja un monto negativo.
-              let restante = vSancion
-              for (const fila of filas) {
-                if (restante <= 0) break
-                const montoActual = Number(fila.monto) || 0
-                const quitar = Math.min(montoActual, restante)
-                if (quitar <= 0) continue
-                const { error: eUtil } = await supabase
-                  .from('utilidades_clasificadas')
-                  .update({ monto: montoActual - quitar, updated_at: new Date().toISOString() })
-                  .eq('id', fila.id)
-                if (eUtil) {
-                  problemas.push(`Utilidad por sanciones: ${eUtil.message}`)
-                  break
-                }
-                restante -= quitar
-                revertido.utilidadSancion += quitar
-              }
-              if (restante > 0) {
-                problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de sanción contados como utilidad: revisa las utilidades del fondo`)
-              }
-            }
+
+          if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+            const res = await descontarUtilidadPorTipo(natilleraId, 'sanciones', formaPago, vSancion, 'sanciones')
+            revertido.utilidadSancion += res.descontado
+            problemas.push(...res.problemas)
+          }
+
+          // 3b. Actividades cobradas en este pago (las rifas no suman al cobrarse: ver
+          // `tipoUtilidadDeActividad`, así que nunca llegan aquí).
+          for (const [tipoUtil, monto] of Object.entries(utilidadActividadesPorTipo)) {
+            const res = await descontarUtilidadPorTipo(natilleraId, tipoUtil, formaPago, monto, `actividades (${tipoUtil})`)
+            revertido.utilidadActividades += res.descontado
+            problemas.push(...res.problemas)
           }
         } catch (e) {
-          problemas.push(`Utilidad por sanciones: ${e.message}`)
+          problemas.push(`Utilidades del fondo: ${e.message}`)
         }
       }
 
@@ -4534,9 +4710,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // ── 6. Borrar la transacción del historial ───────────────────────────────
-      const { error: delError } = await supabase
-        .from('historial_pagos_cuota').delete().eq('id', historialId)
+      // Se pide el resultado del DELETE: con RLS y sin política de borrado, PostgREST responde
+      // "ok" sin borrar nada. Si no se comprueba, la transacción sobrevive, el modal la sigue
+      // ofreciendo y un segundo intento revertiría los mismos conceptos por segunda vez.
+      const { data: histBorrado, error: delError } = await supabase
+        .from('historial_pagos_cuota').delete().eq('id', historialId).select('id')
       if (delError) throw delError
+      if ((histBorrado || []).length === 0) {
+        throw new Error(
+          'Los conceptos del pago (cuota, sanción, actividades y abonos) SÍ se revirtieron, pero la ' +
+          'transacción no se pudo borrar del historial por falta de permisos en la base de datos ' +
+          '(falta aplicar la migración 019). NO vuelvas a eliminar este pago hasta aplicarla: se ' +
+          'descontaría dos veces.'
+        )
+      }
 
       // ── 7. Auditoría (segundo plano) ─────────────────────────────────────────
       try {
@@ -4563,6 +4750,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             actividades_revertidas: revertido.actividades,
             abonos_prestamo_revertidos: revertido.abonosPrestamo,
             utilidad_sancion_revertida: revertido.utilidadSancion,
+            utilidad_actividades_revertida: revertido.utilidadActividades,
             comprobantes_eliminados: revertido.comprobantes,
             problemas,
           },
@@ -4618,44 +4806,52 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const valorActividades = Number(cuota.valor_pagado_actividades) || 0
       const gmf = Number(cuota.impuesto_4x1000) || 0
 
-      // Actividades y abonos enlazados por el código de comprobante de la cuota.
-      let actividades = []
-      let abonosPrestamo = []
-      if (codigo) {
-        const { data: acts } = await supabase
-          .from('socios_actividad')
-          .select('id, valor_pagado, valor_asignado, actividad:actividades(descripcion)')
-          .eq('socio_natillera_id', cuota.socio_natillera_id)
-          .eq('codigo_comprobante', codigo)
-          .gt('valor_pagado', 0)
-        actividades = acts || []
-
-        const { data: abonos } = await supabase
-          .from('pagos_prestamo')
-          .select('id, prestamo_id, valor, numeros_cuota')
-          .eq('codigo_comprobante', codigo)
-          .eq('origen', 'cuota_natillera')
-        abonosPrestamo = abonos || []
-      }
-      const valorPrestamos = abonosPrestamo.reduce((acc, a) => acc + (Number(a.valor) || 0), 0)
-
       const avisos = [
         'Este pago no quedó guardado como transacción, así que se revierte el pago COMPLETO de la cuota: no hay abonos separables.',
       ]
-      if (!codigo) {
-        if (valorActividades > 0 || valorPrestamos > 0) {
-          avisos.push('La cuota no tiene código de comprobante, así que no se pueden identificar sus actividades ni sus abonos a préstamo. Solo se revertirá la cuota; revisa Actividades y Préstamos después.')
+
+      // Actividades y abonos acotados por socio y día del pago: el código de comprobante de la
+      // cuota NO sirve de enlace (cada actividad y cada abono generan el suyo propio).
+      let actividadesARevertir = []
+      if (valorActividades > 0) {
+        const { candidatas, mismoDia } = await buscarActividadesPagoDirecto(cuota)
+        let restante = valorActividades
+        for (const fila of candidatas) {
+          if (restante <= 0) break
+          const quitar = Math.min(Number(fila.valor_pagado) || 0, restante)
+          if (quitar <= 0) continue
+          actividadesARevertir.push({ fila, valor: quitar })
+          restante -= quitar
         }
-      } else {
-        if (valorActividades > 0 && actividades.length === 0) {
-          avisos.push('No se encontraron actividades con el código de comprobante de esta cuota. El dinero de actividades se descontará de la cuota, pero conviene revisarlas en el módulo de Actividades.')
+        if (actividadesARevertir.length === 0) {
+          avisos.push('No se encontraron actividades pagadas de este socio. El dinero de actividades se descontará de la cuota, pero conviene revisarlas en el módulo de Actividades.')
+        } else {
+          avisos.push(
+            mismoDia
+              ? `Se revertirán ${actividadesARevertir.length} actividad(es) cobradas el mismo día del pago.`
+              : `Se revertirán ${actividadesARevertir.length} actividad(es) elegidas por recencia (el pago no dejó fecha para acotarlas). Revísalas después en el módulo de Actividades.`
+          )
         }
-        if (actividades.length > 0) {
-          avisos.push(`Se revertirán ${actividades.length} actividad(es) enlazadas por el código ${codigo}.`)
+        if (restante > 0) {
+          avisos.push(`Quedarán $${restante.toLocaleString('es-CO')} de actividades sin revertir: revísalos en el módulo de Actividades.`)
         }
-        if (abonosPrestamo.length > 0) {
-          avisos.push(`Se revertirán ${abonosPrestamo.length} abono(s) a préstamo enlazados por el código ${codigo}.`)
-        }
+      }
+
+      const abonosPrestamo = await buscarAbonosPagoDirecto(cuota)
+      const valorPrestamos = abonosPrestamo.reduce((acc, a) => acc + (Number(a.valor) || 0), 0)
+      if (abonosPrestamo.length > 0) {
+        avisos.push(`Se revertirán ${abonosPrestamo.length} abono(s) a préstamo registrados el mismo día del pago.`)
+      }
+
+      // Utilidad del fondo que sumaron esas actividades al cobrarse (las rifas no suman aquí).
+      const utilidadActividadesPorTipo = {}
+      for (const { fila, valor } of actividadesARevertir) {
+        const tipoUtil = tipoUtilidadDeActividad(fila.actividad?.tipo)
+        if (tipoUtil) utilidadActividadesPorTipo[tipoUtil] = (utilidadActividadesPorTipo[tipoUtil] || 0) + valor
+      }
+      const utilidadActividades = Object.values(utilidadActividadesPorTipo).reduce((a, b) => a + b, 0)
+      if (utilidadActividades > 0) {
+        avisos.push(`Se devolverán $${utilidadActividades.toLocaleString('es-CO')} a las utilidades del fondo por las actividades cobradas en este pago.`)
       }
 
       // La sanción cobrada también salió a utilidades del fondo (RF-09).
@@ -4686,8 +4882,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valorActividades,
           valorPrestamos,
           impuesto4x1000: gmf,
-          detalleActividades: actividades.map(a => ({
-            nombre: a.actividad?.descripcion || 'Actividad', valor: Number(a.valor_pagado) || 0,
+          detalleActividades: actividadesARevertir.map(({ fila, valor }) => ({
+            nombre: fila.actividad?.descripcion || 'Actividad', valor,
           })),
           detallePrestamos: [],
           abonosPrestamoEnlazados: abonosPrestamo.length,
@@ -4710,7 +4906,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
    * después la cuota. Si algo falla a mitad, la cuota todavía refleja el pago y se puede reintentar.
    */
   async function eliminarPagoDirectoCuota(cuotaId, options = {}) {
-    const revertido = { actividades: 0, abonosPrestamo: 0, cuota: false, utilidadSancion: 0, comprobantes: 0 }
+    const revertido = {
+      actividades: 0, abonosPrestamo: 0, cuota: false,
+      utilidadSancion: 0, utilidadActividades: 0, comprobantes: 0,
+    }
     const problemas = []
 
     try {
@@ -4732,22 +4931,27 @@ export const useCuotasStore = defineStore('cuotas', () => {
         throw new Error('Esta cuota no tiene pagos que revertir')
       }
 
-      // ── 1. Actividades enlazadas por el código de comprobante ────────────────
-      if (vActividades > 0 && codigo) {
+      // ── 1. Actividades cobradas en este pago ─────────────────────────────────
+      // No hay enlace: se acotan por socio y día del pago (ver `buscarActividadesPagoDirecto`).
+      const utilidadActividadesPorTipo = {}
+      if (vActividades > 0) {
         try {
-          const { data: acts } = await supabase
-            .from('socios_actividad')
-            .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia')
-            .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
-            .eq('codigo_comprobante', codigo)
-            .gt('valor_pagado', 0)
+          const { candidatas, mismoDia } = await buscarActividadesPagoDirecto(cuotaActual)
+          if (candidatas.length === 0) {
+            problemas.push('No se encontraron actividades pagadas de este socio para revertir: revísalas en el módulo de Actividades')
+          } else if (!mismoDia) {
+            problemas.push('Las actividades se revirtieron por recencia (el pago no dejó fecha para acotarlas): revísalas en el módulo de Actividades')
+          }
+
           let restante = vActividades
-          for (const fila of acts || []) {
+          for (const fila of candidatas) {
             if (restante <= 0) break
             const pagado = Number(fila.valor_pagado) || 0
             const quitar = Math.min(pagado, restante)
+            if (quitar <= 0) continue
             const nuevoPagado = Math.max(0, pagado - quitar)
             const datos = { valor_pagado: nuevoPagado }
+            // Al dejar de estar completa, el comprobante de la actividad deja de ser válido.
             if (nuevoPagado < (Number(fila.valor_asignado) || 0)) datos.codigo_comprobante = null
             if (nuevoPagado === 0) {
               datos.valor_pagado_efectivo = 0
@@ -4765,8 +4969,14 @@ export const useCuotasStore = defineStore('cuotas', () => {
               }
             }
             const { error: eAct } = await supabase.from('socios_actividad').update(datos).eq('id', fila.id)
-            if (eAct) problemas.push(`Actividad ${fila.id}: ${eAct.message}`)
-            else { revertido.actividades += 1; restante -= quitar }
+            if (eAct) {
+              problemas.push(`Actividad ${fila.id}: ${eAct.message}`)
+              continue
+            }
+            revertido.actividades += 1
+            restante -= quitar
+            const tipoUtil = tipoUtilidadDeActividad(fila.actividad?.tipo)
+            if (tipoUtil) utilidadActividadesPorTipo[tipoUtil] = (utilidadActividadesPorTipo[tipoUtil] || 0) + quitar
           }
           if (restante > 0) {
             problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de actividades sin revertir: revísalas en el módulo de Actividades`)
@@ -4774,120 +4984,103 @@ export const useCuotasStore = defineStore('cuotas', () => {
         } catch (e) {
           problemas.push(`Actividades: ${e.message}`)
         }
-      } else if (vActividades > 0 && !codigo) {
-        problemas.push('La cuota no tiene código de comprobante: sus actividades no se pudieron identificar ni revertir')
       }
 
-      // ── 2. Abonos a préstamo enlazados por el código de comprobante ──────────
-      if (codigo) {
-        try {
-          const { data: abonos } = await supabase
-            .from('pagos_prestamo')
-            .select('id, prestamo_id, valor, numeros_cuota')
-            .eq('codigo_comprobante', codigo)
-            .eq('origen', 'cuota_natillera')
+      // ── 2. Abonos a préstamo generados por este pago ─────────────────────────
+      try {
+        const abonos = await buscarAbonosPagoDirecto(cuotaActual)
 
-          for (const abono of abonos || []) {
-            // Deshacer lo último primero: se descuenta de las cuotas del plan que cubrió el abono.
-            const numeros = Array.isArray(abono.numeros_cuota) ? [...abono.numeros_cuota] : []
-            numeros.sort((a, b) => b - a)
-            let restante = Number(abono.valor) || 0
-            for (const num of numeros) {
-              if (restante <= 0) break
-              const { data: filas } = await supabase
-                .from('plan_pagos_prestamo')
-                .select('id, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia')
-                .eq('prestamo_id', abono.prestamo_id)
-                .eq('numero_cuota', num)
-                .limit(1)
-              const fila = (filas || [])[0]
-              if (!fila) { problemas.push(`No se encontró la cuota #${num} del préstamo para revertir`); continue }
-              const pagado = Number(fila.valor_pagado) || 0
-              const quitar = Math.min(pagado, restante)
-              const nuevoPagado = Math.max(0, pagado - quitar)
-              const ef = Number(fila.valor_pagado_efectivo) || 0
-              const tr = Number(fila.valor_pagado_transferencia) || 0
-              let nuevoEf = ef
-              let nuevoTr = tr
-              if (nuevoPagado === 0) { nuevoEf = 0; nuevoTr = 0 }
-              else if (formaPago === 'efectivo') nuevoEf = Math.max(0, ef - quitar)
-              else if (formaPago === 'transferencia') nuevoTr = Math.max(0, tr - quitar)
-              else {
-                const total = ef + tr
-                const quitarEf = total > 0 ? Math.round(quitar * (ef / total)) : quitar
-                nuevoEf = Math.max(0, ef - quitarEf)
-                nuevoTr = Math.max(0, tr - (quitar - quitarEf))
-              }
-              const datos = { valor_pagado: nuevoPagado, valor_pagado_efectivo: nuevoEf, valor_pagado_transferencia: nuevoTr }
-              if (nuevoPagado < (Number(fila.valor_cuota) || 0)) { datos.pagada = false; datos.fecha_pago = null }
-              const { error: ePlan } = await supabase.from('plan_pagos_prestamo').update(datos).eq('id', fila.id)
-              if (ePlan) problemas.push(`Cuota de préstamo #${num}: ${ePlan.message}`)
-              else restante -= quitar
+        for (const abono of abonos) {
+          // Deshacer lo último primero: se descuenta de las cuotas del plan que cubrió el abono.
+          const numeros = Array.isArray(abono.numeros_cuota) ? [...abono.numeros_cuota] : []
+          numeros.sort((a, b) => b - a)
+          let restante = Number(abono.valor) || 0
+          for (const num of numeros) {
+            if (restante <= 0) break
+            const { data: filas } = await supabase
+              .from('plan_pagos_prestamo')
+              .select('id, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia')
+              .eq('prestamo_id', abono.prestamo_id)
+              .eq('numero_cuota', num)
+              .limit(1)
+            const fila = (filas || [])[0]
+            if (!fila) { problemas.push(`No se encontró la cuota #${num} del préstamo para revertir`); continue }
+            const pagado = Number(fila.valor_pagado) || 0
+            const quitar = Math.min(pagado, restante)
+            const nuevoPagado = Math.max(0, pagado - quitar)
+            const ef = Number(fila.valor_pagado_efectivo) || 0
+            const tr = Number(fila.valor_pagado_transferencia) || 0
+            let nuevoEf = ef
+            let nuevoTr = tr
+            if (nuevoPagado === 0) { nuevoEf = 0; nuevoTr = 0 }
+            else if (formaPago === 'efectivo') nuevoEf = Math.max(0, ef - quitar)
+            else if (formaPago === 'transferencia') nuevoTr = Math.max(0, tr - quitar)
+            else {
+              const total = ef + tr
+              const quitarEf = total > 0 ? Math.round(quitar * (ef / total)) : quitar
+              nuevoEf = Math.max(0, ef - quitarEf)
+              nuevoTr = Math.max(0, tr - (quitar - quitarEf))
             }
-
-            // Devolver el saldo y reabrir el préstamo si había quedado pagado.
-            const monto = Number(abono.valor) || 0
-            if (monto > 0 && abono.prestamo_id) {
-              const { data: prestamo } = await supabase
-                .from('prestamos').select('id, saldo_actual, estado').eq('id', abono.prestamo_id).single()
-              if (prestamo) {
-                const datos = { saldo_actual: (Number(prestamo.saldo_actual) || 0) + monto }
-                if (prestamo.estado === 'pagado') datos.estado = 'activo'
-                const { error: ePres } = await supabase.from('prestamos').update(datos).eq('id', prestamo.id)
-                if (ePres) problemas.push(`Préstamo ${prestamo.id}: ${ePres.message}`)
-              }
-            }
+            const datos = { valor_pagado: nuevoPagado, valor_pagado_efectivo: nuevoEf, valor_pagado_transferencia: nuevoTr }
+            if (nuevoPagado < (Number(fila.valor_cuota) || 0)) { datos.pagada = false; datos.fecha_pago = null }
+            const { error: ePlan } = await supabase.from('plan_pagos_prestamo').update(datos).eq('id', fila.id)
+            if (ePlan) problemas.push(`Cuota de préstamo #${num}: ${ePlan.message}`)
+            else restante -= quitar
           }
 
-          const ids = (abonos || []).map(a => a.id)
-          if (ids.length > 0) {
-            const { data: borrados, error: eDel } = await supabase
-              .from('pagos_prestamo').delete().in('id', ids).select('id')
-            if (eDel) problemas.push(`Abonos a préstamo: ${eDel.message}`)
-            else revertido.abonosPrestamo = (borrados || []).length
+          // Devolver el saldo y reabrir el préstamo si había quedado pagado.
+          const monto = Number(abono.valor) || 0
+          if (monto > 0 && abono.prestamo_id) {
+            const { data: prestamo } = await supabase
+              .from('prestamos').select('id, saldo_actual, estado').eq('id', abono.prestamo_id).single()
+            if (prestamo) {
+              const datos = { saldo_actual: (Number(prestamo.saldo_actual) || 0) + monto }
+              if (prestamo.estado === 'pagado') datos.estado = 'activo'
+              const { error: ePres } = await supabase.from('prestamos').update(datos).eq('id', prestamo.id)
+              if (ePres) problemas.push(`Préstamo ${prestamo.id}: ${ePres.message}`)
+            }
           }
-        } catch (e) {
-          problemas.push(`Préstamos: ${e.message}`)
         }
+
+        const ids = abonos.map(a => a.id)
+        if (ids.length > 0) {
+          // Se pide el resultado del DELETE: sin política de borrado la operación "tiene éxito"
+          // sin borrar nada, y el abono quedaría huérfano en silencio.
+          const { data: borrados, error: eDel } = await supabase
+            .from('pagos_prestamo').delete().in('id', ids).select('id')
+          if (eDel) problemas.push(`Abonos a préstamo: ${eDel.message}`)
+          else if ((borrados || []).length === 0) {
+            problemas.push('No se pudo borrar el abono a préstamo de este pago: seguirá apareciendo en el historial del préstamo')
+          } else {
+            revertido.abonosPrestamo = (borrados || []).length
+          }
+        }
+      } catch (e) {
+        problemas.push(`Préstamos: ${e.message}`)
       }
 
-      // ── 3. Devolver la sanción de las utilidades del fondo (RF-09) ───────────
-      if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+      // ── 3. Devolver a las utilidades del fondo lo que sumó este pago (RF-09) ──
+      const hayUtilidadQueDevolver =
+        (vSancion > 0 && !cuotaActual.no_calcular_multa) ||
+        Object.keys(utilidadActividadesPorTipo).length > 0
+
+      if (hayUtilidadQueDevolver) {
         try {
           const natilleraId = await obtenerNatilleraDeCuota(cuotaActual, options._natilleraId)
-          if (!natilleraId) {
-            problemas.push('No se pudo identificar la natillera: la sanción sigue contada como utilidad del fondo')
-          } else {
-            const { filas, cerradas, error: errUtil } = await getUtilidadesSancionAbiertas(natilleraId, formaPago)
-            if (errUtil) problemas.push(`Utilidad por sanciones: ${errUtil}`)
-            else if (filas.length === 0) {
-              problemas.push(
-                cerradas > 0
-                  ? 'La utilidad de esta sanción pertenece a un cierre ya liquidado y no se modificó'
-                  : 'No se encontró la utilidad por sanciones para devolver el monto de la multa'
-              )
-            } else {
-              let restante = vSancion
-              for (const fila of filas) {
-                if (restante <= 0) break
-                const montoActual = Number(fila.monto) || 0
-                const quitar = Math.min(montoActual, restante)
-                if (quitar <= 0) continue
-                const { error: eUtil } = await supabase
-                  .from('utilidades_clasificadas')
-                  .update({ monto: montoActual - quitar, updated_at: new Date().toISOString() })
-                  .eq('id', fila.id)
-                if (eUtil) { problemas.push(`Utilidad por sanciones: ${eUtil.message}`); break }
-                restante -= quitar
-                revertido.utilidadSancion += quitar
-              }
-              if (restante > 0) {
-                problemas.push(`Quedaron $${restante.toLocaleString('es-CO')} de sanción contados como utilidad: revisa las utilidades del fondo`)
-              }
-            }
+
+          if (vSancion > 0 && !cuotaActual.no_calcular_multa) {
+            const res = await descontarUtilidadPorTipo(natilleraId, 'sanciones', formaPago, vSancion, 'sanciones')
+            revertido.utilidadSancion += res.descontado
+            problemas.push(...res.problemas)
+          }
+
+          for (const [tipoUtil, monto] of Object.entries(utilidadActividadesPorTipo)) {
+            const res = await descontarUtilidadPorTipo(natilleraId, tipoUtil, formaPago, monto, `actividades (${tipoUtil})`)
+            revertido.utilidadActividades += res.descontado
+            problemas.push(...res.problemas)
           }
         } catch (e) {
-          problemas.push(`Utilidad por sanciones: ${e.message}`)
+          problemas.push(`Utilidades del fondo: ${e.message}`)
         }
       }
 
@@ -4956,6 +5149,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             actividades_revertidas: revertido.actividades,
             abonos_prestamo_revertidos: revertido.abonosPrestamo,
             utilidad_sancion_revertida: revertido.utilidadSancion,
+            utilidad_actividades_revertida: revertido.utilidadActividades,
             comprobantes_eliminados: revertido.comprobantes,
             problemas,
           },
@@ -5008,6 +5202,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
     eliminarTodasLasCuotasSocio,
     previsualizarEliminacionPago,
     eliminarPagoHistorial,
+    // Reutilizados al revertir un pago desde el módulo de Actividades.
+    tipoUtilidadDeActividad,
+    descontarUtilidadPorTipo,
     previsualizarEliminacionPagoDirecto,
     eliminarPagoDirectoCuota
   }

@@ -546,8 +546,12 @@
             :key="grupo.socioId"
             class="relative overflow-hidden rounded-2xl border border-gray-200/60 shadow-lg bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20"
           >
-            <!-- Header del grupo (Socio) -->
-            <div class="bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 p-4 sm:p-5">
+            <!--
+              Header del grupo (Socio) — MÓVIL.
+              Se conserva tal cual: en pantalla estrecha los datos apilados
+              funcionan y no había nada que arreglar.
+            -->
+            <div class="sm:hidden bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 p-4">
               <div class="flex items-center gap-4">
                 <img 
                   :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)" 
@@ -598,6 +602,98 @@
                       Total a Pagar: ${{ formatMoney(grupo.totalAPagar) }}
                     </span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!--
+              Header del grupo (Socio) — ESCRITORIO.
+              Los mismos datos, reordenados por importancia: el estado pegado al
+              avatar, el total a pagar como cifra grande a la derecha, y el resto
+              en una línea de apoyo. Antes eran ocho textos del mismo tamaño en
+              una fila con salto, y sobraba espacio en blanco sin que ninguno
+              destacara.
+            -->
+            <div class="hidden sm:block bg-gradient-to-r from-natillera-500/10 via-emerald-500/10 to-teal-500/10 border-b border-gray-200/60 px-5 py-4">
+              <div class="flex items-center gap-4">
+                <!-- Avatar + estado: juntos, porque se leen juntos -->
+                <div class="flex shrink-0 flex-col items-center gap-1.5">
+                  <img
+                    :src="getAvatarUrl(grupo.socio?.nombre || grupo.socioId, grupo.socio?.avatar_seed, grupo.socio?.avatar_style)"
+                    :alt="grupo.socio?.nombre"
+                    class="h-14 w-14 rounded-xl border-2 border-natillera-300 shadow-md object-cover"
+                  />
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full px-2 py-[3px] text-[10px] font-semibold leading-none ring-1 ring-inset"
+                    :class="[
+                      grupo.estado === 'pagada' ? 'bg-emerald-50/80 text-emerald-700 ring-emerald-200/70' :
+                      grupo.estado === 'mora' ? 'bg-rose-50/80 text-rose-700 ring-rose-200/70' :
+                      grupo.estado === 'parcial' ? 'bg-amber-50/80 text-amber-800 ring-amber-200/70' :
+                      grupo.estado === 'programada' ? 'bg-slate-50 text-slate-500 ring-slate-200' :
+                      'bg-orange-50/80 text-orange-800 ring-orange-200/70'
+                    ]"
+                  >
+                    <span
+                      class="h-1.5 w-1.5 rounded-full"
+                      :class="[
+                        grupo.estado === 'pagada' ? 'bg-emerald-500' :
+                        grupo.estado === 'mora' ? 'bg-rose-500' :
+                        grupo.estado === 'parcial' ? 'bg-amber-500' :
+                        grupo.estado === 'programada' ? 'bg-slate-400' : 'bg-orange-500'
+                      ]"
+                    />
+                    {{ grupo.estado === 'pagada' ? 'Pagada' :
+                       grupo.estado === 'mora' ? 'Mora' :
+                       grupo.estado === 'parcial' ? 'Parcial' :
+                       grupo.estado === 'programada' ? 'Programada' : 'Pendiente' }}
+                  </span>
+                </div>
+
+                <!-- Nombre y resumen -->
+                <div class="min-w-0 flex-1">
+                  <h3 class="truncate font-display text-xl font-bold leading-tight text-gray-800">
+                    {{ grupo.socio?.nombre || 'Socio' }}
+                  </h3>
+                  <p class="mt-1 truncate text-sm text-gray-600">
+                    {{ grupo.cuotas.length }} cuota{{ grupo.cuotas.length !== 1 ? 's' : '' }}
+                    <span class="mx-1.5 text-gray-300">·</span>
+                    Pagado <span class="font-semibold text-green-600">${{ formatMoney(grupo.pagado) }}</span>
+                    <template v-if="grupo.pendiente > 0">
+                      <span class="mx-1.5 text-gray-300">·</span>
+                      Cuotas <span class="font-semibold text-red-600">${{ formatMoney(grupo.pendiente) }}</span>
+                    </template>
+                  </p>
+                  <!-- Conceptos extra: solo aparecen si existen, para no llenar de ceros -->
+                  <p
+                    v-if="grupo.actividadesPendientes > 0 || grupo.cuotasPrestamosPendientes > 0 || grupo.cuotasPrestamosAbonado > 0"
+                    class="mt-0.5 truncate text-xs text-gray-500"
+                  >
+                    <span v-if="grupo.actividadesPendientes > 0" class="text-purple-600">
+                      {{ getTextoActividadesGrupo(grupo) }}: ${{ formatMoney(grupo.actividadesPendientes) }}
+                    </span>
+                    <span v-if="grupo.cuotasPrestamosPendientes > 0" class="ml-2 text-blue-600">
+                      Préstamos: ${{ formatMoney(grupo.cuotasPrestamosPendientes) }}
+                    </span>
+                    <span v-if="grupo.cuotasPrestamosAbonado > 0" class="ml-2 text-sky-700">
+                      Abonado: ${{ formatMoney(grupo.cuotasPrestamosAbonado) }}
+                    </span>
+                  </p>
+                </div>
+
+                <!-- La cifra que importa: lo que este socio debe hoy -->
+                <div class="shrink-0 text-right">
+                  <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    {{ grupo.totalAPagar > 0 ? 'Total a pagar' : 'Al día' }}
+                  </p>
+                  <p
+                    class="font-display text-3xl font-bold leading-none"
+                    :class="grupo.totalAPagar > 0 ? 'text-red-700' : 'text-green-600'"
+                  >
+                    ${{ formatMoney(grupo.totalAPagar) }}
+                  </p>
+                  <p class="mt-1 text-xs text-gray-500">
+                    de ${{ formatMoney(grupo.total) }}
+                  </p>
                 </div>
               </div>
             </div>
