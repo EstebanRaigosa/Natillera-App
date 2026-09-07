@@ -37,6 +37,8 @@ El comportamiento de los préstamos se rige por reglas definidas **al crear/conf
 | `activo` | Si la natillera permite préstamos | `true` al crear con préstamos activos |
 | `porcentaje` | Tasa de interés sugerida por defecto en el formulario | `2` (%) |
 | `plazo_maximo` | Máximo de cuotas permitido por préstamo | `36` (o el elegido, p. ej. `6`) |
+| `tasa_mora` | Interés de mora mensual (%) sobre el capital pendiente de cada cuota vencida, proporcional a días (base 30) | `0` (sin mora hasta configurarla) |
+| `dias_gracia_activo` / `dias_gracia` | Días después de la fecha de cada cuota en los que aún no corre mora. El valor es propio de préstamos, pero **hereda el de las cuotas** (`reglas_multas.dias_gracia`) mientras no se guarde uno | apagado · valor = el de cuotas |
 
 El formulario de nuevo préstamo arranca con estos valores por defecto, pero la tasa y el número de cuotas se pueden ajustar dentro de los límites permitidos.
 
@@ -184,7 +186,7 @@ flowchart TD
 En la vista de Cuotas agrupada por socio, cada tarjeta muestra, además de la cuota de ahorro:
 
 - El **total pendiente de préstamos** que corresponde a ese período (incluyendo arrastres de períodos anteriores).
-- Lo **ya abonado** a préstamos en ese período.
+- Lo **ya abonado a préstamos desde esa cuota**, y solo eso. Un abono hecho desde el módulo de Préstamos **no** aparece en la tarjeta ni en el comprobante de la cuota, aunque caiga en el mismo período: no fue parte de ese pago. La pertenencia se guarda en `plan_pagos_prestamo.cuota_id` al pagar desde Cuotas; para pagos anteriores a ese enlace se usa el historial de la propia cuota (`historial_pagos_cuota.valor_cuotas_prestamo`). Nunca se infiere por fecha ni por período.
 
 Esto permite ver, socio por socio, cuánto debe realmente en el mes contando ahorro + préstamo.
 
@@ -297,5 +299,7 @@ Solo los préstamos **activos** aparecen para cobro en el módulo de Cuotas. Un 
 | Cuotas de préstamo de meses pasados sin pagar | Se **acumulan** y reaparecen en la siguiente tarjeta del socio en Cuotas (no se pierden). |
 | Pago insuficiente en Cuotas | Se respeta el orden: sanción → actividades → préstamo → cuota natillera. |
 | Préstamo con interés anticipado | No se registra utilidad adicional al pagar cuotas (ya se cobró al inicio). |
+| Días de gracia activos | Una cuota cuenta como **vencida** solo cuando pasó su fecha **más** los días de gracia; dentro de la gracia no suma días de mora ni cobra. |
+| Abono con fecha de pago distinta de hoy | La mora se liquida **a la fecha de pago registrada**: anotar tarde un pago no cobra los días de retraso del registro, y una fecha posterior cobra hasta esa fecha. |
 | Socio sin teléfono | Se permite operar, pero se solicita teléfono al compartir comprobantes por WhatsApp. |
 | Eliminar socio | Borra en cascada sus préstamos, planes y abonos. |

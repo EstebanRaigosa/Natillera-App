@@ -216,10 +216,20 @@ watch(() => props.activo, (encendido) => {
   irAlPaso()
 })
 
+/*
+ * En iOS el pinch-zoom y la aparición del teclado mueven el viewport VISUAL sin
+ * disparar `resize` en `window`: solo `visualViewport` se entera. Sin esto el
+ * foco se queda donde estaba y señala un sitio vacío (§2, §9).
+ */
+const vv = typeof window !== 'undefined' ? window.visualViewport : null
+
 onMounted(() => {
   window.addEventListener('resize', programarMedida)
   window.addEventListener('scroll', programarMedida, { passive: true })
+  window.addEventListener('orientationchange', programarMedida)
   window.addEventListener('keydown', alTeclado)
+  vv?.addEventListener('resize', programarMedida)
+  vv?.addEventListener('scroll', programarMedida)
   if (props.activo) irAlPaso()
 })
 
@@ -227,7 +237,10 @@ onBeforeUnmount(() => {
   if (raf != null) cancelAnimationFrame(raf)
   window.removeEventListener('resize', programarMedida)
   window.removeEventListener('scroll', programarMedida)
+  window.removeEventListener('orientationchange', programarMedida)
   window.removeEventListener('keydown', alTeclado)
+  vv?.removeEventListener('resize', programarMedida)
+  vv?.removeEventListener('scroll', programarMedida)
 })
 </script>
 
@@ -243,6 +256,16 @@ onBeforeUnmount(() => {
 /* Ocupa toda la pantalla por debajo del foco y de la tarjeta: nada de lo que
    hay detrás recibe un solo toque mientras la guía está abierta. */
 .tour__bloqueo {
+  /*
+   * §5 pide bloquear el scroll de fondo, pero aquí NO se usa
+   * `useBodyScrollLock`: fija el body con `position: fixed` y dejaría
+   * inservible el `scrollIntoView` con el que el tour trae cada elemento al
+   * centro. Se corta el gesto del dedo, que es lo que desalinea el foco, y se
+   * deja intacto el scroll programático. `overscroll-behavior` evita además el
+   * pull-to-refresh y el rebote de iOS (§11).
+   */
+  touch-action: none;
+  overscroll-behavior: contain;
   position: absolute;
   inset: 0;
   pointer-events: auto;

@@ -7,6 +7,7 @@
       forceHidden ? 'translate-y-[110%] pointer-events-none opacity-0' : 'translate-y-0 opacity-100',
       destacarBarra && !forceHidden ? 'mobile-bottom-nav--destacar' : ''
     ]"
+    :style="{ '--tapado-inferior': tapadoInferior + 'px' }"
   >
     <!-- Haz de brillo que barre a través de las opciones durante la animación de atención -->
     <div
@@ -185,40 +186,49 @@
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Act.</span>
       </button>
 
-      <!-- Totales generales -->
-      <router-link
+      <!--
+        Caja: un solo espacio que agrupa Conciliación y Movimientos.
+        Con siete opciones la barra ya iba al límite de ancho en un iPhone SE, así que
+        meter dos más de a una las habría dejado ilegibles. Este espacio abre una hoja
+        donde cada destino tiene sitio para explicar a qué pregunta responde, y se pinta
+        como activo cuando estás en cualquiera de los dos.
+      -->
+      <button
         v-if="natilleraId"
-        id="tour-bottom-nav-totales"
-        :to="`/natilleras/${natilleraId}/cuadre-caja`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
-        :class="isActive(`/natilleras/${natilleraId}/cuadre-caja`) ? 'nav-item--active' : 'nav-item--inactive'"
+        id="tour-bottom-nav-caja"
+        type="button"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation [-webkit-tap-highlight-color:transparent]"
+        :class="cajaActiva ? 'nav-item--active' : 'nav-item--inactive'"
+        aria-haspopup="menu"
+        :aria-expanded="menuCajaAbierto"
+        @click="menuCajaAbierto = true"
       >
         <div
-          v-if="isActive(`/natilleras/${natilleraId}/cuadre-caja`)"
+          v-if="cajaActiva"
           class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
-        <CalculatorIconSolid
-          v-if="isActive(`/natilleras/${natilleraId}/cuadre-caja`)"
+        <WalletIconSolid
+          v-if="cajaActiva"
           class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 transition-all text-white"
         />
-        <CalculatorIcon
+        <WalletIcon
           v-else
           class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 transition-all"
         />
         <span
           class="text-[10px] sm:text-[11px] leading-tight font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/cuadre-caja`) ? 'text-white' : ''"
-        >Totales</span>
-      </router-link>
+          :class="cajaActiva ? 'text-white' : ''"
+        >Caja</span>
+      </button>
       <button
         v-else
         type="button"
-        @click="navegarAPrimeraNatillera('cuadre-caja')"
+        @click="navegarAPrimeraNatillera('conciliacion')"
         class="nav-item nav-item--inactive flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 touch-manipulation"
       >
-        <CalculatorIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
-        <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Totales</span>
+        <WalletIcon class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+        <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Caja</span>
       </button>
 
       <!-- Configuración -->
@@ -272,19 +282,34 @@
       </router-link>
     </div>
   </nav>
+
+  <!-- Hoja del espacio «Caja». Vive fuera del <nav> porque ModalWrapper la teletransporta a body. -->
+  <MenuCajaSheet
+    v-if="natilleraId"
+    :show="menuCajaAbierto"
+    :natillera-id="natilleraId"
+    @close="menuCajaAbierto = false"
+  />
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../stores/natilleras'
 import { useNotificationStore } from '../stores/notifications'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
+import { useTapadoInferior } from '../composables/useTapadoInferior'
+import MenuCajaSheet from './MenuCajaSheet.vue'
 
 defineProps({
   /** Oculta la barra cuando el menú lateral está abierto (móvil) */
   forceHidden: { type: Boolean, default: false }
 })
+
+// En Safari de iOS la barra de direcciones vive abajo y se pinta encima del
+// contenido, tapando esta barra. `tapadoInferior` es lo que hay que levantarla
+// para que quede justo por encima; vale 0 en Android y en la PWA instalada.
+const { tapado: tapadoInferior } = useTapadoInferior()
 
 // Prefetch de los chunks de las vistas destino del nav inferior para que al tocar
 // el ícono la navegación sea instantánea en lugar de esperar la descarga del chunk.
@@ -294,7 +319,8 @@ const _navViewImports = [
   () => import('../views/cuotas/Cuotas.vue'),
   () => import('../views/prestamos/Prestamos.vue'),
   () => import('../views/actividades/Actividades.vue'),
-  () => import('../views/cuadre/CuadreCaja.vue'),
+  () => import('../views/conciliacion/ConciliacionCaja.vue'),
+  () => import('../views/movimientos/Movimientos.vue'),
   () => import('../views/natilleras/NatilleraConfiguracion.vue'),
 ]
 
@@ -385,7 +411,7 @@ import {
   CurrencyDollarIcon,
   BanknotesIcon,
   CalendarIcon,
-  CalculatorIcon,
+  WalletIcon,
   Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
 import {
@@ -394,7 +420,7 @@ import {
   CurrencyDollarIcon as CurrencyDollarIconSolid,
   BanknotesIcon as BanknotesIconSolid,
   CalendarIcon as CalendarIconSolid,
-  CalculatorIcon as CalculatorIconSolid,
+  WalletIcon as WalletIconSolid,
   Cog6ToothIcon as Cog6ToothIconSolid
 } from '@heroicons/vue/24/solid'
 
@@ -450,6 +476,23 @@ function isActive(path) {
   return route.path.startsWith(path)
 }
 
+/* --------------------------------- Espacio «Caja» ---------------------------- */
+
+const menuCajaAbierto = ref(false)
+
+// El espacio se pinta activo estando en cualquiera de las dos pantallas que agrupa,
+// para que la barra no diga «no estás en ningún sitio» cuando sí lo estás.
+const cajaActiva = computed(() => {
+  if (!natilleraId.value) return false
+  const base = `/natilleras/${natilleraId.value}`
+  return route.path.startsWith(`${base}/conciliacion`) || route.path.startsWith(`${base}/movimientos`)
+})
+
+// Con el botón «atrás» del teléfono la hoja debe cerrarse como cualquier otra capa.
+watch(() => route.fullPath, () => {
+  menuCajaAbierto.value = false
+})
+
 // Navegar a la primera natillera activa con la sección especificada
 function navegarAPrimeraNatillera(seccion) {
   const todasLasNatilleras = natillerasStore.todasLasNatilleras || []
@@ -491,7 +534,12 @@ function navegarAPrimeraNatillera(seccion) {
 /* Ítem activo = mismo verde que el botón principal del login (token --primary) */
 .mobile-bottom-nav {
   isolation: isolate;
-  padding-bottom: max(0.3rem, env(safe-area-inset-bottom, 0px));
+  /* `--tapado-inferior` lo fija useTapadoInferior: en Safari de iOS es el alto de
+     la barra de direcciones, que se dibuja encima de esta barra. Sumarlo al
+     padding sube los iconos por encima de ella sin despegar la barra del fondo,
+     que es lo que pasaría moviendo `bottom` (dejaría un hueco a la vista).
+     Vale 0 en Android y en la PWA instalada, donde no hay chrome que esquivar. */
+  padding-bottom: calc(max(0.3rem, env(safe-area-inset-bottom, 0px)) + var(--tapado-inferior, 0px));
 }
 
 .mobile-bottom-nav .nav-item--inactive {

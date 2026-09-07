@@ -13,24 +13,83 @@
           RNF-09: el cuerpo se pinta como texto plano por interpolación, nunca con
           v-html. Un mensaje con <script> se ve literal y no se ejecuta (CA-19).
         -->
-        <p class="whitespace-pre-wrap break-words text-[0.9375rem] leading-relaxed">{{ mensaje.cuerpo }}</p>
+        <p v-if="mensaje.cuerpo" class="whitespace-pre-wrap break-words text-[0.9375rem] leading-relaxed">{{ mensaje.cuerpo }}</p>
 
-        <!-- Adjuntos: la URL se firma al pulsar y caduca a los 15 min (RF-17) -->
-        <ul v-if="adjuntos.length" class="mt-2 space-y-1.5">
-          <li v-for="adjunto in adjuntos" :key="adjunto.id || adjunto.ruta">
+        <!--
+          Imágenes: se ven, no se anuncian.
+
+          La miniatura sale desde el primer instante —mientras sube, con la copia
+          local del archivo— para que el adjunto no parezca llegar tarde ni
+          desaparecido. La URL firmada caduca a los 15 min (RF-17).
+        -->
+        <ul v-if="imagenes.length" :class="['grid gap-1.5', mensaje.cuerpo ? 'mt-2' : '', imagenes.length > 1 ? 'grid-cols-2' : 'grid-cols-1']">
+          <li v-for="imagen in imagenes" :key="imagen.id || imagen.ruta">
             <button
               type="button"
               :class="[
-                'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition touch-manipulation',
+                'relative block w-full overflow-hidden rounded-xl transition touch-manipulation',
+                esPropio ? 'bg-white/15' : 'bg-gray-100',
+              ]"
+              :aria-label="`Ver ${imagen.nombre}`"
+              @click="abrirAdjunto(imagen)"
+            >
+              <img
+                v-if="fuente(imagen) && !rotas.has(claveAdjunto(imagen))"
+                :src="fuente(imagen)"
+                :alt="imagen.nombre"
+                loading="lazy"
+                decoding="async"
+                :class="[
+                  'w-full object-cover',
+                  imagenes.length > 1 ? 'aspect-square' : 'max-h-64 min-h-[6rem]',
+                  imagen._subiendo ? 'opacity-60' : '',
+                ]"
+                @error="marcarRota(imagen)"
+              />
+              <!-- Sin miniatura (HEIC en un navegador que no lo pinta, firma
+                   caducada o archivo borrado): se cae a la fila de archivo. -->
+              <span
+                v-else
+                :class="[
+                  'flex min-h-[4.5rem] items-center gap-2 px-3 py-3 text-left text-xs',
+                  esPropio ? 'text-white' : 'text-gray-700',
+                ]"
+              >
+                <PhotoIcon class="h-5 w-5 shrink-0" />
+                <span class="min-w-0 flex-1 truncate">{{ imagen.nombre }}</span>
+              </span>
+
+              <span
+                v-if="imagen._subiendo"
+                class="absolute inset-x-0 bottom-0 flex items-center gap-1.5 bg-black/45 px-2.5 py-1.5 text-[0.6875rem] font-semibold text-white"
+              >
+                <svg class="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Enviando…
+              </span>
+            </button>
+          </li>
+        </ul>
+
+        <!-- Documentos: fila con nombre y tamaño; el visor decide si los abre
+             dentro (texto, PDF en escritorio) o fuera. -->
+        <ul v-if="documentos.length" :class="['space-y-1.5', mensaje.cuerpo || imagenes.length ? 'mt-2' : '']">
+          <li v-for="documento in documentos" :key="documento.id || documento.ruta">
+            <button
+              type="button"
+              :class="[
+                'flex min-h-[2.75rem] w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs transition touch-manipulation',
                 esPropio ? 'bg-white/15 hover:bg-white/25' : 'bg-gray-50 hover:bg-gray-100 border border-gray-200',
               ]"
-              :disabled="abriendo === adjunto.ruta"
-              @click="abrirAdjunto(adjunto)"
+              @click="abrirAdjunto(documento)"
             >
-              <PaperClipIcon class="h-4 w-4 shrink-0" />
-              <span class="min-w-0 flex-1 truncate">{{ adjunto.nombre }}</span>
+              <DocumentTextIcon v-if="esTexto(documento.mime)" class="h-4 w-4 shrink-0" />
+              <PaperClipIcon v-else class="h-4 w-4 shrink-0" />
+              <span class="min-w-0 flex-1 truncate">{{ documento.nombre }}</span>
               <span :class="['shrink-0 text-[0.6875rem]', esPropio ? 'text-white/70' : 'text-gray-500']">
-                {{ abriendo === adjunto.ruta ? 'Abriendo…' : formatearTamano(adjunto.bytes) }}
+                {{ documento._subiendo ? 'Enviando…' : formatearTamano(documento.bytes) }}
               </span>
             </button>
           </li>
@@ -63,10 +122,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { CheckIcon, ClockIcon, ExclamationTriangleIcon, PaperClipIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, watch } from 'vue'
+import {
+  CheckIcon, ClockIcon, DocumentTextIcon, ExclamationTriangleIcon, PaperClipIcon, PhotoIcon,
+} from '@heroicons/vue/24/outline'
 import { useSoporteStore } from '../../stores/soporte'
-import { useNotificationStore } from '../../stores/notifications'
+import { esImagen, esTexto, formatearTamano } from '../../utils/adjuntosSoporte'
+import { useVisorAdjunto } from '../../composables/useVisorAdjunto'
 
 const props = defineProps({
   mensaje: { type: Object, required: true },
@@ -77,11 +139,15 @@ const props = defineProps({
 defineEmits(['reintentar'])
 
 const soporte = useSoporteStore()
-const notificaciones = useNotificationStore()
-const abriendo = ref(null)
+// El visor vive montado una sola vez en el layout: aquí solo se pide abrirlo.
+const { abrirAdjunto: mostrarEnVisor } = useVisorAdjunto()
+const firmadas = ref({})          // ruta -> URL firmada de la miniatura
+const rotas = ref(new Set())      // adjuntos que el navegador no supo pintar
 
 const esPropio = computed(() => props.mensaje.autor === props.ladoPropio)
 const adjuntos = computed(() => props.mensaje.soporte_adjuntos ?? [])
+const imagenes = computed(() => adjuntos.value.filter((a) => esImagen(a.mime)))
+const documentos = computed(() => adjuntos.value.filter((a) => !esImagen(a.mime)))
 
 const hora = computed(() => {
   const fecha = new Date(props.mensaje.created_at)
@@ -89,22 +155,42 @@ const hora = computed(() => {
   return fecha.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
 })
 
-function formatearTamano(bytes) {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+function claveAdjunto(adjunto) {
+  return adjunto.ruta || adjunto.id || adjunto.nombre
 }
 
-async function abrirAdjunto(adjunto) {
-  abriendo.value = adjunto.ruta
-  try {
-    const url = await soporte.urlFirmada(adjunto.ruta)
-    window.open(url, '_blank', 'noopener,noreferrer')
-  } catch {
-    notificaciones.critica('No se pudo abrir el archivo. Puede que ya no exista.')
-  } finally {
-    abriendo.value = null
-  }
+/*
+ * La firmada manda en cuanto está; la copia local es el respaldo mientras sube y
+ * durante los segundos que tarda en llegar la firma. En ese orden, y no al
+ * revés: la local se revoca poco después de confirmarse el envío.
+ */
+function fuente(imagen) {
+  return firmadas.value[imagen.ruta] || imagen._previsualizacion || ''
+}
+
+function marcarRota(imagen) {
+  const siguiente = new Set(rotas.value)
+  siguiente.add(claveAdjunto(imagen))
+  rotas.value = siguiente
+}
+
+/*
+ * Las firmas de todas las imágenes del mensaje se piden en una sola llamada, no
+ * una por miniatura, y el store las cachea mientras duran.
+ */
+watch(imagenes, async (lista) => {
+  const rutas = lista.filter((a) => a.ruta && !a._previsualizacion).map((a) => a.ruta)
+  if (!rutas.length) return
+  const nuevas = await soporte.urlesFirmadas(rutas)
+  firmadas.value = { ...firmadas.value, ...nuevas }
+}, { immediate: true, deep: true })
+
+function abrirAdjunto(adjunto) {
+  // Un adjunto a medio subir no tiene nada que enseñar todavía salvo su propia
+  // copia local, que ya se está viendo en la burbuja.
+  if (adjunto._subiendo && !adjunto._previsualizacion) return
+  // Se le pasa también la firma ya resuelta: el visor no tiene por qué volver a
+  // pedirla para una miniatura que acaba de mostrarse aquí.
+  mostrarEnVisor({ ...adjunto, _urlFirmada: firmadas.value[adjunto.ruta] || null })
 }
 </script>

@@ -9,6 +9,79 @@ import { fechaPagoAIso } from '../utils/formatDate'
  * Necesaria para que las cuotas con pago parcial (estado BD "parcial") pero ya en mora por fecha
  * entren en calcularSancionesTotales; antes solo se filtraba c.estado === "mora".
  */
+/*
+ * Dos preguntas que el módulo se hacía mal, y por las que una cuota pagada
+ * podía acabar «en mora» con una sanción que crecía sin fin (caso real: cuota
+ * pagada el mismo día del vencimiento que a los cinco meses figuraba con
+ * $41.500 de multa):
+ *
+ *  · «¿Está pagada?» se respondía con `valor_pagado >= valor_cuota + valor_multa`.
+ *    Bastaba una multa fantasma para que la cuota dejara de ser «pagada», el
+ *    calendario la mandara a mora y la multa volviera a crecer: bucle.
+ *  · «¿Hasta cuándo corren los intereses?» se respondía «hasta hoy» aunque la
+ *    cuota llevara meses pagada.
+ *
+ * Aquí se fija el criterio: el CAPITAL manda. Con el capital completo, la
+ * cuota no vuelve a mora por calendario; y si además se pagó dentro del plazo,
+ * no debe sanción alguna.
+ */
+function fechaSoloDia(valor) {
+  if (!valor) return null
+  const str = String(valor)
+  // Un timestamp con hora (fecha_pago se guarda en UTC) se pasa a día LOCAL:
+  // un pago anotado a las 8 pm en Colombia es la 1 am del día siguiente en
+  // UTC, y recortando los 10 primeros caracteres saldría «tarde» un día.
+  if (/[T ]\d{2}:\d{2}/.test(str)) {
+    const f = new Date(str)
+    if (Number.isNaN(f.getTime())) return null
+    f.setHours(0, 0, 0, 0)
+    return f
+  }
+  const [a, m, d] = str.substring(0, 10).split('-').map(Number)
+  if (Number.isNaN(a) || Number.isNaN(m) || Number.isNaN(d)) return null
+  const f = new Date(a, m - 1, d)
+  f.setHours(0, 0, 0, 0)
+  return f
+}
+
+export function capitalCuotaCompleto(cuota) {
+  const valorCuota = parseFloat(cuota?.valor_cuota) || 0
+  const valorPagado = parseFloat(cuota?.valor_pagado) || 0
+  return valorCuota > 0 && valorPagado >= valorCuota
+}
+
+/**
+ * Fecha de pago «perdonada»: el día del vencimiento, a mediodía local. Es lo
+ * que se escribe en `fecha_pago` cuando el admin marca «no calcular multa» en
+ * una cuota pagada tarde: la mora se decide por fechas, así que el perdón se
+ * expresa moviendo la fecha, no parcheando la multa. Mediodía y no medianoche
+ * para que, guardada en UTC, siga cayendo en el mismo día en Colombia.
+ */
+export function fechaPagoPerdonada(cuota) {
+  const venc = fechaSoloDia(cuota?.fecha_vencimiento) || fechaSoloDia(cuota?.fecha_limite)
+  if (!venc) return null
+  return new Date(venc.getFullYear(), venc.getMonth(), venc.getDate(), 12, 0, 0).toISOString()
+}
+
+/** Sanción totalmente abonada (lo pagado a sanción cubre la multa vigente). */
+export function sancionSaldada(cuota) {
+  const multa = parseFloat(cuota?.valor_multa) || 0
+  const pagada = parseFloat(cuota?.valor_pagado_sancion) || 0
+  return multa <= 0 || pagada >= multa
+}
+
+/** Capital completo y entregado a más tardar el día del vencimiento: sin mora. */
+export function cuotaPagadaDentroDePlazo(cuota) {
+  if (!capitalCuotaCompleto(cuota)) return false
+  // El perdón manual equivale a haber pagado a tiempo, aunque la fecha real
+  // todavía no se haya ajustado (cuotas perdonadas antes de este cambio).
+  if (cuota.no_calcular_multa === true) return true
+  const pago = fechaSoloDia(cuota.fecha_pago)
+  const venc = fechaSoloDia(cuota.fecha_vencimiento) || fechaSoloDia(cuota.fecha_limite)
+  if (!pago || !venc) return false
+  return pago.getTime() <= venc.getTime()
+}
+
 function calcularEstadoRealCuotaStore(cuota, diasGraciaVal) {
   const valorCuota = cuota.valor_cuota || 0
   const valorPagado = cuota.valor_pagado || 0
@@ -505,8 +578,38 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const lista = cuotasLista || cuotas.value
       const cuotasMora = lista.filter(c =>
-        c.estado === 'mora' || calcularEstadoRealCuotaStore(c, diasGracia) === 'mora'
+        // Pagada dentro del plazo: no es mora aunque el estado guardado diga
+        // otra cosa. Se limpia más abajo en vez de dejar que se recalcule.
+        !cuotaPagadaDentroDePlazo(c) &&
+        (c.estado === 'mora' || calcularEstadoRealCuotaStore(c, diasGracia) === 'mora')
       )
+
+      // Cuotas que quedaron marcadas en mora con multa pese a haberse pagado a
+      // tiempo: se les quita la sanción y se devuelven a «pagada». Es el arreglo
+      // del bucle, no una excepción puntual.
+      const pagadasATiempoConMultaFantasma = lista.filter(c =>
+        cuotaPagadaDentroDePlazo(c) && (
+          c.estado === 'mora' ||
+          (parseFloat(c.valor_multa) || 0) > 0 ||
+          // Residuos de una mora que ya no es: la base o el orden de racha
+          // guardados hacen que la vista pinte «sanción $4.000» en una cuota
+          // pagada el día del vencimiento.
+          (parseFloat(c.valor_multa_base) || 0) > 0 ||
+          c.mora_orden != null || c.fecha_inicio_mora != null || c.fecha_mora != null
+        )
+      )
+      if (pagadasATiempoConMultaFantasma.length > 0) {
+        const ids = pagadasATiempoConMultaFantasma.map(c => c.id)
+        const { error: errLimpieza } = await supabase
+          .from('cuotas')
+          .update({ estado: 'pagada', valor_multa: 0, valor_multa_base: 0, valor_multa_intereses: 0, mora_orden: null, fecha_inicio_mora: null, fecha_mora: null })
+          .in('id', ids)
+        if (errLimpieza) console.warn('📋 [Sanciones] No se pudo limpiar la multa de cuotas pagadas a tiempo:', errLimpieza)
+        else pagadasATiempoConMultaFantasma.forEach(c => {
+          c.estado = 'pagada'; c.valor_multa = 0; c.valor_multa_base = 0; c.valor_multa_intereses = 0
+          c.mora_orden = null; c.fecha_inicio_mora = null; c.fecha_mora = null
+        })
+      }
 
       // Atajo: si las cuotas en mora, la configuración y el día son exactamente los mismos que
       // en el último cálculo, el resultado también lo sería. Devolver el anterior evita repetir
@@ -704,6 +807,9 @@ export const useCuotasStore = defineStore('cuotas', () => {
             inicioTramo.setHours(0, 0, 0, 0)
             const hoy = new Date()
             hoy.setHours(0, 0, 0, 0)
+            // Con el capital ya pagado, la sanción queda congelada al día del
+            // pago: seguir sumando intereses «hasta hoy» a una cuota saldada
+            // era lo que hacía crecer la multa mes a mes después de pagarla.
             let finTramo = hoy
             const siguienteCuota = cuotasSocio[indexEnSocio + 1]
             if (siguienteCuota) {
@@ -728,6 +834,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 }
               }
             }
+            // Con el capital ya pagado, el tramo termina el día del pago, gane a
+            // quien gane: ni «hoy» ni la siguiente cuota en mora del socio
+            // pueden alargar la sanción de una cuota que ya se saldó. (La
+            // siguiente cuota lo pisaba: Liliam pagó el 28 de marzo y seguía
+            // sumando intereses hasta junio.)
+            const diaPago = capitalCuotaCompleto(cuota) ? fechaSoloDia(cuota.fecha_pago) : null
+            if (diaPago && diaPago.getTime() < finTramo.getTime()) finTramo = diaPago
             if (finTramo.getTime() < inicioTramo.getTime()) finTramo = new Date(inicioTramo)
             const diasEnTramo = Math.max(0, Math.floor((finTramo - inicioTramo) / (1000 * 60 * 60 * 24)) + 1)
             interesesAdicionales = Math.floor(diasEnTramo / interesesDias) * interesesValor
@@ -769,6 +882,20 @@ export const useCuotasStore = defineStore('cuotas', () => {
             console.warn('Algunas actualizaciones de sanciones fallaron:', errores)
           }
         }
+        // Recalcular puede BAJAR la multa (p. ej. al congelarla al día del pago)
+        // hasta quedar cubierta por lo que ya se abonó a sanción: la cuota
+        // deja de deber y pasa a pagada. Sin esto, Tatiana quedaba «en mora»
+        // con 5.000 de multa y 5.000 ya pagados.
+        const saldadasAlRecalcular = lista
+          .filter(c => sanciones[c.id] != null && capitalCuotaCompleto(c) && c.estado !== 'pagada'
+            && sancionSaldada({ ...c, valor_multa: sanciones[c.id] }))
+          .map(c => c.id)
+        if (saldadasAlRecalcular.length > 0) {
+          const { error: errSaldadas } = await supabase.from('cuotas').update({ estado: 'pagada' }).in('id', saldadasAlRecalcular)
+          if (errSaldadas) console.warn('📋 [Sanciones] No se pudo cerrar cuotas con sanción saldada:', errSaldadas)
+          else lista.forEach(c => { if (saldadasAlRecalcular.includes(c.id)) c.estado = 'pagada' })
+        }
+
         lista.forEach(c => {
           if (sanciones[c.id] != null) {
             c.valor_multa = sanciones[c.id]
@@ -833,10 +960,27 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const cuotasAPendiente = [] // programada -> pendiente
       const cuotasAMora = [] // pendiente/parcial -> mora (solo las que no tienen multa ya aplicada)
 
+      const cuotasAPagada = [] // capital completo y dentro de plazo, pero marcadas en mora/pendiente
+      const cuotasSancionSaldada = [] // capital completo, pagada tarde, pero la sanción ya se pagó entera
+
       lista.forEach(cuota => {
+        // Con el capital completo la cuota NO vuelve a mora por calendario:
+        //  · pagada dentro del plazo → 'pagada', y sin sanción;
+        //  · pagada tarde con la sanción ya saldada → 'pagada' (se conserva la
+        //    multa y lo abonado, es historial: solo cambia el estado);
+        //  · pagada tarde con sanción pendiente → se deja como está (la
+        //    sanción la fija calcularSancionesTotales, congelada al día del pago).
+        if (capitalCuotaCompleto(cuota)) {
+          if (cuotaPagadaDentroDePlazo(cuota)) {
+            if (cuota.estado !== 'pagada') cuotasAPagada.push(cuota.id)
+          } else if (sancionSaldada(cuota) && cuota.estado !== 'pagada') {
+            cuotasSancionSaldada.push(cuota.id)
+          }
+          return
+        }
         // Solo procesar cuotas que no estén pagadas completamente (incluyendo sanción)
-        const totalAPagar = (cuota.valor_cuota || 0) + (cuota.valor_multa || 0)
-        if ((cuota.valor_pagado || 0) >= totalAPagar) return
+        const totalAPagar = (parseFloat(cuota.valor_cuota) || 0) + (parseFloat(cuota.valor_multa) || 0)
+        if ((parseFloat(cuota.valor_pagado) || 0) >= totalAPagar) return
 
         // Usar ambas fechas según REGLAS.md
         const fechaVencimiento = cuota.fecha_vencimiento || cuota.fecha_limite
@@ -886,6 +1030,26 @@ export const useCuotasStore = defineStore('cuotas', () => {
       })
 
       const actualizaciones = []
+
+      if (cuotasSancionSaldada.length > 0) {
+        const { data: actualizadasSaldada, error: errorSaldada } = await supabase
+          .from('cuotas')
+          .update({ estado: 'pagada' })
+          .in('id', cuotasSancionSaldada)
+          .select()
+        if (errorSaldada) console.error('Error cerrando cuotas con sanción saldada:', errorSaldada)
+        else if (actualizadasSaldada) actualizaciones.push(...actualizadasSaldada)
+      }
+
+      if (cuotasAPagada.length > 0) {
+        const { data: actualizadasPagada, error: errorPagada } = await supabase
+          .from('cuotas')
+          .update({ estado: 'pagada', valor_multa: 0, valor_multa_base: 0, valor_multa_intereses: 0, mora_orden: null, fecha_inicio_mora: null, fecha_mora: null })
+          .in('id', cuotasAPagada)
+          .select()
+        if (errorPagada) console.error('Error devolviendo a pagada cuotas pagadas a tiempo:', errorPagada)
+        else if (actualizadasPagada) actualizaciones.push(...actualizadasPagada)
+      }
 
       if (cuotasAProgramada.length > 0) {
         const { data: actualizadasProgramada, error: errorProgramada } = await supabase
@@ -1856,6 +2020,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const fechaCobro = new Date(fechaPagoIso)
       fechaCobro.setHours(0, 0, 0, 0)
 
+      // Causación: el instante en que este abono se está registrando. No es lo mismo que la
+      // fecha del pago —un pago del día 2 puede digitarse el día 9— y sin ella no hay forma
+      // de saber cuándo apareció un movimiento ni de ordenar dos abonos del mismo día.
+      const fechaCausacionIso = new Date().toISOString()
+
       // Paralelizar: obtener cuota + socio_natillera en una sola ronda
       const [cuotaRes, socioRes] = await Promise.all([
         supabase.from('cuotas').select('*').eq('id', cuotaId).single(),
@@ -2249,13 +2418,38 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // Preparar objeto de actualización
-      // Actualizar fecha_pago cuando se registra un pago (parcial o completo)
-      const fechaPagoActualizada = nuevoValorPagado > 0 ? fechaPagoIso : null
+      /*
+       * fecha_pago de la cuota.
+       *
+       * Antes: `nuevoValorPagado > 0 ? fecha : null`. Un pago que no tocaba el
+       * capital —solo la rifa, o solo la sanción— dejaba la fecha en null (y
+       * borraba la que hubiera), y el comprobante salía «Fecha no registrada».
+       *
+       * Ahora la fecha sigue al capital, que es lo que decide la mora:
+       *  · si este pago abona al capital, es la fecha de este pago;
+       *  · si no, se conserva la que había (un pago posterior solo de rifa no
+       *    puede convertir en tardío un capital que se pagó a tiempo);
+       *  · y si no había ninguna pero sí entró dinero (sanción, actividades,
+       *    préstamo), se registra la de este pago: el comprobante necesita una.
+       */
+      const abonaCapital = nuevoValorPagado > (parseFloat(valorPagadoAnterior) || 0)
+      const entraDinero = abonaCapital
+        || (valorSancionPagada || 0) > 0 || (valorActividadesPagado || 0) > 0 || (valorCuotasPrestamosPagado || 0) > 0
+      const fechaPagoActualizada = abonaCapital
+        ? fechaPagoIso
+        : (cuotaActual.fecha_pago || (entraDinero ? fechaPagoIso : null))
+      // La causación sigue la misma rama que la fecha de pago, para que las dos describan
+      // siempre el mismo abono: si se conserva la fecha de un pago anterior, se conserva
+      // también el momento en que aquel se registró.
+      const fechaCausacionActualizada = abonaCapital
+        ? fechaCausacionIso
+        : (cuotaActual.fecha_causacion || (entraDinero ? fechaCausacionIso : null))
       
       const updateData = {
         valor_pagado: nuevoValorPagado,
         estado: nuevaEstado,
         fecha_pago: fechaPagoActualizada,
+        fecha_causacion: fechaCausacionActualizada,
         comprobante_url: comprobante
       }
       
@@ -2293,6 +2487,16 @@ export const useCuotasStore = defineStore('cuotas', () => {
         updateData.valor_multa_base = 0
         updateData.valor_multa_intereses = 0
         updateData.valor_pagado_sancion = 0
+        // El perdón se materializa en la fecha: si el pago llegó tarde y con él
+        // el capital queda completo, la fecha de pago se fija en el vencimiento
+        // para que ningún recálculo por fechas vuelva a cobrar la sanción.
+        if (!pagoDentroDePlazo && nuevaEstado === 'pagada') {
+          const fechaPerdonada = fechaPagoPerdonada(cuotaActual)
+          if (fechaPerdonada) updateData.fecha_pago = fechaPerdonada
+          updateData.mora_orden = null
+          updateData.fecha_inicio_mora = null
+          updateData.fecha_mora = null
+        }
       } else if (pagoDentroDePlazo) {
         // El dinero entró antes del vencimiento: la multa que se había calculado contra la fecha de
         // hoy no corresponde y se borra, o la cuota seguiría mostrando una deuda que no existe.
@@ -2462,7 +2666,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           const valorPagadoCuotaTotal = parseFloat(data?.valor_pagado) || 0
           const impuesto4x1000Hist = Math.max(0, Math.round(Number(options.impuesto4x1000) || 0))
           const insertHistorial = {
-            cuota_id: cuotaId, fecha_pago: fechaPagoIso, forma_pago: formaPagoHist,
+            cuota_id: cuotaId, fecha_pago: fechaPagoIso, fecha_causacion: fechaCausacionIso, forma_pago: formaPagoHist,
             socio_nombre: nombreSocio, natillera_nombre: natilleraNombre,
             valor_total: valorTotalHist, valor_cuota: valorCuotaHist, valor_sancion: valorSancionPagadaFinal || 0,
             valor_actividades: valorActividadesHist, valor_cuotas_prestamo: valorCuotasPrestamosPagado || 0,
@@ -4077,11 +4281,11 @@ export const useCuotasStore = defineStore('cuotas', () => {
       return resultado
     }
     if (filas.length === 0) {
-      resultado.problemas.push(
-        cerradas > 0
-          ? `La utilidad de ${nombre} de este pago pertenece a un ciclo ya liquidado y no se modificó`
-          : `No se encontró la utilidad de ${nombre} para devolver el monto de este pago`
-      )
+      // Sin filas abiertas y sin cierres: la natillera nunca registró utilidad de ese tipo, así
+      // que no hay nada que devolver. No es un fallo de la reversión y no se reporta como tal.
+      if (cerradas > 0) {
+        resultado.problemas.push(`La utilidad de ${nombre} de este pago pertenece a un ciclo ya liquidado y no se pudo devolver`)
+      }
       return resultado
     }
 
@@ -4218,23 +4422,17 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const valorActividades = Number(h.valor_actividades) || 0
       const valorPrestamos = Number(h.valor_cuotas_prestamo) || 0
 
-      // Avisos: conceptos con dinero que no se pueden revertir de forma exacta.
+      // Avisos: SOLO lo que puede quedar mal después de revertir. Lo que la reversión hace de
+      // forma normal (devolver utilidades, buscar la actividad por nombre cuando el pago es
+      // antiguo) no es un aviso: es su trabajo, y llenar el modal de cajas ámbar hacía parecer
+      // que la eliminación fallaba cuando no falla.
       const avisos = []
-      if (valorActividades > 0 && detalleActividades.every(d => !d?.socio_actividad_id)) {
-        avisos.push('Las actividades de este pago se registraron antes de que se guardara el detalle por actividad. Se revertirán buscándolas por nombre y valor; conviene revisarlas después en el módulo de Actividades.')
-      }
-      if (valorPrestamos > 0 && abonosPrestamoEnlazados.length === 0) {
-        avisos.push('El abono a préstamo de este pago no quedó enlazado a la transacción. Se revertirá usando el detalle guardado (préstamo y número de cuota); conviene revisar el préstamo después.')
-      }
 
       // Lo cobrado por actividades también se sumó a las utilidades del fondo y se devuelve al
       // eliminar el pago. Las rifas no suman al cobrarse (solo al liquidarse), así que no cuentan.
       const utilidadActividades = detalleActividades.reduce(
         (acc, d) => acc + (tipoUtilidadDeActividad(d?.tipo) ? (Number(d?.valor) || 0) : 0), 0
       )
-      if (utilidadActividades > 0) {
-        avisos.push(`Se devolverán $${utilidadActividades.toLocaleString('es-CO')} a las utilidades del fondo por las actividades cobradas en este pago.`)
-      }
 
       // La sanción cobrada se sumó a las utilidades del fondo: hay que devolverla de ahí o el
       // cierre repartiría dinero que nadie pagó. Se avisa cuando no se va a poder.
@@ -4271,7 +4469,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
         comprobantesEnlazados = 0
       }
       if (comprobantesEnlazados === 0 && comprobantesSinEnlace > 0) {
-        avisos.push('Esta cuota tiene un comprobante de pago completado sin enlace a la transacción. No se borrará automáticamente para no eliminar el equivocado; conviene revisarlo en el historial de la cuota.')
+        avisos.push('El comprobante de «pago parcial completado» de esta cuota no está enlazado a la transacción: solo se borrará si la cuota queda sin ningún pago.')
       }
 
       return {
@@ -4286,6 +4484,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valorSancion: Number(h.valor_sancion) || 0,
           valorActividades,
           valorPrestamos,
+          utilidadActividades,
           impuesto4x1000: Number(h.impuesto_4x1000) || 0,
           detalleActividades,
           detallePrestamos,
@@ -4349,27 +4548,33 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const formaPago = String(h.forma_pago || 'efectivo').toLowerCase()
 
       // ── 1. Revertir actividades cubiertas por esta transacción ───────────────
+      // Tres fuentes en cascada, de más exacta a más aproximada, para no dejar dinero sin
+      // revertir: (a) el id de la fila guardado en el detalle; (b) el nombre de la actividad
+      // guardado en el detalle; (c) las actividades pagadas del socio el día del pago. Antes se
+      // paraba en (a)/(b) y los pagos sin detalle —o con un nombre que ya no coincide— dejaban
+      // la actividad cobrada aunque el pago hubiera desaparecido.
       if (vActividades > 0) {
         try {
           const detalle = Array.isArray(h.detalle_actividades) ? h.detalle_actividades : []
           const conId = detalle.filter(d => d?.socio_actividad_id)
+          const columnasFila = 'id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia, codigo_comprobante, actividad:actividades(descripcion, tipo)'
 
           let filasARevertir = []
           if (conId.length > 0) {
             const ids = conId.map(d => d.socio_actividad_id)
             const { data } = await supabase
               .from('socios_actividad')
-              .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia, codigo_comprobante')
+              .select(columnasFila)
               .in('id', ids)
             filasARevertir = (data || []).map(fila => {
               const linea = conId.find(d => d.socio_actividad_id === fila.id)
-              return { fila, valor: Number(linea?.valor) || 0, tipo: linea?.tipo || null }
+              return { fila, valor: Number(linea?.valor) || 0, tipo: linea?.tipo || fila.actividad?.tipo || null }
             })
           } else if (detalle.length > 0 && cuotaActual.socio_natillera_id) {
             // Pagos anteriores al detalle con id: emparejar por nombre de actividad y valor.
             const { data } = await supabase
               .from('socios_actividad')
-              .select('id, valor_pagado, valor_asignado, valor_pagado_efectivo, valor_pagado_transferencia, codigo_comprobante, actividad:actividades(descripcion)')
+              .select(columnasFila)
               .eq('socio_natillera_id', cuotaActual.socio_natillera_id)
               .gt('valor_pagado', 0)
             for (const d of detalle) {
@@ -4378,9 +4583,37 @@ export const useCuotasStore = defineStore('cuotas', () => {
                 Number(fila.valor_pagado) >= (Number(d?.valor) || 0) &&
                 !filasARevertir.some(r => r.fila.id === fila.id)
               )
-              if (candidata) filasARevertir.push({ fila: candidata, valor: Number(d?.valor) || 0, tipo: d?.tipo || null })
-              else problemas.push(`No se encontró la actividad "${d?.nombre || 'sin nombre'}" para revertir`)
+              if (candidata) filasARevertir.push({ fila: candidata, valor: Number(d?.valor) || 0, tipo: d?.tipo || candidata.actividad?.tipo || null })
             }
+          }
+
+          // (c) Lo que el detalle no haya cubierto —porque no existe, porque el nombre cambió o
+          // porque la fila ya no está— se completa con las actividades que el socio pagó ese día.
+          const cubierto = filasARevertir.reduce((acc, r) => acc + (Number(r.valor) || 0), 0)
+          let porCubrir = Math.max(0, vActividades - cubierto)
+          if (porCubrir > 0 && cuotaActual.socio_natillera_id) {
+            const { candidatas, mismoDia } = await buscarActividadesPagoDirecto({
+              socio_natillera_id: cuotaActual.socio_natillera_id,
+              fecha_pago: h.fecha_pago,
+            })
+            // Sin candidatas del mismo día solo se recurre a la recencia cuando el detalle no
+            // aportó NADA (pagos antiguos sin detalle). Si el detalle sí emparejó algo, tirar de
+            // recencia podría revertir la actividad de otro pago del socio: mejor avisar.
+            const sePuedeUsar = mismoDia || filasARevertir.length === 0
+            if (!mismoDia && sePuedeUsar) {
+              problemas.push('Las actividades se identificaron por recencia: este pago no dejó detalle ni actividades cobradas ese mismo día. Revísalas en el módulo de Actividades.')
+            }
+            for (const fila of (sePuedeUsar ? candidatas : [])) {
+              if (porCubrir <= 0) break
+              if (filasARevertir.some(r => r.fila.id === fila.id)) continue
+              const quitar = Math.min(Number(fila.valor_pagado) || 0, porCubrir)
+              if (quitar <= 0) continue
+              filasARevertir.push({ fila, valor: quitar, tipo: fila.actividad?.tipo || null })
+              porCubrir -= quitar
+            }
+          }
+          if (porCubrir > 0) {
+            problemas.push(`Quedaron $${porCubrir.toLocaleString('es-CO')} de actividades sin revertir: el socio ya no tiene actividades pagadas por ese valor. Revísalas en el módulo de Actividades.`)
           }
 
           for (const { fila, valor, tipo } of filasARevertir) {
@@ -4392,6 +4625,10 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (nuevoPagado === 0) {
               datos.valor_pagado_efectivo = 0
               datos.valor_pagado_transferencia = 0
+              datos.forma_pago = null
+              datos.fecha_pago = null
+              datos.fecha_causacion = null
+              datos.estado = 'pendiente'
             } else {
               const ef = Number(fila.valor_pagado_efectivo) || 0
               const tr = Number(fila.valor_pagado_transferencia) || 0
@@ -4422,18 +4659,18 @@ export const useCuotasStore = defineStore('cuotas', () => {
       }
 
       // ── 2. Revertir abonos a préstamo generados por esta transacción ─────────
+      // Igual que en actividades, tres fuentes en cascada: (a) el enlace explícito del abono a
+      // esta transacción; (b) el detalle de cuotas de préstamo guardado en el pago; (c) los
+      // abonos con origen 'cuota_natillera' que el socio hizo el día del pago. Sin (c), un pago
+      // sin enlace ni detalle dejaba el abono, el saldo y el plan intactos.
       if (vPrestamos > 0) {
         try {
           let abonos = []
-          try {
-            const { data } = await supabase
-              .from('pagos_prestamo')
-              .select('id, prestamo_id, valor, numeros_cuota')
-              .eq('historial_pago_cuota_id', historialId)
-            abonos = data || []
-          } catch (e) {
-            abonos = []
-          }
+          const { data: enlazados } = await supabase
+            .from('pagos_prestamo')
+            .select('id, prestamo_id, valor, numeros_cuota')
+            .eq('historial_pago_cuota_id', historialId)
+          abonos = enlazados || []
 
           const detallePrestamos = Array.isArray(h.detalle_cuotas_prestamo) ? h.detalle_cuotas_prestamo : []
 
@@ -4462,9 +4699,36 @@ export const useCuotasStore = defineStore('cuotas', () => {
             }
           }
 
+          // (c) Sin enlace y sin detalle utilizable: los abonos del socio ese día.
+          if (abonos.length === 0 && aplicaciones.every(a => !a.prestamoId || a.valor <= 0)) {
+            const delDia = await buscarAbonosPagoDirecto({
+              socio_natillera_id: cuotaActual.socio_natillera_id,
+              fecha_pago: h.fecha_pago,
+            })
+            if (delDia.length > 0) {
+              abonos = delDia
+              aplicaciones.length = 0
+              for (const abono of delDia) {
+                const numeros = Array.isArray(abono.numeros_cuota) ? [...abono.numeros_cuota] : []
+                // Sin detalle no se sabe cuánto fue a cada cuota: se reparte el abono entre las
+                // que cubrió, empezando por la última (deshacer lo último primero).
+                numeros.sort((a, b) => b - a)
+                let restante = Number(abono.valor) || 0
+                for (const num of numeros) {
+                  if (restante <= 0) break
+                  aplicaciones.push({ prestamoId: abono.prestamo_id, numeroCuota: num, valor: restante, repartir: true })
+                  restante = 0
+                }
+                if (numeros.length === 0) {
+                  aplicaciones.push({ prestamoId: abono.prestamo_id, numeroCuota: null, valor: Number(abono.valor) || 0 })
+                }
+              }
+            }
+          }
+
           // Descontar en plan_pagos_prestamo
           for (const ap of aplicaciones) {
-            if (!ap.prestamoId || ap.valor <= 0) continue
+            if (!ap.prestamoId || ap.valor <= 0 || ap.numeroCuota == null) continue
             const { data: filas } = await supabase
               .from('plan_pagos_prestamo')
               .select('id, valor_cuota, valor_pagado, valor_pagado_efectivo, valor_pagado_transferencia')
@@ -4476,19 +4740,23 @@ export const useCuotasStore = defineStore('cuotas', () => {
               problemas.push(`No se encontró la cuota #${ap.numeroCuota} del préstamo para revertir`)
               continue
             }
-            const nuevoPagado = Math.max(0, (Number(fila.valor_pagado) || 0) - ap.valor)
+            // Con `repartir` el valor exacto no se conoce: se quita todo lo pagado de esa cuota
+            // hasta agotar el abono, que es justo lo que el pago había abonado.
+            const pagadoFila = Number(fila.valor_pagado) || 0
+            const aQuitar = ap.repartir ? Math.min(pagadoFila, ap.valor) : ap.valor
+            const nuevoPagado = Math.max(0, pagadoFila - aQuitar)
             const ef = Number(fila.valor_pagado_efectivo) || 0
             const tr = Number(fila.valor_pagado_transferencia) || 0
             let nuevoEf = ef
             let nuevoTr = tr
             if (nuevoPagado === 0) { nuevoEf = 0; nuevoTr = 0 }
-            else if (formaPago === 'efectivo') nuevoEf = Math.max(0, ef - ap.valor)
-            else if (formaPago === 'transferencia') nuevoTr = Math.max(0, tr - ap.valor)
+            else if (formaPago === 'efectivo') nuevoEf = Math.max(0, ef - aQuitar)
+            else if (formaPago === 'transferencia') nuevoTr = Math.max(0, tr - aQuitar)
             else {
               const total = ef + tr
-              const quitarEf = total > 0 ? Math.round(ap.valor * (ef / total)) : ap.valor
+              const quitarEf = total > 0 ? Math.round(aQuitar * (ef / total)) : aQuitar
               nuevoEf = Math.max(0, ef - quitarEf)
-              nuevoTr = Math.max(0, tr - (ap.valor - quitarEf))
+              nuevoTr = Math.max(0, tr - (aQuitar - quitarEf))
             }
             const datos = {
               valor_pagado: nuevoPagado,
@@ -4498,6 +4766,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (nuevoPagado < (Number(fila.valor_cuota) || 0)) {
               datos.pagada = false
               datos.fecha_pago = null
+              datos.fecha_causacion = null
             }
             const { error: ePlan } = await supabase.from('plan_pagos_prestamo').update(datos).eq('id', fila.id)
             if (ePlan) problemas.push(`Cuota de préstamo #${ap.numeroCuota}: ${ePlan.message}`)
@@ -4525,27 +4794,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
           // Borrar los abonos que originó esta transacción (ya no existen contablemente).
           const abonosABorrar = abonos.map(a => a.id)
-          if (abonosABorrar.length === 0) {
-            // Sin enlace: se identifican por préstamo, origen, día del pago y monto exacto. Sin
-            // esto la fila de `pagos_prestamo` sobrevivía y el préstamo seguía mostrando un abono
-            // de un pago que ya no existe (aunque el saldo y el plan sí se hubieran revertido).
-            const candidatos = await buscarAbonosPrestamoSinEnlace(Object.keys(porPrestamo), h.fecha_pago)
-            const yaElegidos = new Set()
-            for (const [prestamoId, monto] of Object.entries(porPrestamo)) {
-              if (monto <= 0) continue
-              const exacto = candidatos.find(c =>
-                !yaElegidos.has(c.id) &&
-                String(c.prestamo_id) === String(prestamoId) &&
-                Math.round(Number(c.valor) || 0) === Math.round(monto)
-              )
-              if (exacto) {
-                yaElegidos.add(exacto.id)
-                abonosABorrar.push(exacto.id)
-              } else {
-                problemas.push(`No se encontró el abono de $${monto.toLocaleString('es-CO')} en el préstamo para borrarlo: el saldo y el plan sí se revirtieron, pero conviene revisar el historial del préstamo`)
-              }
-            }
-          }
           if (abonosABorrar.length > 0) {
             // Se pide el resultado del DELETE: sin política de borrado la operación "tiene éxito"
             // sin borrar nada, y el abono quedaría huérfano en silencio.
@@ -4557,6 +4805,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
             } else {
               revertido.abonosPrestamo = (borrados || []).length
             }
+          } else if (Object.keys(porPrestamo).length === 0) {
+            problemas.push(`No se encontró el abono a préstamo de $${vPrestamos.toLocaleString('es-CO')} de este pago. Revísalo en el préstamo del socio.`)
           }
         } catch (e) {
           problemas.push(`Préstamos: ${e.message}`)
@@ -4641,19 +4891,24 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Sin pago restante, la cuota vuelve a estar limpia: sin fecha ni comprobante.
       if (nuevoValorPagado <= 0) {
         updateData.fecha_pago = null
+        updateData.fecha_causacion = null
         updateData.codigo_comprobante = null
         updateData.tipo_pago = null
       } else {
-        // Queda pago previo: la fecha pasa a ser la del último pago que sobrevive.
+        // Queda pago previo: la fecha pasa a ser la del último pago que sobrevive. Se traen las
+        // dos fechas de la misma fila para que sigan describiendo el mismo abono.
         const { data: restantes } = await supabase
           .from('historial_pagos_cuota')
-          .select('fecha_pago')
+          .select('fecha_pago, fecha_causacion')
           .eq('cuota_id', h.cuota_id)
           .neq('id', historialId)
           .order('fecha_pago', { ascending: false })
           .limit(1)
-        const ultima = (restantes || [])[0]?.fecha_pago
-        if (ultima) updateData.fecha_pago = ultima
+        const ultima = (restantes || [])[0]
+        if (ultima?.fecha_pago) {
+          updateData.fecha_pago = ultima.fecha_pago
+          updateData.fecha_causacion = ultima.fecha_causacion || null
+        }
       }
 
       const { data: cuotaActualizada, error: updateError } = await supabase
@@ -4693,16 +4948,19 @@ export const useCuotasStore = defineStore('cuotas', () => {
             } else {
               revertido.comprobantes = (borrados || []).length
             }
-          } else {
-            const { data: sinEnlace } = await supabase
+          } else if (nuevoValorPagado <= 0) {
+            // Sin enlace (pagos anteriores a la migración 020). Solo se borran cuando la cuota
+            // queda SIN pago: entonces ningún comprobante de "pago parcial completado" describe
+            // ya nada. Si queda pago, no se toca: coincidir por monto sería adivinar.
+            const { data: borradosSinEnlace, error: eSin } = await supabase
               .from('historial_comprobantes')
-              .select('id')
+              .delete()
               .eq('cuota_id', h.cuota_id)
               .eq('motivo', 'completar_pago_parcial')
               .is('historial_pago_cuota_id', null)
-            if ((sinEnlace || []).length > 0) {
-              problemas.push('Quedó un comprobante de pago sin enlazar en el historial de la cuota: revísalo a mano')
-            }
+              .select('id')
+            if (eSin) problemas.push(`Comprobantes de la cuota: ${eSin.message}`)
+            else revertido.comprobantes += (borradosSinEnlace || []).length
           }
         }
       } catch (e) {
@@ -4825,12 +5083,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
         }
         if (actividadesARevertir.length === 0) {
           avisos.push('No se encontraron actividades pagadas de este socio. El dinero de actividades se descontará de la cuota, pero conviene revisarlas en el módulo de Actividades.')
-        } else {
-          avisos.push(
-            mismoDia
-              ? `Se revertirán ${actividadesARevertir.length} actividad(es) cobradas el mismo día del pago.`
-              : `Se revertirán ${actividadesARevertir.length} actividad(es) elegidas por recencia (el pago no dejó fecha para acotarlas). Revísalas después en el módulo de Actividades.`
-          )
+        } else if (!mismoDia) {
+          avisos.push('Las actividades se eligieron por recencia: este pago no dejó fecha para acotarlas. Revísalas después en el módulo de Actividades.')
         }
         if (restante > 0) {
           avisos.push(`Quedarán $${restante.toLocaleString('es-CO')} de actividades sin revertir: revísalos en el módulo de Actividades.`)
@@ -4839,9 +5093,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
 
       const abonosPrestamo = await buscarAbonosPagoDirecto(cuota)
       const valorPrestamos = abonosPrestamo.reduce((acc, a) => acc + (Number(a.valor) || 0), 0)
-      if (abonosPrestamo.length > 0) {
-        avisos.push(`Se revertirán ${abonosPrestamo.length} abono(s) a préstamo registrados el mismo día del pago.`)
-      }
+
 
       // Utilidad del fondo que sumaron esas actividades al cobrarse (las rifas no suman aquí).
       const utilidadActividadesPorTipo = {}
@@ -4850,9 +5102,6 @@ export const useCuotasStore = defineStore('cuotas', () => {
         if (tipoUtil) utilidadActividadesPorTipo[tipoUtil] = (utilidadActividadesPorTipo[tipoUtil] || 0) + valor
       }
       const utilidadActividades = Object.values(utilidadActividadesPorTipo).reduce((a, b) => a + b, 0)
-      if (utilidadActividades > 0) {
-        avisos.push(`Se devolverán $${utilidadActividades.toLocaleString('es-CO')} a las utilidades del fondo por las actividades cobradas en este pago.`)
-      }
 
       // La sanción cobrada también salió a utilidades del fondo (RF-09).
       let utilidadSancion = null
@@ -4881,6 +5130,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
           valorSancion,
           valorActividades,
           valorPrestamos,
+          utilidadActividades,
           impuesto4x1000: gmf,
           detalleActividades: actividadesARevertir.map(({ fila, valor }) => ({
             nombre: fila.actividad?.descripcion || 'Actividad', valor,
@@ -4956,6 +5206,8 @@ export const useCuotasStore = defineStore('cuotas', () => {
             if (nuevoPagado === 0) {
               datos.valor_pagado_efectivo = 0
               datos.valor_pagado_transferencia = 0
+              datos.fecha_pago = null
+              datos.fecha_causacion = null
             } else {
               const ef = Number(fila.valor_pagado_efectivo) || 0
               const tr = Number(fila.valor_pagado_transferencia) || 0
@@ -5022,7 +5274,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
               nuevoTr = Math.max(0, tr - (quitar - quitarEf))
             }
             const datos = { valor_pagado: nuevoPagado, valor_pagado_efectivo: nuevoEf, valor_pagado_transferencia: nuevoTr }
-            if (nuevoPagado < (Number(fila.valor_cuota) || 0)) { datos.pagada = false; datos.fecha_pago = null }
+            if (nuevoPagado < (Number(fila.valor_cuota) || 0)) { datos.pagada = false; datos.fecha_pago = null; datos.fecha_causacion = null }
             const { error: ePlan } = await supabase.from('plan_pagos_prestamo').update(datos).eq('id', fila.id)
             if (ePlan) problemas.push(`Cuota de préstamo #${num}: ${ePlan.message}`)
             else restante -= quitar
@@ -5098,6 +5350,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
         impuesto_4x1000: 0,
         valor_multa: nuevaMulta,
         fecha_pago: null,
+        fecha_causacion: null,
         codigo_comprobante: null,
         tipo_pago: null,
         estado: calcularEstadoRealCuotaStore({ ...cuotaActual, valor_pagado: 0 }, undefined),

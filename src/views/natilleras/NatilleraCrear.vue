@@ -1224,7 +1224,11 @@ async function handleSubmit() {
       activo: true,
       porcentaje: wizardForm.interes_prestamo,
       plazo_maximo: wizardForm.plazo_maximo,
-      tasa_mora: wizardForm.tasa_mora || 0
+      tasa_mora: wizardForm.tasa_mora || 0,
+      // Gracia propia de préstamos: nace con el mismo valor que las cuotas y
+      // apagada, para que activarla sea una decisión explícita en Configuración.
+      dias_gracia_activo: false,
+      dias_gracia: Number(wizardForm.dias_gracia) >= 0 ? Math.floor(Number(wizardForm.dias_gracia)) : 3
     } : { activo: false }
   }
 

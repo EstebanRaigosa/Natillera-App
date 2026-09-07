@@ -70,10 +70,26 @@ async function esperarServiceWorker(msLimite = 12000) {
   return await Promise.race([navigator.serviceWorker.ready, limite])
 }
 
+/**
+ * Límite de tiempo para promesas que el navegador puede dejar colgadas.
+ * `subscribe()` habla con el servicio push del navegador (FCM en Chrome, Mozilla
+ * en Firefox, Apple en Safari): es una llamada de red y con la red caída se
+ * queda pendiente sin rechazar.
+ */
+function conLimite(promesa, ms, mensaje) {
+  return Promise.race([
+    promesa,
+    new Promise((_, rechazar) => setTimeout(() => rechazar(new Error(mensaje)), ms)),
+  ])
+}
+
 export function usePush() {
   const estado = ref('sin_conceder')
   const ocupado = ref(false)
   const error = ref(null)
+  // Qué se está esperando ahora mismo. Sin esto el botón dice «Activando…»
+  // durante medio minuto sin explicar a qué espera, y parece que se colgó.
+  const pista = ref(null)
 
   const soportado = computed(() =>
     typeof window !== 'undefined' &&
@@ -145,6 +161,22 @@ export function usePush() {
     if (!soportado.value || estado.value === 'requiere_instalar') return false
 
     ocupado.value = true
+    pista.value = 'Esperando tu permiso…'
+    /*
+     * El diálogo del permiso lo pinta el navegador y puede tardar en salir, o
+     * no salir. Esperar los 20 s completos antes de decir nada hace que una
+     * espera normal parezca una cuelgue; a los 4 s ya se da la pista de dónde
+     * mirar, pero SIN abortar: quien tarde en decidir sigue pudiendo aceptar.
+     */
+    const avisoLento = setTimeout(() => {
+      // El modo de avisos discretos es cosa de Chrome de escritorio. En iOS el
+      // diálogo sale siempre, y allí este texto mandaría a buscar un icono que
+      // no existe: la pista tiene que decir otra cosa.
+      pista.value = detectIosPlatform()
+        ? 'Responde al aviso que acaba de salir para poder activarlos.'
+        : '¿No ves ningún aviso? Chrome a veces pregunta en silencio: '
+          + 'mira el icono de campana a la izquierda de la dirección web.'
+    }, 4000)
     try {
       /*
        * `requestPermission()` tampoco rechaza nunca. Chrome tiene un modo
@@ -157,6 +189,7 @@ export function usePush() {
         Notification.requestPermission(),
         new Promise((resolver) => setTimeout(() => resolver('sin_respuesta'), 20000)),
       ])
+      clearTimeout(avisoLento)
 
       if (permiso === 'sin_respuesta') {
         estado.value = 'sin_conceder'
@@ -180,13 +213,22 @@ export function usePush() {
         return false
       }
 
+      pista.value = 'Preparando la app…'
       const registro = await esperarServiceWorker()
-      const existente = await registro.pushManager.getSubscription()
-      const suscripcion = existente ?? await registro.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: b64urlABytes(CLAVE_PUBLICA),
-      })
 
+      pista.value = 'Conectando con el servicio de notificaciones…'
+      const existente = await registro.pushManager.getSubscription()
+      const suscripcion = existente ?? await conLimite(
+        registro.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64urlABytes(CLAVE_PUBLICA),
+        }),
+        15000,
+        'No se pudo contactar con el servicio de notificaciones del navegador. '
+          + 'Comprueba la conexión (o si hay una VPN o un cortafuegos de por medio) e inténtalo otra vez.',
+      )
+
+      pista.value = 'Guardando este dispositivo…'
       await guardarSuscripcion(suscripcion)
       estado.value = 'activo'
       return true
@@ -194,7 +236,9 @@ export function usePush() {
       error.value = e?.message ?? String(e)
       return false
     } finally {
+      clearTimeout(avisoLento)
       ocupado.value = false
+      pista.value = null
     }
   }
 
@@ -202,6 +246,7 @@ export function usePush() {
   async function desactivar() {
     error.value = null
     ocupado.value = true
+    pista.value = 'Dando de baja este dispositivo…'
     try {
       const registro = await esperarServiceWorker()
       const suscripcion = await registro.pushManager.getSubscription()
@@ -217,8 +262,9 @@ export function usePush() {
       return false
     } finally {
       ocupado.value = false
+      pista.value = null
     }
   }
 
-  return { estado, ocupado, error, soportado, configurado, comprobar, activar, desactivar, estaInstalada }
+  return { estado, ocupado, error, pista, soportado, configurado, comprobar, activar, desactivar, estaInstalada }
 }

@@ -123,6 +123,20 @@ const breadcrumbs = computed(() => {
         to: null
       })
     }
+    // Conciliación de caja
+    else if (path.includes('/conciliacion')) {
+      crumbs.push({
+        label: 'Conciliación de caja',
+        to: null
+      })
+    }
+    // Movimientos del fondo (ingresos, egresos y traslados)
+    else if (path.includes('/movimientos')) {
+      crumbs.push({
+        label: 'Movimientos del fondo',
+        to: null
+      })
+    }
     // Cierre de natillera
     else if (path.endsWith('/cierre')) {
       crumbs.push({

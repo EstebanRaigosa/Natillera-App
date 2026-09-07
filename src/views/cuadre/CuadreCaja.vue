@@ -1170,7 +1170,8 @@ import {
   ChevronUpIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PencilIcon
+  PencilIcon,
+  MagnifyingGlassIcon
 } from '@heroicons/vue/24/outline'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).

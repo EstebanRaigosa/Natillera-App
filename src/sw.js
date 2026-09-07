@@ -22,10 +22,27 @@ import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from
 import { NavigationRoute, registerRoute } from 'workbox-routing'
 import { clientsClaim } from 'workbox-core'
 
-// Equivalente a skipWaiting + clientsClaim de la configuración anterior: la
-// versión nueva toma el control sin esperar a que se cierren las pestañas.
-self.skipWaiting()
+/*
+ * Activación: `clientsClaim` sí, `skipWaiting` automático NO.
+ *
+ * Antes esto era `self.skipWaiting()` a secas, y era peligroso: el service
+ * worker nuevo tomaba el control de una pestaña que ya estaba pintada con el
+ * index.html viejo. Esa página sigue pidiendo sus chunks con hash viejo —todas
+ * las vistas se cargan con `import()`— y `cleanupOutdatedCaches` acababa de
+ * borrarlos, así que navegar a Cuotas o Préstamos podía fallar con «Failed to
+ * fetch dynamically imported module». Y encima no arreglaba nada: sin recargar,
+ * el usuario seguía viendo la versión anterior.
+ *
+ * Ahora el relevo lo pide la app (`useActualizacionApp`) justo antes de
+ * recargar, mandando SKIP_WAITING. Así las dos versiones nunca conviven en una
+ * misma página.
+ */
 clientsClaim()
+
+self.addEventListener('message', (event) => {
+  // El mensaje lo envía workbox-window desde `useActualizacionApp`.
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting()
+})
 
 // Lista de archivos del build, inyectada por vite-plugin-pwa al compilar.
 precacheAndRoute(self.__WB_MANIFEST)
@@ -45,11 +62,16 @@ registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), {
 /*
  * Dos imágenes con papeles distintos:
  *
- *   icon  — se ve a color, grande, en Android y en escritorio.
+ *   icon  — se ve a color, grande, en Android y en escritorio. Es el icono de la
+ *           app, sin inventar nada: la notificación tiene que parecer de
+ *           Natillerapp de un vistazo.
  *   badge — la silueta pequeña de la barra de estado en Android. Es una MÁSCARA:
  *           el sistema toma solo el canal alfa y lo pinta de blanco, así que un
- *           icono con fondo opaco sale como un cuadrado blanco. Por eso lleva su
- *           propio PNG monocromo con transparencia.
+ *           icono con fondo opaco sale como un cuadrado blanco. Lleva su propio
+ *           PNG monocromo, que reproduce la marca —el aro de ocho socios
+ *           alrededor de la moneda— en vez del globo de chat genérico que traía
+ *           antes: en la barra de estado se distinguía de cualquier otro chat en
+ *           nada. Se regenera con `npm run badge:notificacion`.
  *
  * iOS ignora las dos y usa siempre el icono de la PWA instalada; no hay forma de
  * cambiarlo por notificación.

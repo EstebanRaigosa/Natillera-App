@@ -251,4 +251,10 @@ Si el mismo patrón se repite, crear un componente (p. ej. `MiModalInformativo.v
 
 ## Compatibilidad iOS
 
-Los detalles de viewport, `ModalWrapper` interno y scroll están en la skill **`ios-safari-compat`**. Cualquier modal nuevo debe cumplir ambas: esta skill (patrón UX/UI) + iOS (comportamiento técnico).
+Los detalles de viewport, `ModalWrapper` interno y scroll están en **`docs/compatibilidad-ios-safari.md`** (no hay skill `ios-safari-compat`; esa referencia era antigua). Cualquier modal nuevo debe cumplir ambas: esta skill (patrón UX/UI) + el manual (comportamiento técnico).
+
+### Modales `align="bottom"` y la barra de Safari
+
+Un modal anclado abajo se alinea al borde inferior del viewport de **layout**, y desde iOS 15 Safari dibuja su barra de direcciones justo encima de esa zona. El **pie de acciones puede quedar tapado** aunque lleve `env(safe-area-inset-bottom)`: ese inset describe el home indicator, no el navegador.
+
+Si al probar en iPhone el botón primario aparece cortado o debajo del chrome de Safari, no es el `env()` que falta: es este caso. Se resuelve midiendo el visual viewport con `useTapadoInferior` y **sumando el valor al `padding-bottom`** del pie (nunca moviendo `bottom`, que despega la card y deja un hueco). Detalle y motivos en `docs/compatibilidad-ios-safari.md` §4.1.

@@ -65,7 +65,7 @@ Los agentes **no se lanzan solos** al terminar una especificación: se invocan c
 
 | Funcionalidad | Estado | Especificación | Revisión | Casos de prueba |
 |---------------|--------|----------------|----------|-----------------|
-| Chat de soporte | Borrador v2.0 · 3 preguntas abiertas | [especificacion.md](./chat-soporte/especificacion.md) | pendiente | pendiente |
+| Chat de soporte | v2.9 · 3 preguntas abiertas | [especificacion.md](./chat-soporte/especificacion.md) | pendiente | pendiente |
 | Portal del Socio | Borrador | [especificacion.md](./portal-socio/especificacion.md) | pendiente | pendiente |
 | Eliminar pago de cuota | v1.3 · pendiente RF-12 | [especificacion.md](./eliminar-pago-cuota/especificacion.md) | pendiente | pendiente |
 | Préstamos | [Benchmark competitivo v1.0](./prestamos/benchmark-competitivo.md) · spec por escribir | — | — | — |

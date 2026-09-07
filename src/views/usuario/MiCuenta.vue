@@ -7,7 +7,10 @@
 
     <!-- ── Identidad ── -->
     <div class="card">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+      <!-- En móvil, avatar y datos comparten fila y el botón salta a la siguiente
+           (`flex-wrap` + `w-full`). Antes era una columna y el nombre quedaba debajo
+           del avatar, gastando dos líneas de alto para nada. -->
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
         <img
           :src="avatar"
           :alt="auth.userName || ''"
@@ -23,7 +26,7 @@
         </div>
         <button
           type="button"
-          class="btn-modal-secondary shrink-0 !min-h-[44px] px-4 text-sm"
+          class="btn-modal-secondary w-full shrink-0 !min-h-[44px] px-4 text-sm sm:w-auto"
           @click="editandoNombre = true"
         >
           <PencilSquareIcon class="mr-1.5 h-4 w-4" />
@@ -41,29 +44,12 @@
     <AjustesNotificaciones />
     <AjustesBotonSoporte />
 
-    <!-- Puente hacia la otra configuración, para que nadie las confunda -->
-    <div class="card">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="min-w-0 flex-1">
-          <h2 class="font-display text-base font-bold text-gray-800">¿Buscabas los mensajes de recordatorio?</h2>
-          <p class="mt-1 text-sm leading-relaxed text-gray-600">
-            Las plantillas de WhatsApp, el periodo y los días de gracia son ajustes de la
-            natillera, no de tu cuenta, y viven en otra pantalla.
-          </p>
-        </div>
-        <RouterLink to="/configuracion" class="btn-modal-secondary shrink-0 !min-h-[44px] px-4 text-sm">
-          Ir a Configuración
-        </RouterLink>
-      </div>
-    </div>
-
     <UsernameModal :show="editandoNombre" @close="editandoNombre = false" @saved="editandoNombre = false" />
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
 import { PencilSquareIcon } from '@heroicons/vue/24/outline'
 import AjustesNotificaciones from '../../components/soporte/AjustesNotificaciones.vue'
 import AjustesBotonSoporte from '../../components/soporte/AjustesBotonSoporte.vue'

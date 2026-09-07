@@ -60,6 +60,21 @@
         </div>
       </div>
 
+      <!--
+        Despedida al cerrar el hilo. Va después del acuse y con el color del
+        estado «resuelta»: cierra la conversación en el mismo sitio donde se
+        tuvo, en lugar de dejar solo un redactor bloqueado sin explicación.
+      -->
+      <div v-if="despedida" class="mt-3 flex justify-center px-2">
+        <div class="max-w-[85%] rounded-2xl bg-sky-50 px-4 py-2.5 text-center ring-1 ring-sky-200">
+          <p class="flex items-center justify-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-sky-700/80">
+            <CheckCircleIcon class="h-3.5 w-3.5" />
+            {{ tituloDespedida }}
+          </p>
+          <p class="mt-1 text-sm leading-relaxed text-gray-700">{{ despedida }}</p>
+        </div>
+      </div>
+
       <div v-if="!mensajes.length" class="flex h-full items-center justify-center">
         <p class="text-sm text-gray-500">Aún no hay mensajes en esta conversación.</p>
       </div>
@@ -69,7 +84,7 @@
 
 <script setup>
 import { nextTick, ref, watch } from 'vue'
-import { SparklesIcon } from '@heroicons/vue/24/outline'
+import { CheckCircleIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import BurbujaMensaje from './BurbujaMensaje.vue'
 
 const props = defineProps({
@@ -82,6 +97,10 @@ const props = defineProps({
   hayMasAntiguos: { type: Boolean, default: false },
   /** Acuse a mostrar al final del hilo mientras nadie del soporte ha escrito. */
   acuse: { type: String, default: '' },
+  /** Despedida a mostrar al final del hilo cuando la conversación ya está cerrada. */
+  despedida: { type: String, default: '' },
+  /** Encabezado del bloque de despedida: el estado que la cerró. */
+  tituloDespedida: { type: String, default: 'Conversación cerrada' },
 })
 
 defineEmits(['cargar-antiguos', 'reintentar'])
@@ -112,6 +131,7 @@ async function irAlFinal(forzar = false) {
 
 watch(() => props.mensajes.length, () => { irAlFinal() })
 watch(() => props.acuse, () => { irAlFinal() })
+watch(() => props.despedida, () => { irAlFinal() })
 watch(() => props.cargandoInicial, (cargando) => { if (!cargando) irAlFinal(true) })
 
 /*

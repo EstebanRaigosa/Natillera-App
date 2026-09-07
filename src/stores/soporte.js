@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { supabase } from '../lib/supabase'
+import { comprimirImagen, crearVistaPrevia, revocarVistasPrevias } from '../utils/adjuntosSoporte'
 
 /**
  * Store del chat de soporte (Especificaciones/chat-soporte/especificacion.md).
@@ -133,18 +134,22 @@ export function codigoConversacion(numero) {
  * respuesta en la bandeja. En la interfaz aparecen marcados como automáticos, y
  * eso no es un detalle estético: un texto que se hiciera pasar por una persona
  * dejaría al usuario esperando una conversación que no ha empezado.
+ *
+ * Ninguno invita a marcharse («ya puedes cerrar», «no estés pendiente»). Un
+ * acuse dice que el mensaje llegó, no despacha a quien escribe: el que decide
+ * cuándo se va de la conversación es el usuario, no nosotros.
  */
 export const ACUSES_RECIBO = [
   'Recibido. Ya lo estamos mirando y te contamos por aquí mismo.',
   'Tu mensaje llegó completo. Ahora nos toca a nosotros.',
-  'Anotado. Puedes cerrar la app: te avisamos en cuanto tengamos respuesta.',
+  'Anotado. Lo revisamos y te contamos por aquí en cuanto sepamos algo.',
   'Gracias por contarnos. No se nos pierde, está en la fila.',
   'Listo, lo tenemos. Te escribimos aquí apenas lo revisemos.',
   'Mensaje guardado. Vamos a echarle un ojo con calma.',
   'Ya está con nosotros. Te respondemos en cuanto lo tengamos claro.',
   'Recibimos lo que nos cuentas. Danos un momento y te decimos algo.',
   'Perfecto, queda registrado. Seguimos nosotros desde aquí.',
-  'Lo tenemos delante. Te avisamos por aquí sin que tengas que estar pendiente.',
+  'Lo tenemos delante. Te escribimos por aquí en cuanto haya novedad.',
   'Gracias por el detalle: así es más fácil ayudarte. Ya lo miramos.',
   'Tu mensaje entró bien. Te contestamos por este mismo hilo.',
   'Recibido y a salvo. Te escribimos apenas tengamos algo que contarte.',
@@ -163,6 +168,44 @@ export function acuseParaConversacion(id) {
   let suma = 0
   for (let i = 0; i < id.length; i++) suma = (suma + id.charCodeAt(i)) % 9973
   return ACUSES_RECIBO[suma % ACUSES_RECIBO.length]
+}
+
+/**
+ * Despedida que cierra el hilo cuando el soporte lo da por resuelto.
+ *
+ * Hace falta porque a partir de RN-06 una conversación resuelta ya no se
+ * reabre: el hilo termina de verdad, y terminar sin decir nada deja al usuario
+ * mirando un redactor bloqueado sin saber qué se espera de él.
+ *
+ * Son despedidas, no actas de cierre. Cada una hace tres cosas a la vez: se
+ * despide de verdad («un gusto», «que te vaya muy bien»), dice sin rodeos que la
+ * conversación **queda cerrada**, y deja claro que lo siguiente va en una nueva.
+ * Sin las tres, o suena frío, o el usuario se queda esperando poder responder.
+ */
+export const DESPEDIDAS = [
+  'Un gusto haberte ayudado. Damos esta conversación por cerrada; si necesitas algo más, abre una nueva y seguimos.',
+  'Nos alegra que quedara resuelto. Aquí cerramos este hilo, y en el siguiente te atendemos con el mismo gusto.',
+  'Listo, esto queda solucionado. Cerramos la conversación; cuando quieras volver, abre otra y con gusto te ayudamos.',
+  'Gracias por escribirnos y por la paciencia. Este hilo queda cerrado; te esperamos en el próximo si hace falta.',
+  'Que te vaya muy bien con tu natillera. La conversación queda cerrada; para cualquier otra cosa, abre una nueva.',
+  'Fue un placer atenderte. Cerramos aquí; si algo más se te presenta, abre otra conversación y la vemos enseguida.',
+  'Nos despedimos de este hilo, que queda cerrado. Gracias por contarnos con tanto detalle; si hace falta, abre uno nuevo.',
+  'Todo listo por aquí. Cerramos la conversación y quedamos pendientes por si algún día necesitas abrir otra.',
+  'Un abrazo y gracias por confiar en Natillerapp. Esta conversación queda cerrada; la próxima la abres cuando quieras.',
+  'Nos alegra haberte podido ayudar. Damos el hilo por cerrado; si vuelve a aparecer algo, cuéntanoslo en uno nuevo.',
+  'Hasta aquí llegamos con este tema, que queda cerrado. Gracias por tu tiempo, y para lo siguiente abre otra conversación.',
+  'Gracias por avisarnos. Cerramos esta conversación tranquilos; para lo que venga, abre otra y te leemos.',
+  'Con esto nos despedimos y la conversación queda cerrada. Si algo más se presenta, ábrenos otra y con gusto te ayudamos.',
+  'Nos dio gusto ayudarte. Este hilo queda cerrado; el siguiente lo abres tú cuando lo necesites, sin pena.',
+  'Quedamos contentos de haberlo resuelto. Cerramos la conversación; si algo cambia, abre una nueva y seguimos.',
+]
+
+/** Misma idea que el acuse: atada al id, para que no cambie en cada repintado. */
+export function despedidaParaConversacion(id) {
+  if (!id) return DESPEDIDAS[0]
+  let suma = 0
+  for (let i = 0; i < id.length; i++) suma = (suma + id.charCodeAt(i) * 31) % 9973
+  return DESPEDIDAS[suma % DESPEDIDAS.length]
 }
 
 function uuid() {
@@ -226,6 +269,17 @@ export const useSoporteStore = defineStore('soporte', () => {
   const error = ref(null)
   const esSoporte = ref(false)
   const rolResuelto = ref(false)
+  /*
+   * Qué conversación tenía abierta cada vista.
+   *
+   * Vive en el store y no en el componente porque los paneles se montan con
+   * `v-if`: al apilar otro overlay encima (el visor de un adjunto, por ejemplo)
+   * el chat se desmonta, y al volver aparecía la lista en vez del hilo que se
+   * estaba leyendo. Guardarlo aquí también hace que reabrir el chat te devuelva
+   * donde estabas, que es lo que hace cualquier chat.
+   */
+  const conversacionAbiertaUsuario = ref(null)
+  const conversacionAbiertaBandeja = ref(null)
   // Usuario al que corresponde el rol ya resuelto (ver comprobarRol).
   let uidDelRol = null
 
@@ -464,17 +518,30 @@ export const useSoporteStore = defineStore('soporte', () => {
    * mensaje que apunte a un archivo inexistente. La ruta empieza por el uid
    * porque es lo único que ya se conoce en este punto y lo que comprueba la
    * política del bucket.
+   *
+   * Dos decisiones que cambian el tiempo que el usuario espera:
+   *
+   *  · Las fotos se encogen antes de salir (`comprimirImagen`). Una captura de
+   *    móvil de 5 MB se queda en unos cientos de kB sin perder legibilidad, y
+   *    eso es la diferencia entre esperar segundos y no esperar.
+   *  · Se suben EN PARALELO. Eran peticiones independientes puestas en fila:
+   *    con cinco adjuntos se pagaba cinco veces la latencia de la red.
+   *
+   * La validación va entera y por delante: si un archivo no vale, no se sube
+   * ninguno, y no queda medio mensaje a medio subir en el bucket.
    */
   async function subirAdjuntos(archivos, clientId) {
     if (!archivos?.length) return []
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('SOPORTE_SIN_SESION: sesión no válida')
 
-    const subidos = []
     for (const archivo of archivos) {
       const problema = validarArchivo(archivo)
       if (problema) throw new Error(`SOPORTE_DATOS: ${problema}`)
+    }
 
+    return Promise.all(archivos.map(async (original) => {
+      const archivo = await comprimirImagen(original)
       const limpio = archivo.name.replace(/[^\w.\-]+/g, '_').slice(-80)
       const ruta = `${user.id}/${clientId}/${uuid().slice(0, 8)}-${limpio}`
 
@@ -483,24 +550,93 @@ export const useSoporteStore = defineStore('soporte', () => {
         .upload(ruta, archivo, { contentType: archivo.type, upsert: false })
       if (e) throw e
 
-      subidos.push({ ruta, nombre: archivo.name, mime: archivo.type, bytes: archivo.size })
-    }
-    return subidos
+      return { ruta, nombre: archivo.name, mime: archivo.type, bytes: archivo.size }
+    }))
   }
 
-  function validarArchivo(archivo) {
+  /*
+   * Tipo y tamaño se validan por separado porque ocurren en momentos distintos:
+   * el tipo, en cuanto se elige el archivo; el tamaño, cuando ya está
+   * comprimido. Rechazar una foto de 8 MB que va a viajar como 400 kB sería
+   * negarse a enviar algo que sí cabe.
+   */
+  function validarTipoArchivo(archivo) {
     if (!MIMES_ADMITIDOS.includes(archivo.type)) return `«${archivo.name}» no es un tipo de archivo admitido`
+    return null
+  }
+
+  function validarTamanoArchivo(archivo) {
     if (archivo.size > MAX_BYTES_ADJUNTO) return `«${archivo.name}» supera los 5 MB`
     return null
   }
 
-  /** RF-17: nunca getPublicUrl(). Una URL pública es permanente y no se revoca. */
+  function validarArchivo(archivo) {
+    return validarTipoArchivo(archivo) ?? validarTamanoArchivo(archivo)
+  }
+
+  /*
+   * RF-17: nunca getPublicUrl(). Una URL pública es permanente y no se revoca.
+   *
+   * Las firmas se guardan mientras duran. Sin caché, cada miniatura del hilo
+   * pedía su firma al desplazarse y volvía a pedirla al volver a subir: para
+   * pintar una conversación con diez fotos eso son diez peticiones que se
+   * repiten. El margen de un minuto evita entregar una firma a punto de caducar.
+   */
+  const firmas = new Map()  // ruta -> { url, caducaEn }
+  const VIDA_FIRMA_MS = 15 * 60 * 1000
+  const MARGEN_FIRMA_MS = 60 * 1000
+
+  function firmaViva(ruta) {
+    const guardada = firmas.get(ruta)
+    if (guardada && guardada.caducaEn - MARGEN_FIRMA_MS > Date.now()) return guardada.url
+    if (guardada) firmas.delete(ruta)
+    return null
+  }
+
   async function urlFirmada(ruta) {
+    const viva = firmaViva(ruta)
+    if (viva) return viva
+
     const { data, error: e } = await supabase.storage
       .from('soporte-adjuntos')
-      .createSignedUrl(ruta, 15 * 60)
+      .createSignedUrl(ruta, VIDA_FIRMA_MS / 1000)
     if (e) throw e
+    firmas.set(ruta, { url: data.signedUrl, caducaEn: Date.now() + VIDA_FIRMA_MS })
     return data.signedUrl
+  }
+
+  /**
+   * Firma varias rutas de una vez: las miniaturas de un mensaje se piden juntas,
+   * no una por una. Devuelve { ruta: url } solo con las que se pudieron firmar;
+   * un archivo borrado del bucket no debe tumbar las miniaturas de al lado.
+   */
+  async function urlesFirmadas(rutas) {
+    const unicas = [...new Set((rutas ?? []).filter(Boolean))]
+    const resultado = {}
+    const pendientes = []
+
+    for (const ruta of unicas) {
+      const viva = firmaViva(ruta)
+      if (viva) resultado[ruta] = viva
+      else pendientes.push(ruta)
+    }
+    if (!pendientes.length) return resultado
+
+    try {
+      const { data, error: e } = await supabase.storage
+        .from('soporte-adjuntos')
+        .createSignedUrls(pendientes, VIDA_FIRMA_MS / 1000)
+      if (e) throw e
+      for (const fila of data ?? []) {
+        if (!fila?.signedUrl || fila.error) continue
+        // `path` viene sin el nombre del bucket, igual que se pidió.
+        firmas.set(fila.path, { url: fila.signedUrl, caducaEn: Date.now() + VIDA_FIRMA_MS })
+        resultado[fila.path] = fila.signedUrl
+      }
+    } catch {
+      // Sin firmas no hay miniatura, pero el adjunto sigue abriéndose al pulsar.
+    }
+    return resultado
   }
 
   // ---- Escritura ----------------------------------------------------------
@@ -511,6 +647,28 @@ export const useSoporteStore = defineStore('soporte', () => {
    */
   async function enviar({ conversacionId = null, cuerpo, asunto = null, categoria = null, archivos = [], clientId = null }) {
     const idCliente = clientId ?? uuid()
+
+    /*
+     * Los adjuntos se pintan YA, con la copia local del archivo, en vez de
+     * aparecer cuando termina la subida. Antes el texto salía al instante y la
+     * foto llegaba varios segundos después: parecía que el adjunto se había
+     * quedado por el camino, y más de uno lo volvía a enviar.
+     */
+    const vistasPrevias = []
+    const adjuntosLocales = (archivos ?? []).map((archivo, i) => {
+      const previsualizacion = crearVistaPrevia(archivo)
+      if (previsualizacion) vistasPrevias.push(previsualizacion)
+      return {
+        id: `local-adj-${idCliente}-${i}`,
+        ruta: null,
+        nombre: archivo.name,
+        mime: archivo.type,
+        bytes: archivo.size,
+        _previsualizacion: previsualizacion,
+        _subiendo: true,
+      }
+    })
+
     const provisional = {
       id: `local-${idCliente}`,
       conversacion_id: conversacionId,
@@ -518,7 +676,7 @@ export const useSoporteStore = defineStore('soporte', () => {
       autor: esSoporte.value && conversacionId ? 'soporte' : 'usuario',
       cuerpo,
       created_at: new Date().toISOString(),
-      soporte_adjuntos: [],
+      soporte_adjuntos: adjuntosLocales,
       _local: true,
       _estado: 'enviando',
     }
@@ -544,7 +702,14 @@ export const useSoporteStore = defineStore('soporte', () => {
       const confirmado = {
         ...data.mensaje,
         conversacion_id: idReal,
-        soporte_adjuntos: adjuntos.map((a, i) => ({ id: `adj-${i}`, ...a })),
+        // Se conserva la miniatura local junto a la ruta ya subida: sin ella, el
+        // mensaje confirmado se quedaría sin imagen el rato que tarda en llegar
+        // la URL firmada, y la foto parecería desaparecer justo al enviarse.
+        soporte_adjuntos: adjuntos.map((a, i) => ({
+          id: `adj-${i}`,
+          ...a,
+          _previsualizacion: adjuntosLocales[i]?._previsualizacion ?? null,
+        })),
         _estado: 'enviado',
       }
 
@@ -553,25 +718,49 @@ export const useSoporteStore = defineStore('soporte', () => {
       const previos = (mensajes.value[idReal] ?? []).filter((m) => m.client_id !== idCliente)
       mensajes.value = { ...mensajes.value, [idReal]: [...previos, confirmado] }
 
+      // Las miniaturas locales se sueltan con retraso: revocarlas en el mismo
+      // instante deja la imagen en blanco hasta que carga la del servidor.
+      if (vistasPrevias.length) setTimeout(() => revocarVistasPrevias(vistasPrevias), 15000)
+
       return { ok: true, conversacionId: idReal, clientId: idCliente, numero: data.numero }
     } catch (e) {
       const { codigo, mensaje } = traducirError(e)
+      revocarVistasPrevias(vistasPrevias)
 
       // Un límite de frecuencia o un dato inválido no se arreglan reintentando:
       // el texto se devuelve al redactor con el motivo, sin encolarlo.
       const recuperable = codigo === 'RED' || codigo === 'DESCONOCIDO'
       if (recuperable) {
         encolar({ clientId: idCliente, conversacionId, cuerpo, asunto, categoria, creadoEn: Date.now() })
+        // La cola solo reenvía texto (caso borde 2): los archivos elegidos no
+        // sobreviven a una recarga. Se quitan del mensaje en pantalla para no
+        // prometer un envío que no va a ocurrir, y se dice sin rodeos.
+        quitarAdjuntosLocales(conversacionId, idCliente)
       }
       marcarEstadoLocal(conversacionId, idCliente, recuperable ? 'fallido' : null)
 
-      return { ok: false, clientId: idCliente, codigo, error: mensaje, encolado: recuperable }
+      const conAviso = recuperable && adjuntosLocales.length
+        ? `${mensaje} Los archivos hay que volver a adjuntarlos.`
+        : mensaje
+
+      return { ok: false, clientId: idCliente, codigo, error: conAviso, encolado: recuperable }
     }
   }
 
   function agregarMensajeLocal(conversacionId, mensaje) {
     const previos = mensajes.value[conversacionId] ?? []
     mensajes.value = { ...mensajes.value, [conversacionId]: [...previos, mensaje] }
+  }
+
+  function quitarAdjuntosLocales(conversacionId, clientId) {
+    if (!conversacionId) return
+    const lista = mensajes.value[conversacionId]
+    if (!lista) return
+    mensajes.value = {
+      ...mensajes.value,
+      [conversacionId]: lista.map((m) =>
+        m.client_id === clientId ? { ...m, soporte_adjuntos: [] } : m),
+    }
   }
 
   function marcarEstadoLocal(conversacionId, clientId, estado) {
@@ -708,18 +897,41 @@ export const useSoporteStore = defineStore('soporte', () => {
       ...mensajes.value,
       [mensaje.conversacion_id]: [...lista, { ...mensaje, soporte_adjuntos: [], _estado: 'enviado' }],
     }
+    // Realtime publica la fila del mensaje, no sus adjuntos: sin esto, quien
+    // recibe ve el texto y los archivos no aparecen hasta recargar el hilo.
+    completarAdjuntos(mensaje)
     return true
+  }
+
+  async function completarAdjuntos(mensaje) {
+    try {
+      const { data, error: e } = await supabase
+        .from('soporte_adjuntos')
+        .select('id, ruta, nombre, mime, bytes')
+        .eq('mensaje_id', mensaje.id)
+      if (e || !data?.length) return
+
+      const lista = mensajes.value[mensaje.conversacion_id] ?? []
+      mensajes.value = {
+        ...mensajes.value,
+        [mensaje.conversacion_id]: lista.map((m) =>
+          m.id === mensaje.id ? { ...m, soporte_adjuntos: data } : m),
+      }
+    } catch {
+      // El adjunto se verá al recargar el hilo; no es motivo para avisar.
+    }
   }
 
   return {
     // estado
     conversaciones, bandeja, totalBandeja, mensajes, hayMasAntiguos, cola, pendientes,
     noLeidos, cargando, cargandoMensajes, error, esSoporte,
+    conversacionAbiertaUsuario, conversacionAbiertaBandeja,
     // lectura
     comprobarRol, cargarConversaciones, cargarBandeja, cargarMensajes, refrescarNoLeidos, marcarLeido,
     escucharInsignia, dejarDeEscucharInsignia,
     // adjuntos
-    subirAdjuntos, validarArchivo, urlFirmada,
+    subirAdjuntos, validarArchivo, validarTipoArchivo, validarTamanoArchivo, urlFirmada, urlesFirmadas,
     // escritura
     enviar, procesarCola, cancelarEnvio,
     // panel

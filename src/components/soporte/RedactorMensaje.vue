@@ -4,9 +4,10 @@
   >
     <!--
       Solo lectura: se explica el motivo en lugar de dejar un campo muerto
-      (RN-08). Cuando `textoDesbloqueo` viene informado, el bloqueo es
-      reversible por el propio usuario: es el caso de una conversación resuelta,
-      que RN-06 permite retomar escribiendo en ella.
+      (RN-08). `textoAccion` ofrece la salida que sí existe —abrir otra
+      conversación—, porque desde RN-06 un hilo cerrado no se retoma escribiendo
+      en él: un campo bloqueado sin alternativa deja al usuario sin saber qué
+      hacer con lo que venía a contar.
     -->
     <div v-if="bloqueado" class="rounded-xl bg-gray-50 px-3 py-3 ring-1 ring-gray-200">
       <div class="flex items-start gap-2 text-xs text-gray-600">
@@ -14,13 +15,13 @@
         <p class="min-w-0 flex-1">{{ motivoBloqueo }}</p>
       </div>
       <button
-        v-if="textoDesbloqueo"
+        v-if="textoAccion"
         type="button"
         class="mt-2.5 inline-flex min-h-[2.75rem] w-full items-center justify-center rounded-full border border-[#1B5E37] px-4 text-sm font-semibold text-[#1B5E37] transition hover:bg-[#1B5E37]/5 touch-manipulation sm:w-auto"
-        @click="$emit('desbloquear')"
+        @click="$emit('accion')"
       >
-        <ArrowUturnLeftIcon class="mr-1.5 h-4 w-4" />
-        {{ textoDesbloqueo }}
+        <PlusIcon class="mr-1.5 h-4 w-4" />
+        {{ textoAccion }}
       </button>
     </div>
 
@@ -31,22 +32,57 @@
         <span>Sin conexión. Lo que escribas se enviará solo cuando vuelva la red.</span>
       </div>
 
-      <!-- Adjuntos elegidos, antes de subir -->
-      <ul v-if="archivos.length" class="mb-2 flex flex-wrap gap-1.5">
+      <!--
+        Adjuntos elegidos, antes de subir. Las imágenes se ven: comprobar de un
+        vistazo que la captura es la correcta evita el mensaje de después
+        («perdón, era la otra pantalla»).
+      -->
+      <ul v-if="archivos.length" class="mb-2 flex flex-wrap gap-2">
         <li
-          v-for="(archivo, indice) in archivos"
-          :key="`${archivo.name}-${indice}`"
-          class="inline-flex max-w-full items-center gap-1.5 rounded-full bg-gray-100 py-1 pl-2.5 pr-1 text-xs text-gray-700 ring-1 ring-gray-200"
+          v-for="(elegido, indice) in archivos"
+          :key="`${elegido.archivo.name}-${indice}`"
+          class="relative"
         >
-          <PaperClipIcon class="h-3.5 w-3.5 shrink-0 text-gray-500" />
-          <span class="min-w-0 truncate">{{ archivo.name }}</span>
+          <div
+            v-if="elegido.previa"
+            class="relative h-16 w-16 overflow-hidden rounded-xl ring-1 ring-gray-200"
+          >
+            <img
+              :src="elegido.previa"
+              :alt="elegido.archivo.name"
+              :class="['h-full w-full object-cover', elegido.preparando ? 'opacity-60' : '']"
+            />
+            <span
+              v-if="elegido.preparando"
+              class="absolute inset-0 flex items-center justify-center bg-black/25"
+              aria-label="Preparando el archivo"
+            >
+              <svg class="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            </span>
+          </div>
+          <div
+            v-else
+            class="flex h-16 max-w-[10rem] items-center gap-1.5 rounded-xl bg-gray-100 px-2.5 text-xs text-gray-700 ring-1 ring-gray-200"
+          >
+            <PaperClipIcon class="h-4 w-4 shrink-0 text-gray-500" />
+            <span class="min-w-0 flex-1 truncate">{{ elegido.archivo.name }}</span>
+          </div>
+
+          <!-- Botón de quitar: área táctil de 44 px lograda con un padding
+               transparente; el círculo visible es más pequeño para no tapar la
+               miniatura. -->
           <button
             type="button"
-            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-200 touch-manipulation"
-            :aria-label="`Quitar ${archivo.name}`"
+            class="absolute -right-2 -top-2 flex h-11 w-11 items-center justify-center text-gray-500 touch-manipulation"
+            :aria-label="`Quitar ${elegido.archivo.name}`"
             @click="quitarArchivo(indice)"
           >
-            <XMarkIcon class="h-3.5 w-3.5" />
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white shadow ring-1 ring-gray-200 transition hover:bg-gray-100">
+              <XMarkIcon class="h-3.5 w-3.5" />
+            </span>
           </button>
         </li>
       </ul>
@@ -111,12 +147,13 @@
 </template>
 
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import {
-  ArrowUturnLeftIcon, ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
-  PaperClipIcon, XMarkIcon,
+  ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
+  PaperClipIcon, PlusIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { MAX_ADJUNTOS, MIMES_ADMITIDOS, useSoporteStore } from '../../stores/soporte'
+import { comprimirImagen, crearVistaPrevia, esImagen, revocarVistasPrevias } from '../../utils/adjuntosSoporte'
 import { useNotificationStore } from '../../stores/notifications'
 
 const MAX_CUERPO = 4000
@@ -126,21 +163,21 @@ const props = defineProps({
   enviando: { type: Boolean, default: false },
   bloqueado: { type: Boolean, default: false },
   motivoBloqueo: { type: String, default: 'Esta conversación está archivada y no admite mensajes nuevos.' },
-  /** Si viene informado, el bloqueo se puede levantar desde aquí. */
-  textoDesbloqueo: { type: String, default: '' },
+  /** Si viene informado, se ofrece una salida bajo el motivo del bloqueo. */
+  textoAccion: { type: String, default: '' },
   permiteAdjuntos: { type: Boolean, default: true },
   marcador: { type: String, default: 'Escribe tu mensaje…' },
   minimo: { type: Number, default: 1 },
 })
 
-const emit = defineEmits(['update:modelValue', 'enviar', 'desbloquear'])
+const emit = defineEmits(['update:modelValue', 'enviar', 'accion'])
 
 const soporte = useSoporteStore()
 const notificaciones = useNotificationStore()
 
 const campo = ref(null)
 const entradaArchivos = ref(null)
-const archivos = ref([])
+const archivos = ref([])   // { archivo: File, previa: string|null }
 
 const sinConexion = ref(typeof navigator !== 'undefined' && navigator.onLine === false)
 if (typeof window !== 'undefined') {
@@ -148,8 +185,12 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => { sinConexion.value = true })
 }
 
+const preparandoAdjuntos = computed(() => archivos.value.some((a) => a.preparando))
+
 const puedeEnviar = computed(() =>
-  !props.enviando && props.modelValue.trim().length >= props.minimo)
+  !props.enviando
+  && !preparandoAdjuntos.value
+  && props.modelValue.trim().length >= props.minimo)
 
 const cercaDelLimite = computed(() => props.modelValue.length > MAX_CUERPO - 200)
 
@@ -161,6 +202,15 @@ function alEscribir(evento) {
   el.style.height = `${el.scrollHeight}px`
 }
 
+/*
+ * El archivo se prepara al elegirlo, no al enviarlo.
+ *
+ * Comprimir en el momento del envío dejaba el mensaje escrito esperando a que
+ * una foto de varios megas se encogiera y subiera. Haciéndolo aquí, mientras el
+ * usuario todavía está escribiendo, al pulsar enviar el archivo ya está listo y
+ * el envío es inmediato. De paso, el límite de 5 MB se mide sobre lo que de
+ * verdad va a viajar.
+ */
 function elegirArchivos(evento) {
   const elegidos = Array.from(evento.target.files ?? [])
   evento.target.value = ''
@@ -170,19 +220,53 @@ function elegirArchivos(evento) {
       notificaciones.alerta(`Puedes adjuntar hasta ${MAX_ADJUNTOS} archivos por mensaje.`)
       break
     }
-    // Se valida antes de subir nada, indicando el motivo (caso borde 8).
-    const problema = soporte.validarArchivo(archivo)
+    // El tipo se comprueba antes de nada, indicando el motivo (caso borde 8).
+    const problema = soporte.validarTipoArchivo(archivo)
     if (problema) {
       notificaciones.alerta(problema)
       continue
     }
-    archivos.value.push(archivo)
+
+    const entrada = { archivo, previa: crearVistaPrevia(archivo), preparando: esImagen(archivo.type) }
+    archivos.value.push(entrada)
+
+    if (entrada.preparando) prepararImagen(entrada)
+    else rechazarSiPesaDemasiado(entrada)
   }
 }
 
-function quitarArchivo(indice) {
-  archivos.value.splice(indice, 1)
+async function prepararImagen(entrada) {
+  try {
+    const listo = await comprimirImagen(entrada.archivo)
+    // El usuario pudo quitarlo mientras se comprimía.
+    if (!archivos.value.includes(entrada)) return
+    entrada.archivo = listo
+  } finally {
+    entrada.preparando = false
+    rechazarSiPesaDemasiado(entrada)
+  }
 }
+
+function rechazarSiPesaDemasiado(entrada) {
+  const problema = soporte.validarTamanoArchivo(entrada.archivo)
+  if (!problema) return
+  const indice = archivos.value.indexOf(entrada)
+  if (indice >= 0) quitarArchivo(indice)
+  notificaciones.alerta(problema)
+}
+
+function quitarArchivo(indice) {
+  const [fuera] = archivos.value.splice(indice, 1)
+  revocarVistasPrevias([fuera?.previa])
+}
+
+function soltarVistasPrevias() {
+  revocarVistasPrevias(archivos.value.map((a) => a.previa))
+}
+
+// Las miniaturas son objetos en memoria del navegador: si no se sueltan, se
+// quedan hasta recargar la página.
+onBeforeUnmount(soltarVistasPrevias)
 
 /*
  * Al enviar, el campo se deshabilita y el navegador le quita el foco; cuando se
@@ -199,7 +283,7 @@ let teniaFoco = false
 function intentarEnviar() {
   if (!puedeEnviar.value) return
   teniaFoco = typeof document !== 'undefined' && document.activeElement === campo.value
-  emit('enviar', { cuerpo: props.modelValue.trim(), archivos: [...archivos.value] })
+  emit('enviar', { cuerpo: props.modelValue.trim(), archivos: archivos.value.map((a) => a.archivo) })
 }
 
 watch(() => props.enviando, (enviandoAhora, enviandoAntes) => {
@@ -212,6 +296,9 @@ watch(() => props.enviando, (enviandoAhora, enviandoAntes) => {
 
 /** El padre la llama cuando el envío se confirma: el texto solo se borra entonces. */
 function limpiar() {
+  // Las vistas previas locales ya no hacen falta: el hilo pinta las suyas con
+  // el mensaje recién enviado.
+  soltarVistasPrevias()
   archivos.value = []
   if (campo.value) campo.value.style.height = 'auto'
 }

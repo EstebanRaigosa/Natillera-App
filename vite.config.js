@@ -50,8 +50,23 @@ export default defineConfig({
     // navegador móvil descarta la pestaña en segundo plano y recarga al volver, el
     // arranque sea instantáneo desde cache en vez de pantalla blanca + descarga de red.
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      /*
+       * `prompt` y no `autoUpdate`, y el registro lo hace la app (injectRegister
+       * null), no un script inyectado.
+       *
+       * Con `autoUpdate` + `injectRegister: 'auto'` el plugin inyectaba un
+       * registerSW.js que solo llamaba a `navigator.serviceWorker.register`:
+       * ni comprobaba versiones ni recargaba. El resultado era que tras un
+       * despliegue el service worker viejo seguía sirviendo el index.html
+       * precacheado —o sea, la versión anterior— y el usuario tenía que
+       * recargar varias veces para ver la nueva. El `auto` de `autoUpdate` solo
+       * existe si la app importa `virtual:pwa-register`, y no lo hacía nadie.
+       *
+       * Ahora lo registra `useActualizacionApp`, que avisa al usuario y aplica
+       * la actualización en el momento oportuno.
+       */
+      registerType: 'prompt',
+      injectRegister: null,
       // injectManifest y no generateSW: el service worker se escribe a mano en
       // src/sw.js porque necesita manejadores propios de `push` y
       // `notificationclick` para las notificaciones del soporte (RNF-06 de
@@ -63,6 +78,18 @@ export default defineConfig({
       // SW desactivado en desarrollo para no interferir con HMR.
       devOptions: { enabled: false, type: 'module' },
       includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
+      /*
+       * Los iconos declarados en el manifest NO entran en el precache.
+       *
+       * Por defecto el plugin los añade, y eso se saltaba el `globIgnores` de
+       * más abajo: los dos PNG de 512 px (378 KB entre ambos) volvían a colarse
+       * en el precache pese a estar excluidos ahí. Quien los necesita es el
+       * sistema operativo al instalar la PWA, y para eso los pide por red.
+       * Cuanto más pesa el precache, más tarda el service worker nuevo en
+       * instalarse y más se alarga la ventana en que el usuario sigue viendo la
+       * versión anterior.
+       */
+      includeManifestIcons: false,
       manifest: {
         name: 'Natillerapp',
         short_name: 'Natillerapp',
@@ -86,6 +113,44 @@ export default defineConfig({
         // Chunks pesados (p. ej. xlsx) se cargan bajo demanda; no es necesario precachearlos.
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        /*
+         * Lo que NO entra en el precache.
+         *
+         * El precache se descarga entero al abrir la app por primera vez y tras
+         * cada despliegue. Estaba en 6 MB (2,9 MB comprimidos) y en una red
+         * lenta compite por el ancho de banda con lo que el usuario está
+         * intentando ver: la app parece colgada porque el service worker se ha
+         * llevado la conexión. Nada de lo de aquí abajo hace falta para arrancar.
+         *
+         * Ojo: excluir del precache NO borra el archivo ni lo hace inaccesible;
+         * solo deja de bajarse por adelantado. Se pide cuando de verdad se usa.
+         */
+        globIgnores: [
+          // 315 KB comprimidos de la librería de Excel: solo se necesita al
+          // exportar, y ya se carga bajo demanda.
+          '**/xlsx-*.js',
+          // Iconos grandes de instalación: los pide el sistema operativo al
+          // instalar la PWA, no el arranque de la app.
+          '**/android-chrome-512x512*.png',
+          '**/favicon-512x512.png',
+          // Imagen para redes sociales: la leen los rastreadores, nunca la app.
+          '**/og-image.png',
+          // Sin una sola referencia en el código (comprobado). Se dejan en
+          // disco por si acaso, pero no se bajan por adelantado.
+          'loading.png',
+          'isotipo.png',
+          'logo_icon_white.png',
+          // Mismo caso, detectados al auditar el precache: no los pide el
+          // arranque de la app.
+          'isotipo_white.png',
+          'logo_icon.png',
+          'natillerapp-isotipo.png',
+          'vite.svg',
+          // Páginas sueltas de demostración en `public/`: no forman parte de la
+          // app y no tienen por qué viajar en el precache de todos los usuarios.
+          'instalar-demo.html',
+          'tour-demo.html',
+        ],
         // Service worker clásico, no módulo ES. `generateSW` producía uno
         // clásico y el registro actual no pide `{ type: 'module' }`; un SW en
         // formato ES exige soporte de módulos en el worker y dejaría sin

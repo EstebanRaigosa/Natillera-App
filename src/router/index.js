@@ -25,6 +25,8 @@ const Cuotas = () => import('../views/cuotas/Cuotas.vue')
 const Prestamos = () => import('../views/prestamos/Prestamos.vue')
 const Actividades = () => import('../views/actividades/Actividades.vue')
 const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
+const ConciliacionCaja = () => import('../views/conciliacion/ConciliacionCaja.vue')
+const Movimientos = () => import('../views/movimientos/Movimientos.vue')
 const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
 const Configuracion = () => import('../views/configuracion/Configuracion.vue')
 const MiCuenta = () => import('../views/usuario/MiCuenta.vue')
@@ -145,6 +147,20 @@ const routes = [
         component: CuadreCaja,
         props: true,
         meta: { title: 'Totales generales' }
+      },
+      {
+        path: 'natilleras/:id/conciliacion',
+        name: 'ConciliacionCaja',
+        component: ConciliacionCaja,
+        props: true,
+        meta: { title: 'Conciliación de caja' }
+      },
+      {
+        path: 'natilleras/:id/movimientos',
+        name: 'Movimientos',
+        component: Movimientos,
+        props: true,
+        meta: { title: 'Movimientos del fondo' }
       },
       {
         path: 'natilleras/:id/configuracion',

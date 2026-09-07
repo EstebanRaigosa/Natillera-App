@@ -1,6 +1,10 @@
 <template>
   <router-view />
   <NatiNotificacion />
+  <AvisoNuevaVersion />
+  <!-- Ofrece los avisos al instalar la PWA. Va en la raíz porque el momento no depende de
+       ninguna vista: puede ser al instalar o al primer arranque desde la pantalla de inicio. -->
+  <AvisoNotificacionesPwa />
   <UsernameModal 
     :show="showUsernameModal" 
     @close="showUsernameModal = false"
@@ -13,13 +17,17 @@ import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 import NatiNotificacion from './components/NatiNotificacion.vue'
+import AvisoNuevaVersion from './components/AvisoNuevaVersion.vue'
+import AvisoNotificacionesPwa from './components/AvisoNotificacionesPwa.vue'
 import UsernameModal from './components/UsernameModal.vue'
 import { useSessionTimeout } from './composables/useSessionTimeout'
+import { useActualizacionApp } from './composables/useActualizacionApp'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const showUsernameModal = ref(false)
+const actualizacion = useActualizacionApp()
 
 // Configurar timeout de sesión por inactividad (15 minutos)
 /*
@@ -83,6 +91,10 @@ onMounted(() => {
   if (authStore.isAuthenticated) {
     sessionTimeout.start()
   }
+
+  // Registra el service worker y vigila si hay una versión desplegada más nueva.
+  // Va aquí, en la raíz, porque afecta a toda la app y no solo al dashboard.
+  actualizacion.iniciar()
 })
 
 onUnmounted(() => {
@@ -92,6 +104,8 @@ onUnmounted(() => {
   
   // Detener el sistema de timeout al desmontar
   sessionTimeout.stop()
+
+  actualizacion.detener()
 })
 
 // Observar cambios en el estado de autenticación para iniciar/detener el timeout

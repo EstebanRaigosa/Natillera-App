@@ -141,7 +141,7 @@
             <ArchiveBoxIcon v-else class="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
             <p>
               {{ conversacionActiva.estado === 'resuelta'
-                ? 'El soporte dio esta conversación por resuelta.'
+                ? 'El soporte dio esta conversación por resuelta. Si necesitas algo más, abre una nueva.'
                 : 'Esta conversación está archivada.' }}
             </p>
           </div>
@@ -159,6 +159,8 @@
           :cargando-antiguos="soporte.cargandoMensajes"
           :hay-mas-antiguos="soporte.hayMasAntiguos[idActivo] === true"
           :acuse="acuse"
+          :despedida="despedida"
+          :titulo-despedida="conversacionActiva.estado === 'archivada' ? 'Conversación archivada' : 'Conversación resuelta'"
           @cargar-antiguos="cargarAntiguos"
           @reintentar="reintentarMensaje"
         />
@@ -169,9 +171,9 @@
           :enviando="enviando"
           :bloqueado="redactorBloqueado"
           :motivo-bloqueo="motivoBloqueo"
-          :texto-desbloqueo="conversacionActiva.estado === 'resuelta' ? 'Volver a escribir' : ''"
+          :texto-accion="redactorBloqueado ? 'Abrir una conversación nueva' : ''"
           @enviar="enviarMensaje"
-          @desbloquear="reabrirHilo"
+          @accion="abrirNueva"
         />
       </template>
 
@@ -205,7 +207,7 @@
  *   `usarRuta`  → sincroniza la conversación abierta con la URL (solo la página;
  *                 el panel flotante no debe cambiar la dirección del navegador)
  */
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArchiveBoxIcon, ArrowLeftIcon, ChatBubbleLeftRightIcon, CheckCircleIcon,
@@ -214,7 +216,7 @@ import {
 import HiloMensajes from './HiloMensajes.vue'
 import RedactorMensaje from './RedactorMensaje.vue'
 import NuevaConversacionModal from './NuevaConversacionModal.vue'
-import { acuseParaConversacion, codigoConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
+import { acuseParaConversacion, codigoConversacion, despedidaParaConversacion, ESTADOS, ESTADOS_CERRADOS, useSoporteStore } from '../../stores/soporte'
 import { useSoporteRealtime } from '../../composables/useSoporteRealtime'
 import { useNotificationStore } from '../../stores/notifications'
 
@@ -230,14 +232,15 @@ const router = useRouter()
 const soporte = useSoporteStore()
 const notificaciones = useNotificationStore()
 
-const idActivo = ref(props.usarRuta ? (route.params.conversacionId ?? null) : null)
+const idActivo = ref(props.usarRuta
+  ? (route.params.conversacionId ?? null)
+  : soporte.conversacionAbiertaUsuario)
 const borrador = ref('')
 const enviando = ref(false)
 const creando = ref(false)
 const mostrarNueva = ref(false)
 const redactor = ref(null)
 const modalNueva = ref(null)
-const reabriendoHilo = ref(false)
 
 const conversacionActiva = computed(() =>
   soporte.conversaciones.find((c) => c.id === idActivo.value) ?? null)
@@ -261,27 +264,32 @@ const acuse = computed(() => {
 })
 
 /*
- * Una conversación resuelta llega con el redactor bloqueado, pero el bloqueo es
- * reversible: RN-06 dice que un mensaje del usuario en una conversación
- * resuelta la devuelve a `abierta`, y CA-02 lo exige. Archivada sí es
- * definitivo para el usuario (RN-08).
+ * RN-06: un hilo cerrado no se retoma escribiendo en él, ni resuelto ni
+ * archivado. Antes, un mensaje del usuario en una conversación resuelta la
+ * devolvía a `abierta`; eso hacía que «resuelta» no significara nada —un hilo
+ * de hace un mes volvía a la bandeja con una consulta nueva pegada a un caso
+ * que ya no tenía que ver— y que el historial dejara de contar una sola cosa.
+ *
+ * El servidor rechaza el mensaje (SOPORTE_RESUELTA), así que esto no es la
+ * única defensa: es lo que evita que el usuario escriba un texto largo para
+ * que se lo rechacen al pulsar enviar.
  */
-const redactorBloqueado = computed(() => {
-  const estado = conversacionActiva.value?.estado
-  if (estado === 'archivada') return true
-  if (estado === 'resuelta') return !reabriendoHilo.value
-  return false
-})
+const redactorBloqueado = computed(() => estaCerrada(conversacionActiva.value?.estado))
 
 const motivoBloqueo = computed(() =>
   conversacionActiva.value?.estado === 'archivada'
-    ? 'Esta conversación está archivada. Si necesitas retomarla, escríbenos una nueva.'
-    : 'Esta conversación está resuelta. Si el problema sigue, puedes retomarla aquí mismo.')
+    ? 'Esta conversación está archivada y no admite mensajes nuevos.'
+    : 'Esta conversación quedó resuelta y ya no admite mensajes nuevos.')
 
-function reabrirHilo() {
-  reabriendoHilo.value = true
-  nextTick(() => redactor.value?.enfocar())
-}
+/*
+ * Despedida del hilo cerrado: sale al final, con las mismas reglas que el acuse
+ * (texto fijo por conversación, marcado como automático). Sin ella, cerrar una
+ * conversación se veía como un campo bloqueado y nada más.
+ */
+const despedida = computed(() =>
+  estaCerrada(conversacionActiva.value?.estado)
+    ? despedidaParaConversacion(idActivo.value)
+    : '')
 
 function fechaRelativa(iso) {
   const fecha = new Date(iso)
@@ -306,7 +314,6 @@ const { estadoCanal, suscribir } = useSoporteRealtime({
   },
   alCambiarConversacion: (fila) => {
     soporte.aplicarCambioConversacion(fila)
-    if (!estaCerrada(fila.estado)) reabriendoHilo.value = false
   },
   alRefrescar: () => {
     if (idActivo.value) soporte.cargarMensajes(idActivo.value)
@@ -353,6 +360,7 @@ async function abrirConversacion(id, { navegar = true } = {}) {
     await soporte.cargarConversaciones()
     if (!soporte.conversaciones.some((c) => c.id === id)) {
       idActivo.value = null
+      soporte.conversacionAbiertaUsuario = null
       notificaciones.informacion('Esa conversación ya no existe.')
       if (props.usarRuta && route.params.conversacionId) router.replace('/soporte')
       return
@@ -360,8 +368,8 @@ async function abrirConversacion(id, { navegar = true } = {}) {
   }
 
   idActivo.value = id
+  soporte.conversacionAbiertaUsuario = id
   borrador.value = ''
-  reabriendoHilo.value = false
   emit('cambiar-conversacion', conversacionActiva.value)
 
   if (navegar && props.usarRuta) router.push(`/soporte/${id}`)
@@ -373,7 +381,7 @@ async function abrirConversacion(id, { navegar = true } = {}) {
 
 function cerrarConversacion() {
   idActivo.value = null
-  reabriendoHilo.value = false
+  soporte.conversacionAbiertaUsuario = null
   emit('cambiar-conversacion', null)
   if (props.usarRuta) router.push('/soporte')
   suscribir(null)

@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "scrape:loteria": "node scripts/scrape-loteria-catalogo.mjs",
-    "vapid:keys": "node scripts/generar-claves-vapid.mjs"
+    "vapid:keys": "node scripts/generar-claves-vapid.mjs",
+    "badge:notificacion": "node scripts/generar-badge-notificacion.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

@@ -4,7 +4,7 @@
 |-------|-------|
 | **Módulo** | Soporte (transversal) |
 | **Estado** | Implementado (pendiente de despliegue) |
-| **Versión** | 2.8 |
+| **Versión** | 2.11 |
 | **Fecha** | 2026-08-31 |
 | **Autor** | Esteban |
 | **Ruta(s) de la app** | `/soporte` · `/soporte/:conversacionId` · `/admin/soporte` · `/admin/soporte/:conversacionId` |
@@ -59,7 +59,7 @@ que hay un mensaje nuevo.
 
 | Actor | Puede | No puede |
 |-------|-------|----------|
-| Usuario autenticado | Abrir conversaciones; leer y escribir **solo en las suyas**; adjuntar archivos; reabrir una conversación cerrada escribiendo en ella | Ver conversaciones ajenas; cambiar estados; borrar; entrar al panel de soporte |
+| Usuario autenticado | Abrir conversaciones; leer y escribir **solo en las suyas** mientras siguen vivas; adjuntar archivos | Ver conversaciones ajenas; cambiar estados; **reabrir una conversación resuelta o archivada**; borrar; entrar al panel de soporte |
 | Administrador de natillera | Igual que cualquier usuario autenticado | Serlo de una natillera no da privilegios de soporte |
 | Colaborador | Igual que cualquier usuario autenticado | — |
 | Socio (portal) | Fuera de alcance en esta versión | — |
@@ -112,9 +112,10 @@ Nunca comparando un correo en el cliente: un valor del cliente no es una credenc
 - **Descripción:** dentro de una conversación, usuario y soporte alternan sin límite de
   turnos.
 - **Entradas:** `cuerpo` (1–4.000 caracteres), `adjuntos` (0–5).
-- **Validaciones:** la conversación existe, pertenece al usuario y no está `archivada`.
+- **Validaciones:** la conversación existe, pertenece al usuario y **no está `resuelta`
+  ni `archivada`** (RN-06, RN-08). El soporte sí puede escribir en una `resuelta`.
 - **Salida:** fila en `soporte_mensajes`; `ultimo_mensaje_at` de la conversación se
-  actualiza por trigger; si estaba `resuelta`, vuelve a `abierta` (RN-06).
+  actualiza por trigger. **El estado no cambia al escribir.**
 
 #### RF-03 — Historial del usuario
 - **Descripción:** lista de conversaciones con asunto, estado, fecha del último mensaje y
@@ -146,6 +147,15 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
 - **Orden de operaciones:** los archivos se suben **antes** de crear el mensaje. Si alguno
   falla, se avisa y el usuario decide si envía sin él o reintenta. Nunca se crea un mensaje
   que apunte a un archivo inexistente.
+- **Preparación:** las imágenes se **redimensionan a 1.600 px y se recodifican** (WebP, o
+  JPEG donde no lo haya) **al elegirlas**, no al enviarlas. El límite de 5 MB se mide sobre
+  el archivo ya preparado. Un archivo que no se deja recodificar se sube tal cual.
+- **Subida:** los adjuntos de un mensaje viajan **en paralelo**; eran peticiones
+  independientes puestas en fila.
+- **Vista previa:** las imágenes se ven en la burbuja desde el instante del envío, con la
+  copia local mientras suben, y se abren en un visor dentro de la app (`VisorAdjunto`), que
+  también asoma el texto plano y embebe el PDF donde el navegador lo permite. Las URL
+  firmadas se piden por lote y se cachean mientras duran (RF-17).
 - **Representación:** filas en `soporte_adjuntos`. El cuerpo del mensaje no contiene URLs.
 
 #### RF-06 — Bandeja del superadministrador
@@ -179,17 +189,21 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
 
 #### RF-10 — Push al superadministrador
 - **Disparo:** inserción de un mensaje con `autor = 'usuario'`.
-- **Contenido:** título `Soporte · <categoría>`; cuerpo con el correo del usuario y los
-  primeros 120 caracteres; acción que abre `/admin/soporte/:id`.
+- **Contenido:** título con el **asunto del chat** (recortado a 64 caracteres); cuerpo con el
+  correo de quien escribe y, en la línea siguiente, los primeros 180 caracteres del mensaje;
+  acción que abre `/admin/soporte/:id`.
+- **Sin asunto:** si la conversación no tiene asunto, el título cae a `Soporte · <categoría>`.
 - **Agrupación:** `tag = conv-<id>` para que varios mensajes de la misma conversación
   sustituyan la notificación anterior en lugar de apilarse.
 
 #### RF-11 — Push al usuario
 - **Disparo:** inserción de un mensaje con `autor = 'soporte'`.
-- **Contenido:** título `Respuesta de soporte`; cuerpo con los primeros 120 caracteres;
-  acción que abre `/soporte/:id`.
-- **Regla de privacidad:** el cuerpo **no** incluye cifras, saldos ni nombres de natillera.
-  Una notificación se muestra en la pantalla bloqueada, a la vista de cualquiera.
+- **Contenido:** título con el **asunto del chat**; cuerpo `Soporte:` y, en la línea siguiente,
+  los primeros 180 caracteres de la respuesta; acción que abre `/soporte/:id`.
+- **Privacidad:** el cuerpo lleva el texto tal cual. Una notificación se ve en la pantalla
+  bloqueada, así que el riesgo se asume a cambio de que la notificación sea útil sin abrir la
+  app. La constante `INCLUIR_TEXTO_EN_PUSH_AL_USUARIO` en la Edge Function permite volver al
+  aviso genérico sin texto.
 
 #### RF-12 — Respaldo por correo
 - **Descripción:** si el destinatario no tiene suscripciones activas, o todos los envíos
@@ -254,7 +268,7 @@ Es el requisito que separa un chat usable de uno que frustra. Tres piezas:
 | RN-03 | Un usuario puede tener varias conversaciones abiertas a la vez |
 | RN-04 | Categorías: `error` · `duda` · `sugerencia` · `cuenta` · `otro` |
 | RN-05 | Estados: `abierta` → `en_proceso` → `resuelta` → `archivada` |
-| RN-06 | Un mensaje del usuario en una conversación `resuelta` la devuelve a `abierta` |
+| RN-06 | Una conversación `resuelta` no admite mensajes del usuario ni se reabre sola: para seguir, abre una nueva |
 | RN-07 | Una conversación `resuelta` sin actividad durante 30 días pasa a `archivada` |
 | RN-08 | Una conversación `archivada` es de solo lectura para el usuario |
 | RN-09 | El número visible es `#` + entero correlativo de una secuencia de Postgres |
@@ -276,12 +290,21 @@ de cuentas eliminadas, y conservarlos complica el cumplimiento de una solicitud 
 |-------|-------|-------|
 | `abierta` | `en_proceso`, `resuelta` | Superadministrador |
 | `en_proceso` | `resuelta` | Superadministrador |
-| `resuelta` | `abierta` | Automático (RN-06) o superadministrador |
+| `resuelta` | `abierta` | Superadministrador (ya no ocurre automáticamente) |
 | `resuelta` | `archivada` | Automático (RN-07) o superadministrador |
 | `archivada` | `abierta` | Superadministrador |
 
-Cualquier otra transición se rechaza en la función que la aplica. El usuario nunca cambia
-un estado directamente; solo lo provoca por RN-06.
+Cualquier otra transición se rechaza en la función que la aplica. **El usuario nunca
+cambia un estado**, ni directamente ni escribiendo: desde la migración
+`025_soporte_resuelta_no_se_reabre.sql`, un mensaje suyo en una conversación `resuelta` se
+rechaza con `SOPORTE_RESUELTA` y la interfaz le ofrece abrir una nueva.
+
+**Justificación de RN-06 (redacción nueva).** Que un mensaje reabriera el hilo convertía
+«resuelta» en una etiqueta provisional: un «gracias» de hace un mes devolvía a la bandeja
+un caso cerrado, y una consulta nueva quedaba pegada a un asunto que ya no tenía nada que
+ver. Un hilo cerrado cuenta una sola cosa de principio a fin; lo siguiente es otro hilo.
+Al cerrarse se muestra una **despedida automática** (§7.5) para que el final se vea, en
+lugar de dejar solo un redactor bloqueado.
 
 ## 6. Modelo de datos
 
@@ -409,7 +432,7 @@ Comportamiento:
 4. Determina `autor` según `es_super_admin()`. **No se acepta como parámetro:** si el
    cliente pudiera declarar quién escribe, cualquiera enviaría mensajes firmados como
    soporte.
-5. Inserta, actualiza `ultimo_mensaje_at` y aplica RN-06.
+5. Inserta y actualiza `ultimo_mensaje_at`. **El estado de la conversación no se toca** (RN-06, desde la migración 025).
 6. Devuelve el mensaje creado.
 
 `SECURITY INVOKER`, para que RLS siga aplicando dentro de la función.
@@ -438,11 +461,24 @@ solo por URL firmada (RF-17).
 - **Estados:** carga (esqueleto de burbujas) · vacío · error con reintento · archivada
   (redactor deshabilitado, con el motivo) · sin conexión (aviso y mensajes en cola).
 
-### 7.3 Panel — `/admin/soporte`
+### 7.3 Panel del soporte
 
-- **Desktop:** filtros y búsqueda arriba; bandeja a la izquierda; a la derecha el hilo con
-  redactor, selector de estado y campo de nota interna claramente marcado como privado.
-- **Móvil:** dos niveles (bandeja → hilo) con botón de volver.
+- **Acceso habitual:** modal sobre la pantalla actual (`PanelSoporteAdminModal.vue`), que
+  abre el botón flotante y también las notificaciones dirigidas al soporte. Arranca
+  **ampliado** —es una herramienta de trabajo, no una consulta rápida— y se puede reducir a
+  panel lateral.
+- **«Atrás» cierra el overlay, no la pantalla.** Los tres overlays del soporte —chat,
+  bandeja y visor de adjuntos— van en una misma pila (`useModalStack` en `DashboardLayout`),
+  que sincroniza `pushState`/`popstate`. Con una foto abierta sobre el chat, «atrás» cierra
+  la foto y deja el chat como estaba. Para que ocultar un overlay no pierda el hilo que se
+  estaba leyendo (los paneles se montan con `v-if`), la conversación abierta de cada vista
+  vive en el store (`conversacionAbiertaUsuario` / `conversacionAbiertaBandeja`).
+- **Ruta `/admin/soporte/:conversacionId?`:** se conserva para los enlaces directos. El
+  cuerpo es el mismo componente en los dos sitios (`PanelBandejaSoporte.vue`), en modo
+  compacto o de dos columnas.
+- **Desktop / ampliado:** filtros y búsqueda arriba; bandeja a la izquierda; a la derecha el
+  hilo con redactor, selector de estado y campo de nota interna marcado como privado.
+- **Móvil / reducido:** dos niveles (bandeja → hilo) con botón de volver.
 
 ### 7.4 Transversal
 
@@ -454,6 +490,29 @@ solo por URL firmada (RF-17).
 - **Estado del mensaje:** `enviando` (reloj tenue), `enviado` (marca), `fallido` (icono de
   alerta y botón «Reintentar»). Se distingue por forma además de por color.
 - **Estado de la conversación:** pastilla con etiqueta textual, no solo color.
+
+### 7.5 Textos automáticos
+
+Dos, y ninguno se guarda como mensaje (no notifican, no cuentan como respuesta y no alteran
+el filtro «sin responder»):
+
+| Texto | Cuándo | Fuente |
+|-------|--------|--------|
+| **Acuse de recibo** | Hay mensaje confirmado y el soporte todavía no ha escrito | `ACUSES_RECIBO` (15 variantes) |
+| **Despedida** | La conversación queda `resuelta` o `archivada` | `DESPEDIDAS` (15 variantes) |
+
+Ambos se eligen por el id de la conversación, no al azar: un texto que cambiara en cada
+repintado delataría que no lo ha escrito nadie. Se muestran marcados como automáticos y con
+forma distinta a las burbujas.
+
+**La despedida es una despedida, no un acta de cierre.** Cada variante hace tres cosas a la
+vez: se despide con calidez, dice sin rodeos que la conversación **queda cerrada**, y deja
+claro que lo siguiente va en una nueva. Faltando cualquiera de las tres, o suena fría, o el
+usuario se queda esperando poder responder en un hilo que ya no admite mensajes.
+
+**Ningún acuse invita a marcharse.** «Ya puedes cerrar la app», «no hace falta que estés
+pendiente» y equivalentes están prohibidos: un acuse dice que el mensaje llegó, no despacha
+a quien escribe. Quien decide cuándo se va de la conversación es el usuario.
 
 ## 8. Requisitos no funcionales
 
@@ -512,8 +571,10 @@ Por qué cada pieza:
 
 - **CA-02 (RF-02, RN-06):**
   - *Dado* una conversación `resuelta`
-  - *Cuando* el usuario escribe en ella
-  - *Entonces* el mensaje se añade y el estado vuelve a `abierta`
+  - *Cuando* el usuario la abre
+  - *Entonces* el redactor está bloqueado con el motivo, se ve la despedida al final del
+    hilo y se ofrece **«Abrir una conversación nueva»**; si aun así se fuerza el envío, el
+    servidor lo rechaza con `SOPORTE_RESUELTA` y el estado no cambia
 
 - **CA-03 (RF-03):**
   - *Dado* un usuario con varias conversaciones, una de ellas con respuesta sin leer
@@ -558,7 +619,7 @@ Por qué cada pieza:
 - **CA-11 (RF-11):**
   - *Dado* un usuario con push activo y la app en segundo plano
   - *Cuando* el soporte responde
-  - *Entonces* recibe una notificación cuyo cuerpo no contiene cifras, saldos ni nombres de natillera
+  - *Entonces* recibe una notificación cuyo título es el asunto del chat y cuyo cuerpo es el texto de la respuesta, de modo que puede saber de qué va sin abrir la app
 
 - **CA-12 (RF-12):**
   - *Dado* un usuario **sin** suscripciones push activas
@@ -648,15 +709,15 @@ cumplir mejor su intención. Están comentados también en el propio código.
 | §6.5 | `soporte_enviar_mensaje` con `SECURITY INVOKER` | `SECURITY DEFINER`, con validación explícita de identidad y pertenencia | Para que la función sea de verdad «el único camino de escritura», las tablas no conceden INSERT a los clientes. Con `INVOKER` la función tampoco podría escribir. Con una política de INSERT abierta, cualquiera insertaría por PostgREST saltándose el límite de frecuencia (RF-18) |
 | §6.1/§6.4 | Política `conv_insert` para el usuario | No existe; además se revocan INSERT/UPDATE/DELETE a `authenticated` en las tres tablas del hilo | Misma razón. Las lecturas siguen íntegramente por RLS, que es lo que sostiene RF-15 y CA-13 |
 | §6.6 | Ruta de adjunto `<conversacion_id>/<mensaje_id>/<archivo>` | `<user_id>/<client_id>/<archivo>` | RF-05 exige subir los archivos **antes** de crear el mensaje, así que en ese momento no existe `mensaje_id` —ni `conversacion_id` al abrir un hilo nuevo—. El `client_id` sí existe (lo genera el redactor), y el uid como primera carpeta es lo que la política del bucket puede comprobar |
-| RF-11 / CA-11 | El push al usuario lleva los primeros 120 caracteres | Lleva «Tienes una respuesta en tu conversación #N» | CA-11 exige que el cuerpo no contenga cifras, saldos ni nombres de natillera, y no hay forma fiable de detectar el nombre de una natillera dentro de una frase. La constante `INCLUIR_TEXTO_EN_PUSH_AL_USUARIO` en la Edge Function permite volver al adelanto de RF-11 si se prefiere |
+| RF-10 / RF-11 | El título era `Soporte · <categoría>` / `Respuesta de soporte` | El título es el **asunto del chat** y el cuerpo lleva el mensaje (180 caracteres) | Petición de producto: una notificación que no dice de qué chat es ni qué dice el mensaje obliga a abrir la app para enterarse. Se asume el riesgo de privacidad que CA-11 evitaba; `INCLUIR_TEXTO_EN_PUSH_AL_USUARIO = false` lo revierte |
 | §6.3 | La bandeja incluye `nota_interna` | No la incluye; se lee con `soporte_nota_interna()`, que exige ser superadministrador | RLS filtra filas, no columnas: con la nota en la vista o en el GRANT de la tabla, el dueño de la conversación podría leer la nota de su propio hilo, que es justo lo que CA-07 prohíbe. El GRANT de `soporte_conversaciones` es columna a columna y deja `nota_interna` fuera |
 | RF-09 | Realtime solo sobre `INSERT` en `soporte_mensajes` | También `UPDATE` sobre `soporte_conversaciones`, publicada **con lista de columnas** (migración 023) | Un cambio de estado no llegaba a la otra parte: había que recargar para ver que el soporte había resuelto el hilo. La lista de columnas es obligatoria: el RLS de Realtime filtra filas, no columnas, y publicando la tabla entera el dueño recibiría `nota_interna` por el canal cada vez que el soporte guardase una nota — RN-11 y CA-07 rotos por una puerta que no se ve desde la API REST |
-| RN-06 / §7.2 | El redactor solo se deshabilita con la conversación `archivada` | En `resuelta` llega deshabilitado, con un botón **«Volver a escribir»** que lo levanta | Pedido en pruebas: una conversación resuelta debe verse cerrada, no invitar a escribir. Deshabilitarlo del todo dejaría RN-06 (y CA-02) inalcanzable desde la interfaz, así que el bloqueo es reversible por el propio usuario. `archivada` sigue siendo definitivo para él (RN-08) |
+| RN-06 / §7.2 | «Un mensaje del usuario en una conversación `resuelta` la devuelve a `abierta`» | Resuelta es un final: el redactor queda bloqueado sin vuelta atrás y se ofrece **«Abrir una conversación nueva»**. El servidor lo respalda (`SOPORTE_RESUELTA`, migración 025) | Pedido en pruebas. Reabrir escribiendo convertía «resuelta» en una etiqueta provisional: un «gracias» de hace un mes devolvía a la bandeja un caso cerrado, y una consulta nueva quedaba pegada a un asunto que ya no tenía que ver. Se cierra con una **despedida automática** (§7.5) para que el final se vea, en vez de dejar solo un campo bloqueado. El soporte sí puede escribir en una resuelta y sigue siendo el único que la reabre |
 | §7.1 | Entrada en el menú lateral **y** en `MobileBottomNav` | Menú lateral (con insignia) **más un botón flotante** arrastrable y ocultable | `MobileBottomNav` solo se renderiza dentro de una natillera (`v-if="natilleraId"`) y es contextual a ella; el soporte es transversal. El botón flotante lo pidió Esteban en pruebas, revirtiendo el «se descarta» de §7.1 — ver la fila siguiente |
 | RN-09 | «El número visible es `#` + entero correlativo de una secuencia de Postgres» | El correlativo sigue siendo la clave interna, pero lo que se ve es un código tipo `NT-MMV3` (`codigoConversacion`) | Enseñar el correlativo cuenta cuántas conversaciones existen: «#3» dice que el sistema se estrenó ayer y «#1», que eres el primero que escribe. La transformación es una red de Feistel de 4 rondas sobre 20 bits: biyectiva por construcción, así que **no puede haber colisiones** y no hay nada que guardar ni comprobar al crear. El correlativo **sí se muestra en el panel del soporte**, junto al código: al agente le sirve para saber el orden y el volumen, al usuario no. Alfabeto Crockford (sin I, L, O ni U) para que se pueda dictar por teléfono. Comprobado sobre el millón de códigos posibles: 0 colisiones, y dos conversaciones consecutivas comparten un 3,1 % de caracteres — exactamente lo que daría el azar |
 | §2 (fuera de alcance) | «Respuestas automáticas, bots» | Acuse de recibo mientras el soporte no ha contestado: 15 textos en `ACUSES_RECIBO`, elegidos por el id de la conversación | Pedido en pruebas. **No es un mensaje**: no se guarda en `soporte_mensajes`, no dispara el webhook ni el push, y no cuenta como respuesta. Guardarlo sí habría roto tres cosas — el filtro «sin responder» de CA-06 dejaría de ver la conversación porque el último autor pasaría a ser `soporte`, el usuario recibiría un push por un texto automático, y su contador de no leídos subiría solo. Se muestra marcado como automático y con forma distinta a las burbujas: un texto que se hiciera pasar por una persona dejaría al usuario esperando una conversación que no ha empezado |
-| §7.3 | El panel de soporte se alcanza por el menú de Administrador | También se retira del menú: para quien atiende el soporte, el botón flotante ofrece dos destinos —«Mis mensajes» y «Panel de soporte», este con su contador— y un toque abre ese menú en vez de ir directo al chat | Pedido en pruebas. La bandeja sigue navegando a `/admin/soporte` y no a un panel flotante: tiene filtros, búsqueda, paginación y el hilo al lado, es una herramienta de trabajo y no una consulta rápida |
-| §7.1 | Entrada permanente en el menú lateral | Se retira: el acceso del usuario es solo el botón flotante, y Configuración ofrece la vía de rescate («Abrir el soporte») por si lo oculta | Pedido en pruebas. El enlace de rescate no es opcional: sin él, ocultar el botón dejaría al usuario sin ninguna forma de volver a su propia conversación |
+| §7.3 | El panel de soporte se alcanza por el menú de Administrador | Se retira del menú: el botón flotante ofrece dos destinos —«Mis mensajes» y «Panel de soporte», este con su contador—. **La bandeja abre como modal** sobre la pantalla actual, no navegando | Pedido en pruebas, en dos pasos. Primero se movió al botón flotante; después, la navegación a `/admin/soporte` se cambió por un modal: se atiende soporte *mientras* se hace otra cosa, y cambiar de pantalla obligaba a volver a mano. Que sea herramienta de trabajo se resuelve con el tamaño (arranca ampliado, con filtros, búsqueda, paginación y el hilo al lado), no con la ruta. La ruta se conserva para enlaces directos, con el mismo componente detrás (`PanelBandejaSoporte.vue`) |
+| §7.1 | Entrada permanente en el menú lateral | Se retira: el acceso del usuario es solo el botón flotante. En *Mi cuenta* queda el interruptor **Visible / Oculto** del botón; el enlace «Abrir el soporte» que había allí se quitó a petición | Pedido en pruebas. La vía de rescate sigue existiendo, pero es el propio interruptor: quien oculta el botón lo vuelve a mostrar desde la misma pantalla. La ruta `/soporte` se conserva para las notificaciones |
 | §7.2 | El hilo del usuario vive en la pantalla `/soporte` | El panel flotante se puede **ampliar** hasta ocupar todo salvo la barra lateral, y ampliado pasa a dos columnas | Pedido en pruebas: para una conversación larga, el widget de 24 rem se queda corto |
 | §7.1 / §7.2 | El acceso lleva a la pantalla `/soporte` | El botón flotante abre un **panel de chat sobre la pantalla actual** (`ChatSoporteFlotante.vue`); `/soporte` sigue existiendo para el enlace del menú y para las notificaciones, que apuntan a una conversación concreta con URL propia | Pedido en pruebas: el botón debe abrir el chat donde estés, sin perder lo que estabas haciendo. El cuerpo es el mismo componente (`PanelConversaciones.vue`) en los dos sitios, en modo compacto o de dos columnas: mantener dos chats en paralelo sería garantizar que se separan |
 | §7.1 | «Se descarta el botón flotante» | Implementado en `BotonSoporte.vue` | Se revierte a petición expresa. Los tres motivos del descarte se resuelven en vez de ignorarse: **compite con la barra inferior** → el arrastre está acotado a una zona segura que descuenta esa barra cuando existe; **compite con los pies de las modales** → se esconde solo mientras `isBodyScrollLocked` sea cierto, que es la señal que ya emite `useBodyScrollLock`; **lógica de ocultamiento frágil** → no hay heurísticas de scroll, solo esa señal y la ruta. La posición se guarda como lado + fracción de altura, nunca en píxeles, para que sobreviva a rotaciones y a cambios de pantalla |
@@ -665,6 +726,9 @@ cumplir mejor su intención. Están comentados también en el propio código.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| 2.11 | 2026-09-03 | *Mi cuenta* pierde el enlace «Abrir el soporte» y el cuadro «¿Buscabas los mensajes de recordatorio?». La vía de rescate pasa a ser el interruptor Visible/Oculto del botón flotante |
+| 2.10 | 2026-09-03 | «Atrás» del navegador y de Android cierra el overlay de soporte de encima en vez de salir de la pantalla: chat, bandeja y visor entran en una pila `useModalStack` con sincronización de historial. El visor pasa a montarse una sola vez en el layout (`useVisorAdjunto`) y la conversación abierta se recuerda en el store, para que apilar un overlay no pierda el hilo |
+| 2.9 | 2026-09-03 | Cuatro cambios: (1) la bandeja del soporte abre como **modal** (`PanelSoporteAdminModal.vue`) con el cuerpo extraído a `PanelBandejaSoporte.vue`, compartido con la ruta; (2) **adjuntos**: compresión de imágenes al elegirlas, subida en paralelo, miniatura visible desde el instante del envío y visor dentro de la app (`VisorAdjunto.vue`); (3) **RN-06 cambia**: una conversación resuelta ya no se reabre escribiendo (`migrations/025_soporte_resuelta_no_se_reabre.sql`), con **despedida automática** de 15 variantes; (4) los acuses dejan de sugerir que el usuario se marche |
 | 2.8 | 2026-09-01 | El botón flotante es el único acceso también para el soporte: un toque despliega «Mis mensajes» y «Panel de soporte». Se retira la entrada del menú de Administrador |
 | 2.7 | 2026-09-01 | La insignia de no leídos se actualiza en vivo desde cualquier pantalla (canal propio en el store). Se retira el soporte del menú lateral, el panel flotante se puede ampliar a pantalla casi completa, y el correlativo interno vuelve a ser visible en el panel del soporte |
 | 2.6 | 2026-09-01 | El identificador visible pasa a ser un código (`NT-MMV3`) en vez del correlativo. Mismo algoritmo en el cliente y en la Edge Function, con paridad comprobada sobre 200.000 números |

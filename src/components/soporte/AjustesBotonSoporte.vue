@@ -44,9 +44,8 @@
       </button>
     </div>
 
-    <div class="mt-3 flex flex-wrap gap-2">
+    <div v-if="visible" class="mt-3 flex flex-wrap gap-2">
       <button
-        v-if="visible"
         type="button"
         class="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 touch-manipulation"
         @click="restablecer"
@@ -55,24 +54,11 @@
         Devolverlo a su sitio
       </button>
 
-      <!--
-        Vía de rescate. El soporte ya no tiene entrada en el menú lateral, así
-        que con el botón oculto este enlace es la única forma de llegar: sin él,
-        ocultarlo dejaría al usuario encerrado fuera de su propia conversación.
-      -->
-      <RouterLink
-        to="/soporte"
-        class="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 touch-manipulation"
-      >
-        <ChatBubbleOvalLeftEllipsisIcon class="h-4 w-4" />
-        Abrir el soporte
-      </RouterLink>
     </div>
   </div>
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
 import { ArrowPathIcon, ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/vue/24/outline'
 import { useBotonSoporte } from '../../composables/useBotonSoporte'
 import { useNotificationStore } from '../../stores/notifications'

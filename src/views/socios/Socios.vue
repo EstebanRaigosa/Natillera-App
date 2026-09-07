@@ -156,7 +156,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="sn in sociosPaginados"
+                v-for="sn in sociosMostrados"
                 :key="sn.id"
                 class="socios-table__row"
                 :class="{ 'socios-table__row--inactivo': sn.estado !== 'activo' }"
@@ -278,7 +278,7 @@
         <div class="md:hidden w-full">
         <ul class="socios-mobile-list">
           <li
-            v-for="sn in sociosPaginados"
+            v-for="sn in sociosMostrados"
             :key="sn.id"
             class="socios-mobile-card"
             :class="{ 'socios-mobile-card--inactivo': sn.estado !== 'activo' }"
@@ -407,60 +407,34 @@
         </ul>
         </div>
 
-        <!-- Paginación -->
-        <div class="socios-pagination">
-          <div class="socios-pagination__info">
-            <label class="socios-page-size">
-              <span class="text-xs text-slate-500">Filas:</span>
-              <select
-                v-model.number="itemsPorPagina"
-                class="socios-page-size__select"
-                aria-label="Filas por página"
-              >
-                <option v-for="n in ITEMS_POR_PAGINA_OPCIONES" :key="n" :value="n">{{ n }}</option>
-              </select>
-            </label>
-            <p class="text-xs text-slate-500">
-              Mostrando
-              <strong class="text-slate-700 font-semibold">{{ rangoMostrado }}</strong>
-              de
-              <strong class="text-slate-700 font-semibold">{{ sociosFiltrados.length }}</strong>
-              {{ sociosFiltrados.length === 1 ? 'socio' : 'socios' }}
-            </p>
-          </div>
-          <div v-if="totalPaginas > 1" class="flex items-center gap-1">
-            <button
-              type="button"
-              class="socios-page-btn"
-              :disabled="paginaActual === 1"
-              aria-label="Página anterior"
-              @click="paginaActual = Math.max(1, paginaActual - 1)"
-            >
-              <ChevronLeftIcon class="w-4 h-4" />
-            </button>
-            <button
-              v-for="p in paginasVisibles"
-              :key="p"
-              type="button"
-              class="socios-page-btn"
-              :class="{ 'socios-page-btn--active': p === paginaActual }"
-              :aria-current="p === paginaActual ? 'page' : undefined"
-              :aria-label="`Ir a página ${p}`"
-              @click="paginaActual = p"
-            >
-              {{ p }}
-            </button>
-            <button
-              type="button"
-              class="socios-page-btn"
-              :disabled="paginaActual === totalPaginas"
-              aria-label="Página siguiente"
-              @click="paginaActual = Math.min(totalPaginas, paginaActual + 1)"
-            >
-              <ChevronRightIcon class="w-4 h-4" />
-            </button>
-          </div>
+        <!-- Carga progresiva (useScrollInfinito): el centinela pide la tanda siguiente al
+             acercarse, y el botón queda como respaldo si el observador no salta. -->
+        <div v-if="hayMasSocios" ref="centinelaRef" class="socios-mas">
+          <button
+            type="button"
+            class="ds-btn ds-btn--secondary w-full sm:w-auto"
+            @click="cargarMasSocios"
+          >
+            <ChevronDownIcon class="w-4 h-4" />
+            Ver más socios
+          </button>
+          <p class="text-xs text-slate-500">
+            Mostrando
+            <strong class="text-slate-700 font-semibold">{{ sociosMostrados.length }}</strong>
+            de
+            <strong class="text-slate-700 font-semibold">{{ sociosFiltrados.length }}</strong>
+            {{ sociosFiltrados.length === 1 ? 'socio' : 'socios' }}
+          </p>
         </div>
+
+        <p v-else class="socios-mas socios-mas--fin">
+          <span v-if="hayVariasTandasDeSocios">
+            Ya viste los {{ sociosFiltrados.length }} socios
+          </span>
+          <span v-else>
+            {{ sociosFiltrados.length }} {{ sociosFiltrados.length === 1 ? 'socio' : 'socios' }}
+          </span>
+        </p>
       </template>
     </section>
 
@@ -650,70 +624,26 @@
             </div>
           </section>
 
-          <!-- Cuotas pagadas -->
-          <section class="detalle-seccion">
-            <button
-              type="button"
-              class="detalle-seccion__head"
-              :aria-expanded="seccionActiva === 'cuotasPagadas'"
-              @click="toggleSeccion('cuotasPagadas')"
-            >
-              <span class="detalle-seccion__title">
-                <CalendarDaysIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-                Cuotas pagadas
-              </span>
-              <ChevronDownIcon
-                class="w-4 h-4 text-slate-400 transition-transform duration-200"
-                :class="seccionActiva === 'cuotasPagadas' ? 'rotate-180' : ''"
-              />
-            </button>
-            <div v-show="seccionActiva === 'cuotasPagadas'" class="detalle-seccion__body">
-              <div v-if="loadingDetalle" class="text-center py-6 text-slate-500 text-sm">
-                Cargando cuotas pagadas…
-              </div>
-              <div v-else-if="cuotasPagadasDetalleSocio.length === 0" class="text-center py-6 text-slate-400 text-sm">
-                No hay cuotas pagadas registradas.
-              </div>
-              <div
-                v-else
-                class="overflow-x-auto max-h-[min(320px,45vh)] overflow-y-auto rounded-[var(--radius-md)] border border-[color:var(--surface-divider)]"
-              >
-                <table class="w-full min-w-[280px] text-sm text-left border-collapse">
-                  <thead class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] border-b border-[color:var(--surface-divider)]">
-                    <tr>
-                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
-                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide text-right whitespace-nowrap">Valor</th>
-                      <th scope="col" class="px-3 py-2.5 font-semibold text-slate-600 text-xs uppercase tracking-wide whitespace-nowrap">Fecha pago</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-slate-100 bg-white">
-                    <tr
-                      v-for="item in cuotasPagadasDetalleSocio"
-                      :key="item.id"
-                      class="hover:bg-[color:var(--brand-primary-soft)] transition-colors"
-                    >
-                      <td class="px-3 py-2 text-slate-800 align-top">{{ item.cuotaLabel }}</td>
-                      <td class="px-3 py-2 text-right font-semibold text-[color:var(--brand-primary)] tabular-nums whitespace-nowrap align-top">
-                        $ {{ formatMoney(item.valorPagado) }}
-                      </td>
-                      <td class="px-3 py-2 text-slate-600 whitespace-nowrap align-top">
-                        {{ item.fechaPago ? formatDate(item.fechaPago) : '—' }}
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot class="bg-[color:var(--brand-primary-soft)] border-t border-[color:var(--surface-divider)]">
-                    <tr>
-                      <th scope="row" class="px-3 py-2.5 text-left font-bold text-slate-900 text-sm">Total</th>
-                      <td class="px-3 py-2.5 text-right font-bold text-[color:var(--brand-primary)] tabular-nums whitespace-nowrap text-sm">
-                        $ {{ formatMoney(totalValorCuotasPagadasDetalleSocio) }}
-                      </td>
-                      <td class="px-3 py-2.5"></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </section>
+          <!--
+            Aquí había un desplegable con una tabla de cuotas pagadas: repetía a medias la
+            modal de cuotas del socio, que además muestra las pendientes y las de mora.
+            Ahora es un botón que la abre encima; el «atrás» del móvil cierra esa y
+            devuelve a este detalle, porque `handlePopState` mira cuotas antes que detalle.
+          -->
+          <button
+            type="button"
+            class="detalle-ir-cuotas"
+            @click="verCuotasDesdeDetalle"
+          >
+            <span class="detalle-ir-cuotas__icono" aria-hidden="true">
+              <CalendarDaysIcon class="w-4 h-4" />
+            </span>
+            <span class="detalle-ir-cuotas__texto">
+              <span class="detalle-ir-cuotas__titulo">Ver las cuotas del socio</span>
+              <span class="detalle-ir-cuotas__sub">Pagadas, pendientes y en mora, con su fecha de pago</span>
+            </span>
+            <ChevronRightIcon class="w-4 h-4 flex-shrink-0 text-slate-400" aria-hidden="true" />
+          </button>
 
           <!-- Información de Contacto -->
           <section class="detalle-seccion">
@@ -1663,10 +1593,16 @@
                       {{ etiquetaEstadoCuotaSocioModal(cuotaData) }}
                     </span>
                   </div>
-                  <!-- Fila 2: subetiqueta + acción WhatsApp -->
+                  <!-- Fila 2: subetiqueta + fecha de pago + acción WhatsApp -->
                   <div class="cuotas-mobile-card__sub-row">
                     <p class="cuotas-mobile-card__sub">
                       {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
+                    </p>
+                    <p
+                      v-if="etiquetaFechaPagoCuotaSocioModal(cuotaData)"
+                      class="cuotas-mobile-card__fecha"
+                    >
+                      {{ etiquetaFechaPagoCuotaSocioModal(cuotaData) }}
                     </p>
                     <button
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
@@ -1724,6 +1660,12 @@
                   </p>
                   <p class="text-[10px] text-gray-500 leading-tight mt-0.5 truncate">
                     {{ subetiquetaValorCuotaSocioModal(cuotaData) }}
+                  </p>
+                  <p
+                    v-if="etiquetaFechaPagoCuotaSocioModal(cuotaData)"
+                    class="text-[10px] text-gray-500 leading-tight truncate tabular-nums"
+                  >
+                    {{ etiquetaFechaPagoCuotaSocioModal(cuotaData) }}
                   </p>
                 </div>
                 <div class="flex flex-col items-end gap-0.5 min-w-0 justify-self-end">
@@ -2853,6 +2795,7 @@ import { normalizeText } from '../../utils/normalizeText.js'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useScrollInfinito } from '../../composables/useScrollInfinito'
 import { isTourEnabled } from '../../config/toursEnabled'
 import { shouldShowNatilleraMenuTour, startNatilleraMenuTour } from '../../composables/useNatilleraMenuTour'
 import {
@@ -2881,7 +2824,6 @@ import {
   XCircleIcon,
   CheckCircleIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
   ChevronRightIcon,
   XMarkIcon,
   BanknotesIcon,
@@ -3155,7 +3097,7 @@ const exitoImportar = ref('')
 const importando = ref(false)
 
 // Sección activa del modal de detalle (solo una a la vez)
-const seccionActiva = ref('cuotasPagadas')  // 'cuotasPagadas', 'contacto' o null (el resumen financiero es fijo, no desplegable)
+const seccionActiva = ref(null)  // 'contacto' o null (el resumen financiero es fijo y las cuotas se ven en su propia modal)
 
 // ─────────────────────────────────────────────────────────────
 // Natiscroll para modales estandarizadas (skill natillerapp-modals: obligatorio
@@ -3375,29 +3317,9 @@ watch(socioAActivar, () => {
   }
 }, { flush: 'post' })
 
-// Filtros y paginación de la tabla
+// Filtros de la tabla
 const filtroEstado = ref('todos')           // 'todos' | 'activo' | 'inactivo'
 const filtroPeriodicidad = ref('todos')     // 'todos' | 'mensual' | 'quincenal'
-const paginaActual = ref(1)
-
-const ITEMS_POR_PAGINA_OPCIONES = [10, 25, 50, 100]
-const ITEMS_POR_PAGINA_DEFECTO = 10
-const STORAGE_KEY_ITEMS_POR_PAGINA = 'socios:itemsPorPagina'
-
-function leerItemsPorPaginaInicial() {
-  try {
-    const guardado = Number(localStorage.getItem(STORAGE_KEY_ITEMS_POR_PAGINA))
-    if (ITEMS_POR_PAGINA_OPCIONES.includes(guardado)) return guardado
-  } catch { /* localStorage no disponible (SSR / privado) */ }
-  return ITEMS_POR_PAGINA_DEFECTO
-}
-
-const itemsPorPagina = ref(leerItemsPorPaginaInicial())
-
-watch(itemsPorPagina, (nv) => {
-  paginaActual.value = 1
-  try { localStorage.setItem(STORAGE_KEY_ITEMS_POR_PAGINA, String(nv)) } catch { /* noop */ }
-})
 
 const sociosFiltrados = computed(() => {
   let res = sociosStore.sociosNatillera
@@ -3421,38 +3343,21 @@ const sociosFiltrados = computed(() => {
   )
 })
 
-const totalPaginas = computed(() => Math.max(1, Math.ceil(sociosFiltrados.value.length / itemsPorPagina.value)))
+/**
+ * La lista crece al bajar, en vez de repartirse en páginas numeradas: con el pulgar es
+ * más natural seguir deslizando que buscar el «3». Vale para la tabla de escritorio y
+ * para las tarjetas de móvil, porque las dos leen `sociosMostrados`.
+ */
+const {
+  centinelaRef,
+  mostrados: sociosMostrados,
+  hayMas: hayMasSocios,
+  huboVariasTandas: hayVariasTandasDeSocios,
+  cargarMas: cargarMasSocios,
+  reiniciar: volverALaPrimeraTandaDeSocios
+} = useScrollInfinito(sociosFiltrados, { porTanda: 10, margen: '250px 0px' })
 
-const sociosPaginados = computed(() => {
-  const start = (paginaActual.value - 1) * itemsPorPagina.value
-  return sociosFiltrados.value.slice(start, start + itemsPorPagina.value)
-})
-
-const rangoMostrado = computed(() => {
-  const total = sociosFiltrados.value.length
-  if (total === 0) return '0'
-  const start = (paginaActual.value - 1) * itemsPorPagina.value + 1
-  const end = Math.min(start + itemsPorPagina.value - 1, total)
-  return `${start}-${end}`
-})
-
-const paginasVisibles = computed(() => {
-  const total = totalPaginas.value
-  const cur = paginaActual.value
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1)
-  let start = Math.max(1, cur - 2)
-  let end = Math.min(total, start + 4)
-  if (end - start < 4) start = Math.max(1, end - 4)
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
-})
-
-watch([busqueda, filtroEstado, filtroPeriodicidad], () => {
-  paginaActual.value = 1
-})
-
-watch(totalPaginas, (nv) => {
-  if (paginaActual.value > nv) paginaActual.value = nv
-})
+watch([busqueda, filtroEstado, filtroPeriodicidad], volverALaPrimeraTandaDeSocios)
 
 // inputmode del input de búsqueda. Se setea a 'none' durante el focus inicial
 // programático en móvil para que el teclado virtual NO se abra automáticamente.
@@ -3541,6 +3446,17 @@ function limpiarFiltros() {
 
 function toggleSeccion(seccion) {
   seccionActiva.value = seccionActiva.value === seccion ? null : seccion
+}
+
+/**
+ * Del detalle al listado de cuotas. El detalle se queda abierto debajo a propósito: el
+ * bloqueo de scroll lleva un contador global y `handlePopState` cierra la modal de cuotas
+ * antes que el detalle, así que cerrar la de arriba devuelve al socio donde estaba.
+ */
+function verCuotasDesdeDetalle() {
+  const socio = socioSeleccionado.value
+  if (!socio) return
+  verCuotasSocio(socio)
 }
 
 const formSocio = reactive({
@@ -5174,58 +5090,6 @@ function getMesLabel(mes) {
   return mesObj ? mesObj.label : `Mes ${mes}`
 }
 
-/** Cuotas con estado pagada para el modal de detalle: etiqueta tipo "1.ª de Marzo 2026", valor y fecha (orden reciente primero). */
-const cuotasPagadasDetalleSocio = computed(() => {
-  const list = (cuotasSocio.value || []).filter((c) => c.estado === 'pagada')
-  const items = list.map((c) => {
-    let mes = c.mes
-    let anio = c.anio
-    if (c.fecha_limite && typeof c.fecha_limite === 'string' && c.fecha_limite.includes('-')) {
-      const [y, m] = c.fecha_limite.split('-').map(Number)
-      if (anio == null) anio = y
-      if (mes == null) mes = m
-    }
-    const nombreMes = mes != null ? getMesLabel(mes) : null
-    let cuotaLabel = 'Cuota'
-    if (c.quincena === 1 && nombreMes != null && anio != null) {
-      cuotaLabel = `1.ª de ${nombreMes} ${anio}`
-    } else if (c.quincena === 2 && nombreMes != null && anio != null) {
-      cuotaLabel = `2.ª de ${nombreMes} ${anio}`
-    } else if (nombreMes != null && anio != null) {
-      cuotaLabel = `${nombreMes} ${anio}`
-    } else if (anio != null) {
-      cuotaLabel = c.quincena === 1 ? `1.ª quincena ${anio}` : c.quincena === 2 ? `2.ª quincena ${anio}` : `${anio}`
-    } else if (c.quincena === 1) {
-      cuotaLabel = '1.ª quincena'
-    } else if (c.quincena === 2) {
-      cuotaLabel = '2.ª quincena'
-    }
-
-    const fechaPagoMs = c.fecha_pago ? new Date(c.fecha_pago).getTime() : 0
-    let fechaLimiteMs = 0
-    if (c.fecha_limite) {
-      fechaLimiteMs = new Date(c.fecha_limite).getTime()
-    }
-
-    return {
-      id: c.id,
-      cuotaLabel,
-      fechaPago: c.fecha_pago,
-      valorPagado: c.valor_pagado || 0,
-      fechaPagoMs,
-      fechaLimiteMs
-    }
-  })
-  return items.sort(
-    (a, b) =>
-      (b.fechaPagoMs || b.fechaLimiteMs) - (a.fechaPagoMs || a.fechaLimiteMs)
-  )
-})
-
-const totalValorCuotasPagadasDetalleSocio = computed(() =>
-  cuotasPagadasDetalleSocio.value.reduce((s, i) => s + (i.valorPagado || 0), 0)
-)
-
 // Función para obtener el emoji del mes
 function getMesEmoji(mes) {
   const emojis = {
@@ -5378,6 +5242,17 @@ function subetiquetaValorCuotaSocioModal(c) {
   if (pagado >= total) return 'Liquidado'
   if (pagado > 0 && pagado < total) return `Pagado $${formatMoney(pagado)}`
   return 'Pendiente de pago'
+}
+
+/**
+ * Fecha que consta como pago en la cuota. En un pago parcial `fecha_pago` guarda el
+ * último abono, no la liquidación, así que ahí la etiqueta no puede decir «pagada el».
+ */
+function etiquetaFechaPagoCuotaSocioModal(c) {
+  if (!c.fechaPago) return ''
+  const total = totalObligacionCuotaSocioModal(c)
+  const pagado = c.valorPagado || 0
+  return `${pagado >= total ? 'Pagada el' : 'Último pago'} ${formatDate(c.fechaPago)}`
 }
 
 function etiquetaEstadoCuotaSocioModal(c) {
@@ -6681,102 +6556,27 @@ onUnmounted(() => {
 .action-btn--warning:hover { background: #fef3c7; color: #b45309; }
 .action-btn--danger:hover  { background: #fee2e2; color: #b91c1c; }
 
-/* ---------- Paginación ---------- */
-.socios-pagination {
+/* ---------- Pie de carga progresiva ---------- */
+.socios-mas {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
   align-items: center;
-  justify-content: space-between;
+  gap: 0.625rem;
   padding: 0.875rem 1rem;
   border-top: 1px solid var(--surface-divider);
   background: var(--surface-muted);
+  text-align: center;
 }
 @media (min-width: 640px) {
-  .socios-pagination { flex-direction: row; padding: 0.875rem 1.25rem; }
+  .socios-mas { padding: 0.875rem 1.25rem; }
 }
 
-.socios-pagination__info {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1rem;
-  justify-content: center;
-}
-@media (min-width: 640px) {
-  .socios-pagination__info { justify-content: flex-start; }
-}
-
-.socios-page-size {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4375rem;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.socios-page-size__select {
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: #fff;
-  border: 1px solid var(--surface-divider-strong);
-  border-radius: var(--radius-md);
-  padding: 0.3125rem 1.625rem 0.3125rem 0.625rem;
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #334155;
-  min-height: 32px;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.4375rem center;
-  background-size: 0.875rem;
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
-}
-.socios-page-size__select:focus {
-  outline: none;
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18);
-}
-/* En móviles muy pequeños, el select crece para mantener área táctil cómoda */
-@media (max-width: 480px) {
-  .socios-page-size__select { min-height: 36px; }
-}
-
-.socios-page-btn {
-  min-width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.5rem;
-  border-radius: var(--radius-md);
-  font-family: var(--font-display);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #475569;
-  background: transparent;
-  border: 1px solid var(--surface-divider);
-  cursor: pointer;
-  transition: background-color var(--transition-base),
-              border-color var(--transition-base),
-              color var(--transition-base),
-              box-shadow var(--transition-base);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.socios-page-btn:hover:not(:disabled) {
-  background: #fff;
-  border-color: rgba(27, 94, 55, 0.30);
-  color: var(--brand-primary);
-}
-.socios-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.socios-page-btn--active,
-.socios-page-btn--active:hover {
-  background: var(--brand-primary);
-  border-color: var(--brand-primary);
-  color: #fff;
-  box-shadow: var(--shadow-brand);
+/* Cuando ya no queda nada por traer, el pie es solo el recuento. */
+.socios-mas--fin {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 /* ---------- Botón compacto «+» en la cabecera (móvil) ---------- */
@@ -6837,7 +6637,6 @@ onUnmounted(() => {
   .action-btn,
   .card-pill,
   .socios-fab,
-  .socios-page-btn,
   .socios-search__clear { -webkit-transform: translate3d(0, 0, 0); }
 }
 
@@ -7376,6 +7175,60 @@ onUnmounted(() => {
   background: #fff;
 }
 
+/* Acceso a la modal de cuotas: es una acción, no una sección que se despliega. */
+.detalle-ir-cuotas {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  min-height: 56px;
+  background: #fff;
+  border: 1px solid var(--surface-divider);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.detalle-ir-cuotas:hover {
+  background: var(--brand-primary-soft);
+  border-color: rgba(27, 94, 55, 0.3);
+}
+.detalle-ir-cuotas:active {
+  background: var(--surface-muted);
+}
+.detalle-ir-cuotas__icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+}
+.detalle-ir-cuotas__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.detalle-ir-cuotas__titulo {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1f2937;
+  line-height: 1.25;
+}
+.detalle-ir-cuotas__sub {
+  font-size: 0.6875rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
 .detalle-mini-stat {
   text-align: center;
   padding: 0.625rem 0.5rem;
@@ -7690,6 +7543,15 @@ onUnmounted(() => {
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Fecha de pago: no se recorta, se recorta antes la subetiqueta de al lado. */
+.cuotas-mobile-card__fecha {
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: #475569;
   white-space: nowrap;
 }
 .cuotas-mobile-card__wsp {

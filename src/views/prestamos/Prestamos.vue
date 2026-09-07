@@ -1288,18 +1288,16 @@
 
             <button 
               @click="compartirWhatsAppAbono"
-              :disabled="generandoImagenComprobante || !comprobanteAbono?.socioTelefono"
+              :disabled="generandoImagenComprobante"
               :class="[
                 'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
-                (generandoImagenComprobante || !comprobanteAbono?.socioTelefono)
+                generandoImagenComprobante
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-green-500 hover:bg-green-600 text-white'
               ]"
-              :title="!comprobanteAbono?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
               <span v-if="generandoImagenComprobante">Preparando...</span>
-              <span v-else-if="!comprobanteAbono?.socioTelefono">📲 Sin teléfono registrado</span>
               <span v-else>📲 Compartir por WhatsApp</span>
             </button>
           </div>
@@ -1466,18 +1464,16 @@
           <button
             type="button"
             @click="compartirWhatsAppComprobantePagado"
-            :disabled="generandoImagenComprobantePagado || !comprobantePagado?.socioTelefono"
+            :disabled="generandoImagenComprobantePagado"
             :class="[
               'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-colors min-h-[48px]',
-              (generandoImagenComprobantePagado || !comprobantePagado?.socioTelefono)
+              generandoImagenComprobantePagado
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-green-500 hover:bg-green-600 text-white'
             ]"
-            :title="!comprobantePagado?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
           >
             <ChatBubbleLeftIcon class="w-5 h-5" />
-            <span v-if="!comprobantePagado?.socioTelefono">📲 Sin teléfono registrado</span>
-            <span v-else>📲 Compartir por WhatsApp</span>
+            <span>📲 Compartir por WhatsApp</span>
           </button>
 
           <p class="hidden sm:block text-xs text-gray-400 text-center">
@@ -3354,16 +3350,14 @@
               <button
                 type="button"
                 @click="compartirPrestamoWhatsApp"
-                :disabled="generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono"
+                :disabled="generandoImagenPrestamo"
                 :class="[
                   'btn-modal-primary w-full',
-                  (generandoImagenPrestamo || !prestamoDetalle?.socio_natillera?.socio?.telefono) ? 'opacity-50 cursor-not-allowed' : ''
+                  generandoImagenPrestamo ? 'opacity-50 cursor-not-allowed' : ''
                 ]"
-                :title="!prestamoDetalle?.socio_natillera?.socio?.telefono ? 'No hay teléfono registrado para este socio' : ''"
               >
                 <ChatBubbleLeftIcon class="w-5 h-5" />
                 <span v-if="generandoImagenPrestamo">Preparando…</span>
-                <span v-else-if="!prestamoDetalle?.socio_natillera?.socio?.telefono">Sin teléfono registrado</span>
                 <span v-else>Compartir por WhatsApp</span>
               </button>
               <p class="text-center text-xs text-gray-500">
@@ -3552,16 +3546,14 @@
             <button
               type="button"
               @click="compartirPrestamoNuevoWhatsApp"
-              :disabled="generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono"
+              :disabled="generandoImagenPrestamoNuevo"
               :class="[
                 'btn-modal-primary w-full',
-                (generandoImagenPrestamoNuevo || !socioSeleccionado?.socio?.telefono) ? 'opacity-50 cursor-not-allowed' : ''
+                generandoImagenPrestamoNuevo ? 'opacity-50 cursor-not-allowed' : ''
               ]"
-              :title="!socioSeleccionado?.socio?.telefono ? 'El socio no tiene teléfono registrado' : ''"
             >
               <ChatBubbleLeftIcon class="w-5 h-5" />
               <span v-if="generandoImagenPrestamoNuevo">Preparando...</span>
-              <span v-else-if="!socioSeleccionado?.socio?.telefono">Sin teléfono registrado</span>
               <span v-else>Compartir por WhatsApp</span>
             </button>
             <button
@@ -3835,7 +3827,7 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
-import { natilleraPrestamosDeshabilitados, parseReglasInteresPrestamo } from '../../utils/natilleraPrestamos'
+import { natilleraPrestamosDeshabilitados, parseReglasInteresPrestamo, diasGraciaPrestamo } from '../../utils/natilleraPrestamos'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -4067,13 +4059,38 @@ const toggleMoraInfo = (prestamoId) => {
 
 // parseReglasInteresPrestamo se importa desde utils/natilleraPrestamos (incluye tasa_mora)
 const reglasInteresNatillera = ref(parseReglasInteresPrestamo(null))
+// Días de gracia efectivos de la natillera para préstamos (0 si la regla está
+// apagada). Se leen de aquí en todos los cálculos para que el interruptor de la
+// configuración tenga un solo punto de verdad.
+const diasGraciaPrestamos = computed(() => diasGraciaPrestamo(reglasInteresNatillera.value))
+
 
 const plazoMaximoCuotasCrear = computed(() => reglasInteresNatillera.value.plazo_maximo)
 
 async function cargarReglasPrestamoNatillera() {
   try {
-    const n = await natillerasStore.fetchNatillera(id)
-    reglasInteresNatillera.value = parseReglasInteresPrestamo(n?.reglas_interes)
+    /*
+     * Consulta directa en vez de `natillerasStore.fetchNatillera(id)`.
+     *
+     * De toda la natillera aquí solo se usa `reglas_interes`: para las reglas de
+     * interés y para saber si la natillera tiene los préstamos deshabilitados.
+     * `fetchNatillera` en cambio hace dos rondas de consultas y se trae socios,
+     * actividades, socios_actividad y TODAS las cuotas de la natillera —en la
+     * más grande, 384 filas y ~378 KB de JSON— que esta vista no usa en ningún
+     * sitio. Y como esto va con `await` antes de `fetchPrestamos()`, ese peso se
+     * pagaba entero antes de empezar a pedir los préstamos.
+     */
+    const { data: n, error: e } = await supabase
+      .from('natilleras')
+      .select('id, reglas_interes, reglas_multas')
+      .eq('id', id)
+      .maybeSingle()
+    if (e) throw e
+    // `reglas_multas` solo se usa para heredar los días de gracia de las cuotas
+    // cuando préstamos no tiene los suyos guardados.
+    reglasInteresNatillera.value = parseReglasInteresPrestamo(n?.reglas_interes, {
+      diasGraciaCuotas: n?.reglas_multas?.dias_gracia ?? 3
+    })
     return n
   } catch (e) {
     console.warn('No se cargaron reglas de préstamo de la natillera:', e)
@@ -4322,9 +4339,27 @@ const comprobanteAbono = ref(null)
 // ── Mora en el abono ───────────────────────────────────────────────
 // El pago cubre PRIMERO la mora acumulada (va al fondo) y el resto baja el saldo
 // de capital+interés. El saldo nunca capitaliza la mora.
-const moraPrestamoAbono = computed(() => prestamoSeleccionado.value?.moraAcumulada || 0)
+/*
+ * Fecha a la que se liquida la mora del abono: la que el usuario registra como
+ * fecha de pago, no «hoy». Un pago que se anota tarde (el socio pagó el 5 y se
+ * registra el 12) debe cobrar la mora hasta el 5; uno con fecha posterior,
+ * hasta esa fecha. Si el campo está vacío o es inválido, se cae a hoy.
+ */
+const fechaCorteAbono = computed(() => {
+  const f = formAbono.fecha_pago ? parseDateLocal(formAbono.fecha_pago) : null
+  const corte = f && !Number.isNaN(f.getTime()) ? f : new Date()
+  corte.setHours(0, 0, 0, 0)
+  return corte
+})
+// Mora del préstamo a la fecha de pago (no la acumulada «a hoy» del listado).
+const moraPrestamoAbono = computed(() => Math.round(calcularMoraPrestamo(
+  prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
+  reglasInteresNatillera.value.tasa_mora,
+  fechaCorteAbono.value,
+  diasGraciaPrestamos.value
+)))
 const saldoPrestamoAbono = computed(() => parseFloat(prestamoSeleccionado.value?.saldo_actual) || 0)
-// Total a pagar (dinámico): saldo pendiente + mora acumulada a hoy
+// Total a pagar (dinámico): saldo pendiente + mora a la fecha de pago
 const totalAPagarConMora = computed(() => saldoPrestamoAbono.value + moraPrestamoAbono.value)
 // Desglose del abono: la mora se cobra PROPORCIONAL a la(s) cuota(s) que se pagan
 // (recorriendo las vencidas de la más antigua a la más nueva), no toda de golpe.
@@ -4332,7 +4367,8 @@ const desgloseAbono = computed(() => desglosarAbonoConMora(
   formAbono.valor,
   prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
   reglasInteresNatillera.value.tasa_mora,
-  new Date()
+  fechaCorteAbono.value,
+  diasGraciaPrestamos.value
 ))
 const moraPagadaAbono = computed(() => desgloseAbono.value.moraPagada)
 const abonoACapitalAbono = computed(() => desgloseAbono.value.abonoAPrestamo)
@@ -5005,7 +5041,7 @@ function etiquetaEstadoCuotaComprobante(cuota) {
 
 // Mora acumulada a hoy de UNA cuota del plan (para mostrarla en el comprobante).
 function moraCuotaComprobante(cuota) {
-  return Math.round(calcularMoraCuota(cuota, reglasInteresNatillera.value.tasa_mora, new Date()))
+  return Math.round(calcularMoraCuota(cuota, reglasInteresNatillera.value.tasa_mora, new Date(), diasGraciaPrestamos.value))
 }
 
 function estiloBadgeEstadoCuotaComprobante(cuota) {
@@ -5182,31 +5218,56 @@ const ticketCompartir = computed(() => {
 // Sin scroll automático al cambiar tipo de interés o fecha: evitaba el salto y desmaquetado del modal
 
 // Calcular cuota mensual para el detalle del préstamo
+/**
+ * Plan de pagos de un préstamo, esté donde esté cargado: el del detalle abierto
+ * o el del listado global (que trae los planes de toda la natillera).
+ */
+function planDePrestamo(prestamo) {
+  const pid = prestamo?.id
+  if (!pid) return []
+  if (prestamoDetalle.value?.id === pid && planPagosPrestamo.value.length > 0) return planPagosPrestamo.value
+  return todosLosPlanesPagos.value.filter((c) => c.prestamo_id === pid)
+}
+
+/*
+ * Valor de la cuota de un préstamo.
+ *
+ * La verdad es el PLAN DE PAGOS, no una fórmula: el plan ya incorporó la
+ * periodicidad (en quincenal la tasa mensual se divide entre dos), el interés
+ * total tal como se guardó y cualquier refinanciación. Recalcular desde
+ * monto × tasa × cuotas ignoraba todo eso: a un préstamo de 500.000 al 5 % en
+ * 4 quincenas le mostraba 150.000 de cuota cuando el plan decía 137.500.
+ *
+ * Orden de preferencia:
+ *   1. el plan (la primera cuota pendiente, o la primera si ya está pagado),
+ *   2. el `interes_total` guardado con el préstamo,
+ *   3. la fórmula, y solo entonces, con la misma tasa periódica que usa el
+ *      generador del plan.
+ */
 function calcularCuotaMensualDetalle(prestamo) {
   if (!prestamo) return 0
-  const numeroCuotas = prestamo.numero_cuotas || 1
-  const monto = prestamo.monto || 0
-  const tasaMensual = (prestamo.interes || 0) / 100
-  const cuotas = numeroCuotas
-  
-  // Calcular el total (capital + intereses) y dividir entre las cuotas
-  // Tanto para interés anticipado como normal, la cuota incluye capital + intereses
-  let interesTotal = 0
-  if (prestamo.interes_anticipado && prestamo.interes_total) {
-    // Si es interés anticipado, usar el interés_total guardado
-    interesTotal = parseFloat(prestamo.interes_total) || 0
-  } else {
-    // Calcular el interés total
-    if (prestamo.tipo_interes === 'compuesto') {
-      const montoFinal = monto * Math.pow(1 + tasaMensual, cuotas)
-      interesTotal = montoFinal - monto
-    } else {
-      interesTotal = monto * tasaMensual * cuotas
-    }
+
+  const plan = planDePrestamo(prestamo)
+  if (plan.length > 0) {
+    const ordenado = [...plan].sort((a, b) => (Number(a.numero_cuota) || 0) - (Number(b.numero_cuota) || 0))
+    const referencia = ordenado.find((c) => !c.pagada) || ordenado[0]
+    const valor = parseFloat(referencia?.valor_cuota)
+    if (Number.isFinite(valor) && valor > 0) return valor
   }
-  
-  const montoTotal = monto + interesTotal
-  return montoTotal / numeroCuotas
+
+  const numeroCuotas = Number(prestamo.numero_cuotas) || 1
+  const monto = parseFloat(prestamo.monto) || 0
+  const interesGuardado = parseFloat(prestamo.interes_total)
+  if (Number.isFinite(interesGuardado) && interesGuardado >= 0) {
+    return (monto + interesGuardado) / numeroCuotas
+  }
+
+  const tasaMensual = (parseFloat(prestamo.interes) || 0) / 100
+  const tasaPeriodica = prestamo.periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
+  const interesTotal = prestamo.tipo_interes === 'compuesto'
+    ? monto * Math.pow(1 + tasaPeriodica, numeroCuotas) - monto
+    : monto * tasaPeriodica * numeroCuotas
+  return (monto + interesTotal) / numeroCuotas
 }
 
 // Calcular saldo inicial total (capital + intereses)
@@ -5237,12 +5298,23 @@ function porcentajePagadoPrestamo(prestamo) {
 }
 
 // ── Interés de mora ────────────────────────────────────────────────
+// Último día en que la cuota se puede pagar sin mora: la fecha proyectada más
+// los días de gracia. Mismo criterio que las cuotas de la natillera
+// (`fecha_limite + dias_gracia + 1 = primer día en mora`, ver stores/cuotas.js).
+function fechaLimiteSinMora(cuota, diasGracia = 0) {
+  const fecha = parseDateLocal(cuota.fecha_proyectada)
+  fecha.setHours(0, 0, 0, 0)
+  const gracia = Number(diasGracia) || 0
+  if (gracia > 0) fecha.setDate(fecha.getDate() + gracia)
+  return fecha
+}
+
 // Mora de UNA cuota vencida: solo sobre el capital pendiente de esa cuota
 // (no sobre el interés → sin anatocismo), proporcional a los días de atraso
-// con base de 30 días. diasMora se cuenta desde el día siguiente al
-// vencimiento hasta `fechaCorte` (hoy, o la fecha de pago al liquidar).
+// con base de 30 días. diasMora se cuenta desde el día siguiente al fin de la
+// gracia hasta `fechaCorte` (hoy, o la fecha de pago al liquidar).
 //   moraCuota = capitalPendienteCuota × (tasaMoraMensual/100/30) × diasMora
-function calcularMoraCuota(cuota, tasaMora, fechaCorte) {
+function calcularMoraCuota(cuota, tasaMora, fechaCorte, diasGracia = 0) {
   const tasa = Number(tasaMora) || 0
   if (tasa <= 0 || !cuota) return 0
   const valorCuota = parseFloat(cuota.valor_cuota || 0)
@@ -5252,19 +5324,18 @@ function calcularMoraCuota(cuota, tasaMora, fechaCorte) {
   // Proporción de capital aún debida en esta cuota (excluye el interés)
   const capitalPendiente = parseFloat(cuota.capital || 0) * (pendiente / valorCuota)
   if (capitalPendiente <= 0) return 0
-  const fv = parseDateLocal(cuota.fecha_proyectada)
-  fv.setHours(0, 0, 0, 0)
+  const fv = fechaLimiteSinMora(cuota, diasGracia)
   const corte = new Date(fechaCorte)
   corte.setHours(0, 0, 0, 0)
-  const diasMora = Math.floor((corte - fv) / 86400000) // día siguiente al vencimiento = 1
+  const diasMora = Math.floor((corte - fv) / 86400000) // día siguiente al límite = 1
   if (diasMora <= 0) return 0
   return capitalPendiente * (tasa / 100 / 30) * diasMora
 }
 
 // Mora acumulada de un préstamo = suma de la mora de sus cuotas vencidas.
-function calcularMoraPrestamo(cuotasVencidasArray, tasaMora, fechaCorte) {
+function calcularMoraPrestamo(cuotasVencidasArray, tasaMora, fechaCorte, diasGracia = 0) {
   return (cuotasVencidasArray || []).reduce(
-    (sum, c) => sum + calcularMoraCuota(c, tasaMora, fechaCorte),
+    (sum, c) => sum + calcularMoraCuota(c, tasaMora, fechaCorte, diasGracia),
     0
   )
 }
@@ -5275,7 +5346,7 @@ function calcularMoraPrestamo(cuotasVencidasArray, tasaMora, fechaCorte) {
 // mora cobrada es PROPORCIONAL a la(s) cuota(s) que se pagan y coincide con el plan de
 // pagos (pagar «valor_cuota + mora» de una cuota la liquida exacto). El excedente sobre
 // las cuotas vencidas va al préstamo (cuotas futuras), sin mora.
-function desglosarAbonoConMora(valor, cuotasVencidasOrdenadas, tasaMora, fechaCorte) {
+function desglosarAbonoConMora(valor, cuotasVencidasOrdenadas, tasaMora, fechaCorte, diasGracia = 0) {
   const total = parseFloat(valor) || 0
   let restante = total
   let mora = 0
@@ -5283,7 +5354,7 @@ function desglosarAbonoConMora(valor, cuotasVencidasOrdenadas, tasaMora, fechaCo
     if (restante <= 0) break
     const pendiente = Math.max(0, parseFloat(c.valor_cuota || 0) - parseFloat(c.valor_pagado || 0))
     if (pendiente <= 0) continue
-    const moraC = calcularMoraCuota(c, tasaMora, fechaCorte)
+    const moraC = calcularMoraCuota(c, tasaMora, fechaCorte, diasGracia)
     const costo = pendiente + moraC
     if (costo <= 0) continue
     if (restante >= costo) {
@@ -5354,11 +5425,14 @@ async function registrarMoraCobradaEnFondo(natilleraId, montoMora, formaPago) {
 // Calcular cuotas restantes
 function calcularCuotasRestantes(prestamo) {
   if (!prestamo) return 0
+  // Con plan, las cuotas restantes son las que faltan por pagar: dividir el
+  // saldo por una cuota teórica se desviaba en cuanto la cuota real no coincidía.
+  const plan = planDePrestamo(prestamo)
+  if (plan.length > 0) return plan.filter((c) => !c.pagada).length
   const cuotaMensual = calcularCuotaMensualDetalle(prestamo)
   if (cuotaMensual <= 0) return 0
-  const saldoActual = prestamo.saldo_actual || 0
-  const cuotasRestantes = Math.ceil(saldoActual / cuotaMensual)
-  return cuotasRestantes
+  const saldoActual = parseFloat(prestamo.saldo_actual) || 0
+  return Math.ceil(saldoActual / cuotaMensual)
 }
 
 // Función para generar código único de comprobante
@@ -5441,27 +5515,29 @@ async function fetchPrestamos() {
     // (obtenerTotalInteresesPrestamos captura sus errores y devuelve 0).
     const totalInteresesPromise = obtenerTotalInteresesPrestamos(id)
 
-    // Primero obtener los IDs de socios_natillera de esta natillera
-    const { data: sociosNatillera } = await supabase
-      .from('socios_natillera')
-      .select('id, socio:socios(*)')
-      .eq('natillera_id', id)
+    /*
+     * Una sola consulta en vez de dos.
+     *
+     * Antes se pedían los `socios_natillera` de la natillera solo para sacar sus
+     * ids y filtrar los préstamos con `.in(...)`: dos viajes encadenados, y el
+     * primero además se traía cada socio entero sin usarlo. Con `!inner` el
+     * filtro por natillera viaja dentro del propio join, así que se pide una vez
+     * y devuelve exactamente los mismos préstamos (comprobado contra la base:
+     * mismos ids, sin diferencias en ningún sentido).
+     */
+    const { data, error } = await supabase
+      .from('prestamos')
+      .select('*, socio_natillera:socios_natillera!inner(*, socio:socios(*))')
+      .eq('socio_natillera.natillera_id', id)
+      .order('created_at', { ascending: false })
 
-    if (!sociosNatillera || sociosNatillera.length === 0) {
+    if (error) throw error
+
+    if (!data || data.length === 0) {
       prestamos.value = []
       interesesGanadosUtilidades.value = await totalInteresesPromise
       return
     }
-
-    const socioNatilleraIds = sociosNatillera.map(s => s.id)
-
-    const { data, error } = await supabase
-      .from('prestamos')
-      .select('*, socio_natillera:socios_natillera(*, socio:socios(*))')
-      .in('socio_natillera_id', socioNatilleraIds)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
 
     // Obtener IDs de préstamos para cargar el plan de pagos
     const prestamoIds = (data || []).map(p => p.id)
@@ -5516,8 +5592,9 @@ async function fetchPrestamos() {
     interesesGanadosUtilidades.value = totalIntereses
 
     prestamos.value = (data || []).map(prestamo => {
-      // Usar la relación cargada o buscar en el array como fallback
-      const socioNatillera = prestamo.socio_natillera || sociosNatillera.find(s => s.id === prestamo.socio_natillera_id)
+      // `!inner` garantiza la relación en todas las filas: si no viniera, el
+      // préstamo no estaría en el resultado.
+      const socioNatillera = prestamo.socio_natillera
       const planPagosPrestamo = planPagosMap[prestamo.id] || []
       
       // Obtener el historial de refinanciación si existe
@@ -5530,11 +5607,11 @@ async function fetchPrestamos() {
         : null
       
       // Filtrar cuotas vencidas (no pagadas y con fecha anterior a hoy)
-      const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
-        const fechaVencimiento = parseDateLocal(cuota.fecha_proyectada)
-        fechaVencimiento.setHours(0, 0, 0, 0)
-        return !cuota.pagada && fechaVencimiento < fechaActual
-      })
+      // Vencida = pasó la fecha proyectada MÁS los días de gracia. Dentro de la
+      // gracia la cuota está pendiente, no en mora: ni cuenta ni cobra.
+      const cuotasVencidasArray = planPagosPrestamo.filter(cuota =>
+        !cuota.pagada && fechaLimiteSinMora(cuota, diasGraciaPrestamos.value) < fechaActual
+      )
 
       // Verificar si tiene cuotas vencidas
       const tieneCuotasVencidas = cuotasVencidasArray.length > 0
@@ -5554,9 +5631,10 @@ async function fetchPrestamos() {
           parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada)
         )[0]
         
-        const fechaVencimientoMasAntigua = parseDateLocal(cuotaMasAntigua.fecha_proyectada)
-        fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
-        
+        // Los días de mora se cuentan desde que se agotó la gracia, no desde
+        // la fecha proyectada.
+        const fechaVencimientoMasAntigua = fechaLimiteSinMora(cuotaMasAntigua, diasGraciaPrestamos.value)
+
         // Calcular días de diferencia
         const diffTime = fechaActual - fechaVencimientoMasAntigua
         diasMora = Math.floor(diffTime / (1000 * 60 * 60 * 24))
@@ -5591,7 +5669,7 @@ async function fetchPrestamos() {
 
       // Interés de mora acumulado a hoy (solo capital pendiente, por cuota vencida)
       const moraAcumulada = Math.round(
-        calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual)
+        calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual, diasGraciaPrestamos.value)
       )
       // Cuotas vencidas (de la más antigua a la más nueva) para desglosar el abono con mora
       const cuotasVencidasOrdenadas = [...cuotasVencidasArray]
@@ -5681,11 +5759,11 @@ async function actualizarPrestamoEnLista(prestamoId) {
     const fechaActual = new Date()
     fechaActual.setHours(0, 0, 0, 0)
 
-    const cuotasVencidasArray = planPagosPrestamo.filter(cuota => {
-      const fechaVencimiento = parseDateLocal(cuota.fecha_proyectada)
-      fechaVencimiento.setHours(0, 0, 0, 0)
-      return !cuota.pagada && fechaVencimiento < fechaActual
-    })
+    // Vencida = pasó la fecha proyectada MÁS los días de gracia. Dentro de la
+    // gracia la cuota está pendiente, no en mora: ni cuenta ni cobra.
+    const cuotasVencidasArray = planPagosPrestamo.filter(cuota =>
+      !cuota.pagada && fechaLimiteSinMora(cuota, diasGraciaPrestamos.value) < fechaActual
+    )
 
     const tieneCuotasVencidas = cuotasVencidasArray.length > 0
     const cuotasVencidas = cuotasVencidasArray.length
@@ -5702,8 +5780,9 @@ async function actualizarPrestamoEnLista(prestamoId) {
         parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada)
       )[0]
 
-      const fechaVencimientoMasAntigua = parseDateLocal(cuotaMasAntigua.fecha_proyectada)
-      fechaVencimientoMasAntigua.setHours(0, 0, 0, 0)
+      // Los días de mora se cuentan desde que se agotó la gracia, no desde
+      // la fecha proyectada.
+      const fechaVencimientoMasAntigua = fechaLimiteSinMora(cuotaMasAntigua, diasGraciaPrestamos.value)
 
       // Calcular días de diferencia
       const diffTime = fechaActual - fechaVencimientoMasAntigua
@@ -5771,7 +5850,7 @@ async function actualizarPrestamoEnLista(prestamoId) {
         diasMora,
         valorCuotasEnDeuda,
         moraAcumulada: Math.round(
-          calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual)
+          calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual, diasGraciaPrestamos.value)
         ),
         cuotasVencidasOrdenadas: [...cuotasVencidasArray]
           .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
@@ -5800,7 +5879,7 @@ function abrirModalAbono(prestamo) {
   if (overdue.length > 0) {
     const c0 = overdue[0]
     const pend = Math.max(0, (parseFloat(c0.valor_cuota) || 0) - (parseFloat(c0.valor_pagado) || 0))
-    const mora0 = calcularMoraCuota(c0, reglasInteresNatillera.value.tasa_mora, new Date())
+    const mora0 = calcularMoraCuota(c0, reglasInteresNatillera.value.tasa_mora, new Date(), diasGraciaPrestamos.value)
     valorInicial = Math.round(pend + mora0)
   } else {
     const valorCuota = calcularCuotaMensualDetalle(prestamo)
@@ -6027,17 +6106,9 @@ async function reenviarComprobanteAbono(pago) {
       codigoComprobante: pago.codigo_comprobante,
       socioNombre: socioNombre,
       socioTelefono: socioTelefono,
-      fecha: pago.fecha 
-        ? (() => {
-            const d = new Date(pago.fecha)
-            const day = String(d.getDate()).padStart(2, '0')
-            const month = String(d.getMonth() + 1).padStart(2, '0')
-            const year = d.getFullYear()
-            const hours = String(d.getHours()).padStart(2, '0')
-            const minutes = String(d.getMinutes()).padStart(2, '0')
-            return `${day}/${month}/${year} ${hours}:${minutes}`
-          })()
-        : 'Fecha no disponible',
+      // Solo la fecha: la hora que guarda `pago.fecha` es la del registro, no la
+      // del pago, y en el comprobante confundía.
+      fecha: pago.fecha ? formatDate(pago.fecha) : 'Fecha no disponible',
       saldoAnterior: saldoAnterior,
       saldoNuevo: saldoNuevo,
       prestamo: prestamo
@@ -6066,6 +6137,20 @@ async function reenviarComprobanteAbono(pago) {
     console.error('Error al preparar comprobante:', e)
     notificationStore.error('Error al preparar el comprobante: ' + e.message, 'Error')
   }
+}
+
+/**
+ * Abre WhatsApp con un mensaje ya escrito.
+ *
+ * Sin teléfono NO se calla: `wa.me` sin número abre WhatsApp con el mensaje
+ * listo y deja que la persona elija a quién enviárselo. Antes, cuando el socio
+ * no tenía número registrado, este camino simplemente no hacía nada y el
+ * comprobante se quedaba en la carpeta de descargas sin explicación.
+ */
+function abrirWhatsAppConMensaje(telefonoCrudo, mensaje) {
+  const t = (telefonoCrudo || '').replace(/\D/g, '')
+  const texto = encodeURIComponent(mensaje)
+  window.open(t ? `https://wa.me/57${t}?text=${texto}` : `https://wa.me/?text=${texto}`, '_blank')
 }
 
 async function compartirWhatsAppAbono() {
@@ -6125,9 +6210,9 @@ async function compartirWhatsAppAbono() {
       // Esperar un poco y abrir WhatsApp
       setTimeout(() => {
         const telefono = comprobanteAbono.value.socioTelefono?.replace(/\D/g, '')
-        if (telefono) {
+        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
           const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo. ¡Gracias por estar al día! 🙌`
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          abrirWhatsAppConMensaje(telefono, mensaje)
           
           // Registrar auditoría de envío de comprobante (fallback)
           if (comprobanteAbono.value?.pagoPrestamoId) {
@@ -6156,9 +6241,9 @@ async function compartirWhatsAppAbono() {
     console.error('Error compartiendo por WhatsApp:', e)
     // Si falla el share API, intentar abrir WhatsApp directamente
     const telefono = comprobanteAbono.value.socioTelefono?.replace(/\D/g, '')
-    if (telefono) {
+    { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
       const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
-      window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+      abrirWhatsAppConMensaje(telefono, mensaje)
       
       // Registrar auditoría de envío de comprobante (solo texto)
       if (comprobanteAbono.value?.pagoPrestamoId) {
@@ -6180,8 +6265,6 @@ async function compartirWhatsAppAbono() {
           }
         }))
       }
-    } else {
-      notificationStore.error('No se pudo compartir el comprobante', 'Error')
     }
   } finally {
     generandoImagenComprobante.value = false
@@ -6332,8 +6415,8 @@ async function compartirWhatsAppComprobantePagado() {
       link.click()
       setTimeout(() => {
         const telefono = comprobantePagado.value.socioTelefono?.replace(/\D/g, '')
-        if (telefono) {
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensajeCompartir)}`, '_blank')
+        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
+          abrirWhatsAppConMensaje(telefono, mensajeCompartir)
         }
       }, 500)
     }
@@ -6520,6 +6603,7 @@ async function aplicarAbonoAPlanPagos(prestamoId, valorAbono, fechaPago) {
           .update({
             pagada: true,
             fecha_pago: fechaPago,
+            fecha_causacion: new Date().toISOString(),
             valor_pagado: valorCuota,
             ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
           })
@@ -6540,7 +6624,10 @@ async function aplicarAbonoAPlanPagos(prestamoId, valorAbono, fechaPago) {
         const { error: errorUpdate } = await supabase
           .from('plan_pagos_prestamo')
           .update({
-            valor_pagado: nuevoValorPagado
+            valor_pagado: nuevoValorPagado,
+            // Abono parcial: la cuota no queda saldada, así que no lleva fecha_pago, pero sí
+            // deja constancia de que hoy se movió dinero en ella.
+            fecha_causacion: new Date().toISOString()
           })
           .eq('id', cuota.id)
 
@@ -6700,7 +6787,8 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
           valor_pagado_efectivo: 0,
           valor_pagado_transferencia: 0,
           pagada: false,
-          fecha_pago: null
+          fecha_pago: null,
+          fecha_causacion: null
         })
         .eq('id', cuota.id)
     }
@@ -6730,6 +6818,13 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
     let indiceCuota = 0
     const cuotasPagadasNuevas = [] // Cuotas que se marcaron como pagadas en esta actualización
 
+    // Fechas del último abono, para repartirlas entre las cuotas que este recálculo vuelve a
+    // marcar. La causación sale del abono y no del reloj: este proceso puede correr meses
+    // después y poner `now()` fingiría que el pago se digitó hoy.
+    const ultimoPago = todosPagos[todosPagos.length - 1]
+    const fechaUltimoPago = ultimoPago?.fecha || new Date().toISOString()
+    const causacionUltimoPago = ultimoPago?.fecha_causacion || fechaUltimoPago
+
     while (abonoRestante > 0 && indiceCuota < cuotasOrdenadas.length) {
       const cuota = cuotasOrdenadas[indiceCuota]
       const valorCuota = parseFloat(cuota.valor_cuota)
@@ -6744,7 +6839,6 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
 
       if (abonoRestante >= valorCuota) {
         // El abono cubre completamente esta cuota
-        const fechaUltimoPago = todosPagos[todosPagos.length - 1]?.fecha || new Date().toISOString()
         const periodo = periodoDesdeFechaProyectada(cuota.fecha_proyectada)
         const cuotaAnterior = cuotasAnteriores.find(c => c.id === cuota.id)
         const seMarcoComoPagada = !cuotaAnterior?.pagada
@@ -6755,6 +6849,7 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
           pagada: true,
           valor_pagado: valorCuota,
           fecha_pago: fechaUltimoPago,
+          fecha_causacion: causacionUltimoPago,
           forma_pago: vEf > 0 && vTr > 0 ? null : (vEf > 0 ? 'efectivo' : 'transferencia'),
           ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
         }
@@ -6788,7 +6883,9 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
         const ratioEf = abonoRestante > 0 ? abonoRestanteEfectivo / abonoRestante : 1
         const vEf = Math.round(abonoRestante * ratioEf)
         const vTr = abonoRestante - vEf
-        const updatePayload = { valor_pagado: abonoRestante }
+        // Cuota a medias: sin fecha_pago (no está saldada) pero con causación, o el reset de
+        // arriba la habría dejado en blanco pese a tener dinero aplicado.
+        const updatePayload = { valor_pagado: abonoRestante, fecha_causacion: causacionUltimoPago }
         if (vEf > 0 || vTr > 0) {
           updatePayload.valor_pagado_efectivo = vEf
           updatePayload.valor_pagado_transferencia = vTr
@@ -8012,13 +8109,26 @@ function handleClickOutside(event) {
 
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
-  const nNat = await cargarReglasPrestamoNatillera()
+
+  /*
+   * Las reglas y los préstamos no dependen unos de otros, así que van a la vez.
+   * Antes las reglas se esperaban enteras antes de empezar siquiera a pedir los
+   * préstamos, y eso era un viaje de ida y vuelta a us-east-1 de puro tiempo
+   * muerto. Si resulta que la natillera no permite préstamos se redirige igual;
+   * lo único que se pierde es una consulta que ya iba en paralelo, y ese es el
+   * caso raro.
+   */
+  const [nNat] = await Promise.all([
+    cargarReglasPrestamoNatillera(),
+    fetchPrestamos(),
+  ])
+
   if (nNat && natilleraPrestamosDeshabilitados(nNat)) {
     notificationStore.info('La natillera no permite préstamos', 'Préstamos')
     router.replace(`/natilleras/${id}`)
     return
   }
-  await fetchPrestamos()
+
   fetchSocios()
   tryRestorePrestamosWorkDraft()
 })
@@ -8055,7 +8165,8 @@ async function handleRegistrarAbono() {
       formAbono.valor,
       prestamoSeleccionado.value.cuotasVencidasOrdenadas,
       reglasInteresNatillera.value.tasa_mora,
-      new Date()
+      fechaCorteAbono.value,       // la misma fecha que vio el usuario en el desglose
+      diasGraciaPrestamos.value
     )
     const moraPagada = desgloseAbonoReg.moraPagada
     const abonoAPrestamo = desgloseAbonoReg.abonoAPrestamo
@@ -8129,6 +8240,9 @@ async function handleRegistrarAbono() {
       prestamo_id: prestamoSeleccionado.value.id,
       valor: v,
       fecha: fechaPago,
+      // `fecha` es el día en que entró el dinero (lo elige el usuario); la causación es
+      // cuándo se digitó. Se separan para poder auditar los abonos retroactivos.
+      fecha_causacion: new Date().toISOString(),
       codigo_comprobante: codigoComprobante,
       valor_efectivo: fp === 'transferencia' ? 0 : v,
       valor_transferencia: fp === 'transferencia' ? v : 0,
@@ -8257,22 +8371,9 @@ async function handleRegistrarAbono() {
     
     // Preparar datos del comprobante
     // Usar la fecha del formulario si está disponible, sino usar la fecha actual
-    const fechaPagoComprobante = formAbono.fecha_pago 
-      ? (() => {
-          // Convertir fecha del formulario (YYYY-MM-DD) a formato dd/MM/yyyy
-          const [year, month, day] = formAbono.fecha_pago.split('-')
-          return `${day}/${month}/${year}`
-        })()
-      : (() => {
-          // Si no hay fecha seleccionada, usar fecha y hora actual
-          const d = new Date()
-          const day = String(d.getDate()).padStart(2, '0')
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const year = d.getFullYear()
-          const hours = String(d.getHours()).padStart(2, '0')
-          const minutes = String(d.getMinutes()).padStart(2, '0')
-          return `${day}/${month}/${year} ${hours}:${minutes}`
-        })()
+    // Fecha del pago tal como la registró el usuario, sin hora (la hora era la
+    // del momento de registrar, no la del pago, y en el comprobante confundía).
+    const fechaPagoComprobante = formatDate(formAbono.fecha_pago || getCurrentDateISO())
     
     comprobanteAbono.value = {
       pagoPrestamoId: pagoInsertado[0].id, // ID del pago de préstamo para auditoría
@@ -8849,9 +8950,9 @@ async function compartirPrestamoWhatsApp() {
       // Esperar un poco y abrir WhatsApp
       setTimeout(() => {
         const telefono = prestamoDetalle.value.socio_natillera?.socio?.telefono?.replace(/\D/g, '')
-        if (telefono) {
+        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
           const mensaje = `Hola ${prestamoDetalle.value.socio_natillera?.socio?.nombre} 👋\n\nTe envío la información de tu préstamo. ¡Gracias por confiar en nosotros! 🙌`
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          abrirWhatsAppConMensaje(telefono, mensaje)
         }
       }, 500)
       
@@ -8862,9 +8963,9 @@ async function compartirPrestamoWhatsApp() {
       console.error('Error compartiendo:', e)
       // Fallback: solo abrir WhatsApp con texto
       const telefono = prestamoDetalle.value.socio_natillera?.socio?.telefono?.replace(/\D/g, '')
-      if (telefono) {
+      { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
         const mensaje = `Hola ${prestamoDetalle.value.socio_natillera?.socio?.nombre} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
-        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        abrirWhatsAppConMensaje(telefono, mensaje)
       }
     }
   } finally {
@@ -8971,8 +9072,10 @@ async function descargarPrestamoNuevo() {
 
 // Función para compartir préstamo nuevo por WhatsApp
 async function compartirPrestamoNuevoWhatsApp() {
-  if (!socioSeleccionado.value || !contactoSeleccionadoWhatsApp.value?.telefono) {
-    notificationStore.error('Debes seleccionar un contacto con teléfono', 'Error')
+  // Sin número no se corta: se comparte igual y es WhatsApp quien pregunta a
+  // quién enviarlo. Exigirlo aquí dejaba el botón activo pero la acción muerta.
+  if (!socioSeleccionado.value) {
+    notificationStore.error('Debes seleccionar un socio', 'Error')
     return
   }
   
@@ -9018,8 +9121,8 @@ async function compartirPrestamoNuevoWhatsApp() {
       // Esperar un poco y abrir WhatsApp
       setTimeout(() => {
         const telefono = contactoSeleccionadoWhatsApp.value.telefono.replace(/\D/g, '')
-        if (telefono) {
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensajeCompartir)}`, '_blank')
+        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
+          abrirWhatsAppConMensaje(telefono, mensajeCompartir)
         }
       }, 500)
       
@@ -9035,12 +9138,12 @@ async function compartirPrestamoNuevoWhatsApp() {
       console.error('Error compartiendo:', e)
       // Fallback: solo abrir WhatsApp con texto
       const telefono = contactoSeleccionadoWhatsApp.value.telefono?.replace(/\D/g, '')
-      if (telefono) {
+      { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
         const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
         const mensaje = esComprobanteRealCompartir.value
           ? `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío el *comprobante* del préstamo de ${nombreSocio} en la natillera, ya registrado en el sistema.\n\n¡Gracias por confiar en nosotros! 🙌`
           : `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera. *Aún no está generado en el sistema*; el comprobante oficial sale al confirmar en la app.\n\n¡Gracias por confiar en nosotros! 🙌`
-        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        abrirWhatsAppConMensaje(telefono, mensaje)
       }
     }
   } finally {

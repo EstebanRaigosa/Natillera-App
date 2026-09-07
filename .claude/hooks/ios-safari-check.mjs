@@ -22,6 +22,7 @@ process.stdin.on('end', () => {
     `Acabas de editar \`${nombre}\`. Antes de dar por terminado, valida compatibilidad iOS/Safari sin romper Android (manual: docs/compatibilidad-ios-safari.md):`,
     '- [ ] Alturas full-screen con `100dvh` + fallback `-webkit-fill-available`.',
     '- [ ] Bordes pegados a pantalla respetan `env(safe-area-inset-*)`.',
+    '- [ ] Anclado a `fixed bottom-0`? En iOS la barra de Safari lo tapa: `useTapadoInferior` ademas del env() (manual 4.1).',
     '- [ ] Modales vía `<ModalWrapper>`; X e iconos de input por **flex**, nunca `position:absolute`.',
     '- [ ] `useBodyScrollLock` en modales; no tocar `<main>` en la rama iOS.',
     '- [ ] Inputs `font-size >= 16px`; sin `appearance:none` global en `<select>`.',

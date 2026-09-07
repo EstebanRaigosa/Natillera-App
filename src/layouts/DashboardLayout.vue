@@ -112,11 +112,20 @@
               <button
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/cuadre-caja') }"
-                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/cuadre-caja')"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/conciliacion') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/conciliacion')"
               >
-                <CalculatorIcon class="w-5 h-5 shrink-0" />
-                <span class="sidebar-option-label">Totales</span>
+                <ScaleIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Conciliación</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/movimientos') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/movimientos')"
+              >
+                <ArrowsRightLeftIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Movimientos</span>
               </button>
           </div>
 
@@ -245,6 +254,27 @@
           el dashboard. En el propio dashboard se oculta: ahí la elección ya
           está en el contenido.
         -->
+        <template v-if="natilleraParaVolver">
+          <button
+            type="button"
+            class="cambiar-natillera-btn relative z-[1] w-full text-left"
+            :title="natilleraParaVolver.nombre ? `Volver a ${natilleraParaVolver.nombre}` : 'Volver a la natillera'"
+            @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraParaVolver.id)"
+          >
+            <span class="cambiar-natillera-btn__icon-wrap" aria-hidden="true">
+              <ArrowUturnLeftIcon class="cambiar-natillera-btn__icon" />
+            </span>
+            <span class="cambiar-natillera-btn__text">
+              <span class="cambiar-natillera-btn__title">Volver a la natillera</span>
+              <span class="cambiar-natillera-btn__hint w-full min-w-0 truncate">
+                {{ natilleraParaVolver.nombre || 'La última que abriste' }}
+              </span>
+            </span>
+          </button>
+
+          <div class="user-panel-divider relative z-[1]" role="presentation" />
+        </template>
+
         <template v-if="mostrarSelectorNatillera">
           <button
             type="button"
@@ -329,7 +359,7 @@
       >
         <!-- Header móvil -->
         <header
-          class="lg:hidden sticky top-0 z-30 shrink-0 border-b border-gray-100 bg-white/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
+          class="cabecera-movil lg:hidden sticky top-0 z-30 shrink-0 border-b border-gray-100 bg-white/95 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top,0px))] backdrop-blur-xl supports-[backdrop-filter]:bg-white/80"
         >
           <div class="flex items-center justify-between">
             <button
@@ -341,7 +371,7 @@
             >
               <Bars3Icon class="w-6 h-6" />
             </button>
-            <div class="flex items-center gap-1.5 min-w-0 justify-center">
+            <div class="flex flex-1 items-center gap-1.5 min-w-0 justify-center px-1">
               <img
                 src="/favicon-512x512.png"
                 alt=""
@@ -355,7 +385,7 @@
                 <AppBrand />
               </h1>
             </div>
-            <div class="w-11 shrink-0 flex justify-end">
+            <div class="min-w-[2.75rem] shrink-0 flex justify-end">
               <InstallPwaButton variant="header" />
             </div>
           </div>
@@ -394,7 +424,16 @@
       @abrir="chatSoporteAbierto = true"
       @abrir-panel="abrirPanelSoporte"
     />
-    <ChatSoporteFlotante :show="chatSoporteAbierto" @cerrar="chatSoporteAbierto = false" />
+    <ChatSoporteFlotante :show="chatSoporteAbierto" @cerrar="cerrarOverlaySoporte" />
+    <PanelSoporteAdminModal
+      :show="panelSoporteAbierto"
+      :conversacion-inicial="conversacionPanelSoporte"
+      @cerrar="cerrarOverlaySoporte"
+    />
+    <!-- El visor de adjuntos se monta una sola vez aquí, no en cada burbuja del
+         hilo: así entra en la pila de modales y «atrás» lo cierra a él antes que
+         al chat que tiene debajo. -->
+    <VisorAdjunto :show="visorAdjuntoAbierto" :adjunto="adjuntoVisible" @cerrar="cerrarOverlaySoporte" />
 
     <!-- Indicador de modo desarrollo -->
     <div 
@@ -421,6 +460,7 @@ import { useNatillerasStore } from '../stores/natilleras'
 import { useColaboradoresStore } from '../stores/colaboradores'
 import { useNotificationStore } from '../stores/notifications'
 import { useSoporteStore } from '../stores/soporte'
+import { getLastNatilleraId } from '../utils/lastNatillera'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { isDev, isLocalhost } from '../config/environment'
 import { requestNatilleraSidebarAction } from '../composables/useNatilleraSidebarActions'
@@ -439,12 +479,12 @@ import {
   CalendarIcon,
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
-  CalculatorIcon,
+  ScaleIcon,
   MagnifyingGlassIcon,
   DocumentCheckIcon,
   UserPlusIcon,
   CircleStackIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon, ArrowUturnLeftIcon
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import { useScrollRestoration } from '../composables/useScrollRestoration'
@@ -452,6 +492,10 @@ import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import BotonSoporte from '../components/soporte/BotonSoporte.vue'
 import ChatSoporteFlotante from '../components/soporte/ChatSoporteFlotante.vue'
+import PanelSoporteAdminModal from '../components/soporte/PanelSoporteAdminModal.vue'
+import VisorAdjunto from '../components/soporte/VisorAdjunto.vue'
+import { useVisorAdjunto } from '../composables/useVisorAdjunto'
+import { useModalStack, __modalStackSync } from '../composables/useModalStack'
 import AppBrand from '../components/AppBrand.vue'
 import InstallPwaButton from '../components/InstallPwaButton.vue'
 import logoIconSrc from '../../assets/logo_icon.png'
@@ -469,6 +513,10 @@ const colaboradoresStore = useColaboradoresStore()
 const notificationStore = useNotificationStore()
 const soporteStore = useSoporteStore()
 const chatSoporteAbierto = ref(false)
+const panelSoporteAbierto = ref(false)
+const conversacionPanelSoporte = ref(null)
+const { adjuntoVisible, cerrarAdjunto } = useVisorAdjunto()
+const visorAdjuntoAbierto = computed(() => adjuntoVisible.value !== null)
 const sidebarOpen = ref(false)
 const sidebarHover = ref(false) // Para controlar el hover en pantallas lg (1024px)
 const sidebarTourLock = ref(false) // Ancla la barra abierta durante un recorrido guiado
@@ -526,6 +574,28 @@ const textoActualNatilleraSidebar = computed(() => {
  */
 const mostrarSelectorNatillera = computed(() =>
   !!natilleraIdRuta.value || route.path !== '/dashboard')
+
+/*
+ * «Volver a la natillera»: en las pantallas que no pertenecen a ninguna
+ * —Mi cuenta, Configuración, Auditoría, Soporte— la barra lateral pierde el
+ * menú de la natillera y con él la forma de regresar sin pasar por el
+ * dashboard. El router guarda la última que abrió esta persona
+ * (`setLastNatilleraId`); aquí solo se lee. Se lee dentro del computed, con
+ * `route.fullPath` como dependencia, porque localStorage no es reactivo y hay
+ * que reevaluarlo en cada navegación.
+ */
+const natilleraParaVolver = computed(() => {
+  void route.fullPath
+  if (natilleraIdRuta.value || route.path === '/dashboard') return null
+  const uid = authStore.user?.id
+  const id = getLastNatilleraId(uid)
+  if (!id) return null
+  const enLista = todasLasNatillerasActivas.value.find(n => String(n.id) === id)
+  const actual = natillerasStore.natilleraActual
+  const nombre = enLista?.nombre?.trim()
+    || (actual && String(actual.id) === id ? actual.nombre?.trim() : '')
+  return { id, nombre: nombre || '' }
+})
 
 const textoSelectorNatillera = computed(() =>
   natilleraIdRuta.value ? textoActualNatilleraSidebar.value : 'Elige con cuál trabajar')
@@ -818,21 +888,93 @@ function refrescarSoporteAlVolver() {
 }
 
 /*
- * La bandeja del soporte va a su pantalla y no a un panel flotante: tiene
- * filtros, búsqueda, paginación y el hilo al lado. Es una herramienta de
- * trabajo, no una consulta rápida.
+ * Pila de overlays del soporte: chat, bandeja del soporte y visor de adjuntos.
+ *
+ * Existe para que «atrás» —el botón del navegador y el gesto de Android— cierre
+ * el overlay de encima en vez de sacarte de la pantalla. Un panel que ocupa toda
+ * la pantalla se comporta como una pantalla, y de una pantalla se sale
+ * volviendo, no buscando la X.
+ *
+ * El visor entra en la misma pila para que, con una foto abierta sobre el chat,
+ * «atrás» cierre la foto y deje el chat como estaba. Que el chat no pierda la
+ * conversación al ocultarse lo resuelve el store (`conversacionAbierta*`).
  */
-function abrirPanelSoporte() {
-  chatSoporteAbierto.value = false
-  router.push('/admin/soporte')
+const {
+  requestCloseTop: cerrarOverlaySoporteSuperior,
+  replaceTop: reemplazarOverlaySoporte,
+} = useModalStack({
+  chatSoporte: {
+    isOpen: computed(() => chatSoporteAbierto.value),
+    hide: () => { chatSoporteAbierto.value = false },
+    show: () => { chatSoporteAbierto.value = true },
+    dismiss: () => {
+      chatSoporteAbierto.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  panelSoporte: {
+    isOpen: computed(() => panelSoporteAbierto.value),
+    hide: () => { panelSoporteAbierto.value = false },
+    show: () => { panelSoporteAbierto.value = true },
+    dismiss: () => {
+      panelSoporteAbierto.value = false
+      conversacionPanelSoporte.value = null
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  visorAdjunto: {
+    isOpen: visorAdjuntoAbierto,
+    hide: cerrarAdjunto,
+    // No se restaura solo: cerrarlo olvida qué adjunto era, y nada se abre
+    // encima del visor, así que la pila nunca necesita reponerlo.
+    show: () => {},
+    dismiss: () => {
+      cerrarAdjunto()
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  }
+})
+
+/** Cierre desde la X o el backdrop: pasa por la pila para no descuadrar el historial. */
+function cerrarOverlaySoporte() {
+  cerrarOverlaySoporteSuperior()
+}
+
+/*
+ * La bandeja del soporte se abre encima de la pantalla en la que estés, igual
+ * que el chat: se atiende soporte *mientras* se hace otra cosa, y navegar a
+ * otra pantalla obligaba a volver a mano. Tiene filtros, búsqueda, paginación y
+ * el hilo al lado, así que el modal arranca ampliado.
+ *
+ * La ruta `/admin/soporte` sigue existiendo para los enlaces directos.
+ */
+function abrirPanelSoporte(conversacionId = null) {
+  conversacionPanelSoporte.value = typeof conversacionId === 'string' ? conversacionId : null
+  // Venir del chat es un solo gesto: el panel ocupa su capa en vez de apilar
+  // otra, para que «atrás» no tenga que pulsarse dos veces.
+  if (chatSoporteAbierto.value) reemplazarOverlaySoporte('panelSoporte')
+  else panelSoporteAbierto.value = true
 }
 
 function abrirDesdeNotificacion(evento) {
   if (evento.data?.tipo !== 'soporte-abrir' || !evento.data.url) return
-  // Se cierra el panel flotante si estaba abierto: la notificación apunta a una
-  // conversación concreta, y esa tiene su propia dirección.
-  chatSoporteAbierto.value = false
-  router.push(evento.data.url)
+  // Un aviso del soporte abre la bandeja encima de donde estés, con la
+  // conversación ya seleccionada; no se cambia de pantalla por una notificación.
+  // `abrirPanelSoporte` se encarga de sustituir el chat si estaba abierto.
+  const url = String(evento.data.url)
+  if (url.startsWith('/admin/soporte')) {
+    abrirPanelSoporte(url.split('/')[3] || null)
+    soporteStore.refrescarNoLeidos()
+    return
+  }
+
+  // La conversación del usuario tiene URL propia: se navega a ella cerrando el
+  // overlay de encima por la pila, para no dejar una capa de historial suelta.
+  // Se cierra solo el superior a propósito: dos `history.back()` en el mismo
+  // tick el navegador los puede fundir en uno, y en la práctica nunca hay dos
+  // overlays visibles a la vez.
+  cerrarOverlaySoporteSuperior()
+  router.push(url)
   soporteStore.refrescarNoLeidos()
 }
 

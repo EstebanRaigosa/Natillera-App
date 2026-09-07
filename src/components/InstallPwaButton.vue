@@ -244,6 +244,9 @@ onUnmounted(() => {
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+  /* En una barra estrecha «Instalar» se partiría en dos líneas y reventaría la
+     altura del pill: en una sola línea siempre. */
+  white-space: nowrap;
   color: #fff;
   background: #1b5e37;
   box-shadow: 0 4px 12px rgba(27, 94, 55, 0.28);

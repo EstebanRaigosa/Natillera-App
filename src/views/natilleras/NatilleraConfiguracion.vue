@@ -359,6 +359,48 @@
                           En <strong>0</strong> no se cobra interés de mora.
                         </template>
                       </p>
+
+                      <!-- Días de gracia propios de préstamos. Heredan el valor de
+                           las cuotas hasta que se guarda uno aquí; apagados, la mora
+                           corre desde el día siguiente a la fecha de la cuota. -->
+                      <div class="mt-4 pt-4 border-t border-rose-200/60 space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                          <div class="relative">
+                            <input type="checkbox" v-model="configPrestamos.dias_gracia_activo" class="sr-only peer" :disabled="esVisor" />
+                            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-rose-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                          </div>
+                          <span class="font-semibold text-gray-700 text-sm">Días de gracia antes de cobrar mora</span>
+                        </label>
+
+                        <div v-if="configPrestamos.dias_gracia_activo" class="space-y-2">
+                          <div class="flex items-center gap-3">
+                            <label class="text-sm font-semibold text-gray-700">Días</label>
+                            <!-- text-base: con menos de 16 px iOS hace zoom al enfocar -->
+                            <input
+                              v-model.number="configPrestamos.dias_gracia"
+                              type="number"
+                              class="input-field w-16 text-center text-base font-semibold py-1.5"
+                              min="0"
+                              max="30"
+                              :disabled="esVisor"
+                            />
+                          </div>
+                          <p class="text-sm text-gray-600">
+                            La mora de una cuota del préstamo empieza a contar
+                            <strong>{{ Number(configPrestamos.dias_gracia) || 0 }}</strong>
+                            {{ Number(configPrestamos.dias_gracia) === 1 ? 'día' : 'días' }} después de su fecha.
+                            <template v-if="Number(configPrestamos.dias_gracia) === Number(configDiasGracia.dias_gracia)">
+                              Es el mismo valor que en las cuotas.
+                            </template>
+                            <template v-else>
+                              En las cuotas son <strong>{{ configDiasGracia.dias_gracia }}</strong>; aquí se puede fijar otro.
+                            </template>
+                          </p>
+                        </div>
+                        <p v-else class="text-sm text-gray-600">
+                          Apagado: la mora corre desde el día siguiente a la fecha de cada cuota.
+                        </p>
+                      </div>
                     </div>
                   </section>
                 </div>
@@ -2361,6 +2403,10 @@ async function guardarConfigDiasGracia() {
       configDiasGracia.value = {
         dias_gracia: reglasMultas.dias_gracia || 3
       }
+      // Si préstamos hereda la gracia de las cuotas, que el formulario lo refleje ya.
+      configPrestamos.value = parseReglasInteresPrestamo(natillera.value.reglas_interes, {
+        diasGraciaCuotas: reglasMultas.dias_gracia || 3
+      })
     }
   } else {
     mensaje.value = {
@@ -2434,7 +2480,11 @@ async function guardarConfigPrestamos() {
       activo: c.activo !== false,
       porcentaje: Number(c.porcentaje) >= 0 ? Number(c.porcentaje) : 0,
       plazo_maximo: Number(c.plazo_maximo) >= 1 ? Math.floor(Number(c.plazo_maximo)) : 1,
-      tasa_mora: Number(c.tasa_mora) >= 0 ? Number(c.tasa_mora) : 0
+      tasa_mora: Number(c.tasa_mora) >= 0 ? Number(c.tasa_mora) : 0,
+      dias_gracia_activo: c.dias_gracia_activo === true,
+      // Se guarda siempre, activo o no: así el valor editado no se pierde al
+      // apagar el interruptor y volverlo a encender.
+      dias_gracia: Number(c.dias_gracia) >= 0 ? Math.floor(Number(c.dias_gracia)) : 0
     }
   })
 
@@ -2616,8 +2666,11 @@ function actualizarValoresDesdeNatillera() {
       dias_gracia: reglasMultas.dias_gracia || 3
     }
 
-    // Cargar reglas de préstamos (interés, plazo, tasa de mora)
-    configPrestamos.value = parseReglasInteresPrestamo(natillera.value.reglas_interes)
+    // Cargar reglas de préstamos (interés, plazo, tasa de mora, días de gracia).
+    // Sin gracia propia guardada, el campo arranca con la de las cuotas.
+    configPrestamos.value = parseReglasInteresPrestamo(natillera.value.reglas_interes, {
+      diasGraciaCuotas: reglasMultas.dias_gracia || 3
+    })
 
     // Cargar configuración de cuotas automáticas
     configCuotasAuto.value = {

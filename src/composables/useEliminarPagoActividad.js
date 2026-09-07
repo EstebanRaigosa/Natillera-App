@@ -296,6 +296,7 @@ export function useEliminarPagoActividad() {
           valor_pagado_transferencia: 0,
           codigo_comprobante: null,
           fecha_pago: null,
+          fecha_causacion: null,
           estado: 'pendiente',
         })
         .eq('id', socioActividadId)

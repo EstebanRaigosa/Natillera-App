@@ -104,6 +104,10 @@
       Falta configurar <code class="rounded bg-gray-100 px-1">VITE_VAPID_PUBLIC_KEY</code> en el
       entorno; sin ella no se pueden activar los avisos.
     </p>
+    <p v-if="pista" class="mt-3 flex items-start gap-1.5 text-xs leading-relaxed text-gray-500">
+      <span class="mt-1 inline-block size-1.5 shrink-0 animate-pulse rounded-full bg-[#1B5E37]" />
+      <span>{{ pista }}</span>
+    </p>
     <p v-if="error" class="mt-3 text-xs text-red-600">{{ error }}</p>
   </div>
 </template>
@@ -118,7 +122,7 @@ import InstallPwaButton from '../InstallPwaButton.vue'
 import { usePush } from '../../composables/usePush'
 import { useNotificationStore } from '../../stores/notifications'
 
-const { estado, ocupado, error, configurado, comprobar, activar, desactivar } = usePush()
+const { estado, ocupado, error, pista, configurado, comprobar, activar, desactivar } = usePush()
 const notificaciones = useNotificationStore()
 
 onMounted(() => { comprobar() })

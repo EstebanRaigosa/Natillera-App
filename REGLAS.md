@@ -62,6 +62,25 @@ Una cuota está en estado **Pagada** cuando:
 
 **Fórmula:** `valor_pagado >= valor_cuota`
 
+**El capital manda.** La sanción pendiente **no** forma parte de este criterio. Una cuota con el
+capital completo nunca vuelve a *En Mora* por el paso del calendario:
+- Si el capital se pagó **a más tardar el día del vencimiento**, la cuota es *Pagada* y no debe
+  sanción alguna, aunque en algún momento se le hubiera calculado una.
+- Si el capital se pagó **después** del vencimiento, la sanción existe pero queda **congelada al día
+  del pago**: los intereses por día se cuentan hasta la `fecha_pago`, nunca hasta hoy.
+- Si el capital se pagó tarde y **la sanción ya está abonada por completo** (`valor_pagado_sancion >=
+  valor_multa`), la cuota es *Pagada*: se conservan la multa y el abono como historial, solo cambia el
+  estado.
+- **«No calcular multa» es el perdón**, y se hace efectivo **moviendo la `fecha_pago` al día del
+  vencimiento** (a mediodía local). Como la mora se decide por fechas, poner la multa en 0 no bastaba:
+  el siguiente recálculo la volvía a cobrar. Con la fecha ajustada, la cuota es *Pagada* a tiempo
+  para cualquier cálculo. Si se marca antes de pagar, el ajuste se aplica al registrar el pago.
+
+> Por qué está escrito: el criterio anterior (`valor_pagado >= valor_cuota + valor_multa`) hacía que
+> cualquier multa —incluida una calculada por error— sacara la cuota de *Pagada*, el calendario la
+> devolviera a *En Mora* y la multa volviera a crecer cada día. Una cuota pagada el mismo día del
+> vencimiento llegó a figurar con $41.500 de sanción cinco meses después.
+
 ### Cuotas con Pago Parcial
 
 Cuando una cuota tiene **pago parcial** (es decir, `0 < valor_pagado < valor_cuota`), aplican los mismos estados definidos anteriormente:
