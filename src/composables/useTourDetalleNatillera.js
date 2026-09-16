@@ -1,13 +1,14 @@
 /**
  * Guía de bienvenida del detalle de la natillera.
  *
- * Se muestra las DOS primeras visitas y luego desaparece. Dos y no una porque
- * en la primera se entra a mirar y casi nadie retiene nada; en la segunda ya se
- * sabe qué se busca y la explicación cala. Tres ya cansa.
+ * Sale UNA vez: la primera entrada a la pantalla con la natillera ya poblada.
+ * Antes salía dos veces; se redujo a una porque quien quiera repasarla tiene el
+ * botón «¿Cómo funciona?» en la cabecera, que la relanza sin gastar visitas.
  *
- * El contador vive por usuario y por natillera: quien crea su segunda natillera
- * ya conoce la pantalla, pero la cuenta se lleva aparte para no depender de un
- * único interruptor global que se marque por accidente.
+ * La primera entrada que cuenta es la primera con socios: si la natillera está
+ * vacía, el detalle no tiene nada que enseñar y la vista ni siquiera la abre
+ * (ver el watch de `cargandoNatillera` en NatilleraDetalle.vue). Al crear el
+ * primer socio, Socios.vue llama a `pedirGuiaDetalle()` y sale entonces.
  */
 
 /*
@@ -16,7 +17,7 @@
  * natilleras: repetírsela en cada una sería castigar a quien más usa la app.
  */
 const CLAVE = (userId) => `natillera_detalle_guia_v2_${userId}`
-const VISITAS_CON_GUIA = 2
+const VISITAS_CON_GUIA = 1
 
 function leer(clave) {
   try {
@@ -41,12 +42,7 @@ export function debeMostrarGuiaDetalle(userId) {
   return leer(CLAVE(userId)) < VISITAS_CON_GUIA
 }
 
-/**
- * Registra que la guía ya se mostró una vez más.
- *
- * Si el usuario la completó hasta el final, se da por vista del todo: ya no
- * hace falta enseñársela una segunda vez.
- */
+/** Registra que la guía ya se mostró: con una basta, se completara o no. */
 export function registrarGuiaDetalleVista(userId, { completado = false } = {}) {
   if (typeof window === 'undefined' || !userId) return
   const clave = CLAVE(userId)

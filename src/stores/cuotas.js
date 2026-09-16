@@ -4265,6 +4265,67 @@ export const useCuotasStore = defineStore('cuotas', () => {
    *
    * @returns {Promise<{descontado: number, problemas: string[]}>}
    */
+  /**
+   * Suma utilidad de un tipo al ciclo abierto, con el mismo criterio que el cobro de una
+   * actividad desde la cuota: una fila por natillera + tipo + forma de pago sin cerrar.
+   * Lo usa el cobro directo de actividades (Actividades → `useRegistrarPagoActividad`).
+   *
+   * @returns {Promise<{sumado: number, problemas: string[]}>}
+   */
+  async function sumarUtilidadPorTipo(natilleraId, tipo, formaPago, monto, descripcion = null) {
+    const resultado = { sumado: 0, problemas: [] }
+    const valor = Math.max(0, Number(monto) || 0)
+    if (valor <= 0) return resultado
+    if (!natilleraId || !tipo) {
+      resultado.problemas.push(`No se pudo identificar la natillera: la utilidad de ${tipo || 'la actividad'} no quedó registrada en el fondo`)
+      return resultado
+    }
+
+    const texto = descripcion || `Utilidad de ${tipo}`
+    try {
+      let consulta = supabase
+        .from('utilidades_clasificadas')
+        .select('id, monto')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', tipo)
+        .is('fecha_cierre', null)
+      consulta = formaPago != null ? consulta.eq('forma_pago', formaPago) : consulta.is('forma_pago', null)
+      const { data: existente } = await consulta.maybeSingle()
+
+      if (existente) {
+        // Se pide el resultado: con RLS y sin política de UPDATE, PostgREST responde «ok»
+        // sin tocar nada y la utilidad se daría por registrada.
+        const { data: filas, error } = await supabase
+          .from('utilidades_clasificadas')
+          .update({
+            monto: (parseFloat(existente.monto) || 0) + valor,
+            descripcion: texto,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existente.id)
+          .select('id')
+        if (error) throw error
+        if ((filas || []).length === 0) throw new Error('sin permisos sobre la utilidad')
+      } else {
+        const insertar = {
+          natillera_id: natilleraId,
+          tipo,
+          monto: valor,
+          fecha_cierre: null,
+          descripcion: texto,
+          detalles: {}
+        }
+        if (formaPago != null) insertar.forma_pago = formaPago
+        const { error } = await supabase.from('utilidades_clasificadas').insert(insertar)
+        if (error) throw error
+      }
+      resultado.sumado = valor
+    } catch (e) {
+      resultado.problemas.push(`El pago quedó registrado, pero la utilidad de ${tipo} no: ${e.message}`)
+    }
+    return resultado
+  }
+
   async function descontarUtilidadPorTipo(natilleraId, tipo, formaPago, monto, etiqueta = null) {
     const resultado = { descontado: 0, problemas: [] }
     const objetivo = Math.max(0, Number(monto) || 0)
@@ -5457,6 +5518,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
     eliminarPagoHistorial,
     // Reutilizados al revertir un pago desde el módulo de Actividades.
     tipoUtilidadDeActividad,
+    sumarUtilidadPorTipo,
     descontarUtilidadPorTipo,
     previsualizarEliminacionPagoDirecto,
     eliminarPagoDirectoCuota

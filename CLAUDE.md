@@ -10,11 +10,12 @@ Este repositorio guarda sus reglas en varios sitios porque lo usan varias herram
 |---|---|---|
 | `docs/compatibilidad-ios-safari.md` | **La** referencia de iOS/Safari: 17 secciones con patrones, bugs conocidos y cómo probar | Siempre que se toque UI, CSS, overlays o PWA |
 | `.claude/skills/natillerapp-modals/SKILL.md` | Patrón obligatorio de modales (`ModalWrapper`) | Al crear o modificar cualquier modal, diálogo u overlay |
+| `.claude/skills/natillerapp-recorrido-guiado/SKILL.md` | Patrón base de recorridos guiados (`RecorridoInteractivo`) | Al crear, modificar o migrar cualquier recorrido, tour u onboarding de pantalla |
 | `.cursor/rules/*.mdc` | Las mismas reglas en formato Cursor, más las convenciones de front-end | Referencia; su contenido está resumido aquí abajo |
 
 **No existe ninguna skill `ios-safari-compat`**, ni en `~/.claude/skills/` ni en `~/.cursor/skills/`, aunque versiones anteriores de este archivo y de `.cursor/rules/ios-safari-compat.mdc` la citaban. La fuente real es `docs/compatibilidad-ios-safari.md`. Si una regla apunta a un archivo que no existe, corregir la regla en vez de improvisar.
 
-`.cursor/skills/natillerapp-modals/SKILL.md` es una copia de la de `.claude` (hoy difieren solo en comillas tipográficas). Al cambiar una, cambiar la otra.
+`.cursor/skills/natillerapp-modals/SKILL.md` es una copia de la de `.claude` (hoy difieren solo en comillas tipográficas), y lo mismo `.cursor/skills/natillerapp-recorrido-guiado/SKILL.md`. Al cambiar una, cambiar la otra.
 
 ## 1. Regla obligatoria: validar iOS/Safari en cada implementación
 

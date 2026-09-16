@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-6">
+    <RecorridoInteractivo :pasos="pasosGuiaPrestamos" :activo="guiaPrestamosActiva" @terminar="cerrarGuiaPrestamos" />
     <!-- Page header (DS) — patrón unificado Socios/Actividades/Cuotas/Préstamos -->
     <header class="ds-page-header">
       <div class="ds-page-header__row">
@@ -12,25 +13,33 @@
             <h1 class="ds-page-header__title">Préstamos</h1>
             <p class="ds-page-header__sub hidden sm:block">Gestiona los préstamos internos del fondo</p>
           </div>
-          <!-- Móvil: CTA primario en línea con el título (sm+ usa el bloque de actions) -->
+          <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
           <button
             type="button"
-            class="ds-btn ds-btn--primary sm:hidden prestamos-header-add"
-            aria-label="Nuevo préstamo"
-            @click="abrirModalNuevoPrestamo"
+            data-guia="boton-recorrido"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            title="¿Cómo funciona esta pantalla?"
+            aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+            @click="abrirGuiaPrestamos({ manual: true })"
           >
-            <PlusIcon class="w-5 h-5" />
+            <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+            <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
           </button>
         </div>
-        <div class="ds-page-header__actions hidden sm:flex">
+        <!-- CTA primario. En móvil `__row` es columna, así que cae como fila propia bajo
+             el título y cabe el texto completo; antes era un «+» sin etiqueta apretado
+             junto al título, que no decía qué hacía. -->
+        <div class="ds-page-header__actions">
           <button
             type="button"
-            class="ds-btn ds-btn--primary"
-            aria-label="Nuevo préstamo"
+            data-guia="prestamos-nuevo"
+            class="ds-btn ds-btn--primary w-full sm:w-auto"
+            aria-label="Registrar préstamo"
             @click="abrirModalNuevoPrestamo"
           >
-            <PlusIcon class="w-4 h-4" />
-            <span>Nuevo Préstamo</span>
+            <PlusIcon class="w-5 h-5 sm:w-4 sm:h-4" />
+            <span class="sm:hidden">Registrar préstamo</span>
+            <span class="hidden sm:inline">Nuevo Préstamo</span>
           </button>
         </div>
       </div>
@@ -41,8 +50,8 @@
 
     <template v-else>
     <!-- Resumen (DS stat cards) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
-      <div class="ds-stat-card">
+    <div data-guia="prestamos-resumen" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+      <div data-guia="prestamos-resumen-total" class="ds-stat-card">
         <div class="ds-stat-card__icon">
           <BanknotesIcon class="w-5 h-5" />
         </div>
@@ -50,7 +59,7 @@
         <p class="ds-stat-card__label">Total Préstamos</p>
       </div>
 
-      <div class="ds-stat-card">
+      <div data-guia="prestamos-resumen-prestado" class="ds-stat-card">
         <div class="ds-stat-card__icon">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
@@ -58,7 +67,7 @@
         <p class="ds-stat-card__label">Prestado</p>
       </div>
 
-      <div class="ds-stat-card">
+      <div data-guia="prestamos-resumen-pagado" class="ds-stat-card">
         <div class="ds-stat-card__icon">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
@@ -66,7 +75,7 @@
         <p class="ds-stat-card__label">Total Pagado</p>
       </div>
 
-      <div class="ds-stat-card">
+      <div data-guia="prestamos-resumen-intereses" class="ds-stat-card">
         <div class="ds-stat-card__icon">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
@@ -102,7 +111,7 @@
     <section v-else class="prestamos-panel">
       <!-- Cabecera del panel: tabs + resumen de la sección activa -->
       <header class="prestamos-panel__head">
-        <div class="prestamos-tabs" role="tablist" aria-label="Secciones de préstamos">
+        <div data-guia="prestamos-pestanas" class="prestamos-tabs" role="tablist" aria-label="Secciones de préstamos">
           <button
             type="button"
             role="tab"
@@ -127,7 +136,7 @@
           </button>
         </div>
 
-        <p class="prestamos-panel__summary">
+        <p data-guia="prestamos-saldo-seccion" class="prestamos-panel__summary">
           <span class="prestamos-panel__summary-label">
             {{ tabPrestamos === 'pagados' ? 'Total pagado' : 'Saldo por cobrar' }}
           </span>
@@ -138,7 +147,7 @@
       </header>
 
       <!-- Cuerpo del panel: envuelve las tarjetas -->
-      <div class="prestamos-panel__body">
+      <div data-guia="prestamos-lista" class="prestamos-panel__body">
         <!-- Empty de la pestaña activa -->
         <div
           v-if="prestamosFiltrados.length === 0"
@@ -157,152 +166,197 @@
           </p>
         </div>
 
-        <!-- Lista de la pestaña activa -->
-        <div v-else class="space-y-3 sm:space-y-4">
+        <!-- Lista de la pestaña activa: ds-card compacta (nombre → saldo → Monto/Interés/Pagado) -->
+        <div v-else class="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         <div
-          v-for="prestamo in prestamosFiltrados"
+          v-for="(prestamo, idx) in prestamosFiltrados"
           :key="prestamo.id"
+          :data-guia="idx === 0 ? 'prestamos-tarjeta' : undefined"
           @click="abrirModalDetalle(prestamo)"
-          :class="[
-            'group relative overflow-hidden rounded-2xl bg-white shadow-[var(--shadow-xs)] hover:shadow-[var(--shadow-md)] transition-shadow duration-200 cursor-pointer',
-            prestamo.tieneCuotasVencidas
-              ? 'border border-rose-200'
-              : 'border border-[color:var(--surface-divider)]'
-          ]"
+          class="ds-card ds-card--hover flex cursor-pointer flex-col gap-3"
         >
-          <!-- Franja slim de mora -->
-          <div
-            v-if="prestamo.tieneCuotasVencidas"
-            class="flex items-center gap-1.5 bg-rose-50 border-b border-rose-100 px-4 py-2 text-rose-700"
-          >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span class="text-xs font-bold">En mora</span>
-            <span class="text-xs font-semibold text-rose-500">· {{ prestamo.diasMora }} {{ prestamo.diasMora === 1 ? 'día' : 'días' }}</span>
-            <span class="ml-auto text-xs font-bold whitespace-nowrap">${{ formatMoney(prestamo.valorCuotasEnDeuda || 0) }} en deuda</span>
-          </div>
+          <!-- Jerarquía de la tarjeta, de más a menos importante:
+               1. quién y cómo va       → nombre + badge de estado
+               2. cuánto debe           → saldo (cifra protagonista) + progreso del plan
+               3. qué hacer y cuándo    → UN solo bloque resaltado: mora o próximo pago
+               4. condiciones del crédito → monto/interés/pagado, en letra de referencia
+               5. acciones
+               Nunca compiten dos bloques resaltados: en mora, el próximo pago baja a
+               línea secundaria dentro del bloque rojo. -->
 
-          <!-- Franja slim: al día (préstamo activo sin cuotas vencidas) -->
-          <div
-            v-else-if="prestamo.estado === 'activo'"
-            class="flex items-center gap-1.5 bg-emerald-50 border-b border-emerald-100 px-4 py-2 text-emerald-700"
-          >
-            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="text-xs font-bold">Al día</span>
-          </div>
-
-          <div class="p-4 sm:p-5">
-            <!-- Socio + saldo -->
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex items-center gap-3 min-w-0">
-                <div
-                  :class="[
-                    'w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0',
-                    prestamo.tieneCuotasVencidas
-                      ? 'bg-rose-100 text-rose-600'
-                      : 'bg-[color:var(--brand-primary-soft)] text-[color:var(--brand-primary)]'
-                  ]"
-                >
-                  <BanknotesIcon class="w-5 h-5" />
-                </div>
-                <div class="min-w-0">
-                  <p class="font-display font-semibold text-gray-800 text-base truncate">
-                    {{ prestamo.socio_natillera?.socio?.nombre || 'Socio' }}
-                  </p>
-                  <p class="text-xs text-gray-500">{{ formatDate(prestamo.created_at) }}</p>
-                </div>
-              </div>
-              <div class="text-right flex-shrink-0">
-                <p class="text-[0.625rem] font-semibold uppercase tracking-wide text-gray-400">Saldo</p>
-                <p
-                  class="font-display font-bold text-lg leading-tight"
-                  :class="prestamo.saldo_actual > 0 ? 'text-gray-900' : 'text-[color:var(--brand-primary)]'"
-                >
-                  ${{ formatMoney(prestamo.saldo_actual) }}
-                </p>
-              </div>
+          <!-- 1. Identidad y estado -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="truncate font-display text-lg font-extrabold leading-tight text-slate-900 sm:text-xl">
+                {{ prestamo.socio_natillera?.socio?.nombre || 'Socio' }}
+              </p>
+              <!-- En activos el progreso va bajo el saldo; aquí solo el resumen del plan saldado -->
+              <p v-if="prestamo.estado === 'pagado' && prestamo.cuotasTotales > 0" class="mt-0.5 text-sm text-slate-500 tabular-nums">
+                {{ prestamo.cuotasTotales }} {{ prestamo.cuotasTotales === 1 ? 'cuota' : 'cuotas' }}
+              </p>
             </div>
+            <span v-if="prestamo.tieneCuotasVencidas" data-guia-parte="estado" class="ds-badge ds-badge--danger flex-shrink-0 whitespace-nowrap">
+              <ExclamationTriangleIcon class="h-3.5 w-3.5" />
+              En mora · {{ prestamo.diasMora }} {{ prestamo.diasMora === 1 ? 'día' : 'días' }}
+            </span>
+            <span v-else-if="prestamo.estado === 'activo'" data-guia-parte="estado" class="ds-badge ds-badge--success flex-shrink-0 whitespace-nowrap">
+              <CheckCircleIcon class="h-3.5 w-3.5" />
+              Al día
+            </span>
+            <span v-else-if="prestamo.estado === 'pagado'" data-guia-parte="estado" class="ds-badge ds-badge--muted flex-shrink-0 whitespace-nowrap">
+              <CheckCircleIcon class="h-3.5 w-3.5" />
+              Pagado
+            </span>
+          </div>
 
-            <!-- Barra de progreso pagado / total -->
-            <div class="mt-4">
-              <div class="flex items-center justify-between mb-1.5 text-xs">
-                <span class="font-semibold text-gray-600">{{ porcentajePagadoPrestamo(prestamo) }}% pagado</span>
-                <span class="font-medium text-gray-400">
-                  ${{ formatMoney(calcularValorPagadoDetalle(prestamo)) }} de ${{ formatMoney(calcularSaldoInicialTotal(prestamo)) }}
-                </span>
-              </div>
-              <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
+          <!-- 2. Saldo: la cifra que manda en la tarjeta, con el avance del plan debajo.
+               Un préstamo pagado no tiene saldo que mostrar. -->
+          <div v-if="prestamo.estado !== 'pagado'" data-guia-parte="saldo">
+            <div class="flex items-baseline justify-between gap-3">
+              <span class="text-sm text-slate-500">Saldo</span>
+              <span
+                class="font-display text-2xl font-extrabold leading-none tabular-nums"
+                :class="prestamo.tieneCuotasVencidas ? 'text-[color:var(--brand-danger)]' : 'text-slate-900'"
+              >
+                ${{ formatMoney(prestamo.saldo_actual) }}
+              </span>
+            </div>
+            <div v-if="prestamo.cuotasTotales > 0" class="mt-2">
+              <div class="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-divider)]">
                 <div
-                  class="h-full rounded-full transition-all duration-500"
-                  :class="prestamo.tieneCuotasVencidas ? 'bg-rose-400' : 'bg-[color:var(--brand-primary)]'"
+                  class="h-full rounded-full bg-[color:var(--brand-primary)]"
                   :style="{ width: porcentajePagadoPrestamo(prestamo) + '%' }"
                 ></div>
               </div>
+              <p class="mt-1 flex items-baseline justify-between gap-2 text-xs text-slate-500 tabular-nums">
+                <span>{{ prestamo.cuotasPagadas }} de {{ prestamo.cuotasTotales }} cuotas</span>
+                <span>{{ porcentajePagadoPrestamo(prestamo) }}% pagado</span>
+              </p>
             </div>
+          </div>
 
-            <!-- Metadatos secundarios -->
-            <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-              <span>Monto <strong class="font-semibold text-gray-700">${{ formatMoney(prestamo.monto) }}</strong></span>
-              <span class="text-gray-300" aria-hidden="true">·</span>
-              <span>Interés <strong class="font-semibold text-gray-700">{{ prestamo.interes }}%</strong></span>
-              <span class="text-gray-300" aria-hidden="true">·</span>
-              <span>Pagado <strong class="font-semibold text-blue-600">${{ formatMoney(calcularValorPagadoDetalle(prestamo)) }}</strong></span>
+          <!-- 3a. En mora: lo que se paga hoy para ponerse al día (cuotas vencidas + interés
+               de mora). Absorbe el próximo pago como línea menor para no partir la atención. -->
+          <div v-if="prestamo.tieneCuotasVencidas" class="ds-callout prestamo-callout--mora !block tabular-nums">
+            <div class="flex items-baseline justify-between gap-2">
+              <span class="font-semibold">Para ponerse al día</span>
+              <span class="font-display text-base font-bold text-[color:var(--brand-danger)]">
+                ${{ formatMoney((prestamo.valorCuotasEnDeuda || 0) + (prestamo.moraAcumulada || 0)) }}
+              </span>
             </div>
+            <p class="text-xs">
+              Vencido ${{ formatMoney(prestamo.valorCuotasEnDeuda || 0) }}
+              <strong v-if="prestamo.moraAcumulada > 0" class="font-bold">+ mora ${{ formatMoney(prestamo.moraAcumulada) }}</strong>
+            </p>
+            <p v-if="prestamo.proximoPago" class="mt-1 border-t border-[color:rgba(153,27,27,0.15)] pt-1 text-xs opacity-90">
+              Siguiente cuota {{ formatDate(prestamo.proximoPago.fechaLimite) }} ·
+              ${{ formatMoney(prestamo.proximoPago.valor) }}
+            </p>
+          </div>
 
-            <!-- Acciones -->
-            <div class="mt-4 flex items-center gap-2">
-              <template v-if="prestamo.estado === 'activo'">
-                <button
-                  @click.stop="abrirModalAbono(prestamo)"
-                  :class="[
-                    'flex-1 sm:flex-none py-2.5 px-4 text-sm font-semibold rounded-xl transition-colors active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation text-white',
-                    prestamo.tieneCuotasVencidas
-                      ? 'bg-rose-600 hover:bg-rose-700'
-                      : 'bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]'
-                  ]"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>Abonar</span>
-                </button>
-                <button
-                  @click.stop="abrirModalRefinanciar(prestamo)"
-                  class="flex-1 sm:flex-none py-2.5 px-4 text-sm font-semibold rounded-xl transition-colors active:scale-95 bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center gap-1.5 touch-manipulation"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <span class="hidden sm:inline">Refinanciar</span>
-                  <span class="sm:hidden">Refin.</span>
-                </button>
-              </template>
-              <button
-                v-if="prestamo.estado === 'pagado'"
-                @click.stop="enviarComprobantePagado(prestamo)"
-                class="flex-1 sm:flex-none py-2.5 px-4 text-sm font-semibold rounded-xl transition-colors active:scale-95 flex items-center justify-center gap-1.5 touch-manipulation bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)] text-white"
-              >
-                <PaperAirplaneIcon class="w-4 h-4 flex-shrink-0" />
-                <span>Enviar comprobante</span>
-              </button>
-              <button
-                @click.stop="confirmarEliminarPrestamo(prestamo)"
-                class="ml-auto sm:ml-0 sm:flex-none py-2.5 px-3 text-sm font-semibold rounded-xl transition-colors active:scale-95 bg-white border border-gray-200 text-gray-500 hover:border-rose-200 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center gap-1.5 touch-manipulation"
-                aria-label="Eliminar préstamo"
-              >
-                <TrashIcon class="w-4 h-4 flex-shrink-0" />
-                <span class="hidden sm:inline">Eliminar</span>
-              </button>
+          <!-- 3b. Al día: cuándo toca el próximo pago. La fecha ya incluye los días de
+               gracia, o sea que es hasta cuándo se puede pagar sin mora. Una línea que se
+               parte en dos en móviles estrechos (`flex-wrap` + `ml-auto`); el detalle
+               —número de cuota, gracia, fecha nominal— vive en el modal de detalle. -->
+          <div
+            v-else-if="prestamo.estado === 'activo' && prestamo.proximoPago"
+            data-guia-parte="proximo"
+            class="ds-callout prestamo-callout--proximo tabular-nums"
+            :class="{ 'prestamo-callout--proximo-urgente': prestamo.proximoPago.diasRestantes <= 2 }"
+          >
+            <span class="min-w-0 font-semibold">
+              Próximo pago
+              <span class="font-normal">{{ formatDate(prestamo.proximoPago.fechaLimite) }}</span>
+              <span class="whitespace-nowrap text-xs">· {{ textoProximoPago(prestamo.proximoPago) }}</span>
+            </span>
+            <span class="ml-auto flex-shrink-0 font-display text-base font-bold">
+              ${{ formatMoney(prestamo.proximoPago.valor) }}
+            </span>
+          </div>
+
+          <!-- 4. Condiciones del crédito: referencia, no protagonismo -->
+          <div data-guia-parte="cifras" class="grid grid-cols-3 gap-2 border-t border-[color:var(--surface-divider)] pt-3">
+            <div class="flex min-w-0 flex-col">
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Monto</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-slate-700">${{ formatMoney(prestamo.monto) }}</span>
             </div>
+            <div class="flex min-w-0 flex-col">
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Interés</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-slate-700">{{ prestamo.interes }}%</span>
+            </div>
+            <div class="flex min-w-0 flex-col">
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Pagado</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-[color:var(--brand-primary)]">${{ formatMoney(calcularValorPagadoDetalle(prestamo)) }}</span>
+            </div>
+          </div>
+
+          <!-- Acciones: una principal + «⋯» que despliega el resto en la misma tarjeta.
+               Desplegable en línea y no modal: la pila de modales ocultaría el menú y lo
+               restauraría al cerrar Refinanciar/Eliminar, y cerrar uno y abrir otro en el
+               mismo gesto descuadra el history (ver replaceTop en useModalStack). -->
+          <div class="flex items-center gap-2">
+            <button
+              v-if="prestamo.estado === 'activo'"
+              type="button"
+              data-guia-parte="abonar"
+              class="ds-btn flex-1"
+              :class="prestamo.tieneCuotasVencidas ? 'ds-btn--danger' : 'ds-btn--primary'"
+              @click.stop="abrirModalAbono(prestamo)"
+            >
+              <PlusIcon class="h-4 w-4" />
+              Abonar
+            </button>
+            <button
+              v-else-if="prestamo.estado === 'pagado'"
+              type="button"
+              class="ds-btn ds-btn--primary flex-1"
+              @click.stop="enviarComprobantePagado(prestamo)"
+            >
+              <PaperAirplaneIcon class="h-4 w-4" />
+              Enviar comprobante
+            </button>
+            <button
+              type="button"
+              data-guia-parte="mas"
+              class="ds-btn ds-btn--secondary prestamo-card__mas ml-auto"
+              :aria-expanded="accionesPrestamoAbiertas === prestamo.id"
+              aria-label="Más acciones"
+              @click.stop="alternarAccionesPrestamo(prestamo.id)"
+            >
+              <EllipsisHorizontalIcon class="h-5 w-5" />
+            </button>
+          </div>
+          <div v-if="accionesPrestamoAbiertas === prestamo.id" class="flex items-center gap-2">
+            <button
+              v-if="prestamo.estado === 'activo'"
+              type="button"
+              class="ds-btn ds-btn--secondary flex-1"
+              @click.stop="accionesPrestamoAbiertas = null; abrirModalRefinanciar(prestamo)"
+            >
+              <ArrowPathIcon class="h-4 w-4" />
+              Refinanciar
+            </button>
+            <button
+              type="button"
+              class="ds-btn ds-btn--ghost prestamo-card__eliminar flex-1"
+              @click.stop="accionesPrestamoAbiertas = null; confirmarEliminarPrestamo(prestamo)"
+            >
+              <TrashIcon class="h-4 w-4" />
+              Eliminar
+            </button>
           </div>
         </div>
       </div>
       </div>
     </section>
     </template>
+
+    <!-- Ayuda «¿Cómo se calcula el interés?» (se abre desde crear o refinanciar; la pila de modales oculta el formulario y lo restaura al cerrar) -->
+    <ExplicacionInteresPrestamo
+      :show="modalAyudaInteres"
+      v-bind="propsAyudaInteres"
+      @close="requestCloseTopModal"
+    />
 
     <!-- Modal Nuevo Préstamo (paso a paso) — patrón ModalWrapper / skill modales -->
     <ModalWrapper
@@ -394,7 +448,7 @@
         >
           <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0">
           <!-- Paso 0: Monto y socio -->
-          <div v-show="pasoNuevoPrestamo === 0" class="space-y-4 sm:space-y-5">
+          <div v-show="pasoNuevoPrestamo === 0" data-guia="crear-monto" class="space-y-4 sm:space-y-5">
           <!-- Selector de Socio -->
           <div class="relative selector-socio-container">
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Socio</label>
@@ -565,8 +619,9 @@
               <input 
                 :value="montoFormateado"
                 @input="actualizarMonto"
-                @focus="$event.target.select()"
-                @click="$event.target.select()"
+                @pointerdown="alPresionarMonto"
+                @focus="seleccionarTodoMonto"
+                @click="alTocarMonto"
                 type="text" 
                 inputmode="numeric"
                 class="w-full pl-9 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-lg font-semibold placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-shadow"
@@ -584,7 +639,7 @@
           </div>
 
           <!-- Paso 1: Plazo e interés -->
-          <div v-show="pasoNuevoPrestamo === 1" class="space-y-4 sm:space-y-5">
+          <div v-show="pasoNuevoPrestamo === 1" data-guia="crear-plazo" class="space-y-4 sm:space-y-5">
           <!-- Tipo de interés -->
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Tipo de interés</label>
@@ -596,7 +651,7 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'simple' ? 'text-emerald-800' : 'text-gray-700']">Simple</span>
-                  <span class="text-xs text-gray-500">Sobre monto inicial</span>
+                  <span class="text-xs text-gray-500">Interés fijo sobre el monto</span>
                 </div>
                 <div v-if="formPrestamo.tipo_interes === 'simple'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -609,13 +664,21 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <span :class="['font-semibold text-sm block', formPrestamo.tipo_interes === 'compuesto' ? 'text-emerald-800' : 'text-gray-700']">Compuesto</span>
-                  <span class="text-xs text-gray-500">Se acumula por periodo</span>
+                  <span class="text-xs text-gray-500">Cuota fija, interés sobre saldo</span>
                 </div>
                 <div v-if="formPrestamo.tipo_interes === 'compuesto'" class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                 </div>
               </label>
             </div>
+            <button
+              type="button"
+              class="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-[#1B5E37] underline-offset-2 hover:underline touch-manipulation"
+              @click="abrirAyudaInteres('crear')"
+            >
+              <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0" />
+              ¿Cómo se calcula el interés?
+            </button>
           </div>
 
           <!-- Número de cuotas e Interés -->
@@ -690,7 +753,7 @@
           <!-- Toggle Interés Normal / Anticipado -->
           <div v-if="formPrestamo.monto && formPrestamo.interes && formPrestamo.numero_cuotas">
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Cobro del interés</label>
-            <p class="text-xs text-gray-500 mb-1.5">Define si el interés se descuenta al desembolso (anticipado) o se reconoce al pagar cada cuota (normal).</p>
+            <p class="text-xs text-gray-500 mb-1.5">El socio recibe y paga lo mismo. Anticipado: el interés entra a las utilidades al crear el préstamo. Normal: entra con cada cuota pagada.</p>
             <div class="rounded-xl border border-gray-200 bg-white p-1.5 flex gap-1">
               <button type="button" @click="mostrarInteresAnticipado = false" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', !mostrarInteresAnticipado ? 'bg-gray-800 text-white' : 'text-gray-600 hover:bg-gray-50']">Normal</button>
               <button type="button" @click="mostrarInteresAnticipado = true" :class="['flex-1 py-2 rounded-lg text-sm font-medium transition-all', mostrarInteresAnticipado ? 'bg-amber-500 text-white' : 'text-gray-600 hover:bg-gray-50']">Anticipado</button>
@@ -699,7 +762,7 @@
           </div>
 
           <!-- Paso 2: Resumen. Antes de crear: botón WhatsApp antes de Generar. Después de crear: comprobante con Descargar y WhatsApp -->
-          <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
+          <div v-show="pasoNuevoPrestamo === 2" data-guia="crear-resumen" class="space-y-3 sm:space-y-4">
             <!-- Vista antes de generar: sin comprobante; confirmar desde el footer -->
             <template v-if="!prestamoRecienCreado">
               <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
@@ -1793,7 +1856,7 @@
                 required
               />
               <p class="mt-2 text-xs text-gray-500">
-                Número de cuotas para el nuevo plan de pagos. Los intereses se calcularán sobre el saldo actual (${{ formatMoney(prestamoSeleccionado?.saldo_actual || 0) }}).
+                Número de cuotas del nuevo plan. El interés nuevo se calcula solo sobre el capital pendiente.
               </p>
             </div>
 
@@ -1829,6 +1892,7 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <span class="font-bold text-xs block">Simple</span>
+                    <span class="text-[0.6875rem] text-gray-500 block leading-tight">Fijo sobre el capital</span>
                   </div>
                   <div 
                     v-if="formRefinanciar.tipo_interes_nuevo === 'simple'"
@@ -1868,6 +1932,7 @@
                   </div>
                   <div class="flex-1 min-w-0">
                     <span class="font-bold text-xs block">Compuesto</span>
+                    <span class="text-[0.6875rem] text-gray-500 block leading-tight">Cuota fija, sobre saldo</span>
                   </div>
                   <div 
                     v-if="formRefinanciar.tipo_interes_nuevo === 'compuesto'"
@@ -1880,6 +1945,15 @@
                 </label>
               </div>
             </div>
+
+            <button
+              type="button"
+              class="-mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-sm font-semibold text-[#1B5E37] underline-offset-2 hover:underline touch-manipulation"
+              @click="abrirAyudaInteres('refinanciar')"
+            >
+              <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0" />
+              ¿Cómo se calcula el interés?
+            </button>
 
             <!-- Tasa de interés (opcional) -->
             <div>
@@ -1898,7 +1972,7 @@
               </p>
             </div>
 
-            <!-- Vista previa -->
+            <!-- Vista previa: qué se refinancia (capital, interés vencido, interés futuro, mora) -->
             <div v-if="vistaPreviaRefinanciacion" class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
               <h4 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                 <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1907,28 +1981,39 @@
                 </svg>
                 Vista Previa del Refinanciamiento
               </h4>
-              <div class="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p class="text-gray-600 mb-1">Saldo a refinanciar</p>
-                  <p class="font-bold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.saldo) }}</p>
+              <dl class="space-y-2 text-sm tabular-nums">
+                <div class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Saldo actual</dt>
+                  <dd class="font-semibold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.saldoActual) }}</dd>
                 </div>
-                <div>
-                  <p class="text-gray-600 mb-1">Total de cuotas</p>
-                  <p class="font-bold text-gray-800">{{ vistaPreviaRefinanciacion.totalCuotas }}</p>
+                <div class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Capital pendiente</dt>
+                  <dd class="font-bold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.capitalPendiente) }}</dd>
                 </div>
-                <div>
-                  <p class="text-gray-600 mb-1">Interés total</p>
-                  <p class="font-bold text-orange-600">${{ formatMoney(vistaPreviaRefinanciacion.interesTotal) }}</p>
+                <div v-if="vistaPreviaRefinanciacion.interesVencido > 0" class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Interés vencido sin pagar <span class="block text-xs text-gray-500">Se cobra en las cuotas, sin intereses</span></dt>
+                  <dd class="font-semibold text-gray-800">${{ formatMoney(vistaPreviaRefinanciacion.interesVencido) }}</dd>
                 </div>
-                <div>
-                  <p class="text-gray-600 mb-1">Total a pagar</p>
-                  <p class="font-bold text-green-600">${{ formatMoney(vistaPreviaRefinanciacion.totalPagar) }}</p>
+                <div v-if="vistaPreviaRefinanciacion.interesFuturo > 0" class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Interés futuro que se elimina</dt>
+                  <dd class="font-semibold text-gray-500">− ${{ formatMoney(vistaPreviaRefinanciacion.interesFuturo) }}</dd>
                 </div>
-                <div class="col-span-2">
-                  <p class="text-gray-600 mb-1">Valor de cuota</p>
-                  <p class="font-bold text-lg text-green-700">${{ formatMoney(vistaPreviaRefinanciacion.valorCuota) }}</p>
+                <div class="flex justify-between gap-3">
+                  <dt class="text-gray-600">Interés nuevo <span class="block text-xs text-gray-500">{{ vistaPreviaRefinanciacion.tasaInteres }}% · {{ vistaPreviaRefinanciacion.totalCuotas }} cuotas · {{ vistaPreviaRefinanciacion.tipoInteres === 'compuesto' ? 'compuesto' : 'simple' }}</span></dt>
+                  <dd class="font-bold text-orange-600">${{ formatMoney(vistaPreviaRefinanciacion.interesNuevo) }}</dd>
                 </div>
-              </div>
+                <div class="flex justify-between gap-3 border-t border-green-200 pt-2">
+                  <dt class="font-semibold text-gray-800">Total a pagar</dt>
+                  <dd class="font-bold text-green-600">${{ formatMoney(vistaPreviaRefinanciacion.totalAPagar) }}</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                  <dt class="font-semibold text-gray-800">Valor de cuota</dt>
+                  <dd class="font-bold text-lg text-green-700">${{ formatMoney(vistaPreviaRefinanciacion.valorCuota) }}</dd>
+                </div>
+              </dl>
+              <p v-if="vistaPreviaRefinanciacion.moraPendiente > 0" class="mt-3 rounded-lg bg-amber-100/70 px-3 py-2 text-xs text-amber-800">
+                Mora pendiente: <strong>${{ formatMoney(vistaPreviaRefinanciacion.moraPendiente) }}</strong>. No se suma al préstamo refinanciado; si la vas a cobrar, registra el abono antes de refinanciar.
+              </p>
             </div>
 
             <!-- Advertencia -->
@@ -1940,7 +2025,7 @@
                 <div class="flex-1">
                   <p class="font-semibold text-amber-800 mb-1">Advertencia</p>
                   <p class="text-sm text-amber-700">
-                    Al refinanciar, se eliminarán las cuotas pendientes del plan de pagos actual y se generará un nuevo plan basado en el saldo actual y la nueva fecha de pago. Los intereses se recalcularán automáticamente.
+                    Al refinanciar se reemplaza el plan de pagos. El nuevo plan parte del capital pendiente, el interés vencido se cobra en las nuevas cuotas sin intereses adicionales y el interés futuro del plan anterior se cambia por el de las nuevas condiciones.
                   </p>
                 </div>
               </div>
@@ -3828,6 +3913,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNotificationStore } from '../../stores/notifications'
 import { natilleraPrestamosDeshabilitados, parseReglasInteresPrestamo, diasGraciaPrestamo } from '../../utils/natilleraPrestamos'
+import { calcularCondicionesPrestamo, generarDesgloseCuotas, calcularRefinanciacion } from '../../utils/calculoPrestamos'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
@@ -3850,7 +3936,12 @@ import {
   ChevronRightIcon,
   LockClosedIcon,
   ArrowsRightLeftIcon,
-  PaperAirplaneIcon
+  PaperAirplaneIcon,
+  EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
+  QuestionMarkCircleIcon,
+  ChartBarIcon,
+  RectangleStackIcon
 } from '@heroicons/vue/24/outline'
 import { getAvatarUrl } from '../../utils/avatars'
 import { getCurrentDateISO, formatDateToLocalISO, parseDateLocal, formatDate } from '../../utils/formatDate'
@@ -3862,6 +3953,9 @@ import { useSessionDraftPersistence } from '../../composables/useSessionDraftPer
 import { useModalStack, __modalStackSync } from '../../composables/useModalStack'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import PrestamosSkeleton from '../../components/PrestamosSkeleton.vue'
+import ExplicacionInteresPrestamo from '../../components/ExplicacionInteresPrestamo.vue'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { toPng } from 'html-to-image'
 
 /** Devuelve mes (1-12), anio y quincena (1 o 2) desde fecha_proyectada para plan_pagos_prestamo */
@@ -3934,6 +4028,43 @@ const historialAbonosExpandido = ref(new Set())
 // Ids de refinanciaciones cuyo desplegable del plan de pagos anterior está abierto.
 const historialPlanExpandido = ref(new Set())
 const prestamoAEliminar = ref(null)
+// Id del préstamo con el desplegable «⋯» (Refinanciar / Eliminar) abierto en la lista.
+const accionesPrestamoAbiertas = ref(null)
+// Ayuda del interés: desde qué formulario se abrió define los datos del simulador
+const modalAyudaInteres = ref(false)
+const contextoAyudaInteres = ref('crear') // 'crear' | 'refinanciar'
+function abrirAyudaInteres(contexto) {
+  contextoAyudaInteres.value = contexto
+  modalAyudaInteres.value = true
+}
+const propsAyudaInteres = computed(() => {
+  if (contextoAyudaInteres.value === 'refinanciar') {
+    const p = prestamoSeleccionado.value
+    return {
+      capital: vistaPreviaRefinanciacion.value?.capitalPendiente || 0,
+      tasaMensual: p ? tasaRefinanciacionElegida(p) : 0,
+      numeroCuotas: formRefinanciar.numero_cuotas_nuevo || 0,
+      periodicidad: p?.periodicidad || 'mensual',
+      tipoInteres: formRefinanciar.tipo_interes_nuevo,
+      interesAnticipado: !!p?.interes_anticipado,
+      refinanciacion: true,
+      refinanciacionDatos: vistaPreviaRefinanciacion.value
+    }
+  }
+  return {
+    capital: formPrestamo.monto,
+    tasaMensual: formPrestamo.interes,
+    numeroCuotas: formPrestamo.numero_cuotas,
+    periodicidad: formPrestamo.periodicidad,
+    tipoInteres: formPrestamo.tipo_interes,
+    interesAnticipado: mostrarInteresAnticipado.value,
+    refinanciacion: false,
+    refinanciacionDatos: null
+  }
+})
+function alternarAccionesPrestamo(id) {
+  accionesPrestamoAbiertas.value = accionesPrestamoAbiertas.value === id ? null : id
+}
 const abonoAEliminar = ref(null)
 const abonoAEditar = ref(null)
 const modalCompartirPrestamo = ref(false)
@@ -4687,71 +4818,34 @@ const montoPagadosSeccion = computed(() => {
 })
 
 // Vista previa del refinanciamiento
+// Tasa elegida al refinanciar: vacía = la del préstamo
+function tasaRefinanciacionElegida(prestamo) {
+  const t = formRefinanciar.interes_nuevo
+  return t === null || t === undefined || t === '' ? (parseFloat(prestamo?.interes) || 0) : Number(t)
+}
+
 const vistaPreviaRefinanciacion = computed(() => {
-  if (!prestamoSeleccionado.value || !formRefinanciar.fecha_pago || !formRefinanciar.numero_cuotas_nuevo || formRefinanciar.numero_cuotas_nuevo <= 0) {
-    return null
-  }
-
   const prestamo = prestamoSeleccionado.value
-  const saldoActual = parseFloat(prestamo.saldo_actual || 0)
-  
-  if (saldoActual <= 0) {
-    return null
-  }
+  const totalCuotas = Number(formRefinanciar.numero_cuotas_nuevo) || 0
+  if (!prestamo || !formRefinanciar.fecha_pago || totalCuotas <= 0) return null
+  if ((parseFloat(prestamo.saldo_actual) || 0) <= 0) return null
 
-  // El número de cuotas es el ingresado (no se suma al anterior)
-  const totalCuotas = formRefinanciar.numero_cuotas_nuevo || 0
-
-  if (totalCuotas <= 0) {
-    return null
-  }
-
-  // Usar tasa de interés nueva si se especificó, sino usar la original
-  const interes = formRefinanciar.interes_nuevo !== null && formRefinanciar.interes_nuevo !== undefined
-    ? formRefinanciar.interes_nuevo
-    : (prestamo.interes || 0)
-  
-  const tasaMensual = interes / 100
+  const tasaInteres = tasaRefinanciacionElegida(prestamo)
   const tipoInteres = formRefinanciar.tipo_interes_nuevo || prestamo.tipo_interes || 'simple'
-  const periodicidad = prestamo.periodicidad || 'mensual'
-  const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-
-  // Obtener el interés inicial original del préstamo
-  // Si el préstamo tiene interes_total_original (fue refinanciado), usar ese valor
-  // Si no, usar el interes_total actual (es el inicial)
-  const tieneInteresAnticipado = prestamo.interes_anticipado || false
-  const interesInicialOriginal = prestamo.interes_total_original !== null && prestamo.interes_total_original !== undefined
-    ? parseFloat(prestamo.interes_total_original)
-    : (prestamo.interes_total ? parseFloat(prestamo.interes_total) : 0)
-  
-  // Calcular el nuevo interés total
-  let interesTotalNuevoCalculado = 0
-  let totalPagar = 0
-  let valorCuota = 0
-
-  if (tipoInteres === 'compuesto') {
-    totalPagar = saldoActual * Math.pow(1 + tasaPeriodica, totalCuotas)
-    interesTotalNuevoCalculado = totalPagar - saldoActual
-    valorCuota = totalPagar / totalCuotas
-  } else {
-    interesTotalNuevoCalculado = saldoActual * tasaPeriodica * totalCuotas
-    totalPagar = saldoActual + interesTotalNuevoCalculado
-    valorCuota = totalPagar / totalCuotas
-  }
-
-  // El interés total que se muestra debe ser el nuevo completo
-  // La diferencia (interesTotalNuevoCalculado - interesInicialOriginal) solo se distribuye en las cuotas
-  // pero el interés_total del préstamo y el saldo_actual deben incluir el nuevo interés completo
-  let interesTotalAMostrar = interesTotalNuevoCalculado
-
-  return {
-    saldo: saldoActual,
-    totalCuotas,
-    interesTotal: Math.round(interesTotalAMostrar),
-    totalPagar: Math.round(totalPagar),
-    valorCuota: Math.round(valorCuota),
-    tasaInteres: interes,
+  const refinanciacion = calcularRefinanciacion({
+    prestamo,
+    plan: planDePrestamo(prestamo),
+    fechaCorte: getCurrentDateISO(),
+    tasaMensual: tasaInteres,
+    numeroCuotas: totalCuotas,
     tipoInteres
+  })
+  return {
+    ...refinanciacion,
+    totalCuotas,
+    tasaInteres,
+    tipoInteres,
+    moraPendiente: Math.round(prestamo.moraAcumulada || 0)
   }
 })
 
@@ -4842,9 +4936,36 @@ function formatCurrencyInput(value) {
   return formatMoney(parseInt(numericValue))
 }
 
+// Campo Monto: el primer toque selecciona todo (para reemplazar el valor de un golpe);
+// con el campo ya enfocado, tocar deja el cursor donde se tocó.
+let montoSeleccionarAlTocar = false
+
+function alPresionarMonto(event) {
+  montoSeleccionarAlTocar = document.activeElement !== event.target
+}
+
+function seleccionarTodoMonto(event) {
+  // setSelectionRange y no select(): en iOS select() a veces no marca el texto
+  const input = event.target
+  input.setSelectionRange(0, input.value.length)
+}
+
+function alTocarMonto(event) {
+  // En iOS/Android el toque que enfoca coloca el cursor DESPUÉS del focus y deshace la
+  // selección; por eso se vuelve a seleccionar aquí, solo en ese primer toque.
+  if (!montoSeleccionarAlTocar) return
+  montoSeleccionarAlTocar = false
+  seleccionarTodoMonto(event)
+}
+
 function actualizarMonto(event) {
+  const input = event.target
+  // Dígitos a la izquierda del cursor: al reformatear con puntos de miles el cursor
+  // debe quedar tras el mismo dígito, no saltar al final.
+  const digitosAntesDelCursor = input.value.slice(0, input.selectionStart ?? input.value.length).replace(/\D/g, '').length
+
   // Obtener el valor del input sin formatear
-  const valorSinFormato = event.target.value.replace(/\./g, '')
+  const valorSinFormato = input.value.replace(/\./g, '')
   
   // Si está vacío, establecer en 0
   if (!valorSinFormato || valorSinFormato === '') {
@@ -4865,7 +4986,19 @@ function actualizarMonto(event) {
   formPrestamo.monto = numero
   
   // Formatear para mostrar en el input
-  montoFormateado.value = formatMoney(numero)
+  const formateado = formatMoney(numero)
+  montoFormateado.value = formateado
+  // Vue reescribe el value en el siguiente render; el cursor se recoloca después
+  nextTick(() => {
+    if (document.activeElement !== input) return
+    let posicion = 0
+    let digitos = 0
+    while (posicion < formateado.length && digitos < digitosAntesDelCursor) {
+      if (/\d/.test(formateado[posicion])) digitos++
+      posicion++
+    }
+    input.setSelectionRange(posicion, posicion)
+  })
 }
 
 const socioSeleccionado = computed(() => {
@@ -4927,21 +5060,13 @@ const capitalAPrestar = computed(() => {
 // - Normal: el interés se va sumando a utilidades al pagar cada cuota (proporcional por cuota).
 const interesTotal = computed(() => {
   if (!capitalAPrestar.value || !formPrestamo.interes || !formPrestamo.numero_cuotas) return 0
-  
-  const monto = capitalAPrestar.value
-  const tasaMensual = formPrestamo.interes / 100
-  const cuotas = formPrestamo.numero_cuotas
-  const periodicidad = formPrestamo.periodicidad || 'mensual'
-  const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-  
-  if (formPrestamo.tipo_interes === 'compuesto') {
-    // Interés compuesto: M = C * (1 + i)^n; Interés = M - C
-    const montoFinal = monto * Math.pow(1 + tasaPeriodica, cuotas)
-    return montoFinal - monto
-  } else {
-    // Interés simple: I = C * i * n
-    return monto * tasaPeriodica * cuotas
-  }
+  return calcularCondicionesPrestamo({
+    capital: capitalAPrestar.value,
+    tasaMensual: formPrestamo.interes,
+    numeroCuotas: formPrestamo.numero_cuotas,
+    periodicidad: formPrestamo.periodicidad || 'mensual',
+    tipoInteres: formPrestamo.tipo_interes
+  }).interesTotal
 })
 
 // Total a pagar por el socio: capital + intereses (igual para anticipado y normal)
@@ -4974,25 +5099,12 @@ function calcularCapitalNecesario(montoARecibir, tasaMensual, cuotas, tipoIntere
   }
 }
 
-// El monto que recibe el socio (desembolso real)
-const montoARecibir = computed(() => {
-  if (mostrarInteresAnticipado.value) {
-    // Con interés anticipado, el socio recibe el capital menos el interés (que se retiene y va a utilidades)
-    const montoARecibirCalculado = capitalAPrestar.value - interesTotal.value
-    return Math.max(0, montoARecibirCalculado)
-  }
-  return capitalAPrestar.value
-})
+// El socio recibe el capital completo en normal y en anticipado: el anticipado NO descuenta
+// el interés del desembolso, solo adelanta cuándo ese interés entra a las utilidades.
+const montoARecibir = computed(() => capitalAPrestar.value)
 
-// Movimiento total del fondo al inicio
-const movimientoFondoInicio = computed(() => {
-  if (mostrarInteresAnticipado.value) {
-    // Con interés anticipado: capital que sale + interés que se retiene y queda en el fondo
-    return capitalAPrestar.value + interesTotal.value
-  }
-  // Con interés normal: solo sale el capital
-  return capitalAPrestar.value
-})
+// Del fondo sale el capital en los dos casos
+const movimientoFondoInicio = computed(() => capitalAPrestar.value)
 
 // Valor total a pagar por el socio
 const montoAPagar = computed(() => {
@@ -5128,8 +5240,8 @@ const estiloAvisoMoraComprobanteExistente = computed(() => {
 })
 
 const cuotaMensual = computed(() => {
-  // Con interés anticipado o normal, la cuota es el total (capital + intereses) dividido entre las cuotas
-  return montoTotal.value / formPrestamo.numero_cuotas
+  // La cuota sale del plan proyectado: en compuesto (francés) la última puede variar unos pesos
+  return planPagosComprobanteNuevo.value[0]?.valor_cuota ?? montoTotal.value / formPrestamo.numero_cuotas
 })
 
 // Plan de pagos de vista previa para el comprobante (préstamo nuevo)
@@ -5262,12 +5374,13 @@ function calcularCuotaMensualDetalle(prestamo) {
     return (monto + interesGuardado) / numeroCuotas
   }
 
-  const tasaMensual = (parseFloat(prestamo.interes) || 0) / 100
-  const tasaPeriodica = prestamo.periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-  const interesTotal = prestamo.tipo_interes === 'compuesto'
-    ? monto * Math.pow(1 + tasaPeriodica, numeroCuotas) - monto
-    : monto * tasaPeriodica * numeroCuotas
-  return (monto + interesTotal) / numeroCuotas
+  return calcularCondicionesPrestamo({
+    capital: monto,
+    tasaMensual: prestamo.interes,
+    numeroCuotas,
+    periodicidad: prestamo.periodicidad,
+    tipoInteres: prestamo.tipo_interes
+  }).valorCuota
 }
 
 // Calcular saldo inicial total (capital + intereses)
@@ -5307,6 +5420,40 @@ function fechaLimiteSinMora(cuota, diasGracia = 0) {
   const gracia = Number(diasGracia) || 0
   if (gracia > 0) fecha.setDate(fecha.getDate() + gracia)
   return fecha
+}
+
+// Próxima cuota a pagar: la más cercana de las que todavía no están vencidas.
+// Una cuota cuya fecha proyectada ya pasó pero sigue dentro de la gracia NO está
+// vencida: aún es el próximo pago, y su fecha límite real es la de la gracia.
+function calcularProximoPago(plan, diasGracia, fechaActual) {
+  const cuota = (plan || [])
+    .filter(c => !c.pagada && fechaLimiteSinMora(c, diasGracia) >= fechaActual)
+    .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))[0]
+  if (!cuota) return null
+
+  const limite = fechaLimiteSinMora(cuota, diasGracia)
+  const proyectada = parseDateLocal(cuota.fecha_proyectada)
+  proyectada.setHours(0, 0, 0, 0)
+  const valor = Math.max(0, (parseFloat(cuota.valor_cuota) || 0) - (parseFloat(cuota.valor_pagado) || 0))
+
+  return {
+    numero_cuota: cuota.numero_cuota,
+    fecha_proyectada: cuota.fecha_proyectada,
+    // Fecha hasta la que se puede pagar sin mora (ya incluye los días de gracia)
+    fechaLimite: formatDateToLocalISO(limite),
+    valor,
+    diasRestantes: Math.round((limite - fechaActual) / 86400000),
+    enGracia: proyectada < fechaActual,
+    diasGracia: Number(diasGracia) || 0
+  }
+}
+
+// Texto de urgencia de la tarjeta: «Vence hoy», «Vence mañana», «En 5 días».
+function textoProximoPago(proximo) {
+  if (!proximo) return ''
+  const dias = proximo.diasRestantes
+  const plazo = dias <= 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `En ${dias} días`
+  return proximo.enGracia ? `En gracia · ${plazo}` : plazo
 }
 
 // Mora de UNA cuota vencida: solo sobre el capital pendiente de esa cuota
@@ -5450,23 +5597,17 @@ function generarCodigoComprobante() {
 function calcularInteresGeneradoDetalle(prestamo) {
   if (!prestamo) return 0
   
-  // Si es interés anticipado, usar el interés_total guardado
-  if (prestamo.interes_anticipado && prestamo.interes_total) {
-    return parseFloat(prestamo.interes_total) || 0
-  }
-  
-  // Interés normal (mes vencido): el interés total del préstamo es monto * tasa * cuotas (simple) o compuesto
-  // saldo_actual en BD es el saldo TOTAL a pagar (capital + interés), no solo capital, por eso no se puede
-  // usar monto - saldo_actual para proporción. Mostramos el interés total del préstamo.
-  const monto = parseFloat(prestamo.monto || 0)
-  const tasaMensual = (prestamo.interes || 0) / 100
-  const numeroCuotas = prestamo.numero_cuotas || 1
-  
-  if (prestamo.tipo_interes === 'compuesto') {
-    const montoFinal = monto * Math.pow(1 + tasaMensual, numeroCuotas)
-    return montoFinal - monto
-  }
-  return monto * tasaMensual * numeroCuotas
+  // El interés pactado es el guardado al crear o refinanciar. Recalcularlo aquí ignoraba la
+  // periodicidad quincenal (mostraba el doble) y cambiaba la cifra de préstamos ya creados.
+  const guardado = parseFloat(prestamo.interes_total)
+  if (Number.isFinite(guardado)) return guardado
+  return calcularCondicionesPrestamo({
+    capital: prestamo.monto,
+    tasaMensual: prestamo.interes,
+    numeroCuotas: prestamo.numero_cuotas,
+    periodicidad: prestamo.periodicidad,
+    tipoInteres: prestamo.tipo_interes
+  }).interesTotal
 }
 
 function seleccionarSocio(socio) {
@@ -5618,6 +5759,12 @@ async function fetchPrestamos() {
 
       // Contar cuántas cuotas vencidas tiene
       const cuotasVencidas = cuotasVencidasArray.length
+      // Progreso del plan para la tarjeta: «3 de 12 cuotas pagadas»
+      const cuotasTotales = planPagosPrestamo.length
+      const cuotasPagadas = planPagosPrestamo.filter(c => c.pagada).length
+
+      // Próximo pago (con días de gracia aplicados) para mostrarlo en la tarjeta
+      const proximoPago = calcularProximoPago(planPagosPrestamo, diasGraciaPrestamos.value, fechaActual)
 
       // Calcular días de mora (desde la cuota más antigua vencida)
       let diasMora = 0
@@ -5681,6 +5828,9 @@ async function fetchPrestamos() {
         socio_natillera: socioNatillera,
         tieneCuotasVencidas,
         cuotasVencidas,
+        cuotasTotales,
+        cuotasPagadas,
+        proximoPago,
         diasMora,
         valorCuotasEnDeuda,
         moraAcumulada,
@@ -5767,6 +5917,11 @@ async function actualizarPrestamoEnLista(prestamoId) {
 
     const tieneCuotasVencidas = cuotasVencidasArray.length > 0
     const cuotasVencidas = cuotasVencidasArray.length
+    const cuotasTotales = planPagosPrestamo.length
+    const cuotasPagadas = planPagosPrestamo.filter(c => c.pagada).length
+
+    // Próximo pago (con días de gracia aplicados) para mostrarlo en la tarjeta
+    const proximoPago = calcularProximoPago(planPagosPrestamo, diasGraciaPrestamos.value, fechaActual)
 
     // Calcular días de mora (desde la cuota más antigua vencida)
     let diasMora = 0
@@ -5847,6 +6002,9 @@ async function actualizarPrestamoEnLista(prestamoId) {
         socio_natillera: socioNatillera,
         tieneCuotasVencidas,
         cuotasVencidas,
+        cuotasTotales,
+        cuotasPagadas,
+        proximoPago,
         diasMora,
         valorCuotasEnDeuda,
         moraAcumulada: Math.round(
@@ -6747,11 +6905,14 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
       tieneInteresAnticipadoInicial = prestamoInfo.interes_anticipado || false
     }
 
-    // Obtener todos los pagos del préstamo ordenados por fecha
+    // Pagos del ciclo vigente ordenados por fecha. Los abonos de un ciclo refinanciado
+    // (refinanciacion_id) ya se liquidaron contra el plan anterior: reaplicarlos al plan
+    // nuevo marcaría como pagadas cuotas que nadie ha pagado.
     const { data: todosPagos, error: errorPagos } = await supabase
       .from('pagos_prestamo')
       .select('*')
       .eq('prestamo_id', prestamoId)
+      .is('refinanciacion_id', null)
       .order('fecha', { ascending: true })
 
     if (errorPagos) {
@@ -7012,13 +7173,22 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
   }
 }
 
-// Función para generar el plan de pagos
+// Fecha de la cuota i del plan: quincenal cada 15 días; mensual el mismo día de cada mes
+// (si el mes no tiene ese día, el último del mes).
+function fechaCuotaDelPlan(fechaInicio, periodicidad, i) {
+  if (periodicidad === 'quincenal') {
+    const fecha = new Date(fechaInicio)
+    fecha.setDate(fecha.getDate() + (15 * (i - 1)))
+    return fecha
+  }
+  return fechaProyectadaMensual(fechaInicio, i)
+}
+
+// Función para generar el plan de pagos (préstamo nuevo). Los montos salen de
+// utils/calculoPrestamos.js; aquí solo se ponen fechas y datos del socio.
 function generarPlanPagos(prestamo) {
-  const planPagos = []
   const numeroCuotas = prestamo.numero_cuotas || 1
   const monto = prestamo.monto || 0
-  const interes = prestamo.interes || 0
-  const tasaMensual = interes / 100
   // Resolver una sola vez el nombre del socio y de la natillera para todas las cuotas del plan.
   const nombreSocioPlan = prestamo.nombre_socio
     || prestamo.socio_natillera?.socio?.nombre
@@ -7029,236 +7199,75 @@ function generarPlanPagos(prestamo) {
     || null
   // Usar fecha_inicio si está disponible, sino usar created_at, sino fecha actual
   // Usamos parseDateLocal para evitar problemas de zona horaria
-  const fechaInicio = prestamo.fecha_inicio 
-    ? parseDateLocal(prestamo.fecha_inicio) 
+  const fechaInicio = prestamo.fecha_inicio
+    ? parseDateLocal(prestamo.fecha_inicio)
     : parseDateLocal(prestamo.created_at) || new Date()
-  
-  // Obtener periodicidad (por defecto mensual)
   const periodicidad = prestamo.periodicidad || 'mensual'
-  
-  // Calcular tasa de interés según periodicidad
-  // Si es quincenal, el interés mensual se divide entre 2 (cada quincena tiene la mitad del interés mensual)
-  const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-  
-  // Calcular valor de cuota
-  let valorCuota = 0
-  let interesTotal = 0
-  
-  // El interés se calcula igual para anticipado y normal (simple o compuesto)
-  if (prestamo.tipo_interes === 'compuesto') {
-    const montoFinal = monto * Math.pow(1 + tasaPeriodica, numeroCuotas)
-    interesTotal = montoFinal - monto
-    valorCuota = (monto + interesTotal) / numeroCuotas
-  } else {
-    interesTotal = monto * tasaPeriodica * numeroCuotas
-    valorCuota = (monto + interesTotal) / numeroCuotas
-  }
-  // Si hay interés_total guardado (ej. al crear/refinanciar), usarlo para consistencia
-  if (prestamo.interes_total != null && prestamo.interes_total !== '' && !Number.isNaN(Number(prestamo.interes_total))) {
-    interesTotal = Number(prestamo.interes_total)
-    valorCuota = (monto + interesTotal) / numeroCuotas
-  }
-  
-  // El saldo inicial siempre debe incluir capital + intereses (total a pagar)
-  // Con interés anticipado, el total a pagar es el bruto calculado (monto + interesTotal)
-  // Con interés normal, el total a pagar es monto + intereses
-  let saldoRestante = monto + interesTotal
-  
-  for (let i = 1; i <= numeroCuotas; i++) {
-    // Calcular fecha proyectada según periodicidad
-    let fechaProyectada
-    if (periodicidad === 'quincenal') {
-      fechaProyectada = new Date(fechaInicio)
-      // Para quincenal: sumar 15 días por cada cuota
-      fechaProyectada.setDate(fechaProyectada.getDate() + (15 * (i - 1)))
-    } else {
-      // Para mensual: mismo día cada mes; si el mes no tiene ese día (ej. 31 en feb/abr), usar último día del mes
-      fechaProyectada = fechaProyectadaMensual(fechaInicio, i)
-    }
 
-    // Calcular capital e interés de esta cuota
-    let capitalCuota = 0
-    let interesCuota = 0
+  // El interés guardado es lo pactado con el socio; sin él se calcula con las mismas reglas
+  const guardado = Number(prestamo.interes_total)
+  const interesTotal = prestamo.interes_total != null && prestamo.interes_total !== '' && Number.isFinite(guardado)
+    ? guardado
+    : calcularCondicionesPrestamo({
+      capital: monto,
+      tasaMensual: prestamo.interes,
+      numeroCuotas,
+      periodicidad,
+      tipoInteres: prestamo.tipo_interes
+    }).interesTotal
 
-    if (prestamo.interes_anticipado) {
-      // Con interés anticipado, distribuir el interés proporcionalmente en las cuotas
-      // El interés total ya está calculado y se distribuye equitativamente entre todas las cuotas
-      interesCuota = interesTotal / numeroCuotas
-      capitalCuota = valorCuota - interesCuota
-    } else {
-      if (prestamo.tipo_interes === 'compuesto') {
-        // Interés compuesto: el interés se calcula sobre el saldo restante
-        interesCuota = saldoRestante * tasaPeriodica
-        capitalCuota = valorCuota - interesCuota
-      } else {
-        // Interés simple: el interés se calcula sobre el saldo restante (que incluye capital + intereses)
-        interesCuota = saldoRestante * tasaPeriodica
-        capitalCuota = valorCuota - interesCuota
-      }
-    }
-    
-    saldoRestante = Math.max(0, saldoRestante - capitalCuota)
-    
-    const fp = formatDateToLocalISO(fechaProyectada)
+  const desglose = generarDesgloseCuotas({
+    capital: monto,
+    interesTotal,
+    tasaMensual: prestamo.interes,
+    numeroCuotas,
+    periodicidad,
+    tipoInteres: prestamo.tipo_interes,
+    interesAnticipado: !!prestamo.interes_anticipado
+  })
+
+  return desglose.map((cuota) => {
+    const fp = formatDateToLocalISO(fechaCuotaDelPlan(fechaInicio, periodicidad, cuota.numero_cuota))
     const periodo = periodoDesdeFechaProyectada(fp)
-    planPagos.push({
+    return {
       prestamo_id: prestamo.id,
-      numero_cuota: i,
+      numero_cuota: cuota.numero_cuota,
       fecha_proyectada: fp,
-      valor_cuota: Math.round(valorCuota),
-      capital: Math.round(capitalCuota),
-      interes: Math.round(interesCuota),
-      saldo_proyectado: Math.round(saldoRestante),
+      valor_cuota: cuota.valor_cuota,
+      capital: cuota.capital,
+      interes: cuota.interes,
+      saldo_proyectado: cuota.saldo_proyectado,
       pagada: false,
       nombre_socio: nombreSocioPlan,
       socio_nombre: nombreSocioPlan,
       nombre_natillera: nombreNatilleraPlan,
       ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
-    })
-  }
-
-  return planPagos
+    }
+  })
 }
 
-// Función para generar el plan de pagos refinanciado (basado en saldo actual)
-// diferenciaIntereses: diferencia de intereses a distribuir en las cuotas (cuando el préstamo inicial fue con interés anticipado)
-// mantenerInteresOriginal: si es true, solo distribuir la diferencia en las cuotas (no el interés nuevo completo)
-// interesTotalNuevo: interés nuevo completo calculado sobre el monto base
-function generarPlanPagosRefinanciado(prestamo, saldoActual, nuevaFechaInicio, diferenciaIntereses = 0, mantenerInteresOriginal = false, interesTotalNuevo = 0) {
-  const planPagos = []
-  const numeroCuotas = prestamo.numero_cuotas || 1
-  const interes = prestamo.interes || 0
-  const tasaMensual = interes / 100
+// Plan del nuevo ciclo tras refinanciar: los montos vienen de calcularRefinanciacion
+// y las fechas corren desde la nueva fecha de inicio.
+function generarPlanPagosRefinanciado(prestamo, desglose, nuevaFechaInicio) {
   // Usamos parseDateLocal para evitar problemas de zona horaria
   const fechaInicio = parseDateLocal(nuevaFechaInicio)
-  
-  // Obtener periodicidad (por defecto mensual)
   const periodicidad = prestamo.periodicidad || 'mensual'
-  
-  // Calcular tasa de interés según periodicidad
-  const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-  
-  // Calcular valor de cuota basado en el saldo actual
-  let valorCuota = 0
-  
-  // Calcular el valor de la cuota
-  // SIEMPRE debe ser: (monto base + interés nuevo completo) / número de cuotas
-  // El interés nuevo completo ya se calculó y se pasó como parámetro
-  if (interesTotalNuevo > 0) {
-    // Usar el interés nuevo completo que se pasó como parámetro
-    valorCuota = Math.ceil((saldoActual + interesTotalNuevo) / numeroCuotas)
-  } else {
-    // Si no se pasó el interés nuevo completo, calcularlo
-    if (prestamo.tipo_interes === 'compuesto') {
-      const montoFinal = Math.ceil(saldoActual * Math.pow(1 + tasaPeriodica, numeroCuotas))
-      valorCuota = Math.ceil(montoFinal / numeroCuotas)
-    } else {
-      const interesTotalCalculado = Math.ceil(saldoActual * tasaPeriodica * numeroCuotas)
-      valorCuota = Math.ceil((saldoActual + interesTotalCalculado) / numeroCuotas)
-    }
-  }
-  
-  let saldoRestante = saldoActual
-  
-  // Si es interés compuesto y hay diferencia, calcular la distribución proporcional
-  // Para interés compuesto, la diferencia se distribuye de forma que las primeras cuotas paguen más
-  let distribucionDiferencia = []
-  if (mantenerInteresOriginal && diferenciaIntereses > 0 && prestamo.tipo_interes === 'compuesto') {
-    // Calcular cómo se distribuiría el interés compuesto normalmente sobre el saldo actual
-    // Primero calcular el valor de cuota normal con interés compuesto (sin la diferencia)
-    const interesTotalNormal = Math.ceil(saldoActual * tasaPeriodica * numeroCuotas) // Interés simple como aproximación
-    const montoFinalNormal = Math.ceil(saldoActual * Math.pow(1 + tasaPeriodica, numeroCuotas))
-    const valorCuotaNormal = Math.ceil(montoFinalNormal / numeroCuotas)
-    
-    let saldoTemp = saldoActual
-    let diferenciaRestante = diferenciaIntereses
-    
-    // Calcular el interés de cada cuota como si fuera interés compuesto normal
-    let interesesPorCuota = []
-    for (let i = 1; i <= numeroCuotas; i++) {
-      const interesCuotaNormal = Math.ceil(saldoTemp * tasaPeriodica)
-      interesesPorCuota.push(interesCuotaNormal)
-      const capitalCuotaNormal = Math.ceil(valorCuotaNormal - interesCuotaNormal)
-      saldoTemp = Math.max(0, saldoTemp - capitalCuotaNormal)
-    }
-    
-    // Calcular el total de interés que se pagaría normalmente
-    const totalInteresNormal = interesesPorCuota.reduce((sum, interes) => sum + interes, 0)
-    
-    // Distribuir la diferencia proporcionalmente según el interés de cada cuota
-    for (let i = 0; i < numeroCuotas; i++) {
-      if (i === numeroCuotas - 1) {
-        // En la última cuota, usar toda la diferencia restante para evitar errores de redondeo
-        distribucionDiferencia.push(Math.ceil(diferenciaRestante))
-      } else {
-        const proporcion = totalInteresNormal > 0 ? interesesPorCuota[i] / totalInteresNormal : 1 / numeroCuotas
-        const diferenciaCuota = diferenciaIntereses * proporcion
-        distribucionDiferencia.push(Math.ceil(diferenciaCuota))
-        diferenciaRestante -= diferenciaCuota
-      }
-    }
-  }
-  
-  for (let i = 1; i <= numeroCuotas; i++) {
-    // Calcular fecha proyectada según periodicidad
-    let fechaProyectada
-    if (periodicidad === 'quincenal') {
-      fechaProyectada = new Date(fechaInicio)
-      fechaProyectada.setDate(fechaProyectada.getDate() + (15 * (i - 1)))
-    } else {
-      // Para mensual: mismo día cada mes; si el mes no tiene ese día (ej. 31 en feb/abr), usar último día del mes
-      fechaProyectada = fechaProyectadaMensual(fechaInicio, i)
-    }
-
-    // Calcular capital e interés de esta cuota
-    let capitalCuota = 0
-    let interesCuota = 0
-
-    if (mantenerInteresOriginal && diferenciaIntereses > 0) {
-      // Si el préstamo inicial fue con interés anticipado, solo distribuimos la diferencia
-      let diferenciaPorCuota = 0
-      if (prestamo.tipo_interes === 'compuesto' && distribucionDiferencia.length > 0) {
-        // Usar la distribución proporcional calculada
-        diferenciaPorCuota = distribucionDiferencia[i - 1] || 0
-      } else {
-        // Para interés simple, distribuir equitativamente y redondear hacia arriba
-        diferenciaPorCuota = Math.ceil(diferenciaIntereses / numeroCuotas)
-      }
-      
-      interesCuota = diferenciaPorCuota // Ya está redondeado hacia arriba
-      capitalCuota = Math.ceil(valorCuota - interesCuota)
-    } else {
-      // Para refinanciaciones normales, calcular normalmente y redondear hacia arriba
-      if (prestamo.tipo_interes === 'compuesto') {
-        // Interés compuesto: el interés se calcula sobre el saldo restante
-        interesCuota = Math.ceil(saldoRestante * tasaPeriodica)
-        capitalCuota = Math.ceil(valorCuota - interesCuota)
-      } else {
-        // Interés simple: el interés es fijo por cuota basado en el saldo actual
-        interesCuota = Math.ceil(saldoActual * tasaPeriodica)
-        capitalCuota = Math.ceil(valorCuota - interesCuota)
-      }
-    }
-    
-    saldoRestante = Math.ceil(Math.max(0, saldoRestante - capitalCuota))
-    
-    const fp = formatDateToLocalISO(fechaProyectada)
+  return desglose.map((cuota) => {
+    const fp = formatDateToLocalISO(fechaCuotaDelPlan(fechaInicio, periodicidad, cuota.numero_cuota))
     const periodo = periodoDesdeFechaProyectada(fp)
-    planPagos.push({
+    return {
       prestamo_id: prestamo.id,
-      numero_cuota: i,
+      numero_cuota: cuota.numero_cuota,
       fecha_proyectada: fp,
-      valor_cuota: Math.ceil(valorCuota),
-      capital: Math.ceil(capitalCuota),
-      interes: Math.ceil(interesCuota),
-      saldo_proyectado: Math.ceil(saldoRestante),
+      valor_cuota: cuota.valor_cuota,
+      capital: cuota.capital,
+      interes: cuota.interes,
+      saldo_proyectado: cuota.saldo_proyectado,
       pagada: false,
       valor_pagado: 0,
       ...(periodo.mes != null && { mes: periodo.mes, anio: periodo.anio, quincena: periodo.quincena })
-    })
-  }
-  
-  return planPagos
+    }
+  })
 }
 
 async function handleRefinanciar() {
@@ -7287,120 +7296,53 @@ async function handleRefinanciar() {
       return
     }
 
-    // Usar tasa de interés nueva si se especificó, sino usar la original
-    const interesNuevo = formRefinanciar.interes_nuevo !== null && formRefinanciar.interes_nuevo !== undefined
-      ? formRefinanciar.interes_nuevo
-      : (prestamo.interes || 0)
-    
+    const interesNuevo = tasaRefinanciacionElegida(prestamo)
     const tipoInteresNuevo = formRefinanciar.tipo_interes_nuevo || 'simple'
-    
-    // Obtener el historial completo para encontrar el interés inicial original
+    const periodicidadNueva = prestamo.periodicidad || 'mensual'
+
+    // Si el préstamo NACIÓ con interés anticipado (queda en el primer registro del historial)
     const { data: historialCompleto, error: errorHistorialCompleto } = await supabase
       .from('historial_refinanciaciones')
       .select('*')
       .eq('prestamo_id', prestamoId)
       .order('fecha_refinanciacion', { ascending: true })
-    
+
     if (errorHistorialCompleto) {
       console.error('Error al obtener historial de refinanciaciones:', errorHistorialCompleto)
     }
-    
-    const esPrimeraRefinanciacion = !historialCompleto || historialCompleto.length === 0
-    
-    // Determinar si el préstamo INICIAL fue con interés anticipado
-    // Si hay historial, verificar el interes_anticipado_anterior del primer registro
-    // Si no hay historial, usar el interes_anticipado actual del préstamo
-    let tieneInteresAnticipadoInicial = false
-    if (historialCompleto && historialCompleto.length > 0) {
-      // Verificar si el préstamo inicial tenía interés anticipado
-      tieneInteresAnticipadoInicial = historialCompleto[0].interes_anticipado_anterior || false
-    } else {
-      // Si no hay historial, el préstamo actual es el inicial
-      tieneInteresAnticipadoInicial = prestamo.interes_anticipado || false
-    }
-    
-    // Obtener el interés inicial original del préstamo
-    // Si hay historial, usar el interes_total_anterior del primer registro
-    // Si no hay historial, usar el interes_total actual del préstamo
-    let interesInicialOriginal = 0
-    if (historialCompleto && historialCompleto.length > 0) {
-      // Usar el interés anterior del primer registro (el interés inicial original)
-      interesInicialOriginal = historialCompleto[0].interes_total_anterior 
-        ? parseFloat(historialCompleto[0].interes_total_anterior) 
-        : 0
-    } else {
-      // Si no hay historial, el interés inicial es el actual del préstamo
-      interesInicialOriginal = prestamo.interes_total ? parseFloat(prestamo.interes_total) : 0
-    }
-    
-    console.log('🔍 Verificación de refinanciación:', {
-      esPrimeraRefinanciacion,
-      tieneInteresAnticipadoInicial,
-      historialExistente: historialCompleto?.length || 0,
-      interesInicialOriginal
-    })
-    
-    // Calcular diferencia de intereses si el préstamo INICIAL fue con interés anticipado
-    // La diferencia se calcula siempre usando el interés inicial original
-    // Esto se aplica en TODAS las refinanciaciones, no solo en la primera
-    let diferenciaIntereses = 0
-    let mantenerInteresTotalOriginal = false
-    
-    // Calcular el monto base para la refinanciación
-    // Si el préstamo inicial fue con interés anticipado, el monto base es el saldo_actual
-    // (que ya incluye el interés anticipado del préstamo anterior)
-    // Si no, el monto base es el saldo_actual normal
-    const montoBaseRefinanciacion = saldoActual
-    
-    // Calcular el nuevo interés total sobre el monto base de refinanciación
-    const periodicidadNueva = prestamo.periodicidad || 'mensual'
-    const tasaMensualNueva = interesNuevo / 100
-    const tasaPeriodicaNueva = periodicidadNueva === 'quincenal' ? tasaMensualNueva / 2 : tasaMensualNueva
-    let interesTotalNuevo = 0
-    if (tipoInteresNuevo === 'compuesto') {
-      const montoFinal = Math.ceil(montoBaseRefinanciacion * Math.pow(1 + tasaPeriodicaNueva, totalCuotas))
-      interesTotalNuevo = Math.ceil(montoFinal - montoBaseRefinanciacion)
-    } else {
-      interesTotalNuevo = Math.ceil(montoBaseRefinanciacion * tasaPeriodicaNueva * totalCuotas)
-    }
-    
-    if (tieneInteresAnticipadoInicial && interesInicialOriginal > 0) {
-      console.log('⚠️ Refinanciación con interés anticipado inicial - usando interés inicial original:', interesInicialOriginal)
-      
-      // La diferencia es: interés nuevo - interés inicial original (siempre usar el inicial)
-      // Esta diferencia es la que se debe distribuir en las nuevas cuotas
-      diferenciaIntereses = Math.ceil(interesTotalNuevo - interesInicialOriginal)
-      
-      // Si la diferencia es negativa, significa que el nuevo interés es menor, no hay diferencia adicional a distribuir
-      if (diferenciaIntereses < 0) {
-        diferenciaIntereses = 0
-      }
-      
-      // Marcar que debemos mantener el interés total original para intereses ganados
-      mantenerInteresTotalOriginal = true
-      
-      console.log('📊 Cálculo de diferencia:', {
-        montoBaseRefinanciacion,
-        interesInicialOriginal,
-        interesTotalNuevoCalculado: interesTotalNuevo,
-        diferenciaIntereses,
-        mantenerInteresTotalOriginal
-      })
-    } else {
-      console.log('ℹ️ Refinanciación normal (el préstamo inicial no tenía interés anticipado o no hay interés inicial)')
-    }
-    
-    // Obtener todas las cuotas del plan de pagos actual
+
+    const tieneInteresAnticipadoInicial = historialCompleto && historialCompleto.length > 0
+      ? !!historialCompleto[0].interes_anticipado_anterior
+      : !!prestamo.interes_anticipado
+
+    // Plan vigente leído de la BD: de él sale lo que realmente se debe hoy
     const { data: todasCuotas, error: errorCuotas } = await supabase
       .from('plan_pagos_prestamo')
       .select('*')
       .eq('prestamo_id', prestamoId)
       .order('numero_cuota', { ascending: true })
-    
+
     if (errorCuotas) {
       throw new Error('Error al obtener el plan de pagos actual')
     }
-    
+
+    // Refinanciación como en un crédito real (ver utils/calculoPrestamos.js):
+    // interés nuevo solo sobre el capital pendiente, interés vencido diferido sin
+    // intereses, interés futuro del plan anterior eliminado y mora sin capitalizar.
+    const refinanciacion = calcularRefinanciacion({
+      prestamo,
+      plan: todasCuotas || [],
+      fechaCorte: getCurrentDateISO(),
+      tasaMensual: interesNuevo,
+      numeroCuotas: totalCuotas,
+      tipoInteres: tipoInteresNuevo
+    })
+
+    if (refinanciacion.totalAPagar <= 0) {
+      notificationStore.warning('No hay capital pendiente para refinanciar', 'No se puede refinanciar')
+      return
+    }
+
     // Snapshot del ciclo que se está cerrando (para el historial de refinanciación).
     // El interés generado se calcula con las condiciones vigentes ANTES de refinanciar.
     const interesGeneradoAnterior = Math.ceil(calcularInteresGeneradoDetalle(prestamo) || 0)
@@ -7439,19 +7381,9 @@ async function handleRefinanciar() {
       interes: interesNuevo,
       tipo_interes: tipoInteresNuevo
     }
-    
-    // Generar nuevo plan de pagos basado en el monto base de refinanciación y la nueva fecha
-    // Pasar la diferencia de intereses y el interés nuevo completo si el préstamo inicial fue con interés anticipado
-    // Esto se aplica en TODAS las refinanciaciones, no solo en la primera
-    const nuevoPlanPagos = generarPlanPagosRefinanciado(
-      prestamoTemporal,
-      montoBaseRefinanciacion, // Usar el monto base (saldo_actual que incluye intereses si es anticipado)
-      formRefinanciar.fecha_pago,
-      diferenciaIntereses, // Diferencia a distribuir en las cuotas
-      mantenerInteresTotalOriginal,
-      interesTotalNuevo // Interés nuevo completo para calcular el valor de la cuota correctamente
-    )
-    
+
+    const nuevoPlanPagos = generarPlanPagosRefinanciado(prestamoTemporal, refinanciacion.desglose, formRefinanciar.fecha_pago)
+
     // Insertar el nuevo plan de pagos
     if (nuevoPlanPagos.length > 0) {
       const { error: errorPlan } = await supabase
@@ -7462,11 +7394,6 @@ async function handleRefinanciar() {
         throw new Error('Error al crear el nuevo plan de pagos')
       }
     }
-    
-    // El interés nuevo ya se calculó arriba sobre el montoBaseRefinanciacion
-    // SIEMPRE guardamos el interés nuevo completo como interes_total
-    // La diferencia solo se usa para distribuir en las cuotas, pero el interes_total debe ser el nuevo completo
-    const interesTotalAGuardar = interesTotalNuevo
     
     // Guardar historial de refinanciación ANTES de actualizar el préstamo
     const historialRefinanciacion = {
@@ -7488,13 +7415,13 @@ async function handleRefinanciar() {
       // Si es la primera refinanciación, esto indica si el préstamo inicial fue con interés anticipado
       interes_anticipado_anterior: tieneInteresAnticipadoInicial,
       // Valores nuevos
-      monto_nuevo: montoBaseRefinanciacion, // El nuevo monto es el monto base (total a pagar anterior)
+      monto_nuevo: refinanciacion.montoNuevo, // Capital pendiente (+ interés vencido si ya era utilidad)
       interes_nuevo: interesNuevo,
       numero_cuotas_nuevo: totalCuotas,
       tipo_interes_nuevo: tipoInteresNuevo,
       periodicidad_nueva: periodicidadNueva,
       fecha_inicio_nueva: formRefinanciar.fecha_pago,
-      saldo_actual_nuevo: Math.ceil(montoBaseRefinanciacion + interesTotalNuevo), // Monto base + interés nuevo completo (ya redondeado hacia arriba)
+      saldo_actual_nuevo: refinanciacion.totalAPagar,
       // Resumen del ciclo cerrado (para mostrar en la tarjeta del historial)
       interes_generado_anterior: interesGeneradoAnterior,
       total_pagado_anterior: Math.ceil(totalPagadoAnterior),
@@ -7536,37 +7463,20 @@ async function handleRefinanciar() {
       }
     }
 
-    // Actualizar el préstamo con los nuevos valores
-    // El nuevo monto es el monto base de refinanciación (saldo_actual que incluye intereses si es anticipado)
-    // El nuevo saldo_actual es: monto base + diferencia (si hay interés anticipado inicial) o monto base + interés nuevo completo
+    // Nuevo ciclo del préstamo. La modalidad (normal/anticipado) se conserva porque define
+    // cómo se reconoce la utilidad y cómo lo leen el libro de caja y el cuadre.
     const datosActualizacion = {
-      monto: montoBaseRefinanciacion, // El nuevo monto es el monto base (total a pagar anterior)
+      monto: refinanciacion.montoNuevo,
       interes: interesNuevo,
       numero_cuotas: totalCuotas,
       tipo_interes: tipoInteresNuevo,
       periodicidad: periodicidadNueva,
       fecha_inicio: formRefinanciar.fecha_pago,
-      interes_total: interesTotalAGuardar, // El interés nuevo completo (ya redondeado hacia arriba)
-      saldo_actual: Math.ceil(montoBaseRefinanciacion + interesTotalNuevo), // Monto base + interés nuevo completo (ya redondeado hacia arriba)
-      // Si el préstamo inicial fue con interés anticipado, mantenemos interes_anticipado como true
-      // para que los intereses ganados sigan contabilizándose correctamente
-      // La diferencia de intereses se cobrará en cuotas, pero el interés original ya se cobró anticipadamente
-      interes_anticipado: mantenerInteresTotalOriginal ? true : prestamo.interes_anticipado
+      interes_total: refinanciacion.interesTotalNuevo,
+      saldo_actual: refinanciacion.totalAPagar,
+      interes_anticipado: !!(prestamo.interes_anticipado || tieneInteresAnticipadoInicial)
     }
-    
-    console.log('📊 Datos de la vista previa:', vistaPreviaRefinanciacion.value)
-    console.log('🔄 Actualizando préstamo con datos:', datosActualizacion)
-    console.log('📋 Valores usados:', {
-      saldoActual,
-      interesNuevo,
-      totalCuotas,
-      tipoInteresNuevo,
-      periodicidadNueva,
-      fechaPago: formRefinanciar.fecha_pago,
-      interesTotalNuevo,
-      mantenerInteresTotalOriginal
-    })
-    
+
     const { data: prestamoActualizadoData, error: errorUpdate } = await supabase
       .from('prestamos')
       .update(datosActualizacion)
@@ -7579,39 +7489,6 @@ async function handleRefinanciar() {
       throw new Error('Error al actualizar el préstamo con los nuevos valores')
     }
     
-    console.log('✅ Préstamo actualizado correctamente en BD:', prestamoActualizadoData)
-    
-    // Verificar que todos los campos se actualizaron
-    if (prestamoActualizadoData) {
-      console.log('🔍 Verificación de campos actualizados:')
-      const camposCorrectos = {
-        monto: prestamoActualizadoData.monto === saldoActual,
-        interes: prestamoActualizadoData.interes === interesNuevo,
-        numero_cuotas: prestamoActualizadoData.numero_cuotas === totalCuotas,
-        tipo_interes: prestamoActualizadoData.tipo_interes === tipoInteresNuevo,
-        periodicidad: prestamoActualizadoData.periodicidad === periodicidadNueva,
-        fecha_inicio: prestamoActualizadoData.fecha_inicio === formRefinanciar.fecha_pago,
-        interes_total: prestamoActualizadoData.interes_total === interesTotalNuevo,
-        saldo_actual: prestamoActualizadoData.saldo_actual === datosActualizacion.saldo_actual
-      }
-      
-      console.log('  - monto:', prestamoActualizadoData.monto, '(esperado:', saldoActual, ')', camposCorrectos.monto ? '✅' : '❌')
-      console.log('  - interes:', prestamoActualizadoData.interes, '(esperado:', interesNuevo, ')', camposCorrectos.interes ? '✅' : '❌')
-      console.log('  - numero_cuotas:', prestamoActualizadoData.numero_cuotas, '(esperado:', totalCuotas, ')', camposCorrectos.numero_cuotas ? '✅' : '❌')
-      console.log('  - tipo_interes:', prestamoActualizadoData.tipo_interes, '(esperado:', tipoInteresNuevo, ')', camposCorrectos.tipo_interes ? '✅' : '❌')
-      console.log('  - periodicidad:', prestamoActualizadoData.periodicidad, '(esperado:', periodicidadNueva, ')', camposCorrectos.periodicidad ? '✅' : '❌')
-      console.log('  - fecha_inicio:', prestamoActualizadoData.fecha_inicio, '(esperado:', formRefinanciar.fecha_pago, ')', camposCorrectos.fecha_inicio ? '✅' : '❌')
-      console.log('  - interes_total:', prestamoActualizadoData.interes_total, '(esperado:', interesTotalNuevo, ')', camposCorrectos.interes_total ? '✅' : '❌')
-      console.log('  - saldo_actual:', prestamoActualizadoData.saldo_actual, '(esperado:', datosActualizacion.saldo_actual, ')', camposCorrectos.saldo_actual ? '✅' : '❌')
-      
-      const camposIncorrectos = Object.entries(camposCorrectos).filter(([_, correcto]) => !correcto)
-      if (camposIncorrectos.length > 0) {
-        console.error('❌ Campos que NO se actualizaron correctamente:', camposIncorrectos.map(([campo]) => campo))
-      } else {
-        console.log('✅ Todos los campos se actualizaron correctamente en BD')
-      }
-    }
-    
     // Obtener el natillera_id para la auditoría y actualizar utilidades_clasificadas
     const { data: socioNatillera } = await supabase
       .from('socios_natillera')
@@ -7621,31 +7498,22 @@ async function handleRefinanciar() {
     
     const nombreSocio = prestamo.socio_natillera?.socio?.nombre || 'Socio'
     
-    // Si el préstamo inicial fue con interés anticipado,
-    // actualizar el registro en utilidades_clasificadas con el nuevo interés total completo
-    // El interés inicial ya está registrado, pero al refinanciar debemos actualizar
-    // para reflejar que ahora el préstamo tiene un nuevo interés total
-    if (tieneInteresAnticipadoInicial && interesTotalNuevo > 0 && socioNatillera?.natillera_id) {
-      console.log('📊 Actualizando utilidades_clasificadas al refinanciar préstamo con interés anticipado inicial')
-      console.log('   Interés inicial registrado:', interesInicialOriginal)
-      console.log('   Nuevo interés total:', interesTotalNuevo)
-      console.log('   Diferencia a cobrar en cuotas:', diferenciaIntereses)
-      
-      // Actualizar el registro con el nuevo interés total completo
-      // El interés inicial ya se cobró, pero ahora el préstamo tiene un nuevo interés total
-      // La diferencia se cobrará a medida que se paguen las cuotas
+    // Anticipado: el interés nuevo del ciclo se reconoce como utilidad al refinanciar, igual que
+    // al crear. Se SUMA al ya registrado: el interés del ciclo anterior se ganó y no se revierte
+    // (antes se reemplazaba y esa utilidad se perdía). En interés normal la utilidad entra al
+    // pagar cada cuota, como siempre.
+    if (datosActualizacion.interes_anticipado && refinanciacion.interesNuevo > 0 && socioNatillera?.natillera_id) {
       await actualizarInteresPrestamo(
         socioNatillera.natillera_id,
         prestamoId,
-        interesTotalNuevo, // Usar el nuevo interés total completo
+        refinanciacion.interesNuevo,
         'anticipado',
-        false, // No es nuevo, es actualización por refinanciación
-        true, // Es refinanciación, reemplazar el interés en lugar de sumarlo
-        prestamo.medio_entrega || null // forma_pago (se mantiene el medio del préstamo)
+        false, // no es nuevo
+        false, // sumar, no reemplazar
+        prestamo.medio_entrega || null
       )
-      console.log('✅ Utilidades_clasificadas actualizadas con nuevo interés total')
     }
-    
+
     // Registrar en auditoría
     registrarAuditoriaEnSegundoPlano(
       auditoria.registrarActualizacion(
@@ -7745,32 +7613,9 @@ async function handleCrearPrestamo() {
     return
   }
 
-  // Validar interés anticipado: d = interes × meses debe ser < 1
-  if (mostrarInteresAnticipado.value) {
-    const tasaMensual = formPrestamo.interes / 100
-    const cuotas = formPrestamo.numero_cuotas
-    const periodicidad = formPrestamo.periodicidad || 'mensual'
-    const tasaPeriodica = periodicidad === 'quincenal' ? tasaMensual / 2 : tasaMensual
-    const d = tasaPeriodica * cuotas
-
-    if (d >= 1) {
-      generandoPrestamo.value = false
-      loading.value = false
-      notificationStore.error(
-        `El valor de interés × meses (${(d * 100).toFixed(2)}%) debe ser menor al 100%. Por favor, reduce el interés o aumenta el número de cuotas.`,
-        'Error en cálculo de interés anticipado'
-      )
-      return
-    }
-  }
-
   // Validar que haya recaudado suficiente según la forma de pago seleccionada.
-  // Lo que efectivamente sale del fondo en la forma de pago es lo que recibe el socio:
-  // - Normal: capital completo
-  // - Anticipado: capital - interés (el interés se retiene y queda como utilidad)
-  const montoAfectaFondo = mostrarInteresAnticipado.value
-    ? Math.max(0, capital - Math.round(interesTotal.value))
-    : capital
+  // Lo que sale del fondo es lo que recibe el socio: el capital completo, sea normal o anticipado.
+  const montoAfectaFondo = capital
   const natilleraId = id
   if (natilleraId) {
     try {
@@ -7956,7 +7801,7 @@ function cerrarModalNuevoPrestamo() {
 let stashAbonoEliminar = null
 let stashPrestamoEliminar = null
 
-const { requestCloseTop: requestCloseTopModal } = useModalStack({
+const { requestCloseTop: requestCloseTopModal, hasOpenModal } = useModalStack({
   nuevoPrestamo: {
     isOpen: computed(() => !!modalNuevoPrestamo.value),
     hide: () => {
@@ -8080,6 +7925,18 @@ const { requestCloseTop: requestCloseTopModal } = useModalStack({
       abonoAEliminar.value = null
     }
   },
+  ayudaInteres: {
+    isOpen: computed(() => !!modalAyudaInteres.value),
+    hide: () => {
+      modalAyudaInteres.value = false
+    },
+    show: () => {
+      modalAyudaInteres.value = true
+    },
+    dismiss: () => {
+      modalAyudaInteres.value = false
+    }
+  },
   eliminarPrestamo: {
     isOpen: computed(() => !!prestamoAEliminar.value),
     hide: () => {
@@ -8100,6 +7957,264 @@ const { requestCloseTop: requestCloseTopModal } = useModalStack({
     }
   }
 })
+
+// ─── Recorrido guiado de Préstamos (skill natillerapp-recorrido-guiado) ──────
+// Va después de useModalStack y de cargaInicial: el watch de arranque los lee al crearse.
+const contadorGuiaPrestamos = crearContadorGuia('prestamos')
+const guiaPrestamosActiva = ref(false)
+/* Se construyen al abrir: dependen del DOM (sin préstamos no hay tarjeta que señalar). */
+const pasosGuiaPrestamos = ref([])
+let guiaPrestamosAMano = false
+/** Una vez por visita: si se cierra, no vuelve a salir sola. */
+let guiaPrestamosIntentada = false
+let temporizadorGuiaPrestamos = null
+
+/*
+ * Sin navegación ni soporte: ya los enseña el recorrido del detalle. Aquí, lo propio:
+ * crear un préstamo, los números, las pestañas y qué se hace desde cada tarjeta.
+ * Solo señala (no abre modales): la primera tarjeta de la lista hace de ejemplo.
+ */
+const esperarGuiaPrestamos = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
+
+/*
+ * Flujo «cómo se crea un préstamo»: abre la modal de verdad y la deja en cada uno de sus
+ * tres pasos. Un estado por paso, no una acción: cada `antes` deja la pantalla como su
+ * paso la necesita venga de donde venga (avanzando, retrocediendo o saltando) y devuelve
+ * `false` si ya estaba así. El formulario se enseña con sus valores por defecto: no se
+ * rellena nada, para que nadie termine con un préstamo a medio escribir.
+ */
+async function cerrarModalesGuiaPrestamos() {
+  let cambio = false
+  for (let i = 0; i < 6 && hasOpenModal.value; i++) {
+    requestCloseTopModal()
+    cambio = true
+    // Cada cierre hace history.back(): dejar que llegue antes del siguiente.
+    await esperarGuiaPrestamos(40)
+  }
+  return cambio
+}
+
+async function guiaCrearEnPaso(paso) {
+  if (modalNuevoPrestamo.value) {
+    if (pasoNuevoPrestamo.value === paso) return false
+    pasoNuevoPrestamo.value = paso
+    // El cuerpo conserva el scroll del paso anterior: subirlo de golpe deja el bloque
+    // a la vista y el foco llega de una vez, sin encuadrar después.
+    await nextTick()
+    modalNuevoPrestamoScrollRef.value?.scrollTo({ top: 0, behavior: 'auto' })
+    return true
+  }
+  await cerrarModalesGuiaPrestamos()
+  await abrirModalNuevoPrestamo()
+  pasoNuevoPrestamo.value = paso
+  await nextTick()
+  return true
+}
+
+const guiaCrearMonto = () => guiaCrearEnPaso(0)
+const guiaCrearPlazo = () => guiaCrearEnPaso(1)
+const guiaCrearResumen = () => guiaCrearEnPaso(2)
+
+/*
+ * La pestaña «Pagados» no se ve mientras el recorrido enseña los préstamos por cobrar,
+ * así que hay un paso que la abre. Fuera de la lista para que la referencia sea estable
+ * (la comparación de `antes` entre pasos evita deshacer y rehacer el cambio).
+ */
+let pestanaPrestamosAntesGuia = null
+function mostrarPagadosGuia() {
+  if (tabPrestamos.value === 'pagados') return false
+  pestanaPrestamosAntesGuia = tabPrestamos.value
+  tabPrestamos.value = 'pagados'
+  return true
+}
+function restaurarPestanaGuia() {
+  if (pestanaPrestamosAntesGuia === null) return
+  tabPrestamos.value = pestanaPrestamosAntesGuia
+  pestanaPrestamosAntesGuia = null
+}
+
+function construirPasosGuiaPrestamos({ manual = false } = {}) {
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  const tarjeta = '[data-guia="prestamos-tarjeta"]'
+  const puedeCrear = !!document.querySelector('[data-guia="prestamos-nuevo"]')
+  // Mismo `grupo` = no se cierra la modal entre pasos; al salir del flujo, sí.
+  const flujoCrear = { grupo: 'crear-prestamo', despues: cerrarModalesGuiaPrestamos }
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      // Héroe propio: quien ya vio el del detalle o el de Actividades lo saltaría
+      // creyendo que es el mismo recorrido.
+      heroe: 'monedas',
+      heroePiezas: ['🪙', '💵', '🪙'],
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
+      texto: 'Te enseño a manejar los préstamos en menos de un minuto.'
+    },
+    {
+      selector: '[data-guia="prestamos-nuevo"]',
+      icono: PlusIcon,
+      gesto: 'tocar',
+      titulo: 'Presta dinero',
+      texto: 'Crea un préstamo para un socio en pocos pasos.',
+      radio: 24,
+      margen: 6
+    },
+    // Los tres pasos de la modal de creación, a grandes rasgos. Mismo `grupo`: entre
+    // ellos la modal no se cierra; al salir del flujo, sí. Solo si se puede crear
+    // (a un visor no se le abre una modal que no va a poder usar).
+    ...(puedeCrear ? [
+      {
+        selector: '[data-guia="crear-monto"]',
+        icono: UserIcon,
+        titulo: 'Paso 1: a quién y cuánto',
+        texto: 'Eliges el socio, el monto y cada cuánto paga.',
+        ...flujoCrear,
+        antes: guiaCrearMonto
+      },
+      {
+        selector: '[data-guia="crear-plazo"]',
+        icono: CalendarDaysIcon,
+        titulo: 'Paso 2: plazo e interés',
+        texto: 'Tipo de interés, número de cuotas y fecha de la primera.',
+        ...flujoCrear,
+        antes: guiaCrearPlazo
+      },
+      {
+        selector: '[data-guia="crear-resumen"]',
+        icono: CheckCircleIcon,
+        titulo: 'Paso 3: revisa y confirma',
+        texto: 'Te muestra cuota, intereses y total antes de crearlo.',
+        ...flujoCrear,
+        antes: guiaCrearResumen
+      }
+    ] : []),
+    {
+      selector: '[data-guia="prestamos-resumen"]',
+      icono: ChartBarIcon,
+      titulo: 'Tus números',
+      texto: 'Lo prestado, lo que volvió y lo que ganó la natillera.',
+      recorrer: [
+        { selector: '[data-guia="prestamos-resumen-total"]', etiqueta: 'Total · préstamos creados' },
+        { selector: '[data-guia="prestamos-resumen-prestado"]', etiqueta: 'Prestado · dinero entregado' },
+        { selector: '[data-guia="prestamos-resumen-pagado"]', etiqueta: 'Pagado · lo que ya volvió' },
+        { selector: '[data-guia="prestamos-resumen-intereses"]', etiqueta: 'Intereses · ganancia de la natillera' }
+      ]
+    },
+    {
+      selector: '[data-guia="prestamos-pestanas"]',
+      icono: RectangleStackIcon,
+      titulo: 'Por cobrar y pagados',
+      texto: 'Separa los préstamos activos de los terminados.',
+      recorrer: '[data-guia="prestamos-pestanas"] [role="tab"]'
+    },
+    {
+      selector: '[data-guia="prestamos-saldo-seccion"]',
+      icono: CurrencyDollarIcon,
+      titulo: 'Lo que falta cobrar',
+      texto: 'Suma lo que deben los préstamos de la pestaña.'
+    },
+    {
+      selector: tarjeta,
+      icono: UserIcon,
+      titulo: 'Cada préstamo',
+      texto: 'Toca la tarjeta para ver su detalle y abonos.',
+      recorrer: [
+        { selector: `${tarjeta} [data-guia-parte="estado"]`, etiqueta: 'Estado · al día, en mora o pagado' },
+        { selector: `${tarjeta} [data-guia-parte="saldo"]`, etiqueta: 'Saldo · lo que falta pagar' },
+        { selector: `${tarjeta} [data-guia-parte="cifras"]`, etiqueta: 'Monto, interés y lo pagado' }
+      ].filter((item) => document.querySelector(item.selector))
+    },
+    {
+      selector: `${tarjeta} [data-guia-parte="abonar"]`,
+      icono: BanknotesIcon,
+      gesto: 'tocar',
+      titulo: 'Registra un abono',
+      texto: 'Toca «Abonar» cuando el socio pague.',
+      radio: 22,
+      margen: 6
+    },
+    {
+      selector: `${tarjeta} [data-guia-parte="mas"]`,
+      icono: EllipsisHorizontalIcon,
+      gesto: 'tocar',
+      titulo: 'Más opciones',
+      texto: 'Aquí refinancias o eliminas el préstamo.',
+      radio: 22,
+      margen: 6
+    },
+    {
+      selector: '[data-guia="prestamos-lista"]',
+      icono: CheckCircleIcon,
+      titulo: 'Los que ya pagaron',
+      texto: prestamosPagados.value.length
+        ? 'En «Pagados» quedan los saldados; desde ahí envías el comprobante.'
+        : 'Cuando un préstamo se salde, pasa solo a «Pagados».',
+      // Abre la pestaña para enseñarla y la deja como estaba al salir del paso
+      antes: mostrarPagadosGuia,
+      despues: restaurarPestanaGuia
+    },
+    // Quien lo abrió a mano ya sabe dónde está el botón.
+    ...(manual ? [] : [{
+      selector: '[data-guia="boton-recorrido"]',
+      icono: QuestionMarkCircleIcon,
+      gesto: 'tocar',
+      titulo: '¿Lo quieres repasar?',
+      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
+      radio: 22,
+      margen: 6
+    }]),
+    {
+      tipo: 'final',
+      titulo: '¡Listo para prestar!',
+      texto: 'Ya sabes crear, abonar y refinanciar préstamos.'
+    }
+  ]
+  return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))
+}
+
+/** ¿Sale solo en esta visita? `?guia=1` lo fuerza para probarlo sin tocar localStorage. */
+function tocaGuiaPrestamos() {
+  if (route.query.guia === '1') return true
+  return contadorGuiaPrestamos.hayPendiente() || contadorGuiaPrestamos.debeMostrar(authStore.user?.id)
+}
+
+function abrirGuiaPrestamos({ manual = false } = {}) {
+  if (guiaPrestamosActiva.value) return
+  // Abierta por cualquier vía cuenta como intentada: al cerrarla la pantalla vuelve a
+  // estar «lista» y, sin esto, saldría otra vez sola.
+  guiaPrestamosIntentada = true
+  guiaPrestamosAMano = manual
+  // Un menú «⋯» desplegado cambiaría la tarjeta mientras se enseña
+  accionesPrestamoAbiertas.value = null
+  pasosGuiaPrestamos.value = construirPasosGuiaPrestamos({ manual })
+  guiaPrestamosActiva.value = true
+}
+
+/** El abierto a mano no cuenta: verlo a voluntad no debe gastar las visitas en que sale solo. */
+function cerrarGuiaPrestamos({ completado } = {}) {
+  guiaPrestamosActiva.value = false
+  contadorGuiaPrestamos.limpiarPendiente()
+  if (!guiaPrestamosAMano) contadorGuiaPrestamos.registrarVista(authStore.user?.id, { completado })
+  guiaPrestamosAMano = false
+}
+
+/*
+ * Arranque automático: con los datos cargados (sin esqueleto) y sin ninguna modal abierta
+ * (p. ej. un borrador de abono restaurado al entrar). Tras un respiro, se vuelve a comprobar.
+ */
+const pantallaPrestamosLista = computed(() => !cargaInicial.value && !hasOpenModal.value)
+
+watch(pantallaPrestamosLista, (lista) => {
+  clearTimeout(temporizadorGuiaPrestamos)
+  if (!lista || guiaPrestamosIntentada || !tocaGuiaPrestamos()) return
+  // Las tarjetas entran con animación: medirlas antes descuadra el foco.
+  temporizadorGuiaPrestamos = setTimeout(() => {
+    if (!pantallaPrestamosLista.value || guiaPrestamosIntentada) return
+    guiaPrestamosIntentada = true
+    abrirGuiaPrestamos()
+  }, 650)
+})
+
+onUnmounted(() => clearTimeout(temporizadorGuiaPrestamos))
 
 function handleClickOutside(event) {
   if (mostrarSelectorSocio.value && !event.target.closest('.selector-socio-container')) {
@@ -9268,12 +9383,44 @@ async function compartirPrestamoNuevoWhatsApp() {
 </style>
 
 <style scoped>
-/* CTA «+» icon-only en la cabecera móvil (hereda color/radio de .ds-btn--primary) */
-.prestamos-header-add {
-  width: 44px;
-  min-width: 44px;
+/* ---------- Tarjeta de préstamo (ds-card) ---------- */
+/* «⋯» icon-only: .ds-btn trae padding horizontal de pill; aquí va cuadrado de 44px */
+.prestamo-card__mas {
+  width: var(--tap-min, 44px);
+  min-width: var(--tap-min, 44px);
   padding: 0;
   flex-shrink: 0;
+}
+/* .ds-btn--ghost anula min-height; en la tarjeta se recupera el área táctil de 44px */
+.prestamo-card__eliminar {
+  min-height: var(--tap-min, 44px);
+  color: var(--brand-danger, #dc2626);
+}
+.prestamo-card__eliminar:hover:not(:disabled) {
+  background: #fef2f2;
+}
+/* ds-callout no tiene variante de peligro: mismos radio y padding, con la paleta de .ds-badge--danger */
+.prestamo-callout--mora {
+  background: #fef2f2;
+  color: #991b1b;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Próximo pago: mismo radio y padding compacto que el callout de mora, en tono marca;
+   ámbar cuando quedan 2 días o menos (la gracia ya está incluida en la fecha).
+   `flex-wrap` porque en móviles estrechos «Próximo pago 25/09/2026 · En 5 días» y el
+   valor no caben en una línea: se parten en dos en vez de desbordar la tarjeta. */
+.prestamo-callout--proximo {
+  background: var(--brand-primary-soft, #eef5f0);
+  color: #1f2937;
+  padding: 0.5rem 0.75rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+}
+.prestamo-callout--proximo-urgente {
+  background: #fffbeb;
+  color: #92400e;
 }
 
 /* ---------- Panel que envuelve las secciones de préstamos ---------- */

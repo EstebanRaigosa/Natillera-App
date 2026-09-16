@@ -391,65 +391,22 @@ async function register(email, password, nombre) {
         return { success: false, esSocio: false, error: 'El número de teléfono es requerido' }
       }
 
-      // Normalizar teléfono: remover espacios y caracteres especiales, solo dígitos
       const telefonoLimpio = telefono.replace(/\D/g, '').trim()
-      
       if (!telefonoLimpio || telefonoLimpio.length < 10) {
         return { success: false, esSocio: false, error: 'Número de teléfono inválido' }
       }
 
-      // Normalizar para búsqueda: remover código de país si existe (57 para Colombia)
-      let telefonoNormalizado = telefonoLimpio
-      if (telefonoNormalizado.startsWith('57') && telefonoNormalizado.length > 10) {
-        telefonoNormalizado = telefonoNormalizado.substring(2)
-      }
+      // Esta comprobación ocurre ANTES de iniciar sesión. Antes se resolvía
+      // descargando hasta 1.000 socios al navegador con la clave pública, lo que
+      // dejaba nombres, documentos y teléfonos de 487 personas al alcance de
+      // cualquiera (migración 029). Ahora el servidor normaliza y responde sí o
+      // no; la tabla ya no es legible sin sesión.
+      const { data, error: e } = await supabase.rpc('telefono_es_socio', {
+        p_telefono: telefonoLimpio,
+      })
+      if (e) throw e
 
-      // Buscar socios con ese teléfono
-      // Buscar con diferentes formatos posibles (sin código de país, con código, y formato original)
-      const { data: socios, error: errorSocios } = await supabase
-        .from('socios')
-        .select('id, nombre, telefono')
-        .or(`telefono.eq.${telefonoNormalizado},telefono.eq.${telefonoLimpio},telefono.eq.${telefono.trim()}`)
-
-      if (errorSocios) {
-        console.error('Error buscando socio por teléfono:', errorSocios)
-        return { success: false, esSocio: false, error: 'Error al verificar el teléfono' }
-      }
-
-      // Verificar si hay al menos un socio con ese teléfono
-      let esSocio = false
-      if (socios && socios.length > 0) {
-        esSocio = true
-      } else {
-        // Si no se encontró con la búsqueda exacta, obtener todos los socios y comparar manualmente
-        // Esto es necesario porque los teléfonos pueden estar almacenados en diferentes formatos
-        const { data: todosSocios, error: errorTodos } = await supabase
-          .from('socios')
-          .select('id, nombre, telefono')
-          .limit(1000) // Limitar para evitar cargar demasiados datos
-        
-        if (!errorTodos && todosSocios) {
-          // Comparar teléfonos normalizados
-          esSocio = todosSocios.some(socio => {
-            if (!socio.telefono) return false
-            const socioTelefonoLimpio = socio.telefono.replace(/\D/g, '')
-            let socioTelefonoNormalizado = socioTelefonoLimpio
-            if (socioTelefonoNormalizado.startsWith('57') && socioTelefonoNormalizado.length > 10) {
-              socioTelefonoNormalizado = socioTelefonoNormalizado.substring(2)
-            }
-            // Comparar tanto el formato normalizado como el formato completo
-            return socioTelefonoNormalizado === telefonoNormalizado || 
-                   socioTelefonoLimpio === telefonoLimpio ||
-                   socio.telefono.trim() === telefono.trim()
-          })
-        }
-      }
-
-      return { 
-        success: true, 
-        esSocio,
-        socios: socios || []
-      }
+      return { success: true, esSocio: data === true, socios: [] }
     } catch (e) {
       console.error('Error verificando si el teléfono es socio:', e)
       return { success: false, esSocio: false, error: e.message || 'Error al verificar el teléfono' }
@@ -684,60 +641,32 @@ async function register(email, password, nombre) {
   async function actualizarSociosConEmail(telefono, email) {
     try {
       if (!telefono || !email) {
-        return { 
-          success: false, 
-          error: 'Teléfono y email son requeridos' 
+        return {
+          success: false,
+          error: 'Teléfono y email son requeridos'
         }
       }
 
-      // Normalizar teléfono para búsqueda
-      const { normalizarTelefonoParaBD } = await import('../services/twilio')
-      const telefonoNormalizado = normalizarTelefonoParaBD(telefono.trim())
-      
-      if (!telefonoNormalizado) {
-        return { 
-          success: false, 
-          error: 'Número de teléfono inválido' 
-        }
-      }
+      // Va por RPC desde la migración 029: `socios` dejó de ser editable por
+      // cualquier usuario con sesión, y quien acaba de registrarse no administra
+      // la natillera donde está su ficha. El servidor escribe el correo de la
+      // sesión —no el que llegue por parámetro— sobre las fichas cuyo teléfono
+      // coincide.
+      const { data, error: e } = await supabase.rpc('socios_vincular_email', {
+        p_telefono: telefono.trim(),
+        p_email: email.trim(),
+      })
 
-      // Buscar todos los socios con ese teléfono
-      const { data: socios, error: errorSocios } = await supabase
-        .from('socios')
-        .select('id, nombre, telefono, email')
-        .eq('telefono', telefonoNormalizado)
+      if (e) throw e
 
-      if (errorSocios) {
-        throw errorSocios
-      }
-
-      if (!socios || socios.length === 0) {
-        return { 
-          success: true, 
-          sociosActualizados: 0,
-          message: 'No se encontraron socios con ese teléfono'
-        }
-      }
-
-      // Actualizar todos los socios con el email
-      const sociosIds = socios.map(s => s.id)
-      const { error: updateError } = await supabase
-        .from('socios')
-        .update({ email: email.trim() })
-        .in('id', sociosIds)
-
-      if (updateError) {
-        throw updateError
-      }
-
-      return { 
-        success: true, 
-        sociosActualizados: socios.length
+      return {
+        success: true,
+        sociosActualizados: data ?? 0
       }
     } catch (e) {
       console.error('Error actualizando socios con email:', e)
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: e.message || 'Error al actualizar socios'
       }
     }

@@ -1592,7 +1592,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
             }
           }
         })
-        return resultado
+        return _completarBolsillos(natilleraIds, resultado)
       }
       // Si hay error (función no existe), caer al fallback
       if (isDev) console.warn('[Dashboard stats] RPC fallback:', rpcError?.message)
@@ -1601,7 +1601,60 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
 
     // ── Fallback: queries múltiples (compatible sin migración) ──
-    return _calcularEstadisticasFallback(natilleraIds, resultado)
+    await _calcularEstadisticasFallback(natilleraIds, resultado)
+    return _completarBolsillos(natilleraIds, resultado)
+  }
+
+  /**
+   * Egresos e ingresos por bolsillo (recaudado / utilidades) de cada natillera.
+   *
+   * Ni la RPC ni el fallback los traen, y sin ellos la tarjeta del dashboard mostraría
+   * más «Recaudado» y más «Utilidad» que los indicadores del detalle, que sí descuentan
+   * lo que salió del libro de caja. Es una query más, la misma que el detalle hace para
+   * una sola natillera. Si falla, se devuelven las estadísticas sin ajustar: es mejor un
+   * número de más que una lista vacía.
+   */
+  async function _completarBolsillos(natilleraIds, resultado) {
+    try {
+      const { data, error } = await supabase
+        .from('movimientos_fondo')
+        .select('natillera_id, tipo, monto, descripcion, origen_egreso, destino_ingreso')
+        .in('natillera_id', natilleraIds)
+      if (error) throw error
+
+      const descMov = (m) => (m && (m.descripcion ?? '')).toString().toLowerCase().trim()
+      const esPremioRifa = (m) => {
+        if (m.tipo !== 'salida') return false
+        const d = descMov(m)
+        return d.includes('premio rifa') || d.includes('rifa liquidada') || (d.includes('premio') && d.includes('rifa'))
+      }
+
+      natilleraIds.forEach(id => {
+        Object.assign(resultado[id], {
+          egresosRecaudado: 0, egresosUtilidades: 0, ingresosRecaudado: 0, ingresosUtilidades: 0
+        })
+      })
+      ;(data || []).forEach(m => {
+        const stats = resultado[m.natillera_id]
+        if (!stats) return
+        const monto = parseFloat(m.monto || 0)
+        if (!monto) return
+        // Los premios de rifa ya están descontados del recaudado base: contarlos aquí
+        // los restaría dos veces.
+        if (m.tipo === 'salida' && !esPremioRifa(m)) {
+          if (m.origen_egreso === 'recaudado') stats.egresosRecaudado += monto
+          else if (m.origen_egreso === 'utilidades') stats.egresosUtilidades += monto
+          return
+        }
+        if (m.tipo === 'entrada') {
+          if (m.destino_ingreso === 'recaudado') stats.ingresosRecaudado += monto
+          else if (m.destino_ingreso === 'utilidades') stats.ingresosUtilidades += monto
+        }
+      })
+    } catch (e) {
+      if (isDev) console.warn('[Dashboard stats] sin movimientos por bolsillo:', e?.message)
+    }
+    return resultado
   }
 
   async function _calcularEstadisticasFallback(natilleraIds, resultado) {

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { useCuotasStore } from '../stores/cuotas'
 import { useAuditoria } from './useAuditoria'
+import { PREFIJO_PAGO_DIRECTO } from './useRegistrarPagoActividad'
 
 /**
  * Revertir el pago de un socio en una actividad, desde el módulo de Actividades.
@@ -21,6 +22,15 @@ import { useAuditoria } from './useAuditoria'
  * Lo que no se pueda identificar con certeza NO se toca a ciegas: se devuelve en `problemas`
  * para que la UI lo muestre y se revise a mano.
  */
+/**
+ * ¿El cobro se hizo desde Actividades, sin cuota de por medio? Se reconoce por la marca del
+ * comprobante (`useRegistrarPagoActividad`). Importa: para estos pagos NO hay cuota que
+ * ajustar, y buscar «la del mismo periodo» le quitaría dinero a una cuota que nunca los cobró.
+ */
+function esPagoDirecto(socioAct) {
+  return String(socioAct?.codigo_comprobante || '').startsWith(PREFIJO_PAGO_DIRECTO)
+}
+
 export function useEliminarPagoActividad() {
   const cuotasStore = useCuotasStore()
 
@@ -137,14 +147,24 @@ export function useEliminarPagoActividad() {
         avisos.push(`Se devolverán $${valorFila.toLocaleString('es-CO')} a las utilidades del fondo (${tipoUtil}).`)
       }
 
-      const { transaccion, exacta } = await buscarTransaccionOrigen(socioAct, actividad)
-      let cuotaOrigenId = transaccion?.cuota_id || null
-      if (!transaccion) {
-        const cuota = await buscarCuotaOrigenSinTransaccion(socioAct)
-        cuotaOrigenId = cuota?.id || null
+      const directo = esPagoDirecto(socioAct)
+      let transaccion = null
+      let exacta = false
+      let cuotaOrigenId = null
+      if (!directo) {
+        const origen = await buscarTransaccionOrigen(socioAct, actividad)
+        transaccion = origen.transaccion
+        exacta = origen.exacta
+        cuotaOrigenId = transaccion?.cuota_id || null
+        if (!transaccion) {
+          const cuota = await buscarCuotaOrigenSinTransaccion(socioAct)
+          cuotaOrigenId = cuota?.id || null
+        }
       }
 
-      if (!cuotaOrigenId) {
+      if (directo) {
+        avisos.push('Este pago se registró en Actividades, sin cuota: no hay ninguna cuota que ajustar.')
+      } else if (!cuotaOrigenId) {
         avisos.push('No se pudo identificar la cuota que cobró esta actividad: la cuota seguirá contando ese dinero como actividades pagadas. Revísala en el módulo de Cuotas.')
       } else if (transaccion && !exacta) {
         avisos.push('El pago de cuota se identificó por nombre de actividad y periodo (es anterior al detalle por actividad). Conviene revisar la cuota después.')
@@ -215,7 +235,12 @@ export function useEliminarPagoActividad() {
       }
 
       // ── 2. Descontar el dinero de la cuota que lo cobró ───────────────────────
-      const { transaccion, exacta } = await buscarTransaccionOrigen(socioAct, actividad)
+      // Salvo que se cobrara desde Actividades: ahí no hubo cuota y tocar «la del mismo
+      // periodo» le restaría un dinero que esa cuota nunca cobró.
+      const directo = esPagoDirecto(socioAct)
+      const { transaccion, exacta } = directo
+        ? { transaccion: null, exacta: false }
+        : await buscarTransaccionOrigen(socioAct, actividad)
       let cuotaOrigenId = transaccion?.cuota_id || null
 
       if (transaccion) {
@@ -247,7 +272,7 @@ export function useEliminarPagoActividad() {
         } else {
           revertido.transaccion = true
         }
-      } else {
+      } else if (!directo) {
         const cuota = await buscarCuotaOrigenSinTransaccion(socioAct)
         cuotaOrigenId = cuota?.id || null
       }

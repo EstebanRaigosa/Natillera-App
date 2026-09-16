@@ -10,8 +10,10 @@
     :aria-label="ariaLoadingBoxCarga"
   />
 
-  <!-- Guía rápida de Cuotas (se muestra sola la primera vez) -->
+  <!-- Guía rápida de Cuotas en carrusel: ya no sale sola (la sustituye el recorrido); ?ayuda=1 la abre -->
   <CuotasAyudaModal :show="!!modalAyudaCuotas" @close="requestCloseTopModal" />
+  <!-- Recorrido guiado (skill natillerapp-recorrido-guiado): sale solo dos visitas y con «¿Cómo funciona?» -->
+  <RecorridoInteractivo :pasos="pasosGuiaCuotas" :activo="guiaCuotasActiva" @terminar="cerrarGuiaCuotas" />
 
   <!-- Modal Selector Rápido de Mes — natillerapp-modals.
        Fuera del gate de carga: se abre de inmediato al entrar mientras las cuotas cargan
@@ -324,10 +326,23 @@
             <h1 class="ds-page-header__title">Cuotas y Pagos</h1>
             <p class="ds-page-header__sub hidden sm:block">Gestiona las cuotas del mes seleccionado</p>
           </div>
+          <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
+          <button
+            type="button"
+            data-guia="boton-recorrido"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            title="¿Cómo funciona esta pantalla?"
+            aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+            @click="abrirGuiaCuotas({ manual: true })"
+          >
+            <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+            <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
+          </button>
           <!-- Móvil: acciones rápidas en línea (sm+ usa el bloque de actions) -->
           <button
             v-if="mesesNatillera.length > 1"
             type="button"
+            data-guia="cuotas-calendario"
             class="ds-btn ds-btn--secondary sm:hidden cuotas-header-icon-btn"
             aria-label="Seleccionar mes"
             @click="modalSelectorRapidoMes = true"
@@ -527,11 +542,11 @@
 
       <!-- Contenedor de indicadores: está por encima de las tabs no-seleccionadas
            (las recubre por arriba) y la tab seleccionada (z-[20]) lo recubre a él. -->
-      <div class="relative z-10 -mt-1 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-3 sm:p-5">
+      <div data-guia="cuotas-resumen" class="relative z-10 -mt-1 bg-white rounded-2xl border border-gray-200/80 shadow-sm p-3 sm:p-5">
         <!-- Resumen del mes seleccionado -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4">
           <!-- Mes + total recaudado + % -->
-          <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap min-w-0">
+          <div data-guia="cuotas-resumen-total" class="flex items-center gap-2 sm:gap-2.5 flex-wrap min-w-0">
             <span class="text-base sm:text-lg font-display font-bold text-natillera-800 whitespace-nowrap">
               {{ mesSeleccionadoLabel }}
               <span class="text-gray-400 font-semibold text-xs sm:text-sm">{{ anioParaMes(mesSeleccionado) }}</span>
@@ -545,7 +560,7 @@
             </span>
           </div>
           <!-- Desglose por estado -->
-          <div class="flex items-center gap-3 sm:gap-4 flex-wrap text-xs sm:text-sm font-medium text-gray-600">
+          <div data-guia="cuotas-resumen-estados" class="flex items-center gap-3 sm:gap-4 flex-wrap text-xs sm:text-sm font-medium text-gray-600">
             <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
               <span class="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true"></span>{{ resumenMesActual.pagadas }} pagadas
             </span>
@@ -566,9 +581,10 @@
     <!-- Búsqueda + filtros (estilo Socios) -->
     <div
       v-if="!cambiandoMes && !cuotasStore.loading && !inicializando && cuotasMesActual.length > 0"
+      data-guia="cuotas-filtros"
       class="cuotas-toolbar"
     >
-      <div class="socios-toolbar__search">
+      <div data-guia="cuotas-buscar" class="socios-toolbar__search">
         <MagnifyingGlassIcon class="w-4 h-4" aria-hidden="true" />
         <input
           ref="inputBusquedaRef"
@@ -596,7 +612,7 @@
       </div>
       <div class="cuotas-filtros">
         <!-- Estado: control segmentado (el activo se resalta en verde; «Todos» = quitar) -->
-        <div class="cuotas-segmented" role="group" aria-label="Filtrar por estado">
+        <div data-guia="cuotas-filtro-estado" class="cuotas-segmented" role="group" aria-label="Filtrar por estado">
           <span class="cuotas-segmented__icon" aria-hidden="true">
             <FunnelIcon class="w-4 h-4" />
           </span>
@@ -613,7 +629,7 @@
           </button>
         </div>
         <!-- Periodicidad -->
-        <div class="cuotas-segmented" role="group" aria-label="Filtrar por periodicidad">
+        <div data-guia="cuotas-filtro-periodicidad" class="cuotas-segmented" role="group" aria-label="Filtrar por periodicidad">
           <span class="cuotas-segmented__icon" aria-hidden="true">
             <CalendarDaysIcon class="w-4 h-4" />
           </span>
@@ -1264,8 +1280,10 @@
       <template v-else-if="!vistaExcel && !vistaAgrupada && !vistaLista">
         <div class="space-y-2">
           <div
-            v-for="grupo in cuotasAgrupadasPorSocio"
+            v-for="(grupo, indiceGrupo) in cuotasAgrupadasPorSocio"
             :key="grupo.socioId"
+            :data-guia="indiceGrupo === 0 ? 'cuotas-socio' : undefined"
+            :data-guia-tarjeta-socio="grupo.socioId"
             :id="grupo.cuotas.some(c => esPrimerFlujoSocioCuota(c)) ? 'tour-primer-flujo-socio-cuota-card' : undefined"
             @click="abrirModalCuotasSocio(grupo)"
             class="flex items-center gap-3 min-h-[56px] cursor-pointer rounded-xl border border-gray-200 border-l-[5px] bg-white px-3 py-2 active:bg-gray-50"
@@ -2823,6 +2841,7 @@
           <div
             v-for="cuota in socioCuotasSel.cuotas"
             :key="cuota.id"
+            :data-guia-cuota-socio="cuota.id"
             @click="abrirAccionCuotaDesdeSocio(cuota)"
             class="overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] bg-white shadow-[var(--shadow-sm)]"
             :class="!esVisor ? 'cursor-pointer hover:shadow-[var(--shadow-md)] transition-shadow' : ''"
@@ -3061,6 +3080,7 @@
               <button
                 v-if="!esVisor && (cuota.estadoReal || cuota.estado) !== 'pagada'"
                 type="button"
+                data-guia="pagar-cuota"
                 @click.stop="abrirPagoCuotaDesdeSocio(cuota)"
                 class="min-h-[44px] basis-full sm:basis-0 flex-1 px-4 py-2.5 bg-[#1B5E37] hover:bg-[#155a32] active:bg-[#134d2b] text-white text-sm font-semibold rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
                 style="touch-action: manipulation;"
@@ -3582,7 +3602,7 @@
         class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-0 space-y-4 bg-white [-webkit-overflow-scrolling:touch]"
       >
         <template v-if="pasoRegistrarPagoSelector === 'socio'">
-          <div class="flex items-center gap-0 border-2 border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all">
+          <div data-guia="pago-selector-buscar" class="flex items-center gap-0 border-2 border-gray-200 rounded-xl bg-white focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500 transition-all">
             <span class="pl-3 flex-shrink-0 text-gray-400 pointer-events-none">
               <MagnifyingGlassIcon class="w-5 h-5" />
             </span>
@@ -3638,6 +3658,7 @@
             <button
               v-for="item in sociosFiltradosRegistrarPago"
               :key="item.socio_natillera_id"
+              :data-guia-selector-socio="item.socio_natillera_id"
               type="button"
               class="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-transparent bg-gray-50 hover:bg-gray-100 hover:border-natillera-200 text-left transition-all"
               @click="seleccionarSocioRegistrarPago(item.socio_natillera_id)"
@@ -3676,6 +3697,7 @@
             <button
               v-for="cuota in cuotasRegistrarPagoDelSocio"
               :key="cuota.id"
+              :data-guia-selector-cuota="cuota.id"
               type="button"
               class="w-full flex flex-col gap-2 p-3 rounded-xl border-2 border-gray-200 border-l-2 border-l-natillera-600 bg-white hover:border-natillera-400 hover:border-l-natillera-700 hover:shadow-md text-left transition-all"
               @click="seleccionarCuotaYAbrirModalPago(cuota)"
@@ -3861,7 +3883,7 @@
           @scroll.passive="programarNatiscrollModalPago"
         >
           <!-- Card de información del socio -->
-          <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
+          <div data-guia="pago-socio" class="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-xl border border-gray-200 shadow-sm">
             <!-- Alerta de ajustes si existe -->
             <div v-if="tieneAjuste(cuotaSeleccionada)" class="mb-2 p-2 rounded-lg bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-200 shadow-sm">
               <button
@@ -3966,7 +3988,7 @@
           <div class="space-y-5">
             <!-- Fecha del pago: cuándo se recibió realmente el dinero. Es la referencia del cobro:
                  la mora y la sanción se miden hasta ese día, no hasta hoy. -->
-            <div>
+            <div data-guia="pago-fecha">
               <label class="block text-sm font-semibold text-gray-700 mb-2">
                 Fecha del pago <span class="text-red-500">*</span>
               </label>
@@ -4005,7 +4027,7 @@
             </div>
 
             <!-- Campo de tipo de pago -->
-            <div>
+            <div data-guia="pago-tipo">
               <label class="block text-sm font-semibold text-gray-700 mb-2">
                 Tipo de pago <span class="text-red-500">*</span>
               </label>
@@ -4099,7 +4121,7 @@
             </div>
 
             <!-- Campo de valor del pago -->
-            <div>
+            <div data-guia="pago-valor">
               <label class="block text-sm font-semibold text-gray-700 mb-2">
                 <span v-if="cuotaSeleccionada?.valor_pagado && cuotaSeleccionada.valor_pagado > 0">
                   Valor adicional a agregar <span class="text-red-500">*</span>
@@ -4470,6 +4492,7 @@
           </button>
           <button 
             type="button"
+            data-guia="pago-confirmar"
             class="btn-modal-primary flex-1"
             :disabled="cuotasStore.loading || getValorPagoTotal() <= 0"
             @click="mostrarConfirmacionPago"
@@ -7153,6 +7176,10 @@ import { normalizeText } from '../../utils/normalizeText.js'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { toPng } from 'html-to-image'
 import { 
+  QuestionMarkCircleIcon,
+  RectangleGroupIcon,
+  UserCircleIcon,
+  ChartBarIcon,
   ArrowLeftIcon,
   ArrowUpIcon,
   PlusIcon,
@@ -7205,6 +7232,8 @@ import LoadingBox from '../../components/LoadingBox.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import CuotasAyudaModal from '../../components/CuotasAyudaModal.vue'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { isTourEnabled } from '../../config/toursEnabled'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
@@ -7658,8 +7687,7 @@ const tourGuiadoCuotasDetalleActivo = ref(false)
 const desplegableYaAbonadoOpen = ref(false)
 // Selector rápido de mes (móvil): hoja inferior con grilla de meses
 const modalSelectorRapidoMes = ref(false)
-const modalAyudaCuotas = ref(false) // Guía rápida (se muestra sola la 1ª vez)
-const AYUDA_CUOTAS_KEY = 'natillerapp_ayuda_cuotas_v1'
+const modalAyudaCuotas = ref(false) // Guía rápida en carrusel: solo con ?ayuda=1 (la sustituye el recorrido guiado)
 // Config de la natillera lista (meses + año). Hasta entonces el selector muestra skeleton.
 const configCargada = ref(false)
 // Refs del carrusel de meses (desktop + móvil) para centrar el mes seleccionado
@@ -7755,6 +7783,9 @@ useBodyScrollLock(modalRegistrarPagoSelector)
 
 watch([modalRegistrarPagoSelector, pasoRegistrarPagoSelector], ([abierta, paso]) => {
   if (!abierta || paso !== 'socio') return
+  // Durante el recorrido la modal la abre el propio recorrido: enfocar la búsqueda
+  // sacaría el teclado en móvil debajo de la capa que bloquea la pantalla.
+  if (guiaCuotasActiva.value) return
   const enfocar = () => {
     const el = inputBusquedaRegistrarPagoRef.value
     if (el && document.contains(el)) {
@@ -17304,6 +17335,398 @@ function schedulePrimerCuotasDetalleSocioTour() {
   })
 }
 
+// ─── Recorrido guiado de Cuotas (skill natillerapp-recorrido-guiado) ─────────
+const contadorGuiaCuotas = crearContadorGuia('cuotas')
+const guiaCuotasActiva = ref(false)
+/* Se construyen al abrir: dependen de lo que hay en el DOM (sin cuotas no hay filtros). */
+const pasosGuiaCuotas = ref([])
+let guiaCuotasAMano = false
+/** Una vez por visita: si se cierra, no vuelve a salir al cambiar de mes. */
+let guiaCuotasIntentada = false
+/** Recorridos del primer socio (driver.js) pendientes al entrar. */
+let recorridoPrimerSocioAlEntrar = false
+let temporizadorGuiaCuotas = null
+
+/*
+ * Sin pasos de navegación ni de soporte: ya los enseña el recorrido del detalle, y
+ * quien llega aquí viene de allí. Esta pantalla se centra en lo suyo: el mes, el
+ * resumen, las DOS formas de registrar un pago —con sus modales abiertas de verdad—
+ * y cómo encontrar a un socio.
+ */
+
+/*
+ * Socio y cuota de ejemplo para abrir las modales. Tiene que poder cobrarse ya: una
+ * cuota con periodos anteriores sin saldar no abre el pago, abre el aviso de atrasos.
+ * Se prefiere una sin abonos: con abono, tocar la cuota abre la edición.
+ */
+let demoGuiaCuotas = null
+
+function buscarDemoGuiaCuotas() {
+  let conAbono = null
+  for (const grupo of cuotasAgrupadasPorSocio.value) {
+    if (!sociosParaRegistrarPago.value.some((item) => item.socio_natillera_id === grupo.socioId)) continue
+    for (const cuota of grupo.cuotas) {
+      if (!cuotaSinSaldar(cuota) || obtenerPendientesAnteriores(cuota).length > 0) continue
+      if (getTotalPagadoConActividadesSocio(cuota) <= 0) return { grupo, cuota }
+      conAbono ??= { grupo, cuota }
+    }
+  }
+  return conAbono
+}
+
+const esperarGuiaCuotas = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
+
+/*
+ * Estados de pantalla para los pasos de pago. Cada uno deja la pantalla como su paso la
+ * necesita venga de donde venga —avanzando, retrocediendo o saltando— y devuelve false
+ * si ya estaba así. Todo pasa por la pila de modales (requestCloseTopModal), que es la
+ * que mantiene cuadrado el historial y el botón «atrás».
+ */
+async function cerrarModalesGuiaCuotas() {
+  let cambio = false
+  for (let i = 0; i < 6 && hasOpenModal.value; i++) {
+    requestCloseTopModal()
+    cambio = true
+    // Cada cierre hace history.back(): dejar que llegue antes del siguiente.
+    await esperarGuiaCuotas(40)
+  }
+  return cambio
+}
+
+/** Cerrar el pago devuelve la modal que la pila tenía debajo (selector o cuotas del socio). */
+async function cerrarPagoGuiaCuotas() {
+  if (!modalPago.value) return false
+  requestCloseTopModal()
+  await esperarGuiaCuotas(40)
+  return true
+}
+
+async function guiaCuotasSinModal() {
+  return cerrarModalesGuiaCuotas()
+}
+
+async function guiaSelectorEnSocios() {
+  if (modalRegistrarPagoSelector.value && pasoRegistrarPagoSelector.value === 'socio' && !modalPago.value) return false
+  await cerrarModalesGuiaCuotas()
+  abrirModalRegistrarPagoSelector()
+  return true
+}
+
+async function guiaSelectorEnCuotas() {
+  const socioId = demoGuiaCuotas?.grupo.socioId
+  const cerroPago = await cerrarPagoGuiaCuotas()
+  if (
+    modalRegistrarPagoSelector.value &&
+    pasoRegistrarPagoSelector.value === 'cuotas' &&
+    socioNatilleraIdRegistrarPago.value === socioId
+  ) return cerroPago
+  if (!modalRegistrarPagoSelector.value) {
+    await cerrarModalesGuiaCuotas()
+    abrirModalRegistrarPagoSelector()
+  }
+  seleccionarSocioRegistrarPago(socioId)
+  return true
+}
+
+async function guiaPagoDesdeSelector() {
+  if (modalPago.value) return false
+  await guiaSelectorEnCuotas()
+  await nextTick()
+  const id = demoGuiaCuotas?.cuota.id
+  const cuota = cuotasRegistrarPagoDelSocio.value.find((c) => c.id === id) || demoGuiaCuotas?.cuota
+  seleccionarCuotaYAbrirModalPago(cuota)
+  return true
+}
+
+async function guiaCuotasDelSocio() {
+  const socioId = demoGuiaCuotas?.grupo.socioId
+  const cerroPago = await cerrarPagoGuiaCuotas()
+  if (modalCuotasSocio.value && socioCuotasSelId.value === socioId) return cerroPago
+  await cerrarModalesGuiaCuotas()
+  abrirModalCuotasSocio(demoGuiaCuotas?.grupo)
+  return true
+}
+
+async function guiaPagoDesdeSocio() {
+  if (modalPago.value) return false
+  await guiaCuotasDelSocio()
+  await nextTick()
+  const id = demoGuiaCuotas?.cuota.id
+  const cuota = socioCuotasSel.value?.cuotas.find((c) => c.id === id) || demoGuiaCuotas?.cuota
+  abrirPagoCuotaDesdeSocio(cuota)
+  return true
+}
+
+function construirPasosGuiaCuotas({ manual = false } = {}) {
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  demoGuiaCuotas = esVisor.value ? null : buscarDemoGuiaCuotas()
+  const socioId = demoGuiaCuotas?.grupo.socioId
+  const cuotaId = demoGuiaCuotas?.cuota.id
+  // Mismo `grupo` = no se cierran las modales entre pasos; al salir del flujo, sí.
+  const flujoBoton = { grupo: 'pago-boton', despues: cerrarModalesGuiaCuotas }
+  const flujoTarjeta = { grupo: 'pago-tarjeta', despues: cerrarModalesGuiaCuotas }
+
+  const pagos = demoGuiaCuotas
+    ? [
+        // ── Forma 1: botón «Registrar Pago» → socio → cuota → pago ──
+        {
+          selector: '#tour-cuotas-registrar-pago-mobile, #tour-cuotas-registrar-pago-desktop',
+          icono: BanknotesIcon,
+          gesto: 'tocar',
+          titulo: 'Forma 1 de 2: «Registrar Pago»',
+          texto: 'Hay dos formas de cobrar. La primera empieza en este botón.',
+          radio: 14,
+          margen: 6,
+          antes: guiaCuotasSinModal,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-selector-buscar"]',
+          icono: MagnifyingGlassIcon,
+          titulo: 'Busca al socio',
+          texto: 'Escribe su nombre, documento o teléfono.',
+          antes: guiaSelectorEnSocios,
+          ...flujoBoton,
+        },
+        {
+          selector: `[data-guia-selector-socio="${socioId}"]`,
+          icono: UserCircleIcon,
+          gesto: 'tocar',
+          titulo: 'Elige el socio',
+          texto: 'Al tocarlo aparecen sus cuotas del mes.',
+          antes: guiaSelectorEnSocios,
+          ...flujoBoton,
+        },
+        {
+          selector: `[data-guia-selector-cuota="${cuotaId}"]`,
+          icono: RectangleGroupIcon,
+          gesto: 'tocar',
+          titulo: 'Elige la cuota',
+          texto: 'Cada una dice cuánto falta, con multa si la tiene.',
+          antes: guiaSelectorEnCuotas,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-socio"]',
+          icono: UserCircleIcon,
+          titulo: 'Revisa a quién cobras',
+          texto: 'Socio, periodo y el desglose de lo que debe.',
+          antes: guiaPagoDesdeSelector,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-fecha"]',
+          icono: CalendarDaysIcon,
+          titulo: '¿Qué día pagó?',
+          texto: 'La multa se calcula hasta esa fecha.',
+          antes: guiaPagoDesdeSelector,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-tipo"]',
+          icono: BanknotesIcon,
+          titulo: 'Efectivo o transferencia',
+          texto: 'Toca cómo te pagó.',
+          antes: guiaPagoDesdeSelector,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-valor"]',
+          icono: CurrencyDollarIcon,
+          titulo: 'El valor ya viene calculado',
+          texto: 'Si paga menos, cámbialo: queda como abono.',
+          antes: guiaPagoDesdeSelector,
+          ...flujoBoton,
+        },
+        {
+          selector: '[data-guia="pago-confirmar"]',
+          icono: CheckCircleIcon,
+          gesto: 'tocar',
+          titulo: 'Registra el pago',
+          texto: 'Confirmas el resumen y sale el comprobante.',
+          radio: 24,
+          margen: 4,
+          antes: guiaPagoDesdeSelector,
+          ...flujoBoton,
+        },
+        // ── Forma 2: tarjeta del socio → sus cuotas → «Pagar» → pago ──
+        {
+          selector: `[data-guia-tarjeta-socio="${socioId}"]`,
+          icono: UserCircleIcon,
+          gesto: 'tocar',
+          titulo: 'Forma 2 de 2: toca el socio',
+          texto: 'Más directa: desde la lista, sin buscarlo.',
+          antes: guiaCuotasSinModal,
+          ...flujoTarjeta,
+        },
+        {
+          selector: `[data-guia-cuota-socio="${cuotaId}"]`,
+          icono: RectangleGroupIcon,
+          titulo: 'Sus cuotas del mes',
+          texto: 'Cada tarjeta muestra lo que falta y su multa.',
+          antes: guiaCuotasDelSocio,
+          ...flujoTarjeta,
+        },
+        {
+          selector: `[data-guia-cuota-socio="${cuotaId}"] [data-guia="pagar-cuota"]`,
+          icono: CurrencyDollarIcon,
+          gesto: 'tocar',
+          titulo: 'Toca «Pagar»',
+          texto: 'Se abre el mismo pago que acabas de ver.',
+          radio: 12,
+          margen: 4,
+          antes: guiaCuotasDelSocio,
+          ...flujoTarjeta,
+        },
+        {
+          selector: '[data-guia="pago-confirmar"]',
+          icono: CheckCircleIcon,
+          gesto: 'tocar',
+          titulo: 'Y lo registras igual',
+          texto: 'Mismo formulario y el mismo comprobante al final.',
+          radio: 24,
+          margen: 4,
+          antes: guiaPagoDesdeSocio,
+          ...flujoTarjeta,
+        },
+      ]
+    : [
+        // Sin ninguna cuota cobrable (todo pagado, o visor): se señalan sin abrir nada.
+        {
+          selector: '#tour-cuotas-registrar-pago-mobile, #tour-cuotas-registrar-pago-desktop',
+          icono: BanknotesIcon,
+          gesto: 'tocar',
+          titulo: 'Forma 1 de 2: «Registrar Pago»',
+          texto: 'Eliges el socio y la cuota; al final sale el comprobante.',
+          radio: 14,
+          margen: 6,
+        },
+        {
+          selector: '[data-guia="cuotas-socio"]',
+          icono: UserCircleIcon,
+          gesto: 'tocar',
+          titulo: 'Forma 2 de 2: toca un socio',
+          texto: 'Ves sus cuotas y le cobras ahí mismo.',
+        },
+      ]
+
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      // Héroe propio: cobrar cuotas es ir marcando quién pagó, y así se distingue del de
+      // Préstamos (monedas) y del de Actividades (fichas), que ya se habrán visto.
+      heroe: 'sellos',
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Bienvenido!',
+      texto: 'Te enseño a cobrar las cuotas, paso a paso.',
+    },
+    {
+      // Hay versión móvil y de escritorio; el recorrido se queda con la visible.
+      selector: '#tour-cuotas-periodo-selector-mobile, #tour-cuotas-periodo-selector-desktop',
+      icono: RectangleGroupIcon,
+      titulo: 'Elige el mes',
+      texto: 'Cada pestaña es un mes; el punto de color dice cómo va.',
+      margen: 4,
+    },
+    {
+      selector: '[data-guia="cuotas-calendario"]',
+      icono: CalendarDaysIcon,
+      gesto: 'tocar',
+      titulo: 'Salta a cualquier mes',
+      texto: 'Abre todos los meses de un vistazo.',
+      radio: 14,
+      margen: 6,
+    },
+    {
+      selector: '[data-guia="cuotas-resumen"]',
+      icono: ChartBarIcon,
+      titulo: 'Cómo va el mes',
+      texto: 'Lo recaudado y cuántos socios han pagado.',
+      recorrer: [
+        { selector: '[data-guia="cuotas-resumen-total"]', etiqueta: 'Recaudado y % del mes' },
+        { selector: '[data-guia="cuotas-resumen-estados"]', etiqueta: 'Pagadas, parciales, mora y pendientes' },
+      ],
+    },
+    ...pagos,
+    {
+      selector: '[data-guia="cuotas-filtros"]',
+      icono: MagnifyingGlassIcon,
+      titulo: 'Encuentra a quien buscas',
+      texto: 'Busca por nombre o filtra la lista.',
+      recorrer: [
+        { selector: '[data-guia="cuotas-buscar"]', etiqueta: 'Nombre, documento o teléfono' },
+        { selector: '[data-guia="cuotas-filtro-estado"]', etiqueta: 'Por estado de la cuota' },
+        { selector: '[data-guia="cuotas-filtro-periodicidad"]', etiqueta: 'Mensuales o quincenales' },
+      ],
+    },
+    // Quien lo abrió a mano ya sabe dónde está el botón.
+    ...(manual ? [] : [{
+      selector: '[data-guia="boton-recorrido"]',
+      icono: QuestionMarkCircleIcon,
+      gesto: 'tocar',
+      titulo: '¿Lo quieres repasar?',
+      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
+      radio: 22,
+      margen: 6,
+    }]),
+    {
+      tipo: 'final',
+      titulo: '¡A cobrar!',
+      texto: 'Ya conoces las dos formas de registrar un pago.',
+    },
+  ]
+  // Los pasos con `antes` se conservan: su objetivo aparece al abrir la modal.
+  return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))
+}
+
+/** ¿Sale solo en esta visita? `?guia=1` lo fuerza para probarlo sin tocar localStorage. */
+function tocaGuiaCuotas() {
+  if (route.query.guia === '1') return true
+  // Los visores no cobran: la mitad de los pasos no les aplica.
+  if (esVisor.value) return false
+  return contadorGuiaCuotas.hayPendiente() || contadorGuiaCuotas.debeMostrar(authStore.user?.id)
+}
+
+function abrirGuiaCuotas({ manual = false } = {}) {
+  if (guiaCuotasActiva.value) return
+  // Abierta por cualquier vía cuenta como intentada: si no, al cerrar el recorrido a mano
+  // se cierran sus modales, la pantalla vuelve a estar «lista» y saldría otra vez sola.
+  guiaCuotasIntentada = true
+  guiaCuotasAMano = manual
+  pasosGuiaCuotas.value = construirPasosGuiaCuotas({ manual })
+  guiaCuotasActiva.value = true
+}
+
+/** El abierto a mano no cuenta: verlo a voluntad no debe gastar las visitas en que sale solo. */
+function cerrarGuiaCuotas({ completado } = {}) {
+  guiaCuotasActiva.value = false
+  contadorGuiaCuotas.limpiarPendiente()
+  if (!guiaCuotasAMano) contadorGuiaCuotas.registrarVista(authStore.user?.id, { completado })
+  guiaCuotasAMano = false
+}
+
+/*
+ * Arranque automático. Cuotas abre sola el selector de mes al entrar: el recorrido
+ * espera a que se elija o se cierre, a que la lista del mes esté pintada y a que no
+ * quede ninguna modal. Antes enfocaría esqueletos o quedaría señalando bajo la modal.
+ */
+const pantallaCuotasLista = computed(() =>
+  !inicializando.value && !cambiandoMes.value && !cuotasStore.loading && !hasOpenModal.value
+)
+
+watch(pantallaCuotasLista, (lista) => {
+  clearTimeout(temporizadorGuiaCuotas)
+  if (!lista || guiaCuotasIntentada || recorridoPrimerSocioAlEntrar || tourGuiadoCuotasDetalleActivo.value) return
+  if (!tocaGuiaCuotas()) return
+  // Un respiro tras el pintado: las tarjetas entran con animación y medirlas antes descuadra el foco.
+  temporizadorGuiaCuotas = setTimeout(() => {
+    if (!pantallaCuotasLista.value || guiaCuotasIntentada) return
+    guiaCuotasIntentada = true
+    abrirGuiaCuotas()
+  }, 650)
+})
+
+onUnmounted(() => clearTimeout(temporizadorGuiaCuotas))
+
 // Centrar el carrusel cuando cambia el mes seleccionado
 watch(mesSeleccionado, () => {
   centrarMesEnCarrusel(true)
@@ -17338,21 +17761,17 @@ onMounted(async () => {
     modalSelectorRapidoMes.value = true
   }
 
-  // Guía rápida. Disparador de prueba: entrar con ?ayuda=1 en la URL la fuerza SIEMPRE y no
-  // marca el flag (repetible para probar). Si no, se muestra solo la 1ª vez (localStorage) y
-  // se apila ENCIMA del selector de mes (useModalStack lo restaura al cerrar la guía). No
-  // aplica durante los recorridos guiados del primer socio.
+  // La guía rápida en carrusel ya no sale sola: la sustituye el recorrido guiado, que
+  // arranca cuando el selector de mes se cierra (ver pantallaCuotasLista). ?ayuda=1
+  // sigue abriendo el carrusel para probarlo.
   const forzarAyuda = route.query.ayuda === '1' || route.query.ayuda === 'true'
   const enRecorridoDetalleSocio =
     isTourEnabled('cuotasDetalleSocio') &&
     peekPendingCuotasDetalleTour(id) &&
     shouldShowPrimerCuotasDetalleSocioTour(id)
-  if (forzarAyuda) {
-    modalAyudaCuotas.value = true
-  } else if (!enRecorridoPrimerSocioCuotas && !enRecorridoDetalleSocio && debeMostrarAyudaCuotas()) {
-    modalAyudaCuotas.value = true
-    try { localStorage.setItem(AYUDA_CUOTAS_KEY, '1') } catch (e) { /* ignore */ }
-  }
+  if (forzarAyuda) modalAyudaCuotas.value = true
+  // Los recorridos del primer socio (driver.js) mandan: el nuestro no se cruza con ellos.
+  recorridoPrimerSocioAlEntrar = enRecorridoPrimerSocioCuotas || enRecorridoDetalleSocio
 
   inicializando.value = true
   const tiempoInicio = performance.now()
@@ -17437,19 +17856,6 @@ onMounted(async () => {
 
   document.addEventListener('click', handleClickOutside)
 })
-
-/**
- * ¿Debe mostrarse la guía rápida de Cuotas? Solo la primera vez (recordado en
- * localStorage) y no a visores.
- */
-function debeMostrarAyudaCuotas() {
-  if (esVisor.value) return false
-  try {
-    return !localStorage.getItem(AYUDA_CUOTAS_KEY)
-  } catch (e) {
-    return false
-  }
-}
 
 function onResizeCarrusel() {
   actualizarFlechasDesktop()

@@ -76,36 +76,44 @@ export const useUsersStore = defineStore('users', () => {
     }
   }
 
-  // Actualizar perfil de usuario
+  /**
+   * Actualizar perfil de usuario desde el panel de administración.
+   *
+   * Va por `admin_actualizar_perfil` y no por un UPDATE directo porque `rol`,
+   * `activo` y `permisos` ya no son escribibles desde el cliente: cualquiera
+   * podía nombrarse `super_admin` con una línea en la consola del navegador y
+   * quedarse con la bandeja de soporte entera (migración 028).
+   */
   async function updateUserProfile(userId, updates) {
     try {
       loading.value = true
       error.value = null
 
-      const { data, error: updateError } = await supabase
-        .from('user_profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-        .select()
-        .single()
+      const { data, error: updateError } = await supabase.rpc('admin_actualizar_perfil', {
+        p_user_id:  userId,
+        p_nombre:   updates.nombre ?? null,
+        p_rol:      updates.rol ?? null,
+        p_activo:   updates.activo ?? null,
+        p_permisos: updates.permisos ?? null,
+      })
 
       if (updateError) throw updateError
 
-      // Actualizar en la lista local
+      // La función devuelve solo los campos que toca; el resto se conserva de
+      // la fila que ya teníamos para no dejar la lista a medias.
       const index = users.value.findIndex(u => u.id === userId)
+      const fusionado = { ...(index !== -1 ? users.value[index] : {}), ...data }
+
       if (index !== -1) {
-        users.value[index] = data
+        users.value[index] = fusionado
       }
 
       // Si es el usuario actual, actualizar su perfil
       if (userId === currentUserProfile.value?.id) {
-        currentUserProfile.value = data
+        currentUserProfile.value = { ...currentUserProfile.value, ...data }
       }
 
-      return { success: true, data }
+      return { success: true, data: fusionado }
     } catch (e) {
       error.value = e.message
       console.error('Error actualizando perfil:', e)

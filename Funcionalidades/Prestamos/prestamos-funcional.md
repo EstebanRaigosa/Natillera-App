@@ -50,34 +50,36 @@ Permite otorgar un préstamo a un socio activo. El flujo captura socio, monto, t
 
 ### 3.1 Cálculo del interés
 
-El interés **se calcula siempre igual** (simple o compuesto). Lo único que cambia entre "normal" y "anticipado" es **cuándo** el interés se reconoce como utilidad de la natillera.
+Las fórmulas viven en `src/utils/calculoPrestamos.js` y se verifican con `node scripts/verificar-calculo-prestamos.mjs`. Lo único que cambia entre "normal" y "anticipado" es **cuándo** el interés se reconoce como utilidad de la natillera.
 
-- **Interés simple:** `Interés = Capital × tasa × nº cuotas`
-- **Interés compuesto:** `Interés = Capital × (1 + tasa)^nº cuotas − Capital`
+- **Interés simple (fijo sobre el monto):** `Interés = Capital × tasa × nº cuotas`. Cuotas iguales: capital `C / n` e interés `I / n` en cada una.
+- **Interés compuesto (sistema francés, cuota fija sobre saldo):** `Cuota = C × i / (1 − (1 + i)^−n)` e `Interés = Cuota × n − C`. El interés de cada cuota es el saldo de capital × tasa, así que baja cuota a cuota mientras el abono a capital sube.
 - En **periodicidad quincenal** la tasa mensual se divide entre 2 (cada quincena cobra media tasa mensual).
 
-**Total a pagar por el socio = Capital + Interés total**, repartido en cuotas iguales.
+**Total a pagar por el socio = Capital + Interés total.** En todo plan: Σ capital = capital, Σ interés = interés total y el saldo proyectado de la última cuota es 0.
+
+> Préstamos creados antes del 2026-09-14 conservan su plan y su `interes_total` tal como se guardaron; las fórmulas no se reaplican a préstamos existentes.
 
 ### 3.2 Interés normal vs. anticipado
 
+Normal y anticipado **cobran exactamente lo mismo**: con $1.000.000 y $300.000 de interés, el socio recibe $1.000.000 y paga $1.300.000 en ambos casos. Solo cambia **cuándo** el interés entra a las utilidades.
+
 | | Interés **normal** | Interés **anticipado** |
 |---|---|---|
-| **Qué recibe el socio** | El capital completo | Capital **menos** el interés (el interés se retiene) |
-| **Qué sale del fondo** | Solo el capital | Capital, pero el interés retenido queda en el fondo como utilidad |
-| **Cuándo se registra la utilidad** | Progresivamente, **al pagar cada cuota** (interés proporcional de esa cuota) | **Todo el interés de una vez, al crear el préstamo** |
-| **Cuota** | Capital + interés / nº cuotas | Igual (el interés ya distribuido) |
-
-**Validación del anticipado:** el producto `tasa × nº cuotas` debe ser **menor al 100 %**; de lo contrario el descuento se comería todo el capital y el desembolso quedaría en cero. Se bloquea con aviso.
+| **Qué recibe el socio** | El capital completo | El capital completo |
+| **Qué paga el socio** | Capital + interés | Capital + interés |
+| **Qué sale del fondo** | El capital | El capital |
+| **Cuándo se registra la utilidad** | **Al pagar cada cuota** (el interés de esa cuota) | **Todo el interés de una vez, al crear el préstamo** |
+| **Cuotas** | Según el tipo de interés | Iguales a normal |
 
 ### 3.3 Validaciones al crear
 
 1. **Monto mínimo:** $10.000.
 2. **Plazo:** número de cuotas entre 1 y el `plazo_maximo` de la natillera.
-3. **Interés anticipado válido** (`tasa × cuotas < 1`).
 4. **Fondo suficiente:** se valida contra el **disponible del fondo según el medio de entrega**:
    - Si es **efectivo**, debe haber suficiente recaudado en efectivo.
    - Si es **transferencia**, suficiente recaudado por transferencia.
-   - Lo que se compara es lo que **efectivamente sale del fondo**: capital completo (normal) o capital − interés retenido (anticipado).
+   - Lo que se compara es lo que **efectivamente sale del fondo**: el capital completo, en normal y en anticipado.
 
 ### 3.4 Qué ocurre al confirmar
 
@@ -98,8 +100,8 @@ Cada préstamo genera un plan con **una cuota por período**:
 - **Fecha proyectada de cada cuota:**
   - **Mensual:** el mismo día del mes de la fecha inicial; si el mes no tiene ese día (p. ej. 31 en febrero) se usa el último día del mes.
   - **Quincenal:** se suman 15 días por cada cuota.
-- **Valor de la cuota:** total a pagar ÷ número de cuotas (cuotas iguales).
-- **Capital e interés de cada cuota:** se desglosan (en interés normal, el interés se calcula sobre el saldo restante; en anticipado se distribuye equitativamente).
+- **Valor de la cuota:** simple → total a pagar ÷ número de cuotas; compuesto → cuota fija del sistema francés. La última cuota absorbe los pesos de redondeo.
+- **Capital e interés de cada cuota:** simple → capital e interés iguales en cada cuota; compuesto → interés sobre el saldo de capital. Normal o anticipado no cambia el desglose.
 - **Saldo proyectado:** cuánto queda por pagar después de cada cuota.
 - **Período (mes / año / quincena):** se deriva de la fecha proyectada. **Este período es lo que permite "casar" cada cuota del préstamo con el período de las cuotas de la natillera.**
 
@@ -194,12 +196,17 @@ Esto permite ver, socio por socio, cuánto debe realmente en el mes contando aho
 
 ## 7. Refinanciar un préstamo
 
-Permite reestructurar un préstamo activo que aún tiene saldo, sobre el **saldo actual** (no sobre el capital original):
+Permite reestructurar un préstamo activo con **nueva fecha de inicio**, **nuevo número de cuotas**, **nueva tasa** y **tipo de interés** (o los originales). Funciona como en un crédito real:
 
-- Se define **nueva fecha de inicio**, **nuevo número de cuotas**, **nueva tasa** y **tipo de interés** (o se conservan los originales).
-- Se calcula el nuevo interés total sobre el saldo pendiente y se **regenera el plan de pagos** desde cero con las nuevas condiciones.
-- El `saldo_actual` y el interés del préstamo se actualizan al nuevo total.
-- Se conserva referencia al interés original para no doble-contar utilidades.
+1. **Base del interés nuevo = capital pendiente.** Nunca el saldo, que incluye interés.
+2. **Interés vencido no pagado** (cuotas ya vencidas): se cobra en las nuevas cuotas **sin generar interés** (cobrar interés sobre interés atrasado es anatocismo, art. 2235 C.C.).
+3. **Interés futuro** de cuotas que aún no vencían: se elimina; no se había ganado y lo reemplaza el interés de las nuevas condiciones.
+4. **Mora pendiente:** no se capitaliza. La vista previa la muestra para cobrarla con un abono antes de refinanciar.
+5. Se **regenera el plan de pagos** desde la cuota 1; el préstamo queda con `monto` = capital pendiente, `interes_total` = interés nuevo (+ interés vencido) y `saldo_actual` = total a pagar.
+6. **Utilidades:** normal → el interés entra al pagar cada cuota. Anticipado → el interés nuevo se **suma** a la utilidad ya registrada al refinanciar, y el interés vencido viaja como capital para no contarlo dos veces.
+7. Los abonos del ciclo anterior quedan asociados a la refinanciación y no se reaplican al plan nuevo.
+
+Si el plan guardado de un préstamo antiguo no reparte bien el capital, el capital pendiente se estima en proporción `monto / (monto + interés total)` del saldo.
 
 Como el plan de pagos se regenera con nuevas fechas/períodos, la integración con Cuotas (sección 6) sigue funcionando automáticamente con las nuevas cuotas.
 

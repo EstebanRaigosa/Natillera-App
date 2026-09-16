@@ -1,5 +1,6 @@
 <template>
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-6 sm:space-y-8 relative pb-6">
+    <RecorridoInteractivo :pasos="pasosGuiaCuadre" :activo="guiaCuadreActiva" @terminar="cerrarGuiaCuadre" />
     <!-- Efectos decorativos de fondo -->
     <div class="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
@@ -15,10 +16,22 @@
             <div class="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
               <CalculatorIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div class="min-w-0">
+            <div class="min-w-0 flex-1">
               <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 leading-tight">Totales generales</h1>
               <p class="text-gray-500 mt-0.5 text-xs sm:text-sm leading-snug">Cuenta el dinero y contrasta con lo que debería haber</p>
             </div>
+            <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
+            <button
+              type="button"
+              data-guia="boton-recorrido"
+              class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+              title="¿Cómo funciona esta pantalla?"
+              aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+              @click="abrirGuiaCuadre({ manual: true })"
+            >
+              <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+              <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
+            </button>
           </div>
         </div>
       </div>
@@ -26,7 +39,7 @@
 
     <!-- Pestañas: Totales | Simulador de cierre -->
     <div v-if="!loading" class="relative">
-      <div class="flex rounded-xl bg-gray-100 p-1 border border-gray-200/80 shadow-inner">
+      <div data-guia="cuadre-pestanas" class="flex rounded-xl bg-gray-100 p-1 border border-gray-200/80 shadow-inner">
         <button
           type="button"
           @click="tabActiva = 'totales'"
@@ -62,9 +75,10 @@
     <template v-if="!loading">
       <div v-show="tabActiva === 'totales'">
       <!-- Tarjetas: Total esperado por forma de pago (clic para desglose) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <div data-guia="cuadre-totales" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <!-- Efectivo esperado -->
         <div
+          data-guia="cuadre-efectivo"
           class="text-left bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-green-200 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
@@ -89,6 +103,7 @@
 
         <!-- Transferencia esperada -->
         <div
+          data-guia="cuadre-transferencia"
           class="text-left bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5 sm:p-6 border-2 border-blue-200 shadow-sm"
         >
           <div class="flex items-center gap-3 mb-4">
@@ -113,7 +128,7 @@
         </div>
 
         <!-- Total general (efectivo + transferencia) -->
-        <div class="md:col-span-2 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
+        <div data-guia="cuadre-total-general" class="md:col-span-2 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
           <div class="flex items-center gap-3 mb-2">
             <div class="w-12 h-12 bg-teal-500 rounded-xl flex items-center justify-center">
               <CalculatorIcon class="w-7 h-7 text-white" />
@@ -205,7 +220,7 @@
       </template>
 
       <!-- Detalle por concepto: Cuotas, Sanciones, Actividades, Préstamos -->
-      <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
+      <div data-guia="cuadre-detalle" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div class="flex items-center gap-3">
             <button
@@ -227,6 +242,7 @@
             </div>
           </div>
           <button
+            data-guia="cuadre-exportar"
             @click="exportarAExcel"
             :disabled="exportando || detalleFiltrado.length === 0"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-semibold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
@@ -542,7 +558,7 @@
       </div>
 
       <!-- Lista de movimientos -->
-      <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
+      <div data-guia="cuadre-movimientos" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-gray-200 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div>
             <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -552,6 +568,7 @@
             <p class="text-sm text-gray-500 mt-0.5">Entradas y salidas manuales (depósitos, retiros, gastos operativos).</p>
           </div>
           <button
+            data-guia="cuadre-nuevo-movimiento"
             @click="abrirModalMovimiento"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-semibold text-sm transition-colors shadow-md"
           >
@@ -922,7 +939,7 @@
       <!-- Simulador de cierre -->
       <div v-show="tabActiva === 'simulador'">
         <div class="space-y-6">
-          <div class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
+          <div data-guia="cuadre-simulador" class="bg-white rounded-2xl p-5 sm:p-6 border-2 border-teal-200 shadow-sm">
             <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
               <CalculatorIcon class="w-5 h-5 text-teal-600" />
               Simulador de cierre
@@ -1149,6 +1166,8 @@ import BackButton from '../../components/BackButton.vue'
 
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 import { calcularCierreNatillera, TIPOS_UTILIDAD as TIPOS_UTILIDAD_SIMULADOR } from '../../composables/useCierreNatillera'
@@ -1171,7 +1190,10 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   PencilIcon,
-  MagnifyingGlassIcon
+  MagnifyingGlassIcon,
+  QuestionMarkCircleIcon,
+  Square2StackIcon,
+  ScaleIcon
 } from '@heroicons/vue/24/outline'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
@@ -3608,6 +3630,188 @@ async function actualizarMovimiento(movimientoOriginal, nuevoMonto, nuevaFecha, 
 }
 
 watch(id, cargarDatos, { immediate: true })
+
+// ─── Recorrido guiado de Cuadre de caja (skill natillerapp-recorrido-guiado) ────
+// Va al final: el watch de arranque lee `loading` y las modales al crearse, y declararlo
+// antes de lo que usa rompe la vista al montar (TDZ).
+const contadorGuiaCuadre = crearContadorGuia('cuadre')
+const guiaCuadreActiva = ref(false)
+/* Se construyen al abrir: dependen del DOM en ese momento (sin movimientos no hay lista). */
+const pasosGuiaCuadre = ref([])
+let guiaCuadreAMano = false
+/** Una vez por visita: si se cierra, no vuelve a salir sola. */
+let guiaCuadreIntentada = false
+let temporizadorGuiaCuadre = null
+
+/*
+ * La pestaña «Simulador» no se ve mientras el recorrido enseña los totales: hay un paso
+ * que la abre. Fuera de la lista para que la referencia sea estable entre pasos.
+ */
+let pestanaCuadreAntesGuia = null
+function mostrarSimuladorGuia() {
+  if (tabActiva.value === 'simulador') return false
+  pestanaCuadreAntesGuia = tabActiva.value
+  tabActiva.value = 'simulador'
+  return true
+}
+function restaurarPestanaCuadreGuia() {
+  if (pestanaCuadreAntesGuia === null) return
+  tabActiva.value = pestanaCuadreAntesGuia
+  pestanaCuadreAntesGuia = null
+}
+
+/* El detalle por concepto viene plegado: se despliega ya enfocado y se deja como estaba. */
+let detalleAbiertoAntesGuia = null
+function desplegarDetalleGuia() {
+  detalleAbiertoAntesGuia = detalleExpandido.value
+  detalleExpandido.value = true
+}
+function restaurarDetalleGuia() {
+  if (detalleAbiertoAntesGuia === null) return
+  detalleExpandido.value = detalleAbiertoAntesGuia
+  detalleAbiertoAntesGuia = null
+}
+
+/*
+ * Sin navegación ni soporte: ya los enseña el recorrido del detalle. Aquí, lo propio de
+ * cuadrar la caja: qué debería haber, de dónde sale, qué se apunta a mano y el simulador.
+ */
+function construirPasosGuiaCuadre({ manual = false } = {}) {
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      // Héroe propio: quien ya vio otro recorrido lo saltaría creyendo que es el mismo.
+      heroe: 'balanza',
+      heroePiezas: ['💵', '🏦'],
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
+      texto: 'Te enseño a cuadrar la caja en menos de un minuto.'
+    },
+    {
+      selector: '[data-guia="cuadre-pestanas"]',
+      icono: Square2StackIcon,
+      titulo: 'Dos vistas',
+      texto: 'Cambia entre los totales de hoy y el ensayo del cierre.',
+      recorrer: '[data-guia="cuadre-pestanas"] button'
+    },
+    {
+      selector: '[data-guia="cuadre-totales"]',
+      icono: ScaleIcon,
+      titulo: 'Lo que debería haber',
+      texto: 'Cuenta el dinero real y compáralo con esto.',
+      recorrer: [
+        { selector: '[data-guia="cuadre-efectivo"]', etiqueta: 'Efectivo · el que tienes en mano' },
+        { selector: '[data-guia="cuadre-transferencia"]', etiqueta: 'Transferencia · el del banco' },
+        { selector: '[data-guia="cuadre-total-general"]', etiqueta: 'Total · los dos juntos' }
+      ].filter((item) => document.querySelector(item.selector))
+    },
+    {
+      selector: '[data-guia="cuadre-detalle"]',
+      icono: TableCellsIcon,
+      titulo: 'De dónde sale cada peso',
+      texto: 'Cada cuota, sanción y préstamo, con socio y fecha.',
+      alLlegar: desplegarDetalleGuia,
+      despues: restaurarDetalleGuia
+    },
+    {
+      selector: '[data-guia="cuadre-exportar"]',
+      icono: ArrowDownTrayIcon,
+      gesto: 'tocar',
+      titulo: 'Llévatelo a Excel',
+      texto: 'Baja el detalle tal como lo tengas filtrado.',
+      radio: 20,
+      margen: 6
+    },
+    {
+      selector: '[data-guia="cuadre-movimientos"]',
+      icono: ListBulletIcon,
+      titulo: 'Lo que apuntas a mano',
+      texto: 'Depósitos, retiros y gastos que mueven el total.'
+    },
+    {
+      selector: '[data-guia="cuadre-nuevo-movimiento"]',
+      icono: PlusIcon,
+      gesto: 'tocar',
+      titulo: 'Registra un movimiento',
+      texto: 'Toca aquí cuando entre o salga plata de la caja.',
+      radio: 20,
+      margen: 6
+    },
+    {
+      selector: '[data-guia="cuadre-simulador"]',
+      icono: CalculatorIcon,
+      titulo: 'Ensaya el cierre',
+      texto: 'Mira cuánto le tocaría a cada socio, sin cerrar nada.',
+      // Abre la pestaña para enseñarla y la deja como estaba al salir del paso
+      antes: mostrarSimuladorGuia,
+      despues: restaurarPestanaCuadreGuia
+    },
+    // Quien lo abrió a mano ya sabe dónde está el botón.
+    ...(manual ? [] : [{
+      selector: '[data-guia="boton-recorrido"]',
+      icono: QuestionMarkCircleIcon,
+      gesto: 'tocar',
+      titulo: '¿Lo quieres repasar?',
+      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
+      radio: 22,
+      margen: 6
+    }]),
+    {
+      tipo: 'final',
+      titulo: '¡Caja cuadrada!',
+      texto: 'Ya sabes revisar, exportar y ensayar el cierre.'
+    }
+  ]
+  return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))
+}
+
+/** ¿Sale solo en esta visita? `?guia=1` lo fuerza para probarlo sin tocar localStorage. */
+function tocaGuiaCuadre() {
+  if (route.query.guia === '1') return true
+  return contadorGuiaCuadre.hayPendiente() || contadorGuiaCuadre.debeMostrar(authStore.user?.id)
+}
+
+function abrirGuiaCuadre({ manual = false } = {}) {
+  if (guiaCuadreActiva.value) return
+  // Abierta por cualquier vía cuenta como intentada: al cerrarla la pantalla vuelve a
+  // estar «lista» y, sin esto, saldría otra vez sola.
+  guiaCuadreIntentada = true
+  guiaCuadreAMano = manual
+  // Un desplegable abierto cambiaría lo que se enseña mientras se enseña
+  dropdownCategoriasAbierto.value = false
+  dropdownOrdenarAbierto.value = false
+  pasosGuiaCuadre.value = construirPasosGuiaCuadre({ manual })
+  guiaCuadreActiva.value = true
+}
+
+/** El abierto a mano no cuenta: verlo a voluntad no debe gastar las visitas en que sale solo. */
+function cerrarGuiaCuadre({ completado } = {}) {
+  guiaCuadreActiva.value = false
+  contadorGuiaCuadre.limpiarPendiente()
+  if (!guiaCuadreAMano) contadorGuiaCuadre.registrarVista(authStore.user?.id, { completado })
+  guiaCuadreAMano = false
+}
+
+/*
+ * Arranque automático: con los datos cargados (sin pantalla de carga) y sin ninguna modal
+ * abierta. Tras un respiro, se vuelve a comprobar: las tarjetas entran con animación y
+ * medirlas antes descuadra el foco.
+ */
+const pantallaCuadreLista = computed(
+  () => !loading.value && !modalMovimientoAbierto.value && !movimientoAEliminar.value
+)
+
+watch(pantallaCuadreLista, (lista) => {
+  clearTimeout(temporizadorGuiaCuadre)
+  if (!lista || guiaCuadreIntentada || !tocaGuiaCuadre()) return
+  temporizadorGuiaCuadre = setTimeout(() => {
+    if (!pantallaCuadreLista.value || guiaCuadreIntentada) return
+    guiaCuadreIntentada = true
+    abrirGuiaCuadre()
+  }, 650)
+}, { immediate: true })
+
+onUnmounted(() => clearTimeout(temporizadorGuiaCuadre))
 
 // Cerrar dropdown de categorías al hacer clic fuera
 function handleClickOutsideDropdowns(e) {

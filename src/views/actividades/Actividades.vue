@@ -1,5 +1,17 @@
 <template>
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-6">
+    <RecorridoInteractivo :pasos="pasosGuia" :activo="guiaActiva" @terminar="cerrarGuia" />
+    <CargaCuadricula
+      :show="generandoNumerosRifa"
+      titulo="Repartiendo números"
+      :descripcion="`${socios.length} ${socios.length === 1 ? 'socio recibe' : 'socios reciben'} ${Number(formActividad.cantidadNumerosPorSocio) || 0} ${(Number(formActividad.cantidadNumerosPorSocio) || 0) === 1 ? 'número' : 'números'} al azar.`"
+    />
+    <!-- Un pago toca la fila, su desglose y las utilidades del fondo: se acompaña la espera -->
+    <CargaCuadricula
+      :show="registrandoCobroSocio || registrandoCobro"
+      titulo="Registrando el pago"
+      descripcion="Actualizando los valores y las utilidades del fondo."
+    />
     <!-- Page header (DS) — patrón unificado Socios/Cuotas/Préstamos/Actividades -->
     <header class="ds-page-header">
       <div class="ds-page-header__row">
@@ -12,30 +24,46 @@
             <h1 class="ds-page-header__title">Actividades</h1>
             <p class="ds-page-header__sub hidden sm:block">Rifas, eventos y otras actividades del fondo</p>
           </div>
-          <!-- Móvil: CTA primario (acento) en línea con el título (sm+ usa el bloque de actions) -->
+          <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
           <button
             type="button"
-            class="ds-btn ds-btn--primary sm:hidden"
-            aria-label="Nueva actividad"
-            @click="modalNuevaActividad = true"
+            data-guia="boton-recorrido"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            title="¿Cómo funciona esta pantalla?"
+            aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+            @click="abrirGuia({ manual: true })"
           >
-            <PlusIcon class="w-5 h-5" />
+            <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+            <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
           </button>
         </div>
-        <div class="ds-page-header__actions hidden sm:flex">
+        <div class="ds-page-header__actions">
+          <!-- Móvil: a ancho completo bajo el título; con el texto en la fila del título
+               se comía el ancho y «Actividades» quedaba partido -->
           <button
             type="button"
-            class="ds-btn ds-btn--primary"
-            aria-label="Nueva actividad"
+            data-guia="actividades-cobrar"
+            class="ds-btn ds-btn--secondary ds-btn--block sm:w-auto"
+            @click="abrirModalCobroSocio"
+          >
+            <BanknotesIcon class="w-5 h-5 sm:w-4 sm:h-4" />
+            <span>Registrar pago</span>
+          </button>
+          <button
+            type="button"
+            data-guia="actividades-nueva"
+            class="ds-btn ds-btn--primary ds-btn--block sm:w-auto"
             @click="modalNuevaActividad = true"
           >
-            <PlusIcon class="w-4 h-4" />
-            <span>Nueva Actividad</span>
+            <PlusIcon class="w-5 h-5 sm:w-4 sm:h-4" />
+            <span>Registrar actividad</span>
           </button>
         </div>
       </div>
     </header>
-    <!-- Modal de Bienvenida / Tutorial -->
+    <!-- Modal explicativo «Liquidar vs En curso». Solo se abre la primera vez en cada
+         natillera: al cerrarlo se marca como visto (sin checkbox), por eso no hay opción
+         de «no mostrar de nuevo». -->
     <ModalWrapper
       :show="!!mostrarModalBienvenida"
       :z-index="50"
@@ -43,11 +71,11 @@
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-3xl max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
-      card-max-width="48rem"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
       @close="cerrarModalBienvenida"
     >
-        <!-- Cabecera de bienvenida (marca verde). Compacta móvil-fila / desktop-columna; X por flex -->
+        <!-- Cabecera marca verde. Compacta móvil-fila / desktop-columna; X por flex -->
         <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
           <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -55,8 +83,8 @@
                 <CalendarIcon class="w-5 h-5 text-white" />
               </div>
               <div class="min-w-0 flex-1">
-                <h3 class="text-base font-display font-bold leading-tight">¡Bienvenido a Actividades! 🎉</h3>
-                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Aprende cómo crear y gestionar actividades</p>
+                <h3 class="text-base font-display font-bold leading-tight">Dos formas de registrar</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Liquidar o En curso</p>
               </div>
             </div>
             <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/20 touch-manipulation" aria-label="Cerrar" @click="cerrarModalBienvenida">
@@ -69,8 +97,8 @@
               <div class="w-[3.2rem] h-[3.2rem] bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
                 <CalendarIcon class="w-6 h-6 text-white" />
               </div>
-              <h3 class="text-lg font-display font-bold mt-3">¡Bienvenido a Actividades! 🎉</h3>
-              <p class="text-white/90 text-xs mt-1">Aprende cómo crear y gestionar actividades</p>
+              <h3 class="text-lg font-display font-bold mt-3">Dos formas de registrar</h3>
+              <p class="text-white/90 text-xs mt-1">Liquidar o En curso</p>
             </div>
             <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/20" aria-label="Cerrar" @click="cerrarModalBienvenida">
               <XMarkIcon class="w-6 h-6" />
@@ -81,200 +109,64 @@
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="refScrollBienvenida"
-          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-6 sm:p-8"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] px-4 py-5 sm:px-6"
           @scroll.passive="onScrollBienvenida"
         >
-          <div class="space-y-6">
-            <!-- Sección: Tipos de Actividades -->
-            <div class="bg-gradient-to-br from-blue-50 via-indigo-50/50 to-purple-50/30 rounded-2xl p-6 border-2 border-blue-200/50">
-              <div class="flex items-start gap-4 mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <CurrencyDollarIcon class="w-6 h-6 text-white" />
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-xl font-display font-bold text-gray-800 mb-2">Tipos de Actividades</h3>
-                  <p class="text-gray-600 text-sm mb-4">Existen dos formas de registrar actividades en el sistema:</p>
+          <div class="space-y-3">
+            <p class="px-1 text-center text-sm text-gray-500">
+              La diferencia está en <strong class="text-gray-700">quién lleva el cobro</strong>
+            </p>
+            <!-- Liquidar -->
+            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-emerald-200 bg-white shadow-sm" style="--retraso: 60ms">
+              <div class="flex items-center gap-3 bg-gradient-to-r from-emerald-50 to-emerald-50/20 px-4 py-3">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-xl shadow-sm">💰</div>
+                <div class="min-w-0">
+                  <h4 class="font-display text-base font-bold leading-tight text-gray-800">Liquidar</h4>
+                  <p class="text-xs font-semibold text-emerald-600">Ya terminó</p>
                 </div>
               </div>
-              <div class="grid md:grid-cols-2 gap-4">
-                <!-- Liquidar Actividad -->
-                <div class="bg-white rounded-xl p-5 border-2 border-green-200/50 shadow-md">
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
-                      <span class="text-xl">💰</span>
-                    </div>
-                    <h4 class="font-bold text-gray-800">Liquidar Actividad</h4>
-                  </div>
-                  <p class="text-sm text-gray-600 mb-3">
-                    Usa esta opción cuando la actividad ya terminó y conoces los resultados finales.
-                  </p>
-                  <ul class="space-y-2 text-xs text-gray-600">
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-500 mt-1">✓</span>
-                      <span>Ingresa los <strong>ingresos</strong> totales generados</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-500 mt-1">✓</span>
-                      <span>Registra los <strong>gastos</strong> incurridos (opcional)</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-green-500 mt-1">✓</span>
-                      <span>La <strong>utilidad</strong> se calcula automáticamente</span>
-                    </li>
-                  </ul>
-                </div>
-                <!-- Actividad en Curso -->
-                <div class="bg-white rounded-xl p-5 border-2 border-amber-200/50 shadow-md">
-                  <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                      <span class="text-xl">🔄</span>
-                    </div>
-                    <h4 class="font-bold text-gray-800">Actividad en Curso</h4>
-                  </div>
-                  <p class="text-sm text-gray-600 mb-3">
-                    Usa esta opción cuando la actividad apenas comienza y necesitas recaudar dinero.
-                  </p>
-                  <ul class="space-y-2 text-xs text-gray-600">
-                    <li class="flex items-start gap-2">
-                      <span class="text-amber-500 mt-1">✓</span>
-                      <span>Asigna valores a pagar por cada socio</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-amber-500 mt-1">✓</span>
-                      <span>Define el <strong>período</strong> de pago (mes y año)</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-amber-500 mt-1">✓</span>
-                      <span>Selecciona la <strong>quincena</strong> si aplica</span>
-                    </li>
-                    <li class="flex items-start gap-2">
-                      <span class="text-amber-500 mt-1">✓</span>
-                      <span>Puedes repetirla en <strong>varios meses</strong></span>
-                    </li>
-                  </ul>
-                </div>
+              <div class="px-4 py-3">
+                <p class="text-sm leading-relaxed text-gray-700">
+                  Anotas los <strong>ingresos</strong> y <strong>gastos</strong>; la utilidad entra al fondo.
+                </p>
+                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                  <CheckCircleIcon class="w-3.5 h-3.5" />
+                  Nadie queda debiendo
+                </p>
               </div>
             </div>
-            <!-- Sección: Múltiples Meses -->
-            <div class="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-cyan-50/30 rounded-2xl p-6 border-2 border-emerald-200/50">
-              <div class="flex items-start gap-4 mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-xl font-display font-bold text-gray-800 mb-2">Actividades Recurrentes</h3>
-                  <p class="text-gray-600 text-sm mb-4">
-                    Puedes crear actividades que se repitan en varios meses del período de la natillera.
-                  </p>
+            <!-- En curso -->
+            <div class="tarjeta-modo overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm" style="--retraso: 160ms">
+              <div class="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-50/20 px-4 py-3">
+                <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-xl shadow-sm">🔄</div>
+                <div class="min-w-0">
+                  <h4 class="font-display text-base font-bold leading-tight text-gray-800">En curso</h4>
+                  <p class="text-xs font-semibold text-amber-600">Apenas empieza</p>
                 </div>
               </div>
-              <div class="bg-white rounded-xl p-5 border-2 border-emerald-200/50">
-                <div class="space-y-3">
-                  <div class="flex items-start gap-3">
-                    <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span class="text-white text-xs font-bold">1</span>
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-800 text-sm mb-1">Activa el switch "Varios meses"</p>
-                      <p class="text-xs text-gray-600">Se mostrará un panel con todos los meses del período de la natillera</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span class="text-white text-xs font-bold">2</span>
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-800 text-sm mb-1">Selecciona los meses</p>
-                      <p class="text-xs text-gray-600">Marca con checkboxes los meses en los que se debe pagar la actividad</p>
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-3">
-                    <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span class="text-white text-xs font-bold">3</span>
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-800 text-sm mb-1">Elige la quincena (si aplica)</p>
-                      <p class="text-xs text-gray-600">Si la natillera es quincenal, selecciona si el pago será en la primera o segunda quincena de cada mes</p>
-                    </div>
-                  </div>
-                </div>
+              <div class="px-4 py-3">
+                <p class="text-sm leading-relaxed text-gray-700">
+                  Le cobras a cada socio, como una cuota. Al final la <strong>liquidas</strong>.
+                </p>
+                <p class="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                  <UsersIcon class="w-3.5 h-3.5" />
+                  Queda pendiente por socio
+                </p>
               </div>
             </div>
-            <!-- Sección: Valores -->
-            <div class="bg-gradient-to-br from-purple-50 via-pink-50/50 to-rose-50/30 rounded-2xl p-6 border-2 border-purple-200/50">
-              <div class="flex items-start gap-4 mb-4">
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <h3 class="text-xl font-display font-bold text-gray-800 mb-2">Asignación de Valores</h3>
-                  <p class="text-gray-600 text-sm mb-4">
-                    Para actividades en curso, puedes asignar valores de dos formas:
-                  </p>
-                </div>
-              </div>
-              <div class="grid md:grid-cols-2 gap-4">
-                <div class="bg-white rounded-xl p-4 border-2 border-purple-200/50">
-                  <h4 class="font-bold text-gray-800 text-sm mb-2 flex items-center gap-2">
-                    <span>✓</span>
-                    <span>Valores Iguales</span>
-                  </h4>
-                  <p class="text-xs text-gray-600">
-                    Todos los socios pagarán el mismo valor. Útil para rifas o eventos donde todos participan igual.
-                  </p>
-                </div>
-                <div class="bg-white rounded-xl p-4 border-2 border-purple-200/50">
-                  <h4 class="font-bold text-gray-800 text-sm mb-2 flex items-center gap-2">
-                    <span>✓</span>
-                    <span>Valores Diferentes</span>
-                  </h4>
-                  <p class="text-xs text-gray-600">
-                    Asigna un valor personalizado a cada socio. Útil cuando algunos socios participan más que otros.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <!-- Nota importante -->
-            <div class="bg-gradient-to-br from-amber-50 via-orange-50/50 to-yellow-50/30 rounded-xl p-5 border-2 border-amber-300/50">
-              <div class="flex items-start gap-3">
-                <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <h4 class="font-bold text-gray-800 text-sm mb-2">💡 Consejo</h4>
-                  <p class="text-xs text-gray-700 leading-relaxed">
-                    Si hay socios con periodicidad <strong>mensual</strong> en una natillera <strong>quincenal</strong>, 
-                    la fecha de pago se establecerá automáticamente en la <strong>segunda quincena</strong> del mes seleccionado.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p class="tarjeta-modo px-1 pt-1 text-center text-xs leading-relaxed text-gray-500" style="--retraso: 260ms">
+              ¿Falta recoger la plata? <strong class="text-amber-600">En curso</strong>.<br class="sm:hidden" />
+              ¿Ya están las cuentas? <strong class="text-emerald-600">Liquidar</strong>.
+            </p>
           </div>
         </div>
           <NatiscrollHint :show="hayMasBienvenida" />
         </div>
         <!-- Footer de acciones fijo -->
         <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-          <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                v-model="noMostrarDeNuevo"
-                class="w-4 h-4 text-natillera-500 border-gray-300 rounded focus:ring-natillera-500"
-              />
-              <span class="text-sm text-gray-600">No mostrar este mensaje de nuevo</span>
-            </label>
-            <!-- CTA de acento (identidad Actividades); w-full en móvil para área táctil cómoda -->
-            <button type="button" @click="cerrarModalBienvenida" class="ds-btn ds-btn--primary w-full sm:w-auto">
-              Entendido, ¡empecemos!
-            </button>
-          </div>
+          <button type="button" @click="cerrarModalBienvenida" class="ds-btn ds-btn--primary w-full">
+            Entendido
+          </button>
         </div>
     </ModalWrapper>
 
@@ -283,22 +175,22 @@
 
     <template v-else>
     <!-- Tarjetas de resumen financiero (DS stat cards; color semántico por concepto) -->
-    <div class="grid grid-cols-3 gap-3 sm:gap-4">
-      <div class="ds-stat-card">
+    <div data-guia="actividades-resumen" class="grid grid-cols-3 gap-3 sm:gap-4">
+      <div data-guia="actividades-resumen-ingresos" class="ds-stat-card">
         <div class="ds-stat-card__icon">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
         <p class="ds-stat-card__value whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(totalIngresos) }}</p>
         <p class="ds-stat-card__label">Ingresos</p>
       </div>
-      <div class="ds-stat-card">
+      <div data-guia="actividades-resumen-gastos" class="ds-stat-card">
         <div class="ds-stat-card__icon bg-red-100 text-red-600">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
         <p class="ds-stat-card__value text-red-600 whitespace-nowrap tabular-nums max-sm:text-[clamp(0.75rem,3.4vw,1.05rem)]">${{ formatMoney(totalGastos) }}</p>
         <p class="ds-stat-card__label">Gastos</p>
       </div>
-      <div class="ds-stat-card">
+      <div data-guia="actividades-resumen-utilidad" class="ds-stat-card">
         <div class="ds-stat-card__icon bg-purple-100 text-purple-600">
           <BanknotesIcon class="w-5 h-5" />
         </div>
@@ -306,27 +198,23 @@
         <p class="ds-stat-card__label">Utilidad</p>
       </div>
     </div>
-    <!-- Selector de vista Normal / Agrupada (solo si hay actividades) -->
-    <div class="flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm overflow-hidden">
+    <!-- Selector de vista Normal / Agrupada (segmentado DS, a ancho completo) -->
+    <div data-guia="actividades-vista" class="ds-segmented w-full" role="group" aria-label="Modo de vista">
       <button
+        type="button"
+        class="ds-segmented__opt flex-1"
+        :class="{ 'is-selected': !vistaAgrupada }"
+        :aria-pressed="!vistaAgrupada"
         @click="vistaAgrupada = false"
-        :class="[
-          'flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-[13px] sm:text-sm font-medium transition-all leading-tight min-h-[44px]',
-          !vistaAgrupada
-            ? 'bg-natillera-500 text-white shadow-sm'
-            : 'text-gray-600 hover:bg-gray-50'
-        ]"
       >
         Normal
       </button>
       <button
+        type="button"
+        class="ds-segmented__opt flex-1"
+        :class="{ 'is-selected': vistaAgrupada }"
+        :aria-pressed="vistaAgrupada"
         @click="vistaAgrupada = true"
-        :class="[
-          'flex-1 px-3 sm:px-4 py-2.5 rounded-lg text-[13px] sm:text-sm font-medium transition-all leading-tight min-h-[44px]',
-          vistaAgrupada
-            ? 'bg-natillera-500 text-white shadow-sm'
-            : 'text-gray-600 hover:bg-gray-50'
-        ]"
       >
         Agrupada
       </button>
@@ -349,15 +237,85 @@
           @click="modalNuevaActividad = true"
         >
           <PlusIcon class="w-5 h-5" />
-          Crear primera actividad
+          Registrar primera actividad
         </button>
       </div>
     </div>
-    <div v-else class="space-y-6">
-      <!-- Vista Normal: Todas las actividades sin agrupar (estilo referencia) -->
+    <div v-else class="space-y-4">
+      <!-- Toolbar DS (buscador + segmentado), igual que Socios y Cuotas. Con varias
+           series de 12 meses, encontrar una a ojo era el cuello de botella de la vista. -->
+      <div v-if="actividades.length > 1" class="ds-toolbar">
+        <div class="ds-search">
+          <MagnifyingGlassIcon class="w-4 h-4" aria-hidden="true" />
+          <input
+            v-model="busquedaActividades"
+            type="text"
+            inputmode="search"
+            placeholder="Buscar serie o mes"
+            class="ds-search__input"
+            aria-label="Buscar serie o actividad"
+            autocomplete="off"
+            @keydown.esc="busquedaActividades = ''"
+          />
+          <button
+            v-if="busquedaActividades"
+            type="button"
+            class="ds-search__clear"
+            aria-label="Limpiar búsqueda"
+            @click="busquedaActividades = ''"
+          >
+            <XMarkIcon class="w-4 h-4" />
+          </button>
+        </div>
+        <div class="ds-filtros">
+          <!-- Estado: control segmentado (el activo en verde de marca; «Todas» = quitar) -->
+          <div class="ds-segmented" role="group" aria-label="Filtrar por estado">
+            <span class="ds-segmented__icon" aria-hidden="true">
+              <FunnelIcon class="w-4 h-4" />
+            </span>
+            <button
+              v-for="opcion in opcionesFiltroEstado"
+              :key="`estado-${opcion.value}`"
+              type="button"
+              class="ds-segmented__opt"
+              :class="{ 'is-selected': filtroEstado === opcion.value }"
+              :aria-pressed="filtroEstado === opcion.value"
+              @click="filtroEstado = opcion.value"
+            >
+              {{ opcion.label }}
+            </button>
+          </div>
+        </div>
+        <button
+          v-if="gruposVisibles.length"
+          type="button"
+          class="ds-btn ds-btn--ghost"
+          @click="alternarTodosLosGrupos"
+          :aria-label="hayAlgunGrupoExpandido ? 'Cerrar todas las series' : 'Abrir todas las series'"
+        >
+          <ChevronUpIcon v-if="hayAlgunGrupoExpandido" class="w-4 h-4" />
+          <ChevronDownIcon v-else class="w-4 h-4" />
+          <span>{{ hayAlgunGrupoExpandido ? 'Cerrar' : 'Abrir' }}</span>
+        </button>
+      </div>
+
+      <!-- Sin resultados para el filtro actual (sirve a las dos vistas) -->
+      <div v-if="sinResultadosFiltro" class="rounded-2xl border border-dashed border-gray-300 bg-white px-4 py-8 text-center">
+        <p class="text-sm font-semibold text-gray-700">Sin resultados</p>
+        <p class="mt-1 text-xs text-gray-500">Prueba con otro texto o quita el filtro de estado.</p>
+        <button
+          type="button"
+          class="ds-btn ds-btn--secondary mt-3"
+          @click="busquedaActividades = ''; filtroEstado = 'todas'"
+        >
+          Ver todas
+        </button>
+      </div>
+
+      <!-- Vista Normal: todas las actividades sin agrupar -->
       <div v-if="!vistaAgrupada" class="space-y-4">
         <ActividadCard
-          v-for="actividad in actividades"
+          v-for="actividad in actividadesFiltradas"
           :key="actividad.id"
           :actividad="actividad"
           @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
@@ -368,97 +326,132 @@
           @registrar-gastos="abrirModalRegistrarGastos(actividad)"
         />
       </div>
-      <!-- Vista Agrupada: Grupos colapsables y actividades individuales -->
-      <div v-else class="space-y-6">
-        <!-- Grupos de actividades y actividades individuales -->
-        <template v-for="(item, index) in actividadesAgrupadas" :key="item.tipo === 'grupo' ? item.serieId : (item.actividad?.id || `individual-${index}`)">
-          <!-- Grupo de actividades (serie) - Tarjeta + contenedor integrados en un solo bloque -->
+      <!-- Vista Agrupada: series colapsables (con resumen propio) + actividades sueltas -->
+      <div v-else class="space-y-4">
+
+        <!-- Series y actividades sueltas -->
+        <template v-for="(item, index) in itemsAgrupadosFiltrados" :key="item.tipo === 'grupo' ? item.serieId : (item.actividad?.id || `individual-${index}`)">
+          <!-- Serie: cabecera-resumen + lista colapsable -->
           <template v-if="item.tipo === 'grupo'">
-            <div class="rounded-2xl overflow-hidden bg-white border border-indigo-200/60 shadow-[var(--shadow-xs)]">
-              <!-- Franja de estado del grupo (color diferenciador índigo, análoga a Finalizada / En curso) -->
+            <div
+              class="rounded-2xl overflow-hidden bg-white border shadow-[var(--shadow-xs)] transition-colors"
+              :class="isGrupoExpandido(item.serieId) ? 'border-indigo-300' : 'border-indigo-200/60'"
+            >
+              <!-- Franja: identifica que es una serie y en qué va -->
               <div class="flex items-center gap-1.5 px-4 py-2 border-b border-indigo-100 bg-indigo-50 text-indigo-700 text-xs font-semibold">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0"></span>
-                <span>Grupo</span>
-                <span class="ml-auto font-medium text-indigo-500">{{ item.actividades.length }} {{ item.actividades.length === 1 ? 'actividad' : 'actividades' }}</span>
+                <RectangleStackIcon class="w-4 h-4 flex-shrink-0" />
+                <span>Serie de {{ item.resumen.total }}</span>
+                <span class="text-indigo-300">·</span>
+                <span class="capitalize font-medium text-indigo-500 truncate">{{ (item.tipoActividad || 'otro').toLowerCase() }}</span>
+                <span
+                  class="ml-auto flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold"
+                  :class="item.resumen.todoLiquidado ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                >
+                  {{ item.resumen.todoLiquidado ? 'Finalizada' : `${item.resumen.enCurso} en curso` }}
+                </span>
               </div>
-              <!-- Encabezado colapsable: en móvil dos filas (título+chevron / subtítulo+acciones) para que no se vea apretado -->
+
+              <!-- Cabecera colapsable con el resumen del grupo -->
               <div
                 @click="toggleGrupo(item.serieId)"
                 :class="[
-                  'p-3 sm:p-5 cursor-pointer transition-colors duration-200 min-h-[64px]',
-                  isGrupoExpandido(item.serieId) ? 'bg-indigo-50/60' : 'bg-white hover:bg-indigo-50/50'
+                  'p-3 sm:p-4 cursor-pointer transition-colors duration-200',
+                  isGrupoExpandido(item.serieId) ? 'bg-indigo-50/60' : 'bg-white hover:bg-indigo-50/40'
                 ]"
               >
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                  <!-- Fila 1 móvil / bloque izquierdo desktop: icono + título + (subtítulo solo sm) + badge + chevron -->
-                  <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-                    <div class="w-11 h-11 rounded-xl bg-indigo-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <CubeIcon class="w-5 h-5" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <h3 class="font-display font-semibold text-gray-800 text-base sm:text-lg mb-0.5 leading-snug line-clamp-2">
-                        {{ item.descripcionBase }}
-                      </h3>
-                      <p class="hidden sm:block text-xs text-indigo-600/80 font-medium leading-tight">
-                        {{ isGrupoExpandido(item.serieId) ? 'Toca para cerrar el grupo' : 'Toca para ver el detalle' }}
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                      <div
-                        class="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200 touch-manipulation"
-                        :class="isGrupoExpandido(item.serieId) ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-600'"
-                      >
-                        <ChevronDownIcon class="w-5 h-5 transition-transform duration-300" :class="{ 'rotate-180': isGrupoExpandido(item.serieId) }" />
-                      </div>
-                    </div>
+                <div class="flex items-start gap-3">
+                  <div class="w-11 h-11 rounded-xl bg-indigo-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <component :is="iconoDeTipo(item.tipoActividad, item.tipoRifa)" class="w-5 h-5" />
                   </div>
-                  <!-- Fila 2 móvil / bloque derecho desktop: subtítulo (solo móvil) + botones -->
-                  <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
-                    <p class="sm:hidden w-full text-xs text-indigo-600/80 font-medium leading-tight">
-                      {{ isGrupoExpandido(item.serieId) ? 'Toca para cerrar el grupo' : 'Toca para ver el detalle' }}
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-display font-semibold text-gray-800 text-base sm:text-lg leading-snug line-clamp-2">
+                      {{ item.descripcionBase }}
+                    </h3>
+                    <p v-if="item.resumen.rango" class="mt-0.5 text-xs font-medium text-gray-500">
+                      {{ item.resumen.rango }}
                     </p>
-                    <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                    <button
-                      @click.stop="confirmarEliminarGrupo(item)"
-                      class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-rose-600 hover:bg-rose-50 touch-manipulation"
-                      title="Eliminar grupo completo"
-                    >
-                      <TrashIcon class="w-5 h-5" />
-                    </button>
-                    <button
-                      @click.stop="exportarGrupoAExcel(item)"
-                      class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 touch-manipulation"
-                      title="Exportar grupo a Excel"
-                    >
-                      <ArrowDownTrayIcon class="w-5 h-5" />
-                    </button>
-                    <button
-                      v-if="item.tipoActividad === 'rifa'"
-                      @click.stop="abrirModalGanadoresGrupo(item)"
-                      class="flex items-center gap-1.5 px-2.5 py-2.5 min-h-[44px] sm:px-3 rounded-xl transition-colors text-amber-600 hover:text-amber-700 hover:bg-white/80 touch-manipulation"
-                      title="Ver ganadores"
-                    >
-                      <TrophyIcon class="w-5 h-5 flex-shrink-0" />
-                      <span class="hidden sm:inline text-sm font-semibold">Ver ganadores</span>
-                    </button>
                   </div>
+                  <div
+                    class="w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-200 flex-shrink-0"
+                    :class="isGrupoExpandido(item.serieId) ? 'bg-indigo-500 text-white' : 'bg-indigo-100 text-indigo-600'"
+                  >
+                    <ChevronDownIcon class="w-5 h-5 transition-transform duration-300" :class="{ 'rotate-180': isGrupoExpandido(item.serieId) }" />
                   </div>
+                </div>
+
+                <!-- Avance de la serie: cuántas se cerraron ya -->
+                <div class="mt-3">
+                  <div class="flex items-center justify-between gap-2 text-[11px] font-semibold">
+                    <span class="text-gray-500">{{ item.resumen.liquidadas }} de {{ item.resumen.total }} finalizadas</span>
+                    <span class="text-indigo-600 tabular-nums">{{ item.resumen.pctAvance }}%</span>
+                  </div>
+                  <div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-indigo-100">
+                    <div class="h-full rounded-full bg-indigo-500 transition-all duration-500" :style="{ width: `${item.resumen.pctAvance}%` }"></div>
+                  </div>
+                </div>
+
+                <!-- Cifras del grupo: lo que evita tener que abrirlo para saber cómo va -->
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  <div v-if="item.resumen.enCurso" class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Recaudado</p>
+                    <p class="font-bold text-emerald-600 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
+                      ${{ formatMoney(item.resumen.recaudado) }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 leading-tight whitespace-nowrap tabular-nums">de ${{ formatMoney(item.resumen.asignado) }}</p>
+                  </div>
+                  <div v-if="item.resumen.liquidadas" class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0">
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Utilidad</p>
+                    <p class="font-bold text-violet-600 text-sm leading-tight mt-0.5 whitespace-nowrap tabular-nums">
+                      ${{ formatMoney(item.resumen.utilidad) }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 leading-tight">ya liquidada</p>
+                  </div>
+                </div>
+
+                <!-- Acciones de la serie -->
+                <div class="mt-3 flex items-center gap-1.5 border-t border-indigo-100/70 pt-2">
+                  <button
+                    v-if="item.tipoActividad === 'rifa'"
+                    @click.stop="abrirModalGanadoresGrupo(item)"
+                    class="inline-flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-xl transition-colors text-amber-600 hover:text-amber-700 hover:bg-amber-50 touch-manipulation"
+                    title="Ver ganadores"
+                  >
+                    <TrophyIcon class="w-5 h-5 flex-shrink-0" />
+                    <span class="text-sm font-semibold">Ganadores</span>
+                  </button>
+                  <button
+                    @click.stop="exportarGrupoAExcel(item)"
+                    class="ml-auto p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 touch-manipulation"
+                    title="Exportar serie a Excel"
+                    aria-label="Exportar serie a Excel"
+                  >
+                    <ArrowDownTrayIcon class="w-5 h-5" />
+                  </button>
+                  <button
+                    @click.stop="confirmarEliminarGrupo(item)"
+                    class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-rose-600 hover:bg-rose-50 touch-manipulation"
+                    title="Eliminar serie completa"
+                    aria-label="Eliminar serie completa"
+                  >
+                    <TrashIcon class="w-5 h-5" />
+                  </button>
                 </div>
               </div>
 
-              <!-- Contenedor de actividades expandido: animación y buen espaciado en móvil -->
+              <!-- Actividades de la serie: el título es el período, que es lo que las distingue -->
               <div
                 v-show="isGrupoExpandido(item.serieId)"
-                class="border-t border-indigo-100 bg-indigo-50/50 pt-4 pb-4 px-3 sm:px-5 overflow-hidden animate-fade-in-up"
+                class="border-t border-indigo-100 bg-indigo-50/50 pt-3 pb-4 px-3 sm:px-4 overflow-hidden animate-fade-in-up"
               >
-                <p class="text-[11px] font-semibold text-indigo-500 uppercase tracking-wide mb-3 px-0.5">
-                  Actividades del grupo ({{ item.actividades.length }})
-                </p>
-                <div class="space-y-3 sm:space-y-4">
+                <!-- Hilo índigo a la izquierda: deja claro que las filas cuelgan de la serie -->
+                <div class="space-y-1.5 border-l-2 border-indigo-200 pl-3">
                   <ActividadCard
                     v-for="actividad in item.actividades"
                     :key="actividad.id"
+                    :data-guia-actividad="actividad.id"
                     :actividad="actividad"
+                    :etiqueta-periodo="etiquetaPeriodo(actividad)"
+                    compacta
                     @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
                     @eliminar="confirmarEliminarActividad(actividad)"
                     @ver-desglose="abrirModalDesglosePagosRifa(actividad)"
@@ -470,24 +463,362 @@
               </div>
             </div>
           </template>
-        
-        <!-- Actividad individual (sin serie) - estilo referencia -->
-        <template v-else-if="item.tipo === 'individual' && item.actividad && item.actividad.id">
-          <ActividadCard
-            :key="item.actividad.id"
-            :actividad="item.actividad"
-            @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
-            @eliminar="confirmarEliminarActividad(item.actividad)"
-            @ver-desglose="abrirModalDesglosePagosRifa(item.actividad)"
-            @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(item.actividad)"
-            @ver-miembros="abrirModalMiembrosPagaron(item.actividad)"
-            @registrar-gastos="abrirModalRegistrarGastos(item.actividad)"
-          />
+
+          <!-- Actividad suelta (sin serie) -->
+          <template v-else-if="item.tipo === 'individual' && item.actividad && item.actividad.id">
+            <ActividadCard
+              :key="item.actividad.id"
+              :actividad="item.actividad"
+              @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
+              @eliminar="confirmarEliminarActividad(item.actividad)"
+              @ver-desglose="abrirModalDesglosePagosRifa(item.actividad)"
+              @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(item.actividad)"
+              @ver-miembros="abrirModalMiembrosPagaron(item.actividad)"
+              @registrar-gastos="abrirModalRegistrarGastos(item.actividad)"
+            />
+          </template>
         </template>
-      </template>
       </div>
     </div>
     </template>
+    <!-- Modal: cobrar actividades pendientes de un socio (sin pasar por su cuota) -->
+    <ModalWrapper
+      :show="!!modalCobroSocio"
+      :z-index="50"
+      align="bottom"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="32rem"
+      @close="modalCobroSocio = false"
+    >
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
+                <BanknotesIcon class="w-5 h-5 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">Registrar pago</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">
+                  {{ pasoCobro === 'socio' ? 'Elige el socio que va a pagar' : socioCobro?.socio?.nombre }}
+                </p>
+              </div>
+            </div>
+            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="modalCobroSocio = false">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+          <div class="hidden sm:flex items-start w-full px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+            <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+            <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+              <div class="w-[3.2rem] h-[3.2rem] bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
+                <BanknotesIcon class="w-6 h-6 text-white" />
+              </div>
+              <h3 class="text-lg font-display font-bold mt-3">Registrar pago</h3>
+              <p class="text-white/90 text-xs mt-1">
+                {{ pasoCobro === 'socio' ? 'Elige el socio que va a pagar' : socioCobro?.socio?.nombre }}
+              </p>
+            </div>
+            <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15" aria-label="Cerrar" @click="modalCobroSocio = false">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="refScrollCobroSocio"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4"
+          @scroll.passive="onScrollCobroSocio"
+        >
+          <!-- Paso 1: elegir socio -->
+          <template v-if="pasoCobro === 'socio'">
+            <div class="ds-search mb-3">
+              <MagnifyingGlassIcon class="w-4 h-4" aria-hidden="true" />
+              <input
+                v-model="busquedaSocioCobro"
+                type="text"
+                inputmode="search"
+                placeholder="Buscar socio"
+                class="ds-search__input"
+                aria-label="Buscar socio"
+                autocomplete="off"
+              />
+              <button v-if="busquedaSocioCobro" type="button" class="ds-search__clear" aria-label="Limpiar búsqueda" @click="busquedaSocioCobro = ''">
+                <XMarkIcon class="w-4 h-4" />
+              </button>
+            </div>
+            <p v-if="sociosCobroFiltrados.length === 0" class="py-8 text-center text-sm text-slate-500">
+              Ningún socio coincide con la búsqueda.
+            </p>
+            <div v-else class="space-y-2">
+              <button
+                v-for="sn in sociosCobroFiltrados"
+                :key="sn.id"
+                type="button"
+                class="flex w-full min-h-[56px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left transition-colors hover:border-natillera-300 hover:bg-natillera-50/40 touch-manipulation"
+                @click="elegirSocioCobro(sn)"
+              >
+                <img
+                  :src="getAvatarUrl(sn.socio?.nombre || '', sn.socio?.avatar_seed, sn.socio?.avatar_style)"
+                  :alt="sn.socio?.nombre || 'Socio'"
+                  class="h-10 w-10 flex-shrink-0 rounded-full bg-natillera-50 object-cover"
+                  loading="lazy"
+                />
+                <p class="min-w-0 flex-1 truncate text-sm font-semibold text-slate-800">
+                  {{ sn.socio?.nombre || 'Socio' }}
+                </p>
+                <ChevronRightIcon class="w-5 h-5 flex-shrink-0 text-slate-300" />
+              </button>
+            </div>
+          </template>
+
+          <!-- Paso 2: sus actividades pendientes -->
+          <template v-else>
+            <p v-if="cargandoPendientesCobro" class="py-8 text-center text-sm text-slate-500">Buscando lo que debe…</p>
+            <template v-else-if="pendientesSocioCobro.length === 0">
+              <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
+                <p class="text-sm font-semibold text-slate-700">Nada por cobrar</p>
+                <p class="mt-1 text-xs text-slate-500">
+                  {{ socioCobro?.socio?.nombre }} no debe ninguna actividad de este mes ni de meses anteriores.
+                </p>
+              </div>
+            </template>
+            <template v-else>
+              <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Pendientes hasta {{ mesActualTexto }}
+              </p>
+              <div class="space-y-2">
+                <div
+                  v-for="p in pendientesSocioCobro"
+                  :key="p.id"
+                  class="rounded-xl border-2 p-3 transition-colors"
+                  :class="estaSeleccionada(p) ? 'border-natillera-400 bg-natillera-50/50' : 'border-slate-200 bg-white'"
+                >
+                  <button
+                    type="button"
+                    class="flex w-full items-start gap-3 text-left touch-manipulation"
+                    :aria-pressed="estaSeleccionada(p)"
+                    @click="alternarPendienteCobro(p)"
+                  >
+                    <span
+                      class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors"
+                      :class="estaSeleccionada(p) ? 'border-natillera-500 bg-natillera-500 text-white' : 'border-slate-300 bg-white text-transparent'"
+                    >
+                      <CheckIcon class="h-4 w-4" />
+                    </span>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm font-semibold text-slate-800">{{ p.actividad?.descripcion }}</span>
+                      <span class="block text-xs text-slate-500">
+                        Debe ${{ formatMoney(p.pendiente) }}
+                        <template v-if="p.pagado > 0"> · ya abonó ${{ formatMoney(p.pagado) }}</template>
+                      </span>
+                    </span>
+                  </button>
+                  <!-- Valor a cobrar: por defecto todo lo pendiente, editable para abonos -->
+                  <div v-if="estaSeleccionada(p)" class="mt-2 flex items-center gap-2 pl-9">
+                    <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-natillera-200 bg-white px-3">
+                      <span class="mr-1 text-sm font-medium text-slate-400">$</span>
+                      <!-- text-base: iOS hace zoom en inputs con font-size < 16px -->
+                      <input
+                        :value="seleccionCobro[p.id] ? formatNumberWithSeparator(seleccionCobro[p.id]) : ''"
+                        @input="fijarValorCobro(p, parseMilesInput($event.target.value))"
+                        type="text"
+                        inputmode="decimal"
+                        class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 outline-none"
+                        :placeholder="formatNumberWithSeparator(p.pendiente)"
+                        :aria-label="`Valor a pagar de ${p.actividad?.descripcion}`"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      class="min-h-[44px] flex-shrink-0 rounded-xl border border-natillera-300 bg-white px-3 text-xs font-semibold text-natillera-700 touch-manipulation"
+                      @click="fijarValorCobro(p, p.pendiente)"
+                    >
+                      Todo
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4 space-y-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                <div>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Forma de pago</label>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      @click="formCobroSocio.formaPago = 'efectivo'"
+                      :aria-pressed="formCobroSocio.formaPago === 'efectivo'"
+                      :class="[
+                        'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
+                        formCobroSocio.formaPago === 'efectivo' ? 'border-emerald-500 bg-white text-emerald-700' : 'border-slate-200 bg-white text-slate-500'
+                      ]"
+                    >
+                      Efectivo
+                    </button>
+                    <button
+                      type="button"
+                      @click="formCobroSocio.formaPago = 'transferencia'"
+                      :aria-pressed="formCobroSocio.formaPago === 'transferencia'"
+                      :class="[
+                        'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
+                        formCobroSocio.formaPago === 'transferencia' ? 'border-blue-500 bg-white text-blue-700' : 'border-slate-200 bg-white text-slate-500'
+                      ]"
+                    >
+                      Transferencia
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Fecha del pago</label>
+                  <DateInput v-model="formCobroSocio.fecha" />
+                </div>
+              </div>
+            </template>
+          </template>
+        </div>
+          <NatiscrollHint :show="hayMasCobroSocio" />
+        </div>
+
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div v-if="pasoCobro === 'actividades' && pendientesSocioCobro.length" class="mb-2 flex items-baseline justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total a cobrar</span>
+            <span class="text-lg font-bold tabular-nums text-natillera-600">${{ formatMoney(totalCobroSocio) }}</span>
+          </div>
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-modal-secondary flex-1"
+              @click="pasoCobro === 'socio' ? (modalCobroSocio = false) : volverAElegirSocio()"
+            >
+              {{ pasoCobro === 'socio' ? 'Cancelar' : 'Atrás' }}
+            </button>
+            <button
+              v-if="pasoCobro === 'actividades'"
+              type="button"
+              class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="registrandoCobroSocio || !hayAlgoQueCobrar"
+              @click="registrarCobroSocio"
+            >
+              {{ registrandoCobroSocio ? 'Registrando…' : 'Registrar pago' }}
+            </button>
+          </div>
+        </div>
+    </ModalWrapper>
+
+    <!-- Comprobante del pago de actividades -->
+    <ModalWrapper
+      :show="!!comprobanteActividad"
+      :z-index="50"
+      align="bottom"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
+      @close="comprobanteActividad = null"
+    >
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div class="flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
+                <CheckIcon class="w-5 h-5 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="text-base font-display font-bold leading-tight">¡Pago registrado!</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Comprobante {{ comprobanteActividad?.codigo }}</p>
+              </div>
+            </div>
+            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="comprobanteActividad = null">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="refScrollComprobante"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] bg-emerald-50/60 p-4"
+          @scroll.passive="onScrollComprobante"
+        >
+          <!-- Lo que se captura con toPng: el recibo, sin botones ni cabecera -->
+          <div ref="comprobanteActividadRef" class="rounded-2xl border border-emerald-200 bg-white p-5">
+            <p class="text-center font-display text-base font-bold text-[#1B5E37]">{{ comprobanteActividad?.natilleraNombre }}</p>
+            <p class="mt-0.5 text-center text-[11px] uppercase tracking-widest text-slate-400">Comprobante de pago</p>
+
+            <div class="my-4 border-t border-dashed border-slate-200"></div>
+
+            <div class="space-y-1.5 text-sm">
+              <div class="flex justify-between gap-3">
+                <span class="text-slate-500">Socio</span>
+                <span class="min-w-0 truncate font-semibold text-slate-800">{{ comprobanteActividad?.socioNombre }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span class="text-slate-500">Fecha</span>
+                <span class="font-semibold text-slate-800">{{ formatDate(comprobanteActividad?.fecha) }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span class="text-slate-500">Forma de pago</span>
+                <span class="font-semibold text-slate-800">{{ comprobanteActividad?.formaPago }}</span>
+              </div>
+              <div class="flex justify-between gap-3">
+                <span class="text-slate-500">Comprobante</span>
+                <span class="font-mono font-semibold text-slate-800">{{ comprobanteActividad?.codigo }}</span>
+              </div>
+            </div>
+
+            <div class="my-4 border-t border-dashed border-slate-200"></div>
+
+            <p class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Actividades pagadas</p>
+            <div class="space-y-2">
+              <div v-for="(linea, i) in comprobanteActividad?.lineas || []" :key="i" class="flex items-start justify-between gap-3">
+                <span class="min-w-0">
+                  <span class="block text-sm text-slate-700">{{ linea.nombre }}</span>
+                  <span class="text-[11px] font-semibold" :class="linea.saldada ? 'text-emerald-600' : 'text-amber-600'">
+                    {{ linea.saldada ? 'Queda al día' : 'Abono parcial' }}
+                  </span>
+                </span>
+                <span class="flex-shrink-0 text-sm font-bold tabular-nums text-slate-800">${{ formatMoney(linea.valor) }}</span>
+              </div>
+            </div>
+
+            <div class="mt-4 flex items-baseline justify-between rounded-xl bg-emerald-50 px-3 py-2.5">
+              <span class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Total pagado</span>
+              <span class="text-xl font-bold tabular-nums text-[#1B5E37]">${{ formatMoney(comprobanteActividad?.total) }}</span>
+            </div>
+
+            <p class="mt-3 text-center text-[10px] leading-relaxed text-slate-400">
+              Pago registrado en Actividades. No corresponde a la cuota del periodo.
+            </p>
+          </div>
+        </div>
+          <NatiscrollHint :show="hayMasComprobante" />
+        </div>
+
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-modal-secondary flex-1 disabled:opacity-50"
+              :disabled="generandoImagenComprobante"
+              @click="descargarComprobanteActividad"
+            >
+              <ArrowDownTrayIcon class="w-5 h-5" />
+              Descargar
+            </button>
+            <button
+              type="button"
+              class="btn-modal-primary flex-1 disabled:opacity-50"
+              :disabled="generandoImagenComprobante"
+              @click="compartirComprobanteActividad"
+            >
+              {{ generandoImagenComprobante ? 'Generando…' : 'Compartir' }}
+            </button>
+          </div>
+        </div>
+    </ModalWrapper>
     <!-- Modal Nueva Actividad -->
     <ModalWrapper
       :show="!!modalNuevaActividad"
@@ -530,6 +861,33 @@
             </button>
           </div>
         </div>
+        <!-- Pasos del asistente: siempre a la vista, para saber cuánto falta -->
+        <div class="flex-shrink-0 border-b border-gray-200 bg-white px-4 py-3 sm:px-5">
+          <ol class="flex items-center gap-2">
+            <li
+              v-for="(paso, i) in pasosWizard"
+              :key="paso.id"
+              class="flex min-w-0 flex-1 items-center gap-2"
+            >
+              <span
+                class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors"
+                :class="i < indicePasoWizard
+                  ? 'bg-natillera-500 text-white'
+                  : i === indicePasoWizard
+                    ? 'bg-natillera-500 text-white ring-4 ring-natillera-500/20'
+                    : 'bg-slate-100 text-slate-400'"
+              >
+                <CheckIcon v-if="i < indicePasoWizard" class="h-4 w-4" />
+                <template v-else>{{ i + 1 }}</template>
+              </span>
+              <span
+                class="min-w-0 truncate text-xs font-semibold"
+                :class="i === indicePasoWizard ? 'text-slate-800' : 'text-slate-400'"
+              >{{ paso.titulo }}</span>
+              <span v-if="i < pasosWizard.length - 1" class="h-px flex-1 bg-slate-200" aria-hidden="true"></span>
+            </li>
+          </ol>
+        </div>
         <!-- Cuerpo scrolleable + natiscroll (overlay del hint anclado al viewport del cuerpo) -->
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
@@ -538,10 +896,12 @@
           @scroll.passive="onScrollNuevaActividad"
         >
           <form @submit.prevent="handleCrearActividad" class="p-4 sm:p-4 space-y-4">
+            <!-- Paso «qué actividad es» del asistente -->
+            <div v-show="pasoWizard === 'que'" class="space-y-4">
             <!-- Bloque: Tipo de proceso -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Tipo de proceso</label>
-              <div class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
+              <div data-guia="form-tipo-proceso" class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
                 <button
                   type="button"
                   @click="formActividad.tipoProceso = 'liquidar'; resetearFormularioPorTipo()"
@@ -577,11 +937,11 @@
                 </p>
               </div>
             </div>
-            <!-- Bloque: Actividad + Modo rifa (Modo rifa solo cuando tipo de proceso es "en curso") -->
+            <!-- Bloque: Actividad + Modo rifa (el modo solo existe para rifas en curso) -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
-              <div class="grid gap-4" :class="formActividad.tipoProceso === 'en_curso' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
+              <div class="grid gap-4" :class="muestraModoRifa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
                 <!-- Columna: Tipo de actividad (dropdown personalizado con ítems estilizados) -->
-                <div class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': formActividad.tipoProceso !== 'en_curso' }">
+                <div data-guia="form-tipo" class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': !muestraModoRifa }">
                   <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tipo de actividad</label>
                   <div class="relative flex-1" ref="dropdownTipoActividadRef">
                     <button
@@ -657,58 +1017,64 @@
                     </Teleport>
                   </div>
                 </div>
-                <!-- Columna: Modo rifa (solo visible cuando tipo de proceso es "en curso") -->
-                <div v-if="formActividad.tipoProceso === 'en_curso'" class="flex flex-col sm:min-h-[7.5rem]">
+                <!-- Columna: Modo rifa. Solo para rifas en curso: en bingo, venta o evento no
+                     hay números que repartir y antes ocupaba media fila con un aviso vacío. -->
+                <div v-if="muestraModoRifa" class="flex flex-col sm:min-h-[7.5rem]">
                   <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Modo rifa</label>
-                  <template v-if="formActividad.tipo === 'rifa'">
+                    <!-- «Manual» y «Auto» decían poco: lo que cambia es QUIÉN reparte los
+                         números, así que el nombre visible lo dice y el pie lo concreta. -->
                     <div class="flex-1 flex flex-col gap-2">
                       <div class="flex rounded-xl bg-slate-100 p-1 w-full min-h-[2.75rem]">
                         <button
                           type="button"
                           @click="formActividad.tipoRifa = 'manual'"
+                          :aria-pressed="formActividad.tipoRifa === 'manual'"
                           :class="[
-                            'flex-1 py-2.5 rounded-lg text-sm font-medium transition-all',
+                            'flex-1 px-2 py-2 rounded-lg text-sm font-semibold leading-tight transition-all',
                             formActividad.tipoRifa === 'manual'
                               ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
                               : 'text-slate-500 hover:text-slate-700'
                           ]"
                         >
-                          Manual
+                          Los vendes tú
                         </button>
                         <button
                           type="button"
                           @click="formActividad.tipoRifa = 'aleatoria'"
+                          :aria-pressed="formActividad.tipoRifa === 'aleatoria'"
                           :class="[
-                            'flex-1 py-2.5 rounded-lg text-sm font-medium transition-all',
+                            'flex-1 px-2 py-2 rounded-lg text-sm font-semibold leading-tight transition-all',
                             formActividad.tipoRifa === 'aleatoria'
                               ? 'bg-white text-natillera-600 shadow-sm border border-slate-200/80'
                               : 'text-slate-500 hover:text-slate-700'
                           ]"
                         >
-                          Auto
+                          Los reparte la app
                         </button>
                       </div>
-                      <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 leading-snug">Asignas tú cada número (comprador, vendedor, valor).</p>
-                      <p v-else-if="formActividad.tipoRifa === 'aleatoria'" class="text-xs text-slate-500 leading-snug">Números repartidos automáticamente entre socios.</p>
+                      <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 leading-snug">
+                        Los 100 números quedan libres. Vas anotando quién compra cada uno, a quién se lo vendió y por cuánto.
+                      </p>
+                      <p v-else-if="formActividad.tipoRifa === 'aleatoria'" class="text-xs text-slate-500 leading-snug">
+                        Al guardar, cada socio recibe sus números al azar y ya queda con su cobro pendiente.
+                      </p>
+                      <p v-else class="text-xs text-slate-400 leading-snug">Elige quién reparte los números de la rifa.</p>
                     </div>
-                  </template>
-                  <div v-else class="flex-1 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50/30 flex items-center justify-center min-h-[2.75rem] py-4 sm:py-0">
-                    <span class="text-xs text-slate-400 text-center px-2">Selecciona Rifa para ver opciones</span>
-                  </div>
                 </div>
               </div>
             </div>
             <!-- Bloque: Descripción + Repetir -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
-              <textarea 
+              <textarea
+                data-guia="form-descripcion"
                 v-model="formActividad.descripcion"
                 rows="2"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white resize-none transition-colors"
                 placeholder="Ej: Rifa de Navidad 2025"
                 required
               />
-              <label v-if="formActividad.tipoProceso === 'en_curso'" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
+              <label v-if="formActividad.tipoProceso === 'en_curso'" data-guia="form-repetir" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
                 :class="formActividad.esMultiplesMeses ? 'bg-natillera-50 border-natillera-300 shadow-sm' : 'bg-slate-50/90 border-natillera-200/60 hover:border-natillera-300 hover:bg-natillera-50/50 hover:shadow-sm'">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                   <div
@@ -728,6 +1094,9 @@
                 <ArrowPathIcon class="w-5 h-5 text-slate-400 flex-shrink-0 pointer-events-none" />
               </label>
             </div>
+            </div>
+            <!-- Paso «cuándo se paga» del asistente -->
+            <div v-show="pasoWizard === 'cuando'" class="space-y-4">
             <!-- Período / Mes (solo en curso) - arriba -->
             <template v-if="formActividad.tipoProceso === 'en_curso'">
               <template v-if="!formActividad.esMultiplesMeses">
@@ -811,9 +1180,35 @@
                 <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 space-y-4">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Selecciona los meses *</label>
-                    <div v-if="mesesDelPeriodo.length > 0" class="flex gap-2 flex-shrink-0">
-                      <button type="button" @click="marcarTodosMeses" class="px-2.5 py-1.5 text-xs font-medium text-natillera-600 bg-natillera-50 hover:bg-natillera-100 rounded-lg border border-natillera-200">Todos</button>
-                      <button type="button" @click="desmarcarTodosMeses" class="px-2.5 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200">Ninguno</button>
+                    <!-- Par excluyente: el verde marca cuál está aplicado. Con una selección
+                         parcial no se enciende ninguno, que es lo que de verdad pasa. -->
+                    <div v-if="mesesDelPeriodo.length > 0" class="flex gap-1 flex-shrink-0 rounded-lg bg-slate-100 p-1" role="group" aria-label="Seleccionar meses">
+                      <button
+                        type="button"
+                        @click="marcarTodosMeses"
+                        :aria-pressed="todosLosMesesMarcados"
+                        :class="[
+                          'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors touch-manipulation',
+                          todosLosMesesMarcados
+                            ? 'bg-natillera-500 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-white/70'
+                        ]"
+                      >
+                        Todos
+                      </button>
+                      <button
+                        type="button"
+                        @click="desmarcarTodosMeses"
+                        :aria-pressed="ningunMesMarcado"
+                        :class="[
+                          'px-3 py-1.5 text-xs font-semibold rounded-md transition-colors touch-manipulation',
+                          ningunMesMarcado
+                            ? 'bg-natillera-500 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-white/70'
+                        ]"
+                      >
+                        Ninguno
+                      </button>
                     </div>
                   </div>
                   <div v-if="mesesDelPeriodo.length === 0" class="text-sm text-slate-500 p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -910,22 +1305,27 @@
                 </div>
               </div>
             </div>
-            <!-- Números por socio (rifa en curso: obligatorio en modo Auto) -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
-              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span v-if="formActividad.tipoRifa === 'aleatoria'" class="text-red-500">*</span></label>
+            </div>
+            <!-- Paso «cifras» del asistente -->
+            <div v-show="pasoWizard === 'valores'" class="space-y-4">
+            <!-- Números por socio: solo si reparte la app. Vendiéndolos tú, cada socio se
+                 queda con los que compre, así que el campo no tiene sentido. -->
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.tipoRifa === 'aleatoria'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span class="text-red-500">*</span></label>
               <input 
                 v-model.number="formActividad.cantidadNumerosPorSocio"
-                type="number" 
+                type="number"
                 inputmode="numeric"
-                :disabled="formActividad.tipoRifa !== 'aleatoria'"
-                class="w-full sm:max-w-[140px] h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 transition-colors"
-                :class="formActividad.tipoRifa === 'aleatoria' ? 'bg-slate-50/50 text-slate-800' : 'bg-slate-100/80 text-slate-400 cursor-not-allowed'"
+                class="w-full sm:max-w-[140px] h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 transition-colors"
                 placeholder="Ej: 5"
                 min="1"
                 step="1"
-                :required="formActividad.tipoRifa === 'aleatoria'"
+                required
               />
-              <p v-if="formActividad.tipoRifa === 'manual'" class="text-xs text-slate-500 mt-1.5">Solo aplica en modo Auto (asignación automática de números).</p>
+              <p class="text-xs text-slate-500 mt-1.5">
+                Entre todos no pueden pasar de 100. Ahora mismo: {{ socios.length }} × {{ formActividad.cantidadNumerosPorSocio || 0 }} =
+                <span :class="totalNumerosRifaAuto > 100 ? 'font-bold text-rose-600' : 'font-semibold text-natillera-600'">{{ totalNumerosRifaAuto }}</span>.
+              </p>
             </div>
             <!-- Bloque: Liquidar -->
             <template v-if="formActividad.tipoProceso === 'liquidar'">
@@ -981,6 +1381,15 @@
                     Diferentes
                   </button>
                 </div>
+                <!-- Una línea: lo que cambia es si todos pagan lo mismo o no -->
+                <p class="-mt-2 mb-4 text-xs leading-snug text-slate-500">
+                  <template v-if="formActividad.tipoValores === 'iguales'">
+                    Los {{ socios.length }} socios pagan lo mismo. Escribes el valor una vez.
+                  </template>
+                  <template v-else>
+                    Le pones a cada socio su propio valor. Quien no participe, se queda en 0.
+                  </template>
+                </p>
                 <!-- Valor por socio + Total (cuando se elige Iguales) -->
                 <div v-if="formActividad.tipoValores === 'iguales'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="flex flex-col">
@@ -1036,15 +1445,41 @@
                 </div>
               </div>
             </template>
+            </div>
           </form>
         </div>
           <NatiscrollHint :show="hayMasNuevaActividad" />
         </div>
         <!-- Footer de acciones fijo -->
         <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <!-- Qué falta para poder seguir; evita un «Siguiente» apagado sin explicación -->
+          <p v-if="!esUltimoPasoWizard && faltaEnPasoWizard" class="mb-2 text-center text-xs text-slate-500">
+            {{ faltaEnPasoWizard }}
+          </p>
           <div class="flex gap-3">
-            <button type="button" @click="modalNuevaActividad = false" class="btn-modal-secondary flex-1">Cancelar</button>
-            <button type="button" @click="handleCrearActividad" :disabled="loading" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button
+              type="button"
+              class="btn-modal-secondary flex-1"
+              @click="indicePasoWizard === 0 ? (modalNuevaActividad = false) : pasoWizardAtras()"
+            >
+              {{ indicePasoWizard === 0 ? 'Cancelar' : 'Atrás' }}
+            </button>
+            <button
+              v-if="!esUltimoPasoWizard"
+              type="button"
+              class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="!!faltaEnPasoWizard"
+              @click="pasoWizardSiguiente"
+            >
+              Siguiente
+            </button>
+            <button
+              v-else
+              type="button"
+              @click="handleCrearActividad"
+              :disabled="loading"
+              class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               {{ loading ? 'Guardando...' : 'Guardar' }}
             </button>
           </div>
@@ -1378,6 +1813,97 @@
                   </div>
                 </div>
 
+                <!-- Cobrar solo esta actividad, sin pasar por la cuota del socio. El formulario
+                     es en línea (no abre otro modal): anidar overlays rompe iOS. -->
+                <div v-if="puedeCobrarSocio(socioAct)" class="mt-2.5">
+                  <button
+                    v-if="socioACobrar !== socioAct.id"
+                    type="button"
+                    class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[13px] font-semibold text-emerald-700 transition-colors hover:bg-emerald-100 touch-manipulation"
+                    @click="abrirCobroSocio(socioAct)"
+                  >
+                    <BanknotesIcon class="w-4 h-4" />
+                    Registrar pago
+                  </button>
+
+                  <div v-else class="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 space-y-3">
+                    <p class="text-[13px] font-bold text-emerald-900">
+                      Cobrar solo esta actividad
+                      <span class="block font-normal text-emerald-800">
+                        Debe ${{ formatMoney(pendienteSocio(socioAct)) }}. No toca su cuota del mes.
+                      </span>
+                    </p>
+                    <div>
+                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Valor</label>
+                      <div class="flex items-center gap-2">
+                        <div class="flex h-11 flex-1 items-center rounded-xl border-2 border-emerald-200 bg-white px-3">
+                          <span class="mr-1 text-sm font-medium text-slate-400">$</span>
+                          <!-- text-base: iOS hace zoom en inputs con font-size < 16px -->
+                          <input
+                            :value="formatNumberWithSeparator(formCobro.valor)"
+                            @input="formCobro.valor = parseMilesInput($event.target.value)"
+                            type="text"
+                            inputmode="decimal"
+                            class="w-full min-w-0 border-0 bg-transparent p-0 text-base font-semibold text-slate-800 outline-none"
+                            :placeholder="String(pendienteSocio(socioAct))"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          class="min-h-[44px] flex-shrink-0 rounded-xl border border-emerald-300 bg-white px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50 touch-manipulation"
+                          @click="formCobro.valor = pendienteSocio(socioAct)"
+                        >
+                          Todo
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Forma de pago</label>
+                      <div class="flex gap-2">
+                        <button
+                          type="button"
+                          @click="formCobro.formaPago = 'efectivo'"
+                          :aria-pressed="formCobro.formaPago === 'efectivo'"
+                          :class="[
+                            'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
+                            formCobro.formaPago === 'efectivo' ? 'border-emerald-500 bg-white text-emerald-700' : 'border-transparent bg-white/60 text-slate-500'
+                          ]"
+                        >
+                          Efectivo
+                        </button>
+                        <button
+                          type="button"
+                          @click="formCobro.formaPago = 'transferencia'"
+                          :aria-pressed="formCobro.formaPago === 'transferencia'"
+                          :class="[
+                            'min-h-[44px] flex-1 rounded-xl border-2 px-3 text-[13px] font-semibold transition-colors touch-manipulation',
+                            formCobro.formaPago === 'transferencia' ? 'border-blue-500 bg-white text-blue-700' : 'border-transparent bg-white/60 text-slate-500'
+                          ]"
+                        >
+                          Transferencia
+                        </button>
+                      </div>
+                    </div>
+                    <div class="flex gap-2">
+                      <button
+                        type="button"
+                        class="min-h-[44px] flex-1 rounded-xl border border-slate-300 bg-white px-3 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 touch-manipulation"
+                        :disabled="registrandoCobro"
+                        @click="cancelarCobroSocio"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        class="min-h-[44px] flex-1 rounded-xl bg-natillera-500 px-3 text-[13px] font-bold text-white transition-colors hover:bg-natillera-600 disabled:opacity-50 touch-manipulation"
+                        :disabled="registrandoCobro || !cobroValido(socioAct)"
+                        @click="confirmarCobroSocio(socioAct)"
+                      >
+                        {{ registrandoCobro ? 'Registrando…' : 'Registrar' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <!-- Eliminar el pago del socio. La confirmación es en línea (no abre otro modal):
                      este bloque vive dentro del modal de detalle y anidar overlays rompe iOS. -->
                 <div v-if="getValorPagadoSocio(socioAct) > 0" class="mt-2.5">
@@ -3050,6 +3576,11 @@ import { useEliminarPagoActividad } from '../../composables/useEliminarPagoActiv
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'
+import CargaCuadricula from '../../components/CargaCuadricula.vue'
+import { useRegistrarPagoActividad, generarComprobanteDirecto } from '../../composables/useRegistrarPagoActividad'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import { crearContadorGuia } from '../../composables/useContadorGuia'
+import { useAuthStore } from '../../stores/auth'
 import ActividadesSkeleton from '../../components/ActividadesSkeleton.vue'
 
 import BackButton from '../../components/BackButton.vue'
@@ -3096,7 +3627,14 @@ import {
   CubeIcon,
   UserPlusIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   ChevronUpIcon,
+  FunnelIcon,
+  CheckIcon,
+  QuestionMarkCircleIcon,
+  UsersIcon,
+  CheckCircleIcon,
+  RectangleStackIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
   TrophyIcon,
@@ -3117,6 +3655,7 @@ const props = defineProps({
   id: String
 })
 const route = useRoute()
+const authStore = useAuthStore()
 const id = props.id || route.params.id
 const actividades = ref([])
 const loading = ref(false)
@@ -3134,6 +3673,302 @@ const pagoAEliminar = ref(null)      // id de socios_actividad en confirmación
 const previewPago = ref(null)        // impacto calculado del borrado
 const cargandoPreviewPago = ref(false)
 const eliminandoPagoActividad = ref(false)
+
+// ─── Cobro directo de la actividad (sin pasar por la cuota del socio) ────────
+const { registrarPagoActividad, actividadesPendientesDeSocio } = useRegistrarPagoActividad()
+const socioACobrar = ref(null)        // id de socios_actividad con el formulario abierto
+const registrandoCobro = ref(false)
+const formCobro = reactive({ valor: 0, formaPago: 'efectivo' })
+
+function pendienteSocio(socioAct) {
+  return Math.max(0, (Number(socioAct?.valor_asignado) || 0) - getValorPagadoSocio(socioAct))
+}
+/*
+ * También en rifa aleatoria: cobrar la fila es lo que hace el pago desde la cuota, y
+ * `pendienteSocio` ya descuenta lo pagado por número (getValorPagadoSocio usa el máximo).
+ */
+function puedeCobrarSocio(socioAct) {
+  if (!socioAct?.id) return false
+  return pendienteSocio(socioAct) > 0
+}
+function cobroValido(socioAct) {
+  const valor = Number(formCobro.valor) || 0
+  return valor > 0 && valor <= pendienteSocio(socioAct)
+}
+function abrirCobroSocio(socioAct) {
+  cancelarEliminarPago()
+  socioACobrar.value = socioAct.id
+  formCobro.valor = pendienteSocio(socioAct)
+  formCobro.formaPago = 'efectivo'
+}
+function cancelarCobroSocio() {
+  socioACobrar.value = null
+  formCobro.valor = 0
+}
+async function confirmarCobroSocio(socioAct) {
+  if (registrandoCobro.value || !cobroValido(socioAct)) return
+  registrandoCobro.value = true
+  const inicio = Date.now()
+  try {
+    const res = await registrarPagoActividad(socioAct.id, {
+      valor: Number(formCobro.valor) || 0,
+      formaPago: formCobro.formaPago
+    })
+    if (!res.success) {
+      notificationStore.error(res.error || 'No se pudo registrar el pago', 'Error')
+      return
+    }
+    cancelarCobroSocio()
+    // Recargar el detalle (valores del socio) y la lista (totales de la actividad)
+    if (actividadSeleccionada.value) await verDetalleActividad(actividadSeleccionada.value)
+    await fetchActividades()
+
+    if (res.problemas?.length) {
+      notificationStore.warning('El pago se registró, pero hay cosas por revisar:\n• ' + res.problemas.join('\n• '), 'Revisar')
+    } else {
+      notificationStore.success(
+        `Se registraron $${formatMoney(res.valorRegistrado)}${res.saldada ? '. Queda al día.' : ''}`,
+        'Pago registrado'
+      )
+    }
+  } catch (e) {
+    console.error('Error registrando el pago de la actividad:', e)
+    notificationStore.error('No se pudo registrar el pago', 'Error')
+  } finally {
+    await esperarMinimo(inicio)
+    registrandoCobro.value = false
+  }
+}
+
+// ─── Cobrar actividades pendientes de un socio (desde la cabecera de Actividades) ──
+const modalCobroSocio = ref(false)
+const pasoCobro = ref('socio')            // 'socio' | 'actividades'
+const busquedaSocioCobro = ref('')
+const socioCobro = ref(null)              // socio_natillera elegido
+const pendientesSocioCobro = ref([])      // filas de socios_actividad con saldo
+const cargandoPendientesCobro = ref(false)
+const seleccionCobro = ref({})            // { socioActividadId: valorAPagar }
+const formCobroSocio = reactive({ formaPago: 'efectivo', fecha: hoyISO() })
+const registrandoCobroSocio = ref(false)
+const comprobanteActividad = ref(null)    // datos del recibo tras registrar
+const generandoImagenComprobante = ref(false)
+const comprobanteActividadRef = ref(null)
+
+function hoyISO() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/* Las actividades de meses futuros no se cobran todavía: la cabecera lo dice para que no
+   parezca que falta algo. */
+const mesActualTexto = computed(() => {
+  const hoy = new Date()
+  return `${meses[hoy.getMonth()]?.label || ''} ${hoy.getFullYear()}`.trim()
+})
+
+const sociosCobroFiltrados = computed(() => {
+  const texto = normalizeText(busquedaSocioCobro.value.trim())
+  if (!texto) return socios.value
+  return socios.value.filter((sn) => {
+    const s = sn.socio || {}
+    return normalizeText(s.nombre || '').includes(texto) ||
+      normalizeText(String(s.documento || '')).includes(texto) ||
+      normalizeText(String(s.telefono || '')).includes(texto)
+  })
+})
+
+const totalCobroSocio = computed(() =>
+  Object.values(seleccionCobro.value).reduce((t, v) => t + (Number(v) || 0), 0)
+)
+const hayAlgoQueCobrar = computed(() => totalCobroSocio.value > 0)
+
+async function abrirModalCobroSocio() {
+  modalCobroSocio.value = true
+  pasoCobro.value = 'socio'
+  busquedaSocioCobro.value = ''
+  socioCobro.value = null
+  pendientesSocioCobro.value = []
+  seleccionCobro.value = {}
+  formCobroSocio.formaPago = 'efectivo'
+  formCobroSocio.fecha = hoyISO()
+  if (socios.value.length === 0) await fetchSocios()
+}
+
+async function elegirSocioCobro(socioNatillera) {
+  socioCobro.value = socioNatillera
+  pasoCobro.value = 'actividades'
+  cargandoPendientesCobro.value = true
+  seleccionCobro.value = {}
+  try {
+    const res = await actividadesPendientesDeSocio(id, socioNatillera.id)
+    if (!res.success) {
+      notificationStore.error(res.error || 'No se pudieron cargar las actividades', 'Error')
+      pendientesSocioCobro.value = []
+      return
+    }
+    pendientesSocioCobro.value = res.pendientes
+    // Por defecto se cobra todo lo pendiente: es el caso normal; quitar es un toque
+    res.pendientes.forEach((p) => { seleccionCobro.value[p.id] = p.pendiente })
+  } finally {
+    cargandoPendientesCobro.value = false
+  }
+}
+
+/* Marcada o no se decide SOLO con la casilla: la clave existe aunque el valor sea 0.
+   Antes, vaciar el campo para escribir otra cifra la desmarcaba y el input desaparecía. */
+function estaSeleccionada(pendiente) {
+  return seleccionCobro.value[pendiente.id] !== undefined
+}
+
+function alternarPendienteCobro(pendiente) {
+  const copia = { ...seleccionCobro.value }
+  if (estaSeleccionada(pendiente)) delete copia[pendiente.id]
+  else copia[pendiente.id] = pendiente.pendiente
+  seleccionCobro.value = copia
+}
+
+function fijarValorCobro(pendiente, valor) {
+  const limpio = Math.min(Math.max(0, Number(valor) || 0), pendiente.pendiente)
+  seleccionCobro.value = { ...seleccionCobro.value, [pendiente.id]: limpio }
+}
+
+function volverAElegirSocio() {
+  pasoCobro.value = 'socio'
+  socioCobro.value = null
+  pendientesSocioCobro.value = []
+  seleccionCobro.value = {}
+}
+
+/*
+ * Registra cada actividad seleccionada con UN MISMO código de comprobante: para el socio
+ * es un solo pago, aunque por dentro sean varias filas de `socios_actividad`.
+ */
+async function registrarCobroSocio() {
+  if (registrandoCobroSocio.value || !hayAlgoQueCobrar.value) return
+  registrandoCobroSocio.value = true
+  const inicio = Date.now()
+  const codigo = generarComprobanteDirecto()
+  const lineas = []
+  const problemas = []
+  try {
+    for (const pendiente of pendientesSocioCobro.value) {
+      const valor = Number(seleccionCobro.value[pendiente.id]) || 0
+      if (valor <= 0) continue
+      const res = await registrarPagoActividad(pendiente.id, {
+        valor,
+        formaPago: formCobroSocio.formaPago,
+        fechaPago: formCobroSocio.fecha,
+        comprobante: codigo
+      })
+      if (!res.success) {
+        problemas.push(`${pendiente.actividad?.descripcion || 'Actividad'}: ${res.error}`)
+        continue
+      }
+      if (res.problemas?.length) problemas.push(...res.problemas)
+      lineas.push({
+        nombre: pendiente.actividad?.descripcion || 'Actividad',
+        tipo: pendiente.actividad?.tipo || 'otro',
+        valor: res.valorRegistrado,
+        saldada: res.saldada
+      })
+    }
+
+    if (lineas.length === 0) {
+      notificationStore.error(problemas[0] || 'No se pudo registrar el pago', 'Error')
+      return
+    }
+
+    modalCobroSocio.value = false
+    await fetchActividades()
+    // La cuadrícula se apaga antes del recibo: si no, lo taparía al aparecer
+    await esperarMinimo(inicio)
+    registrandoCobroSocio.value = false
+
+    comprobanteActividad.value = {
+      codigo,
+      socioNombre: socioCobro.value?.socio?.nombre || 'Socio',
+      socioTelefono: socioCobro.value?.socio?.telefono || null,
+      natilleraNombre: natillera.value?.nombre || 'Natillera',
+      fecha: formCobroSocio.fecha,
+      formaPago: formCobroSocio.formaPago === 'transferencia' ? 'Transferencia' : 'Efectivo',
+      lineas,
+      total: lineas.reduce((t, l) => t + l.valor, 0)
+    }
+
+    if (problemas.length > 0) {
+      notificationStore.warning('El pago se registró, pero hay cosas por revisar:\n• ' + problemas.join('\n• '), 'Revisar')
+    }
+  } catch (e) {
+    console.error('Error registrando el pago de actividades:', e)
+    notificationStore.error('No se pudo registrar el pago', 'Error')
+  } finally {
+    await esperarMinimo(inicio)
+    registrandoCobroSocio.value = false
+  }
+}
+
+async function descargarComprobanteActividad() {
+  if (!comprobanteActividadRef.value) return
+  generandoImagenComprobante.value = true
+  try {
+    const dataUrl = await toPng(comprobanteActividadRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    const enlace = document.createElement('a')
+    enlace.download = `comprobante-${(comprobanteActividad.value?.socioNombre || 'pago').replace(/\s+/g, '-')}-${Date.now()}.png`
+    enlace.href = dataUrl
+    document.body.appendChild(enlace)
+    enlace.click()
+    document.body.removeChild(enlace)
+  } catch (e) {
+    console.error('Error generando el comprobante:', e)
+    notificationStore.error('No se pudo generar la imagen del comprobante', 'Error')
+  } finally {
+    generandoImagenComprobante.value = false
+  }
+}
+
+/* Compartir nativo si el navegador lo trae (iOS lo tiene); si no, se descarga y se abre
+   WhatsApp con el mensaje, igual que en Cuotas. */
+async function compartirComprobanteActividad() {
+  if (!comprobanteActividadRef.value) return
+  generandoImagenComprobante.value = true
+  try {
+    const dataUrl = await toPng(comprobanteActividadRef.value, {
+      backgroundColor: '#ecfdf5',
+      pixelRatio: 2,
+      quality: 1.0,
+      cacheBust: true
+    })
+    const blob = await (await fetch(dataUrl)).blob()
+    const archivo = new File([blob], `comprobante-${comprobanteActividad.value?.codigo}.png`, { type: 'image/png' })
+    if (navigator.canShare?.({ files: [archivo] })) {
+      await navigator.share({
+        files: [archivo],
+        title: 'Comprobante de pago',
+        text: `${comprobanteActividad.value?.socioNombre} · ${comprobanteActividad.value?.codigo}`
+      })
+      return
+    }
+    await descargarComprobanteActividad()
+    const telefono = String(comprobanteActividad.value?.socioTelefono || '').replace(/\D/g, '')
+    if (telefono) {
+      const mensaje = `${comprobanteActividad.value?.socioNombre} · Comprobante ${comprobanteActividad.value?.codigo}`
+      window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+    }
+  } catch (e) {
+    // El usuario cancelando el diálogo de compartir no es un error que reportar
+    if (e?.name !== 'AbortError') {
+      console.error('Error compartiendo el comprobante:', e)
+      notificationStore.error('No se pudo compartir el comprobante', 'Error')
+    }
+  } finally {
+    generandoImagenComprobante.value = false
+  }
+}
 const socios = ref([])
 const numerosAsignadosPorSocio = ref({}) // { socio_id: [numeros] } para rifa automática
 const faltantes = ref([]) // Array de faltantes para rifa automática
@@ -3144,7 +3979,6 @@ const grupoAEliminar = ref(null)
 const eliminandoGrupo = ref(false)
 const natillera = ref(null)
 const mostrarModalBienvenida = ref(false)
-const noMostrarDeNuevo = ref(false)
 const tooltipVisible = ref(null) // 'liquidar' | 'en_curso' | null
 const numerosRifa = ref({}) // { '00': { estado: 'libre'|'vendido'|'pagado', ... }, ... }
 const modalVentaRifa = ref(false)
@@ -3219,6 +4053,18 @@ useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
 useBodyScrollLock(computed(() => !!actividadAEliminar.value))
 useBodyScrollLock(computed(() => !!grupoAEliminar.value))
+useBodyScrollLock(modalCobroSocio)
+useBodyScrollLock(computed(() => !!comprobanteActividad.value))
+
+// Cualquier modal de la pantalla abierta: el recorrido guiado espera a que no quede ninguna
+const hayModalAbiertaActividades = computed(() =>
+  modalNuevaActividad.value || modalDetalleActividad.value || mostrarModalBienvenida.value ||
+  modalVentaRifa.value || modalPagarRifa.value || modalLiquidarActividad.value ||
+  modalConfirmarLiquidacionNegativa.value || modalGanadorRifa.value || modalRegistrarGastos.value ||
+  modalAsignarFaltante.value || modalConfirmarAsignarFaltanteTodosMeses.value ||
+  !!grupoGanadoresSeleccionado.value || !!actividadParaFormaPago.value ||
+  !!actividadParaDesglosePagos.value || !!actividadAEliminar.value || !!grupoAEliminar.value
+)
 
 // Natiscroll por modal: velo + «Desliza para ver más» mientras el cuerpo tenga overflow
 // y no se haya llegado al final (skill natillerapp-modals). Cada modal con cuerpo
@@ -3233,6 +4079,8 @@ const { scrollRef: refScrollVentaRifa, hayMas: hayMasVentaRifa, onScroll: onScro
 const { scrollRef: refScrollPagarRifa, hayMas: hayMasPagarRifa, onScroll: onScrollPagarRifa } = useNatiscroll(modalPagarRifa)
 const { scrollRef: refScrollAsignarFaltante, hayMas: hayMasAsignarFaltante, onScroll: onScrollAsignarFaltante } = useNatiscroll(modalAsignarFaltante)
 const { scrollRef: refScrollBienvenida, hayMas: hayMasBienvenida, onScroll: onScrollBienvenida } = useNatiscroll(mostrarModalBienvenida)
+const { scrollRef: refScrollCobroSocio, hayMas: hayMasCobroSocio, onScroll: onScrollCobroSocio } = useNatiscroll(modalCobroSocio)
+const { scrollRef: refScrollComprobante, hayMas: hayMasComprobante, onScroll: onScrollComprobante } = useNatiscroll(computed(() => !!comprobanteActividad.value))
 const { scrollRef: refScrollConfirmarNegativa, hayMas: hayMasConfirmarNegativa, onScroll: onScrollConfirmarNegativa } = useNatiscroll(modalConfirmarLiquidacionNegativa)
 
 // Opciones para el dropdown de tipo de actividad (ítems estilizados)
@@ -3304,6 +4152,75 @@ const formActividad = reactive({
   fechaJuegoRifa: '', // fecha YYYY-MM-DD cuando un solo mes y fecha_especifica
   fechasJuegoPorMes: {} // { 'mes-anio': 'YYYY-MM-DD' } cuando múltiples meses y fecha_especifica
 })
+
+// Cuántos números se van a repartir en total (el tope físico de la rifa es 100)
+const totalNumerosRifaAuto = computed(() =>
+  socios.value.length * (Number(formActividad.cantidadNumerosPorSocio) || 0)
+)
+// Pantalla de espera del reparto de números (rifa automática)
+const generandoNumerosRifa = ref(false)
+
+// Estado del par «Todos / Ninguno» de la selección de meses. Con una selección parcial
+// los dos quedan apagados: ninguno describe lo que hay.
+const ningunMesMarcado = computed(() => formActividad.mesesSeleccionados.length === 0)
+const todosLosMesesMarcados = computed(() =>
+  mesesDelPeriodo.value.length > 0 &&
+  formActividad.mesesSeleccionados.length === mesesDelPeriodo.value.length
+)
+// El modo de rifa (manual / automático) solo aplica a rifas que se van a cobrar
+const muestraModoRifa = computed(() =>
+  formActividad.tipoProceso === 'en_curso' && formActividad.tipo === 'rifa'
+)
+// ─── Asistente de «Nueva actividad» ─────────────────────────────────────────
+// El formulario tenía ocho bloques en una sola tirada de scroll. Se reparten en pasos:
+// qué actividad es, cuándo se paga (solo en curso) y las cifras.
+const pasoWizard = ref('que')
+const pasosWizard = computed(() => {
+  const enCurso = formActividad.tipoProceso === 'en_curso'
+  return [
+    { id: 'que', titulo: 'Actividad' },
+    // Al liquidar no hay fechas de cobro que pedir: ese paso no existe
+    ...(enCurso ? [{ id: 'cuando', titulo: 'Fechas' }] : []),
+    { id: 'valores', titulo: enCurso ? 'Cobro' : 'Resultados' }
+  ]
+})
+const indicePasoWizard = computed(() => {
+  const i = pasosWizard.value.findIndex((paso) => paso.id === pasoWizard.value)
+  return i === -1 ? 0 : i
+})
+const esUltimoPasoWizard = computed(() => indicePasoWizard.value === pasosWizard.value.length - 1)
+/** Qué impide avanzar desde el paso actual; cadena vacía = se puede seguir. */
+const faltaEnPasoWizard = computed(() => {
+  if (pasoWizard.value === 'que') {
+    if (!formActividad.tipoProceso) return 'Elige si la vas a liquidar o está en curso'
+    if (!formActividad.tipo) return 'Elige el tipo de actividad'
+    if (!formActividad.descripcion?.trim()) return 'Ponle un nombre a la actividad'
+  }
+  return ''
+})
+function irAPasoWizard(indice) {
+  const paso = pasosWizard.value[indice]
+  if (!paso) return
+  pasoWizard.value = paso.id
+  // Cada paso empieza arriba: si no, se entra a mitad del scroll del anterior
+  refScrollNuevaActividad.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+function pasoWizardSiguiente() {
+  if (faltaEnPasoWizard.value) return
+  irAPasoWizard(indicePasoWizard.value + 1)
+}
+function pasoWizardAtras() {
+  irAPasoWizard(indicePasoWizard.value - 1)
+}
+// Abrir el formulario siempre empieza por el principio
+watch(modalNuevaActividad, (abierta) => {
+  if (abierta) pasoWizard.value = 'que'
+})
+// Cambiar de liquidar a en curso (o al revés) puede dejar el paso actual sin existir
+watch(pasosWizard, (pasos) => {
+  if (!pasos.some((paso) => paso.id === pasoWizard.value)) pasoWizard.value = pasos[0].id
+})
+
 const totalIngresos = computed(() => 
   actividades.value.reduce((sum, a) => {
     if (a.estado === 'en_curso') {
@@ -3399,121 +4316,174 @@ const totalRecaudadoLiquidar = computed(() => {
   }
   return actividadSeleccionada.value?.total_pagado || 0
 })
-// Función de debug para verificar items
-function debugItem(item, index) {
-  console.log(`🔍 Item ${index}:`, {
-    tipo: item.tipo,
-    esGrupo: item.tipo === 'grupo',
-    tieneSerieId: !!item.serieId,
-    tieneActividades: !!item.actividades,
-    cantidadActividades: item.actividades?.length,
-    tieneActividad: !!item.actividad,
-    actividadId: item.actividad?.id
-  })
-  return true
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+// Etiqueta de período de una actividad de serie: es lo que de verdad la distingue de sus
+// hermanas (todas comparten descripción base), así que se usa como título dentro del grupo
+function etiquetaPeriodo(actividad) {
+  if (!actividad?.mes_pago) {
+    // Sin mes: caer al sufijo de la descripción («Rifa navideña - Enero» → «Enero»)
+    const desc = actividad?.descripcion || ''
+    return desc.includes(' - ') ? desc.split(' - ').slice(1).join(' - ') : ''
+  }
+  const mes = MESES_CORTOS[actividad.mes_pago - 1] || ''
+  const anio = actividad.anio_pago ? ` ${actividad.anio_pago}` : ''
+  const quincena = actividad.quincena ? ` · Q${actividad.quincena}` : ''
+  return `${mes}${anio}${quincena}`
+}
+const opcionesFiltroEstado = [
+  { value: 'todas', label: 'Todas' },
+  { value: 'en_curso', label: 'En curso' },
+  { value: 'finalizadas', label: 'Finalizadas' }
+]
+// Icono real del tipo de actividad: el cubo genérico no dejaba distinguir una serie de
+// rifas de una de ventas sin leer el texto
+function iconoDeTipo(tipo, tipoRifa = null) {
+  if (tipo === 'rifa' && tipoRifa === 'manual') return PencilSquareIcon
+  if (tipo === 'rifa' && tipoRifa === 'aleatoria') return CubeIcon
+  const opcion = opcionesTipoActividad.find(o => o.value === tipo)
+  return opcion?.icon || ClipboardDocumentListIcon
+}
+// Resumen agregado de una serie: lo que permite entender el grupo sin abrirlo
+function resumirGrupo(lista) {
+  const liquidadas = lista.filter(a => a.estado === 'liquidada' || !a.estado)
+  const enCurso = lista.filter(a => a.estado === 'en_curso')
+  const asignado = enCurso.reduce((t, a) => t + (Number(a.total_asignado) || 0), 0)
+  const recaudado = enCurso.reduce((t, a) => t + (Number(a.total_pagado) || 0), 0)
+  const utilidad = liquidadas.reduce((t, a) => t + (Number(a.utilidad) || 0), 0)
+  const conPeriodo = lista.filter(a => a.mes_pago)
+  const primero = conPeriodo[0]
+  const ultimo = conPeriodo[conPeriodo.length - 1]
+  const rango = primero
+    ? (primero === ultimo || etiquetaPeriodo(primero) === etiquetaPeriodo(ultimo)
+        ? etiquetaPeriodo(primero)
+        : `${etiquetaPeriodo(primero)} – ${etiquetaPeriodo(ultimo)}`)
+    : ''
+  return {
+    total: lista.length,
+    liquidadas: liquidadas.length,
+    enCurso: enCurso.length,
+    todoLiquidado: enCurso.length === 0,
+    asignado,
+    recaudado,
+    utilidad,
+    pctRecaudado: asignado > 0 ? Math.min(100, Math.round((recaudado / asignado) * 100)) : 0,
+    pctAvance: lista.length > 0 ? Math.round((liquidadas.length / lista.length) * 100) : 0,
+    rango
+  }
 }
 // Agrupar actividades por actividad_serie_id
 const actividadesAgrupadas = computed(() => {
-  console.log('🔄 Agrupando actividades. Total:', actividades.value.length)
   const grupos = new Map()
   const actividadesIndividuales = []
-  
+
   actividades.value.forEach(actividad => {
-    // Validar que la actividad tenga id
-    if (!actividad || !actividad.id) {
-      console.warn('⚠️ Actividad sin id encontrada:', actividad)
-      return
-    }
-    
-    // Verificar si tiene actividad_serie_id (puede ser null, undefined, o un UUID)
+    if (!actividad || !actividad.id) return
     const serieId = actividad.actividad_serie_id
-    if (serieId && serieId !== null && serieId !== 'null' && serieId !== '') {
-      console.log('📦 Actividad con serie:', actividad.id, 'Serie ID:', serieId, 'Tipo:', typeof serieId)
-      // Actividad que pertenece a una serie
+    if (serieId && serieId !== 'null' && serieId !== '') {
       if (!grupos.has(serieId)) {
-        // Obtener descripción base (sin el mes si está presente)
-        const descripcionBase = actividad.descripcion && actividad.descripcion.includes(' - ') 
-          ? actividad.descripcion.split(' - ')[0] 
+        // Descripción base: sin el sufijo de mes, que se muestra por actividad
+        const descripcionBase = actividad.descripcion && actividad.descripcion.includes(' - ')
+          ? actividad.descripcion.split(' - ')[0]
           : (actividad.descripcion || 'Sin descripción')
-        
         grupos.set(serieId, {
-          serieId: serieId,
+          serieId,
           actividades: [],
-          descripcionBase: descripcionBase,
-          tipoActividad: actividad.tipo, // Guardar el tipo de actividad original
+          descripcionBase,
+          tipoActividad: actividad.tipo,
           tipoRifa: actividad.tipo_rifa
         })
-        // Los grupos vienen cerrados por defecto (no expandir automáticamente)
       }
       grupos.get(serieId).actividades.push(actividad)
-    } else {
-      // Actividad individual (sin serie)
-      actividadesIndividuales.push({
-        tipo: 'individual',
-        actividad: actividad
-      })
+      return
     }
+    actividadesIndividuales.push({ tipo: 'individual', actividad })
   })
-  
-  // Convertir grupos a array y ordenar actividades dentro de cada grupo
+
   const gruposArray = Array.from(grupos.values()).map(grupo => {
-    // Ordenar actividades del grupo por año y mes
     grupo.actividades.sort((a, b) => {
       if (a.anio_pago && a.mes_pago && b.anio_pago && b.mes_pago) {
-        if (a.anio_pago !== b.anio_pago) {
-          return a.anio_pago - b.anio_pago
-        }
+        if (a.anio_pago !== b.anio_pago) return a.anio_pago - b.anio_pago
         return a.mes_pago - b.mes_pago
       }
       return 0
     })
-    // IMPORTANTE: Crear un nuevo objeto con tipo: 'grupo' primero, luego el resto de propiedades
-    // Esto asegura que tipo siempre sea 'grupo' y no se sobrescriba
     return {
-      tipo: 'grupo', // Esto debe ir primero para que no se sobrescriba
+      tipo: 'grupo', // primero, para que no lo pise ninguna propiedad del grupo
       serieId: grupo.serieId,
       actividades: grupo.actividades,
       descripcionBase: grupo.descripcionBase,
-      tipoActividad: grupo.tipoActividad, // Usar tipoActividad que se guardó al crear el grupo
-      tipoRifa: grupo.tipoRifa
+      tipoActividad: grupo.tipoActividad,
+      tipoRifa: grupo.tipoRifa,
+      resumen: resumirGrupo(grupo.actividades)
     }
   })
-  
-  // Combinar grupos y actividades individuales, grupos primero
-  // Asegurar que todas las actividades individuales tengan la estructura correcta
-  const actividadesIndividualesValidadas = actividadesIndividuales.filter(item => 
-    item && item.actividad && item.actividad.id
-  )
-  
-  console.log('✅ Agrupación completada:', {
-    grupos: gruposArray.length,
-    individuales: actividadesIndividualesValidadas.length,
-    total: gruposArray.length + actividadesIndividualesValidadas.length
+
+  const individualesValidas = actividadesIndividuales.filter(item => item?.actividad?.id)
+  return [...gruposArray, ...individualesValidas]
+})
+// Búsqueda y filtro de estado: los comparten la vista Normal y la Agrupada, por eso la
+// toolbar vive fuera de ambas
+const busquedaActividades = ref('')
+const filtroEstado = ref('todas') // 'todas' | 'en_curso' | 'finalizadas'
+function coincideEstado(actividad) {
+  if (filtroEstado.value === 'en_curso') return actividad.estado === 'en_curso'
+  if (filtroEstado.value === 'finalizadas') return actividad.estado !== 'en_curso'
+  return true
+}
+// Vista Normal: lista plana ya filtrada
+const actividadesFiltradas = computed(() => {
+  const texto = normalizeText(busquedaActividades.value.trim())
+  return actividades.value.filter(a => {
+    if (!coincideEstado(a)) return false
+    if (!texto) return true
+    return normalizeText(a.descripcion || '').includes(texto) ||
+      normalizeText(a.tipo || '').includes(texto) ||
+      normalizeText(etiquetaPeriodo(a)).includes(texto)
   })
-  
-  // Debug: mostrar detalles de los grupos
-  if (gruposArray.length > 0) {
-    console.log('📦 Grupos encontrados:', gruposArray.map(g => ({
-      tipo: g.tipo,
-      serieId: g.serieId,
-      descripcion: g.descripcionBase,
-      tipoActividad: g.tipo,
-      tipoRifa: g.tipoRifa,
-      cantidad: g.actividades.length,
-      actividades: g.actividades.map(a => ({ id: a.id, descripcion: a.descripcion }))
-    })))
-  }
-  
-  const resultado = [...gruposArray, ...actividadesIndividualesValidadas]
-  console.log('📋 Resultado final de agrupación:', resultado.length, 'items')
-  console.log('📋 Estructura del primer item:', resultado[0] ? {
-    tipo: resultado[0].tipo,
-    tieneSerieId: !!resultado[0].serieId,
-    tieneActividades: !!resultado[0].actividades,
-    tieneActividad: !!resultado[0].actividad
-  } : 'No hay items')
-  
-  return resultado
+})
+const itemsAgrupadosFiltrados = computed(() => {
+  const texto = normalizeText(busquedaActividades.value.trim())
+  return actividadesAgrupadas.value
+    .map(item => {
+      if (item.tipo !== 'grupo') return item
+      // En un grupo se filtran también sus actividades, para que al abrirlo se vea
+      // solo lo que coincide con el filtro de estado
+      const actividades = item.actividades.filter(coincideEstado)
+      if (!actividades.length) return null
+      return { ...item, actividades, resumen: resumirGrupo(actividades) }
+    })
+    .filter(item => {
+      if (!item) return false
+      if (item.tipo === 'individual') {
+        const a = item.actividad
+        if (!coincideEstado(a)) return false
+        if (!texto) return true
+        return normalizeText(a.descripcion || '').includes(texto) || normalizeText(a.tipo || '').includes(texto)
+      }
+      if (!texto) return true
+      if (normalizeText(item.descripcionBase).includes(texto)) return true
+      if (normalizeText(item.tipoActividad || '').includes(texto)) return true
+      return item.actividades.some(a =>
+        normalizeText(a.descripcion || '').includes(texto) || normalizeText(etiquetaPeriodo(a)).includes(texto)
+      )
+    })
+})
+const gruposVisibles = computed(() => itemsAgrupadosFiltrados.value.filter(i => i.tipo === 'grupo'))
+const sinResultadosFiltro = computed(() => actividades.value.length > 0 && (
+  vistaAgrupada.value ? itemsAgrupadosFiltrados.value.length === 0 : actividadesFiltradas.value.length === 0
+))
+const hayAlgunGrupoExpandido = computed(() =>
+  gruposVisibles.value.some(g => gruposExpandidos.value[g.serieId] === true)
+)
+function alternarTodosLosGrupos() {
+  const expandir = !hayAlgunGrupoExpandido.value
+  gruposVisibles.value.forEach(g => { gruposExpandidos.value[g.serieId] = expandir })
+}
+// Al buscar, abrir las series que coinciden: si el término casó con una actividad de
+// dentro, dejarla escondida tras un grupo cerrado obliga a un toque de más
+watch(busquedaActividades, texto => {
+  const abrir = texto.trim().length >= 2
+  gruposVisibles.value.forEach(g => { gruposExpandidos.value[g.serieId] = abrir })
 })
 // Función para obtener números asignados de un socio (rifa automática)
 function getNumerosAsignadosSocio(socioId) {
@@ -3567,6 +4537,7 @@ function getValorPagadoSocio(socioAct) {
 // Abre la confirmación en línea y calcula el impacto real (utilidades, cuota que lo cobró,
 // números de rifa) para que el usuario vea qué se va a revertir antes de confirmar.
 async function pedirConfirmacionEliminarPago(socioAct) {
+  cancelarCobroSocio() // un solo formulario en línea abierto a la vez
   pagoAEliminar.value = socioAct.id
   previewPago.value = null
   cargandoPreviewPago.value = true
@@ -3794,10 +4765,7 @@ function getEstadoLabel(estado) {
 }
 // Funciones para expandir/colapsar grupos
 function toggleGrupo(serieId) {
-  console.log('🔄 Toggle grupo:', serieId, 'Estado actual:', gruposExpandidos.value[serieId])
-  // Usar Vue.set o simplemente asignar directamente para que Vue detecte el cambio
   gruposExpandidos.value[serieId] = !gruposExpandidos.value[serieId]
-  console.log('✅ Nuevo estado:', gruposExpandidos.value[serieId] ? 'expandido' : 'colapsado')
 }
 function isGrupoExpandido(serieId) {
   return gruposExpandidos.value[serieId] === true
@@ -6095,6 +7063,12 @@ async function handleCrearActividad() {
             notificationStore.error(`No hay suficientes números. Se necesitan ${totalNumerosParaSocios} números pero solo hay 100 disponibles.`, 'Error')
             return
           }
+
+          // El reparto y su guardado tardan: se acompaña con la cuadrícula animada en vez
+          // de dejar el formulario quieto. `inicioReparto` asegura que se vea de verdad.
+          generandoNumerosRifa.value = true
+          inicioReparto = Date.now()
+          await nextTick()
           
           // Generar todos los números disponibles (00-99)
           const numerosDisponibles = Array.from({ length: 100 }, (_, i) => String(i).padStart(2, '0'))
@@ -6438,7 +7412,27 @@ async function handleCrearActividad() {
     notificationStore.error(e.message || 'Error al crear la actividad', 'Error')
   } finally {
     loading.value = false
+    await cerrarRepartoNumeros()
   }
+}
+
+/** Completa hasta `ms` desde `inicio`: una carga de 80 ms solo se ve como un parpadeo. */
+async function esperarMinimo(inicio, ms = 700) {
+  const transcurrido = Date.now() - inicio
+  if (transcurrido < ms) await new Promise((resolver) => setTimeout(resolver, ms - transcurrido))
+}
+
+/* Si el reparto fue instantáneo, la cuadrícula daría un parpadeo; se completa hasta
+   MINIMO_REPARTO_MS para que se lea como una operación, no como un fallo. */
+const MINIMO_REPARTO_MS = 1100
+let inicioReparto = 0
+async function cerrarRepartoNumeros() {
+  if (!generandoNumerosRifa.value) return
+  const transcurrido = Date.now() - inicioReparto
+  if (transcurrido < MINIMO_REPARTO_MS) {
+    await new Promise((resolver) => setTimeout(resolver, MINIMO_REPARTO_MS - transcurrido))
+  }
+  generandoNumerosRifa.value = false
 }
 // Cargar socios cuando se abre el modal y es actividad en curso
 watch(modalNuevaActividad, (isOpen) => {
@@ -6748,22 +7742,265 @@ async function eliminarGrupoConfirmado() {
     eliminandoGrupo.value = false
   }
 }
-// Función para verificar si debe mostrarse el modal de bienvenida
+// La explicación «Liquidar vs En curso» solo se muestra la primera vez por natillera
+const claveBienvenida = `actividades_bienvenida_${id}`
 function verificarModalBienvenida() {
-  const clave = `actividades_bienvenida_${id}`
-  const yaVisto = localStorage.getItem(clave)
-  if (!yaVisto) {
-    mostrarModalBienvenida.value = true
-  }
+  if (localStorage.getItem(claveBienvenida)) return
+  // No taparle la pantalla al recorrido guiado: si está en marcha, espera a que termine
+  if (guiaActiva.value) return
+  mostrarModalBienvenida.value = true
 }
-// Función para cerrar el modal de bienvenida
 function cerrarModalBienvenida() {
   mostrarModalBienvenida.value = false
-  if (noMostrarDeNuevo.value) {
-    const clave = `actividades_bienvenida_${id}`
-    localStorage.setItem(clave, 'true')
-  }
+  // Se marca como vista al cerrarla, sea por el botón, la X o el backdrop
+  localStorage.setItem(claveBienvenida, 'true')
 }
+// ─── Recorrido guiado de Actividades (skill natillerapp-recorrido-guiado) ────
+const contadorGuia = crearContadorGuia('actividades')
+const guiaActiva = ref(false)
+/* Se construyen al abrir: dependen del DOM de ese momento (sin series no hay pasos de serie). */
+const pasosGuia = ref([])
+let guiaAMano = false
+/** Una vez por visita: si se cierra, no vuelve a salir al recargar la lista. */
+let guiaIntentada = false
+let temporizadorGuia = null
+
+// Preparación de la vista agrupada. Declaradas fuera de la lista para que los dos pasos
+// de la serie compartan la misma referencia de `antes` y no se rehaga entre ellos.
+let vistaAnterior = null
+function guiaEnVistaAgrupada() {
+  if (vistaAgrupada.value) return false
+  vistaAnterior = vistaAgrupada.value
+  vistaAgrupada.value = true
+  return true
+}
+let serieAbiertaAntes = null
+let serieGuiaId = null
+function guiaAbrirSerie() {
+  if (!serieGuiaId) return
+  serieAbiertaAntes = isGrupoExpandido(serieGuiaId)
+  gruposExpandidos.value[serieGuiaId] = true
+}
+function guiaRestaurarSerie() {
+  if (vistaAnterior !== null) {
+    vistaAgrupada.value = vistaAnterior
+    vistaAnterior = null
+  }
+  if (serieAbiertaAntes === null || !serieGuiaId) return
+  gruposExpandidos.value[serieGuiaId] = serieAbiertaAntes
+  serieAbiertaAntes = null
+}
+
+// Flujo «nueva actividad»: cada paso deja la pantalla como la necesita, venga de donde
+// venga (avanzando, retrocediendo o saltando), y devuelve false si ya estaba así.
+// Esta vista no usa pila de modales: se cierra con su propio ref, igual que «Cancelar».
+function guiaAbrirFormulario() {
+  if (modalNuevaActividad.value) return false
+  modalNuevaActividad.value = true
+  return true
+}
+function guiaCerrarFormulario() {
+  modalNuevaActividad.value = false
+}
+// El interruptor «Repetir» solo existe en las actividades en curso
+function guiaFormularioEnCurso() {
+  const abierto = guiaAbrirFormulario()
+  if (formActividad.tipoProceso === 'en_curso') return abierto
+  formActividad.tipoProceso = 'en_curso'
+  resetearFormularioPorTipo()
+  return true
+}
+
+function construirPasosGuia({ manual = false } = {}) {
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  const primeraSerie = actividadesAgrupadas.value.find((item) => item.tipo === 'grupo')
+  serieGuiaId = primeraSerie?.serieId || null
+  const primeraDeLaSerie = primeraSerie?.actividades?.[0]?.id || null
+  // Mismo `grupo`: entre estos pasos no se deshace la preparación.
+  const flujoSerie = { grupo: 'serie', despues: guiaRestaurarSerie }
+  const flujoFormulario = { grupo: 'nueva-actividad', despues: guiaCerrarFormulario }
+
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      // Héroe propio: quien ya vio el recorrido del detalle o el de cuotas reconoce
+      // enseguida que este es otro, en vez de saltárselo por «ya lo vi».
+      heroe: 'fichas',
+      heroePiezas: ['🎟️', '🎲', '🎁'],
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
+      texto: 'Te enseño a manejar las actividades en menos de un minuto.',
+    },
+    {
+      selector: '[data-guia="actividades-resumen"]',
+      icono: CurrencyDollarIcon,
+      titulo: 'Tus cifras del fondo',
+      texto: 'Lo que entra, lo que sale y lo que queda.',
+      recorrer: [
+        { selector: '[data-guia="actividades-resumen-ingresos"]', etiqueta: 'Ingresos · lo recogido' },
+        { selector: '[data-guia="actividades-resumen-gastos"]', etiqueta: 'Gastos · lo invertido' },
+        { selector: '[data-guia="actividades-resumen-utilidad"]', etiqueta: 'Utilidad · lo que gana el fondo' },
+      ],
+    },
+    {
+      selector: '[data-guia="actividades-nueva"]',
+      icono: PlusIcon,
+      gesto: 'tocar',
+      titulo: 'Registra una actividad',
+      texto: 'Aquí se abre el formulario. Te lo muestro.',
+      radio: 22,
+      margen: 6,
+      ...flujoFormulario,
+    },
+    {
+      selector: '[data-guia="form-tipo-proceso"]',
+      icono: ArrowPathIcon,
+      titulo: 'Liquidar o en curso',
+      texto: '«Liquidar» si ya terminó; «En curso» si falta cobrarla.',
+      antes: guiaAbrirFormulario,
+      ...flujoFormulario,
+    },
+    {
+      selector: '[data-guia="form-tipo"]',
+      icono: TicketIcon,
+      titulo: 'Qué actividad es',
+      texto: 'Rifa, bingo, venta o evento. Las rifas piden su modo.',
+      antes: guiaAbrirFormulario,
+      ...flujoFormulario,
+    },
+    {
+      selector: '[data-guia="form-descripcion"]',
+      icono: PencilSquareIcon,
+      titulo: 'Ponle un nombre',
+      texto: 'Con el que la reconozcas después, como «Rifa de Navidad».',
+      antes: guiaAbrirFormulario,
+      ...flujoFormulario,
+    },
+    {
+      selector: '[data-guia="form-repetir"]',
+      icono: CalendarIcon,
+      titulo: 'Repítela varios meses',
+      texto: 'Actívalo y la creas de una vez para los meses que elijas.',
+      antes: guiaFormularioEnCurso,
+      ...flujoFormulario,
+    },
+    {
+      selector: '[data-guia="actividades-vista"]',
+      icono: RectangleStackIcon,
+      gesto: 'tocar',
+      titulo: 'Dos formas de verlas',
+      texto: '«Agrupada» junta las que se repiten varios meses.',
+      radio: 22,
+      margen: 6,
+    },
+    {
+      selector: '[data-guia="actividades-buscar"]',
+      icono: MagnifyingGlassIcon,
+      titulo: 'Busca sin bajar',
+      texto: 'Escribe el nombre o el mes que necesitas.',
+      radio: 22,
+      margen: 6,
+    },
+    {
+      selector: '[data-guia="actividades-filtro-estado"]',
+      icono: FunnelIcon,
+      gesto: 'tocar',
+      titulo: 'Filtra por estado',
+      texto: 'Deja solo las que están en curso o las finalizadas.',
+      radio: 22,
+      margen: 6,
+    },
+  ]
+
+  if (serieGuiaId) {
+    pasos.push({
+      selector: `[data-guia-serie="${serieGuiaId}"]`,
+      icono: CubeIcon,
+      titulo: 'Una serie completa',
+      texto: 'Cuántas van liquidadas y cuánto llevas recaudado.',
+      antes: guiaEnVistaAgrupada,
+      ...flujoSerie,
+    })
+    if (primeraDeLaSerie) {
+      pasos.push({
+        selector: `[data-guia-actividad="${primeraDeLaSerie}"]`,
+        icono: CalendarIcon,
+        titulo: 'Mes por mes',
+        texto: 'Ábrela y cada fila te muestra un mes con sus cifras.',
+        antes: guiaEnVistaAgrupada,
+        alLlegar: guiaAbrirSerie,
+        ...flujoSerie,
+      })
+    }
+  }
+
+  if (!manual) {
+    pasos.push({
+      selector: '[data-guia="boton-recorrido"]',
+      icono: QuestionMarkCircleIcon,
+      gesto: 'tocar',
+      titulo: '¿Lo quieres repasar?',
+      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
+      radio: 22,
+      margen: 6,
+    })
+  }
+
+  pasos.push({
+    tipo: 'final',
+    titulo: '¡A recaudar!',
+    texto: 'Ya sabes registrar y seguir las actividades del fondo.',
+  })
+
+  // Los pasos con `antes` se conservan: su objetivo aparece tras preparar la vista.
+  return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))
+}
+
+/** ¿Sale solo en esta visita? `?guia=1` lo fuerza para probarlo sin tocar localStorage. */
+function tocaGuia() {
+  if (route.query.guia === '1') return true
+  return contadorGuia.hayPendiente() || contadorGuia.debeMostrar(authStore.user?.id)
+}
+
+function abrirGuia({ manual = false } = {}) {
+  if (guiaActiva.value) return
+  // Abierta por cualquier vía cuenta como intentada: si no, al cerrarla la pantalla
+  // vuelve a estar «lista» y saldría otra vez sola.
+  guiaIntentada = true
+  guiaAMano = manual
+  pasosGuia.value = construirPasosGuia({ manual })
+  guiaActiva.value = true
+}
+
+/** El abierto a mano no cuenta: verlo a voluntad no debe gastar las visitas en que sale solo. */
+function cerrarGuia({ completado } = {}) {
+  guiaActiva.value = false
+  contadorGuia.limpiarPendiente()
+  if (!guiaAMano) contadorGuia.registrarVista(authStore.user?.id, { completado })
+  guiaAMano = false
+}
+
+/*
+ * Arranque automático. Actividades abre sola la explicación «Liquidar vs En curso» en la
+ * primera visita: el recorrido espera a que se cierre, a que la lista esté pintada y a que
+ * no quede ninguna modal. Antes enfocaría esqueletos o quedaría señalando bajo la modal.
+ */
+const pantallaActividadesLista = computed(() =>
+  !cargaInicial.value && !mostrarModalBienvenida.value && !hayModalAbiertaActividades.value
+)
+
+watch(pantallaActividadesLista, (lista) => {
+  clearTimeout(temporizadorGuia)
+  if (!lista || guiaIntentada || !tocaGuia()) return
+  // Un respiro tras el pintado: las tarjetas entran con animación y medirlas antes descuadra el foco.
+  temporizadorGuia = setTimeout(() => {
+    if (!pantallaActividadesLista.value || guiaIntentada) return
+    guiaIntentada = true
+    abrirGuia()
+  }, 650)
+})
+
+onUnmounted(() => clearTimeout(temporizadorGuia))
+
 onMounted(() => {
   fetchActividades()
   fetchNatillera()
@@ -6780,3 +8017,23 @@ onUnmounted(() => {
   document.removeEventListener('touchstart', handleClickOutside)
 })
 </script>
+
+<style scoped>
+/* Las dos tarjetas de la explicación entran escalonadas: dirige la lectura de
+   «Liquidar» a «En curso» en vez de soltar el bloque entero de golpe */
+.tarjeta-modo {
+  animation: entrar-tarjeta-modo 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--retraso, 0ms);
+}
+@-webkit-keyframes entrar-tarjeta-modo {
+  from { opacity: 0; -webkit-transform: translate3d(0, 12px, 0); transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+}
+@keyframes entrar-tarjeta-modo {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta-modo { animation: none; }
+}
+</style>

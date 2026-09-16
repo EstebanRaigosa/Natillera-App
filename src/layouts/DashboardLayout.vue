@@ -278,6 +278,7 @@
         <template v-if="mostrarSelectorNatillera">
           <button
             type="button"
+            data-guia="panel-cambiar-natillera"
             class="cambiar-natillera-btn relative z-[1] w-full text-left"
             @click="abrirRutaDesdeSidebar({ name: 'Dashboard' })"
           >
@@ -326,6 +327,7 @@
           -->
           <button
             type="button"
+            data-guia="panel-mi-cuenta"
             class="logout-btn group/btn"
             title="Mi cuenta"
             aria-label="Mi cuenta"
@@ -336,6 +338,7 @@
 
           <button
             type="button"
+            data-guia="panel-cerrar-sesion"
             class="logout-btn group/btn"
             title="Cerrar sesión"
             aria-label="Cerrar sesión"
