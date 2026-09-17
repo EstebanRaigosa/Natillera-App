@@ -91,10 +91,14 @@
               <span v-else class="ds-badge ds-badge--muted">
                 Sin cortes previos<span class="hidden sm:inline"> · se revisa todo el histórico</span>
               </span>
+              <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
               <button
                 type="button"
+                data-guia="boton-recorrido"
                 class="inline-flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-lg border border-[#1B5E37]/20 bg-white px-3 text-xs font-semibold text-[#1B5E37] hover:bg-[#1B5E37]/8 sm:border-transparent sm:bg-transparent sm:px-2"
-                @click="abrirTutorial"
+                title="¿Cómo funciona esta pantalla?"
+                aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+                @click="abrirGuiaConciliacion({ manual: true })"
               >
                 <QuestionMarkCircleIcon class="h-4 w-4" />
                 Cómo funciona
@@ -746,14 +750,10 @@
       @confirmar="sellarCorte"
     />
 
-    <BienvenidaConciliacionModal
-      :show="modalBienvenida"
-      @close="cerrarBienvenida"
-      @recorrer="empezarRecorrido"
-    />
+    <RecorridoInteractivo :pasos="pasosGuiaConciliacion" :activo="guiaConciliacionActiva" @terminar="cerrarGuiaConciliacion" />
 
-    <RecorridoGuiado :show="recorridoAbierto" :pasos="pasosRecorrido" @close="cerrarRecorrido" />
-
+    <!-- Carrusel con mockups. Ya no sale solo —lo sustituye el recorrido—, pero se
+         conserva para explicar el proceso completo: se abre con `?ayuda=1`. -->
     <ConciliacionAyudaModal :show="modalAyuda" @close="modalAyuda = false" />
 
     <HistorialCortesModal
@@ -795,8 +795,8 @@ import {
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
-import RecorridoGuiado from '../../components/RecorridoGuiado.vue'
-import BienvenidaConciliacionModal from '../../components/conciliacion/BienvenidaConciliacionModal.vue'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import { crearContadorGuia } from '../../composables/useContadorGuia'
 import ConciliacionAyudaModal from '../../components/conciliacion/ConciliacionAyudaModal.vue'
 import CerrarCorteModal from '../../components/conciliacion/CerrarCorteModal.vue'
 import HistorialCortesModal from '../../components/conciliacion/HistorialCortesModal.vue'
@@ -1298,177 +1298,141 @@ const anularCorteConfirmado = async (idCorte) => {
 
 /* ------------------------------ Tutorial guiado -------------------------------- */
 
-/**
- * La primera visita abre la bienvenida sola. Después queda el botón «Cómo funciona».
+/* ─── Recorrido guiado de Conciliación (skill natillerapp-recorrido-guiado) ───────
  *
- * La marca es por usuario y no global: en un móvil compartido, el segundo tesorero
- * también merece la explicación. Y lleva versión: cuando el tutorial cambia de verdad,
- * subir el número lo vuelve a ofrecer a todo el mundo, que es justo lo que hay que
- * hacer para que un rediseño le llegue a quien ya había visto el anterior.
+ * Antes esta pantalla tenía lo suyo: una modal de bienvenida, un recorrido con foco
+ * propio (`RecorridoGuiado`) solo para escritorio y, en móvil, un carrusel con mockups
+ * porque aquel foco no cabía en pantallas estrechas. Ahora usa el mismo
+ * `RecorridoInteractivo` que el resto de la app, que sí funciona en móvil, así que no
+ * hace falta ramificar por ancho ni mantener tres piezas para explicar una pantalla.
+ * El carrusel se conserva con `?ayuda=1` para quien quiera el proceso entero.
  */
-const VERSION_TUTORIAL = 3
+const contadorGuiaConciliacion = crearContadorGuia('conciliacion')
+const guiaConciliacionActiva = ref(false)
+/* Se construyen al abrir: dependen del DOM (sin apuntes no hay tabla que señalar). */
+const pasosGuiaConciliacion = ref([])
+let guiaConciliacionAMano = false
+/** Una vez por visita: si se cierra, no vuelve a salir sola. */
+let guiaConciliacionIntentada = false
+let temporizadorGuiaConciliacion = null
 
-const claveTutorial = computed(
-  () => `natillerapp:conciliacion:tutorial-visto:v${VERSION_TUTORIAL}:${authStore.user?.id || 'anonimo'}`
-)
-
-const modalBienvenida = ref(false)
-const recorridoAbierto = ref(false)
-/** La guía animada de móvil, alternativa al recorrido con foco (ver `abrirTutorial`). */
+/** El carrusel con mockups, ya solo bajo petición expresa (`?ayuda=1`). */
 const modalAyuda = ref(false)
 
-/**
- * Qué mecanismo explica la pantalla depende del ancho, no del gusto: ver `abrirTutorial`.
- * Los pasos de abajo son solo para escritorio, así que hablan de columnas y de filtros a
- * la vista sin ramificar.
+/*
+ * Cinco paradas: el veredicto, sellar, filtrar, la columna que delata y el historial.
+ * Las marcas son las `data-tour` que ya existían en el template.
  */
-const esAncha = ref(typeof window !== 'undefined' ? window.innerWidth >= 640 : true)
-const medirAncho = () => { esAncha.value = window.innerWidth >= 640 }
+function construirPasosGuiaConciliacion({ manual = false } = {}) {
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      // Héroe propio: quien ya vio el de Cuadre de caja (balanza) o el de Cuotas lo
+      // saltaría creyendo que es el mismo recorrido.
+      heroe: 'lupa',
+      heroePiezas: ['🔍'],
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
+      texto: 'Te enseño a cuadrar la caja con el libro, paso a paso.'
+    },
+    {
+      selector: '[data-tour="panel-corte"]',
+      icono: ScaleIcon,
+      titulo: '¿Cuadra o no?',
+      texto: 'Lo que dice la app, lo que cuentas tú y la diferencia.',
+      recorrer: [
+        { selector: '[data-tour="esperado"]', etiqueta: 'Esperado · lo que dice la app' },
+        { selector: '[data-tour="real"]', etiqueta: 'Real · lo que cuentas tú' },
+        { selector: '[data-tour="diferencia"]', etiqueta: 'Diferencia · verde cuadra, rojo falta' }
+      ].filter((item) => document.querySelector(item.selector))
+    },
+    {
+      selector: '[data-tour="sellar"]',
+      icono: LockClosedIcon,
+      gesto: 'tocar',
+      titulo: 'Séllalo',
+      texto: 'Congela las cifras y abre un periodo nuevo.',
+      radio: 20,
+      margen: 6
+    },
+    {
+      selector: '[data-tour="filtros"]',
+      icono: MagnifyingGlassIcon,
+      titulo: '¿No cuadra? Filtra',
+      texto: 'Por fecha, concepto, socio o forma de pago.'
+    },
+    {
+      selector: '[data-tour="saldo"]',
+      icono: ListBulletIcon,
+      titulo: 'La columna Saldo delata',
+      texto: 'Baja hasta la línea donde deja de cuadrar.'
+    },
+    {
+      selector: '[data-tour="historial"]',
+      icono: ClockIcon,
+      titulo: 'Todo queda firmado',
+      texto: 'Quién revisó, cuándo y qué explicó.'
+    },
+    {
+      tipo: 'final',
+      titulo: '¡Caja revisada!',
+      // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+      texto: manual
+        ? 'Ya sabes cuadrar, sellar y buscar una diferencia.'
+        : 'Repítelo cuando quieras con «Cómo funciona».'
+    }
+  ]
+  return pasos.filter((paso) => !paso.selector || document.querySelector(paso.selector))
+}
 
-const pasosRecorrido = [
-  {
-    selector: '[data-tour="panel-corte"]',
-    icono: ScaleIcon,
-    titulo: '¿Cuadra o no?',
-    texto: 'Se resuelve aquí arriba, en tres columnas.',
-    pistas: [
-      { texto: 'Efectivo', clase: 'bg-green-100 text-green-800' },
-      { texto: 'Transferencia', clase: 'bg-blue-100 text-blue-800' },
-      { texto: 'Total', clase: 'bg-[#1B5E37]/10 text-[#1B5E37]' }
-    ]
-  },
-  {
-    selector: '[data-tour="esperado"]',
-    icono: CpuChipIcon,
-    titulo: 'Lo que dice la app',
-    texto: 'Saldo al inicio + todo lo registrado después.'
-  },
-  {
-    selector: '[data-tour="real"]',
-    icono: BanknotesIcon,
-    titulo: 'Lo que cuentas tú',
-    texto: 'El único dato que pones en esta pantalla.'
-  },
-  {
-    selector: '[data-tour="diferencia"]',
-    icono: ArrowsRightLeftIcon,
-    titulo: 'La diferencia sale sola',
-    pistas: [
-      { texto: 'Verde: cuadra', clase: 'bg-emerald-100 text-emerald-800' },
-      { texto: 'Ámbar: sobra', clase: 'bg-amber-100 text-amber-900' },
-      { texto: 'Rojo: falta', clase: 'bg-red-100 text-red-700' }
-    ]
-  },
-  {
-    selector: '[data-tour="sellar"]',
-    icono: LockClosedIcon,
-    titulo: 'Séllalo',
-    texto: 'Congela las cifras y abre un periodo nuevo.'
-  },
-  {
-    selector: '[data-tour="filtros"]',
-    icono: MagnifyingGlassIcon,
-    titulo: '¿No cuadra? Filtra',
-    pistas: [
-      { texto: 'Fecha', clase: 'bg-gray-100 text-gray-700' },
-      { texto: 'Concepto', clase: 'bg-gray-100 text-gray-700' },
-      { texto: 'Socio', clase: 'bg-gray-100 text-gray-700' },
-      { texto: 'Forma de pago', clase: 'bg-gray-100 text-gray-700' }
-    ]
-  },
-  {
-    selector: '[data-tour="total-filtrado"]',
-    icono: CalculatorIcon,
-    titulo: 'Total de lo filtrado',
-    texto: 'Cuánto se recogió por cada concepto.'
-  },
-  {
-    selector: '[data-tour="saldo"]',
-    icono: ListBulletIcon,
-    titulo: 'La columna Saldo delata',
-    texto: 'Baja hasta la línea donde deja de cuadrar.'
-  },
-  {
-    selector: '[data-tour="historial"]',
-    icono: ClockIcon,
-    titulo: 'Todo queda firmado',
-    texto: 'Quién revisó, cuándo y qué explicó.'
-  }
-]
+/** ¿Sale solo en esta visita? `?guia=1` lo fuerza para probarlo sin tocar localStorage. */
+function tocaGuiaConciliacion() {
+  if (route.query.guia === '1') return true
+  return contadorGuiaConciliacion.hayPendiente() || contadorGuiaConciliacion.debeMostrar(authStore.user?.id)
+}
 
-/**
- * En pantalla estrecha se explica con la guía animada y no con el recorrido de foco.
- *
- * El recorrido señala elementos reales, y eso en móvil se rompe de dos maneras a la vez:
- * la burbuja del paso es casi tan ancha como la pantalla y acaba tapando justo lo que
- * señala, y los objetivos que no caben en el hueco iluminado dejan un recuadro marcando
- * nada. La guía animada no depende del DOM: dibuja la pantalla y la anima, así que
- * enseña lo mismo sin pelearse por el espacio. En escritorio el foco sí funciona y se
- * mantiene, que es donde vale la pena señalar la pantalla de verdad.
+function abrirGuiaConciliacion({ manual = false } = {}) {
+  if (guiaConciliacionActiva.value) return
+  // Abierta por cualquier vía cuenta como intentada: al cerrarla la pantalla vuelve a
+  // estar «lista» y, sin esto, saldría otra vez sola.
+  guiaConciliacionIntentada = true
+  guiaConciliacionAMano = manual
+  // Un desplegable abierto cambiaría lo que se enseña mientras se enseña
+  dropdownConceptos.value = false
+  pasosGuiaConciliacion.value = construirPasosGuiaConciliacion({ manual })
+  guiaConciliacionActiva.value = true
+}
+
+/** El abierto a mano no cuenta: verlo a voluntad no debe gastar las visitas en que sale solo. */
+function cerrarGuiaConciliacion({ completado } = {}) {
+  guiaConciliacionActiva.value = false
+  contadorGuiaConciliacion.limpiarPendiente()
+  if (!guiaConciliacionAMano) contadorGuiaConciliacion.registrarVista(authStore.user?.id, { completado })
+  guiaConciliacionAMano = false
+}
+
+/*
+ * Arranque automático: con el libro reconstruido (sin pantalla de carga) y sin ninguna
+ * modal abierta. Tras un respiro, se vuelve a comprobar: las tarjetas entran con
+ * animación y medirlas antes descuadra el foco.
  */
-const abrirTutorial = () => {
-  recorridoAbierto.value = false
-  if (!esAncha.value) {
-    modalAyuda.value = true
-    marcarTutorialVisto()
-    return
-  }
-  modalBienvenida.value = true
-}
+const pantallaConciliacionLista = computed(
+  () => !cargando.value && !modalCerrarCorte.value && !modalHistorial.value && !modalAyuda.value
+)
 
-const marcarTutorialVisto = () => {
-  try {
-    localStorage.setItem(claveTutorial.value, '1')
-  } catch (e) {
-    // Modo privado de Safari: perder la marca solo significa volver a ofrecer el tutorial.
-    console.warn('Conciliación: no se pudo recordar que el tutorial ya se vio.', e)
-  }
-}
+watch(pantallaConciliacionLista, (lista) => {
+  clearTimeout(temporizadorGuiaConciliacion)
+  if (!lista || guiaConciliacionIntentada || !tocaGuiaConciliacion()) return
+  temporizadorGuiaConciliacion = setTimeout(() => {
+    if (!pantallaConciliacionLista.value || guiaConciliacionIntentada) return
+    guiaConciliacionIntentada = true
+    abrirGuiaConciliacion()
+  }, 650)
+}, { immediate: true })
 
-const cerrarBienvenida = () => {
-  modalBienvenida.value = false
-  marcarTutorialVisto()
-}
-
-const empezarRecorrido = () => {
-  modalBienvenida.value = false
-  marcarTutorialVisto()
-  // Un tick para que el modal se desmonte: si no, el foco mide el fondo bloqueado.
-  // Se vuelve a mirar el ancho: la ventana puede haberse estrechado con la bienvenida
-  // abierta, y el foco en estrecho es justo lo que no queremos.
-  setTimeout(() => {
-    if (esAncha.value) recorridoAbierto.value = true
-    else modalAyuda.value = true
-  }, 260)
-}
-
-const cerrarRecorrido = () => {
-  recorridoAbierto.value = false
-}
-
-function ofrecerTutorialSiEsLaPrimeraVez() {
-  // Puerta de escape para probarlo: `?ayuda=1` lo abre siempre y no deja marca, así que
-  // se puede repetir. Misma convención que la guía de Cuotas.
-  const forzar = route.query.ayuda === '1' || route.query.ayuda === 'true'
-  if (forzar) {
-    if (esAncha.value) modalBienvenida.value = true
-    else modalAyuda.value = true
-    return
-  }
-
-  try {
-    if (localStorage.getItem(claveTutorial.value)) return
-  } catch (e) {
-    return
-  }
-  // En móvil la guía animada se abre directa: ya trae su propio paso de bienvenida, así
-  // que la pantalla de antesala sobraba y solo añadía un toque.
-  if (!esAncha.value) {
-    modalAyuda.value = true
-    marcarTutorialVisto()
-    return
-  }
-  modalBienvenida.value = true
+/** `?ayuda=1` abre el carrusel con mockups; el recorrido va por su cuenta. */
+function ofrecerAyudaSiSePide() {
+  if (route.query.ayuda === '1' || route.query.ayuda === 'true') modalAyuda.value = true
 }
 
 /* --------------------------------- Exportar ------------------------------------ */
@@ -1574,17 +1538,11 @@ const cerrarDropdownFuera = (evento) => {
 
 onMounted(() => {
   document.addEventListener('click', cerrarDropdownFuera)
-  // `orientationchange` además de `resize`: en iOS girar el aparato no siempre dispara
-  // el segundo a tiempo (docs/compatibilidad-ios-safari.md §4).
-  window.addEventListener('resize', medirAncho)
-  window.addEventListener('orientationchange', medirAncho)
-  medirAncho()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', cerrarDropdownFuera)
-  window.removeEventListener('resize', medirAncho)
-  window.removeEventListener('orientationchange', medirAncho)
+  clearTimeout(temporizadorGuiaConciliacion)
 })
 
 watch(id, async (nuevoId) => {
@@ -1601,7 +1559,7 @@ watch(id, async (nuevoId) => {
   misPermisos.value = await promesaPermisos
   // Después de cargar: si la pantalla no ha terminado de dibujarse, el recorrido
   // enfocaría elementos que aún no existen.
-  if (!errorCarga.value) ofrecerTutorialSiEsLaPrimeraVez()
+  if (!errorCarga.value) ofrecerAyudaSiSePide()
 }, { immediate: true })
 
 // El rango por defecto es el periodo abierto; al sellar un corte se recoloca solo.

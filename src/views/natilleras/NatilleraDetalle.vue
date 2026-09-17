@@ -3992,6 +3992,7 @@ import {
   CheckBadgeIcon,
   ListBulletIcon,
   FunnelIcon,
+  UserCircleIcon,
 } from '@heroicons/vue/24/outline'
 import {
   ExclamationTriangleIcon as ExclamationTriangleIconSolid,
@@ -4092,75 +4093,111 @@ const restaurarConfigTrasGuia = () => {
  * está en el teléfono sería explicarle algo que no ve.
  */
 /*
- * Los tres botones del panel de usuario, uno por paso: juntos en un solo paso se leían
- * como un bloque y el engranaje o la salida pasaban desapercibidos. Comparten `antes`
- * con el paso de acciones, así el menú no se cierra entre uno y otro.
+ * El bloque de abajo a la izquierda de la barra lateral (dentro del cajón ☰ en móvil):
+ * cambiar de natillera, mi cuenta y salir. Un solo paso con subfoco por los tres; tres
+ * pasos seguidos para tres botones que están juntos alargaban el recorrido sin enseñar
+ * más. Comparte `antes` con el paso del menú, así el cajón no se cierra entre uno y otro.
  */
-function pasosPanelUsuario(antes, despues) {
-  return [
-    {
-      selector: '[data-guia="panel-cambiar-natillera"]',
-      icono: ArrowsRightLeftIcon,
-      gesto: 'tocar',
-      titulo: 'Cambiar natillera',
-      texto: '1 de 3 botones clave: salta a otra de tus natilleras.',
-      antes,
-      despues,
-    },
-    {
-      selector: '[data-guia="panel-mi-cuenta"]',
-      icono: Cog6ToothIcon,
-      gesto: 'tocar',
-      titulo: 'Mi cuenta',
-      texto: '2 de 3: tus datos, avisos de soporte y botón flotante.',
-      radio: 14,
-      margen: 6,
-      antes,
-      despues,
-    },
-    {
-      selector: '[data-guia="panel-cerrar-sesion"]',
-      icono: ArrowRightOnRectangleIcon,
-      gesto: 'tocar',
-      titulo: 'Cerrar sesión',
-      texto: '3 de 3: sal al terminar, sobre todo en equipos compartidos.',
-      radio: 14,
-      margen: 6,
-      antes,
-      despues,
-    },
-  ]
+function pasoPanelUsuario(antes, despues) {
+  return {
+    selector: '[data-guia="panel-usuario"]',
+    icono: UserCircleIcon,
+    titulo: 'Tu cuenta',
+    texto: 'Cambia de natillera, edita tus datos o cierra sesión.',
+    recorrer: [
+      { selector: '[data-guia="panel-cambiar-natillera"]', etiqueta: 'Cambiar de natillera' },
+      { selector: '[data-guia="panel-mi-cuenta"]', etiqueta: 'Mi cuenta · tus datos y avisos' },
+      { selector: '[data-guia="panel-cerrar-sesion"]', etiqueta: 'Cerrar sesión' }
+    ],
+    antes,
+    despues
+  }
 }
 
+/*
+ * Corto a propósito: cuatro o cinco paradas y fuera. Enseña DÓNDE están las cosas —las
+ * reglas, la navegación, tu cuenta y el soporte—, no qué hace cada tarjeta: eso se
+ * entiende mirando, y cada paso de más es uno que la gente se salta. Lo específico de
+ * cada pantalla lo cuenta el recorrido de esa pantalla.
+ */
 function construirPasosGuia({ manual = false } = {}) {
   const enMovil = window.innerWidth < 1024
   const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
   const existe = (selector) => !!document.querySelector(selector)
 
+  // Mismo `grupo` = el cajón no se cierra y se vuelve a abrir entre un paso y el otro.
+  const flujoMenuMovil = { grupo: 'menu-movil', despues: cerrarMenuMovil }
+  const flujoMenuEscritorio = { grupo: 'menu-escritorio', despues: ocultarMenuLateral }
+
+  const navegacion = enMovil
+    ? [
+        {
+          selector: '#tour-mobile-bottom-nav',
+          recorrer: '#tour-mobile-bottom-nav .nav-item',
+          icono: Squares2X2Icon,
+          titulo: 'Tu barra de navegación',
+          texto: 'Cambia de pantalla con un toque.',
+          radio: 24,
+          margen: 4
+        },
+        {
+          /*
+           * Primero el BOTÓN, con el cajón cerrado: enseñar el menú abierto sin enseñar
+           * de dónde sale deja al usuario sin saber cómo volver a abrirlo. El cajón lo
+           * abre el paso siguiente, que ya enfoca algo de dentro; abrirlo aquí taparía
+           * el propio botón que se está señalando.
+           */
+          selector: '#tour-hamburger-btn',
+          icono: Bars3Icon,
+          gesto: 'tocar',
+          titulo: 'El menú ☰',
+          texto: 'Ábrelo aquí: acciones de la natillera y tu cuenta.',
+          radio: 14,
+          margen: 4
+        },
+        {
+          // El cajón ya abierto: qué se puede hacer con la natillera desde aquí.
+          selector: '#tour-acciones-natillera',
+          recorrer: '#tour-acciones-natillera .nav-link',
+          icono: DocumentCheckIcon,
+          titulo: 'Acciones de la natillera',
+          texto: 'Comprobantes, colaboradores, avisos y cierre.',
+          antes: abrirMenuMovil,
+          ...flujoMenuMovil
+        },
+        { ...pasoPanelUsuario(abrirMenuMovil, cerrarMenuMovil), ...flujoMenuMovil, antes: abrirMenuMovil }
+      ]
+    : [
+        {
+          selector: '[data-guia="menu-lateral"]',
+          recorrer: '[data-guia="menu-lateral"] .nav-link',
+          icono: Bars3Icon,
+          titulo: 'Tu menú',
+          // Entre 1024 y 1280 px la barra se esconde y solo sale al acercar el ratón al
+          // borde: si no se dice, el usuario no vuelve a encontrarla.
+          texto: window.innerWidth < 1280
+            ? 'Acerca el ratón al borde izquierdo y aparece.'
+            : 'Todas las pantallas de la natillera.',
+          antes: mostrarMenuLateral,
+          ...flujoMenuEscritorio
+        },
+        {
+          selector: '#tour-acciones-natillera',
+          recorrer: '#tour-acciones-natillera .nav-link',
+          icono: DocumentCheckIcon,
+          titulo: 'Acciones de la natillera',
+          texto: 'Comprobantes, colaboradores, avisos y cierre.',
+          antes: mostrarMenuLateral,
+          ...flujoMenuEscritorio
+        },
+        { ...pasoPanelUsuario(mostrarMenuLateral, ocultarMenuLateral), ...flujoMenuEscritorio }
+      ]
+
   const pasos = [
     {
       tipo: 'bienvenida',
       titulo: nombre ? `¡Hola, ${nombre}!` : '¡Bienvenido!',
-      texto: 'Te enseño a navegar por tu natillera en menos de un minuto.',
-    },
-    {
-      selector: '[data-guia="indicadores"]',
-      icono: Squares2X2Icon,
-      titulo: 'Tus números clave',
-      texto: 'Cómo va la natillera, de un vistazo.',
-      recorrer: [
-        { selector: '[data-guia="card-socios"]', etiqueta: 'Socios · quiénes ahorran' },
-        { selector: '[data-guia="card-recaudado"]', etiqueta: 'Recaudado · lo que ha entrado' },
-        { selector: '[data-guia="card-pendiente"]', etiqueta: 'Pendiente · lo que falta cobrar' },
-        { selector: '[data-guia="card-utilidad"]', etiqueta: 'Utilidad · las ganancias' },
-      ],
-    },
-    {
-      selector: '[data-guia="card-utilidad"]',
-      icono: SparklesIcon,
-      gesto: 'tocar',
-      titulo: 'Toca «Utilidad»',
-      texto: 'Verás de dónde sale cada peso de ganancia.',
+      texto: 'Te enseño a navegar por tu natillera en menos de un minuto.'
     },
     {
       selector: '[data-guia="configuracion"]',
@@ -4170,121 +4207,28 @@ function construirPasosGuia({ manual = false } = {}) {
       // `alLlegar` y no `antes`: se enfoca el panel cerrado y se despliega ya
       // enfocado, así el hueco crece con él en vez de saltar.
       alLlegar: desplegarConfigParaGuia,
-      despues: restaurarConfigTrasGuia,
+      despues: restaurarConfigTrasGuia
     },
-    {
-      selector: '[data-guia="alertas"]',
-      icono: ExclamationTriangleIcon,
-      titulo: 'Morosos al instante',
-      texto: 'Aparecen solos cuando vence una cuota. Toca uno para cobrarle.',
-    },
-    {
-      selector: '[data-guia="movimientos"]',
-      icono: ClipboardDocumentListIcon,
-      titulo: 'Últimos movimientos',
-      texto: 'Pagos, préstamos y actividades; lo más nuevo arriba.',
-    },
-    {
-      selector: '[data-guia="utilidades"]',
-      icono: ChartPieIcon,
-      titulo: '¿De dónde sale la ganancia?',
-      texto: 'Intereses, multas y rifas, por categoría.',
-    },
-  ]
-
-  if (enMovil) {
-    pasos.push(
-      {
-        selector: '#tour-mobile-bottom-nav',
-        recorrer: '#tour-mobile-bottom-nav .nav-item',
-        icono: Squares2X2Icon,
-        titulo: 'Tu barra de navegación',
-        texto: 'Cambia de pantalla con un toque.',
-        radio: 24,
-        margen: 4,
-      },
-      {
-        selector: '#tour-bottom-nav-caja',
-        icono: WalletIcon,
-        gesto: 'tocar',
-        titulo: 'Caja',
-        texto: 'Concilia el dinero o registra entradas y salidas del fondo.',
-        radio: 14,
-        margen: 6,
-      },
-      {
-        selector: '#tour-hamburger-btn',
-        icono: Bars3Icon,
-        gesto: 'tocar',
-        titulo: 'Menú ☰',
-        texto: 'Aquí dentro están las acciones de la natillera.',
-        radio: 14,
-        margen: 4,
-      },
-      {
-        // El cajón se ABRE de verdad: señalar uno cerrado no enseña nada.
-        selector: '#tour-acciones-natillera',
-        recorrer: '#tour-acciones-natillera .nav-link',
-        icono: DocumentCheckIcon,
-        titulo: 'Acciones de la natillera',
-        texto: 'Comprobantes, colaboradores, avisos y cierre.',
-        antes: abrirMenuMovil,
-        despues: cerrarMenuMovil,
-      },
-      ...pasosPanelUsuario(abrirMenuMovil, cerrarMenuMovil),
-    )
-  } else {
-    pasos.push(
-      {
-        selector: '[data-guia="menu-lateral"]',
-        recorrer: '[data-guia="menu-lateral"] .nav-link',
-        icono: Bars3Icon,
-        titulo: 'Tu menú',
-        texto: 'Todas las pantallas de la natillera.',
-        // Entre 1024 y 1280 px la barra se esconde y solo sale con el ratón.
-        antes: mostrarMenuLateral,
-        despues: ocultarMenuLateral,
-      },
-      {
-        selector: '#tour-acciones-natillera',
-        recorrer: '#tour-acciones-natillera .nav-link',
-        icono: DocumentCheckIcon,
-        titulo: 'Acciones de la natillera',
-        texto: 'Comprobantes, colaboradores, avisos y cierre.',
-        antes: mostrarMenuLateral,
-        despues: ocultarMenuLateral,
-      },
-      ...pasosPanelUsuario(mostrarMenuLateral, ocultarMenuLateral),
-    )
-  }
-
-  pasos.push(
+    ...navegacion,
     {
       selector: '.boton-soporte',
       icono: ChatBubbleLeftIcon,
       gesto: 'tocar',
       titulo: '¿Dudas? Escríbenos',
-      texto: 'El chat de soporte, sin salir de aquí. Arrástralo donde quieras.',
+      texto: 'El chat de soporte, sin salir de aquí.',
       radio: 40,
-      margen: 6,
+      margen: 6
     },
-    // Quien lo abrió a mano ya sabe dónde está el botón.
-    ...(manual ? [] : [{
-      selector: '[data-guia="boton-recorrido"]',
-      icono: QuestionMarkCircleIcon,
-      gesto: 'tocar',
-      titulo: '¿Lo quieres repasar?',
-      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
-      radio: 22,
-      margen: 6,
-    }]),
     {
       tipo: 'final',
       icono: CheckCircleIcon,
       titulo: '¡Todo listo!',
-      texto: 'Ya conoces tu natillera. ¡A ahorrar!',
-    },
-  )
+      // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+      texto: manual
+        ? 'Ya conoces tu natillera. ¡A ahorrar!'
+        : 'Repítelo cuando quieras con «¿Cómo funciona?».'
+    }
+  ]
 
   // Un paso sin nada que señalar confunde más de lo que enseña. Los del menú se
   // conservan: su objetivo existe aunque el cajón esté cerrado.
@@ -4835,10 +4779,34 @@ const nombreNatilleraPascalCase = computed(() => {
     .join(' ')
 })
 
-// Las fórmulas viven en utils/indicadoresNatillera.js: la tarjeta del dashboard
-// muestra estos mismos dos números y tienen que cuadrar.
-const fondoTotalIndicador = computed(() => recaudadoIndicador(estadisticas.value))
-const utilidadNetoIndicador = computed(() => utilidadIndicador(estadisticas.value))
+/*
+ * «Recaudado» y «Utilidad».
+ *
+ * Los calcula `dashboard_stats_batch` en el servidor y la tarjeta del dashboard
+ * lee exactamente lo mismo, así que no pueden separarse. Antes cada pantalla
+ * rehacía la suma en el navegador con su propia copia de la fórmula y dos
+ * personas de la misma natillera podían ver cifras distintas.
+ *
+ * Si la función no responde se cae a las estadísticas locales: es preferible un
+ * número calculado aquí que un hueco en pantalla.
+ */
+const indicadoresServidor = ref(null)
+
+const fondoTotalIndicador = computed(() =>
+  recaudadoIndicador(indicadoresServidor.value ?? estadisticas.value))
+const utilidadNetoIndicador = computed(() =>
+  utilidadIndicador(indicadoresServidor.value ?? estadisticas.value))
+
+async function cargarIndicadoresServidor() {
+  if (!natillera.value?.id) return
+  try {
+    const stats = await natillerasStore.calcularEstadisticasParaDashboard([natillera.value.id])
+    indicadoresServidor.value = stats?.[natillera.value.id] ?? null
+  } catch (e) {
+    console.warn('No se pudieron cargar los indicadores del servidor:', e?.message)
+    indicadoresServidor.value = null
+  }
+}
 
 /**
  * Colores del gráfico de utilidades: solo tonos vivos (sin carbón #453D45 ni teal oscuro #436E6E).
@@ -6593,6 +6561,8 @@ async function calcularEstadisticasAsync() {
     return
   }
   
+  cargarIndicadoresServidor()
+
   const stats = await natillerasStore.calcularEstadisticas(natillera.value)
   estadisticas.value = stats || {
     totalSocios: 0,

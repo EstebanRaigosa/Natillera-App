@@ -5,12 +5,10 @@
     libro con saldo corrido, cierre de corte). Cada paso reproduce el flujo real por
     sub-etapas animadas (CSS + un temporizador que avanza las sub-pantallas).
 
-    Existe porque el recorrido con foco (`RecorridoGuiado`) no funciona en pantalla
-    estrecha: la burbuja del paso tapa justo lo que está señalando y la mayoría de los
-    objetivos no caben en el hueco iluminado. Aquí no se señala nada real, se dibuja.
-
-    Mismo patrón que `CuotasAyudaModal`: ModalWrapper, useBodyScrollLock y natiscroll,
-    según la skill natillerapp-modals.
+    Carrusel con mockups del proceso completo. Nació porque el recorrido con foco de
+    entonces (`RecorridoGuiado`, ya eliminado) no cabía en pantallas estrechas; hoy la
+    pantalla la explica `RecorridoInteractivo`, igual que el resto de la app, y esto se
+    conserva para ver el proceso de principio a fin. Ya no sale solo: `?ayuda=1`.
   -->
   <ModalWrapper
     :show="show"

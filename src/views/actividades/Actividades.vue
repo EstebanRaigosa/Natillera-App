@@ -13,7 +13,7 @@
       descripcion="Actualizando los valores y las utilidades del fondo."
     />
     <!-- Page header (DS) — patrón unificado Socios/Cuotas/Préstamos/Actividades -->
-    <header class="ds-page-header">
+    <header ref="headerRef" class="ds-page-header">
       <div class="ds-page-header__row">
         <div class="ds-page-header__lead">
           <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -244,7 +244,7 @@
     <div v-else class="space-y-4">
       <!-- Toolbar DS (buscador + segmentado), igual que Socios y Cuotas. Con varias
            series de 12 meses, encontrar una a ojo era el cuello de botella de la vista. -->
-      <div v-if="actividades.length > 1" class="ds-toolbar">
+      <div v-if="actividades.length > 1" data-guia="actividades-filtros" class="ds-toolbar">
         <div class="ds-search">
           <MagnifyingGlassIcon class="w-4 h-4" aria-hidden="true" />
           <input
@@ -481,6 +481,19 @@
       </div>
     </div>
     </template>
+    <!-- FAB: la acción principal sigue a mano cuando la cabecera sale de pantalla -->
+    <Transition name="ds-fab">
+      <button
+        v-if="mostrarFab"
+        type="button"
+        class="ds-fab"
+        aria-label="Registrar actividad"
+        @click="modalNuevaActividad = true"
+      >
+        <PlusIcon class="w-6 h-6" />
+      </button>
+    </Transition>
+
     <!-- Modal: cobrar actividades pendientes de un socio (sin pasar por su cuota) -->
     <ModalWrapper
       :show="!!modalCobroSocio"
@@ -4055,6 +4068,20 @@ useBodyScrollLock(computed(() => !!actividadAEliminar.value))
 useBodyScrollLock(computed(() => !!grupoAEliminar.value))
 useBodyScrollLock(modalCobroSocio)
 useBodyScrollLock(computed(() => !!comprobanteActividad.value))
+
+// FAB flotante: aparece cuando la cabecera (con «Registrar actividad») sale del viewport
+const headerRef = ref(null)
+const headerVisible = ref(true)
+let headerObserver = null
+// Lee `guiaActiva`, declarada más abajo: al ser computed solo se evalúa al pintar,
+// cuando el setup ya terminó (no repetir el patrón con un watch, que sí evaluaría ya).
+const mostrarFab = computed(() =>
+  !cargaInicial.value &&
+  actividades.value.length > 0 &&
+  !headerVisible.value &&
+  !hayModalAbiertaActividades.value &&
+  !guiaActiva.value
+)
 
 // Cualquier modal de la pantalla abierta: el recorrido guiado espera a que no quede ninguna
 const hayModalAbiertaActividades = computed(() =>
@@ -7841,46 +7868,14 @@ function construirPasosGuia({ manual = false } = {}) {
         { selector: '[data-guia="actividades-resumen-utilidad"]', etiqueta: 'Utilidad · lo que gana el fondo' },
       ],
     },
-    {
-      selector: '[data-guia="actividades-nueva"]',
-      icono: PlusIcon,
-      gesto: 'tocar',
-      titulo: 'Registra una actividad',
-      texto: 'Aquí se abre el formulario. Te lo muestro.',
-      radio: 22,
-      margen: 6,
-      ...flujoFormulario,
-    },
-    {
-      selector: '[data-guia="form-tipo-proceso"]',
-      icono: ArrowPathIcon,
-      titulo: 'Liquidar o en curso',
-      texto: '«Liquidar» si ya terminó; «En curso» si falta cobrarla.',
-      antes: guiaAbrirFormulario,
-      ...flujoFormulario,
-    },
+    // El formulario se abre de verdad, en una sola parada: recorrer sus campos uno a
+    // uno alargaba el recorrido y se entienden viéndolos.
     {
       selector: '[data-guia="form-tipo"]',
-      icono: TicketIcon,
-      titulo: 'Qué actividad es',
-      texto: 'Rifa, bingo, venta o evento. Las rifas piden su modo.',
+      icono: PlusIcon,
+      titulo: 'Registra una actividad',
+      texto: 'Rifa, bingo, venta o evento; liquidada o en curso.',
       antes: guiaAbrirFormulario,
-      ...flujoFormulario,
-    },
-    {
-      selector: '[data-guia="form-descripcion"]',
-      icono: PencilSquareIcon,
-      titulo: 'Ponle un nombre',
-      texto: 'Con el que la reconozcas después, como «Rifa de Navidad».',
-      antes: guiaAbrirFormulario,
-      ...flujoFormulario,
-    },
-    {
-      selector: '[data-guia="form-repetir"]',
-      icono: CalendarIcon,
-      titulo: 'Repítela varios meses',
-      texto: 'Actívalo y la creas de una vez para los meses que elijas.',
-      antes: guiaFormularioEnCurso,
       ...flujoFormulario,
     },
     {
@@ -7893,19 +7888,10 @@ function construirPasosGuia({ manual = false } = {}) {
       margen: 6,
     },
     {
-      selector: '[data-guia="actividades-buscar"]',
+      selector: '[data-guia="actividades-filtros"]',
       icono: MagnifyingGlassIcon,
-      titulo: 'Busca sin bajar',
-      texto: 'Escribe el nombre o el mes que necesitas.',
-      radio: 22,
-      margen: 6,
-    },
-    {
-      selector: '[data-guia="actividades-filtro-estado"]',
-      icono: FunnelIcon,
-      gesto: 'tocar',
-      titulo: 'Filtra por estado',
-      texto: 'Deja solo las que están en curso o las finalizadas.',
+      titulo: 'Encuentra la que buscas',
+      texto: 'Busca por nombre o mes, o filtra por estado.',
       radio: 22,
       margen: 6,
     },
@@ -7916,39 +7902,19 @@ function construirPasosGuia({ manual = false } = {}) {
       selector: `[data-guia-serie="${serieGuiaId}"]`,
       icono: CubeIcon,
       titulo: 'Una serie completa',
-      texto: 'Cuántas van liquidadas y cuánto llevas recaudado.',
+      texto: 'Ábrela y ves mes a mes cuánto llevas recaudado.',
       antes: guiaEnVistaAgrupada,
       ...flujoSerie,
-    })
-    if (primeraDeLaSerie) {
-      pasos.push({
-        selector: `[data-guia-actividad="${primeraDeLaSerie}"]`,
-        icono: CalendarIcon,
-        titulo: 'Mes por mes',
-        texto: 'Ábrela y cada fila te muestra un mes con sus cifras.',
-        antes: guiaEnVistaAgrupada,
-        alLlegar: guiaAbrirSerie,
-        ...flujoSerie,
-      })
-    }
-  }
-
-  if (!manual) {
-    pasos.push({
-      selector: '[data-guia="boton-recorrido"]',
-      icono: QuestionMarkCircleIcon,
-      gesto: 'tocar',
-      titulo: '¿Lo quieres repasar?',
-      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
-      radio: 22,
-      margen: 6,
     })
   }
 
   pasos.push({
     tipo: 'final',
     titulo: '¡A recaudar!',
-    texto: 'Ya sabes registrar y seguir las actividades del fondo.',
+    // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+    texto: manual
+      ? 'Ya sabes registrar y seguir las actividades del fondo.'
+      : 'Repítelo cuando quieras con «¿Cómo funciona?».',
   })
 
   // Los pasos con `antes` se conservan: su objetivo aparece tras preparar la vista.
@@ -8002,6 +7968,14 @@ watch(pantallaActividadesLista, (lista) => {
 onUnmounted(() => clearTimeout(temporizadorGuia))
 
 onMounted(() => {
+  // Observer de la cabecera para mostrar/ocultar el FAB
+  if (typeof IntersectionObserver !== 'undefined' && headerRef.value) {
+    headerObserver = new IntersectionObserver(
+      ([entrada]) => { headerVisible.value = entrada.isIntersecting },
+      { threshold: 0, rootMargin: '0px 0px -8px 0px' }
+    )
+    headerObserver.observe(headerRef.value)
+  }
   fetchActividades()
   fetchNatillera()
   verificarModalBienvenida()
@@ -8012,6 +7986,7 @@ onMounted(() => {
   document.addEventListener('touchstart', handleClickOutside) // Para móvil
 })
 onUnmounted(() => {
+  headerObserver?.disconnect()
   window.removeEventListener('resize', actualizarIsMobile)
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('touchstart', handleClickOutside)

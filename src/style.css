@@ -3292,6 +3292,43 @@ html[data-theme='forest'] body {
     color: #fff;
     box-shadow: 0 1px 3px rgba(27, 94, 55, 0.35);
   }
+  /* ---------- FAB flotante «+» ----------
+     Promoción al DS del patrón de Socios (.socios-fab): aparece cuando la cabecera con el
+     botón de crear sale del viewport, para que la acción principal siga a mano al hacer scroll. */
+  .ds-fab {
+    position: fixed;
+    z-index: 40;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    /* Sobre la barra inferior de navegación en móvil */
+    bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+    width: 56px;
+    height: 56px;
+    border-radius: 9999px;
+    background: var(--brand-primary);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    cursor: pointer;
+    box-shadow: 0 12px 28px -6px rgba(15, 83, 45, 0.45),
+                0 4px 8px -2px rgba(15, 83, 45, 0.25);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background-color var(--transition-base),
+                transform var(--transition-fast),
+                box-shadow var(--transition-base);
+  }
+  .ds-fab:hover { background: var(--brand-primary-hover); }
+  .ds-fab:active { transform: scale(0.96); }
+  @media (min-width: 1024px) {
+    .ds-fab { bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+  }
+  /* iOS: capa propia, para que no parpadee sobre listas largas con scroll */
+  @supports (-webkit-touch-callout: none) {
+    .ds-fab { -webkit-transform: translate3d(0, 0, 0); }
+  }
+
   .ds-toolbar__count {
     font-size: 0.8125rem;
     color: #94a3b8;
@@ -3299,6 +3336,22 @@ html[data-theme='forest'] body {
   }
 }
 
+
+/* Transición del FAB del DS (clases de <Transition name="ds-fab">) */
+.ds-fab-enter-active,
+.ds-fab-leave-active {
+  transition: opacity 200ms ease,
+              transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ds-fab-enter-from,
+.ds-fab-leave-to {
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-fab-enter-active,
+  .ds-fab-leave-active { transition-duration: 0.01ms; }
+}
 
 /* ==========================================================================
    Modo ligero — equipos modestos, redes lentas y «reducir movimiento»
@@ -3354,10 +3407,17 @@ html[data-theme='forest'] body {
 }
 
 /* Las transiciones no se eliminan —quitarlas del todo hace que la interfaz
-   dé saltos y parezca rota—, se acortan para que respondan al instante. */
+   dé saltos y parezca rota—, se acortan para que respondan al instante.
+
+   Ojo: aquí NO se toca `animation-duration`. Se hizo, y aplastar a 120 ms todos
+   los `@keyframes` reproducía en 20× las animaciones largas (el héroe de la
+   bienvenida de 2,4 s, el fiel de la balanza de 3,6 s, el logo orbitando de 7 s):
+   se veían como un parpadeo epiléptico. Además no ahorra nada, porque lo que
+   cuesta de una animación es el repintado de cada fotograma, no su duración;
+   acortarla mete los mismos fotogramas en menos tiempo. Lo caro se quita abajo,
+   animación por animación. */
 [data-ligero] * {
   transition-duration: 120ms !important;
-  animation-duration: 120ms !important;
 }
 
 /* `transition-all` vigila cada propiedad que cambie, incluidas las que fuerzan
@@ -3367,7 +3427,9 @@ html[data-theme='forest'] body {
 }
 
 /* Los decorados que solo existen por estética salen sobrando cuando cada
-   fotograma cuenta. */
+   fotograma cuenta. Se paran enteros, que es lo que de verdad ahorra fotogramas:
+   los que aportan algo (el héroe del recorrido, que se ve una vez) se dejan correr
+   a su velocidad. */
 [data-ligero] .animate-pulse,
 [data-ligero] .animate-bounce,
 [data-ligero] .animate-ping {

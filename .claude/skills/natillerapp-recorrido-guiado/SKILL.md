@@ -25,10 +25,11 @@ description: >-
 
 | Pieza | Estado |
 |---|---|
-| `RecorridoGuiado.vue` (Conciliación) | Anterior. No usar en recorridos nuevos; migrar cuando se toque esa pantalla. |
+| `RecorridoGuiado.vue` (Conciliación) | Eliminado: Conciliación ya usa `RecorridoInteractivo`. |
 | Composables con driver.js (`use*Tour.js`) | Heredados, casi todos apagados en `src/config/toursEnabled.js`. No crear nuevos. |
 | `TourInteractivo.vue` y el carrusel `NatilleraDetalleAyudaModal.vue` | Eliminados. |
 | Carrusel `CuotasAyudaModal.vue` | Ya no sale solo: lo sustituye el recorrido de Cuotas. Se abre con `?ayuda=1`. |
+| Carrusel `ConciliacionAyudaModal.vue` | Igual: lo sustituye el recorrido de Conciliación. Se abre con `?ayuda=1`. |
 
 **Recorrido o carrusel.** Para enseñar *dónde está cada cosa en una pantalla*, recorrido. El carrusel en modal con mockups (`CuotasAyudaModal.vue`) queda para explicar *un flujo de varios pasos que no está a la vista* (registrar un pago de principio a fin). Se probó el carrusel para el detalle y se descartó: enseña una copia de la pantalla, no la pantalla.
 
@@ -40,11 +41,17 @@ Esto es lo que hace que un recorrido sea «el nuestro». Si una propuesta rompe 
 
 1. **Sobre la pantalla real.** Nada de mockups: el foco señala el elemento de verdad.
 2. **Bloqueo total.** Solo responde la tarjeta. No se toca la página, ni se hace scroll, ni zoom, ni rueda, ni tabulador fuera. Un toque fuera **no avanza** (enseñaría a tocar al azar): la tarjeta da un empujón, «Siguiente» late y aparece donde tocó el dedo el aviso con candado *«Estás en el recorrido · Termínalo o sáltalo para usar esta opción»*.
-3. **Poco texto.** Título de 2–5 palabras y **una sola línea** de explicación (≤ ~70 caracteres). Lo que se puede mostrar se anima en vez de describirse.
-4. **Una cosa a la vez.** Primero llega el foco, luego cambia lo enfocado (desplegar un panel, abrir un cajón). Si pasan juntas, el ojo no sigue ninguna.
-5. **La navegación depende del tamaño.** Por debajo de 1024 px no hay barra lateral: se enseñan la barra inferior, Caja y el menú ☰. Desde 1024 px, la barra lateral. Enseñar lo que no se ve confunde.
-6. **Siempre relanzable.** Botón «¿Cómo funciona?» en la cabecera. Abrirlo a mano no gasta las visitas en que sale solo.
-7. **No compite con otros overlays.** Los modales automáticos de la pantalla esperan a que termine.
+3. **Corto: 4–5 paradas.** Un recorrido enseña **dónde** está lo importante, no qué hace
+   cada botón ni cada campo de un formulario: eso se entiende viéndolo, y cada paso de
+   más es uno que la gente se salta (o la hace cerrar el recorrido entero). La bienvenida
+   y el final no cuentan. Un formulario o un flujo con modales ocupa **un** paso: se abre
+   de verdad y se enfoca montado, no se recorre campo a campo. Lo específico de cada
+   pantalla lo cuenta el recorrido de esa pantalla, no el del detalle.
+4. **Poco texto.** Título de 2–5 palabras y **una sola línea** de explicación (≤ ~70 caracteres). Lo que se puede mostrar se anima en vez de describirse.
+5. **Una cosa a la vez.** Primero llega el foco, luego cambia lo enfocado (desplegar un panel, abrir un cajón). Si pasan juntas, el ojo no sigue ninguna.
+6. **La navegación depende del tamaño.** Por debajo de 1024 px no hay barra lateral: se enseñan la barra inferior, Caja y el menú ☰. Desde 1024 px, la barra lateral. Enseñar lo que no se ve confunde.
+7. **Siempre relanzable.** Botón «¿Cómo funciona?» en la cabecera. Abrirlo a mano no gasta las visitas en que sale solo.
+8. **No compite con otros overlays.** Los modales automáticos de la pantalla esperan a que termine.
 
 ---
 
@@ -58,7 +65,7 @@ Esto es lo que hace que un recorrido sea «el nuestro». Si una propuesta rompe 
 | Toque | **Dos ondas huecas** sobre el centro del objetivo. **Nunca un punto sólido**: tapa justo el botón que hay que ver. |
 | Tarjeta | Blanca, radio 24 px, progreso segmentado, icono en degradado verde que entra con rebote, título que entra palabra a palabra, una línea de texto y el chip del subfoco. |
 | Botones | «Ahora no» / «Saltar»: píldora con borde gris, 44 px. «Atrás»: círculo de 48 px. **«Siguiente»**: verde marca `#1B5E37` relleno, 48 px, con brillo; **siempre el más visible**. |
-| Bienvenida | Por defecto: logo flotando, 4 puntos con los colores de los indicadores orbitando, mano 👋. «¡Hola, {nombre}!» y «Te enseño a navegar por tu natillera en menos de un minuto.» Con `heroe: 'fichas'`, un abanico de tres cartas con los emojis de `heroePiezas` flotando desacompasadas, sobre fondo ámbar. Con `heroe: 'monedas'`, las piezas caen una a una dentro de una alcancía que da un saltito, sobre fondo turquesa. Con `heroe: 'sellos'`, tres casillas se marcan con un visto verde una tras otra, sobre fondo lila. Con `heroe: 'balanza'`, el fiel se columpia con sus dos platillos y acaba a nivel, sobre fondo cian. |
+| Bienvenida | Por defecto: logo flotando, 4 puntos con los colores de los indicadores orbitando, mano 👋. «¡Hola, {nombre}!» y «Te enseño a navegar por tu natillera en menos de un minuto.» Con `heroe: 'fichas'`, un abanico de tres cartas con los emojis de `heroePiezas` flotando desacompasadas, sobre fondo ámbar. Con `heroe: 'monedas'`, las piezas caen una a una dentro de una alcancía que da un saltito, sobre fondo turquesa. Con `heroe: 'sellos'`, tres casillas se marcan con un visto verde una tras otra, sobre fondo lila. Con `heroe: 'balanza'`, el fiel se columpia con sus dos platillos y acaba a nivel, sobre fondo cian. Con `heroe: 'lupa'`, una lupa repasa tres renglones y se para en el que se tiñe de rojo, sobre fondo rosa. |
 | Final | Check verde con rebote y confeti. Botón «¡Listo!». |
 | Posición | `< 640 px`: tarjeta anclada abajo o arriba, al lado contrario del foco. `≥ 640 px`: flota junto al objetivo con flecha (debajo → encima → derecha → izquierda). |
 | Capa | `z-index: 120`: sobre barra inferior (49), cajón (50) e insignia dev (100); bajo las notificaciones (9999). |
@@ -79,7 +86,7 @@ Esto es lo que hace que un recorrido sea «el nuestro». Si una propuesta rompe 
 |---|---|
 | `tipo` | `'bienvenida'` o `'final'`. Sin `selector`; muestran el héroe animado y no cuentan en el progreso. |
 | `selector` | Objetivo. Preferir `[data-guia="…"]` o un `id` estable, **nunca clases de Tailwind**. Si hay dos (móvil y escritorio), se usa el visible. |
-| `titulo`, `texto` | Ver principio 3. |
+| `titulo`, `texto` | Ver principio 4. |
 | `icono` | Componente de `@heroicons/vue/24/outline`. |
 | `gesto: 'tocar'` | Ondas sobre el objetivo, para lo que se puede pulsar. |
 | `recorrer` | Subfoco por un grupo. Un selector (la etiqueta sale del texto del elemento) o `[{ selector, etiqueta }]` cuando el texto no basta. |
@@ -88,7 +95,7 @@ Esto es lo que hace que un recorrido sea «el nuestro». Si una propuesta rompe 
 | `alLlegar()` | Transforma el objetivo **ya enfocado** (desplegar un panel). Luego se reencuadra. |
 | `despues()` | Deshace lo anterior al salir del paso: con Siguiente, Atrás, Saltar o Esc. |
 | `grupo` | Une los pasos de un flujo. Entre pasos del mismo grupo **no** se llama a `despues`; al salir del grupo o terminar, sí. |
-| `heroe`, `heroePiezas` | Solo en la bienvenida. Cambia el logo orbitando por otra animación con los emojis de `heroePiezas` (tres como mucho): `'fichas'` = abanico de cartas (`['🎟️','🎲','🎁']`), `'monedas'` = caen a la alcancía (`['🪙','💵','🪙']`), `'sellos'` = casillas que se marcan como cobradas (`['💵','💵','💵']`). **Dale uno propio a cada pantalla**: quien ya vio otro recorrido lo salta creyendo que es el mismo. Actividades usa `'fichas'`; Préstamos, `'monedas'`; Cuotas, `'sellos'`; Cuadre de caja, `'balanza'`. **Repetir variante entre pantallas anula el efecto**: antes de elegir, mira cuáles están cogidas (`grep -rn "heroe:" src/views/`). Para añadir otro: variante en `heroeBienvenida`, su bloque en el héroe, sus keyframes con prefijo `-webkit-` y su entrada en el bloque de `prefers-reduced-motion`. |
+| `heroe`, `heroePiezas` | Solo en la bienvenida. Cambia el logo orbitando por otra animación con los emojis de `heroePiezas` (tres como mucho): `'fichas'` = abanico de cartas (`['🎟️','🎲','🎁']`), `'monedas'` = caen a la alcancía (`['🪙','💵','🪙']`), `'sellos'` = casillas que se marcan como cobradas (`['💵','💵','💵']`). **Dale uno propio a cada pantalla**: quien ya vio otro recorrido lo salta creyendo que es el mismo. Actividades usa `'fichas'`; Préstamos, `'monedas'`; Cuotas, `'sellos'`; Cuadre de caja, `'balanza'`; Conciliación, `'lupa'`. **Repetir variante entre pantallas anula el efecto**: antes de elegir, mira cuáles están cogidas (`grep -rn "heroe:" src/views/`). Para añadir otro: variante en `heroeBienvenida`, su bloque en el héroe, sus keyframes con prefijo `-webkit-` y su entrada en el bloque de `prefers-reduced-motion`. |
 
 Si el objetivo de un paso no está en pantalla, el paso se salta solo en la dirección en que se iba.
 
@@ -103,7 +110,7 @@ Para desplazar hasta el objetivo, el componente distingue tres casos: si cuelga 
    ```js
    return pasos.filter((paso) => !paso.selector || paso.antes || existe(paso.selector))
    ```
-3. **Orden:** bienvenida → contenido de la pantalla → navegación (según tamaño) → soporte → «¿Lo quieres repasar?» (solo en automático) → final. Navegación y soporte los enseña el recorrido del detalle; en las demás pantallas se omiten salvo que tengan algo propio.
+3. **Orden:** bienvenida → contenido de la pantalla → navegación (según tamaño) → soporte → final. Lo de «¿Lo quieres repasar?» **no** gasta un paso: va en el `texto` del final cuando el recorrido salió solo (`manual ? … : 'Repítelo cuando quieras con «¿Cómo funciona?».'`). Navegación y soporte los enseña el recorrido del detalle; en las demás pantallas se omiten salvo que tengan algo propio.
 4. **Ramificar por tamaño** con `window.innerWidth < 1024`, el mismo umbral `lg` del layout.
 5. **Menú o cajón:** `antes`/`despues` con funciones declaradas **fuera** de la lista, para que dos pasos seguidos compartan referencia y el cajón no parpadee:
    ```js

@@ -3676,6 +3676,11 @@ function restaurarDetalleGuia() {
  * Sin navegación ni soporte: ya los enseña el recorrido del detalle. Aquí, lo propio de
  * cuadrar la caja: qué debería haber, de dónde sale, qué se apunta a mano y el simulador.
  */
+/*
+ * Cuatro paradas: qué debería haber, de dónde sale, qué se apunta a mano y el ensayo
+ * del cierre. Sin navegación ni soporte (los enseña el recorrido del detalle) y sin
+ * detenerse en cada botón: cada paso de más es uno que la gente se salta.
+ */
 function construirPasosGuiaCuadre({ manual = false } = {}) {
   const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
   const pasos = [
@@ -3686,13 +3691,6 @@ function construirPasosGuiaCuadre({ manual = false } = {}) {
       heroePiezas: ['💵', '🏦'],
       titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
       texto: 'Te enseño a cuadrar la caja en menos de un minuto.'
-    },
-    {
-      selector: '[data-guia="cuadre-pestanas"]',
-      icono: Square2StackIcon,
-      titulo: 'Dos vistas',
-      texto: 'Cambia entre los totales de hoy y el ensayo del cierre.',
-      recorrer: '[data-guia="cuadre-pestanas"] button'
     },
     {
       selector: '[data-guia="cuadre-totales"]',
@@ -3709,33 +3707,15 @@ function construirPasosGuiaCuadre({ manual = false } = {}) {
       selector: '[data-guia="cuadre-detalle"]',
       icono: TableCellsIcon,
       titulo: 'De dónde sale cada peso',
-      texto: 'Cada cuota, sanción y préstamo, con socio y fecha.',
+      texto: 'Cada cuota, sanción y préstamo. Se exporta a Excel.',
       alLlegar: desplegarDetalleGuia,
       despues: restaurarDetalleGuia
-    },
-    {
-      selector: '[data-guia="cuadre-exportar"]',
-      icono: ArrowDownTrayIcon,
-      gesto: 'tocar',
-      titulo: 'Llévatelo a Excel',
-      texto: 'Baja el detalle tal como lo tengas filtrado.',
-      radio: 20,
-      margen: 6
     },
     {
       selector: '[data-guia="cuadre-movimientos"]',
       icono: ListBulletIcon,
       titulo: 'Lo que apuntas a mano',
       texto: 'Depósitos, retiros y gastos que mueven el total.'
-    },
-    {
-      selector: '[data-guia="cuadre-nuevo-movimiento"]',
-      icono: PlusIcon,
-      gesto: 'tocar',
-      titulo: 'Registra un movimiento',
-      texto: 'Toca aquí cuando entre o salga plata de la caja.',
-      radio: 20,
-      margen: 6
     },
     {
       selector: '[data-guia="cuadre-simulador"]',
@@ -3746,20 +3726,13 @@ function construirPasosGuiaCuadre({ manual = false } = {}) {
       antes: mostrarSimuladorGuia,
       despues: restaurarPestanaCuadreGuia
     },
-    // Quien lo abrió a mano ya sabe dónde está el botón.
-    ...(manual ? [] : [{
-      selector: '[data-guia="boton-recorrido"]',
-      icono: QuestionMarkCircleIcon,
-      gesto: 'tocar',
-      titulo: '¿Lo quieres repasar?',
-      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
-      radio: 22,
-      margen: 6
-    }]),
     {
       tipo: 'final',
       titulo: '¡Caja cuadrada!',
-      texto: 'Ya sabes revisar, exportar y ensayar el cierre.'
+      // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+      texto: manual
+        ? 'Ya sabes revisar, exportar y ensayar el cierre.'
+        : 'Repítelo cuando quieras con «¿Cómo funciona?».'
     }
   ]
   return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))

@@ -17,6 +17,46 @@
     >
       <div class="mobile-bottom-nav__shine"></div>
     </div>
+    <!--
+      Opciones de «Caja», en la propia barra. Antes abrían una hoja a pantalla completa
+      para elegir entre dos cosas: demasiada ceremonia para dos destinos. Ahora salen
+      como dos iconos justo encima del espacio que las agrupa, y se van igual de rápido.
+
+      Van DENTRO del <nav> a propósito: hereda su z-49, que está por encima del botón de
+      chat (45) y del de «Volver arriba» (40), así el desplegable nunca queda debajo de
+      ninguno de los dos. Sacarlo del nav lo dejaría a merced del z-index de cada vista.
+    -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2 scale-95"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0 scale-100"
+      leave-to-class="opacity-0 translate-y-2 scale-95"
+    >
+      <div
+        v-if="menuCajaAbierto"
+        ref="menuCajaRef"
+        role="menu"
+        aria-label="Opciones de Caja"
+        class="absolute bottom-full right-2 z-[5] mb-2 flex gap-2 rounded-2xl border border-white/15 bg-[#12331f] p-2 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.55)]"
+        @click.stop
+      >
+        <button
+          v-for="opcion in opcionesCaja"
+          :key="opcion.clave"
+          type="button"
+          role="menuitem"
+          class="flex min-h-[44px] min-w-[68px] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-white transition-colors [-webkit-tap-highlight-color:transparent]"
+          :class="opcion.esActual ? 'bg-white/20' : 'hover:bg-white/10 active:bg-white/15'"
+          @click="irACaja(opcion.ruta)"
+        >
+          <component :is="opcion.icono" class="h-5 w-5 flex-shrink-0" />
+          <span class="text-[10px] font-semibold leading-tight">{{ opcion.etiqueta }}</span>
+        </button>
+      </div>
+    </Transition>
+
     <div class="flex items-end justify-around gap-0.5 px-1 max-w-screen-sm mx-auto relative z-[3]">
       <!-- Inicio / Detalle Natillera -->
       <router-link
@@ -201,7 +241,7 @@
         :class="cajaActiva ? 'nav-item--active' : 'nav-item--inactive'"
         aria-haspopup="menu"
         :aria-expanded="menuCajaAbierto"
-        @click="menuCajaAbierto = true"
+        @click.stop="menuCajaAbierto = !menuCajaAbierto"
       >
         <div
           v-if="cajaActiva"
@@ -283,13 +323,6 @@
     </div>
   </nav>
 
-  <!-- Hoja del espacio «Caja». Vive fuera del <nav> porque ModalWrapper la teletransporta a body. -->
-  <MenuCajaSheet
-    v-if="natilleraId"
-    :show="menuCajaAbierto"
-    :natillera-id="natilleraId"
-    @close="menuCajaAbierto = false"
-  />
 </template>
 
 <script setup>
@@ -299,7 +332,6 @@ import { useNatillerasStore } from '../stores/natilleras'
 import { useNotificationStore } from '../stores/notifications'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
-import MenuCajaSheet from './MenuCajaSheet.vue'
 
 defineProps({
   /** Oculta la barra cuando el menú lateral está abierto (móvil) */
@@ -412,7 +444,9 @@ import {
   BanknotesIcon,
   CalendarIcon,
   WalletIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  ScaleIcon,
+  ArrowsRightLeftIcon
 } from '@heroicons/vue/24/outline'
 import {
   HomeIcon as HomeIconSolid,
@@ -479,6 +513,47 @@ function isActive(path) {
 /* --------------------------------- Espacio «Caja» ---------------------------- */
 
 const menuCajaAbierto = ref(false)
+const menuCajaRef = ref(null)
+
+/* Los dos destinos que agrupa «Caja». Etiquetas de una palabra: van bajo un icono. */
+const opcionesCaja = computed(() => {
+  const base = `/natilleras/${natilleraId.value}`
+  return [
+    {
+      clave: 'conciliacion',
+      etiqueta: 'Conciliar',
+      icono: ScaleIcon,
+      ruta: `${base}/conciliacion`,
+      esActual: route.path.startsWith(`${base}/conciliacion`)
+    },
+    {
+      clave: 'movimientos',
+      etiqueta: 'Movim.',
+      icono: ArrowsRightLeftIcon,
+      ruta: `${base}/movimientos`,
+      esActual: route.path.startsWith(`${base}/movimientos`)
+    }
+  ]
+})
+
+function irACaja(ruta) {
+  menuCajaAbierto.value = false
+  if (route.path === ruta) return
+  router.push(ruta)
+}
+
+/* Tocar fuera lo cierra, como cualquier desplegable. El botón de Caja para el evento
+   con `@click.stop`, así que su propio toque no llega aquí y no lo cierra y reabre. */
+function cerrarMenuCajaFuera() {
+  menuCajaAbierto.value = false
+}
+
+watch(menuCajaAbierto, (abierto) => {
+  if (abierto) document.addEventListener('click', cerrarMenuCajaFuera)
+  else document.removeEventListener('click', cerrarMenuCajaFuera)
+})
+
+onUnmounted(() => document.removeEventListener('click', cerrarMenuCajaFuera))
 
 // El espacio se pinta activo estando en cualquiera de las dos pantallas que agrupa,
 // para que la barra no diga «no estás en ningún sitio» cuando sí lo estás.

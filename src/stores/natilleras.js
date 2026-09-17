@@ -1588,11 +1588,18 @@ export const useNatillerasStore = defineStore('natilleras', () => {
               utilidadesRecogidas: Number(s.utilidadesRecogidas) || 0,
               fondoTotal: Number(s.fondoTotal) || 0,
               recaudadoBrutoCuotas: Number(s.recaudadoBrutoCuotas) || 0,
-              progresoCuotas: Number(s.progresoCuotas) || 0
+              progresoCuotas: Number(s.progresoCuotas) || 0,
+              // La función del servidor ya trae los bolsillos del libro de caja.
+              egresosRecaudado: Number(s.egresosRecaudado) || 0,
+              egresosUtilidades: Number(s.egresosUtilidades) || 0,
+              ingresosRecaudado: Number(s.ingresosRecaudado) || 0,
+              ingresosUtilidades: Number(s.ingresosUtilidades) || 0
             }
           }
         })
-        return _completarBolsillos(natilleraIds, resultado)
+        // Con los bolsillos ya dentro sobra la consulta extra a movimientos_fondo.
+        const traeBolsillos = natilleraIds.some(id => rpcData[id]?.egresosRecaudado !== undefined)
+        return traeBolsillos ? resultado : _completarBolsillos(natilleraIds, resultado)
       }
       // Si hay error (función no existe), caer al fallback
       if (isDev) console.warn('[Dashboard stats] RPC fallback:', rpcError?.message)

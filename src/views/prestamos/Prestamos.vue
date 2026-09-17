@@ -1,8 +1,20 @@
 <template>
   <div class="max-w-7xl lg:max-w-6xl xl:max-w-7xl mx-auto space-y-5 sm:space-y-6 pb-6">
     <RecorridoInteractivo :pasos="pasosGuiaPrestamos" :activo="guiaPrestamosActiva" @terminar="cerrarGuiaPrestamos" />
+    <!-- FAB: la acción principal sigue a mano cuando la cabecera sale de pantalla -->
+    <Transition name="ds-fab">
+      <button
+        v-if="mostrarFab"
+        type="button"
+        class="ds-fab"
+        aria-label="Nuevo préstamo"
+        @click="abrirModalNuevoPrestamo"
+      >
+        <PlusIcon class="w-6 h-6" />
+      </button>
+    </Transition>
     <!-- Page header (DS) — patrón unificado Socios/Actividades/Cuotas/Préstamos -->
-    <header class="ds-page-header">
+    <header ref="headerRef" class="ds-page-header">
       <div class="ds-page-header__row">
         <div class="ds-page-header__lead">
           <BackButton :to="`/natilleras/${id}`" :inline="true" />
@@ -4071,6 +4083,26 @@ const modalCompartirPrestamo = ref(false)
 const modalCompartirPrestamoNuevo = ref(false)
 const modalComprobanteAbono = ref(false)
 const modalComprobantePagado = ref(false)
+
+// FAB flotante: aparece cuando la cabecera (con «Nuevo Préstamo») sale del viewport
+const headerRef = ref(null)
+const headerVisible = ref(true)
+let headerObserver = null
+const hayModalAbiertaPrestamos = computed(() =>
+  modalNuevoPrestamo.value || modalAbono.value || modalEditarAbono.value || modalDetalle.value ||
+  modalRefinanciar.value || modalAyudaInteres.value || modalCompartirPrestamo.value ||
+  modalCompartirPrestamoNuevo.value || modalComprobanteAbono.value || modalComprobantePagado.value ||
+  !!prestamoAEliminar.value || !!abonoAEliminar.value || !!abonoAEditar.value
+)
+// Lee `guiaPrestamosActiva`, declarada más abajo: al ser computed solo se evalúa al pintar,
+// cuando el setup ya terminó (no repetir el patrón con un watch, que sí evaluaría ya).
+const mostrarFab = computed(() =>
+  !cargaInicial.value &&
+  prestamos.value.length > 0 &&
+  !headerVisible.value &&
+  !hayModalAbiertaPrestamos.value &&
+  !guiaPrestamosActiva.value
+)
 const generandoImagenPrestamo = ref(false)
 const generandoImagenPrestamoNuevo = ref(false)
 const generandoPrestamo = ref(false)
@@ -8011,9 +8043,9 @@ async function guiaCrearEnPaso(paso) {
   return true
 }
 
+// El recorrido solo abre el primer paso del formulario; `guiaCrearEnPaso` acepta
+// cualquiera por si vuelve a hacer falta enseñar los otros dos.
 const guiaCrearMonto = () => guiaCrearEnPaso(0)
-const guiaCrearPlazo = () => guiaCrearEnPaso(1)
-const guiaCrearResumen = () => guiaCrearEnPaso(2)
 
 /*
  * La pestaña «Pagados» no se ve mientras el recorrido enseña los préstamos por cobrar,
@@ -8033,12 +8065,14 @@ function restaurarPestanaGuia() {
   pestanaPrestamosAntesGuia = null
 }
 
+/*
+ * Cinco paradas y fuera. Enseña el circuito —crear, mirar, cobrar, cerrar—, no cada
+ * dato de la tarjeta: eso se lee solo, y cada paso de más es uno que la gente se salta.
+ */
 function construirPasosGuiaPrestamos({ manual = false } = {}) {
   const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
   const tarjeta = '[data-guia="prestamos-tarjeta"]'
   const puedeCrear = !!document.querySelector('[data-guia="prestamos-nuevo"]')
-  // Mismo `grupo` = no se cierra la modal entre pasos; al salir del flujo, sí.
-  const flujoCrear = { grupo: 'crear-prestamo', despues: cerrarModalesGuiaPrestamos }
   const pasos = [
     {
       tipo: 'bienvenida',
@@ -8049,44 +8083,27 @@ function construirPasosGuiaPrestamos({ manual = false } = {}) {
       titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
       texto: 'Te enseño a manejar los préstamos en menos de un minuto.'
     },
-    {
-      selector: '[data-guia="prestamos-nuevo"]',
-      icono: PlusIcon,
-      gesto: 'tocar',
-      titulo: 'Presta dinero',
-      texto: 'Crea un préstamo para un socio en pocos pasos.',
-      radio: 24,
-      margen: 6
-    },
-    // Los tres pasos de la modal de creación, a grandes rasgos. Mismo `grupo`: entre
-    // ellos la modal no se cierra; al salir del flujo, sí. Solo si se puede crear
-    // (a un visor no se le abre una modal que no va a poder usar).
-    ...(puedeCrear ? [
-      {
-        selector: '[data-guia="crear-monto"]',
-        icono: UserIcon,
-        titulo: 'Paso 1: a quién y cuánto',
-        texto: 'Eliges el socio, el monto y cada cuánto paga.',
-        ...flujoCrear,
-        antes: guiaCrearMonto
-      },
-      {
-        selector: '[data-guia="crear-plazo"]',
-        icono: CalendarDaysIcon,
-        titulo: 'Paso 2: plazo e interés',
-        texto: 'Tipo de interés, número de cuotas y fecha de la primera.',
-        ...flujoCrear,
-        antes: guiaCrearPlazo
-      },
-      {
-        selector: '[data-guia="crear-resumen"]',
-        icono: CheckCircleIcon,
-        titulo: 'Paso 3: revisa y confirma',
-        texto: 'Te muestra cuota, intereses y total antes de crearlo.',
-        ...flujoCrear,
-        antes: guiaCrearResumen
-      }
-    ] : []),
+    // La modal de creación se abre de verdad, en su primer paso: enseñar el botón sin
+    // lo que hay detrás no dice nada, y abrir sus tres pasos uno a uno alargaba de más.
+    // Solo si se puede crear: a un visor no se le abre una modal que no va a poder usar.
+    puedeCrear
+      ? {
+          selector: '[data-guia="crear-monto"]',
+          icono: PlusIcon,
+          titulo: 'Presta dinero',
+          texto: 'Tres pasos: a quién y cuánto, plazo e interés, y confirmar.',
+          antes: guiaCrearMonto,
+          despues: cerrarModalesGuiaPrestamos
+        }
+      : {
+          selector: '[data-guia="prestamos-nuevo"]',
+          icono: PlusIcon,
+          gesto: 'tocar',
+          titulo: 'Presta dinero',
+          texto: 'Crea un préstamo para un socio en pocos pasos.',
+          radio: 24,
+          margen: 6
+        },
     {
       selector: '[data-guia="prestamos-resumen"]',
       icono: ChartBarIcon,
@@ -8100,27 +8117,14 @@ function construirPasosGuiaPrestamos({ manual = false } = {}) {
       ]
     },
     {
-      selector: '[data-guia="prestamos-pestanas"]',
-      icono: RectangleStackIcon,
-      titulo: 'Por cobrar y pagados',
-      texto: 'Separa los préstamos activos de los terminados.',
-      recorrer: '[data-guia="prestamos-pestanas"] [role="tab"]'
-    },
-    {
-      selector: '[data-guia="prestamos-saldo-seccion"]',
-      icono: CurrencyDollarIcon,
-      titulo: 'Lo que falta cobrar',
-      texto: 'Suma lo que deben los préstamos de la pestaña.'
-    },
-    {
       selector: tarjeta,
       icono: UserIcon,
       titulo: 'Cada préstamo',
-      texto: 'Toca la tarjeta para ver su detalle y abonos.',
+      texto: 'Saldo, próximo pago y avance. Tócala para ver el detalle.',
       recorrer: [
         { selector: `${tarjeta} [data-guia-parte="estado"]`, etiqueta: 'Estado · al día, en mora o pagado' },
         { selector: `${tarjeta} [data-guia-parte="saldo"]`, etiqueta: 'Saldo · lo que falta pagar' },
-        { selector: `${tarjeta} [data-guia-parte="cifras"]`, etiqueta: 'Monto, interés y lo pagado' }
+        { selector: `${tarjeta} [data-guia-parte="proximo"]`, etiqueta: 'Próximo pago · con los días de gracia' }
       ].filter((item) => document.querySelector(item.selector))
     },
     {
@@ -8133,39 +8137,23 @@ function construirPasosGuiaPrestamos({ manual = false } = {}) {
       margen: 6
     },
     {
-      selector: `${tarjeta} [data-guia-parte="mas"]`,
-      icono: EllipsisHorizontalIcon,
-      gesto: 'tocar',
-      titulo: 'Más opciones',
-      texto: 'Aquí refinancias o eliminas el préstamo.',
-      radio: 22,
-      margen: 6
-    },
-    {
       selector: '[data-guia="prestamos-lista"]',
       icono: CheckCircleIcon,
       titulo: 'Los que ya pagaron',
       texto: prestamosPagados.value.length
-        ? 'En «Pagados» quedan los saldados; desde ahí envías el comprobante.'
+        ? 'En «Pagados» quedan los saldados, con su comprobante.'
         : 'Cuando un préstamo se salde, pasa solo a «Pagados».',
       // Abre la pestaña para enseñarla y la deja como estaba al salir del paso
       antes: mostrarPagadosGuia,
       despues: restaurarPestanaGuia
     },
-    // Quien lo abrió a mano ya sabe dónde está el botón.
-    ...(manual ? [] : [{
-      selector: '[data-guia="boton-recorrido"]',
-      icono: QuestionMarkCircleIcon,
-      gesto: 'tocar',
-      titulo: '¿Lo quieres repasar?',
-      texto: 'Toca «¿Cómo funciona?» cuando quieras verlo otra vez.',
-      radio: 22,
-      margen: 6
-    }]),
     {
       tipo: 'final',
       titulo: '¡Listo para prestar!',
-      texto: 'Ya sabes crear, abonar y refinanciar préstamos.'
+      // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+      texto: manual
+        ? 'Ya sabes crear, abonar y cerrar préstamos.'
+        : 'Repítelo cuando quieras con «¿Cómo funciona?».'
     }
   ]
   return pasos.filter((paso) => !paso.selector || paso.antes || document.querySelector(paso.selector))
@@ -8225,6 +8213,15 @@ function handleClickOutside(event) {
 onMounted(async () => {
   document.addEventListener('click', handleClickOutside)
 
+  // Observer de la cabecera para mostrar/ocultar el FAB
+  if (typeof IntersectionObserver !== 'undefined' && headerRef.value) {
+    headerObserver = new IntersectionObserver(
+      ([entrada]) => { headerVisible.value = entrada.isIntersecting },
+      { threshold: 0, rootMargin: '0px 0px -8px 0px' }
+    )
+    headerObserver.observe(headerRef.value)
+  }
+
   /*
    * Las reglas y los préstamos no dependen unos de otros, así que van a la vez.
    * Antes las reglas se esperaban enteras antes de empezar siquiera a pedir los
@@ -8249,6 +8246,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  headerObserver?.disconnect()
   document.removeEventListener('click', handleClickOutside)
 })
 

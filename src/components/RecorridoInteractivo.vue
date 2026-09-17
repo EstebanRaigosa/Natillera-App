@@ -93,7 +93,8 @@
                   'rec__hero--fichas': heroeEsFichas,
                   'rec__hero--monedas': heroeEsMonedas,
                   'rec__hero--sellos': heroeEsSellos,
-                  'rec__hero--balanza': heroeEsBalanza
+                  'rec__hero--balanza': heroeEsBalanza,
+                  'rec__hero--lupa': heroeEsLupa
                 }"
                 aria-hidden="true"
               >
@@ -127,6 +128,14 @@
                     <i v-for="(pieza, n) in heroePiezas" :key="n" class="rec__platillo" :style="{ '--n': n }">{{ pieza }}</i>
                   </span>
                   <span class="rec__pivote" />
+                </template>
+                <!-- Heroe «lupa»: repasa renglon a renglon hasta parar en el que no cuadra.
+                     El de Conciliacion, que es exactamente eso: buscar donde se rompe. -->
+                <template v-else-if="heroeEsLupa">
+                  <span class="rec__renglones">
+                    <i v-for="n in 3" :key="n" :style="{ '--n': n - 1 }" />
+                  </span>
+                  <span class="rec__lupa">{{ heroePiezas[0] }}</span>
                 </template>
                 <template v-else-if="pasoActual.tipo === 'bienvenida'">
                   <span class="rec__orbita">
@@ -293,7 +302,9 @@ const PIEZAS_POR_HEROE = {
   monedas: ['🪙', '💵', '🪙'],
   sellos: ['💵', '💵', '💵'],
   // La balanza tiene dos platillos y no tres: efectivo y banco.
-  balanza: ['💵', '🏦']
+  balanza: ['💵', '🏦'],
+  // La lupa es una sola pieza: lo que se mueve es ella.
+  lupa: ['🔍']
 }
 const heroeBienvenida = computed(() =>
   pasoActual.value?.tipo === 'bienvenida' ? pasoActual.value?.heroe : null
@@ -302,6 +313,7 @@ const heroeEsFichas = computed(() => heroeBienvenida.value === 'fichas')
 const heroeEsMonedas = computed(() => heroeBienvenida.value === 'monedas')
 const heroeEsSellos = computed(() => heroeBienvenida.value === 'sellos')
 const heroeEsBalanza = computed(() => heroeBienvenida.value === 'balanza')
+const heroeEsLupa = computed(() => heroeBienvenida.value === 'lupa')
 const heroePiezas = computed(() => {
   const piezas = pasoActual.value?.heroePiezas
   if (Array.isArray(piezas) && piezas.length) return piezas.slice(0, 3)
@@ -1405,6 +1417,48 @@ onBeforeUnmount(() => {
   border-bottom: 26px solid rgba(27, 94, 55, 0.22);
 }
 
+/* Héroe «lupa»: tres renglones y una lupa que los repasa; el último se tiñe de rojo,
+   que es la línea donde deja de cuadrar */
+.rec__hero--lupa {
+  background: radial-gradient(circle at 50% 45%, #ffe4e6 0%, #fff1f2 45%, #ffffff 78%);
+}
+
+.rec__renglones {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 118px;
+  margin: -26px 0 0 -59px;
+}
+
+.rec__renglones i {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.14);
+}
+
+.rec__renglones i + i {
+  margin-top: 14px;
+}
+
+/* El tercero es el que «no cuadra»: se tiñe cuando la lupa llega a él */
+.rec__renglones i:nth-child(3) {
+  -webkit-animation: rec-renglon 3.2s ease-in-out infinite both;
+  animation: rec-renglon 3.2s ease-in-out infinite both;
+}
+
+.rec__lupa {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -44px 0 0 -14px;
+  font-size: 28px;
+  line-height: 1;
+  -webkit-animation: rec-lupa 3.2s ease-in-out infinite both;
+  animation: rec-lupa 3.2s ease-in-out infinite both;
+}
+
 .rec__exito {
   position: relative;
   z-index: 1;
@@ -1810,6 +1864,25 @@ onBeforeUnmount(() => {
   30%, 88% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.9); }
 }
+@-webkit-keyframes rec-lupa {
+  0% { -webkit-transform: translate3d(-34px, 0, 0); }
+  30% { -webkit-transform: translate3d(22px, 22px, 0); }
+  60%, 100% { -webkit-transform: translate3d(-10px, 44px, 0); }
+}
+@keyframes rec-lupa {
+  0% { transform: translate3d(-34px, 0, 0); }
+  30% { transform: translate3d(22px, 22px, 0); }
+  60%, 100% { transform: translate3d(-10px, 44px, 0); }
+}
+@-webkit-keyframes rec-renglon {
+  0%, 55% { background: rgba(15, 23, 42, 0.14); }
+  70%, 100% { background: rgba(190, 18, 60, 0.55); }
+}
+@keyframes rec-renglon {
+  0%, 55% { background: rgba(15, 23, 42, 0.14); }
+  70%, 100% { background: rgba(190, 18, 60, 0.55); }
+}
+
 @-webkit-keyframes rec-fiel {
   0% { -webkit-transform: rotate(-11deg); }
   30% { -webkit-transform: rotate(9deg); }
@@ -1857,6 +1930,8 @@ onBeforeUnmount(() => {
   .rec__moneda i,
   .rec__alcancia,
   .rec__fiel,
+  .rec__lupa,
+  .rec__renglones i,
   .rec__sello i,
   .rec__sello b,
   .rec__exito,
