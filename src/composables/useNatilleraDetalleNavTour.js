@@ -125,7 +125,7 @@ export function startNatilleraDetalleNavTour(opts) {
           popover: {
             title: 'Menú en la barra lateral',
             description:
-              'En pantallas grandes el menú principal está aquí: Inicio, Socios, Cuotas, Préstamos, Actividades y Totales. Es la navegación del día a día dentro de esta natillera.',
+              'En pantallas grandes el menú principal está aquí: Inicio, Socios, Cuotas, Préstamos, Actividades, Conciliación y Movimientos. Es la navegación del día a día dentro de esta natillera.',
             side: 'right',
             align: 'start'
           }
@@ -173,7 +173,7 @@ export function startNatilleraDetalleNavTour(opts) {
         popover: {
           title: 'Menú en la barra inferior',
           description:
-            'En el teléfono el menú principal está en esta barra: Inicio, Socios, Cuotas, Préstamos, Actividades y Totales. Desde aquí cambias de pantalla con un toque.',
+            'En el teléfono el menú principal está en esta barra: Inicio, Socios, Cuotas, Préstamos, Actividades, Caja y Config. Desde aquí cambias de pantalla con un toque.',
           side: 'top',
           align: 'center'
         }

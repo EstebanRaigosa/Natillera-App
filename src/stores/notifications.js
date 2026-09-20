@@ -46,6 +46,34 @@ export const useNotificationStore = defineStore('notifications', () => {
   const notifications = ref([])
   let idCounter = 0
 
+  /**
+   * Temporizadores de autocierre, fuera del estado reactivo porque nadie los pinta.
+   * Se guardan aquí —y no en un `setTimeout` suelto— para poder pausarlos: si el
+   * usuario tiene el puntero encima o está arrastrando el toast, lo está leyendo, y
+   * que se le cierre a media frase es justo lo que no queremos.
+   */
+  const temporizadores = new Map()
+
+  function programar(id, ms) {
+    if (ms <= 0) return
+    temporizadores.set(id, { handle: setTimeout(() => remove(id), ms), restante: ms, desde: Date.now() })
+  }
+
+  function pausar(id) {
+    const t = temporizadores.get(id)
+    if (!t || !t.handle) return
+    clearTimeout(t.handle)
+    t.handle = null
+    t.restante = Math.max(0, t.restante - (Date.now() - t.desde))
+  }
+
+  function reanudar(id) {
+    const t = temporizadores.get(id)
+    if (!t || t.handle) return
+    t.desde = Date.now()
+    t.handle = setTimeout(() => remove(id), t.restante)
+  }
+
   function show(notification = {}) {
     const variant = normalizeVariant(notification.type)
     const id = ++idCounter
@@ -60,10 +88,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     }
 
     notifications.value.push(item)
-
-    if (duration > 0) {
-      setTimeout(() => remove(id), duration)
-    }
+    programar(id, duration)
 
     return id
   }
@@ -97,6 +122,10 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   function remove(id) {
+    const t = temporizadores.get(id)
+    if (t?.handle) clearTimeout(t.handle)
+    temporizadores.delete(id)
+
     const index = notifications.value.findIndex(n => n.id === id)
     if (index !== -1) {
       notifications.value.splice(index, 1)
@@ -104,6 +133,8 @@ export const useNotificationStore = defineStore('notifications', () => {
   }
 
   function clear() {
+    temporizadores.forEach(t => { if (t.handle) clearTimeout(t.handle) })
+    temporizadores.clear()
     notifications.value = []
   }
 
@@ -122,6 +153,8 @@ export const useNotificationStore = defineStore('notifications', () => {
     info,
     // utilidades
     remove,
-    clear
+    clear,
+    pausar,
+    reanudar
   }
 })

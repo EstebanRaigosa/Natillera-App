@@ -4,7 +4,7 @@ import { isTourEnabled } from '../config/toursEnabled'
 const storageKey = (natilleraId) => `natillera_menu_acciones_tour_v3_${natilleraId}`
 
 /**
- * Tour corto (móvil) tras el primer socio: menú ☰, acciones, barra inferior y Totales (estado).
+ * Tour corto (móvil) tras el primer socio: menú ☰, acciones, barra inferior y Caja (el dinero).
  */
 export function shouldShowNatilleraMenuTour(natilleraId) {
   if (!isTourEnabled('natilleraMenu')) return false
@@ -37,8 +37,8 @@ export function startNatilleraMenuTour(opts) {
   const hamburger = document.querySelector('#tour-hamburger-btn')
   const acciones = document.querySelector('#tour-acciones-natillera')
   const barraInferior = document.querySelector('#tour-mobile-bottom-nav')
-  const itemTotales = document.querySelector('#tour-bottom-nav-totales')
-  if (!hamburger || !acciones || !barraInferior || !itemTotales) return
+  const itemCaja = document.querySelector('#tour-bottom-nav-caja')
+  if (!hamburger || !acciones || !barraInferior || !itemCaja) return
 
   const d = driver({
     animate: true,
@@ -97,7 +97,7 @@ export function startNatilleraMenuTour(opts) {
         popover: {
           title: 'Barra inferior de navegacion',
           description:
-            'Desde aqui saltas entre las pantallas principales: Inicio, Socios, Cuotas, Prestamos, Actividades, Totales y Config. Usala para el dia a dia; el menu es para acciones puntuales. En el siguiente paso te mostramos Totales.',
+            'Desde aqui saltas entre las pantallas principales: Inicio, Socios, Cuotas, Prestamos, Actividades, Caja y Config. Usala para el dia a dia; el menu es para acciones puntuales. En el siguiente paso te mostramos Caja.',
           side: 'top',
           align: 'center',
           onPrevClick: (_element, _step, { driver: drv }) => {
@@ -107,11 +107,11 @@ export function startNatilleraMenuTour(opts) {
         }
       },
       {
-        element: '#tour-bottom-nav-totales',
+        element: '#tour-bottom-nav-caja',
         popover: {
-          title: 'Totales - estado de la natillera',
+          title: 'Caja - el dinero de la natillera',
           description:
-            'Toca Totales para ver el cuadre y la situacion financiera: recaudo, pendientes, movimientos y el panorama general. Es el lugar habitual para revisar como va la natillera.',
+            'Toca Caja y elige: Conciliar, para comprobar si el dinero que dice la app es el que tienes de verdad, o Movimientos, para registrar lo que entra y sale del fondo sin venir de una cuota.',
           side: 'top',
           align: 'center'
         }

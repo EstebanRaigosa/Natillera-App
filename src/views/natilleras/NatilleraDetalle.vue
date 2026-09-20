@@ -35,11 +35,23 @@
               </span>
             </div>
           </div>
+          <!-- Relanza el recorrido guiado a voluntad; no gasta las visitas en que sale solo. -->
+          <button
+            type="button"
+            data-guia="boton-recorrido"
+            class="ml-auto flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white px-0 text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            title="¿Cómo funciona esta pantalla?"
+            aria-label="¿Cómo funciona esta pantalla? Ver el recorrido guiado"
+            @click="abrirGuia({ manual: true })"
+          >
+            <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+            <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
+          </button>
           <button
             v-if="puedeUsarRecordatorio"
             type="button"
             @click="abrirModalRecordatorio"
-            class="ml-auto flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-white bg-[#166534] hover:bg-[#145a2d] active:bg-[#124d26] shadow-sm transition-colors touch-manipulation"
+            class="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto sm:px-3 sm:py-2 rounded-full sm:rounded-lg flex items-center justify-center gap-1.5 text-white bg-[#166534] hover:bg-[#145a2d] active:bg-[#124d26] shadow-sm transition-colors touch-manipulation"
             title="Recordatorios"
             aria-label="Recordatorios"
           >
@@ -50,9 +62,9 @@
       </header>
 
       <!-- ─── Indicadores (paleta: #2D2D2D · #E91E63 · #F58231 · #90D15B · #2EBA74) ─── -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+      <div data-guia="indicadores" class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <!-- Socios -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-socios" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2D2D2D]/10 text-[#2D2D2D]">
             <UsersIcon class="h-6 w-6" />
           </div>
@@ -62,7 +74,7 @@
           </div>
         </div>
         <!-- Recaudado -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-recaudado" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2EBA74]/18 text-[#1f9a5c]">
             <BanknotesIcon class="h-6 w-6" />
           </div>
@@ -72,7 +84,7 @@
           </div>
         </div>
         <!-- Pendiente -->
-        <div class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
+        <div data-guia="card-pendiente" class="flex items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 sm:px-3 sm:py-2 shadow-sm">
           <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F58231]/16 text-[#F58231]">
             <ClipboardDocumentListIcon class="h-6 w-6" />
           </div>
@@ -83,6 +95,7 @@
         </div>
         <!-- Utilidad -->
         <div
+          data-guia="card-utilidad"
           @click="abrirModalDesgloseUtilidades"
           class="flex cursor-pointer items-center gap-2 rounded-2xl border border-gray-200/80 bg-white px-2.5 py-2 transition-colors hover:bg-[#90D15B]/14 sm:px-3 sm:py-2 shadow-sm"
         >
@@ -97,12 +110,9 @@
       </div>
 
       <!-- ─── Configuración de la natillera (plegable en todos los tamaños; título corto en móvil) ─── -->
-      <div class="mt-2 sm:mt-3">
+      <div data-guia="configuracion" class="mt-2 sm:mt-3">
         <div class="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-4 lg:px-4 lg:py-3">
-          <div
-            class="flex items-center justify-between gap-3 lg:!mb-2"
-            :class="datosNatilleraConfigPanelAbierto ? 'mb-5' : 'mb-0'"
-          >
+          <div class="flex items-center justify-between gap-3">
             <button
               type="button"
               class="-my-1 flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl py-1.5 pl-0 pr-1 text-left transition-colors hover:bg-gray-50 active:bg-gray-50 sm:my-0 sm:py-0 sm:pr-0"
@@ -139,12 +149,21 @@
               <Cog6ToothIcon class="h-5 w-5 shrink-0 lg:h-6 lg:w-6" aria-hidden="true" />
             </router-link>
           </div>
+          <!--
+            Plegado con grid-template-rows 0fr → 1fr: anima la altura sin medirla en JS.
+            Safari < 16 no interpola la propiedad y abre de golpe, como antes. El
+            margen va dentro (pt-5) para que se pliegue junto al contenido.
+          -->
+          <div
+            class="grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none"
+            :class="datosNatilleraConfigPanelAbierto ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+          >
+            <div class="min-h-0 overflow-hidden" :inert="!datosNatilleraConfigPanelAbierto">
           <div
             id="panel-datos-natillera"
             role="region"
             aria-labelledby="heading-datos-natillera"
-            class="grid grid-cols-2 gap-x-4 gap-y-5 text-sm sm:gap-x-6 sm:gap-y-4 lg:gap-x-5 lg:gap-y-2"
-            :class="{ hidden: !datosNatilleraConfigPanelAbierto }"
+            class="grid grid-cols-2 gap-x-4 gap-y-5 pt-5 text-sm sm:gap-x-6 sm:gap-y-4 lg:gap-x-5 lg:gap-y-2 lg:pt-2"
           >
             <div class="min-w-0">
               <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-500 lg:text-[9px]">
@@ -222,6 +241,8 @@
               <p v-else class="mt-1 text-sm font-bold text-gray-700 sm:text-base lg:mt-0.5 lg:text-sm">
                 Desactivadas
               </p>
+            </div>
+          </div>
             </div>
           </div>
         </div>
@@ -360,6 +381,7 @@
         <!-- Alertas recientes -->
         <section
           v-if="sociosEnMora.length > 0"
+          data-guia="alertas"
           class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
         >
           <div class="px-5 pt-5 pb-3">
@@ -461,6 +483,7 @@
         <!-- Últimos movimientos -->
         <section
           v-if="ultimosMovimientos.length > 0"
+          data-guia="movimientos"
           class="rounded-2xl border border-gray-200/80 bg-white shadow-sm"
         >
           <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-3">
@@ -514,6 +537,7 @@
       <!-- ─── Utilidades por categoría (gráfico) ─── -->
       <section
         v-if="utilidadesCategoriaGrafico.segments.length > 0"
+        data-guia="utilidades"
         class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
       >
         <div class="flex flex-wrap items-start justify-between gap-3 px-5 pt-5 pb-2">
@@ -3910,6 +3934,16 @@
         :es-admin="esAdmin"
       />
     </div>
+    <!--
+      Guía de bienvenida. Se muestra sola las dos primeras visitas a esta
+      pantalla (ver useTourDetalleNatillera.js) y se puede volver a lanzar.
+    -->
+    <ModalNovedadVisual :show="modalNovedadVisual" @cerrar="cerrarNovedadVisual" />
+    <RecorridoInteractivo
+      :pasos="pasosGuia"
+      :activo="guiaActiva"
+      @terminar="cerrarGuia"
+    />
 </template>
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
@@ -3917,6 +3951,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { 
+  ArrowRightOnRectangleIcon,
+  QuestionMarkCircleIcon,
+  ArrowsRightLeftIcon,
+  WalletIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   UsersIcon,
@@ -3954,6 +3992,7 @@ import {
   CheckBadgeIcon,
   ListBulletIcon,
   FunnelIcon,
+  UserCircleIcon,
 } from '@heroicons/vue/24/outline'
 import {
   ExclamationTriangleIcon as ExclamationTriangleIconSolid,
@@ -3974,6 +4013,16 @@ import {
   emailInvitadorDestacado,
 } from '../../utils/invitacionesColaborador'
 import BackButton from '../../components/BackButton.vue'
+import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import ModalNovedadVisual from '../../components/ModalNovedadVisual.vue'
+import { debeMostrarNovedadVisual, registrarNovedadVisualVista, reiniciarNovedadVisual } from '../../composables/useNovedadVisual'
+import {
+  debeMostrarGuiaDetalle,
+  hayGuiaDetallePendiente,
+  limpiarGuiaDetallePendiente,
+  registrarGuiaDetalleVista,
+} from '../../composables/useTourDetalleNatillera'
+import { recaudadoIndicador, utilidadIndicador } from '../../utils/indicadoresNatillera'
 import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -4001,6 +4050,245 @@ const sociosStore = useSociosStore()
 const configStore = useConfiguracionStore()
 const cuotasStore = useCuotasStore()
 const authStore = useAuthStore()
+
+// ─── Guía de bienvenida ────────────────────────────────────────────────────
+const guiaActiva = ref(false)
+/*
+ * Los pasos se construyen al abrir, no en un computed: dependen de lo que hay en
+ * el DOM en ese momento —sin morosos no hay alertas, el botón de soporte puede
+ * estar oculto— y un computed no se entera de eso.
+ */
+const pasosGuia = ref([])
+
+/*
+ * Preparación del menú. Declaradas fuera de la lista a propósito: dos pasos
+ * seguidos comparten la misma referencia y el recorrido no cierra el menú entre
+ * uno y otro.
+ */
+const mostrarMenuLateral = () => dashboardSidebar?.prepareSidebarForTour?.()
+const ocultarMenuLateral = () => dashboardSidebar?.clearSidebarAfterTour?.()
+const abrirMenuMovil = () => dashboardSidebar?.openMobile?.()
+const cerrarMenuMovil = () => dashboardSidebar?.closeMobile?.()
+
+/*
+ * El panel de configuración viene plegado: enfocarlo cerrado es señalar un
+ * título. Se despliega durante su paso y se deja como estaba al salir.
+ */
+let panelConfigAbiertoAntesDeGuia = null
+const desplegarConfigParaGuia = () => {
+  panelConfigAbiertoAntesDeGuia = datosNatilleraConfigPanelAbierto.value
+  datosNatilleraConfigPanelAbierto.value = true
+}
+const restaurarConfigTrasGuia = () => {
+  // Si se salió del paso antes de desplegar, no hay nada que restaurar.
+  if (panelConfigAbiertoAntesDeGuia === null) return
+  datosNatilleraConfigPanelAbierto.value = panelConfigAbiertoAntesDeGuia
+  panelConfigAbiertoAntesDeGuia = null
+}
+
+/*
+ * El contenido de la pantalla es el mismo en todos los tamaños; la navegación no.
+ * En móvil no hay barra lateral: se va por la barra inferior, Caja abre una hoja y
+ * ☰ abre un cajón que solo tiene las acciones. Enseñar la barra lateral a quien
+ * está en el teléfono sería explicarle algo que no ve.
+ */
+/*
+ * El bloque de abajo a la izquierda de la barra lateral (dentro del cajón ☰ en móvil):
+ * cambiar de natillera, mi cuenta y salir. Un solo paso con subfoco por los tres; tres
+ * pasos seguidos para tres botones que están juntos alargaban el recorrido sin enseñar
+ * más. Comparte `antes` con el paso del menú, así el cajón no se cierra entre uno y otro.
+ */
+function pasoPanelUsuario(antes, despues) {
+  return {
+    selector: '[data-guia="panel-usuario"]',
+    icono: UserCircleIcon,
+    titulo: 'Tu cuenta',
+    texto: 'Cambia de natillera, edita tus datos o cierra sesión.',
+    recorrer: [
+      { selector: '[data-guia="panel-cambiar-natillera"]', etiqueta: 'Cambiar de natillera' },
+      { selector: '[data-guia="panel-mi-cuenta"]', etiqueta: 'Mi cuenta · tus datos y avisos' },
+      { selector: '[data-guia="panel-cerrar-sesion"]', etiqueta: 'Cerrar sesión' }
+    ],
+    antes,
+    despues
+  }
+}
+
+/*
+ * Corto a propósito: cuatro o cinco paradas y fuera. Enseña DÓNDE están las cosas —las
+ * reglas, la navegación, tu cuenta y el soporte—, no qué hace cada tarjeta: eso se
+ * entiende mirando, y cada paso de más es uno que la gente se salta. Lo específico de
+ * cada pantalla lo cuenta el recorrido de esa pantalla.
+ */
+function construirPasosGuia({ manual = false } = {}) {
+  const enMovil = window.innerWidth < 1024
+  const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
+  const existe = (selector) => !!document.querySelector(selector)
+
+  // Mismo `grupo` = el cajón no se cierra y se vuelve a abrir entre un paso y el otro.
+  const flujoMenuMovil = { grupo: 'menu-movil', despues: cerrarMenuMovil }
+  const flujoMenuEscritorio = { grupo: 'menu-escritorio', despues: ocultarMenuLateral }
+
+  const navegacion = enMovil
+    ? [
+        {
+          selector: '#tour-mobile-bottom-nav',
+          recorrer: '#tour-mobile-bottom-nav .nav-item',
+          icono: Squares2X2Icon,
+          titulo: 'Tu barra de navegación',
+          texto: 'Cambia de pantalla con un toque.',
+          radio: 24,
+          margen: 4
+        },
+        {
+          /*
+           * Primero el BOTÓN, con el cajón cerrado: enseñar el menú abierto sin enseñar
+           * de dónde sale deja al usuario sin saber cómo volver a abrirlo. El cajón lo
+           * abre el paso siguiente, que ya enfoca algo de dentro; abrirlo aquí taparía
+           * el propio botón que se está señalando.
+           */
+          selector: '#tour-hamburger-btn',
+          icono: Bars3Icon,
+          gesto: 'tocar',
+          titulo: 'El menú ☰',
+          texto: 'Ábrelo aquí: acciones de la natillera y tu cuenta.',
+          radio: 14,
+          margen: 4
+        },
+        {
+          // El cajón ya abierto: qué se puede hacer con la natillera desde aquí.
+          selector: '#tour-acciones-natillera',
+          recorrer: '#tour-acciones-natillera .nav-link',
+          icono: DocumentCheckIcon,
+          titulo: 'Acciones de la natillera',
+          texto: 'Comprobantes, colaboradores, avisos y cierre.',
+          antes: abrirMenuMovil,
+          ...flujoMenuMovil
+        },
+        { ...pasoPanelUsuario(abrirMenuMovil, cerrarMenuMovil), ...flujoMenuMovil, antes: abrirMenuMovil }
+      ]
+    : [
+        {
+          selector: '[data-guia="menu-lateral"]',
+          recorrer: '[data-guia="menu-lateral"] .nav-link',
+          icono: Bars3Icon,
+          titulo: 'Tu menú',
+          // Entre 1024 y 1280 px la barra se esconde y solo sale al acercar el ratón al
+          // borde: si no se dice, el usuario no vuelve a encontrarla.
+          texto: window.innerWidth < 1280
+            ? 'Acerca el ratón al borde izquierdo y aparece.'
+            : 'Todas las pantallas de la natillera.',
+          antes: mostrarMenuLateral,
+          ...flujoMenuEscritorio
+        },
+        {
+          selector: '#tour-acciones-natillera',
+          recorrer: '#tour-acciones-natillera .nav-link',
+          icono: DocumentCheckIcon,
+          titulo: 'Acciones de la natillera',
+          texto: 'Comprobantes, colaboradores, avisos y cierre.',
+          antes: mostrarMenuLateral,
+          ...flujoMenuEscritorio
+        },
+        { ...pasoPanelUsuario(mostrarMenuLateral, ocultarMenuLateral), ...flujoMenuEscritorio }
+      ]
+
+  const pasos = [
+    {
+      tipo: 'bienvenida',
+      titulo: nombre ? `¡Hola, ${nombre}!` : '¡Bienvenido!',
+      texto: 'Te enseño a navegar por tu natillera en menos de un minuto.'
+    },
+    {
+      selector: '[data-guia="configuracion"]',
+      icono: Cog6ToothIcon,
+      titulo: 'Las reglas del juego',
+      texto: 'Cuota, fechas y sanciones. El engranaje las edita.',
+      // `alLlegar` y no `antes`: se enfoca el panel cerrado y se despliega ya
+      // enfocado, así el hueco crece con él en vez de saltar.
+      alLlegar: desplegarConfigParaGuia,
+      despues: restaurarConfigTrasGuia
+    },
+    ...navegacion,
+    {
+      selector: '.boton-soporte',
+      icono: ChatBubbleLeftIcon,
+      gesto: 'tocar',
+      titulo: '¿Dudas? Escríbenos',
+      texto: 'El chat de soporte, sin salir de aquí.',
+      radio: 40,
+      margen: 6
+    },
+    {
+      tipo: 'final',
+      icono: CheckCircleIcon,
+      titulo: '¡Todo listo!',
+      // Quien lo abrió a mano ya sabe dónde está el botón: no gasta un paso en decírselo.
+      texto: manual
+        ? 'Ya conoces tu natillera. ¡A ahorrar!'
+        : 'Repítelo cuando quieras con «¿Cómo funciona?».'
+    }
+  ]
+
+  // Un paso sin nada que señalar confunde más de lo que enseña. Los del menú se
+  // conservan: su objetivo existe aunque el cajón esté cerrado.
+  return pasos.filter((paso) => !paso.selector || paso.antes || existe(paso.selector))
+}
+
+/** ¿Sale la guía en esta entrada? `?guia=1` la fuerza para probarla sin tocar localStorage. */
+function tocaGuiaDetalle() {
+  if (route.query.guia === '1') return true
+  // `hayGuiaDetallePendiente` gana: viene del alta guiada, donde la guía se
+  // muestra aunque el usuario ya la hubiera visto sus dos veces.
+  return hayGuiaDetallePendiente() || debeMostrarGuiaDetalle(authStore.user?.id)
+}
+
+/*
+ * Anuncio del cambio visual. Va ANTES del recorrido y solo para quien ya tenía la app:
+ * primero se dice que la pantalla cambió, y luego, si toca, se enseña. Quien estrena
+ * Natillerapp no lo ve (no tiene un «antes» con el que comparar).
+ */
+const modalNovedadVisual = ref(false)
+
+function tocaNovedadVisual() {
+  return debeMostrarNovedadVisual(authStore.user?.id, natillera.value?.created_at)
+}
+
+function cerrarNovedadVisual() {
+  modalNovedadVisual.value = false
+  registrarNovedadVisualVista(authStore.user?.id)
+  // El recorrido esperaba a que se leyera el anuncio: ahora sí.
+  programarGuiaDetalle()
+}
+
+// Para volver a verlo sin borrar localStorage a mano
+if (import.meta.env.DEV) {
+  window.reiniciarNovedadVisual = () => {
+    reiniciarNovedadVisual(authStore.user?.id)
+    console.log('✅ Aviso del cambio visual reiniciado: saldrá al volver a entrar')
+  }
+}
+
+/** La abierta a mano no cuenta: si no, verla a voluntad gastaría las visitas en que sale sola. */
+let guiaAbiertaAMano = false
+
+function cerrarGuia({ completado } = {}) {
+  guiaActiva.value = false
+  limpiarGuiaDetallePendiente()
+  if (!guiaAbiertaAMano) registrarGuiaDetalleVista(authStore.user?.id, { completado })
+  guiaAbiertaAMano = false
+  // Los modales automáticos (sin socios, recordatorio) esperaron a que acabara.
+  liberarModalesPostCargaRetenidosTrasTour()
+}
+
+/** Abre la guía; también sirve para relanzarla desde un botón de ayuda, si se añade uno. */
+function abrirGuia({ manual = false } = {}) {
+  if (guiaActiva.value) return
+  guiaAbiertaAMano = manual
+  pasosGuia.value = construirPasosGuia({ manual })
+  guiaActiva.value = true
+}
+
 const colaboradoresStore = useColaboradoresStore()
 const notificationStore = useNotificationStore()
 const invitacionARechazarCompacta = ref(null)
@@ -4211,6 +4499,39 @@ const recordatorioEdicionId = ref(null) // uuid al editar, null al crear
 const listRecordatorios = ref([]) // { id, texto }[] desde Supabase
 const loadingRecordatorios = ref(false)
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
+/*
+ * Se espera a que la pantalla tenga datos: arrancar la guía sobre una vista aún
+ * cargando enfocaría esqueletos, o peor, secciones que todavía no existen y que
+ * el filtro de pasos descartaría por error.
+ */
+watch(cargandoNatillera, (cargando) => {
+  if (cargando || guiaActiva.value) return
+  // El anuncio del cambio visual va primero; al cerrarlo se encadena el recorrido.
+  if (tocaNovedadVisual()) {
+    modalNovedadVisual.value = true
+    return
+  }
+  programarGuiaDetalle()
+})
+
+/*
+ * Abre el recorrido si toca, con un respiro tras el primer pintado: las tarjetas entran
+ * con animación y medirlas antes deja el foco descuadrado.
+ */
+function programarGuiaDetalle() {
+  if (guiaActiva.value || cargandoNatillera.value) return
+  if (!tocaGuiaDetalle()) return
+  /*
+   * Sin socios no hay nada que enseñar —los indicadores están en cero y las secciones
+   * vacías— y encima sale la modal «Agrega tu primer socio», que es lo único que hay
+   * que hacer ahí: la guía se le pondría encima y taparía justo eso. Se deja para
+   * después del primer socio: al crearlo, Socios.vue llama a `pedirGuiaDetalle()` y
+   * la guía sale al volver al detalle. Sin gastar visita: aquí no se registra nada.
+   */
+  if (!tieneSocios.value) return
+
+  setTimeout(() => abrirGuia(), 650)
+}
 // Mensajes de carga que rotarán
 const mensajesCarga = [
   'Calienta toda la suplencia...',
@@ -4458,26 +4779,34 @@ const nombreNatilleraPascalCase = computed(() => {
     .join(' ')
 })
 
-const fondoTotalIndicador = computed(() => {
-  return Math.max(
-    0,
-    (estadisticas.value.totalRecaudadoNetoInclParciales
-      ?? estadisticas.value.totalRecaudadoNeto
-      ?? estadisticas.value.totalAportado)
-    - (estadisticas.value.egresosRecaudado ?? 0)
-    + (estadisticas.value.ingresosRecaudado ?? 0)
-  )
-})
+/*
+ * «Recaudado» y «Utilidad».
+ *
+ * Los calcula `dashboard_stats_batch` en el servidor y la tarjeta del dashboard
+ * lee exactamente lo mismo, así que no pueden separarse. Antes cada pantalla
+ * rehacía la suma en el navegador con su propia copia de la fórmula y dos
+ * personas de la misma natillera podían ver cifras distintas.
+ *
+ * Si la función no responde se cae a las estadísticas locales: es preferible un
+ * número calculado aquí que un hueco en pantalla.
+ */
+const indicadoresServidor = ref(null)
 
-const utilidadNetoIndicador = computed(() => {
-  const s = estadisticas.value
-  return Math.max(
-    0,
-    (s.utilidadesRecogidas || 0)
-    - (s.egresosUtilidades ?? 0)
-    + (s.ingresosUtilidades ?? 0)
-  )
-})
+const fondoTotalIndicador = computed(() =>
+  recaudadoIndicador(indicadoresServidor.value ?? estadisticas.value))
+const utilidadNetoIndicador = computed(() =>
+  utilidadIndicador(indicadoresServidor.value ?? estadisticas.value))
+
+async function cargarIndicadoresServidor() {
+  if (!natillera.value?.id) return
+  try {
+    const stats = await natillerasStore.calcularEstadisticasParaDashboard([natillera.value.id])
+    indicadoresServidor.value = stats?.[natillera.value.id] ?? null
+  } catch (e) {
+    console.warn('No se pudieron cargar los indicadores del servidor:', e?.message)
+    indicadoresServidor.value = null
+  }
+}
 
 /**
  * Colores del gráfico de utilidades: solo tonos vivos (sin carbón #453D45 ni teal oscuro #436E6E).
@@ -6232,6 +6561,8 @@ async function calcularEstadisticasAsync() {
     return
   }
   
+  cargarIndicadoresServidor()
+
   const stats = await natillerasStore.calcularEstadisticas(natillera.value)
   estadisticas.value = stats || {
     totalSocios: 0,
@@ -7500,6 +7831,10 @@ function incrementarContadorModalSociosEnMora() {
 
 async function ejecutarModalesAutomaticosPostCarga() {
   if (recorridoDetalleNavActivo.value) return
+  if (guiaActiva.value) {
+    modalesPostCargaRetenidosPorTour.value = true
+    return
+  }
   if (!tieneSocios.value) {
     modalSinSocios.value = true
   }
@@ -8023,6 +8358,14 @@ onMounted(async () => {
         ctxTourPostCarga.userId &&
         shouldShowNatilleraDetalleNavTour(ctxTourPostCarga)
       ) {
+        modalesPostCargaRetenidosPorTour.value = true
+        return
+      }
+      // La guía sale sola en esta entrada: los modales esperan a que termine, o se
+      // abrirían debajo del recorrido tapando justo lo que señala. Sin socios la guía
+      // no sale (ver el watch de `cargandoNatillera`), así que no hay nada que retener
+      // y la modal del primer socio debe salir ya.
+      if (modalNovedadVisual.value || tocaNovedadVisual() || (tieneSocios.value && tocaGuiaDetalle())) {
         modalesPostCargaRetenidosPorTour.value = true
         return
       }

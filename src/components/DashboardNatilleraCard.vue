@@ -96,22 +96,27 @@
           :to="detalleUrl"
           class="block min-h-0 flex-1 text-left"
         >
-          <div
-            class="mb-2 flex min-w-0 flex-nowrap items-center justify-start gap-2 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2"
-          >
-            <BanknotesIcon
-              class="h-3.5 w-3.5 shrink-0 text-[#166534]"
-              stroke-width="1.75"
-              aria-hidden="true"
-            />
-            <span class="shrink-0 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-              Fondo total
-            </span>
-            <span
-              class="min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg"
-            >
-              {{ formatoMoneda(fondoTotal) }}
-            </span>
+          <!-- Recolectado y utilidad, uno al lado del otro: los mismos dos indicadores
+               que la natillera muestra en su detalle. -->
+          <div class="mb-2 grid grid-cols-2 gap-2">
+            <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
+                <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+                Recolectado
+              </span>
+              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+                {{ formatoMoneda(totalRecolectado) }}
+              </span>
+            </div>
+            <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:px-3 sm:py-2">
+              <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
+                <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+                Utilidad
+              </span>
+              <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] sm:text-lg">
+                {{ formatoMoneda(utilidadGenerada) }}
+              </span>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
@@ -259,22 +264,25 @@
           {{ lineaPeriodicidad }}
         </p>
       </div>
-      <div
-        class="flex w-full min-w-0 flex-nowrap items-center justify-start gap-2 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2"
-      >
-        <BanknotesIcon
-          class="h-3.5 w-3.5 shrink-0 text-[#166534]"
-          stroke-width="1.75"
-          aria-hidden="true"
-        />
-        <span class="shrink-0 text-[9px] font-medium uppercase tracking-wide text-gray-400">
-          Fondo total
-        </span>
-        <span
-          class="min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg"
-        >
-          {{ formatoMoneda(fondoTotal) }}
-        </span>
+      <div class="grid w-full min-w-0 grid-cols-2 gap-2">
+        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
+            <BanknotesIcon class="h-3.5 w-3.5 shrink-0 text-[#166534]" stroke-width="1.75" aria-hidden="true" />
+            Recolectado
+          </span>
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-gray-900 sm:text-lg">
+            {{ formatoMoneda(totalRecolectado) }}
+          </span>
+        </div>
+        <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
+          <span class="flex items-center gap-1.5 text-[9px] font-medium uppercase tracking-wide text-gray-400">
+            <SparklesIcon class="h-3.5 w-3.5 shrink-0 text-[#3d6b28]" stroke-width="1.75" aria-hidden="true" />
+            Utilidad
+          </span>
+          <span class="mt-0.5 block min-w-0 truncate text-base font-semibold tabular-nums leading-none text-[#C2185B] sm:text-lg">
+            {{ formatoMoneda(utilidadGenerada) }}
+          </span>
+        </div>
       </div>
       <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-600">
         <span class="inline-flex items-center gap-1">
@@ -356,7 +364,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { TrashIcon, UserGroupIcon, CalendarIcon, BanknotesIcon } from '@heroicons/vue/24/outline'
+import { TrashIcon, UserGroupIcon, CalendarIcon, BanknotesIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import { parseDateLocal } from '../utils/formatDate'
 import { formatearMesAnio } from '../utils/natilleraFormat'
 import PinThumbIcon from './PinThumbIcon.vue'
@@ -369,8 +377,10 @@ const props = defineProps({
   showPin: { type: Boolean, default: false },
   pinned: { type: Boolean, default: false },
   showDelete: { type: Boolean, default: false },
-  /** Total del fondo (mismo cálculo que en detalle) */
-  fondoTotal: { type: Number, default: 0 },
+  /* Los dos indicadores de dinero, calculados con utils/indicadoresNatillera.js:
+     son los mismos «Recaudado» y «Utilidad» que muestra el detalle de la natillera. */
+  totalRecolectado: { type: Number, default: 0 },
+  utilidadGenerada: { type: Number, default: 0 },
   /** 'grid' = tarjeta; 'list' = fila */
   variant: { type: String, default: 'grid' },
 })

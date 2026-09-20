@@ -1225,18 +1225,28 @@ function exportarComprobanteCierrePdf() {
 }
 
 onMounted(async () => {
-  const { data: { user } } = await supabase.auth.getUser()
+  const nid = natilleraId.value
+
+  // Quién eres y qué natillera es no dependen el uno del otro: se piden a la vez
+  // en lugar de encadenar dos viajes al servidor.
+  const [{ data: { user } }] = await Promise.all([
+    supabase.auth.getUser(),
+    natillerasStore.fetchNatillera(nid),
+  ])
   usuarioAutenticado.value = user
 
-  const nid = natilleraId.value
-  await natillerasStore.fetchNatillera(nid)
   await nextTick()
 
   if (natillera.value) {
     if (!esAdmin.value) {
       try {
-        await colaboradoresStore.obtenerMiRol(nid)
-        const permisos = await colaboradoresStore.obtenerMisPermisos(nid)
+        // Rol y permisos son dos consultas distintas y ninguna necesita a la
+        // otra. Además se le pasa el `user` ya resuelto: sin él,
+        // `obtenerMisPermisos` vuelve a pedirlo por su cuenta.
+        const [, permisos] = await Promise.all([
+          colaboradoresStore.obtenerMiRol(nid),
+          colaboradoresStore.obtenerMisPermisos(nid, { user }),
+        ])
         misPermisos.value = permisos
       } catch (err) {
         console.warn('Error obteniendo rol y permisos del usuario:', err)

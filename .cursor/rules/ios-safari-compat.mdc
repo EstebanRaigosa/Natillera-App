@@ -11,6 +11,7 @@ Todo componente, vista, modal, overlay, pantalla de carga o CSS que se cree o mo
 
 1. **Viewport**: usar `100dvh` con fallback `100vh` y `-webkit-fill-available` en alturas full-screen.
 2. **Safe-area**: respetar `env(safe-area-inset-*)` en bordes pegados a pantalla (bottom nav, footers de modales, headers sticky).
+   - **Ojo:** `env(safe-area-inset-bottom)` es el home indicator, **no** la barra de Safari. Desde iOS 15 el navegador la dibuja abajo y encima del contenido, y tapa lo anclado con `fixed bottom-0`. Se mide con `visualViewport` (`useTapadoInferior`) y se **suma al `padding-bottom`**; mover `bottom` deja un hueco a la vista. Ver manual §4.1.
 3. **Modales**: preferir `<ModalWrapper>` — ya tiene ruta iOS dedicada con safe-area, scroll táctil y renderizado correcto. Si un caso legítimo no puede usar ModalWrapper (e.g. overlay custom, dropdown teleportado), documentar el porqué en un comentario y aplicar manualmente las reglas de la skill (translate3d, safe-area, touch, dvh).
 4. **Inputs**: `font-size` >= 16px para evitar zoom en iOS. No aplicar `appearance: none` a `<select>` globalmente.
 5. **Touch**: `touch-action: manipulation` en botones; handlers `@touchstart` con `.passive` si no usan `preventDefault()`.
@@ -24,6 +25,7 @@ Todo componente, vista, modal, overlay, pantalla de carga o CSS que se cree o mo
 
 - [ ] ¿Alturas full-screen usan `dvh` / `-webkit-fill-available`?
 - [ ] ¿Bordes pegados a pantalla respetan safe-area?
+- [ ] ¿Hay algo con `fixed bottom-0`? En iOS necesita `useTapadoInferior`, no solo `env()`.
 - [ ] ¿Modales usan `<ModalWrapper>`? Si no, ¿hay comentario justificando y se aplicaron las reglas manuales?
 - [ ] ¿Inputs con `font-size >= 16px`?
 - [ ] ¿Botones con min 44px de área táctil?
@@ -32,6 +34,12 @@ Todo componente, vista, modal, overlay, pantalla de carga o CSS que se cree o mo
 - [ ] ¿Sin `opacity: 1 !important` ni `display: block !important` en CSS genérico?
 - [ ] ¿Funciona en Android igual que antes?
 
+## Cuándo se valida
+
+En **cada** implementación, antes de darla por terminada — no al final del proyecto ni solo cuando lo pidan. Y decir explícitamente qué se validó: sin un iPhone delante esto es revisión de código contra el manual, que detecta lo que está mal escrito, no lo que se ve mal.
+
 ## Referencia técnica
 
-Para patrones detallados y arquitectura del proyecto → **leer la skill `ios-safari-compat`** (`~/.cursor/skills/ios-safari-compat/SKILL.md`).
+Para patrones detallados, bugs conocidos y cómo probar → **`docs/compatibilidad-ios-safari.md`** (17 secciones, con índice por tema).
+
+No existe ninguna skill `ios-safari-compat`: esta regla apuntaba a `~/.cursor/skills/ios-safari-compat/SKILL.md`, que nunca se creó.

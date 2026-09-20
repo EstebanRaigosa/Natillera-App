@@ -6,6 +6,12 @@ import App from './App.vue'
 import './style.css'
 import 'driver.js/dist/driver.css'
 import { setupPwaInstall } from './composables/usePwaInstall'
+import { aplicarModoLigero } from './composables/useModoLigero'
+
+// Antes de montar: si el equipo o la red son modestos, se marca el documento y
+// el CSS cambia los efectos caros por otros baratos. Va aquí, y no dentro de un
+// componente, para que el primer pintado ya salga con el coste correcto.
+aplicarModoLigero()
 
 // Capturar el evento beforeinstallprompt lo antes posible (se dispara una sola
 // vez y muy temprano). Debe registrarse antes de montar la app.

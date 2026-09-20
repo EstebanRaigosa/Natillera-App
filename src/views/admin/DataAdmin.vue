@@ -630,53 +630,6 @@
         </div>
       </div>
 
-      <!-- Tab Chat Messages -->
-      <div v-if="activeTab === 'chat'" class="card">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-display font-bold text-gray-800">Mensajes de Chat</h2>
-          <button
-            @click="loadChatMessages"
-            class="px-4 py-2 bg-natillera-500 text-white rounded-lg hover:bg-natillera-600 transition-colors"
-          >
-            <ArrowPathIcon class="w-5 h-5 inline mr-2" :class="{ 'animate-spin': loading }" />
-            Actualizar
-          </button>
-        </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-        <div v-else class="overflow-x-auto">
-          <table class="w-full">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Usuario</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Mensaje</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Respuesta</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Desde Usuario</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Fecha</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              <tr v-for="msg in chatMessages" :key="msg.id" class="hover:bg-gray-50">
-                <td class="px-4 py-3 text-sm font-medium text-gray-800">{{ msg.user_email || 'N/A' }}</td>
-                <td class="px-4 py-3 text-sm text-gray-700">{{ msg.message?.substring(0, 50) }}{{ msg.message?.length > 50 ? '...' : '' }}</td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ msg.response ? 'Sí' : 'No' }}</td>
-                <td class="px-4 py-3 text-sm">
-                  <span
-                    :class="[
-                      'px-2 py-1 rounded-full text-xs font-semibold',
-                      msg.is_from_user ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                    ]"
-                  >
-                    {{ msg.is_from_user ? 'Sí' : 'No' }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(msg.created_at) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -709,7 +662,6 @@ const cuotas = ref([])
 const prestamos = ref([])
 const actividades = ref([])
 const historial = ref([])
-const chatMessages = ref([])
 const datosEstructurados = ref([])
 const usuariosCache = ref(new Map()) // Cache de usuarios por ID
 
@@ -752,8 +704,7 @@ const tabs = [
   { id: 'cuotas', label: 'Cuotas' },
   { id: 'prestamos', label: 'Préstamos' },
   { id: 'actividades', label: 'Actividades' },
-  { id: 'historial', label: 'Historial' },
-  { id: 'chat', label: 'Chat' }
+  { id: 'historial', label: 'Historial' }
 ]
 
 async function checkAccess() {
@@ -1003,25 +954,6 @@ async function loadHistorial() {
   }
 }
 
-async function loadChatMessages() {
-  loading.value = true
-  try {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1000)
-
-    if (error) throw error
-    chatMessages.value = data || []
-  } catch (error) {
-    console.error('Error cargando mensajes de chat:', error)
-    chatMessages.value = []
-  } finally {
-    loading.value = false
-  }
-}
-
 async function loadEstructurado() {
   loading.value = true
   try {
@@ -1219,9 +1151,6 @@ async function loadActiveTabData() {
       break
     case 'historial':
       await loadHistorial()
-      break
-    case 'chat':
-      await loadChatMessages()
       break
   }
 }

@@ -330,7 +330,9 @@
         <div>
           <h3 class="text-lg font-bold text-slate-800">Variantes</h3>
           <p class="text-sm text-slate-500">
-            Pulsa cada botón para ver el toast en la esquina superior derecha.
+            Pulsa cada botón para ver el toast, que aparece arriba y al centro.
+            El reloj se detiene con el puntero encima y en móvil se cierra
+            deslizando hacia arriba.
             Las variantes <code class="font-mono">alerta</code> y
             <code class="font-mono">critica</code> usan
             <code class="font-mono">role="alert"</code> +

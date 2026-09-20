@@ -88,6 +88,34 @@ Zonas críticas: `MobileBottomNav`, footers de modales, headers sticky, pantalla
 
 > **Trampa que ya nos mordió:** un `padding: 0 !important` (shorthand) **pisa** los longhand `padding-top/bottom` aunque estos NO tengan `!important` pero el shorthand sí. Si necesitas safe-area junto a un reset de padding, usa **longhands con `!important`** (`padding-bottom: max(...) !important`).
 
+### 4.1 La barra de Safari **no** es safe-area (bug real, sept. 2026)
+
+`env(safe-area-inset-bottom)` describe el **home indicator**, no el navegador. Desde **iOS 15**, Safari dibuja su barra de direcciones **abajo y por encima del contenido**, y un elemento `position: fixed; bottom: 0` se ancla al viewport de **layout**, cuyo borde inferior queda *detrás* de esa barra. Resultado: `MobileBottomNav` aparecía tapada en iPhone, con el `env()` puesto y funcionando.
+
+**Lo que confunde:** el `env()` vale prácticamente 0 justo en el caso en que la barra estorba, así que parece que la safe-area «no se aplica». Sí se aplica; es que no es el inset que hace falta.
+
+**Solución: medir el visual viewport.** La diferencia entre el viewport de layout y el área realmente visible **es** el alto del chrome de Safari:
+
+```js
+const vv = window.visualViewport
+const alturaLayout = document.documentElement.clientHeight
+const tapado = Math.max(0, Math.round(alturaLayout - (vv.height + vv.offsetTop)))
+```
+
+Implementado en [src/composables/useTapadoInferior.js](../src/composables/useTapadoInferior.js), que publica el valor y lo mantiene al día. Cuatro reglas que salieron de este caso:
+
+1. **Sumar al `padding-bottom`, no mover `bottom`.** Mover `bottom` despega el elemento del fondo y deja un hueco por el que se ve pasar el contenido. Con padding la barra sigue pegada abajo y solo sube su contenido:
+   ```css
+   padding-bottom: calc(max(0.3rem, env(safe-area-inset-bottom, 0px)) + var(--tapado-inferior, 0px));
+   ```
+2. **Escuchar `visualViewport`, no `resize`.** Contraer o expandir la barra de Safari **no** dispara `resize` ni `scroll` en `window`. Hacen falta `visualViewport` (`resize` + `scroll`) y `orientationchange`.
+3. **Poner tope al valor.** Con el teclado abierto la diferencia sube a varios cientos de píxeles y el elemento acabaría flotando a media pantalla. Por encima de ~160 px es teclado, no chrome: no mover nada.
+4. **Acotar a iOS y a modo navegador.** En la **PWA instalada** no hay barra de Safari y en Android el chrome va arriba: fuera de iOS el valor debe ser `0` para que el CSS quede idéntico al de siempre. Guardas: `detectIosPlatform()` y `display-mode: standalone` / `navigator.standalone`.
+
+**Dónde más aplica:** cualquier cosa anclada al fondo del viewport. Además de `MobileBottomNav`, los modales con `align="bottom"` de `ModalWrapper` se alinean igual al borde inferior del layout: si su pie de acciones aparece tapado en iPhone, es este mismo problema.
+
+**No se ha verificado en iPhone real** (ver §16): el arreglo está razonado y compila, pero la comprobación en dispositivo sigue pendiente.
+
 ---
 
 ## 5. Scroll lock y modales — el corazón del asunto
@@ -208,7 +236,13 @@ Configurado en [vite.config.js](../vite.config.js) con `VitePWA`. **Por qué exi
 
 Decisiones clave (no las cambies sin entenderlas):
 
-- `registerType: 'autoUpdate'` + `skipWaiting` + `clientsClaim`: el SW nuevo toma control al toque. **Riesgo:** puede refrescar assets a mitad de uso; si algún día causa parpadeos, hay que pasar a un flujo de "hay actualización, recargar" manual.
+- `registerType: 'prompt'` + `injectRegister: null` + `clientsClaim` **sin `skipWaiting` automático**. Antes era `autoUpdate` + `skipWaiting`, y fallaba de dos maneras a la vez:
+  - **El usuario seguía viendo la versión vieja tras desplegar.** El `registerSW.js` que inyectaba el plugin solo hacía `navigator.serviceWorker.register`: ni comprobaba versiones ni recargaba. El `auto` de `autoUpdate` solo funciona si la app importa `virtual:pwa-register`, y nadie lo importaba. Como el SW sirve el `index.html` del precache, el SW viejo seguía devolviendo la app anterior hasta que el usuario recargaba **varias** veces (varias, porque el precache pesa MB y en la primera recarga el SW nuevo aún se estaba instalando).
+  - **Riesgo de chunks huérfanos.** `skipWaiting` + `clientsClaim` sin recargar dejaba al SW nuevo sirviendo el precache nuevo a una página pintada con el HTML viejo. Esa página pide sus chunks con hash viejo —todas las vistas usan `import()`— y `cleanupOutdatedCaches` acababa de borrarlos: «Failed to fetch dynamically imported module».
+
+  Ahora el relevo lo pide la app en [src/composables/useActualizacionApp.js](../src/composables/useActualizacionApp.js): avisa con [AvisoNuevaVersion.vue](../src/components/AvisoNuevaVersion.vue) si el usuario está mirando, y aplica sola la actualización cuando la app pasa a segundo plano (salvo que haya un modal abierto: eso es trabajo a medias). El SW solo hace `skipWaiting` al recibir el mensaje `SKIP_WAITING`, justo antes de la recarga, así que las dos versiones nunca conviven en una página. Busca actualizaciones al volver a primer plano, al recuperar red y cada 30 min: una PWA instalada puede pasar días abierta.
+- `includeManifestIcons: false` — los iconos del manifest los añadía el plugin al precache **saltándose `globIgnores`**. Los pide el sistema operativo al instalar, no el arranque. Cuanto más pesa el precache, más tarda en instalarse el SW nuevo y más se alarga la ventana en que se ve la versión anterior.
+- **Los headers de Netlify ya eran correctos** (`no-cache` en `/sw.js` y `/registerSW.js`): este problema nunca fue de CDN. Si vuelve a aparecer, mirar el registro del SW antes que la caché.
 - `navigateFallback: '/index.html'` — SPA: cualquier navegación offline/sin cache cae al shell.
 - `navigateFallbackDenylist: [/^\/api-/, /supabase\.co/]` — **nunca** redirigir a la SPA las llamadas a Supabase ni a los proxys de API. Datos y auth **siempre a la red**.
 - **No hay `runtimeCaching` de Supabase a propósito:** los datos financieros deben ir siempre frescos y autenticados. El SW solo precachea assets del mismo origen (el build).
@@ -282,6 +316,7 @@ Trabajamos en Windows y **Safari no existe para Windows**, así que:
 
 - [ ] ¿Alturas full-screen usan `dvh` + `-webkit-fill-available`?
 - [ ] ¿Bordes pegados a pantalla respetan `env(safe-area-inset-*)`?
+- [ ] ¿Algo anclado con `fixed bottom-0`? En iOS la barra de Safari lo tapa: hace falta `useTapadoInferior` además del `env()` (§4.1).
 - [ ] ¿Modales usan `<ModalWrapper>`? Si no, ¿hay comentario justificando y se aplicaron las reglas manuales de iOS?
 - [ ] ¿La X y los iconos de input van por **flex**, no por `absolute`?
 - [ ] ¿Inputs con `font-size ≥ 16px`? ¿Sin `appearance:none` global en `<select>`?
@@ -305,6 +340,7 @@ Trabajamos en Windows y **Safari no existe para Windows**, así que:
 | Modal wrapper | [src/components/ModalWrapper.vue](../src/components/ModalWrapper.vue) |
 | Pantallas de carga | [src/components/LoadingScreen.vue](../src/components/LoadingScreen.vue), [LoadingScreenIos.vue](../src/components/LoadingScreenIos.vue), [LoadingBox.vue](../src/components/LoadingBox.vue) |
 | Skeletons | [src/components/CuotasPageSkeleton.vue](../src/components/CuotasPageSkeleton.vue), [PrestamosSkeleton.vue](../src/components/PrestamosSkeleton.vue) |
+| Chrome inferior de Safari | [src/composables/useTapadoInferior.js](../src/composables/useTapadoInferior.js) |
 | Bottom nav | [src/components/MobileBottomNav.vue](../src/components/MobileBottomNav.vue) |
 | Layout | [src/layouts/DashboardLayout.vue](../src/layouts/DashboardLayout.vue) |
 | CSS global (bloque iOS) | [src/style.css](../src/style.css) → `@supports (-webkit-touch-callout: none)` |

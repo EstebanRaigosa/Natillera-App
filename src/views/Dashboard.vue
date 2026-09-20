@@ -367,7 +367,8 @@
             :key="natillera.id"
             :natillera="natillera"
             :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
-            :fondo-total="fondoPorNatillera[natillera.id] ?? 0"
+            :total-recolectado="obtenerRecaudadoNetoNatillera(natillera.id)"
+            :utilidad-generada="obtenerUtilidadesNatillera(natillera.id)"
             :ribbon-compartida="!natillera.es_propia"
             :ribbon-otro-usuario="mostrarBordeTealNatillera(natillera)"
             :show-pin="esUsuarioRaigo"
@@ -432,7 +433,8 @@
             :key="natillera.id"
             :natillera="natillera"
             :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
-            :fondo-total="fondoPorNatillera[natillera.id] ?? 0"
+            :total-recolectado="obtenerRecaudadoNetoNatillera(natillera.id)"
+            :utilidad-generada="obtenerUtilidadesNatillera(natillera.id)"
             :ribbon-compartida="false"
             :ribbon-otro-usuario="mostrarBordeTealNatillera(natillera)"
             :show-pin="esUsuarioRaigo"
@@ -497,7 +499,8 @@
             :key="natillera.id"
             :natillera="natillera"
             :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
-            :fondo-total="fondoPorNatillera[natillera.id] ?? 0"
+            :total-recolectado="obtenerRecaudadoNetoNatillera(natillera.id)"
+            :utilidad-generada="obtenerUtilidadesNatillera(natillera.id)"
             :ribbon-compartida="true"
             :ribbon-otro-usuario="false"
             :show-pin="esUsuarioRaigo"
@@ -733,6 +736,7 @@ import { useNotificationStore } from '../stores/notifications'
 import { useColaboradoresStore } from '../stores/colaboradores'
 import { supabase } from '../lib/supabase'
 import { formatDate } from '../utils/formatDate'
+import { recaudadoIndicador, utilidadIndicador } from '../utils/indicadoresNatillera'
 import {
   formatearRolColaboradorInvitacion as formatearRol,
   emailInvitadorDestacado,
@@ -1398,7 +1402,13 @@ async function calcularTotalFondo() {
         totalRecaudadoNeto: s.totalRecaudadoNeto,
         totalRecaudadoNetoInclParciales: s.totalRecaudadoNetoInclParciales,
         utilidadesRecogidas: s.utilidadesRecogidas,
-        fondoTotal: s.fondoTotal
+        fondoTotal: s.fondoTotal,
+        // Lo que salió o entró por el libro de caja, por bolsillo: sin esto los dos
+        // números de la tarjeta saldrían más altos que los del detalle.
+        egresosRecaudado: s.egresosRecaudado ?? 0,
+        ingresosRecaudado: s.ingresosRecaudado ?? 0,
+        egresosUtilidades: s.egresosUtilidades ?? 0,
+        ingresosUtilidades: s.ingresosUtilidades ?? 0
       }
       recaudadoMap[id] = s.recaudadoBrutoCuotas ?? 0
       progresoMap[id] = s.progresoCuotas ?? 0
@@ -1419,12 +1429,13 @@ async function calcularTotalFondo() {
   }
 }
 
+/* Los mismos dos números que los indicadores «Recaudado» y «Utilidad» del detalle. */
 function obtenerRecaudadoNetoNatillera(natilleraId) {
-  return statsPorNatillera.value[natilleraId]?.totalRecaudadoNetoInclParciales ?? statsPorNatillera.value[natilleraId]?.totalRecaudadoNeto ?? 0
+  return Math.round(recaudadoIndicador(statsPorNatillera.value[natilleraId] || {}))
 }
 
 function obtenerUtilidadesNatillera(natilleraId) {
-  return statsPorNatillera.value[natilleraId]?.utilidadesRecogidas ?? 0
+  return Math.round(utilidadIndicador(statsPorNatillera.value[natilleraId] || {}))
 }
 
 function formatMoney(value) {

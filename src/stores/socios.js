@@ -77,46 +77,21 @@ export const useSociosStore = defineStore('socios', () => {
         throw new Error('natilleraId es requerido para verificar unicidad del teléfono')
       }
 
-      const telefonoLimpio = telefono.trim()
-      
-      // Buscar socios con ese teléfono
-      const { data: sociosConTelefono, error: errorSocios } = await supabase
-        .from('socios')
-        .select('id')
-        .eq('telefono', telefonoLimpio)
+      // Antes esto buscaba el teléfono en TODA la tabla de socios y cruzaba
+      // después con `socios_natillera` para quedarse con los de esta natillera.
+      // Desde la migración 030 la lectura está acotada y esa primera consulta ya
+      // no ve lo de fuera; la pregunta —«¿hay otro socio de ESTA natillera con
+      // este teléfono?»— se responde entera en el servidor, y de paso normaliza
+      // los formatos, que en la tabla conviven con y sin indicativo.
+      const { data, error: e } = await supabase.rpc('telefono_libre_en_natillera', {
+        p_telefono: telefono.trim(),
+        p_natillera_id: natilleraId,
+        p_excluir_socio: excluirSocioId,
+      })
 
-      if (errorSocios) {
-        throw errorSocios
-      }
+      if (e) throw e
 
-      if (!sociosConTelefono || sociosConTelefono.length === 0) {
-        // No hay socios con ese teléfono, es único
-        return true
-      }
-
-      // Filtrar el socio actual si estamos editando
-      const socioIdsParaVerificar = excluirSocioId
-        ? sociosConTelefono.filter(s => s.id !== excluirSocioId).map(s => s.id)
-        : sociosConTelefono.map(s => s.id)
-
-      if (socioIdsParaVerificar.length === 0) {
-        // El único socio con ese teléfono es el que estamos editando, es único
-        return true
-      }
-
-      // Verificar si alguno de estos socios ya está en la natillera
-      const { data: sociosEnNatillera, error: errorNatillera } = await supabase
-        .from('socios_natillera')
-        .select('socio_id')
-        .eq('natillera_id', natilleraId)
-        .in('socio_id', socioIdsParaVerificar)
-
-      if (errorNatillera) {
-        throw errorNatillera
-      }
-
-      // Si no hay socios en la natillera con ese teléfono, es único
-      return !sociosEnNatillera || sociosEnNatillera.length === 0
+      return data === true
     } catch (e) {
       console.error('Error verificando unicidad del teléfono:', e)
       return false // En caso de error, asumir que no es único
@@ -188,67 +163,51 @@ export const useSociosStore = defineStore('socios', () => {
       // Primero crear o buscar el socio
       let socioId
       
-      // Buscar si el socio ya existe por documento o email (pero el teléfono ya está validado como único)
+      // ¿Existe ya esta persona en otra natillera? La búsqueda va por RPC desde la
+      // migración 030: `socios` dejó de ser un directorio legible por cualquiera
+      // con sesión, y esta es la única pregunta que legítimamente mira fuera de
+      // lo propio. La función devuelve solo el id y el teléfono —lo justo para
+      // enlazarla—, no su nombre ni en qué natillera está.
       let socioExistente = null
-      
-      if (datosSocio.documento && datosSocio.documento.trim() !== '' && !datosSocio.documento.startsWith('AUTO-')) {
-        // Si tiene documento, buscar por documento
-        const { data } = await supabase
-          .from('socios')
-          .select('id')
-          .eq('documento', datosSocio.documento)
-          .maybeSingle()
-        socioExistente = data
-      } else if (datosSocio.email && datosSocio.email.trim() !== '') {
-        // Si tiene email, buscar por email
-        const { data } = await supabase
-          .from('socios')
-          .select('id')
-          .eq('email', datosSocio.email)
-          .maybeSingle()
-        socioExistente = data
-      }
+
+      const { data: coincidencias, error: errorBusqueda } = await supabase.rpc('socio_buscar_global', {
+        p_documento: datosSocio.documento?.trim() || null,
+        p_email: datosSocio.email?.trim() || null,
+      })
+
+      if (errorBusqueda) throw errorBusqueda
+      socioExistente = coincidencias?.[0] ?? null
 
       if (socioExistente) {
         socioId = socioExistente.id
-        
-        // Verificar que el teléfono del socio existente no esté siendo usado por otro
-        // Si el socio existente tiene un teléfono diferente, verificar que el nuevo sea único
-        const { data: socioActual } = await supabase
-          .from('socios')
-          .select('telefono')
-          .eq('id', socioId)
-          .single()
 
-        // Si el teléfono es diferente, verificar unicidad nuevamente dentro de la natillera
-        if (socioActual?.telefono !== telefonoLimpio) {
+        // Si el teléfono es distinto del que ya tenía, comprobar que el nuevo no
+        // choque con otro socio de esta natillera.
+        if (socioExistente.telefono !== telefonoLimpio) {
           const telefonoUnicoParaActualizacion = await verificarTelefonoUnico(telefonoLimpio, natilleraId, socioId)
           if (!telefonoUnicoParaActualizacion) {
             throw new Error('Este número de teléfono ya está registrado para otro socio en esta natillera')
           }
         }
-        
-        // Actualizar datos del socio existente
-        const datosActualizar = {
-          nombre: datosSocio.nombre,
-          telefono: telefonoLimpio, // Siempre actualizar el teléfono
-        }
-        if (datosSocio.email) datosActualizar.email = datosSocio.email
-        if (datosSocio.avatar_seed) datosActualizar.avatar_seed = datosSocio.avatar_seed
-        if (datosSocio.avatar_style) datosActualizar.avatar_style = datosSocio.avatar_style
-        
-        const { error: updateError } = await supabase
-          .from('socios')
-          .update(datosActualizar)
-          .eq('id', socioId)
+
+        // La actualización también va por RPC: la ficha puede ser de la natillera
+        // de otro, y la política de UPDATE ya no la alcanza. El servidor exige
+        // que administres la natillera donde la estás metiendo.
+        const { error: updateError } = await supabase.rpc('socio_actualizar_al_vincular', {
+          p_socio_id: socioId,
+          p_natillera_id: natilleraId,
+          p_nombre: datosSocio.nombre,
+          p_telefono: telefonoLimpio,
+          p_email: datosSocio.email || null,
+          p_avatar_seed: datosSocio.avatar_seed || null,
+          p_avatar_style: datosSocio.avatar_style || null,
+        })
 
         if (updateError) {
-          // Verificar si es error de autenticación
           if (updateError.code === 'PGRST301' || updateError.status === 401 || updateError.message?.includes('Unauthorized')) {
             console.error('❌ Error de autenticación al actualizar socio:', updateError)
             throw new Error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
           }
-          // Verificar si es error de unicidad
           if (updateError.code === '23505' || updateError.message?.includes('unique') || updateError.message?.includes('duplicate')) {
             throw new Error('Este número de teléfono ya está registrado para otro socio')
           }

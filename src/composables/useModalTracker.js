@@ -23,6 +23,6 @@ export function useModalTracker() {
   }
 }
 
-// Exportar el estado global directamente para uso en ChatWidget
+// Exportar el estado global directamente para consumo externo
 export { hasOpenModals }
 
