@@ -612,7 +612,7 @@
       </div>
       <div class="cuotas-filtros">
         <!-- Estado: control segmentado (el activo se resalta en verde; «Todos» = quitar) -->
-        <div data-guia="cuotas-filtro-estado" class="cuotas-segmented" role="group" aria-label="Filtrar por estado">
+        <div ref="filtroEstadoRef" data-guia="cuotas-filtro-estado" class="cuotas-segmented" role="group" aria-label="Filtrar por estado">
           <span class="cuotas-segmented__icon" aria-hidden="true">
             <FunnelIcon class="w-4 h-4" />
           </span>
@@ -629,7 +629,7 @@
           </button>
         </div>
         <!-- Periodicidad -->
-        <div data-guia="cuotas-filtro-periodicidad" class="cuotas-segmented" role="group" aria-label="Filtrar por periodicidad">
+        <div ref="filtroPeriodicidadRef" data-guia="cuotas-filtro-periodicidad" class="cuotas-segmented" role="group" aria-label="Filtrar por periodicidad">
           <span class="cuotas-segmented__icon" aria-hidden="true">
             <CalendarDaysIcon class="w-4 h-4" />
           </span>
@@ -5174,16 +5174,6 @@
                 </div>
               </div>
 
-              <!-- Pagado anteriormente (solo valor, cuando hubo pago parcial previo) -->
-              <div 
-                v-if="(pagoRegistrado?.valorPagadoAnteriorTotal || 0) > 0"
-                style="margin-top: 10px; padding: 8px 10px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;"
-              >
-                <p style="color: #047857; font-size: 10px; margin: 0; font-weight: 700; text-transform: uppercase;">Pagado anteriormente</p>
-                <p style="font-size: 14px; font-weight: 700; margin: 0; color: #059669;">
-                  ${{ formatMoney(pagoRegistrado?.valorPagadoAnteriorTotal || 0) }}
-                </p>
-              </div>
             </div>
 
             <!-- SECCIÓN 2: CONCEPTOS PAGADOS (totales de la cuota; siempre visible al reenviar) -->
@@ -5307,7 +5297,7 @@
                     <p style="margin: 0; color: #111827; font-size: 11.5px; font-weight: 700; line-height: 1.3;">
                       {{ abono.fecha }}
                     </p>
-                    <p style="margin: 1px 0 0 0; color: #6b7280; font-size: 10px; font-weight: 500; line-height: 1.35;">
+                    <p v-if="abono.detalle" style="margin: 1px 0 0 0; color: #6b7280; font-size: 10px; font-weight: 500; line-height: 1.35;">
                       {{ abono.detalle }}
                     </p>
                   </div>
@@ -6269,7 +6259,7 @@
             <button 
               type="button"
               @click="cerrarModalEditarCuota()"
-              @touchstart="cerrarModalEditarCuota()"
+              @touchstart.passive="cerrarModalEditarCuota()"
               class="btn-modal-secondary relative z-20 flex-1"
               style="pointer-events: auto !important; touch-action: manipulation !important; min-height: 44px;"
               >
@@ -7998,6 +7988,53 @@ const opcionesFiltroPeriodicidad = [
   { value: 'mensual', label: 'Mensual' },
   { value: 'quincenal', label: 'Quincenal' }
 ]
+const filtroEstadoRef = ref(null)
+const filtroPeriodicidadRef = ref(null)
+
+/**
+ * Deja a la vista la opción activa de una barra de filtros.
+ *
+ * Las barras tienen scroll horizontal y en móvil no caben enteras: «En mora», que es la
+ * última, quedaba medio fuera justo al tocarla, así que el filtro se aplicaba sin que se
+ * viera cuál estaba puesto. Al elegir una opción, la barra se corre para que se vea.
+ *
+ * Mueve solo el contenedor (`scrollBy`), nunca `scrollIntoView`: ese arrastra también a
+ * los ancestros y en iOS da un salto de la página entera.
+ */
+function mostrarOpcionActivaFiltro(barra) {
+  if (!barra) return
+  // Sin desbordamiento no hay nada que correr (en escritorio caben todas).
+  if (barra.scrollWidth <= barra.clientWidth + 1) return
+  const activo = barra.querySelector('.cuotas-segmented__opt.is-selected')
+  if (!activo) return
+
+  // Holgura para que asome la opción vecina: así se ve que la barra sigue.
+  const holgura = 16
+  const cajaBarra = barra.getBoundingClientRect()
+  const cajaActivo = activo.getBoundingClientRect()
+  const sobraDerecha = cajaActivo.right + holgura - cajaBarra.right
+  const sobraIzquierda = cajaBarra.left - (cajaActivo.left - holgura)
+
+  let desplazamiento = 0
+  if (sobraDerecha > 0) desplazamiento = sobraDerecha
+  else if (sobraIzquierda > 0) desplazamiento = -sobraIzquierda
+  if (desplazamiento === 0) return
+
+  const sinAnimacion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+  barra.scrollBy({ left: desplazamiento, behavior: sinAnimacion ? 'auto' : 'smooth' })
+}
+
+// Por `watch` y no en el `@click`: el filtro también cambia desde «Limpiar filtros» y
+// desde los accesos que saltan a las cuotas en mora, y en esos casos hay que correrla igual.
+watch(filtroEstado, async () => {
+  await nextTick()
+  mostrarOpcionActivaFiltro(filtroEstadoRef.value)
+})
+watch(filtroPeriodicidad, async () => {
+  await nextTick()
+  mostrarOpcionActivaFiltro(filtroPeriodicidadRef.value)
+})
+
 const busquedaCuotas = ref('')
 const mostrarFiltros = ref(false)
 const inputBusquedaRef = ref(null)
@@ -9550,8 +9587,10 @@ const abonosComprobante = computed(() => {
   const estaVez = Math.max(0, acumulado - anterior)
   if (estaVez <= 0) return []
 
+  // La forma de pago del abono anterior solo se conoce si quedó en el historial; sin ese
+  // dato se deja en blanco antes que inventar un «Efectivo» que puede ser falso.
   return [
-    { n: 1, fecha: reg.fechaPagoAnterior || 'Abono anterior', detalle: 'Abonado antes de este pago', total: anterior },
+    { n: 1, fecha: reg.fechaPagoAnterior || 'Abono anterior', detalle: reg.formaPagoAnteriorTexto || '', total: anterior },
     { n: 2, fecha: reg.fecha || reg.fechaCorta || 'Hoy', detalle: reg.tipoPago === 'transferencia' ? 'Transferencia' : 'Efectivo', total: estaVez }
   ]
 })
@@ -9912,7 +9951,8 @@ watch(cuotasFiltradas, async () => {
   if (inicializando.value) return
   await Promise.all([
     cargarActividadesPendientesPorSocio(),
-    cargarCuotasPrestamosPendientesParaLista()
+    cargarCuotasPrestamosPendientesParaLista(),
+    cargarCuotasPrestamosPagadasPorCuota()
   ])
 })
 
@@ -10757,30 +10797,64 @@ function getTotalCuotasPrestamosPendientesSocioSync(cuota) {
   return 0
 }
 
-// Obtener el total de cuotas de préstamos pagadas para una cuota específica
-// Similar a getActividadesInfoSocio pero para cuotas de préstamos pagadas
-async function getCuotasPrestamosPagadasSocio(cuota) {
-  if (!cuota?.id) return 0
-  try {
-    // 1) Cuotas del plan abonadas DESDE esta cuota natillera (enlace plan.cuota_id).
-    const { data: plan } = await supabase
-      .from('plan_pagos_prestamo')
-      .select('valor_pagado, valor_cuota, pagada')
-      .eq('cuota_id', cuota.id)
-    const desdePlan = (plan || []).reduce((s, cp) => s + (parseFloat(cp.valor_pagado) || 0), 0)
-    if (desdePlan > 0) return desdePlan
+/**
+ * Cuotas de préstamo ya abonadas, para TODAS las cuotas de la lista de una vez.
+ *
+ * Antes esto se resolvía cuota por cuota desde el render: la versión síncrona
+ * lanzaba una petición por cada cuota pagada que no estuviera en caché. Medido
+ * en la app real, una natillera de 30 socios disparaba **196 peticiones** a
+ * `plan_pagos_prestamo`, y la última terminaba a los 12,2 segundos.
+ *
+ * Y se realimentaba solo: la caché únicamente guardaba los totales mayores que
+ * cero, así que las cuotas sin abonos de préstamo —la mayoría— volvían a pedirse
+ * en cada repintado, para siempre.
+ *
+ * Ahora son dos peticiones para toda la lista, y se guarda también el cero.
+ *
+ * El criterio por cuota es el de siempre: lo abonado desde el plan de pagos
+ * (enlace `plan.cuota_id`) y, si ahí no hay nada, lo que el propio pago dejó
+ * escrito en su historial —que cubre los pagos anteriores a que el plan guardara
+ * el enlace—. Nada de buscar por fecha o por período: eso traía abonos hechos
+ * desde Préstamos.
+ */
+const TAMANO_LOTE_IDS = 150 // el `.in()` viaja en la URL; con más se pasa de largo
 
-    // 2) Lo que el propio pago de la cuota dejó escrito en su historial. Cubre los pagos
-    //    anteriores a que el plan guardara el enlace.
-    const { data: hist } = await supabase
-      .from('historial_pagos_cuota')
-      .select('valor_cuotas_prestamo')
-      .eq('cuota_id', cuota.id)
-    return (hist || []).reduce((s, h) => s + (parseFloat(h.valor_cuotas_prestamo) || 0), 0)
-    // Nada de buscar por fecha o por período: eso traía abonos hechos desde Préstamos.
+async function cargarCuotasPrestamosPagadasPorCuota() {
+  const ids = [...new Set(
+    cuotasFiltradas.value
+      .filter(c => c?.id && (c.estadoReal || c.estado) === 'pagada')
+      .map(c => c.id)
+  )]
+  if (ids.length === 0) return
+
+  try {
+    const porPlan = new Map()
+    const porHistorial = new Map()
+
+    for (let i = 0; i < ids.length; i += TAMANO_LOTE_IDS) {
+      const lote = ids.slice(i, i + TAMANO_LOTE_IDS)
+      const [planRes, histRes] = await Promise.all([
+        supabase.from('plan_pagos_prestamo').select('cuota_id, valor_pagado').in('cuota_id', lote),
+        supabase.from('historial_pagos_cuota').select('cuota_id, valor_cuotas_prestamo').in('cuota_id', lote)
+      ])
+      if (planRes.error) throw planRes.error
+      if (histRes.error) throw histRes.error
+
+      for (const fila of planRes.data || []) {
+        porPlan.set(fila.cuota_id, (porPlan.get(fila.cuota_id) || 0) + (parseFloat(fila.valor_pagado) || 0))
+      }
+      for (const fila of histRes.data || []) {
+        porHistorial.set(fila.cuota_id, (porHistorial.get(fila.cuota_id) || 0) + (parseFloat(fila.valor_cuotas_prestamo) || 0))
+      }
+    }
+
+    for (const id of ids) {
+      const desdePlan = porPlan.get(id) || 0
+      // El cero también se guarda: es lo que evita volver a preguntar por él.
+      cuotasPrestamosPagadasCache.value.set(id, desdePlan > 0 ? desdePlan : (porHistorial.get(id) || 0))
+    }
   } catch (error) {
-    console.error('Error obteniendo cuotas de préstamos pagadas:', error)
-    return 0
+    console.error('Error cargando cuotas de préstamos pagadas:', error)
   }
 }
 
@@ -10805,18 +10879,9 @@ function getTotalCuotasPrestamosPagadasSocioSync(cuota) {
     return cuotasPrestamosPagadasCache.value.get(cuota.id)
   }
   
-  // Si la cuota está pagada y no tenemos datos en caché, cargar de forma asíncrona
-  if ((cuota.estadoReal || cuota.estado) === 'pagada') {
-    // Cargar de forma asíncrona y guardar en caché
-    getCuotasPrestamosPagadasSocio(cuota).then(total => {
-      if (total > 0) {
-        cuotasPrestamosPagadasCache.value.set(cuota.id, total)
-      }
-    }).catch(err => {
-      console.error('Error cargando cuotas de préstamos pagadas:', err)
-    })
-  }
-  
+  // Sin datos en caché, cero. Esta función la llama la plantilla varias veces por
+  // fila: pedir a la red desde aquí era lo que generaba las 196 peticiones. Quien
+  // llena la caché es `cargarCuotasPrestamosPagadasPorCuota`, en lote.
   return 0
 }
 
@@ -16503,8 +16568,11 @@ async function reenviarComprobante(cuota) {
   // snapshot de historial_comprobantes (ya consultado en paralelo arriba, sin await serial).
   if (totalGmfHistorialReenvio <= 0 && respaldoGmfRes?.totalGmf > 0) {
     totalGmfHistorialReenvio = respaldoGmfRes.totalGmf
-    if (Array.isArray(respaldoGmfRes.historialPagos) && respaldoGmfRes.historialPagos.length > 0) {
-      historialPagosReenvio = respaldoGmfRes.historialPagos
+    // El snapshot solo sustituye al historial real si aporta MÁS abonos: es una foto vieja y
+    // si trae menos líneas haría desaparecer del comprobante abonos que sí existen.
+    const respaldo = Array.isArray(respaldoGmfRes.historialPagos) ? respaldoGmfRes.historialPagos : []
+    if (respaldo.length > historialPagosReenvio.length) {
+      historialPagosReenvio = respaldo
     }
   }
   historialPagosReenvio = asegurarLineaGmfEnHistorialReenvio(historialPagosReenvio, totalGmfHistorialReenvio)
@@ -16718,12 +16786,10 @@ async function cargarNatillera() {
     return data
   }
 
-  // Una sola consulta que trae TODO lo necesario
-  const { data } = await supabase
-    .from('natilleras')
-    .select('nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas, periodicidad')
-    .eq('id', id)
-    .single()
+  // Por la caché compartida del store: esta misma fila la piden también el
+  // cálculo de sanciones y la carga del detalle. Antes eran tres viajes de
+  // ~300 ms para el mismo dato.
+  const data = await natillerasStore.getConfigNatillera(id)
   
   if (data) {
     // Guardar en caché
@@ -17546,7 +17612,19 @@ onMounted(async () => {
   const tiempoInicio = performance.now()
 
   try {
-    // ── FASE 1a: Config de natillera (confirma/carga; instantánea si ya venía primada) ──
+    // ── FASE 1: Config de natillera y cuotas, A LA VEZ ──
+    // `fetchCuotasNatillera` solo necesita el id de la natillera, no su
+    // configuración, así que esperar a `cargarNatillera()` para lanzarla era una
+    // ida y vuelta de más en el camino crítico. Se dispara primero y se espera
+    // después, ya con la config resuelta.
+    const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
+    const promesaCuotas = storeYaTieneDatos
+      ? null
+      : cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+    // Si falla, que no quede un rechazo sin atender mientras se resuelve la config;
+    // el error se vuelve a lanzar en el `await` de abajo.
+    promesaCuotas?.catch(() => {})
+
     await cargarNatillera()
     configCargada.value = true
 
@@ -17555,11 +17633,9 @@ onMounted(async () => {
       router.replace(`/natilleras/${id}/cuotas/${mesSeleccionado.value}`)
     }
 
-    // ── FASE 1b: Cuotas en segundo plano ──
-    // Si el store ya tiene las cuotas de esta natillera, reutilizar los datos en lugar de volver a consultar la BD.
-    const storeYaTieneDatos = cuotasStore.hasCuotasForNatillera(id)
-    if (!storeYaTieneDatos) {
-      await cuotasStore.fetchCuotasNatillera(id, { skipMoraUpdate: true })
+    // Las cuotas tienen que estar antes de seguir: el resto de fases cuenta con ellas.
+    if (promesaCuotas) {
+      await promesaCuotas
     }
 
     const sociosDelStore = cuotasStore.sociosNatillera
@@ -17609,7 +17685,8 @@ onMounted(async () => {
 
   Promise.all([
     cargarActividadesPendientesPorSocio(),
-    cargarCuotasPrestamosPendientesParaLista()
+    cargarCuotasPrestamosPendientesParaLista(),
+    cargarCuotasPrestamosPagadasPorCuota()
   ]).catch(err => console.error('Error cargando datos secundarios:', err))
 
   await nextTick()

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { supabase } from '../lib/supabase'
 import { comprimirImagen, crearVistaPrevia, revocarVistasPrevias } from '../utils/adjuntosSoporte'
+import { anotarUsaSoporte, pedirAvisoNotificaciones } from '../composables/useAvisoNotificaciones'
 
 /**
  * Store del chat de soporte (Especificaciones/chat-soporte/especificacion.md).
@@ -721,6 +722,18 @@ export const useSoporteStore = defineStore('soporte', () => {
       // Las miniaturas locales se sueltan con retraso: revocarlas en el mismo
       // instante deja la imagen en blanco hasta que carga la del servidor.
       if (vistasPrevias.length) setTimeout(() => revocarVistasPrevias(vistasPrevias), 15000)
+
+      /*
+       * Momento bueno para pedir el permiso de notificaciones: acaba de escribir
+       * a soporte y espera respuesta, así que el aviso le sirve para algo. Pedirlo
+       * al entrar, a todo el mundo, lo quema: un «no» en el diálogo nativo deja el
+       * permiso en `denied` para siempre y ya no se puede volver a preguntar.
+       *
+       * Solo dispara el modal —que lleva el botón—, nunca `requestPermission()`
+       * directamente: eso exige un gesto del usuario.
+       */
+      anotarUsaSoporte()
+      pedirAvisoNotificaciones('soporte')
 
       return { ok: true, conversacionId: idReal, clientId: idCliente, numero: data.numero }
     } catch (e) {

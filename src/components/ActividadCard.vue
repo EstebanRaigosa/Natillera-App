@@ -147,6 +147,7 @@
   >
     <!-- Franja de estado slim -->
     <div
+      data-guia-parte="estado"
       class="flex items-center gap-1.5 px-4 py-2 border-b text-xs font-semibold"
       :class="esLiquidada
         ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
@@ -189,7 +190,7 @@
            Móvil: una columna, cada chip en fila (etiqueta izquierda + valor derecha) para
            que el número tenga todo el ancho y no haga wrap. Escritorio (sm+): 3 chips con
            etiqueta arriba y valor debajo. Valor siempre en una línea (nowrap + tabular-nums). -->
-      <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+      <div data-guia-parte="cifras" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
         <template v-if="esLiquidada">
           <div class="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2 min-w-0 flex items-center justify-between gap-3 sm:block">
             <p class="text-[10px] font-semibold uppercase tracking-wide text-gray-400 leading-tight">Ingresos</p>

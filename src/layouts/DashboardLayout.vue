@@ -399,6 +399,7 @@
         <div 
           class="flex-1 max-lg:flex-none p-3 sm:p-4 lg:p-5 xl:p-8 w-full min-h-0"
           :class="route.params.id ? 'content-above-bottom-nav lg:pb-3' : 'pb-3'"
+          :style="{ '--tapado-inferior': tapadoInferior + 'px' }"
         >
           <router-view />
         </div>
@@ -491,6 +492,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import { useScrollRestoration } from '../composables/useScrollRestoration'
+import { useTapadoInferior } from '../composables/useTapadoInferior'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
 import BotonSoporte from '../components/soporte/BotonSoporte.vue'
@@ -511,6 +513,19 @@ const route = useRoute()
 // que usa el router para el scroll-to-top).
 useScrollRestoration(() => document.querySelector('main.overflow-y-auto'))
 const authStore = useAuthStore()
+/*
+ * Cuánto del viewport tapa la barra de Safari en iOS (§4.1 del manual).
+ *
+ * `MobileBottomNav` ya lo usaba, pero publicaba `--tapado-inferior` en SU propio
+ * elemento, así que la variable no llegaba hasta aquí: la barra crecía con el
+ * chrome de Safari y el hueco que le reserva el contenido seguía siendo fijo.
+ * Resultado: la última fila de la lista quedaba debajo de la barra, y solo se
+ * veía entera tras un segundo scroll, cuando Safari contrae su barra.
+ *
+ * Fuera de iOS —o con la PWA instalada— vale 0 y el CSS queda igual que siempre.
+ */
+const { tapado: tapadoInferior } = useTapadoInferior()
+
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
 const notificationStore = useNotificationStore()
@@ -1012,9 +1027,12 @@ onUnmounted(() => {
   }
 }
 
-/* Reservar espacio bajo la barra inferior fija (ítems ~44px en iOS + sombra/pill activo + safe area) */
+/* Reservar espacio bajo la barra inferior fija (ítems ~44px en iOS + sombra/pill
+   activo + safe area). El `--tapado-inferior` es obligatorio: la barra se levanta
+   por encima del chrome de Safari (§4.1), así que ocupa más alto del que dice su
+   safe-area y sin sumarlo aquí el hueco se queda corto justo por ese tanto. */
 .content-above-bottom-nav {
-  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px) + var(--tapado-inferior, 0px));
 }
 
 .nav-link {

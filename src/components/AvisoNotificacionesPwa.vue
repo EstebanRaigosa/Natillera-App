@@ -132,6 +132,11 @@ import { usePush } from '../composables/usePush'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { useNatiscroll } from '../composables/useNatiscroll'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
+import {
+  avisoNotificacionesPedido,
+  limpiarAvisoNotificacionesPedido,
+  usaSoporte
+} from '../composables/useAvisoNotificaciones'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notifications'
 
@@ -164,19 +169,35 @@ const { scrollRef, hayMas, onScroll } = useNatiscroll(visible)
 // El pie va anclado abajo: en iOS la barra de Safari lo tapa y `env()` no la describe.
 const { tapado } = useTapadoInferior()
 
+/*
+ * El aviso vuelve a salir CADA VEZ que se abre la app, hasta que se acepte.
+ *
+ * Antes se anotaba en `localStorage` y no volvía a aparecer nunca: quien lo
+ * cerraba una vez se quedaba sin avisos para siempre y sin saberlo. Ahora la
+ * memoria dura solo la sesión, así que «Ahora no» calla el modal mientras la app
+ * siga abierta —no se repite al cambiar de pantalla— pero reaparece en la
+ * siguiente apertura.
+ *
+ * Quien acepta deja el permiso en 'granted' y `sePuedePreguntar()` ya no deja
+ * pasar nada: no hace falta recordar nada para ese caso.
+ */
+const descartadoEnEstaSesion = ref(false)
+
+/* Puesta a true mientras se atiende una petición contextual (acaba de escribir a
+   soporte), para que ese caso no lo filtre el requisito de `usaSoporte()`. */
+let pedidoContextual = false
+
 function yaSePregunto() {
-  try {
-    return localStorage.getItem(CLAVE_PREGUNTADO) === '1'
-  } catch {
-    // Modo privado o storage bloqueado: se preferirá preguntar de más a no preguntar.
-    return false
-  }
+  return descartadoEnEstaSesion.value
 }
 
 function anotarQueSePregunto() {
+  descartadoEnEstaSesion.value = true
+  // Limpieza de la memoria permanente anterior: si no, los que ya cerraron el
+  // aviso alguna vez arrastrarían la marca vieja sin que sirva para nada.
   try {
-    localStorage.setItem(CLAVE_PREGUNTADO, '1')
-  } catch { /* sin storage no hay memoria; el modal volverá a salir */ }
+    localStorage.removeItem(CLAVE_PREGUNTADO)
+  } catch { /* sin storage no hay nada que limpiar */ }
 }
 
 /**
@@ -193,6 +214,16 @@ function sePuedePreguntar() {
   if (visible.value) return false
   const forzado = seFuerzaPorUrl()
   if (!forzado && yaSePregunto()) return false
+  /*
+   * Al ENTRAR solo se insiste a quien tiene algo que recibir: hoy lo único que
+   * manda notificaciones es el chat de soporte, así que preguntarle a quien nunca
+   * ha escrito es quemar el permiso a cambio de nada. Un «no» en el diálogo nativo
+   * deja `denied` para siempre.
+   *
+   * `pedidoContextual` se salta este filtro: viene de acabar de escribir a
+   * soporte, que es justo el momento en que el permiso tiene sentido.
+   */
+  if (!forzado && !pedidoContextual && !usaSoporte()) return false
   // Sin sesión no hay dónde guardar la suscripción, y encima del modal del nombre
   // quedarían dos overlays apilados en el primer arranque.
   if (!auth.isAuthenticated || auth.needsUsername) return false
@@ -229,6 +260,27 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('appinstalled', alInstalar)
   if (temporizador) clearTimeout(temporizador)
+})
+
+/*
+ * Petición contextual: alguien acaba de escribir a soporte. Se salta el filtro de
+ * `usaSoporte()` —la marca puede no haberse leído aún— y el retardo largo del
+ * arranque, porque aquí el usuario ya está mirando la pantalla.
+ *
+ * Lo que NO se salta es el estado del permiso: si ya está 'granted' o 'denied',
+ * `sePuedePreguntar()` corta y no sale nada.
+ */
+watch(avisoNotificacionesPedido, (pedido) => {
+  if (!pedido) return
+  limpiarAvisoNotificacionesPedido()
+  pedidoContextual = true
+  // El mensaje acaba de salir: un respiro para no tapar la burbuja recién pintada.
+  if (temporizador) clearTimeout(temporizador)
+  temporizador = setTimeout(() => {
+    temporizador = null
+    if (sePuedePreguntar()) visible.value = true
+    pedidoContextual = false
+  }, 1200)
 })
 
 // Si la sesión entra después del arranque (login, o restauración lenta), se reintenta.

@@ -179,10 +179,15 @@ const campo = ref(null)
 const entradaArchivos = ref(null)
 const archivos = ref([])   // { archivo: File, previa: string|null }
 
+// Handlers con nombre: los anónimos no se pueden quitar, y este componente es un
+// modal que se monta y desmonta. Con funciones inline cada apertura del redactor
+// dejaba dos listeners más colgados en window para siempre.
 const sinConexion = ref(typeof navigator !== 'undefined' && navigator.onLine === false)
+const alConectar = () => { sinConexion.value = false }
+const alDesconectar = () => { sinConexion.value = true }
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => { sinConexion.value = false })
-  window.addEventListener('offline', () => { sinConexion.value = true })
+  window.addEventListener('online', alConectar)
+  window.addEventListener('offline', alDesconectar)
 }
 
 const preparandoAdjuntos = computed(() => archivos.value.some((a) => a.preparando))
@@ -265,8 +270,15 @@ function soltarVistasPrevias() {
 }
 
 // Las miniaturas son objetos en memoria del navegador: si no se sueltan, se
-// quedan hasta recargar la página.
-onBeforeUnmount(soltarVistasPrevias)
+// quedan hasta recargar la página. Y los listeners de conexión se retiran aquí
+// para que no se acumulen en cada apertura del redactor.
+onBeforeUnmount(() => {
+  soltarVistasPrevias()
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('online', alConectar)
+    window.removeEventListener('offline', alDesconectar)
+  }
+})
 
 /*
  * Al enviar, el campo se deshabilita y el navegador le quita el foco; cuando se

@@ -37,7 +37,7 @@
             <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
           </button>
         </div>
-        <div class="ds-page-header__actions">
+        <div data-guia="actividades-acciones" class="ds-page-header__actions">
           <!-- Móvil: a ancho completo bajo el título; con el texto en la fila del título
                se comía el ancho y «Actividades» quedaba partido -->
           <button
@@ -315,8 +315,9 @@
       <!-- Vista Normal: todas las actividades sin agrupar -->
       <div v-if="!vistaAgrupada" class="space-y-4">
         <ActividadCard
-          v-for="actividad in actividadesFiltradas"
+          v-for="(actividad, idx) in actividadesFiltradas"
           :key="actividad.id"
+          :data-guia="idx === 0 ? 'actividades-tarjeta' : undefined"
           :actividad="actividad"
           @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
           @eliminar="confirmarEliminarActividad(actividad)"
@@ -334,6 +335,7 @@
           <!-- Serie: cabecera-resumen + lista colapsable -->
           <template v-if="item.tipo === 'grupo'">
             <div
+              :data-guia-serie="item.serieId"
               class="rounded-2xl overflow-hidden bg-white border shadow-[var(--shadow-xs)] transition-colors"
               :class="isGrupoExpandido(item.serieId) ? 'border-indigo-300' : 'border-indigo-200/60'"
             >
@@ -914,7 +916,7 @@
             <!-- Bloque: Tipo de proceso -->
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Tipo de proceso</label>
-              <div data-guia="form-tipo-proceso" class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
+              <div class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
                 <button
                   type="button"
                   @click="formActividad.tipoProceso = 'liquidar'; resetearFormularioPorTipo()"
@@ -954,7 +956,7 @@
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
               <div class="grid gap-4" :class="muestraModoRifa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
                 <!-- Columna: Tipo de actividad (dropdown personalizado con ítems estilizados) -->
-                <div data-guia="form-tipo" class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': !muestraModoRifa }">
+                <div class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': !muestraModoRifa }">
                   <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Tipo de actividad</label>
                   <div class="relative flex-1" ref="dropdownTipoActividadRef">
                     <button
@@ -1080,14 +1082,14 @@
             <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
               <textarea
-                data-guia="form-descripcion"
+               
                 v-model="formActividad.descripcion"
                 rows="2"
                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white resize-none transition-colors"
                 placeholder="Ej: Rifa de Navidad 2025"
                 required
               />
-              <label v-if="formActividad.tipoProceso === 'en_curso'" data-guia="form-repetir" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
+              <label v-if="formActividad.tipoProceso === 'en_curso'" class="mt-3 flex items-center justify-between gap-3 py-3 px-4 rounded-xl border cursor-pointer transition-all min-h-[3.25rem] select-none active:scale-[0.99]"
                 :class="formActividad.esMultiplesMeses ? 'bg-natillera-50 border-natillera-300 shadow-sm' : 'bg-slate-50/90 border-natillera-200/60 hover:border-natillera-300 hover:bg-natillera-50/50 hover:shadow-sm'">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                   <div
@@ -7792,60 +7794,43 @@ let guiaAMano = false
 let guiaIntentada = false
 let temporizadorGuia = null
 
-// Preparación de la vista agrupada. Declaradas fuera de la lista para que los dos pasos
-// de la serie compartan la misma referencia de `antes` y no se rehaga entre ellos.
+// Preparación de la vista agrupada, declarada fuera de la lista de pasos para que la
+// referencia sea estable y el cambio de vista no se deshaga y rehaga entre pasos.
+// La serie solo se pone a la vista: no se despliega, porque su cabecera ya lleva el
+// avance y el recaudado, y abrirla movería lo que se está enfocando.
 let vistaAnterior = null
+let serieGuiaId = null
 function guiaEnVistaAgrupada() {
   if (vistaAgrupada.value) return false
   vistaAnterior = vistaAgrupada.value
   vistaAgrupada.value = true
   return true
 }
-let serieAbiertaAntes = null
-let serieGuiaId = null
-function guiaAbrirSerie() {
-  if (!serieGuiaId) return
-  serieAbiertaAntes = isGrupoExpandido(serieGuiaId)
-  gruposExpandidos.value[serieGuiaId] = true
+function guiaRestaurarVista() {
+  if (vistaAnterior === null) return
+  vistaAgrupada.value = vistaAnterior
+  vistaAnterior = null
 }
-function guiaRestaurarSerie() {
-  if (vistaAnterior !== null) {
-    vistaAgrupada.value = vistaAnterior
-    vistaAnterior = null
-  }
-  if (serieAbiertaAntes === null || !serieGuiaId) return
-  gruposExpandidos.value[serieGuiaId] = serieAbiertaAntes
-  serieAbiertaAntes = null
-}
+const flujoSerie = { grupo: 'serie', despues: guiaRestaurarVista }
 
-// Flujo «nueva actividad»: cada paso deja la pantalla como la necesita, venga de donde
-// venga (avanzando, retrocediendo o saltando), y devuelve false si ya estaba así.
-// Esta vista no usa pila de modales: se cierra con su propio ref, igual que «Cancelar».
-function guiaAbrirFormulario() {
-  if (modalNuevaActividad.value) return false
-  modalNuevaActividad.value = true
-  return true
-}
-function guiaCerrarFormulario() {
-  modalNuevaActividad.value = false
-}
-// El interruptor «Repetir» solo existe en las actividades en curso
-function guiaFormularioEnCurso() {
-  const abierto = guiaAbrirFormulario()
-  if (formActividad.tipoProceso === 'en_curso') return abierto
-  formActividad.tipoProceso = 'en_curso'
-  resetearFormularioPorTipo()
-  return true
-}
-
+/*
+ * No abre el formulario de «Registrar actividad». Se probó y la parada más lenta del
+ * recorrido acababa enseñando un formulario, que se entiende solo al verlo, tapando la
+ * pantalla que se estaba explicando. Se señala el botón y listo.
+ *
+ * Cinco paradas contando la serie (cuatro si la natillera no tiene ninguna): los botones,
+ * las cifras, una actividad de verdad, las dos vistas y una serie.
+ */
 function construirPasosGuia({ manual = false } = {}) {
   const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
   const primeraSerie = actividadesAgrupadas.value.find((item) => item.tipo === 'grupo')
   serieGuiaId = primeraSerie?.serieId || null
-  const primeraDeLaSerie = primeraSerie?.actividades?.[0]?.id || null
-  // Mismo `grupo`: entre estos pasos no se deshace la preparación.
-  const flujoSerie = { grupo: 'serie', despues: guiaRestaurarSerie }
-  const flujoFormulario = { grupo: 'nueva-actividad', despues: guiaCerrarFormulario }
+  const existe = (sel) => !!document.querySelector(sel)
+  // Un visor no tiene estos botones: sin ninguno, el paso que los enseña no se añade.
+  const accionesGuia = [
+    { selector: '[data-guia="actividades-nueva"]', etiqueta: 'Registrar actividad · rifa, bingo, venta o evento' },
+    { selector: '[data-guia="actividades-cobrar"]', etiqueta: 'Registrar pago · lo que aporta un socio' },
+  ].filter((item) => existe(item.selector))
 
   const pasos = [
     {
@@ -7857,6 +7842,17 @@ function construirPasosGuia({ manual = false } = {}) {
       titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
       texto: 'Te enseño a manejar las actividades en menos de un minuto.',
     },
+    ...(accionesGuia.length
+      ? [{
+          selector: '[data-guia="actividades-acciones"]',
+          icono: PlusIcon,
+          titulo: 'Crear y cobrar',
+          texto: 'Creas la rifa o el evento, y anotas lo que cada socio pague.',
+          recorrer: accionesGuia,
+          radio: 20,
+          margen: 6,
+        }]
+      : []),
     {
       selector: '[data-guia="actividades-resumen"]',
       icono: CurrencyDollarIcon,
@@ -7868,41 +7864,39 @@ function construirPasosGuia({ manual = false } = {}) {
         { selector: '[data-guia="actividades-resumen-utilidad"]', etiqueta: 'Utilidad · lo que gana el fondo' },
       ],
     },
-    // El formulario se abre de verdad, en una sola parada: recorrer sus campos uno a
-    // uno alargaba el recorrido y se entienden viéndolos.
     {
-      selector: '[data-guia="form-tipo"]',
-      icono: PlusIcon,
-      titulo: 'Registra una actividad',
-      texto: 'Rifa, bingo, venta o evento; liquidada o en curso.',
-      antes: guiaAbrirFormulario,
-      ...flujoFormulario,
+      selector: '[data-guia="actividades-tarjeta"]',
+      icono: CalendarIcon,
+      titulo: 'Cada actividad',
+      texto: 'Cómo va, cuánto se asignó y cuánto se ha recogido.',
+      recorrer: [
+        { selector: '[data-guia="actividades-tarjeta"] [data-guia-parte="estado"]', etiqueta: 'Estado · en curso o finalizada' },
+        { selector: '[data-guia="actividades-tarjeta"] [data-guia-parte="cifras"]', etiqueta: 'Cifras · asignado, recogido y utilidad' },
+      ],
     },
     {
       selector: '[data-guia="actividades-vista"]',
       icono: RectangleStackIcon,
       gesto: 'tocar',
       titulo: 'Dos formas de verlas',
-      texto: '«Agrupada» junta las que se repiten varios meses.',
-      radio: 22,
-      margen: 6,
-    },
-    {
-      selector: '[data-guia="actividades-filtros"]',
-      icono: MagnifyingGlassIcon,
-      titulo: 'Encuentra la que buscas',
-      texto: 'Busca por nombre o mes, o filtra por estado.',
+      texto: 'Una debajo de otra, o juntando las que se repiten.',
+      recorrer: [
+        { selector: '[data-guia="actividades-vista"] .ds-segmented__opt:nth-child(1)', etiqueta: 'Normal · todas en una lista' },
+        { selector: '[data-guia="actividades-vista"] .ds-segmented__opt:nth-child(2)', etiqueta: 'Agrupada · por serie que se repite' },
+      ],
       radio: 22,
       margen: 6,
     },
   ]
 
+  // La serie se enseña de verdad: el paso anterior acaba de nombrar la vista agrupada, y
+  // este la activa para que se vea qué junta. `antes` cambia la vista; el foco llega después.
   if (serieGuiaId) {
     pasos.push({
       selector: `[data-guia-serie="${serieGuiaId}"]`,
       icono: CubeIcon,
       titulo: 'Una serie completa',
-      texto: 'Ábrela y ves mes a mes cuánto llevas recaudado.',
+      texto: 'Las que se repiten cada mes van juntas, con su avance.',
       antes: guiaEnVistaAgrupada,
       ...flujoSerie,
     })

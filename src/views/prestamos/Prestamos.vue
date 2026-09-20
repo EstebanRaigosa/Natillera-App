@@ -460,7 +460,7 @@
         >
           <form @submit.prevent="pasoNuevoPrestamo < 2 ? pasoNuevoPrestamo++ : handleCrearPrestamo()" class="px-4 sm:px-6 pt-4 sm:pt-5 pb-0">
           <!-- Paso 0: Monto y socio -->
-          <div v-show="pasoNuevoPrestamo === 0" data-guia="crear-monto" class="space-y-4 sm:space-y-5">
+          <div v-show="pasoNuevoPrestamo === 0" class="space-y-4 sm:space-y-5">
           <!-- Selector de Socio -->
           <div class="relative selector-socio-container">
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Socio</label>
@@ -651,7 +651,7 @@
           </div>
 
           <!-- Paso 1: Plazo e interés -->
-          <div v-show="pasoNuevoPrestamo === 1" data-guia="crear-plazo" class="space-y-4 sm:space-y-5">
+          <div v-show="pasoNuevoPrestamo === 1" class="space-y-4 sm:space-y-5">
           <!-- Tipo de interés -->
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Tipo de interés</label>
@@ -774,7 +774,7 @@
           </div>
 
           <!-- Paso 2: Resumen. Antes de crear: botón WhatsApp antes de Generar. Después de crear: comprobante con Descargar y WhatsApp -->
-          <div v-show="pasoNuevoPrestamo === 2" data-guia="crear-resumen" class="space-y-3 sm:space-y-4">
+          <div v-show="pasoNuevoPrestamo === 2" class="space-y-3 sm:space-y-4">
             <!-- Vista antes de generar: sin comprobante; confirmar desde el footer -->
             <template v-if="!prestamoRecienCreado">
               <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 space-y-3">
@@ -8003,76 +8003,24 @@ let temporizadorGuiaPrestamos = null
 
 /*
  * Sin navegación ni soporte: ya los enseña el recorrido del detalle. Aquí, lo propio:
- * crear un préstamo, los números, las pestañas y qué se hace desde cada tarjeta.
- * Solo señala (no abre modales): la primera tarjeta de la lista hace de ejemplo.
+ * dónde se crea un préstamo, los números de arriba, las dos secciones y qué cuenta
+ * cada tarjeta.
+ *
+ * No abre ninguna modal. Se probó abriendo el formulario de «Nuevo préstamo» y lo que
+ * enseñaba era un formulario —que se entiende solo al verlo— a cambio de la parada más
+ * lenta del recorrido: la modal tarda en montar, tapa la pantalla que se está enseñando
+ * y hay que cerrarla al salir del paso, viniendo de donde se viniera. Señalar el botón
+ * cuesta un segundo y deja el recorrido entero en la pantalla real.
  */
-const esperarGuiaPrestamos = (ms) => new Promise((resolver) => setTimeout(resolver, ms))
 
 /*
- * Flujo «cómo se crea un préstamo»: abre la modal de verdad y la deja en cada uno de sus
- * tres pasos. Un estado por paso, no una acción: cada `antes` deja la pantalla como su
- * paso la necesita venga de donde venga (avanzando, retrocediendo o saltando) y devuelve
- * `false` si ya estaba así. El formulario se enseña con sus valores por defecto: no se
- * rellena nada, para que nadie termine con un préstamo a medio escribir.
- */
-async function cerrarModalesGuiaPrestamos() {
-  let cambio = false
-  for (let i = 0; i < 6 && hasOpenModal.value; i++) {
-    requestCloseTopModal()
-    cambio = true
-    // Cada cierre hace history.back(): dejar que llegue antes del siguiente.
-    await esperarGuiaPrestamos(40)
-  }
-  return cambio
-}
-
-async function guiaCrearEnPaso(paso) {
-  if (modalNuevoPrestamo.value) {
-    if (pasoNuevoPrestamo.value === paso) return false
-    pasoNuevoPrestamo.value = paso
-    // El cuerpo conserva el scroll del paso anterior: subirlo de golpe deja el bloque
-    // a la vista y el foco llega de una vez, sin encuadrar después.
-    await nextTick()
-    modalNuevoPrestamoScrollRef.value?.scrollTo({ top: 0, behavior: 'auto' })
-    return true
-  }
-  await cerrarModalesGuiaPrestamos()
-  await abrirModalNuevoPrestamo()
-  pasoNuevoPrestamo.value = paso
-  await nextTick()
-  return true
-}
-
-// El recorrido solo abre el primer paso del formulario; `guiaCrearEnPaso` acepta
-// cualquiera por si vuelve a hacer falta enseñar los otros dos.
-const guiaCrearMonto = () => guiaCrearEnPaso(0)
-
-/*
- * La pestaña «Pagados» no se ve mientras el recorrido enseña los préstamos por cobrar,
- * así que hay un paso que la abre. Fuera de la lista para que la referencia sea estable
- * (la comparación de `antes` entre pasos evita deshacer y rehacer el cambio).
- */
-let pestanaPrestamosAntesGuia = null
-function mostrarPagadosGuia() {
-  if (tabPrestamos.value === 'pagados') return false
-  pestanaPrestamosAntesGuia = tabPrestamos.value
-  tabPrestamos.value = 'pagados'
-  return true
-}
-function restaurarPestanaGuia() {
-  if (pestanaPrestamosAntesGuia === null) return
-  tabPrestamos.value = pestanaPrestamosAntesGuia
-  pestanaPrestamosAntesGuia = null
-}
-
-/*
- * Cinco paradas y fuera. Enseña el circuito —crear, mirar, cobrar, cerrar—, no cada
- * dato de la tarjeta: eso se lee solo, y cada paso de más es uno que la gente se salta.
+ * Cuatro paradas y fuera. Enseña el circuito —crear, mirar, cobrar, cerrar— con las
+ * tarjetas y las secciones que ya están a la vista, no cada dato ni cada campo: eso se
+ * lee solo, y cada paso de más es uno que la gente se salta.
  */
 function construirPasosGuiaPrestamos({ manual = false } = {}) {
   const nombre = String(authStore.userName || '').trim().split(/\s+/)[0]
   const tarjeta = '[data-guia="prestamos-tarjeta"]'
-  const puedeCrear = !!document.querySelector('[data-guia="prestamos-nuevo"]')
   const pasos = [
     {
       tipo: 'bienvenida',
@@ -8083,27 +8031,16 @@ function construirPasosGuiaPrestamos({ manual = false } = {}) {
       titulo: nombre ? `¡Hola, ${nombre}!` : '¡Hola!',
       texto: 'Te enseño a manejar los préstamos en menos de un minuto.'
     },
-    // La modal de creación se abre de verdad, en su primer paso: enseñar el botón sin
-    // lo que hay detrás no dice nada, y abrir sus tres pasos uno a uno alargaba de más.
-    // Solo si se puede crear: a un visor no se le abre una modal que no va a poder usar.
-    puedeCrear
-      ? {
-          selector: '[data-guia="crear-monto"]',
-          icono: PlusIcon,
-          titulo: 'Presta dinero',
-          texto: 'Tres pasos: a quién y cuánto, plazo e interés, y confirmar.',
-          antes: guiaCrearMonto,
-          despues: cerrarModalesGuiaPrestamos
-        }
-      : {
-          selector: '[data-guia="prestamos-nuevo"]',
-          icono: PlusIcon,
-          gesto: 'tocar',
-          titulo: 'Presta dinero',
-          texto: 'Crea un préstamo para un socio en pocos pasos.',
-          radio: 24,
-          margen: 6
-        },
+    // Si el botón no está (un visor no puede crear), el filtro del final quita el paso.
+    {
+      selector: '[data-guia="prestamos-nuevo"]',
+      icono: PlusIcon,
+      gesto: 'tocar',
+      titulo: 'Presta dinero',
+      texto: 'Aquí creas un préstamo: monto, plazo e interés.',
+      radio: 24,
+      margen: 6
+    },
     {
       selector: '[data-guia="prestamos-resumen"]',
       icono: ChartBarIcon,
@@ -8117,35 +8054,33 @@ function construirPasosGuiaPrestamos({ manual = false } = {}) {
       ]
     },
     {
-      selector: tarjeta,
-      icono: UserIcon,
-      titulo: 'Cada préstamo',
-      texto: 'Saldo, próximo pago y avance. Tócala para ver el detalle.',
+      selector: '[data-guia="prestamos-pestanas"]',
+      icono: CheckCircleIcon,
+      titulo: 'Por cobrar y pagados',
+      texto: 'Aquí los que aún deben; al lado, los que ya terminaron.',
+      // Se señalan las dos pestañas en vez de cambiar de sección: el subfoco las nombra
+      // sin mover la lista que se enseña en el paso siguiente. Con etiqueta propia porque
+      // el texto del botón trae pegado su contador («Por cobrar3»).
       recorrer: [
-        { selector: `${tarjeta} [data-guia-parte="estado"]`, etiqueta: 'Estado · al día, en mora o pagado' },
-        { selector: `${tarjeta} [data-guia-parte="saldo"]`, etiqueta: 'Saldo · lo que falta pagar' },
-        { selector: `${tarjeta} [data-guia-parte="proximo"]`, etiqueta: 'Próximo pago · con los días de gracia' }
-      ].filter((item) => document.querySelector(item.selector))
-    },
-    {
-      selector: `${tarjeta} [data-guia-parte="abonar"]`,
-      icono: BanknotesIcon,
-      gesto: 'tocar',
-      titulo: 'Registra un abono',
-      texto: 'Toca «Abonar» cuando el socio pague.',
-      radio: 22,
+        { selector: '[data-guia="prestamos-pestanas"] .prestamos-tab:nth-child(1)', etiqueta: 'Por cobrar · todavía deben dinero' },
+        { selector: '[data-guia="prestamos-pestanas"] .prestamos-tab:nth-child(2)', etiqueta: 'Pagados · terminaron de pagar' }
+      ],
+      radio: 20,
       margen: 6
     },
     {
-      selector: '[data-guia="prestamos-lista"]',
-      icono: CheckCircleIcon,
-      titulo: 'Los que ya pagaron',
-      texto: prestamosPagados.value.length
-        ? 'En «Pagados» quedan los saldados, con su comprobante.'
-        : 'Cuando un préstamo se salde, pasa solo a «Pagados».',
-      // Abre la pestaña para enseñarla y la deja como estaba al salir del paso
-      antes: mostrarPagadosGuia,
-      despues: restaurarPestanaGuia
+      selector: tarjeta,
+      icono: UserIcon,
+      titulo: 'Cada préstamo',
+      texto: 'Saldo, próximo pago y abono. Tócala para ver el detalle.',
+      // El abono va aquí dentro: era una parada propia para señalar un botón que ya se
+      // ve en la tarjeta que se está enfocando.
+      recorrer: [
+        { selector: `${tarjeta} [data-guia-parte="estado"]`, etiqueta: 'Estado · al día, en mora o pagado' },
+        { selector: `${tarjeta} [data-guia-parte="saldo"]`, etiqueta: 'Saldo · lo que falta pagar' },
+        { selector: `${tarjeta} [data-guia-parte="proximo"]`, etiqueta: 'Próximo pago · con los días de gracia' },
+        { selector: `${tarjeta} [data-guia-parte="abonar"]`, etiqueta: 'Abonar · cuando el socio pague' }
+      ].filter((item) => document.querySelector(item.selector))
     },
     {
       tipo: 'final',

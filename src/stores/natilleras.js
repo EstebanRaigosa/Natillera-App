@@ -174,6 +174,60 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     }
   }
 
+  /*
+   * Configuración de la natillera, leída una sola vez.
+   *
+   * Al abrir la vista de cuotas se pedía tres veces la misma fila de
+   * `natilleras`: la vista para su cabecera y el mes, `calcularSancionesTotales`
+   * para las reglas de multa, y la carga del detalle. Tres viajes de ~300 ms
+   * para el mismo dato.
+   *
+   * Aquí se guarda un minuto y, si dos sitios la piden a la vez, comparten la
+   * misma petición en vuelo en lugar de lanzar dos.
+   *
+   * La caché se tira al modificar la natillera (`actualizarNatillera`,
+   * `transferirAdministracion`, `eliminarNatillera`): un minuto de configuración
+   * vieja después de cambiar las sanciones sería un error visible.
+   */
+  const COLUMNAS_CONFIG = 'id, nombre, mes_inicio, mes_fin, anio, anio_inicio, reglas_multas, periodicidad'
+  const VIDA_CONFIG_MS = 60 * 1000
+  const configCache = new Map()   // id -> { fila, ts }
+  const configEnVuelo = new Map() // id -> Promise
+
+  function invalidarConfigNatillera(id) {
+    if (id) configCache.delete(id)
+    else configCache.clear()
+  }
+
+  async function getConfigNatillera(id, { refrescar = false } = {}) {
+    if (!id) return null
+
+    if (!refrescar) {
+      const guardada = configCache.get(id)
+      if (guardada && Date.now() - guardada.ts < VIDA_CONFIG_MS) return guardada.fila
+      const enVuelo = configEnVuelo.get(id)
+      if (enVuelo) return enVuelo
+    }
+
+    const promesa = (async () => {
+      const { data, error: e } = await supabase
+        .from('natilleras')
+        .select(COLUMNAS_CONFIG)
+        .eq('id', id)
+        .maybeSingle()
+      if (e) throw e
+      if (data) configCache.set(id, { fila: data, ts: Date.now() })
+      return data
+    })()
+
+    configEnVuelo.set(id, promesa)
+    try {
+      return await promesa
+    } finally {
+      configEnVuelo.delete(id)
+    }
+  }
+
   async function getNatilleraConDatos(id) {
     const [natRes, sociosRes, actividadesRes] = await Promise.all([
       supabase.from('natilleras').select('*').eq('id', id).maybeSingle(),
@@ -378,6 +432,9 @@ export const useNatillerasStore = defineStore('natilleras', () => {
 
       if (updateError) throw updateError
 
+      // La configuración cambió: la copia guardada ya no vale.
+      invalidarConfigNatillera(id)
+
       const index = natilleras.value.findIndex(n => n.id === id)
       if (index !== -1) {
         natilleras.value[index] = data
@@ -483,6 +540,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         throw new Error(`Error al reasignar la natillera: ${updateError.message}`)
       }
 
+      invalidarConfigNatillera(natilleraId)
+
       // Actualizar en la lista local
       const index = natilleras.value.findIndex(n => n.id === natilleraId)
       if (index !== -1) {
@@ -523,6 +582,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     try {
       loading.value = true
       error.value = null
+      invalidarConfigNatillera(id)
 
       // Verificar autenticación
       const { data: { user } } = await supabase.auth.getUser()
@@ -1815,6 +1875,8 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     fetchNatillerasCompartidas,
     fetchTodasLasNatilleras,
     fetchNatillera,
+    getConfigNatillera,
+    invalidarConfigNatillera,
     crearNatillera,
     actualizarNatillera,
     cerrarNatillera,
