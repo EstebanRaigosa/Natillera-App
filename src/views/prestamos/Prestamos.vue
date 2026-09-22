@@ -179,22 +179,31 @@
         </div>
 
         <!-- Lista de la pestaña activa: ds-card compacta (nombre → saldo → Monto/Interés/Pagado) -->
-        <div v-else class="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <!--
+          Una tarjeta por fila, a todo el ancho. En tres columnas las cifras del crédito
+          se apretaban y el nombre del socio se truncaba; a lo ancho la tarjeta se parte en
+          dos y el bloque de mora se lee sin romperse.
+        -->
+        <div v-else class="grid grid-cols-1 items-start gap-4">
         <div
           v-for="(prestamo, idx) in prestamosFiltrados"
           :key="prestamo.id"
           :data-guia="idx === 0 ? 'prestamos-tarjeta' : undefined"
           @click="abrirModalDetalle(prestamo)"
-          class="ds-card ds-card--hover flex cursor-pointer flex-col gap-3"
+          class="ds-card ds-card--hover cursor-pointer lg:flex lg:items-start lg:gap-6"
         >
           <!-- Jerarquía de la tarjeta, de más a menos importante:
                1. quién y cómo va       → nombre + badge de estado
                2. cuánto debe           → saldo (cifra protagonista) + progreso del plan
                3. qué hacer y cuándo    → UN solo bloque resaltado: mora o próximo pago
-               4. condiciones del crédito → monto/interés/pagado, en letra de referencia
+               4. condiciones del crédito → monto/tasa/intereses/pagado, en letra de referencia
                5. acciones
                Nunca compiten dos bloques resaltados: en mora, el próximo pago baja a
-               línea secundaria dentro del bloque rojo. -->
+               línea secundaria dentro del bloque rojo.
+               Del 4 en adelante viven en un panel lateral en escritorio (ver más abajo). -->
+
+          <!-- Columna izquierda: quién es, cuánto debe y qué toca hacer. -->
+          <div class="flex min-w-0 flex-1 flex-col gap-3">
 
           <!-- 1. Identidad y estado -->
           <div class="flex items-start justify-between gap-3">
@@ -286,8 +295,18 @@
             </span>
           </div>
 
+          </div>
+
+          <!--
+            Columna derecha: las condiciones y los botones. A lo ancho, una fila de
+            acciones de borde a borde queda ridícula —un «Abonar» de mil píxeles—, así que
+            en escritorio se recogen en un panel lateral de ancho fijo separado por una
+            línea. En móvil vuelve todo a la pila de siempre.
+          -->
+          <div class="mt-3 flex flex-col gap-3 border-t border-[color:var(--surface-divider)] pt-3 lg:mt-0 lg:w-72 lg:flex-shrink-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+
           <!-- 4. Condiciones del crédito: referencia, no protagonismo -->
-          <div data-guia-parte="cifras" class="grid grid-cols-3 gap-2 border-t border-[color:var(--surface-divider)] pt-3">
+          <div data-guia-parte="cifras" class="grid grid-cols-2 gap-2">
             <div class="flex min-w-0 flex-col">
               <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Monto</span>
               <span class="truncate text-sm font-semibold tabular-nums text-slate-700">${{ formatMoney(prestamo.monto) }}</span>
@@ -295,6 +314,16 @@
             <div class="flex min-w-0 flex-col">
               <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Interés</span>
               <span class="truncate text-sm font-semibold tabular-nums text-slate-700">{{ prestamo.interes }}%</span>
+            </div>
+            <!--
+              Lo que el préstamo le deja al fondo, en pesos. La tasa sola no dice nada:
+              un 5 % a una cuota y un 5 % a seis dejan cosas muy distintas.
+            -->
+            <div class="flex min-w-0 flex-col">
+              <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Intereses</span>
+              <span class="truncate text-sm font-semibold tabular-nums text-amber-700">
+                ${{ formatMoney(calcularInteresesGeneradosDetalle(prestamo)) }}
+              </span>
             </div>
             <div class="flex min-w-0 flex-col">
               <span class="text-[0.6875rem] uppercase tracking-wide text-slate-400">Pagado</span>
@@ -356,6 +385,8 @@
               <TrashIcon class="h-4 w-4" />
               Eliminar
             </button>
+          </div>
+
           </div>
         </div>
       </div>
@@ -3929,6 +3960,7 @@ import { calcularCondicionesPrestamo, generarDesgloseCuotas, calcularRefinanciac
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useAuthStore } from '../../stores/auth'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
+import { calcularUtilidadesReales } from '../../composables/useUtilidadesReales'
 import { 
   ArrowLeftIcon,
   PlusIcon,
@@ -4670,33 +4702,22 @@ const totalPrestado = computed(() =>
   prestamos.value.reduce((sum, p) => sum + p.monto, 0)
 )
 
-// El total de intereses se lee directamente de utilidades_clasificadas
-// que se actualiza cuando se crea un préstamo nuevo con interés anticipado
-// o cuando se pagan cuotas de préstamos refinanciados
 const totalIntereses = computed(() => interesesGanadosUtilidades.value)
 
-// Funciones auxiliares para manejar intereses por préstamo en utilidades_clasificadas
-// Cada préstamo tiene su propio registro con id_actividad = prestamo_id
+/**
+ * Intereses ganados por los préstamos de la natillera.
+ *
+ * Se CALCULA con `calcularUtilidadesReales`, la misma pieza que usan el desglose de
+ * utilidades y el cierre. Antes se sumaban las filas de `utilidades_clasificadas` con
+ * `id_actividad`, y eso daba dos problemas: se dejaba fuera el interés de mora —que va en
+ * una fila aparte, sin préstamo asociado— y arrastraba cualquier desviación del acumulador,
+ * así que esta tarjeta y el desglose mostraban cifras distintas del mismo dinero.
+ */
 async function obtenerTotalInteresesPrestamos(natilleraId) {
-  const { data: utilidades, error } = await supabase
-    .from('utilidades_clasificadas')
-    .select('monto')
-    .eq('natillera_id', natilleraId)
-    .eq('tipo', 'prestamos')
-    .is('fecha_cierre', null)
-    .not('id_actividad', 'is', null) // Solo registros individuales por préstamo
-
-  if (error) {
-    console.error('Error obteniendo utilidades de préstamos:', error)
-    return 0
-  }
-
-  // Sumar todos los montos de los registros individuales
-  const total = (utilidades || []).reduce((sum, utilidad) => {
-    return sum + parseFloat(utilidad.monto || 0)
-  }, 0)
-
-  return total
+  if (!natilleraId) return 0
+  const { porTipo, error } = await calcularUtilidadesReales(natilleraId)
+  if (error) console.error('Error obteniendo utilidades de préstamos:', error)
+  return porTipo?.prestamos || 0
 }
 
 async function actualizarInteresPrestamo(natilleraId, prestamoId, interes, tipo = 'anticipado', esNuevo = true, esRefinanciacion = false, formaPago = null) {
@@ -5413,6 +5434,35 @@ function calcularCuotaMensualDetalle(prestamo) {
     periodicidad: prestamo.periodicidad,
     tipoInteres: prestamo.tipo_interes
   }).valorCuota
+}
+
+/**
+ * Intereses que genera el préstamo, en pesos.
+ *
+ * Mismo orden de preferencia que `calcularCuotaMensualDetalle`, y por el mismo motivo: el
+ * plan es la única fuente que ya tiene en cuenta la periodicidad (en quincenal la tasa
+ * mensual se parte por dos) y las refinanciaciones. Recalcular desde monto × tasa × cuotas
+ * daría una cifra que no coincide con la que el socio tiene en su plan de pagos.
+ */
+function calcularInteresesGeneradosDetalle(prestamo) {
+  if (!prestamo) return 0
+
+  const plan = planDePrestamo(prestamo)
+  if (plan.length > 0) {
+    const suma = plan.reduce((total, cuota) => total + (parseFloat(cuota.interes) || 0), 0)
+    if (suma > 0) return Math.round(suma)
+  }
+
+  const guardado = parseFloat(prestamo.interes_total)
+  if (Number.isFinite(guardado) && guardado >= 0) return Math.round(guardado)
+
+  return Math.round(calcularCondicionesPrestamo({
+    capital: parseFloat(prestamo.monto) || 0,
+    tasaMensual: prestamo.interes,
+    numeroCuotas: Number(prestamo.numero_cuotas) || 1,
+    periodicidad: prestamo.periodicidad,
+    tipoInteres: prestamo.tipo_interes
+  }).interesTotal)
 }
 
 // Calcular saldo inicial total (capital + intereses)

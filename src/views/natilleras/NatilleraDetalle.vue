@@ -2903,7 +2903,7 @@
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
       card-class="relative w-full sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
       card-max-width="32rem"
-      @close="cerrarModalDesglose"
+      @close="cerrarCapaDesglose"
     >
       <!-- Móvil: fila icono + títulos + X (flex, sin absolute) -->
       <div class="sm:hidden flex-shrink-0 bg-[#1B5E37]">
@@ -2967,7 +2967,7 @@
         <div v-if="detalleRifasAbierto" class="space-y-4">
           <button
             type="button"
-            @click="cerrarDetalleRifas"
+            @click="cerrarCapaDesglose"
             class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
@@ -3079,18 +3079,18 @@
         <div v-else-if="detalleOtrosAbierto" class="space-y-4">
           <button
             type="button"
-            @click="cerrarDetalleOtros"
+            @click="cerrarCapaDesglose"
             class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Otros (por descripción de actividad)</h4>
+          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">{{ etiquetaDetalleOtros }} (por descripción de actividad)</h4>
           <div v-if="detalleOtros.loading" class="flex justify-center py-10">
             <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
           <div v-else-if="!detalleOtros.porActividad || detalleOtros.porActividad.length === 0" class="text-center py-8 text-gray-500 text-sm">
-            No hay utilidades clasificadas como &quot;Otro&quot;.
+            No hay utilidades registradas en {{ etiquetaDetalleOtros.toLowerCase() }}.
           </div>
           <div v-else class="space-y-3">
             <div
@@ -3145,7 +3145,15 @@
                     </table>
                   </div>
                 </div>
-                <p v-else class="text-xs text-gray-500 mt-1">Sin registros de pagos por socio.</p>
+                <!--
+                  Una actividad cargada ya liquidada no tiene pagos por socio: sus ingresos
+                  y gastos se escribieron a mano. Avisar de que «no hay registros» sugiere
+                  que falta algo, cuando ahí nunca hubo nada que registrar. En una actividad
+                  en curso sí informa: quiere decir que todavía no ha pagado nadie.
+                -->
+                <p v-else-if="item.estado !== 'liquidada'" class="text-xs text-gray-500 mt-1">
+                  Todavía no ha pagado ningún socio.
+                </p>
               </div>
             </div>
           </div>
@@ -3154,7 +3162,7 @@
         <div v-else-if="detalleSancionesAbierto" class="space-y-4">
           <button
             type="button"
-            @click="cerrarDetalleSanciones"
+            @click="cerrarCapaDesglose"
             class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
@@ -3260,13 +3268,23 @@
         <div v-else-if="detallePrestamosAbierto" class="space-y-4">
           <button
             type="button"
-            @click="cerrarDetallePrestamos"
+            @click="cerrarCapaDesglose"
             class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Intereses por préstamo</h4>
+          <!--
+            La regla no es obvia y cambia la cifra de cada fila, así que se dice aquí en vez
+            de dejar que parezca que unos préstamos rinden más que otros.
+          -->
+          <p class="-mt-2 text-xs leading-snug text-gray-500">
+            En los préstamos <span class="font-semibold text-amber-700">anticipados</span> el
+            interés entra completo al generarlos. En los
+            <span class="font-semibold text-sky-700">normales</span> entra a medida que se
+            paga cada cuota, así que aquí solo aparece lo ya cobrado.
+          </p>
           <div v-if="detallePrestamos.loading" class="flex justify-center py-10">
             <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
           </div>
@@ -3291,8 +3309,18 @@
                   class="border-t border-gray-100"
                   :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
                 >
-                  <td class="py-2.5 px-3 text-gray-800">{{ item.socio }}</td>
-                  <td class="py-2.5 px-3 text-right tabular-nums font-medium text-gray-800">${{ formatMoney(item.valorPrestamo) }}</td>
+                  <td class="py-2.5 px-3" :class="item.esMora ? 'font-semibold text-gray-600 italic' : 'text-gray-800'">
+                    <span>{{ item.socio }}</span>
+                    <span
+                      v-if="!item.esMora"
+                      class="ml-1.5 inline-block rounded-full px-1.5 py-0.5 align-middle text-[10px] font-semibold"
+                      :class="item.anticipado ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-800'"
+                    >{{ item.anticipado ? 'Anticipado' : 'Normal' }}</span>
+                  </td>
+                  <td class="py-2.5 px-3 text-right tabular-nums font-medium text-gray-800">
+                    <span v-if="item.valorPrestamo != null">${{ formatMoney(item.valorPrestamo) }}</span>
+                    <span v-else class="text-gray-400">—</span>
+                  </td>
                   <td class="py-2.5 px-3 text-gray-600">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
                   <td class="py-2.5 px-3 text-right tabular-nums font-semibold text-green-600">${{ formatMoney(item.intereses) }}</td>
                   <td class="py-2.5 px-3 text-right tabular-nums text-gray-700">{{ item.porcentaje != null ? item.porcentaje + '%' : '—' }}</td>
@@ -3312,7 +3340,7 @@
         <div v-else-if="conceptoEnDesarrollo" class="space-y-4">
           <button
             type="button"
-            @click="cerrarConceptoEnDesarrollo"
+            @click="cerrarCapaDesglose"
             class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
           >
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
@@ -4027,6 +4055,7 @@ import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useModalStack } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
 import {
   pendingNatilleraSidebarAction,
@@ -4429,6 +4458,12 @@ const totalesAcumuladosRifas = computed(() => {
 })
 const rifasDesplegados = ref({})
 const detalleOtrosAbierto = ref(false)
+/** Tipos de actividad cuyo desglose se arma igual (todos menos la rifa, que tiene el suyo). */
+const TIPOS_ACTIVIDAD_CON_DESGLOSE = ['otro', 'bingo', 'venta', 'evento', 'actividades_en_curso']
+/** Qué tipo de actividad se está desglosando: bingo, venta, evento u otro. */
+const detalleOtrosTipo = ref('otro')
+const ETIQUETAS_TIPO_ACTIVIDAD = { otro: 'Otros', bingo: 'Bingos', venta: 'Ventas', evento: 'Eventos', actividades_en_curso: 'Actividades en curso' }
+const etiquetaDetalleOtros = computed(() => ETIQUETAS_TIPO_ACTIVIDAD[detalleOtrosTipo.value] || 'Actividades')
 const detalleOtros = ref({ loading: false, porActividad: [] })
 const otrosDesplegados = ref({})
 const detalleSancionesAbierto = ref(false)
@@ -6685,23 +6720,43 @@ function cerrarDetalleRifas() {
   detalleRifas.value = { loading: false, porMes: [] }
   rifasDesplegados.value = {}
 }
-async function cargarDetalleOtros() {
+/**
+ * Desglose de un tipo de actividad: qué actividades lo componen y quién pagó en cada una.
+ *
+ * Sirve para cualquier tipo que no sea rifa —bingo, venta, evento, otro— porque todos se
+ * guardan igual: una fila en `utilidades_clasificadas` con el tipo, y los pagos en
+ * `socios_actividad`. Antes solo atendía a «otro» y los demás caían en una pantalla de «en
+ * construcción» que no hacía falta: el dato ya estaba, solo faltaba pedirlo con su tipo.
+ */
+async function cargarDetalleOtros(tipo = 'otro') {
   const natilleraId = id.value || route.params.id
   if (!natilleraId) return
+  detalleOtrosTipo.value = tipo
   detalleOtrosAbierto.value = true
   detalleOtros.value = { loading: true, porActividad: [] }
+  // «Actividades en curso» no es un tipo: es lo recaudado en las que siguen abiertas, de
+  // cualquier tipo menos rifa. No tiene utilidad clasificada —todavía no se ha liquidado
+  // nada—, así que su cifra sale entera de lo que los socios han pagado.
+  const enCurso = tipo === 'actividades_en_curso'
   try {
-    const { data: filasUtilidades, error: errUc } = await supabase
-      .from('utilidades_clasificadas')
-      .select('id_actividad, monto')
-      .eq('natillera_id', natilleraId)
-      .eq('tipo', 'otro')
-    if (errUc) throw errUc
-    const { data: actividades, error: errAct } = await supabase
+    let filasUtilidades = []
+    if (!enCurso) {
+      const { data, error: errUc } = await supabase
+        .from('utilidades_clasificadas')
+        .select('id_actividad, monto')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', tipo)
+      if (errUc) throw errUc
+      filasUtilidades = data || []
+    }
+    let consultaActividades = supabase
       .from('actividades')
       .select('id, descripcion, estado')
       .eq('natillera_id', natilleraId)
-      .eq('tipo', 'otro')
+    consultaActividades = enCurso
+      ? consultaActividades.eq('estado', 'en_curso').neq('tipo', 'rifa')
+      : consultaActividades.eq('tipo', tipo)
+    const { data: actividades, error: errAct } = await consultaActividades
     if (errAct) throw errAct
     const actividadesList = actividades || []
     const actividadIds = actividadesList.map(a => a.id)
@@ -6750,6 +6805,7 @@ async function cargarDetalleOtros() {
       return {
         id: a.id,
         descripcion: a.descripcion || 'Sin descripción',
+        estado: a.estado,
         total: valorMostrar,
         pagos: pagos.sort((x, y) => new Date(y.fechaPago || 0) - new Date(x.fechaPago || 0))
       }
@@ -6763,6 +6819,7 @@ async function cargarDetalleOtros() {
 }
 function cerrarDetalleOtros() {
   detalleOtrosAbierto.value = false
+  detalleOtrosTipo.value = 'otro'
   detalleOtros.value = { loading: false, porActividad: [] }
   otrosDesplegados.value = {}
 }
@@ -6884,30 +6941,64 @@ async function cargarDetallePrestamos() {
   detallePrestamosAbierto.value = true
   detallePrestamos.value = { loading: true, lista: [] }
   try {
-    const { data: filasUtilidades, error: errUc } = await supabase
-      .from('utilidades_clasificadas')
-      .select('id_actividad, monto')
+    /*
+     * El interés de cada préstamo se CALCULA, con las mismas reglas que el desglose
+     * (`useUtilidadesReales`), en vez de leerse de `utilidades_clasificadas`. Si se lee el
+     * acumulador, esta tabla suma una cifra y la tarjeta de la que se abrió muestra otra.
+     *
+     *   · Anticipado  → todo su interés, que se causó al generar el préstamo.
+     *   · Corriente   → solo el interés de las cuotas ya pagadas.
+     *   · Mora        → no es de ningún préstamo: va como línea aparte al final.
+     */
+    const { data: sociosNat } = await supabase
+      .from('socios_natillera')
+      .select('id')
       .eq('natillera_id', natilleraId)
-      .eq('tipo', 'prestamos')
-      .not('id_actividad', 'is', null)
-    if (errUc) throw errUc
-    const prestamoIds = [...new Set((filasUtilidades || []).map(r => r.id_actividad).filter(Boolean))]
-    if (prestamoIds.length === 0) {
+    const idsSocioNatillera = (sociosNat || []).map(sn => sn.id)
+    if (idsSocioNatillera.length === 0) {
       detallePrestamos.value = { loading: false, lista: [] }
       return
     }
-    const montosPorPrestamo = {}
-    ;(filasUtilidades || []).forEach((r) => {
-      const pid = r.id_actividad
-      if (!pid) return
-      montosPorPrestamo[pid] = (montosPorPrestamo[pid] || 0) + (parseFloat(r.monto) || 0)
+
+    const [prestamosRes, planRes, moraRes] = await Promise.all([
+      supabase
+        .from('prestamos')
+        .select('id, monto, interes, created_at, numero_cuotas, socio_natillera_id, interes_anticipado, interes_total')
+        .in('socio_natillera_id', idsSocioNatillera)
+        .in('estado', ['activo', 'pagado']),
+      supabase
+        .from('plan_pagos_prestamo')
+        .select('prestamo_id, interes, prestamos!inner(socio_natillera_id, estado, interes_anticipado)')
+        .in('prestamos.socio_natillera_id', idsSocioNatillera)
+        .in('prestamos.estado', ['activo', 'pagado'])
+        .eq('pagada', true),
+      supabase
+        .from('utilidades_clasificadas')
+        .select('monto')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', 'prestamos')
+        .is('id_actividad', null)
+        .is('fecha_cierre', null)
+        .filter('detalles->>subtipo', 'eq', 'mora')
+    ])
+    if (prestamosRes.error) throw prestamosRes.error
+
+    // Interés corriente ya cobrado, por préstamo (solo en los que no son anticipados).
+    const interesCobradoPorPrestamo = {}
+    ;(planRes.data || []).forEach((cuota) => {
+      if (cuota.prestamos?.interes_anticipado) return
+      const pid = cuota.prestamo_id
+      interesCobradoPorPrestamo[pid] = (interesCobradoPorPrestamo[pid] || 0) + (parseFloat(cuota.interes) || 0)
     })
-    const { data: prestamosData, error: errP } = await supabase
-      .from('prestamos')
-      .select('id, monto, interes, created_at, numero_cuotas, socio_natillera_id')
-      .in('id', prestamoIds)
-    if (errP) throw errP
-    const prestamosList = prestamosData || []
+
+    const prestamosList = prestamosRes.data || []
+    const montosPorPrestamo = {}
+    prestamosList.forEach((p) => {
+      montosPorPrestamo[p.id] = p.interes_anticipado
+        ? (parseFloat(p.interes_total) || 0)
+        : (interesCobradoPorPrestamo[p.id] || 0)
+    })
+    const moraCobrada = (moraRes.data || []).reduce((suma, r) => suma + (parseFloat(r.monto) || 0), 0)
 
     const socioNatilleraIdsUnicos = [...new Set(prestamosList.map(p => p.socio_natillera_id).filter(Boolean))]
     let nombresPorSn = {}
@@ -6930,12 +7021,25 @@ async function cargarDetallePrestamos() {
           valorPrestamo: parseFloat(p.monto) || 0,
           fecha: p.created_at || null,
           intereses,
+          anticipado: !!p.interes_anticipado,
           porcentaje: parseFloat(p.interes) != null ? Number(p.interes) : null,
           numeroCuotas
         }
       })
       .filter((item) => item.intereses > 0)
     lista.sort((a, b) => (b.intereses || 0) - (a.intereses || 0))
+    // La mora no pertenece a ningún préstamo: cierra la tabla como concepto propio.
+    if (moraCobrada > 0) {
+      lista.push({
+        socio: 'Interés de mora',
+        esMora: true,
+        valorPrestamo: null,
+        fecha: null,
+        intereses: moraCobrada,
+        porcentaje: null,
+        numeroCuotas: null
+      })
+    }
     detallePrestamos.value = { loading: false, lista }
   } catch (e) {
     console.error('Error cargando detalle intereses préstamos:', e)
@@ -6965,8 +7069,8 @@ function abrirConceptoPorTipo(item) {
     detalleOtrosAbierto.value = false
     detalleSancionesAbierto.value = false
     detallePrestamosAbierto.value = false
-  } else if (item.id === 'otro') {
-    cargarDetalleOtros()
+  } else if (TIPOS_ACTIVIDAD_CON_DESGLOSE.includes(item.id)) {
+    cargarDetalleOtros(item.id)
     conceptoEnDesarrollo.value = null
     detalleRifasAbierto.value = false
     detalleSancionesAbierto.value = false
@@ -6994,6 +7098,51 @@ function abrirConceptoPorTipo(item) {
 function cerrarConceptoEnDesarrollo() {
   conceptoEnDesarrollo.value = null
 }
+/*
+ * «Atrás» dentro del desglose de utilidades.
+ *
+ * Sin esto, el botón atrás del teléfono se llevaba la página entera en vez de cerrar la
+ * modal. Se registran DOS capas sobre la misma ventana:
+ *
+ *   · `desglose`        — la modal.
+ *   · `desgloseDetalle` — el detalle de un concepto, que se pinta DENTRO de ella.
+ *
+ * Sus `hide`/`show` son deliberadamente vacíos: la pila los usa para ocultar la capa de
+ * abajo al abrir otra encima, y aquí las dos viven en la misma ventana —la de abajo tiene
+ * que seguir montada—. Lo que sí importa es el `dismiss` de cada una, que es lo que ejecuta
+ * el «atrás»: primero vuelve del detalle a la lista y, en el segundo toque, cierra la modal.
+ */
+const detalleDesgloseAbierto = computed(() =>
+  detalleRifasAbierto.value ||
+  detalleOtrosAbierto.value ||
+  detalleSancionesAbierto.value ||
+  detallePrestamosAbierto.value ||
+  !!conceptoEnDesarrollo.value
+)
+
+function volverAlDesglose() {
+  if (detalleRifasAbierto.value) cerrarDetalleRifas()
+  if (detalleOtrosAbierto.value) cerrarDetalleOtros()
+  if (detalleSancionesAbierto.value) cerrarDetalleSanciones()
+  if (detallePrestamosAbierto.value) cerrarDetallePrestamos()
+  conceptoEnDesarrollo.value = null
+}
+
+const { requestCloseTop: cerrarCapaDesglose } = useModalStack({
+  desgloseDetalle: {
+    isOpen: detalleDesgloseAbierto,
+    hide: () => {},
+    show: () => {},
+    dismiss: volverAlDesglose
+  },
+  desglose: {
+    isOpen: computed(() => !!modalDesgloseUtilidades.value),
+    hide: () => {},
+    show: () => { modalDesgloseUtilidades.value = true },
+    dismiss: cerrarModalDesglose
+  }
+})
+
 function labelConceptoEnDesarrollo(tipo) {
   const labels = { sanciones: 'Sanciones', prestamos: 'Intereses de préstamos', bingo: 'Bingo', venta: 'Venta', evento: 'Evento', otro: 'Otro' }
   return labels[tipo] || tipo

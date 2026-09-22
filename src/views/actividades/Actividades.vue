@@ -2199,6 +2199,35 @@
               <span v-if="loadingNumeroGanador" class="text-xs text-gray-500 whitespace-nowrap">Obteniendo...</span>
             </div>
             <p class="text-xs text-gray-500 mt-1">Número de la rifa que ganó (00-99). Si hay fecha de juego, se completa con las 2 últimas cifras del resultado de la Lotería de Medellín.</p>
+            <!-- Ganador del número digitado -->
+            <div v-if="cargandoGanadorPrevio" class="mt-3 text-xs text-gray-500">Buscando ganador...</div>
+            <div
+              v-else-if="ganadorPrevioLiquidar?.tipo === 'socio'"
+              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-natillera-50 via-emerald-50/80 to-teal-50 border-2 border-natillera-200"
+            >
+              <div class="w-10 h-10 flex-shrink-0 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center text-lg">🏆</div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-medium text-natillera-600">Ganador/a</p>
+                <p class="font-display font-bold text-base text-natillera-800 truncate">{{ ganadorPrevioLiquidar.nombre }}</p>
+                <p v-if="ganadorPrevioLiquidar.vendedor" class="text-xs text-gray-500 truncate">Vendido por {{ ganadorPrevioLiquidar.vendedor }}</p>
+              </div>
+            </div>
+            <div
+              v-else-if="ganadorPrevioLiquidar?.tipo === 'natillera'"
+              class="mt-3 flex items-center gap-3 p-3 rounded-xl bg-natillera-50 border-2 border-natillera-200"
+            >
+              <div class="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-600 flex items-center justify-center text-lg">🏦</div>
+              <div class="min-w-0 flex-1">
+                <p class="font-display font-bold text-base text-natillera-800">¡Gana la natillera!</p>
+                <p class="text-xs text-gray-600">El número no estaba asignado: premio y utilidad pasan al fondo.</p>
+              </div>
+            </div>
+            <div
+              v-else-if="ganadorPrevioLiquidar?.tipo === 'sin_vender'"
+              class="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800"
+            >
+              Este número no está registrado en la rifa: quedará como ganador «Desconocido».
+            </div>
           </div>
           <!-- Utilidad calculada -->
           <div class="relative bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-50/50 border-2 border-purple-200 rounded-xl p-4 overflow-hidden">
@@ -2433,6 +2462,64 @@
           <!-- Sin datos de ganador -->
           <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-3">
             <p class="text-xs text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
+          </div>
+          <!-- Pagos de la rifa: quién ya pagó y quién falta -->
+          <div class="rounded-xl border border-gray-200 bg-white p-3">
+            <div class="flex items-baseline justify-between gap-2 mb-2">
+              <p class="font-bold text-sm text-gray-800">Pagos de la rifa</p>
+              <p v-if="saldoPendienteRifa > 0" class="text-xs text-red-600 font-semibold">Faltan ${{ formatMoney(saldoPendienteRifa) }}</p>
+            </div>
+            <p v-if="cargandoPagosRifaLiquidada" class="text-xs text-gray-500 py-2">Cargando pagos...</p>
+            <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-gray-500 italic py-2">No hay números asignados en esta rifa.</p>
+            <template v-else>
+              <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 mb-2" role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="vistaPagosRifa === 'faltan'"
+                  class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
+                  :class="vistaPagosRifa === 'faltan' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
+                  @click="vistaPagosRifa = 'faltan'"
+                >
+                  Faltan ({{ faltanPagarRifa.length }})
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  :aria-selected="vistaPagosRifa === 'pagaron'"
+                  class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
+                  :class="vistaPagosRifa === 'pagaron' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600'"
+                  @click="vistaPagosRifa = 'pagaron'"
+                >
+                  Pagaron ({{ yaPagaronRifa.length }})
+                </button>
+              </div>
+              <ul class="divide-y divide-gray-100">
+                <li
+                  v-for="p in (vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa)"
+                  :key="p.clave"
+                  class="flex items-center gap-3 py-2"
+                >
+                  <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-gray-800 truncate">{{ p.nombre }}</p>
+                    <p v-if="p.numeros.length" class="text-xs text-gray-500 truncate">Nº {{ p.numeros.join(', ') }}</p>
+                  </div>
+                  <div class="text-right flex-shrink-0">
+                    <template v-if="p.saldo > 0">
+                      <p class="text-sm font-bold text-red-600">${{ formatMoney(p.saldo) }}</p>
+                      <p v-if="p.valorPagado > 0" class="text-[0.6875rem] text-gray-500">abonó ${{ formatMoney(p.valorPagado) }}</p>
+                    </template>
+                    <p v-else class="text-sm font-bold text-emerald-700">${{ formatMoney(p.valorPagado) }}</p>
+                  </div>
+                </li>
+              </ul>
+              <p
+                v-if="(vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa).length === 0"
+                class="text-xs text-gray-500 italic py-2 text-center"
+              >
+                {{ vistaPagosRifa === 'faltan' ? 'Todos pagaron.' : 'Nadie ha pagado todavía.' }}
+              </p>
+            </template>
           </div>
         </div>
           <NatiscrollHint :show="hayMasGanadorRifa" />
@@ -3600,7 +3687,7 @@ import ActividadesSkeleton from '../../components/ActividadesSkeleton.vue'
 
 import BackButton from '../../components/BackButton.vue'
 import DateInput from '../../components/DateInput.vue'
-import { formatDate, parseDateLocal } from '../../utils/formatDate.js'
+import { formatDate, parseDateLocal, getCurrentDateISO } from '../../utils/formatDate.js'
 import {
   buscarSorteoPorFecha,
   extraerPremioMayor,
@@ -4045,6 +4132,46 @@ const formLiquidar = reactive({
   numeroGanador: '', // Número ganador de la rifa (00-99) para mostrar en modal ganador
   forma_pago: 'efectivo' // Forma de pago con la que se entrega el premio (efectivo | transferencia)
 })
+// Vista previa del ganador en el modal de liquidar: { tipo: 'socio'|'natillera'|'sin_vender', nombre, vendedor }
+const ganadorPrevioLiquidar = ref(null)
+const cargandoGanadorPrevio = ref(false)
+let consultaGanadorPrevio = 0
+watch(
+  () => [modalLiquidarActividad.value, formLiquidar.numeroGanador],
+  async ([abierto, numero]) => {
+    const id = ++consultaGanadorPrevio
+    ganadorPrevioLiquidar.value = null
+    cargandoGanadorPrevio.value = false
+    const digitos = String(numero || '').replace(/\D/g, '')
+    if (!abierto || !actividadSeleccionada.value || digitos.length === 0) return
+    cargandoGanadorPrevio.value = true
+    // Misma consulta que confirmarLiquidacion, para que lo que se ve sea lo que se guarda
+    const { data } = await supabase
+      .from('numeros_rifa')
+      .select('nombre_comprador, socio_vendedor:socios_natillera(socio:socios(nombre))')
+      .eq('actividad_id', actividadSeleccionada.value.id)
+      .eq('numero', digitos.padStart(2, '0'))
+      .maybeSingle()
+    // Si el usuario siguió escribiendo, esta respuesta ya no aplica
+    if (id !== consultaGanadorPrevio) return
+    cargandoGanadorPrevio.value = false
+    if (!data) {
+      ganadorPrevioLiquidar.value = { tipo: 'sin_vender' }
+      return
+    }
+    const comprador = String(data.nombre_comprador || '').trim()
+    if (comprador.toLowerCase().startsWith('faltante')) {
+      ganadorPrevioLiquidar.value = { tipo: 'natillera' }
+      return
+    }
+    const vendedor = data.socio_vendedor?.socio?.nombre || ''
+    ganadorPrevioLiquidar.value = {
+      tipo: 'socio',
+      nombre: comprador || vendedor || 'Desconocido',
+      vendedor: comprador && vendedor && vendedor !== comprador ? vendedor : ''
+    }
+  }
+)
 const formPagarRifa = reactive({
   numero: '',
   nombreComprador: '',
@@ -5675,6 +5802,77 @@ function abrirModalGanadorRifa(actividad) {
   actividadSeleccionada.value = actividad
   modalGanadorRifa.value = true
 }
+// Estado de pago por socio en la rifa liquidada. Se lee de las dos fuentes porque un pago puede
+// quedar en el número (numeros_rifa.estado) o en el socio (socios_actividad.valor_pagado),
+// con el mismo criterio que getValoresSocioRifaAutomatica.
+const pagosRifaLiquidada = ref([]) // [{ clave, nombre, numeros, valorAPagar, valorPagado, saldo }]
+const cargandoPagosRifaLiquidada = ref(false)
+const vistaPagosRifa = ref('faltan') // 'faltan' | 'pagaron'
+const faltanPagarRifa = computed(() => pagosRifaLiquidada.value.filter(p => p.saldo > 0))
+const yaPagaronRifa = computed(() => pagosRifaLiquidada.value.filter(p => p.saldo <= 0))
+const saldoPendienteRifa = computed(() => faltanPagarRifa.value.reduce((s, p) => s + p.saldo, 0))
+let consultaPagosRifa = 0
+async function cargarPagosRifaLiquidada(actividadId) {
+  const id = ++consultaPagosRifa
+  cargandoPagosRifaLiquidada.value = true
+  const [{ data: filasSocio }, { data: numeros }] = await Promise.all([
+    supabase
+      .from('socios_actividad')
+      .select('socio_natillera_id, valor_asignado, valor_pagado, estado, socio_natillera:socios_natillera(socio:socios(nombre))')
+      .eq('actividad_id', actividadId),
+    supabase
+      .from('numeros_rifa')
+      .select('numero, estado, valor, socio_vendedor_id, nombre_comprador, socio_vendedor:socios_natillera(socio:socios(nombre))')
+      .eq('actividad_id', actividadId)
+  ])
+  if (id !== consultaPagosRifa) return
+
+  const porSocio = {}
+  const entrada = (clave, nombre) => {
+    if (!porSocio[clave]) porSocio[clave] = { clave, nombre, numeros: [], asignadoNumeros: 0, pagadoNumeros: 0, filaSocio: null }
+    return porSocio[clave]
+  }
+  for (const n of numeros || []) {
+    if (n.estado !== 'vendido' && n.estado !== 'pagado') continue
+    const comprador = String(n.nombre_comprador || '').trim()
+    // Los faltantes son de la natillera: nadie les debe cobrar
+    if (!n.socio_vendedor_id && comprador.toLowerCase().startsWith('faltante')) continue
+    const clave = n.socio_vendedor_id || `comprador:${comprador}`
+    const e = entrada(clave, n.socio_vendedor?.socio?.nombre || comprador || 'Sin nombre')
+    const valor = Number(n.valor) || 0
+    e.numeros.push(n.numero)
+    e.asignadoNumeros += valor
+    if (n.estado === 'pagado') e.pagadoNumeros += valor
+  }
+  for (const sa of filasSocio || []) {
+    entrada(sa.socio_natillera_id, sa.socio_natillera?.socio?.nombre || 'Socio').filaSocio = sa
+  }
+
+  pagosRifaLiquidada.value = Object.values(porSocio)
+    .map((e) => {
+      const valorAPagar = e.asignadoNumeros || Number(e.filaSocio?.valor_asignado) || 0
+      const pagadoSocio = Number(e.filaSocio?.valor_pagado) || 0
+      const pagadoPorEstado = e.filaSocio?.estado === 'pagado' ? valorAPagar : 0
+      const valorPagado = Math.min(valorAPagar, Math.max(e.pagadoNumeros, pagadoSocio, pagadoPorEstado))
+      return {
+        clave: e.clave,
+        nombre: e.nombre,
+        numeros: e.numeros.sort((a, b) => parseInt(a) - parseInt(b)),
+        valorAPagar,
+        valorPagado,
+        saldo: valorAPagar - valorPagado
+      }
+    })
+    .filter(p => p.valorAPagar > 0)
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+  cargandoPagosRifaLiquidada.value = false
+}
+watch(modalGanadorRifa, (abierto) => {
+  if (!abierto || !actividadSeleccionada.value?.id) return
+  pagosRifaLiquidada.value = []
+  vistaPagosRifa.value = 'faltan'
+  cargarPagosRifaLiquidada(actividadSeleccionada.value.id)
+})
 function abrirModalFormaPagoLiquidacion(actividad) {
   actividadParaFormaPago.value = actividad
   formFormaPagoLiquidacion.forma_pago = (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
@@ -6067,7 +6265,7 @@ async function confirmarLiquidacion() {
           monto: gastosFinal,
           forma_pago: formaPagoLiquidacion,
           descripcion: `Premio rifa liquidada: ${actividadSeleccionada.value.descripcion || 'Rifa'}`,
-          fecha: new Date().toISOString().slice(0, 10)
+          fecha: getCurrentDateISO()
         })
       if (errorMov) throw errorMov
     }
@@ -7017,7 +7215,7 @@ async function handleCrearActividad() {
                 forma_pago: 'efectivo',
                 destino_ingreso: 'recaudado',
                 descripcion: `Recaudo actividad liquidada: ${descripcionActividad}`,
-                fecha: new Date().toISOString().slice(0, 10)
+                fecha: getCurrentDateISO()
               })
             } catch (eMov) {
               console.warn('Error registrando recaudo de actividad liquidada en movimientos_fondo:', eMov)
@@ -7054,7 +7252,7 @@ async function handleCrearActividad() {
               forma_pago: 'efectivo',
               destino_ingreso: 'recaudado',
               descripcion: `Recaudo actividad liquidada: ${descripcionActividad}`,
-              fecha: new Date().toISOString().slice(0, 10)
+              fecha: getCurrentDateISO()
             })
           } catch (eMov) {
             console.warn('Error registrando recaudo de actividad liquidada en movimientos_fondo:', eMov)

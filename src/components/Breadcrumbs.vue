@@ -123,6 +123,13 @@ const breadcrumbs = computed(() => {
         to: null
       })
     }
+    // Pagos de los socios (lo que cada socio ha pagado, mes a mes)
+    else if (path.includes('/pagos')) {
+      crumbs.push({
+        label: 'Pagos de los socios',
+        to: null
+      })
+    }
     // Conciliación de caja
     else if (path.includes('/conciliacion')) {
       crumbs.push({

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { isDev } from '../config/environment'
 import { supabase } from '../lib/supabase'
+import { calcularUtilidadesReales } from '../composables/useUtilidadesReales'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { useAuthStore } from './auth'
 
@@ -1155,24 +1156,46 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     ])
 
     // ── Procesar utilidades ─────────────────────────────────────────────
+    /*
+     * El desglose por tipo se CALCULA desde la fuente (`calcularUtilidadesReales`), no se
+     * lee de `utilidades_clasificadas`. Ese acumulador se desvía con el tiempo —una multa
+     * perdonada después de cobrarse, un interés anticipado sumado dos veces, un gasto
+     * contra utilidades ignorado— y no se recupera solo. El cierre usa el mismo cálculo,
+     * así que las dos pantallas no pueden decir cosas distintas.
+     *
+     * El reparto por forma de pago sí sigue saliendo del acumulador: es la única fuente que
+     * guarda con qué forma entró cada utilidad. Se reescala al total real para que las dos
+     * lecturas sumen lo mismo.
+     */
     let utilidadesRecogidas = 0
     const utilidadesPorTipo = {}
     const utilidadesPorFormaPagoMap = { efectivo: 0, transferencia: 0, otro: 0 }
 
+    const reales = await calcularUtilidadesReales(nat.id, { idsSocioNatillera: socioNatilleraIds })
+    Object.entries(reales.porTipo || {}).forEach(([tipo, monto]) => {
+      if (monto === 0) return
+      utilidadesPorTipo[tipo] = monto
+      utilidadesRecogidas += monto
+    })
+
     const filasUtilidades = utilidadesRaw.data
     if (filasUtilidades?.length) {
+      const porForma = { efectivo: 0, transferencia: 0, otro: 0 }
+      let registrado = 0
       filasUtilidades.forEach((r) => {
         const m = parseFloat(r.monto) || 0
-        utilidadesRecogidas += m
-        const tipoNorm = (r.tipo || '').toString().toLowerCase().trim()
-        if (tipoNorm) {
-          utilidadesPorTipo[tipoNorm] = (utilidadesPorTipo[tipoNorm] || 0) + m
-        }
+        registrado += m
         const fp = (r.forma_pago || '').toLowerCase().trim()
-        if (fp === 'efectivo') utilidadesPorFormaPagoMap.efectivo += m
-        else if (fp === 'transferencia') utilidadesPorFormaPagoMap.transferencia += m
-        else utilidadesPorFormaPagoMap.otro += m
+        if (fp === 'efectivo') porForma.efectivo += m
+        else if (fp === 'transferencia') porForma.transferencia += m
+        else porForma.otro += m
       })
+      const escala = registrado > 0 ? utilidadesRecogidas / registrado : 0
+      utilidadesPorFormaPagoMap.efectivo = Math.round(porForma.efectivo * escala)
+      utilidadesPorFormaPagoMap.transferencia = Math.round(porForma.transferencia * escala)
+      utilidadesPorFormaPagoMap.otro = utilidadesRecogidas
+        - utilidadesPorFormaPagoMap.efectivo
+        - utilidadesPorFormaPagoMap.transferencia
     }
     if (utilidadesRecogidas === 0 && cuotasPagadas?.length > 0) {
       const sancionesDesdeCuotas = cuotasPagadas.reduce((s, c) => {

@@ -73,6 +73,47 @@
                 Efectivo a tener disponible para liquidar.
               </p>
             </div>
+            <!--
+              Administración: se aparta ANTES de repartir, así que va junto al total y no
+              escondida en el detalle de cada socio. Sin esto, la suma de lo entregado no
+              cuadraría con lo recogido y parecería que falta plata.
+            -->
+            <div
+              v-if="administracionCierre && administracionCierre.monto > 0"
+              class="rounded-xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 to-white p-4 shadow-sm"
+            >
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-indigo-700/85 mb-1">
+                Administración ({{ administracionCierre.porcentaje }} %)
+              </p>
+              <p class="text-2xl sm:text-3xl font-bold tabular-nums text-indigo-700 tracking-tight">
+                ${{ formatMoney(administracionCierre.monto) }}
+              </p>
+              <p class="text-xs text-indigo-700/70 mt-1.5 leading-snug">
+                Sobre
+                {{ administracionCierre.base === 'total' ? 'ahorros + utilidades' : 'las utilidades' }}.
+                Ya está descontado de lo que se reparte.
+              </p>
+            </div>
+
+            <!--
+              Queda por cobrar: la deuda de quien se va debiendo más de lo que ahorró.
+              Va en tarjeta propia y no restándose del total a entregar, porque no es un
+              descuento: es plata que hay que ir a buscar.
+            -->
+            <div
+              v-if="totalPorCobrar > 0"
+              class="rounded-xl border border-amber-200/80 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm"
+            >
+              <p class="text-[10px] font-semibold uppercase tracking-wide text-amber-700/85 mb-1">Queda por cobrar</p>
+              <p class="text-2xl sm:text-3xl font-bold tabular-nums text-amber-700 tracking-tight">
+                ${{ formatMoney(totalPorCobrar) }}
+              </p>
+              <p class="text-xs text-amber-700/70 mt-1.5 leading-snug">
+                {{ sociosQueDeben }}
+                {{ sociosQueDeben === 1 ? 'socio se va debiendo' : 'socios se van debiendo' }}.
+                No entra a la caja: hay que cobrarlo o asumirlo.
+              </p>
+            </div>
             <div class="rounded-xl border border-stone-200/90 bg-white p-4 shadow-sm">
               <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-1">Participantes</p>
               <p class="text-2xl sm:text-3xl font-bold text-gray-900 tabular-nums tracking-tight">
@@ -651,6 +692,27 @@ const totalCierreGeneral = computed(() => {
   }, 0)
 })
 
+/*
+ * Lo que el fondo NO entrega porque el socio debe más de lo que ahorró.
+ *
+ * Un total negativo no se compensa con los positivos: es plata que alguien le queda
+ * debiendo a la natillera y que hay que cobrar aparte o asumir como pérdida. Sumado a
+ * los positivos daría un «total a entregar» más bajo del real y taparía la deuda.
+ */
+const totalPorCobrar = computed(() => {
+  return datosCierre.value.reduce((sum, socio) => {
+    const v = parseFloat(socio.totalFinal) || 0
+    return sum + (v < 0 ? -v : 0)
+  }, 0)
+})
+
+const sociosQueDeben = computed(() =>
+  datosCierre.value.filter(socio => (parseFloat(socio.totalFinal) || 0) < 0).length
+)
+
+/** Lo que se destina a gastos de administración, según el reglamento configurado. */
+const administracionCierre = ref(null)
+
 const calculandoCierre = ref(false)
 const exportandoCierreExcel = ref(false)
 const detalleCierreExpandidoId = ref(null)
@@ -726,8 +788,13 @@ async function calcularDatosCierre() {
       datosCierre.value = []
       return
     }
+    administracionCierre.value = result.administracion || null
     datosCierre.value = (result.socios || []).map(s => {
-      const totalAEntregar = (s.ahorro || 0) + (s.utilidadesTotal || 0)
+      // El total a entregar lo calcula el composable: ya viene con la administración
+      // descontada. Recalcularlo aquí como ahorro + utilidades se la comía.
+      const totalAEntregar = s.totalAEntregar != null
+        ? s.totalAEntregar
+        : (s.ahorro || 0) + (s.utilidadesTotal || 0) - (s.aporteAdministracion || 0)
       const totalFinal = totalAEntregar - (s.descuentos || 0)
       return {
         ...s,
@@ -795,7 +862,7 @@ async function exportarCierreAExcel() {
       ['Socio', 'Teléfono', 'Ahorro', 'Utilidades', 'Total (Antes de desc.)', 'Descuentos', 'A Entregar', 'Debe'],
       ...datosExportar.map(d => [d.Socio, d.Telefono, d.Ahorro, d.Utilidades, d['Total (Antes de desc.)'], d.Descuentos, d['A Entregar'], d.Debe]),
       [],
-      ['TOTAL GENERAL', '', '', '', '', '', totalCierreGeneral.value, '']
+      ['TOTAL GENERAL', '', '', '', '', '', totalCierreGeneral.value, totalPorCobrar.value]
     ]
     const ws = XLSX.utils.aoa_to_sheet(wsData)
     ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: wsData.length - 1, c: 7 } })

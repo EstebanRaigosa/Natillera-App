@@ -27,6 +27,7 @@ const Actividades = () => import('../views/actividades/Actividades.vue')
 const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
 const ConciliacionCaja = () => import('../views/conciliacion/ConciliacionCaja.vue')
 const Movimientos = () => import('../views/movimientos/Movimientos.vue')
+const PagosSocios = () => import('../views/pagos/PagosSocios.vue')
 const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
 const Configuracion = () => import('../views/configuracion/Configuracion.vue')
 const MiCuenta = () => import('../views/usuario/MiCuenta.vue')
@@ -154,6 +155,13 @@ const routes = [
         component: ConciliacionCaja,
         props: true,
         meta: { title: 'Conciliación de caja' }
+      },
+      {
+        path: 'natilleras/:id/pagos',
+        name: 'PagosSocios',
+        component: PagosSocios,
+        props: true,
+        meta: { title: 'Pagos de los socios' }
       },
       {
         path: 'natilleras/:id/movimientos',

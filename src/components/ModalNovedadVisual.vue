@@ -124,7 +124,7 @@
           v-for="(novedad, n) in NOVEDADES"
           :key="novedad.titulo"
           class="novedad__tarjeta relative flex flex-col items-center overflow-hidden rounded-2xl border border-gray-100 bg-white px-3 pb-3.5 pt-4 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_10px_26px_-16px_rgba(16,24,40,0.22)]"
-          :style="{ '--n': n }"
+          :style="{ '--n': n, '--d': diagonalTarjeta(n) }"
         >
           <span class="novedad__brillo" aria-hidden="true" />
           <span
@@ -256,9 +256,26 @@ const CONFETI = Array.from({ length: 18 }, (_, i) => {
     '--dx': `${Math.round(Math.cos(angulo) * distancia * 1.9)}px`,
     '--dy': `${Math.round(Math.sin(angulo) * distancia)}px`,
     '--giro': `${(i * 53) % 360}deg`,
-    '--retraso': `${380 + (i % 6) * 40}ms`
+    // Cada papelito cae lo suyo: si todos bajan igual, el estallido se deshace
+    // como un bloque y se nota que es una animación, no papelitos.
+    '--cae': `${18 + ((i * 13) % 22)}px`,
+    // Ventana corta —cuatro pasos de 34 ms—: un estallido es un golpe, no una
+    // cascada. La salida escalonada de antes lo estiraba 200 ms.
+    '--retraso': `${(i % 4) * 34}ms`
   }
 })
+
+/*
+ * Orden diagonal en la rejilla 2×2: primero la de arriba-izquierda, luego las dos de la
+ * diagonal a la vez, y al final la de abajo-derecha.
+ *
+ * Escalonar por índice lineal (0, 1, 2, 3) hacía entrar seguidas la de arriba-derecha y la
+ * de abajo-izquierda, que están en esquinas opuestas: el ojo lo leía como un zigzag. Por
+ * diagonal se lee como una ola que cruza la rejilla.
+ */
+function diagonalTarjeta(n) {
+  return Math.floor(n / 2) + (n % 2)
+}
 
 /* Puntos que titilan en bucle lento y desacompasado: dan vida sin pedir atención. */
 const CHISPAS = Array.from({ length: 9 }, (_, i) => ({
@@ -374,22 +391,30 @@ const NOVEDADES = [
   border-radius: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.55);
   pointer-events: none;
-  -webkit-animation: novedad-halo 1400ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both;
-  animation: novedad-halo 1400ms cubic-bezier(0.22, 1, 0.36, 1) 320ms both;
+  -webkit-animation: novedad-halo 1400ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
+  animation: novedad-halo 1400ms cubic-bezier(0.22, 1, 0.36, 1) 260ms both;
 }
 
+/* 160 ms detrás del primero, no 300: así los dos anillos se leen como una misma
+   onda saliendo del icono y no como dos efectos distintos. */
 .novedad__halo--tardio {
   border-color: rgba(255, 255, 255, 0.32);
-  -webkit-animation-delay: 620ms;
-  animation-delay: 620ms;
+  -webkit-animation-delay: 420ms;
+  animation-delay: 420ms;
 }
 
-/* Entrada con rebote y, después, una flotación muy corta que nunca para. */
+/*
+ * Entrada con rebote y, después, una flotación muy corta que nunca para.
+ *
+ * Arranca a 100 ms y no a 0: salía a la vez que las auroras y el compás no tenía
+ * primer golpe, todo empezaba junto. Con la salida retrasada, el icono aterriza
+ * —el pico del rebote— cerca de los 550 ms, que es donde ahora estalla el confeti.
+ */
 .novedad__icono {
-  -webkit-animation: novedad-icono 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
-                     novedad-flotar 4.5s ease-in-out 900ms infinite;
-  animation: novedad-icono 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both,
-             novedad-flotar 4.5s ease-in-out 900ms infinite;
+  -webkit-animation: novedad-icono 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 100ms both,
+                     novedad-flotar 4.5s ease-in-out 1100ms infinite;
+  animation: novedad-icono 700ms cubic-bezier(0.34, 1.56, 0.64, 1) 100ms both,
+             novedad-flotar 4.5s ease-in-out 1100ms infinite;
 }
 
 /* ── Entrada: confeti desde el icono ───────────────────────────────────── */
@@ -403,19 +428,24 @@ const NOVEDADES = [
   border-radius: 2px;
   opacity: 0;
   pointer-events: none;
-  -webkit-animation: novedad-confeti 1300ms cubic-bezier(0.15, 0.8, 0.35, 1) var(--retraso) both;
-  animation: novedad-confeti 1300ms cubic-bezier(0.15, 0.8, 0.35, 1) var(--retraso) both;
+  /* El estallido se dispara en el aterrizaje del icono (500 ms + los 0-100 ms de
+     cada papelito). Antes salía a 380 ms, con el icono todavía cayendo: parecían
+     dos cosas sueltas en vez de una consecuencia de la otra. */
+  -webkit-animation: novedad-confeti 1500ms cubic-bezier(0.12, 0.7, 0.3, 1) calc(500ms + var(--retraso)) both;
+  animation: novedad-confeti 1500ms cubic-bezier(0.12, 0.7, 0.3, 1) calc(500ms + var(--retraso)) both;
 }
 
 /* ── Entrada: títulos ──────────────────────────────────────────────────── */
+/* Entran DESPUÉS del icono. Antes el título salía a 220 ms, encabalgado con la
+   caída del icono, y la cabecera se montaba toda a la vez. */
 .novedad__titulo {
-  -webkit-animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
-  animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
+  -webkit-animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
+  animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 360ms both;
 }
 
 .novedad__subtitulo {
-  -webkit-animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 330ms both;
-  animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 330ms both;
+  -webkit-animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 440ms both;
+  animation: novedad-texto 620ms cubic-bezier(0.22, 1, 0.36, 1) 440ms both;
 }
 
 /* Barrido de luz sobre la cabecera: una pasada fuerte al abrir y, luego, un
@@ -451,15 +481,17 @@ const NOVEDADES = [
   pointer-events: none;
   -webkit-animation: novedad-brillo 1100ms ease-out both;
   animation: novedad-brillo 1100ms ease-out both;
-  -webkit-animation-delay: calc(760ms + var(--n) * 115ms);
-  animation-delay: calc(760ms + var(--n) * 115ms);
+  -webkit-animation-delay: calc(900ms + var(--d) * 120ms);
+  animation-delay: calc(900ms + var(--d) * 120ms);
 }
 
 .novedad__fila {
   -webkit-animation: novedad-fila 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation: novedad-fila 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  -webkit-animation-delay: calc(300ms + (var(--n) + 1) * 105ms);
-  animation-delay: calc(300ms + (var(--n) + 1) * 105ms);
+  /* `--n` vale -1 en el párrafo de arriba y 4 en el aviso de abajo: la misma
+     fórmula abre el cuerpo a 620 ms y cierra el aviso ya pasadas las tarjetas. */
+  -webkit-animation-delay: calc(620ms + (var(--n) + 1) * 110ms);
+  animation-delay: calc(620ms + (var(--n) + 1) * 110ms);
 }
 
 /* La tarjeta cae girando sobre su eje X; el chip entra un pelín después, con
@@ -467,20 +499,25 @@ const NOVEDADES = [
 .novedad__tarjeta {
   -webkit-animation: novedad-tarjeta 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
   animation: novedad-tarjeta 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  -webkit-animation-delay: calc(420ms + var(--n) * 115ms);
-  animation-delay: calc(420ms + var(--n) * 115ms);
+  -webkit-animation-delay: calc(700ms + var(--d) * 120ms);
+  animation-delay: calc(700ms + var(--d) * 120ms);
 }
 
 .novedad__chip {
   -webkit-animation: novedad-chip 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation: novedad-chip 620ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  -webkit-animation-delay: calc(560ms + var(--n) * 115ms);
-  animation-delay: calc(560ms + var(--n) * 115ms);
+  -webkit-animation-delay: calc(820ms + var(--d) * 120ms);
+  animation-delay: calc(820ms + var(--d) * 120ms);
 }
 
+/*
+ * Lo último en entrar, a propósito. Salía a 980 ms, en plena cascada de las
+ * tarjetas —que no terminaban hasta los 1500—: el botón aparecía en mitad del
+ * movimiento y la secuencia se deshilachaba en vez de cerrar. Ahora es el remate.
+ */
 .novedad__cta {
-  -webkit-animation: novedad-cta 680ms cubic-bezier(0.34, 1.56, 0.64, 1) 980ms both;
-  animation: novedad-cta 680ms cubic-bezier(0.34, 1.56, 0.64, 1) 980ms both;
+  -webkit-animation: novedad-cta 680ms cubic-bezier(0.34, 1.56, 0.64, 1) 1280ms both;
+  animation: novedad-cta 680ms cubic-bezier(0.34, 1.56, 0.64, 1) 1280ms both;
 }
 
 .novedad__hint {
@@ -525,9 +562,24 @@ const NOVEDADES = [
   50% { transform: translate3d(0, -3px, 0); }
 }
 
+/*
+ * Dos tiempos: el papelito sale disparado y pasado el ecuador pesa y cae. Antes era
+ * un único tramo recto hasta desvanecerse, que se leía como un destello radial; con
+ * la caída parece papel de verdad.
+ */
 @keyframes novedad-confeti {
-  0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); }
-  100% { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--giro)); }
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg) scale(0.5); }
+  10% { opacity: 1; }
+  55% {
+    opacity: 1;
+    transform: translate3d(calc(var(--dx) * 0.88), calc(var(--dy) * 0.88 - 8px), 0)
+               rotate(calc(var(--giro) * 0.55)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--dx), calc(var(--dy) + var(--cae)), 0)
+               rotate(var(--giro)) scale(0.92);
+  }
 }
 
 @keyframes novedad-texto {

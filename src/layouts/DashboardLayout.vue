@@ -112,6 +112,15 @@
               <button
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
+                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/pagos') }"
+                @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/pagos')"
+              >
+                <ReceiptPercentIcon class="w-5 h-5 shrink-0" />
+                <span class="sidebar-option-label">Pagos</span>
+              </button>
+              <button
+                type="button"
+                class="nav-link nav-link-option w-full text-left"
                 :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/conciliacion') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/conciliacion')"
               >
@@ -483,6 +492,7 @@ import {
   CalendarIcon,
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
+  ReceiptPercentIcon,
   ScaleIcon,
   MagnifyingGlassIcon,
   DocumentCheckIcon,

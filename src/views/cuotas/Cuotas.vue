@@ -430,6 +430,7 @@
               type="button"
               role="tab"
               :aria-selected="mesSeleccionado === mes.value"
+              :aria-label="etiquetaMesAccesible(mes)"
               @click="seleccionarMes(mes.value)"
               :class="[
                 'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between items-center text-center snap-center rounded-t-2xl border border-b-0 transition-all',
@@ -445,11 +446,33 @@
                   :class="mesSeleccionado === mes.value ? 'text-natillera-800' : 'text-gray-700'"
                 >{{ mes.label }}</p>
               </div>
-              <span
-                class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
-                :class="dotColorMes(mes.value)"
-                aria-hidden="true"
-              />
+              <span class="flex items-center justify-center gap-2 min-h-[14px]">
+                <!--
+                  Mismo lenguaje que la cuadrícula de meses: triángulo rojo para la mora y
+                  reloj ámbar para lo pendiente. Cuando no hay ni una cosa ni la otra vuelve
+                  el punto de siempre, que ya dice si el mes está pagado o vacío.
+                -->
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                  class="inline-flex items-center gap-0.5 text-red-600"
+                >
+                  <ExclamationTriangleIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                  <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                  class="inline-flex items-center gap-0.5 text-amber-600"
+                >
+                  <ClockIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                  <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora === 0 && resumenMesCarrusel(mes.value).pendientes === 0"
+                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
+                  :class="dotColorMes(mes.value)"
+                  aria-hidden="true"
+                />
+              </span>
             </button>
           </div>
           <button
@@ -479,6 +502,7 @@
               type="button"
               role="tab"
               :aria-selected="mesSeleccionado === mes.value"
+              :aria-label="etiquetaMesAccesible(mes)"
               @click="seleccionarMes(mes.value)"
               :class="[
                 'tab-mes-folder relative flex-shrink-0 flex flex-col justify-between items-center text-center snap-center rounded-t-2xl border border-b-0 touch-manipulation transition-all',
@@ -494,11 +518,33 @@
                   :class="mesSeleccionado === mes.value ? 'text-natillera-800' : 'text-gray-700'"
                 >{{ mes.label }}</p>
               </div>
-              <span
-                class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
-                :class="dotColorMes(mes.value)"
-                aria-hidden="true"
-              />
+              <span class="flex items-center justify-center gap-2 min-h-[14px]">
+                <!--
+                  Mismo lenguaje que la cuadrícula de meses: triángulo rojo para la mora y
+                  reloj ámbar para lo pendiente. Cuando no hay ni una cosa ni la otra vuelve
+                  el punto de siempre, que ya dice si el mes está pagado o vacío.
+                -->
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora > 0"
+                  class="inline-flex items-center gap-0.5 text-red-600"
+                >
+                  <ExclamationTriangleIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                  <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).enMora }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).pendientes > 0"
+                  class="inline-flex items-center gap-0.5 text-amber-600"
+                >
+                  <ClockIcon class="w-3 h-3 flex-shrink-0" aria-hidden="true" />
+                  <span class="text-[10px] font-bold leading-none tabular-nums">{{ resumenMesCarrusel(mes.value).pendientes }}</span>
+                </span>
+                <span
+                  v-if="resumenMesCarrusel(mes.value).enMora === 0 && resumenMesCarrusel(mes.value).pendientes === 0"
+                  class="w-2.5 h-2.5 rounded-full ring-2 ring-white"
+                  :class="dotColorMes(mes.value)"
+                  aria-hidden="true"
+                />
+              </span>
             </button>
           </div>
           <!-- Fade izquierdo (indica que hay más meses a la izquierda) -->
@@ -7179,6 +7225,7 @@ import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { normalizeText } from '../../utils/normalizeText.js'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
+import { aplicarRecaudoRifaLiquidada } from '../../composables/useRecaudoRifaLiquidada'
 import { toPng } from 'html-to-image'
 import { 
   QuestionMarkCircleIcon,
@@ -12296,6 +12343,21 @@ function getTotalActividadesSeleccionadas() {
 }
 
 // Registrar pagos de actividades seleccionadas
+/**
+ * Reparte por forma de pago lo abonado a una actividad en esta transacción. Con pago mixto
+ * se usa el mismo ratio que la fila; sin forma conocida va a `otro`, que en utilidades es
+ * la fila sin forma de pago.
+ */
+function repartoPorFormaDePago(valorPagado, formaPagoAct, options) {
+  if (formaPagoAct === 'efectivo') return { efectivo: valorPagado, transferencia: 0, otro: 0 }
+  if (formaPagoAct === 'transferencia') return { efectivo: 0, transferencia: valorPagado, otro: 0 }
+  if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
+    const efectivo = Math.round(valorPagado * ((options.valorEfectivo || 0) / options.valorPagado))
+    return { efectivo, transferencia: valorPagado - efectivo, otro: 0 }
+  }
+  return { efectivo: 0, transferencia: 0, otro: valorPagado }
+}
+
 async function registrarPagosActividades(valorTotalActividades, tipoPago = null, options = {}) {
   if (!cuotaSeleccionada.value || actividadesSeleccionadas.value.size === 0) return
   
@@ -12357,6 +12419,10 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
     
     // Array para rastrear los pagos por tipo de actividad para utilidades
     const pagosPorTipoUtilidad = {} // { tipo: { liquidada: valor, en_curso: valor } }
+
+    // Las rifas ya liquidadas van aparte: su recaudo y su ganancia son de la rifa concreta,
+    // no del montón «rifas», así que se anotan con su actividad y su forma de pago.
+    const pagosRifaLiquidada = [] // [{ actividadId, efectivo, transferencia, otro }]
     
     // Preparar updates de todas las actividades (sin loops de unicidad)
     const updatesActividades = []
@@ -12433,9 +12499,26 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
         } else if (tipoUtilidad !== 'rifas') {
           pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
         }
+        if (tipoUtilidad === 'rifas' && estadoActividad === 'liquidada' && valorPagadoEnEstaTransaccion > 0) {
+          // El mixto se parte con el mismo ratio que ya se aplicó a la fila, para que la
+          // utilidad de la rifa quede repartida por forma de pago igual que su recaudo.
+          const reparto = repartoPorFormaDePago(valorPagadoEnEstaTransaccion, formaPagoAct, options)
+          pagosRifaLiquidada.push({ actividadId: actividad.actividad.id, ...reparto })
+        }
       }
     })
     
+    // Rifas liquidadas: mover sus totales y su ganancia. También en segundo plano, y con
+    // los fallos en consola: un problema aquí no debe tumbar un pago que ya se registró.
+    if (pagosRifaLiquidada.length > 0) {
+      ;(async () => {
+        for (const pago of pagosRifaLiquidada) {
+          const res = await aplicarRecaudoRifaLiquidada(pago.actividadId, pago)
+          if (res?.problemas?.length) console.error('Recaudo posterior de rifa liquidada:', res.problemas)
+        }
+      })()
+    }
+
     // Fire-and-forget: registrar utilidades en background (no bloquea el retorno)
     if (natilleraId && Object.keys(pagosPorTipoUtilidad).length > 0) {
       ;(async () => {
@@ -17081,9 +17164,36 @@ function anioParaMes(mes) {
   return calcularAnioMes(mes, mesInicio.value, mesFin.value, anioNatillera.value)
 }
 
+const RESUMEN_MES_VACIO = { pagadas: 0, pendientes: 0, enMora: 0, parciales: 0, programadas: 0 }
+
+/**
+ * Resumen de cada mes del selector, calculado una sola vez.
+ *
+ * `getResumenPorMes` recorre todas las cuotas de la natillera, y la pestaña lo pedía cuatro
+ * veces por mes (los dos contadores, el punto y el color de la tarjeta). Con medio millar
+ * de cuotas y doce meses eso era recorrer la lista casi sesenta veces por render.
+ */
+const resumenesPorMes = computed(() => {
+  const mapa = {}
+  ;(mesesNatillera.value || []).forEach((m) => {
+    mapa[m.value] = cuotasStore.getResumenPorMes(m.value, anioParaMes(m.value)) || RESUMEN_MES_VACIO
+  })
+  return mapa
+})
+
 function resumenMesCarrusel(mes) {
-  const anio = anioParaMes(mes)
-  return cuotasStore.getResumenPorMes(mes, anio) || { pagadas: 0, pendientes: 0, enMora: 0 }
+  return resumenesPorMes.value[mes] || RESUMEN_MES_VACIO
+}
+
+/** Lo que oye un lector de pantalla: los iconos de la pestaña no le dicen nada. */
+function etiquetaMesAccesible(mes) {
+  const r = resumenMesCarrusel(mes.value)
+  const partes = []
+  if (r.enMora > 0) partes.push(`${r.enMora} en mora`)
+  if (r.pendientes > 0) partes.push(`${r.pendientes} ${r.pendientes === 1 ? 'pendiente' : 'pendientes'}`)
+  if (r.pagadas > 0) partes.push(`${r.pagadas} ${r.pagadas === 1 ? 'pagada' : 'pagadas'}`)
+  const detalle = partes.length > 0 ? partes.join(', ') : 'sin cuotas'
+  return `${mes.label} ${anioParaMes(mes.value)}: ${detalle}`
 }
 
 function dotColorMes(mes) {

@@ -351,6 +351,7 @@ const _navViewImports = [
   () => import('../views/cuotas/Cuotas.vue'),
   () => import('../views/prestamos/Prestamos.vue'),
   () => import('../views/actividades/Actividades.vue'),
+  () => import('../views/pagos/PagosSocios.vue'),
   () => import('../views/conciliacion/ConciliacionCaja.vue'),
   () => import('../views/movimientos/Movimientos.vue'),
   () => import('../views/natilleras/NatilleraConfiguracion.vue'),
@@ -445,6 +446,7 @@ import {
   CalendarIcon,
   WalletIcon,
   Cog6ToothIcon,
+  ReceiptPercentIcon,
   ScaleIcon,
   ArrowsRightLeftIcon
 } from '@heroicons/vue/24/outline'
@@ -515,10 +517,17 @@ function isActive(path) {
 const menuCajaAbierto = ref(false)
 const menuCajaRef = ref(null)
 
-/* Los dos destinos que agrupa «Caja». Etiquetas de una palabra: van bajo un icono. */
+/* Los destinos que agrupa «Caja». Etiquetas de una palabra: van bajo un icono. */
 const opcionesCaja = computed(() => {
   const base = `/natilleras/${natilleraId.value}`
   return [
+    {
+      clave: 'pagos',
+      etiqueta: 'Pagos',
+      icono: ReceiptPercentIcon,
+      ruta: `${base}/pagos`,
+      esActual: route.path.startsWith(`${base}/pagos`)
+    },
     {
       clave: 'conciliacion',
       etiqueta: 'Conciliar',
@@ -560,7 +569,9 @@ onUnmounted(() => document.removeEventListener('click', cerrarMenuCajaFuera))
 const cajaActiva = computed(() => {
   if (!natilleraId.value) return false
   const base = `/natilleras/${natilleraId.value}`
-  return route.path.startsWith(`${base}/conciliacion`) || route.path.startsWith(`${base}/movimientos`)
+  return route.path.startsWith(`${base}/pagos`) ||
+    route.path.startsWith(`${base}/conciliacion`) ||
+    route.path.startsWith(`${base}/movimientos`)
 })
 
 // Con el botón «atrás» del teléfono la hoja debe cerrarse como cualquier otra capa.

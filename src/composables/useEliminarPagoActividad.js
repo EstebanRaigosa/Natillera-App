@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase'
 import { useCuotasStore } from '../stores/cuotas'
 import { useAuditoria } from './useAuditoria'
 import { PREFIJO_PAGO_DIRECTO } from './useRegistrarPagoActividad'
+import { aplicarRecaudoRifaLiquidada } from './useRecaudoRifaLiquidada'
 
 /**
  * Revertir el pago de un socio en una actividad, desde el módulo de Actividades.
@@ -12,7 +13,9 @@ import { PREFIJO_PAGO_DIRECTO } from './useRegistrarPagoActividad'
  *
  *   1. `socios_actividad.valor_pagado` (y su desglose efectivo/transferencia).
  *   2. `utilidades_clasificadas`, con el tipo de la actividad — salvo las rifas, que solo
- *      suman al liquidarse desde Actividades.
+ *      suman al liquidarse desde Actividades. Si la rifa ya estaba liquidada cuando se
+ *      cobró, el pago sí movió sus totales y hay que devolverlos
+ *      (ver `useRecaudoRifaLiquidada`).
  *   3. La cuota que lo cobró: `cuotas.valor_pagado_actividades` y, si el pago quedó
  *      registrado como transacción, `historial_pagos_cuota` (valor_actividades, valor_total
  *      y la línea dentro de `detalle_actividades`).
@@ -146,6 +149,9 @@ export function useEliminarPagoActividad() {
       if (tipoUtil) {
         avisos.push(`Se devolverán $${valorFila.toLocaleString('es-CO')} a las utilidades del fondo (${tipoUtil}).`)
       }
+      if (actividad?.tipo === 'rifa' && actividad?.estado === 'liquidada' && valorFila > 0) {
+        avisos.push('La rifa ya está liquidada: se le descontará este dinero de lo recaudado y de su ganancia, hasta donde entró después del cierre.')
+      }
 
       const directo = esPagoDirecto(socioAct)
       let transaccion = null
@@ -203,7 +209,7 @@ export function useEliminarPagoActividad() {
    * @returns {Promise<{success: boolean, error?: string, revertido: object, problemas: string[]}>}
    */
   async function eliminarPagoActividad(socioActividadId, options = {}) {
-    const revertido = { fila: false, numeros: 0, utilidad: 0, cuota: false, transaccion: false }
+    const revertido = { fila: false, numeros: 0, utilidad: 0, recaudoRifa: 0, cuota: false, transaccion: false }
     const problemas = []
 
     try {
@@ -231,6 +237,24 @@ export function useEliminarPagoActividad() {
           actividad?.natillera_id, tipoUtil, formaPago, valorFila, `actividades (${tipoUtil})`
         )
         revertido.utilidad = res.descontado
+        problemas.push(...res.problemas)
+      }
+
+      // ── 1b. Rifa liquidada: deshacer lo que este pago le sumó después del cierre ──
+      // El composable no baja de lo que la rifa tenía recaudado el día que se liquidó: si
+      // parte de esta fila se pagó ANTES, eso ya iba en el corte y no se toca aquí.
+      if (actividad?.tipo === 'rifa' && actividad?.estado === 'liquidada' && valorFila > 0) {
+        const efectivoFila = Number(socioAct.valor_pagado_efectivo) || 0
+        const transferenciaFila = Number(socioAct.valor_pagado_transferencia) || 0
+        const conDesglose = efectivoFila + transferenciaFila > 0
+        const res = await aplicarRecaudoRifaLiquidada(actividad.id, conDesglose
+          ? { efectivo: -efectivoFila, transferencia: -transferenciaFila }
+          : {
+              efectivo: formaPago === 'efectivo' ? -valorFila : 0,
+              transferencia: formaPago === 'transferencia' ? -valorFila : 0,
+              otro: formaPago ? 0 : -valorFila
+            })
+        revertido.recaudoRifa = Math.abs(res.aplicado)
         problemas.push(...res.problemas)
       }
 

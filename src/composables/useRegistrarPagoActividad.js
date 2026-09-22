@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { useCuotasStore } from '../stores/cuotas'
+import { aplicarRecaudoRifaLiquidada } from './useRecaudoRifaLiquidada'
 
 /**
  * Cobrar una actividad directamente, sin pasar por la cuota del socio.
@@ -12,8 +13,9 @@ import { useCuotasStore } from '../stores/cuotas'
  *
  *   1. `socios_actividad`: `valor_pagado`, su desglose efectivo/transferencia, la forma de
  *      pago, la causación y —solo si queda saldada— `fecha_pago` y el comprobante.
- *   2. `utilidades_clasificadas`, con el tipo de la actividad. Las rifas no suman aquí:
- *      su utilidad entra al liquidarlas desde Actividades.
+ *   2. `utilidades_clasificadas`, con el tipo de la actividad. Las rifas no suman aquí al
+ *      cobrarse: su utilidad entra al liquidarlas desde Actividades. La excepción es cobrar
+ *      una rifa YA liquidada, que sí mueve sus totales (ver `useRecaudoRifaLiquidada`).
  *
  * El tercero —la cuota que lo cobró (`cuotas.valor_pagado_actividades` y
  * `historial_pagos_cuota`)— NO aplica: aquí no hay cuota de por medio. Para que la
@@ -161,6 +163,17 @@ export function useRegistrarPagoActividad() {
           `Utilidad de ${tipoUtil} (incluye pagos de actividades ${actividad.estado === 'liquidada' ? 'liquidadas' : 'en curso'})`
         )
         if (res?.problemas?.length) problemas.push(...res.problemas)
+      }
+
+      // ── Rifa ya liquidada: lo que se paga después sigue siendo recaudo suyo ────
+      // La rifa no se reabre, pero sus totales y su ganancia sí se mueven; si no, la
+      // tarjeta seguiría diciendo lo de aquel día y el fondo no contaría este dinero.
+      if (actividad?.tipo === 'rifa' && actividad?.estado === 'liquidada') {
+        const recaudo = await aplicarRecaudoRifaLiquidada(actividad.id, {
+          efectivo: forma === 'efectivo' ? aPagar : 0,
+          transferencia: forma === 'transferencia' ? aPagar : 0
+        })
+        if (recaudo?.problemas?.length) problemas.push(...recaudo.problemas)
       }
 
       return {

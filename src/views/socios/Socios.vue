@@ -239,8 +239,8 @@
                         v-if="!esVisor"
                         type="button"
                         class="action-btn action-btn--warning"
-                        title="Desactivar"
-                        aria-label="Desactivar socio"
+                        title="Retirar"
+                        aria-label="Retirar socio de la natillera"
                         @click.stop="abrirModalDesactivar(sn)"
                       >
                         <XCircleIcon class="w-5 h-5" />
@@ -365,11 +365,11 @@
                 <button
                   type="button"
                   class="card-pill card-pill--warning"
-                  aria-label="Desactivar socio"
+                  aria-label="Retirar socio de la natillera"
                   @click.stop="abrirModalDesactivar(sn)"
                 >
                   <XCircleIcon class="w-4 h-4" />
-                  Inact.
+                  Retirar
                 </button>
                 <button
                   type="button"
@@ -758,7 +758,7 @@
             @click="modalDetalle = false; abrirModalDesactivar(socioSeleccionado)"
           >
             <XCircleIcon class="w-3.5 h-3.5" />
-            Inactivar
+            Retirar
           </button>
           <span
             v-if="socioSeleccionado?.estado === 'activo'"
@@ -1914,7 +1914,9 @@
       </div>
     </ModalWrapper>
 
-    <!-- Modal Desactivar Socio — patrón estándar (skill natillerapp-modals + DS) -->
+    <!-- Modal Retirar Socio — patrón estándar (skill natillerapp-modals + DS).
+         El estado en base de datos sigue siendo `inactivo`: solo cambia cómo se llama
+         de cara al usuario, porque «desactivar» sonaba a borrado y no lo es. -->
     <ModalWrapper
       :show="!!socioADesactivar"
       :z-index="50"
@@ -1936,7 +1938,7 @@
           </div>
           <div class="min-w-0 flex-1 text-left">
             <h3 class="font-display font-bold text-white text-base leading-tight truncate">
-              Desactivar socio
+              Retirar socio
             </h3>
             <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
               {{ socioADesactivar?.socio?.nombre }}
@@ -1960,7 +1962,7 @@
               <XCircleIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
             </div>
             <h3 class="font-display font-bold text-white text-lg leading-tight">
-              Desactivar socio
+              Retirar socio
             </h3>
             <p class="text-xs text-white/85 leading-snug mt-1 truncate max-w-[20rem]">
               {{ socioADesactivar?.socio?.nombre }}
@@ -1986,48 +1988,113 @@
           @scroll.passive="programarNatiscrollModalDesactivarSocio"
         >
 
-          <!-- 1. Sanción por retiro (toggle) -->
-          <button
-            type="button"
-            class="modal-toggle-card"
-            :class="{ 'is-active': desactivarSancionar }"
-            :aria-pressed="desactivarSancionar"
-            @click="desactivarSancionar = !desactivarSancionar"
-          >
-            <span class="modal-toggle-card__check" aria-hidden="true">
-              <CheckIcon v-if="desactivarSancionar" class="w-3.5 h-3.5 stroke-[3]" />
-            </span>
-            <span class="min-w-0 flex-1 text-left">
-              <span class="block font-display font-semibold text-slate-800 text-sm">
-                Aplicar sanción por retiro
-              </span>
-              <span class="block text-xs text-slate-500 mt-0.5 leading-snug">
-                Descontar un porcentaje del ahorro para el fondo de la natillera.
-              </span>
-            </span>
-          </button>
+          <!--
+            Orden deliberado: primero CUÁNTO se le entrega, que es la única cifra por la
+            que se abre esta ventana; después de dónde sale; y al final las dos decisiones
+            (sanción y forma de pago). Antes empezaba por el toggle de sanción, o sea
+            pidiendo decidir un descuento sobre un número que todavía no se había visto.
+          -->
 
-          <!-- 1.b Porcentaje de sanción -->
-          <div v-if="desactivarSancionar" class="space-y-1.5">
-            <label for="desactivar-porcentaje" class="ds-label">
-              Porcentaje de sanción (%)
-            </label>
-            <input
-              id="desactivar-porcentaje"
-              v-model.number="desactivarPorcentajeSancion"
-              type="number"
-              min="0"
-              max="100"
-              step="0.5"
-              inputmode="decimal"
-              class="ds-input"
-              placeholder="0"
-            />
-          </div>
+          <!--
+            La sanción va arriba del todo: es la única decisión que cambia la cifra de
+            abajo, así que se decide antes de leerla. En rosa, no en el ámbar de la
+            cabecera ni en el verde de lo que se entrega: es dinero que se resta.
+          -->
+          <section class="retiro-sancion" :class="{ 'is-active': desactivarSancionar }">
+            <button
+              type="button"
+              class="retiro-sancion__cabecera"
+              :aria-pressed="desactivarSancionar"
+              @click="desactivarSancionar = !desactivarSancionar"
+            >
+              <span class="retiro-sancion__icono" aria-hidden="true">
+                <ReceiptPercentIcon class="h-5 w-5" />
+              </span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="retiro-sancion__titulo">Sanción por retiro</span>
+                <span class="retiro-sancion__sub">Se descuenta del ahorro y queda en el fondo</span>
+              </span>
+              <span class="retiro-sancion__switch" aria-hidden="true">
+                <span class="retiro-sancion__bolita"></span>
+              </span>
+            </button>
 
-          <!-- 2. Resumen del socio -->
+            <div v-if="desactivarSancionar" class="retiro-sancion__cuerpo">
+              <div class="grid grid-cols-4 gap-2">
+                <button
+                  v-for="pct in PORCENTAJES_SANCION_RETIRO"
+                  :key="pct"
+                  type="button"
+                  class="retiro-pct"
+                  :class="{ 'is-active': Number(desactivarPorcentajeSancion) === pct }"
+                  @click="desactivarPorcentajeSancion = pct"
+                >{{ pct }} %</button>
+              </div>
+              <div class="mt-2 flex items-center gap-2">
+                <label for="desactivar-porcentaje" class="whitespace-nowrap text-xs text-rose-700/80">Otro</label>
+                <div class="relative flex-1">
+                  <input
+                    id="desactivar-porcentaje"
+                    v-model.number="desactivarPorcentajeSancion"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    inputmode="decimal"
+                    class="ds-input pr-8"
+                    placeholder="0"
+                  />
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">%</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. La cifra que manda -->
+          <section class="retiro-hero">
+            <p class="retiro-hero__label">
+              {{ desactivarSancionar && valorFondoDesactivar > 0
+                  ? `Cómo se reparte el ahorro de ${primerNombreSocioARetirar}`
+                  : `Se le entrega a ${primerNombreSocioARetirar}` }}
+            </p>
+            <p v-if="loadingTotalesDesactivar" class="retiro-hero__valor retiro-hero__valor--cargando">
+              Calculando…
+            </p>
+            <p
+              v-else-if="!desactivarSancionar || valorFondoDesactivar <= 0"
+              class="retiro-hero__valor tabular-nums"
+            >
+              ${{ formatMoney(valorEntregarDesactivar) }}
+            </p>
+            <!--
+              El reparto explícito: quién se lleva qué. Antes era una nota al pie y el
+              dinero que retiene la natillera se leía como letra pequeña, cuando es la
+              mitad de la decisión.
+            -->
+            <div
+              v-if="!loadingTotalesDesactivar && desactivarSancionar && valorFondoDesactivar > 0"
+              class="retiro-reparto"
+            >
+              <div class="retiro-reparto__col">
+                <span class="retiro-reparto__label">Se lleva el socio</span>
+                <span class="retiro-reparto__valor retiro-reparto__valor--socio tabular-nums">
+                  ${{ formatMoney(valorEntregarDesactivar) }}
+                </span>
+              </div>
+              <span class="retiro-reparto__sep" aria-hidden="true"></span>
+              <div class="retiro-reparto__col">
+                <span class="retiro-reparto__label">Queda en el fondo</span>
+                <span class="retiro-reparto__valor retiro-reparto__valor--fondo tabular-nums">
+                  ${{ formatMoney(valorFondoDesactivar) }}
+                </span>
+                <span class="retiro-reparto__pie">{{ desactivarPorcentajeSancion }} % de sanción</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. De dónde sale esa cifra -->
           <section>
-            <h4 class="ds-overline mb-2">Resumen del socio</h4>
+            <h4 class="ds-overline mb-2">De dónde sale</h4>
             <div class="modal-data-list">
               <div class="modal-data-list__row">
                 <span class="modal-data-list__label">Total ahorrado</span>
@@ -2053,31 +2120,9 @@
             </div>
           </section>
 
-          <!-- 3. Liquidación -->
-          <section>
-            <h4 class="ds-overline mb-2">Liquidación al desactivar</h4>
-            <div class="modal-liquidacion">
-              <div class="modal-liquidacion__row">
-                <span class="modal-liquidacion__label">Entregar al socio</span>
-                <span class="modal-liquidacion__value modal-liquidacion__value--main tabular-nums">
-                  ${{ formatMoney(valorEntregarDesactivar) }}
-                </span>
-              </div>
-              <div v-if="desactivarSancionar" class="modal-liquidacion__row">
-                <span class="modal-liquidacion__label">Para el fondo (sanción)</span>
-                <span class="modal-liquidacion__value modal-liquidacion__value--warning tabular-nums">
-                  ${{ formatMoney(valorFondoDesactivar) }}
-                </span>
-              </div>
-            </div>
-          </section>
-
           <!-- 4. Forma de pago -->
           <section>
-            <h4 class="ds-overline mb-2">Forma de pago</h4>
-            <p class="text-[11px] text-slate-500 leading-snug mb-2">
-              El total (entregar + sanción) se descontará en cuadre de caja con esta forma de pago.
-            </p>
+            <h4 class="ds-overline mb-2">¿Cómo se le entrega?</h4>
             <div class="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -2100,6 +2145,9 @@
                 Transferencia
               </button>
             </div>
+            <p class="mt-2 text-[11px] leading-snug text-slate-500">
+              Saldrá del cuadre de caja por esta forma de pago.
+            </p>
           </section>
 
         </div>
@@ -2155,7 +2203,7 @@
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           <XCircleIcon v-else class="w-4 h-4" />
-          {{ desactivando ? 'Desactivando…' : 'Confirmar desactivar' }}
+          {{ desactivando ? 'Retirando…' : 'Confirmar retiro' }}
         </button>
       </div>
     </ModalWrapper>
@@ -2847,7 +2895,8 @@ import {
   TrashIcon,
   SparklesIcon,
   CheckIcon,
-  BuildingOffice2Icon
+  BuildingOffice2Icon,
+  ReceiptPercentIcon
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -3031,6 +3080,15 @@ const inputBusquedaSocios = ref(null)
 const enfocoBusquedaInicialHecho = ref(false)
 const socioAEliminar = ref(null)
 useBodyScrollLock(computed(() => !!socioAEliminar.value))
+
+/** Atajos de sanción por retiro. El 0 deja la sanción en cero sin apagar el toggle. */
+const PORCENTAJES_SANCION_RETIRO = [0, 10, 20, 50]
+
+/** Solo el primer nombre: «Se le entrega a María» lee mejor que el nombre completo. */
+const primerNombreSocioARetirar = computed(() => {
+  const nombre = (socioADesactivar.value?.socio?.nombre || '').trim()
+  return nombre ? nombre.split(/\s+/)[0] : 'el socio'
+})
 
 // Modal desactivar socio: sanción opcional y totales
 const socioADesactivar = ref(null)
@@ -4692,11 +4750,28 @@ async function cargarTotalesDesactivar(socioNatilleraId) {
   }
 }
 
+/**
+ * Porcentaje de sanción por retiro que tiene configurado la natillera.
+ *
+ * Vive en `reglas_multas.sanciones.devolucion.porcentajeMulta`, el bloque «Devolución por
+ * mora excesiva» de la configuración. Solo cuenta si ese bloque está activo: con la
+ * devolución apagada, el reglamento no fija ninguna sanción y el modal arranca en 0.
+ */
+const porcentajeSancionRetiroConfigurado = computed(() => {
+  const nat = natillerasStore.natilleraActual
+  const devolucion = nat?.id === id ? nat?.reglas_multas?.sanciones?.devolucion : null
+  if (!devolucion?.activo) return 0
+  const pct = Number(devolucion.porcentajeMulta)
+  return Number.isFinite(pct) && pct > 0 ? Math.min(100, pct) : 0
+})
+
 function abrirModalDesactivar(sn) {
   if (sn.estado !== 'activo') return
   socioADesactivar.value = sn
-  desactivarSancionar.value = false
-  desactivarPorcentajeSancion.value = 0
+  // Se propone lo que dice el reglamento; si no hay nada configurado, nada que descontar.
+  const pctConfigurado = porcentajeSancionRetiroConfigurado.value
+  desactivarSancionar.value = pctConfigurado > 0
+  desactivarPorcentajeSancion.value = pctConfigurado
   desactivarFormaPago.value = 'efectivo'
   cargarTotalesDesactivar(sn.id)
 }
@@ -4962,8 +5037,8 @@ async function confirmarDesactivarSocio() {
       cerrarModalDesactivar()
       await nextTick()
       notificationStore.warning(
-        `${sn.socio?.nombre || 'El socio'} ha sido desactivado`,
-        'Socio desactivado',
+        `${sn.socio?.nombre || 'El socio'} fue retirado de la natillera`,
+        'Socio retirado',
         2500
       )
     } else {
@@ -4971,7 +5046,7 @@ async function confirmarDesactivarSocio() {
     }
   } catch (e) {
     console.error('Error al desactivar socio:', e)
-    notificationStore.error(e?.message || 'Error al desactivar socio', 'Error')
+    notificationStore.error(e?.message || 'Error al retirar el socio', 'Error')
   } finally {
     desactivando.value = false
   }
@@ -4991,8 +5066,8 @@ async function toggleEstado(sn) {
       )
     } else {
       notificationStore.warning(
-        `${nombreSocio} ha sido desactivado`,
-        'Socio desactivado',
+        `${nombreSocio} fue retirado de la natillera`,
+        'Socio retirado',
         2500
       )
     }
@@ -5882,7 +5957,7 @@ async function verComprobanteSalida(sn) {
     comprobantesSalidaGuardados.value[sn.id] = { ...comprobanteDesactivacion.value }
   } else {
     notificationStore.warning(
-      'No hay comprobante de salida para este socio. Se genera al desactivar desde la opción "Desactivar".',
+      'No hay comprobante de salida para este socio. Se genera al retirarlo desde la opción "Retirar".',
       'Sin comprobante',
       4000
     )
@@ -7705,46 +7780,6 @@ onUnmounted(() => {
 }
 
 /* Toggle de tarjeta (modal desactivar — sanción) */
-.modal-toggle-card {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
-  border-radius: var(--radius-lg, 0.875rem);
-  border: 1px solid var(--surface-divider, #e5e7eb);
-  background: var(--surface-soft, #f8fafc);
-  text-align: left;
-  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  cursor: pointer;
-}
-.modal-toggle-card:hover { border-color: #d6b88a; }
-.modal-toggle-card.is-active {
-  background: #fffbeb;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 1px #f59e0b inset;
-}
-.modal-toggle-card__check {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.125rem;
-  border-radius: 0.375rem;
-  border: 1.5px solid #cbd5e1;
-  background: #fff;
-  color: #fff;
-  transition: background-color 160ms ease, border-color 160ms ease;
-}
-.modal-toggle-card.is-active .modal-toggle-card__check {
-  background: var(--brand-warning, #b45309);
-  border-color: var(--brand-warning, #b45309);
-}
-
 /* Lista de datos (resumen del socio) */
 .modal-data-list {
   border: 1px solid var(--surface-divider, #e5e7eb);
@@ -7776,6 +7811,233 @@ onUnmounted(() => {
 .modal-data-list__value--muted    { color: #94a3b8; font-weight: 500; font-size: 0.8125rem; }
 
 /* Bloque de liquidación */
+/*
+ * Bloque protagonista del modal de retiro: lo que se le entrega al socio.
+ *
+ * Va primero y en grande porque es la única cifra por la que se abre esa ventana; el
+ * resto del cuerpo existe para confirmarla. Verde de marca: es dinero que sale hacia el
+ * socio, no una advertencia.
+ */
+.retiro-hero {
+  border-radius: 1rem;
+  border: 1px solid rgba(27, 94, 55, 0.18);
+  background: linear-gradient(180deg, #f3faf4 0%, #ffffff 100%);
+  padding: 1rem 1.125rem 1.125rem;
+  text-align: center;
+}
+
+.retiro-hero__label {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: #64748b;
+}
+
+.retiro-hero__valor {
+  margin-top: 0.25rem;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--brand-primary, #1B5E37);
+}
+
+.retiro-hero__valor--cargando {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.retiro-hero__nota {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #be185d;
+}
+
+/* Reparto del ahorro: a un lado el socio, al otro el fondo, con el mismo peso visual. */
+.retiro-reparto {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 0.625rem;
+}
+
+.retiro-reparto__col {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.retiro-reparto__sep {
+  width: 1px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.12), transparent);
+}
+
+.retiro-reparto__label {
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  color: #64748b;
+}
+
+.retiro-reparto__valor {
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.retiro-reparto__valor--socio { color: var(--brand-primary, #1B5E37); }
+.retiro-reparto__valor--fondo { color: #be185d; }
+
+.retiro-reparto__pie {
+  font-size: 0.625rem;
+  line-height: 1.2;
+  color: #be185d;
+  opacity: 0.8;
+}
+
+/*
+ * Sanción por retiro. Rosa a propósito: la cabecera del modal es ámbar y la cifra que se
+ * entrega es verde, así que un tercer tono evita que todo el cuerpo se lea igual — y el
+ * rosa dice «esto resta» sin gritar como un rojo de error.
+ *
+ * Apagada es una tarjeta gris discreta; al encenderla se tiñe y despliega el porcentaje.
+ */
+.retiro-sancion {
+  border-radius: 1rem;
+  border: 1px solid var(--surface-divider-strong, #cbd5e1);
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+
+.retiro-sancion.is-active {
+  border-color: rgba(190, 24, 93, 0.28);
+  background: linear-gradient(180deg, #fff1f5 0%, #ffffff 62%);
+}
+
+.retiro-sancion__cabecera {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.retiro-sancion__icono {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #94a3b8;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.retiro-sancion.is-active .retiro-sancion__icono {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.retiro-sancion__titulo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.retiro-sancion.is-active .retiro-sancion__titulo { color: #9d174d; }
+
+.retiro-sancion__sub {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #94a3b8;
+}
+
+.retiro-sancion.is-active .retiro-sancion__sub { color: #be185d; opacity: 0.85; }
+
+/* Interruptor: más claro que una casilla para algo que enciende un bloque entero. */
+.retiro-sancion__switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.625rem;
+  width: 2.875rem;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  transition: background-color 200ms ease;
+}
+
+.retiro-sancion.is-active .retiro-sancion__switch { background: #ec4899; }
+
+.retiro-sancion__bolita {
+  position: absolute;
+  left: 0.1875rem;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.retiro-sancion.is-active .retiro-sancion__bolita {
+  transform: translate3d(1.25rem, 0, 0);
+}
+
+.retiro-sancion__cuerpo {
+  padding: 0 1rem 1rem;
+}
+
+/* Atajos de porcentaje, en la misma familia rosa del bloque. */
+.retiro-pct {
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(190, 24, 93, 0.2);
+  background: #fff;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #9f1239;
+  touch-action: manipulation;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.retiro-pct:hover { border-color: rgba(190, 24, 93, 0.45); }
+
+.retiro-pct.is-active {
+  border-color: #ec4899;
+  background: #fce7f3;
+  color: #9d174d;
+  box-shadow: inset 0 0 0 1px #ec4899;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retiro-sancion,
+  .retiro-sancion__icono,
+  .retiro-sancion__switch,
+  .retiro-sancion__bolita,
+  .retiro-pct {
+    transition: none;
+  }
+}
+
 .modal-liquidacion {
   border: 1px solid #fde68a;
   background: #fffbeb;

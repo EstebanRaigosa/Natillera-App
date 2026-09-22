@@ -20,6 +20,16 @@ import {
  * `CuadreCaja.vue` debería consumir este composable y borrar su copia.
  */
 
+/**
+ * Quién figura en la columna «Socio» cuando el apunte no es de nadie en particular: un
+ * premio, el gasto de una actividad, un ingreso o egreso del fondo. Un guion ahí no dice
+ * si falta el dato o es que no hay socio; este nombre sí.
+ *
+ * Los apuntes que SÍ son de una persona y no consiguen resolver su nombre siguen con «—»:
+ * ahí el dato falta de verdad y llamarlo «Fondo Natillera» sería mentir.
+ */
+export const SOCIO_FONDO = 'Fondo Natillera'
+
 export const CATEGORIAS_LIBRO = [
   { value: 'cuota', label: 'Cuota' },
   { value: 'cuota_prestamo', label: 'Cuota préstamo' },
@@ -30,6 +40,7 @@ export const CATEGORIAS_LIBRO = [
   { value: 'interes_anticipado', label: 'Utilidad por interés anticipado' },
   { value: 'liquidacion_salida', label: 'Liquidación por salida' },
   { value: 'premio_rifa', label: 'Premio rifa' },
+  { value: 'gasto_actividad', label: 'Gasto de actividad' },
   { value: 'movimiento_ingreso', label: 'Ingreso' },
   { value: 'movimiento_egreso', label: 'Egreso' },
   { value: 'movimiento_traslado', label: 'Traslado' }
@@ -43,6 +54,9 @@ const ORDEN_TIPO = {
   gmf_4x1000: 1.25,
   actividad: 2,
   interes_anticipado: 2.5,
+  // El gasto va justo detrás del recaudo de su actividad: en la lista se lee primero lo
+  // que entró completo y después lo que se gastó, que es como se cuenta una actividad.
+  gasto_actividad: 2.75,
   prestamo: 3,
   liquidacion_salida: 3.5,
   premio_rifa: 4,
@@ -70,6 +84,7 @@ export function claseTipo(tipo, esParcial = false) {
     cuota_prestamo: 'bg-teal-100 text-teal-800',
     sancion: 'bg-red-100 text-red-800',
     actividad: 'bg-purple-100 text-purple-800',
+    gasto_actividad: 'bg-fuchsia-100 text-fuchsia-800',
     gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60',
     interes_anticipado: 'bg-amber-100 text-amber-800',
     prestamo: 'bg-blue-100 text-blue-800',
@@ -89,6 +104,7 @@ export function colorTipo(tipo) {
     cuota_prestamo: 'bg-teal-500',
     sancion: 'bg-red-500',
     actividad: 'bg-purple-500',
+    gasto_actividad: 'bg-fuchsia-500',
     gmf_4x1000: 'bg-sky-500',
     interes_anticipado: 'bg-amber-500',
     prestamo: 'bg-blue-500',
@@ -157,6 +173,27 @@ function fechasDePagoPorCuota(historial) {
     if (!actual || String(h.fecha_pago) > String(actual)) mapa[h.cuota_id] = h.fecha_pago
   })
   return mapa
+}
+
+/**
+ * Fecha del movimiento de entrada que la creación de la actividad registró por sus ingresos.
+ *
+ * El gasto se fecha con ESA fecha y no con `created_at`, para que ingreso y gasto caigan
+ * siempre en el mismo día de la lista. No es cosmético: `movimientos_fondo.fecha` se guardó
+ * durante mucho tiempo con la fecha UTC (`toISOString()`), que en Colombia va un día
+ * adelante a partir de las 19:00, mientras que `created_at` sí se lee en hora local. Eso
+ * dejaba el ingreso un día después que su propio gasto. Lo nuevo ya se guarda con
+ * `getCurrentDateISO()`, pero lo registrado antes sigue en la base con la fecha corrida.
+ */
+function fechaDelRecaudo(movimientosData, descripcionActividad) {
+  if (!descripcionActividad) return null
+  const buscado = descripcionActividad.toLowerCase()
+  const movimiento = (movimientosData || []).find(m => {
+    if (!esRecaudoActividadLiquidada(m)) return false
+    const desc = (m.descripcion || m.Descripcion || '').toString().toLowerCase()
+    return desc.includes(buscado)
+  })
+  return movimiento?.fecha || null
 }
 
 function construirItems(nat, prestamosData, sociosActividadData, movimientosData, cuotasPrestamoPagadas, historialImpuesto4x1000, historialCompleto = []) {
@@ -302,7 +339,8 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
     items.push({ tipo: 'interes_anticipado', concepto: `Utilidad por interés anticipado — ${socio}`, socio, forma_pago: fp, monto: interesTotal, ...periodo })
   })
 
-  // Premios de rifa entregados: desde movimientos y, si no hay ninguno, desde actividades liquidadas.
+  // Premios de rifa entregados: desde movimientos y, si no hay ninguno, desde las RIFAS
+  // liquidadas. El respaldo se limita a las rifas a propósito: el premio es cosa de la rifa.
   const premiosDesdeMovimientos = (movimientosData || []).filter(esPremioRifa)
   premiosDesdeMovimientos.forEach(m => {
     const monto = parseFloat(m.monto ?? m.Monto) || 0
@@ -311,7 +349,7 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
     items.push({
       tipo: 'premio_rifa',
       concepto: desc.length > 50 ? 'Premio rifa' : desc,
-      socio: '—',
+      socio: SOCIO_FONDO,
       forma_pago: normalizarForma(m.forma_pago ?? m.Forma_pago),
       monto: -monto,
       fecha_movimiento: m.fecha || null
@@ -319,13 +357,41 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
   })
   if (premiosDesdeMovimientos.length === 0) {
     ;(nat.actividades || [])
-      .filter(a => a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0)
+      .filter(a => a.tipo === 'rifa' && a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0)
       .forEach(a => {
         const monto = parseFloat(a.gastos) || 0
         const concepto = a.descripcion && a.descripcion.length <= 50 ? `Premio: ${a.descripcion}` : 'Premio rifa'
-        items.push({ tipo: 'premio_rifa', concepto, socio: '—', forma_pago: 'efectivo', monto: -monto, fecha_movimiento: a.updated_at || a.created_at || null })
+        items.push({ tipo: 'premio_rifa', concepto, socio: SOCIO_FONDO, forma_pago: 'efectivo', monto: -monto, fecha_movimiento: a.updated_at || a.created_at || null })
       })
   }
+
+  /*
+   * Gastos de una actividad que NO es rifa (un bingo, una venta, un evento) cargada ya
+   * liquidada con sus ingresos y sus gastos.
+   *
+   * Al crearla se registra un movimiento de entrada por los ingresos, pero ninguno por los
+   * gastos, así que el dinero entraba entero y no salía nunca. Antes se tapaba metiéndolos
+   * en el saco de «Premio rifa» —y solo cuando no hubiera ningún premio de rifa de verdad,
+   * con lo que bastaba una rifa liquidada para que estos gastos desaparecieran del cuadre—.
+   * Aquí salen siempre y con su nombre: un bingo no entrega premios de rifa.
+   */
+  ;(nat.actividades || [])
+    .filter(a => a.tipo !== 'rifa' && a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0)
+    .forEach(a => {
+      const monto = parseFloat(a.gastos) || 0
+      const descripcion = (a.descripcion || '').trim()
+      const concepto = descripcion && descripcion.length <= 50 ? `Gasto: ${descripcion}` : 'Gasto de actividad'
+      items.push({
+        tipo: 'gasto_actividad',
+        concepto,
+        socio: SOCIO_FONDO,
+        // Misma forma que el ingreso que la creación registró: si no, el gasto saldría de
+        // un bolsillo donde ese dinero nunca entró.
+        forma_pago: 'efectivo',
+        monto: -monto,
+        fecha_movimiento: fechaDelRecaudo(movimientosData, descripcion) || a.created_at || a.updated_at || null
+      })
+    })
 
   // Liquidaciones por salida de un socio.
   const liquidaciones = (movimientosData || []).filter(esLiquidacionSalida)
@@ -333,7 +399,7 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
     const monto = parseFloat(m.monto ?? m.Monto) || 0
     if (monto <= 0) return
     const desc = (m.descripcion || m.Descripcion || '').toString().trim()
-    const socio = desc.replace(/^Liquidación por salida\s*[-–]\s*/i, '').trim() || '—'
+    const socio = desc.replace(/^Liquidación por salida\s*[-–]\s*/i, '').trim() || SOCIO_FONDO
     const fechaMov = m.fecha ? new Date(m.fecha) : null
     items.push({
       tipo: 'liquidacion_salida',
@@ -358,7 +424,7 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
     items.push({
       tipo: 'actividad',
       concepto: desc.length <= 70 ? desc : `${desc.slice(0, 67)}…`,
-      socio: '—',
+      socio: SOCIO_FONDO,
       forma_pago: normalizarForma(m.forma_pago ?? m.Forma_pago),
       monto,
       mes: fechaValida ? fechaMov.getMonth() + 1 : undefined,
@@ -397,7 +463,7 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
     items.push({
       tipo,
       concepto,
-      socio: '—',
+      socio: SOCIO_FONDO,
       forma_pago: normalizarForma(m.forma_pago ?? m.Forma_pago),
       monto: esEntrada ? monto : -monto,
       mes: fechaValida ? fechaMov.getMonth() + 1 : undefined,
@@ -461,17 +527,60 @@ function construirItems(nat, prestamosData, sociosActividadData, movimientosData
 }
 
 /**
- * Añade fecha resuelta y clave estable de render, y ordena en ascendente para que el
- * saldo corrido se pueda acumular de una pasada. Los apuntes sin fecha van primero:
+ * Momento exacto del apunte en milisegundos, para poder ordenar DENTRO de un mismo día.
+ *
+ * `fecha` es solo 'YYYY-MM-DD', así que con ella todo lo de un día empata y el orden lo
+ * acababa decidiendo el concepto. Cuando el origen es un `timestamptz` —el pago de una
+ * cuota, el abono de un préstamo— la hora está ahí y es la que manda.
+ *
+ * Lo que se guardó como DATE (los movimientos del fondo) no tiene hora: se le asigna la
+ * medianoche local de su día, así que queda por delante de lo que ese mismo día sí lleva
+ * hora. Es arbitrario, pero es estable y no inventa una hora que nadie registró.
+ */
+function resolverInstante(item, fecha) {
+  const bruto = item.fecha_movimiento
+  const esSoloFecha = typeof bruto === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(bruto)
+  if (bruto && !esSoloFecha) {
+    const d = new Date(bruto)
+    if (!isNaN(d.getTime())) return d.getTime()
+  }
+  if (!fecha) return null
+  const [anio, mes, dia] = fecha.split('-').map(Number)
+  return new Date(anio, mes - 1, dia).getTime()
+}
+
+/**
+ * Añade fecha resuelta, instante y clave estable de render, y ordena en ascendente para
+ * que el saldo corrido se pueda acumular de una pasada. Los apuntes sin fecha van primero:
  * son anteriores a cualquier corte que se pueda cerrar.
+ *
+ * Empate a instante: **primero lo que entra, después lo que sale**. El dinero se recibe y
+ * luego se gasta, nunca al revés, así que el ingreso es el apunte más antiguo de los dos y
+ * el egreso el más reciente. Con esto la columna de saldo cuenta la historia bien —el
+ * recaudo sube el saldo y el gasto lo baja acto seguido— y en la vista de conciliación,
+ * que se lee del más reciente al más antiguo, el egreso queda arriba y su ingreso justo
+ * debajo.
  */
 function ordenarCronologicamente(items) {
   return items
-    .map((item, indice) => ({ ...item, ...resolverFecha(item), clave: `${item.tipo}-${indice}` }))
+    .map((item, indice) => {
+      const resuelta = resolverFecha(item)
+      return {
+        ...item,
+        ...resuelta,
+        instante: resolverInstante(item, resuelta.fecha),
+        clave: `${item.tipo}-${indice}`
+      }
+    })
     .sort((a, b) => {
-      const fechaA = a.fecha || ''
-      const fechaB = b.fecha || ''
-      if (fechaA !== fechaB) return fechaA.localeCompare(fechaB)
+      if (a.instante == null || b.instante == null) {
+        if (a.instante !== b.instante) return a.instante == null ? -1 : 1
+      } else if (a.instante !== b.instante) {
+        return a.instante - b.instante
+      }
+      const entraA = a.monto < 0 ? 1 : 0
+      const entraB = b.monto < 0 ? 1 : 0
+      if (entraA !== entraB) return entraA - entraB
       return (ORDEN_TIPO[a.tipo] ?? 4) - (ORDEN_TIPO[b.tipo] ?? 4)
     })
 }

@@ -708,6 +708,133 @@
                   </div>
                 </div>
 
+                <!--
+                  Administración. Va lo primero porque se descuenta ANTES de repartir: lo
+                  que se configure debajo se aplica sobre lo que quede después de esto.
+                  Mismo lenguaje visual que el resto de la pestaña (tarjetas seleccionables
+                  con check), y con el valor en pesos a la vista: un «2 %» no dice nada
+                  hasta que se ve que son seiscientos mil.
+                -->
+                <div class="mb-6">
+                  <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <BanknotesIcon class="w-4 h-4 text-purple-600 flex-shrink-0" />
+                    <span class="text-sm sm:text-base">Gastos de administración</span>
+                  </label>
+                  <p class="text-xs text-gray-500 mb-3 break-words">
+                    Lo que el reglamento destina a la gestión de la natillera. Se aparta al
+                    cerrar, antes de repartirle a nadie.
+                  </p>
+
+                  <div class="rounded-xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-indigo-50 p-3 sm:p-4">
+                    <!-- Cuánto -->
+                    <p class="text-xs font-semibold text-gray-700 mb-2">¿Qué porcentaje?</p>
+                    <div class="grid grid-cols-4 gap-2 mb-3">
+                      <button
+                        v-for="opcion in PORCENTAJES_ADMINISTRACION"
+                        :key="opcion"
+                        type="button"
+                        @click="configCierre.administracion.porcentaje = opcion"
+                        :class="[
+                          'relative rounded-lg border-2 py-2 text-center transition-all duration-200',
+                          Number(configCierre.administracion.porcentaje) === opcion
+                            ? 'border-purple-500 bg-white shadow-md shadow-purple-500/20'
+                            : 'border-gray-200 bg-white/70 hover:border-purple-300'
+                        ]"
+                      >
+                        <span
+                          :class="[
+                            'font-display text-base font-bold',
+                            Number(configCierre.administracion.porcentaje) === opcion ? 'text-purple-700' : 'text-gray-600'
+                          ]"
+                        >{{ opcion }}%</span>
+                      </button>
+                    </div>
+
+                    <div class="mb-3 flex items-center gap-2">
+                      <label for="admin-porcentaje" class="text-xs text-gray-600 whitespace-nowrap">Otro valor</label>
+                      <div class="relative flex-1">
+                        <input
+                          id="admin-porcentaje"
+                          v-model.number="configCierre.administracion.porcentaje"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          inputmode="decimal"
+                          class="input w-full pr-8"
+                          placeholder="0"
+                        />
+                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+                      </div>
+                    </div>
+
+                    <!-- Sobre qué -->
+                    <p class="text-xs font-semibold text-gray-700 mb-2">¿Sobre qué se calcula?</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <button
+                        v-for="base in BASES_ADMINISTRACION"
+                        :key="base.valor"
+                        type="button"
+                        @click="configCierre.administracion.base = base.valor"
+                        :class="[
+                          'relative rounded-lg border-2 p-3 text-left transition-all duration-200',
+                          configCierre.administracion.base === base.valor
+                            ? 'border-purple-500 bg-white shadow-md shadow-purple-500/20'
+                            : 'border-gray-200 bg-white/70 hover:border-purple-300'
+                        ]"
+                      >
+                        <div class="flex items-center gap-2">
+                          <span
+                            :class="[
+                              'min-w-0 flex-1 truncate text-sm font-semibold',
+                              configCierre.administracion.base === base.valor ? 'text-purple-700' : 'text-gray-600'
+                            ]"
+                          >{{ base.titulo }}</span>
+                          <div
+                            v-if="configCierre.administracion.base === base.valor"
+                            class="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0"
+                          >
+                            <svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                          </div>
+                        </div>
+                        <p class="mt-1 text-[10px] leading-snug text-gray-500">{{ base.detalle }}</p>
+                      </button>
+                    </div>
+
+                    <!-- Cuánto es eso en plata, con los datos de hoy -->
+                    <div
+                      v-if="Number(configCierre.administracion.porcentaje) > 0"
+                      class="mt-3 rounded-lg border border-purple-200 bg-white px-3 py-2.5"
+                    >
+                      <div v-if="baseAdministracion.cargando" class="text-xs text-gray-500">
+                        Calculando con los datos de hoy…
+                      </div>
+                      <template v-else-if="baseAdministracion.total > 0">
+                        <div class="flex items-baseline justify-between gap-3">
+                          <span class="text-xs text-gray-600">Hoy serían</span>
+                          <span class="font-display text-lg font-extrabold tabular-nums text-purple-700">
+                            ${{ formatMoney(montoAdministracionEstimado) }}
+                          </span>
+                        </div>
+                        <p class="mt-1 text-[11px] leading-snug text-gray-500">
+                          {{ configCierre.administracion.porcentaje }}% de
+                          ${{ formatMoney(baseAdministracion.total) }}
+                          ({{ configCierre.administracion.base === 'total'
+                              ? 'ahorros + utilidades'
+                              : 'utilidades' }}).
+                          Quedarían ${{ formatMoney(baseAdministracion.total - montoAdministracionEstimado) }}
+                          para repartir entre los socios.
+                        </p>
+                      </template>
+                      <p v-else class="text-xs text-gray-500">
+                        Todavía no hay nada recogido para estimarlo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Configuración de Utilidades de Actividades -->
                   <div class="mb-6">
                     <label class="label font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -1967,6 +2094,7 @@ import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useCuotasStore } from '../../stores/cuotas'
 import { parseReglasInteresPrestamo } from '../../utils/natilleraPrestamos'
 import { supabase } from '../../lib/supabase'
+import { calcularUtilidadesReales } from '../../composables/useUtilidadesReales'
 import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 
 import BackButton from '../../components/BackButton.vue'
@@ -2111,8 +2239,92 @@ const configCierre = ref({
   },
   prestamos: 'equitativa', // 'equitativa' o 'proporcional'
   sanciones: 'equitativa', // 'equitativa' o 'proporcional'
-  utilidades_adicionales: 'equitativa' // Ingresos a 'utilidades' desde el Cuadre de Caja
+  utilidades_adicionales: 'equitativa', // Ingresos a 'utilidades' desde el Cuadre de Caja
+  administracion: { porcentaje: 0, base: 'total' }
 })
+
+/** Atajos: el 2 % es lo que suele fijar el reglamento; el 0 sirve para desactivarlo. */
+const PORCENTAJES_ADMINISTRACION = [0, 1, 2, 3]
+
+const BASES_ADMINISTRACION = [
+  { valor: 'total', titulo: 'Todo lo recogido', detalle: 'Ahorros + utilidades' },
+  { valor: 'utilidades', titulo: 'Solo utilidades', detalle: 'Sin tocar el ahorro' }
+]
+
+/*
+ * Cuánto sería ese porcentaje HOY, con lo que lleva recogido la natillera.
+ *
+ * Un «2 %» no dice nada hasta que se ve que son seiscientos mil. Se calcula al abrir la
+ * pestaña de cierre —no al entrar a configuración— porque son dos consultas y la mayoría
+ * de las visitas no vienen a tocar esto.
+ */
+const baseAdministracion = ref({ cargando: false, ahorro: 0, utilidades: 0, total: 0, cargado: false })
+
+const montoAdministracionEstimado = computed(() => {
+  const pct = Math.max(0, Math.min(100, Number(configCierre.value.administracion?.porcentaje) || 0))
+  return Math.round((baseAdministracion.value.total || 0) * pct / 100)
+})
+
+async function cargarBaseAdministracion() {
+  const natId = natillera.value?.id
+  if (!natId || baseAdministracion.value.cargando) return
+  baseAdministracion.value = { ...baseAdministracion.value, cargando: true }
+  try {
+    const { data: sociosAct } = await supabase
+      .from('socios_natillera')
+      .select('id')
+      .eq('natillera_id', natId)
+      .eq('estado', 'activo')
+    const ids = (sociosAct || []).map(sn => sn.id)
+
+    let ahorro = 0
+    if (ids.length > 0) {
+      const { data: cuotasData } = await supabase
+        .from('cuotas')
+        .select('valor_cuota, valor_pagado, estado')
+        .in('socio_natillera_id', ids)
+      // Mismo criterio que el cierre: la cuota completa cuenta entera y del abono
+      // parcial cuenta lo abonado, nunca más que la propia cuota.
+      ahorro = (cuotasData || []).reduce((suma, c) => {
+        const cuota = parseFloat(c.valor_cuota) || 0
+        const pagado = parseFloat(c.valor_pagado) || 0
+        if (c.estado === 'pagada' || pagado >= cuota) return suma + cuota
+        return suma + Math.min(pagado, cuota)
+      }, 0)
+    }
+
+    const { porTipo } = await calcularUtilidadesReales(natId, { idsSocioNatillera: ids })
+    const utilidades = Object.values(porTipo || {}).reduce((suma, v) => suma + v, 0)
+
+    baseAdministracion.value = { cargando: false, cargado: true, ahorro, utilidades, total: 0 }
+    recalcularBaseAdministracion()
+  } catch (e) {
+    console.error('No se pudo estimar la base de administración:', e)
+    baseAdministracion.value = { cargando: false, cargado: true, ahorro: 0, utilidades: 0, total: 0 }
+  }
+}
+
+/** La base cambia según se elija «todo lo recogido» o «solo utilidades». */
+function recalcularBaseAdministracion() {
+  const b = baseAdministracion.value
+  const total = configCierre.value.administracion?.base === 'utilidades'
+    ? b.utilidades
+    : b.ahorro + b.utilidades
+  baseAdministracion.value = { ...b, total: Math.max(0, Math.round(total)) }
+}
+
+watch(() => configCierre.value.administracion?.base, () => {
+  if (baseAdministracion.value.cargado) recalcularBaseAdministracion()
+})
+
+/*
+ * Se dispara al abrir la pestaña y también cuando la natillera termina de cargar: si el
+ * usuario llega directo a «cierre» antes de que haya datos, la primera pasada sale sin id
+ * y la estimación se quedaría vacía para siempre.
+ */
+watch([tabGeneralActiva, () => natillera.value?.id], ([tab, natId]) => {
+  if (tab === 'cierre' && natId && !baseAdministracion.value.cargado) cargarBaseAdministracion()
+}, { immediate: true })
 
 const tooltipUtilidadesAdicionales = ref(false)
 
@@ -2292,7 +2504,11 @@ async function guardarConfigBasica() {
       actividades: configCierre.value.actividades,
       prestamos: configCierre.value.prestamos,
       sanciones: configCierre.value.sanciones,
-      utilidades_adicionales: configCierre.value.utilidades_adicionales
+      utilidades_adicionales: configCierre.value.utilidades_adicionales,
+      administracion: {
+        porcentaje: Math.max(0, Math.min(100, Number(configCierre.value.administracion?.porcentaje) || 0)),
+        base: configCierre.value.administracion?.base === 'utilidades' ? 'utilidades' : 'total'
+      }
     },
     mes_inicio: configPeriodo.value.mes_inicio,
     anio_inicio: configPeriodo.value.anio_inicio,
@@ -2702,7 +2918,11 @@ function actualizarValoresDesdeNatillera() {
       },
       prestamos: configCierreActual.prestamos || 'equitativa',
       sanciones: configCierreActual.sanciones || 'equitativa',
-      utilidades_adicionales: configCierreActual.utilidades_adicionales || 'equitativa'
+      utilidades_adicionales: configCierreActual.utilidades_adicionales || 'equitativa',
+      administracion: {
+        porcentaje: Number(configCierreActual.administracion?.porcentaje) || 0,
+        base: configCierreActual.administracion?.base === 'utilidades' ? 'utilidades' : 'total'
+      }
     }
     
     // Cargar configuración de sanciones

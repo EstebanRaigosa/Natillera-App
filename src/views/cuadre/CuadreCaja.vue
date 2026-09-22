@@ -97,6 +97,7 @@
             <p v-if="utilidadInteresAnticipadoEfectivo > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoEfectivo) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosEfectivo) }}</p>
             <p v-if="premiosEfectivo > 0">• − Premios rifa: ${{ formatMoney(premiosEfectivo) }}</p>
+            <p v-if="gastosActividadEfectivo > 0">• − Gastos de actividades: ${{ formatMoney(gastosActividadEfectivo) }}</p>
             <p v-if="movimientosEfectivoNeto !== 0">• {{ movimientosEfectivoNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosEfectivoNeto) }}</p>
           </div>
         </div>
@@ -123,6 +124,7 @@
             <p v-if="utilidadInteresAnticipadoTransferencia > 0">• + Utilidad por interés anticipado: ${{ formatMoney(utilidadInteresAnticipadoTransferencia) }}</p>
             <p>• − Préstamos entregados: ${{ formatMoney(prestamosTransferencia) }}</p>
             <p v-if="premiosTransferencia > 0">• − Premios rifa: ${{ formatMoney(premiosTransferencia) }}</p>
+            <p v-if="gastosActividadTransferencia > 0">• − Gastos de actividades: ${{ formatMoney(gastosActividadTransferencia) }}</p>
             <p v-if="movimientosTransferenciaNeto !== 0">• {{ movimientosTransferenciaNeto >= 0 ? '+' : '' }} Movimientos: ${{ formatMoney(movimientosTransferenciaNeto) }}</p>
           </div>
         </div>
@@ -205,8 +207,9 @@
                   </p>
                   <p class="text-sm text-red-600 font-medium">− Préstamos entregados: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) }}</p>
                   <p v-if="(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) > 0" class="text-sm text-red-600 font-medium">− Premios rifa: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) }}</p>
+                  <p v-if="(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) > 0" class="text-sm text-red-600 font-medium">− Gastos de actividades: ${{ formatMoney(modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia) }}</p>
                   <p class="text-sm font-semibold text-gray-700 pt-2 border-t border-gray-200">
-                    Neto (recaudado − préstamos − premios): ${{ formatMoney(Math.max(0, (modalDesgloseFormaPago === 'efectivo' ? recaudadoEfectivo : recaudadoTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia))) }}
+                    Neto (recaudado − préstamos − premios − gastos): ${{ formatMoney(Math.max(0, (modalDesgloseFormaPago === 'efectivo' ? recaudadoEfectivo : recaudadoTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? prestamosEfectivo : prestamosTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? premiosEfectivo : premiosTransferencia) - (modalDesgloseFormaPago === 'efectivo' ? gastosActividadEfectivo : gastosActividadTransferencia))) }}
                   </p>
                 </div>
                 <!-- Movimientos -->
@@ -1162,6 +1165,8 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useAuthStore } from '../../stores/auth'
 import { useNotificationStore } from '../../stores/notifications'
+import { getCurrentDateISO } from '../../utils/formatDate'
+import { SOCIO_FONDO } from '../../composables/useLibroCaja'
 import BackButton from '../../components/BackButton.vue'
 
 import ModalWrapper from '../../components/ModalWrapper.vue'
@@ -1232,6 +1237,7 @@ const CATEGORIAS_DETALLE = [
   { value: 'interes_anticipado', label: 'Utilidad por interés anticipado' },
   { value: 'liquidacion_salida', label: 'Liquidación por salida' },
   { value: 'premio_rifa', label: 'Premio rifa' },
+  { value: 'gasto_actividad', label: 'Gasto de actividad' },
   { value: 'movimiento_ingreso', label: 'Ingreso' },
   { value: 'movimiento_egreso', label: 'Egreso' },
   { value: 'movimiento_traslado', label: 'Traslado' }
@@ -1308,7 +1314,7 @@ const tabActiva = ref('totales') // 'totales' | 'simulador'
 const simuladorSocios = ref([])
 const simuladorSociosFiltrados = ref([])
 const simuladorLoading = ref(false)
-const simuladorFechaCorte = ref(new Date().toISOString().split('T')[0])
+const simuladorFechaCorte = ref(getCurrentDateISO())
 const simuladorError = ref('')
 const simuladorDetalleId = ref(null)
 const LABELS_UTILIDAD_SIMULADOR = {
@@ -1386,7 +1392,7 @@ const formMovimiento = ref({
   destinoIngreso: 'recaudado', // 'recaudado' | 'utilidades' — solo para ingresos
   monto: '',
   descripcion: '',
-  fecha: new Date().toISOString().split('T')[0]
+  fecha: getCurrentDateISO()
 })
 const guardandoMovimiento = ref(false)
 const erroresFormulario = ref({})
@@ -1456,6 +1462,17 @@ const premiosEfectivo = computed(() => {
 })
 const premiosTransferencia = computed(() => {
   return Math.abs(detalleItems.value.filter(i => i.tipo === 'premio_rifa' && (i.forma_pago || 'efectivo') === 'transferencia').reduce((s, i) => s + parseFloat(i.monto || 0), 0))
+})
+/*
+ * Gastos de actividades que no son rifa (tipo 'gasto_actividad'). Se restan igual que los
+ * premios: su ingreso sí entró como movimiento al crear la actividad liquidada, pero el
+ * gasto no, así que sin esta resta la caja diría tener un dinero que ya se gastó.
+ */
+const gastosActividadEfectivo = computed(() => {
+  return Math.abs(detalleItems.value.filter(i => i.tipo === 'gasto_actividad' && (i.forma_pago || 'efectivo') === 'efectivo').reduce((s, i) => s + parseFloat(i.monto || 0), 0))
+})
+const gastosActividadTransferencia = computed(() => {
+  return Math.abs(detalleItems.value.filter(i => i.tipo === 'gasto_actividad' && (i.forma_pago || 'efectivo') === 'transferencia').reduce((s, i) => s + parseFloat(i.monto || 0), 0))
 })
 const prestamosEfectivo = computed(() => {
   return Math.abs(detalleItems.value.filter(i => i.tipo === 'prestamo' && (i.forma_pago || 'efectivo') === 'efectivo' && (i.monto || 0) < 0).reduce((s, i) => s + parseFloat(i.monto || 0), 0))
@@ -1539,10 +1556,10 @@ const movimientosTransferenciaNeto = computed(() => {
 })
 
 const totalEsperadoEfectivo = computed(() => {
-  return Math.max(0, recaudadoEfectivo.value - prestamosEfectivo.value - premiosEfectivo.value) + movimientosEfectivoNeto.value
+  return Math.max(0, recaudadoEfectivo.value - prestamosEfectivo.value - premiosEfectivo.value - gastosActividadEfectivo.value) + movimientosEfectivoNeto.value
 })
 const totalEsperadoTransferencia = computed(() => {
-  return Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value) + movimientosTransferenciaNeto.value
+  return Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value - gastosActividadTransferencia.value) + movimientosTransferenciaNeto.value
 })
 const totalEsperadoGeneral = computed(() => {
   return totalEsperadoEfectivo.value + totalEsperadoTransferencia.value
@@ -1556,7 +1573,8 @@ function logCalculoTotalesGenerales() {
   console.log('  Recaudado (cuotas + cuotas préstamos + sanciones + actividades):', fmt(recaudadoEfectivo.value))
   console.log('  − Préstamos entregados:', fmt(prestamosEfectivo.value))
   console.log('  − Premios rifa:', fmt(premiosEfectivo.value))
-  console.log('  Recaudado neto (recaudado − préstamos − premios):', fmt(Math.max(0, recaudadoEfectivo.value - prestamosEfectivo.value - premiosEfectivo.value)))
+  console.log('  − Gastos de actividades:', fmt(gastosActividadEfectivo.value))
+  console.log('  Recaudado neto (recaudado − préstamos − premios − gastos):', fmt(Math.max(0, recaudadoEfectivo.value - prestamosEfectivo.value - premiosEfectivo.value - gastosActividadEfectivo.value)))
   console.log('  + Movimientos de fondo (neto, sin premios):', fmt(movimientosEfectivoNeto.value))
   console.log('  = Total esperado efectivo:', fmt(totalEsperadoEfectivo.value))
   console.log('--- TRANSFERENCIA ---')
@@ -1566,7 +1584,8 @@ function logCalculoTotalesGenerales() {
   }
   console.log('  − Préstamos entregados:', fmt(prestamosTransferencia.value))
   console.log('  − Premios rifa:', fmt(premiosTransferencia.value))
-  console.log('  Recaudado neto:', fmt(Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value)))
+  console.log('  − Gastos de actividades:', fmt(gastosActividadTransferencia.value))
+  console.log('  Recaudado neto:', fmt(Math.max(0, recaudadoTransferencia.value - prestamosTransferencia.value - premiosTransferencia.value - gastosActividadTransferencia.value)))
   console.log('  + Movimientos de fondo (neto, sin premios):', fmt(movimientosTransferenciaNeto.value))
   console.log('  = Total esperado transferencia:', fmt(totalEsperadoTransferencia.value))
   console.log('--- TOTAL ---')
@@ -1737,14 +1756,14 @@ function toggleFiltroCategoria(value) {
 }
 
 function getConceptoLabel(tipo) {
-  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', gmf_4x1000: '4x1000', prestamo: 'Préstamo', interes_anticipado: 'Utilidad por interés anticipado', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa', movimiento_ingreso: 'Ingreso', movimiento_egreso: 'Egreso', movimiento_traslado: 'Traslado' }
+  const map = { cuota: 'Cuota', cuota_prestamo: 'Cuota préstamo', sancion: 'Sanción', actividad: 'Actividad', gasto_actividad: 'Gasto de actividad', gmf_4x1000: '4x1000', prestamo: 'Préstamo', interes_anticipado: 'Utilidad por interés anticipado', liquidacion_salida: 'Liquidación por salida', premio_rifa: 'Premio rifa', movimiento_ingreso: 'Ingreso', movimiento_egreso: 'Egreso', movimiento_traslado: 'Traslado' }
   return map[tipo] || tipo
 }
 function getConceptoClass(tipo, esParcial = false) {
   if (esParcial && (tipo === 'cuota' || tipo === 'cuota_prestamo')) {
     return 'bg-orange-100 text-orange-800 border border-orange-300/60'
   }
-  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800', movimiento_ingreso: 'bg-lime-100 text-lime-800', movimiento_egreso: 'bg-rose-100 text-rose-800', movimiento_traslado: 'bg-indigo-100 text-indigo-800' }
+  const map = { cuota: 'bg-emerald-100 text-emerald-800', cuota_prestamo: 'bg-teal-100 text-teal-800', sancion: 'bg-red-100 text-red-800', actividad: 'bg-purple-100 text-purple-800', gasto_actividad: 'bg-fuchsia-100 text-fuchsia-800', gmf_4x1000: 'bg-sky-100 text-sky-900 border border-sky-300/60', interes_anticipado: 'bg-amber-100 text-amber-800', prestamo: 'bg-blue-100 text-blue-800', liquidacion_salida: 'bg-amber-100 text-amber-800', premio_rifa: 'bg-amber-100 text-amber-800', movimiento_ingreso: 'bg-lime-100 text-lime-800', movimiento_egreso: 'bg-rose-100 text-rose-800', movimiento_traslado: 'bg-indigo-100 text-indigo-800' }
   return map[tipo] || 'bg-gray-100 text-gray-700'
 }
 function getMesLabel(mes) {
@@ -2396,17 +2415,46 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     const monto = parseFloat(m.monto ?? m.Monto) || 0
     if (monto > 0) {
       const conceptoDesc = (m.descripcion || m.Descripcion || '').toString().trim() || 'Premio rifa'
-      items.push({ tipo: 'premio_rifa', concepto: conceptoDesc.length > 50 ? 'Premio rifa' : conceptoDesc, socio: '—', forma_pago: fp, monto: -monto, fecha_movimiento: m.fecha || null })
+      items.push({ tipo: 'premio_rifa', concepto: conceptoDesc.length > 50 ? 'Premio rifa' : conceptoDesc, socio: SOCIO_FONDO, forma_pago: fp, monto: -monto, fecha_movimiento: m.fecha || null })
     }
   })
-  // Si no hubo premios en movimientos_fondo, tomar de actividades liquidadas (gastos = premio entregado)
+  // Si no hubo premios en movimientos_fondo, tomar de las RIFAS liquidadas (gastos = premio
+  // entregado). Solo rifas: el premio es cosa de la rifa, no de un bingo o una venta.
   if (premiosFromMov.length === 0 && (nat.actividades || []).length > 0) {
-    ;(nat.actividades || []).filter(a => a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0).forEach(a => {
+    ;(nat.actividades || []).filter(a => a.tipo === 'rifa' && a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0).forEach(a => {
       const monto = parseFloat(a.gastos) || 0
       const concepto = (a.descripcion && a.descripcion.length <= 50) ? `Premio: ${a.descripcion}` : 'Premio rifa'
-      items.push({ tipo: 'premio_rifa', concepto, socio: '—', forma_pago: 'efectivo', monto: -monto, fecha_movimiento: a.updated_at || a.created_at || null })
+      items.push({ tipo: 'premio_rifa', concepto, socio: SOCIO_FONDO, forma_pago: 'efectivo', monto: -monto, fecha_movimiento: a.updated_at || a.created_at || null })
     })
   }
+
+  // Gastos de actividades que no son rifa, cargadas ya liquidadas: la creación registra un
+  // movimiento por los ingresos pero ninguno por los gastos, así que salen de aquí. Van
+  // siempre —no solo cuando no hay premios de rifa— y con su propio nombre.
+  /*
+   * El gasto se fecha con la fecha del movimiento de entrada que registró sus ingresos, no
+   * con `created_at`. No es cosmético: `movimientos_fondo.fecha` se guardó mucho tiempo con
+   * la fecha UTC (`toISOString()`), que en Colombia va un día adelante desde las 19:00,
+   * mientras que `created_at` se lee en hora local — y el ingreso acababa un día después
+   * que su propio gasto. Lo nuevo ya se guarda local, pero lo viejo sigue corrido.
+   */
+  const fechaDelRecaudo = (descripcionActividad) => {
+    if (!descripcionActividad) return null
+    const buscado = descripcionActividad.toLowerCase()
+    const mov = (movimientosData || []).find(m => {
+      if (!m || m.tipo !== 'entrada') return false
+      const d = descripcionMov(m)
+      if (!d.includes('recaudo actividad liquidada') && !d.includes('recaudo rifa liquidada')) return false
+      return d.includes(buscado)
+    })
+    return mov?.fecha || null
+  }
+  ;(nat.actividades || []).filter(a => a.tipo !== 'rifa' && a.estado === 'liquidada' && (parseFloat(a.gastos) || 0) > 0).forEach(a => {
+    const monto = parseFloat(a.gastos) || 0
+    const descripcion = (a.descripcion || '').trim()
+    const concepto = (descripcion && descripcion.length <= 50) ? `Gasto: ${descripcion}` : 'Gasto de actividad'
+    items.push({ tipo: 'gasto_actividad', concepto, socio: SOCIO_FONDO, forma_pago: 'efectivo', monto: -monto, fecha_movimiento: fechaDelRecaudo(descripcion) || a.created_at || a.updated_at || null })
+  })
 
   // Liquidaciones por salida (desactivación de socio): salidas en movimientos_fondo con descripción "Liquidación por salida - ..."
   const esLiquidacionSalida = (m) => {
@@ -2446,7 +2494,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     items.push({
       tipo: 'actividad',
       concepto,
-      socio: '—',
+      socio: SOCIO_FONDO,
       forma_pago: fp,
       monto,
       mes,
@@ -2514,7 +2562,7 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
     items.push({
       tipo,
       concepto,
-      socio: '—',
+      socio: SOCIO_FONDO,
       forma_pago: fp,
       monto: montoFinal,
       mes,
@@ -2586,7 +2634,9 @@ function buildDetalleItems(nat, prestamosData, sociosActividadData, movimientosD
   })
 
   // Ordenar: por año-mes desc, luego por tipo (cuota, cuota_prestamo, sancion, actividad, interes_anticipado, prestamo, liquidacion_salida, premio_rifa)
-  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4, movimiento_ingreso: 5, movimiento_egreso: 5.5, movimiento_traslado: 6 }
+  // `gasto_actividad` va justo detrás de `actividad`: en la lista se lee primero el ingreso
+  // completo de la actividad y después lo que se gastó en ella.
+  const ordenTipo = { cuota: 0, cuota_prestamo: 0.5, sancion: 1, gmf_4x1000: 1.25, actividad: 2, interes_anticipado: 2.5, gasto_actividad: 2.75, prestamo: 3, liquidacion_salida: 3.5, premio_rifa: 4, movimiento_ingreso: 5, movimiento_egreso: 5.5, movimiento_traslado: 6 }
   items.sort((a, b) => {
     const keyA = `${a.anio || 0}-${String(a.mes || 0).padStart(2, '0')}-${ordenTipo[a.tipo] ?? 4}`
     const keyB = `${b.anio || 0}-${String(b.mes || 0).padStart(2, '0')}-${ordenTipo[b.tipo] ?? 4}`
@@ -2865,7 +2915,7 @@ function abrirModalMovimiento() {
     destinoIngreso: 'recaudado',
     monto: '',
     descripcion: '',
-    fecha: new Date().toISOString().split('T')[0]
+    fecha: getCurrentDateISO()
   }
   montoFormateado.value = ''
   erroresFormulario.value = {}
@@ -2898,7 +2948,7 @@ function abrirModalEditarMovimiento(movimiento) {
     destinoIngreso: (movimiento.tipo === 'entrada' && (movimiento.destino_ingreso === 'recaudado' || movimiento.destino_ingreso === 'utilidades')) ? movimiento.destino_ingreso : 'recaudado',
     monto: movimiento.monto || '',
     descripcion: movimiento.descripcion || '',
-    fecha: movimiento.fecha || new Date().toISOString().split('T')[0]
+    fecha: movimiento.fecha || getCurrentDateISO()
   }
   montoFormateado.value = formatearMonto(movimiento.monto)
   erroresFormulario.value = {}
@@ -3057,7 +3107,7 @@ async function guardarMovimiento() {
     if (isNaN(monto) || monto <= 0) {
       throw new Error('El monto debe ser un número válido mayor a 0')
     }
-    const fecha = formMovimiento.value.fecha || new Date().toISOString().split('T')[0]
+    const fecha = formMovimiento.value.fecha || getCurrentDateISO()
 
     // Si está editando, actualizar movimiento existente
     if (editandoMovimiento.value && movimientoEditando.value) {
