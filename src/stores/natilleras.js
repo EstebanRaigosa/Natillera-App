@@ -1143,7 +1143,7 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     // Son independientes entre sí así que pueden ir en paralelo.
     const socioNatilleraIds = socios.map(s => s.id)
 
-    const [utilidadesRaw, prestamosRaw, movimientosRaw] = await Promise.all([
+    const [utilidadesRaw, prestamosRaw, movimientosRaw, reales] = await Promise.all([
       nat.id
         ? supabase.from('utilidades_clasificadas').select('tipo, forma_pago, monto').eq('natillera_id', nat.id)
         : Promise.resolve({ data: null, error: null }),
@@ -1152,7 +1152,17 @@ export const useNatillerasStore = defineStore('natilleras', () => {
         : Promise.resolve({ data: null }),
       nat.id
         ? supabase.from('movimientos_fondo').select('tipo, monto, forma_pago, descripcion, origen_egreso, destino_ingreso').eq('natillera_id', nat.id)
-        : Promise.resolve({ data: null })
+        : Promise.resolve({ data: null }),
+      /*
+       * En la MISMA ola que las tres de arriba, no después.
+       *
+       * Estaba encadenada detrás y sus siete consultas se pagaban enteras a continuación:
+       * contra `us-east-1`, dos viajes en serie en vez de uno, y la tarjeta de utilidades
+       * aparecía tarde. No depende de nada de aquí, así que puede salir a la vez.
+       */
+      nat.id
+        ? calcularUtilidadesReales(nat.id, { idsSocioNatillera: socioNatilleraIds, conRegistrado: false })
+        : Promise.resolve({ porTipo: {} })
     ])
 
     // ── Procesar utilidades ─────────────────────────────────────────────
@@ -1171,9 +1181,17 @@ export const useNatillerasStore = defineStore('natilleras', () => {
     const utilidadesPorTipo = {}
     const utilidadesPorFormaPagoMap = { efectivo: 0, transferencia: 0, otro: 0 }
 
-    const reales = await calcularUtilidadesReales(nat.id, { idsSocioNatillera: socioNatilleraIds })
     Object.entries(reales.porTipo || {}).forEach(([tipo, monto]) => {
       if (monto === 0) return
+      /*
+       * `utilidades_adicionales` queda FUERA de lo «recogido».
+       *
+       * Recogido es lo que el fondo ganó con su actividad: rifas, sanciones, intereses.
+       * Un ingreso o un egreso apuntado a mano contra utilidades no se recogió de nadie,
+       * es un ajuste — y ya se muestra en su propio bloque «Egresos e ingresos». Contarlo
+       * en los dos sitios hacía que un ingreso manual de 1.209 apareciera como 2.418.
+       */
+      if (tipo === 'utilidades_adicionales') return
       utilidadesPorTipo[tipo] = monto
       utilidadesRecogidas += monto
     })
@@ -1238,7 +1256,9 @@ export const useNatillerasStore = defineStore('natilleras', () => {
       actividades_en_curso: { label: 'Actividades en curso', desc: 'Recaudado en actividades en curso (sin rifas)' }
     }
     const utilidadesDesglose = Object.entries(utilidadesPorTipo)
-      .filter(([, v]) => v > 0)
+      // Se dejan pasar los negativos: `utilidades_adicionales` puede serlo si se gastó
+      // más de lo que entró, y esconderlo descuadraba la lista contra el total.
+      .filter(([, v]) => v !== 0)
       .map(([tipo, value]) => ({
         id: tipo,
         label: etiquetasTipo[tipo]?.label || tipo,

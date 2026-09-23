@@ -225,6 +225,15 @@
             <button
               type="button"
               class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.path === '/admin/trafico' }"
+              @click="abrirRutaDesdeSidebar('/admin/trafico')"
+            >
+              <SignalIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Tráfico</span>
+            </button>
+            <button
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
               :class="{ 'nav-link-active': route.path === '/admin/data' }"
               @click="abrirRutaDesdeSidebar('/admin/data')"
             >
@@ -426,7 +435,11 @@
     ></div>
 
     <!-- Navegación inferior móvil (oculta mientras el cajón lateral está abierto) -->
-    <MobileBottomNav :force-hidden="sidebarOpen && esViewportMovil" />
+    <MobileBottomNav
+      :force-hidden="sidebarOpen && esViewportMovil"
+      :acciones="accionesBarraInferior"
+      @accion="ejecutarAccionBarraInferior"
+    />
 
     <!-- Acceso flotante al soporte: se le dice si hay barra inferior para que
          mantenga su zona segura por encima de ella. El botón no navega: abre el
@@ -493,6 +506,7 @@ import {
   ClipboardDocumentListIcon,
   ChatBubbleLeftRightIcon,
   ReceiptPercentIcon,
+  SignalIcon,
   ScaleIcon,
   MagnifyingGlassIcon,
   DocumentCheckIcon,
@@ -511,6 +525,7 @@ import PanelSoporteAdminModal from '../components/soporte/PanelSoporteAdminModal
 import VisorAdjunto from '../components/soporte/VisorAdjunto.vue'
 import { useVisorAdjunto } from '../composables/useVisorAdjunto'
 import { useModalStack, __modalStackSync } from '../composables/useModalStack'
+import { useLatido } from '../composables/useLatido'
 import AppBrand from '../components/AppBrand.vue'
 import InstallPwaButton from '../components/InstallPwaButton.vue'
 import logoIconSrc from '../../assets/logo_icon.png'
@@ -523,6 +538,12 @@ const route = useRoute()
 // que usa el router para el scroll-to-top).
 useScrollRestoration(() => document.querySelector('main.overflow-y-auto'))
 const authStore = useAuthStore()
+
+/*
+ * Latido de presencia. Va en el layout y no en una vista concreta porque es el único
+ * sitio por el que pasa toda sesión autenticada, esté donde esté el usuario.
+ */
+useLatido(() => authStore.isAuthenticated)
 /*
  * Cuánto del viewport tapa la barra de Safari en iOS (§4.1 del manual).
  *
@@ -741,11 +762,48 @@ function puedeAccionSidebar(clavePermiso) {
   return true
 }
 
+/*
+ * Las mismas «Acciones Natillera» del menú lateral, para el botón de herramientas de la
+ * barra inferior. Se arman aquí porque aquí están los permisos del usuario; la barra
+ * solo las pinta. Etiquetas de una palabra: van bajo un icono.
+ */
+const accionesBarraInferior = computed(() => {
+  const id = natilleraIdRuta.value
+  if (!id) return []
+  const base = `/natilleras/${id}`
+  const acciones = [
+    { clave: 'buscar', permiso: 'buscar_comprobante', etiqueta: 'Buscar', icono: MagnifyingGlassIcon },
+    { clave: 'invitar', permiso: 'invitar_colaboradores', etiqueta: 'Invitar', icono: UserPlusIcon },
+    { clave: 'notificar', permiso: 'notificar', etiqueta: 'Notificar', icono: ChatBubbleLeftRightIcon, ruta: `${base}/notificar` },
+    // Configuración va siempre: antes tenía su propio botón en la barra para todos, y
+    // quien no puede configurar la abre en solo lectura.
+    { clave: 'configurar', permiso: null, etiqueta: 'Config.', icono: Cog6ToothIcon, ruta: `${base}/configuracion` },
+    { clave: 'cerrar', permiso: 'cerrar_natillera', etiqueta: 'Cerrar', icono: DocumentCheckIcon, ruta: `${base}/cierre`, peligro: true }
+  ]
+  return acciones
+    .filter(a => !a.permiso || puedeAccionSidebar(a.permiso))
+    .map(a => ({ ...a, esActual: !!a.ruta && route.path.startsWith(a.ruta) }))
+})
+
+function ejecutarAccionBarraInferior(clave) {
+  if (clave === 'configurar') {
+    router.push(`/natilleras/${natilleraIdRuta.value}/configuracion`)
+    return
+  }
+  ejecutarAccionNatillera(clave)
+}
+
 function ejecutarAccionNatillera(tipo) {
   const id = natilleraIdRuta.value
   if (!id) return
   if (tipo === 'cerrar') {
     router.push(`/natilleras/${id}/cierre`)
+    cerrarSidebar()
+    return
+  }
+  // Notificar es una página propia, no una modal del detalle.
+  if (tipo === 'notificar') {
+    router.push(`/natilleras/${id}/notificar`)
     cerrarSidebar()
     return
   }

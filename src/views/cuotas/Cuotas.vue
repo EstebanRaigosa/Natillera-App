@@ -8013,6 +8013,13 @@ const ariaLoadingBoxCarga = computed(() => textoLoadingBoxCarga.value)
 const mesInicio = ref(1)
 const mesFin = ref(11)
 const anioNatillera = ref(new Date().getFullYear())
+/*
+ * Año en que TERMINA el ciclo. Se leía de la base pero no se guardaba en ninguna parte:
+ * el resto del código deducía si el periodo cruzaba de año solo con `mes_inicio > mes_fin`.
+ * Eso deja fuera el caso de un ciclo que empieza y acaba en el mismo mes de años
+ * distintos —septiembre a septiembre—, que con esa regla parecía durar un mes.
+ */
+const anioFinNatillera = ref(new Date().getFullYear())
 const mesSeleccionado = ref(null)
 // Se activa cuando el usuario elige un mes manualmente (selector/carrusel). Impide que
 // elegirMesInicial() —que corre en cargarNatillera tras la consulta de red— pise esa
@@ -8637,25 +8644,65 @@ const todosMeses = [
 ]
 
 // Meses configurados para esta natillera
-const mesesNatillera = computed(() => {
-  const meses = []
-  let inicio = mesInicio.value
-  let fin = mesFin.value
-  
-  if (inicio <= fin) {
-    for (let i = inicio; i <= fin; i++) {
-      meses.push(todosMeses[i - 1])
-    }
+/**
+ * Cuántos meses dura el ciclo, contando los años.
+ *
+ * Antes se deducía solo de comparar los números de mes: `inicio <= fin` era «mismo año» y
+ * `inicio > fin` era «cruza a enero». Esa regla pierde el caso de un ciclo que empieza y
+ * acaba en el MISMO mes de años distintos —septiembre de un año a septiembre del
+ * siguiente—: `9 <= 9` daba por bueno un ciclo de un solo mes, y la pantalla se quedaba
+ * con una pestaña.
+ *
+ * Ahora manda la diferencia real de fechas. Los otros dos casos salen igual que antes, así
+ * que las natilleras que ya funcionaban no se mueven.
+ */
+const totalMesesCiclo = computed(() => {
+  const inicio = mesInicio.value
+  const fin = mesFin.value
+  const anioIni = anioNatillera.value
+  const anioFin = anioFinNatillera.value
+
+  let total
+  if (anioFin > anioIni) {
+    total = (anioFin - anioIni) * 12 + (fin - inicio) + 1
+  } else if (inicio > fin) {
+    // Cruza a enero sin que la base lo diga en el año: se deduce como siempre.
+    total = (12 - inicio + 1) + fin
   } else {
-    // Caso donde el período cruza el año (ej: Octubre a Febrero)
-    for (let i = inicio; i <= 12; i++) {
-      meses.push(todosMeses[i - 1])
-    }
-    for (let i = 1; i <= fin; i++) {
-      meses.push(todosMeses[i - 1])
+    total = fin - inicio + 1
+  }
+
+  /*
+   * Tope de 12. El resto de la aplicación identifica un mes solo por su número —la ruta
+   * es `/cuotas/:mes`, el resumen se indexa por mes—, así que un ciclo de 13 meses
+   * repetiría septiembre y las dos pestañas apuntarían al mismo sitio. Soportarlo exige
+   * que la selección lleve también el año; mientras tanto, se muestran los 12 primeros
+   * en vez de uno solo, que era lo que pasaba.
+   */
+  return Math.min(12, Math.max(1, total))
+})
+
+const mesesNatillera = computed(() => {
+  const inicio = mesInicio.value
+  const meses = []
+  for (let i = 0; i < totalMesesCiclo.value; i++) {
+    meses.push(todosMeses[((inicio - 1 + i) % 12)])
+  }
+
+  /*
+   * Red de seguridad: si hay cuotas generadas en meses que la configuración no contempla
+   * —porque se cambió el periodo después de generarlas, por ejemplo—, esos meses también
+   * se muestran. Más vale enseñar un mes de más que esconder cuotas que existen.
+   */
+  const yaEstan = new Set(meses.map(m => m.value))
+  const conCuotas = new Set((cuotasStore.cuotas || []).map(c => c.mes).filter(Boolean))
+  for (const mes of conCuotas) {
+    if (!yaEstan.has(mes) && todosMeses[mes - 1]) {
+      meses.push(todosMeses[mes - 1])
+      yaEstan.add(mes)
     }
   }
-  
+
   return meses
 })
 
@@ -16849,6 +16896,7 @@ function primeConfigSync() {
   sancionesActivas.value = data.reglas_multas?.sanciones?.activa || false
   const anio = data.anio_inicio ?? data.anio ?? new Date().getFullYear()
   anioNatillera.value = Number(anio)
+  anioFinNatillera.value = Number(data.anio ?? anio)
   elegirMesInicial()
   return true
 }
@@ -16865,6 +16913,7 @@ async function cargarNatillera() {
 
     let anioCargado = data.anio_inicio ?? data.anio ?? new Date().getFullYear()
     anioNatillera.value = Number(anioCargado)
+    anioFinNatillera.value = Number(data.anio ?? anioCargado)
     elegirMesInicial()
     return data
   }
@@ -17061,24 +17110,25 @@ async function cargarFechasDelMes(mes) {
 // Por ejemplo: si mes_inicio=12 (dic), mes_fin=11 (nov), anio_inicio=2025
 //   - Diciembre (12) → 2025
 //   - Enero-Nov (1-11) → 2026
+/**
+ * A qué año pertenece un mes dentro del ciclo de la natillera.
+ *
+ * El ciclo arranca en `mesInicioNatillera` y avanza sin saltos, así que la regla es una
+ * sola: un mes igual o posterior al de arranque cae en el año inicial, y uno anterior ya
+ * dio la vuelta al calendario y cae en el siguiente.
+ *
+ * Antes se decidía comparando `mes_inicio > mes_fin` para saber si el periodo cruzaba de
+ * año. Eso fallaba en un ciclo que empieza y acaba en el mismo mes de años distintos
+ * —septiembre a septiembre—: como `9 > 9` es falso, daba el año inicial a TODOS los meses,
+ * y enero, febrero y compañía quedaban fechados un año antes de lo que les toca.
+ *
+ * `mesFinNatillera` se conserva en la firma por los diez sitios que ya la llaman así, pero
+ * ya no hace falta para decidir.
+ */
 function calcularAnioMes(mes, mesInicioNatillera, mesFinNatillera, anioInicioNatillera) {
-  // Si el período cruza el año (mes_inicio > mes_fin, ej: dic a nov)
-  if (mesInicioNatillera > mesFinNatillera) {
-    // Si el mes está en la primera parte del período (mes_inicio a diciembre)
-    if (mes >= mesInicioNatillera) {
-      return anioInicioNatillera
-    }
-    // Si el mes está en la segunda parte del período (enero a mes_fin)
-    if (mes <= mesFinNatillera) {
-      return anioInicioNatillera + 1
-    }
-  } else {
-    // Si el período no cruza el año (mes_inicio <= mes_fin, ej: ene a nov)
-    return anioInicioNatillera
-  }
-  
-  // Por defecto, devolver el año inicial
-  return anioInicioNatillera
+  const inicio = Number(mesInicioNatillera) || 1
+  const anio = Number(anioInicioNatillera) || new Date().getFullYear()
+  return Number(mes) >= inicio ? anio : anio + 1
 }
 
 // Función para calcular fechas por defecto basadas en el mes (sin días de gracia)

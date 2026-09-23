@@ -342,7 +342,10 @@
                   <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                   </svg>
-                  <span>Este período cruza de un año a otro. Ideal para natilleras que inician en diciembre y terminan el año siguiente.</span>
+                  <!-- El aviso decía «ideal para las que inician en diciembre», como si
+                       fuera el único caso. Cruzar de año es lo normal: la mayoría arranca
+                       a mitad de año y cierra en el siguiente. -->
+                  <span>Este período cruza de un año a otro, que es lo habitual: empieza en {{ nombreMes(wizardForm.mes_inicio) }} de {{ wizardForm.anio_inicio }} y termina en {{ nombreMes(wizardForm.mes_fin) }} de {{ wizardForm.anio }}.</span>
                 </p>
               </div>
             </Transition>
@@ -998,6 +1001,11 @@ function goPrevious() {
 }
 
 // Configuración de meses
+/** Nombre del mes para los textos del asistente. */
+function nombreMes(valor) {
+  return meses.find(m => m.value === Number(valor))?.label || '—'
+}
+
 const meses = [
   { value: 1, label: 'Enero' },
   { value: 2, label: 'Febrero' },

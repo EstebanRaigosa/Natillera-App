@@ -403,7 +403,6 @@
                   :key="'cm-' + socioMora.id"
                   type="button"
                   class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-red-50/40 active:bg-red-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
-                  :disabled="loadingEstadoSocio"
                   :aria-label="`Ver estado del socio ${socioMora.nombre || ''}`"
                   @click="abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora)"
                 >
@@ -446,7 +445,6 @@
                   :key="'pm-' + p.prestamoId"
                   type="button"
                   class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
-                  :disabled="loadingEstadoSocio"
                   :aria-label="`Ver estado del socio ${p.nombreSocio || ''}`"
                   @click="abrirComprobanteEstadoDesdeAlertaPrestamo(p)"
                 >
@@ -534,9 +532,33 @@
         </section>
       </div>
 
-      <!-- ─── Utilidades por categoría (gráfico) ─── -->
+      <!--
+        ─── Utilidades por categoría (gráfico) ───
+        Sale con segmentos O con ajustes: una natillera cuya única utilidad sea un ingreso
+        manual no tiene nada que repartir en el donut, pero sí tiene un neto que enseñar.
+        Antes se ocultaba la tarjeta entera y esa cifra desaparecía de la pantalla.
+      -->
+      <!-- Placeholder mientras llegan las estadísticas: reserva el alto para que la tarjeta no salte. -->
       <section
-        v-if="utilidadesCategoriaGrafico.segments.length > 0"
+        v-if="cargandoEstadisticas && utilidadesCategoriaGrafico.segments.length === 0 && !ajustesUtilidadesGrafico.tieneAjustes"
+        class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
+        aria-hidden="true"
+      >
+        <div class="px-5 pt-5 pb-2">
+          <div class="h-5 w-52 rounded bg-gray-200/80 animate-pulse"></div>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center gap-6 px-5 pb-6 pt-4">
+          <div class="h-40 w-40 shrink-0 rounded-full bg-gray-200/70 animate-pulse"></div>
+          <div class="w-full space-y-3">
+            <div class="h-4 w-full rounded bg-gray-200/70 animate-pulse"></div>
+            <div class="h-4 w-4/5 rounded bg-gray-200/70 animate-pulse"></div>
+            <div class="h-4 w-3/5 rounded bg-gray-200/70 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        v-if="utilidadesCategoriaGrafico.segments.length > 0 || ajustesUtilidadesGrafico.tieneAjustes"
         data-guia="utilidades"
         class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
       >
@@ -555,11 +577,14 @@
             Ver desglose completo
           </button>
         </div>
-        <div class="px-5 pb-5 sm:pb-6 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10">
+        <div
+          v-if="utilidadesCategoriaGrafico.segments.length > 0"
+          class="px-5 pb-5 sm:pb-6 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10"
+        >
           <div
             class="flex justify-center lg:justify-start shrink-0"
             role="img"
-            :aria-label="'Utilidades recogidas por categoría, total ' + formatMoney(utilidadesCategoriaGrafico.total)"
+            :aria-label="'Utilidades por categoría, total ' + formatMoney(utilidadesCategoriaGrafico.total)"
           >
             <div
               class="relative h-[11rem] w-[11rem] sm:h-[12.5rem] sm:w-[12.5rem] rounded-full shadow-[inset_0_2px_8px_rgba(0,0,0,0.06)]"
@@ -601,7 +626,8 @@
           </ul>
         </div>
 
-        <!-- Puente visual: recogidas − egresos + ingresos = neto (no forma parte del donut; el donut sigue siendo 100% recogidas) -->
+        <!-- Puente visual: recogidas − egresos + ingresos = neto. El donut ya incluye los
+             ingresos a utilidades como una porción, así que su total coincide con el neto. -->
         <div class="px-5 pb-5 sm:pb-6">
           <div
             v-if="ajustesUtilidadesGrafico.tieneAjustes"
@@ -654,414 +680,6 @@
         Volver a natilleras
       </router-link>
     </div>
-    <!-- Modal Notificar → comprobante estado del socio (natillerapp-modals: velo 70 %, cabecera compacta, scroll + natiscroll, pie fijo) -->
-    <ModalWrapper
-      :show="!!modalWhatsApp"
-      :z-index="50"
-      align="bottom"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative my-0 w-full max-h-[90dvh] flex min-h-0 flex-col overflow-hidden rounded-t-2xl border border-gray-200/60 bg-white shadow-2xl sm:my-4 sm:max-h-[90vh] sm:max-w-md sm:rounded-2xl"
-      card-max-width="28rem"
-      @close="cerrarModalWhatsApp"
-    >
-      <!-- Móvil: icono | títulos | X -->
-      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
-        <div class="flex min-h-[4.2rem] items-center gap-2 pb-3 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <BellAlertIcon class="h-5 w-5 text-[#1B5E37]" />
-          </div>
-          <div class="min-w-0 flex-1 text-left">
-            <h3 class="font-display text-base font-bold leading-tight text-white">
-              Comprobante de estado del socio
-            </h3>
-            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
-              Elige un socio para ver su estado y compartirlo (descarga o WhatsApp).
-            </p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="cerrarModalWhatsApp"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-      <!-- Desktop: tres columnas, X sin absolute (iOS-safe) -->
-      <div class="hidden flex-shrink-0 bg-[#1B5E37] text-white sm:block">
-        <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
-          <div class="w-11 flex-shrink-0" aria-hidden="true" />
-          <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-            <div class="flex h-[3.2rem] w-[3.2rem] flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-              <BellAlertIcon class="h-6 w-6 text-[#1B5E37]" />
-            </div>
-            <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
-              Comprobante de estado del socio
-            </h3>
-            <p class="mt-1 max-w-sm px-1 text-xs leading-snug text-white/90">
-              Selecciona un socio para generar un comprobante con su estado (ahorro, cuotas, sanciones, actividades y préstamos). Podrás descargarlo o enviarlo por WhatsApp.
-            </p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="cerrarModalWhatsApp"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-        <div
-          ref="scrollAreaModalWhatsApp"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-white px-5 pb-2 pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-3 sm:pt-5"
-          @scroll.passive="programarNatiscrollModalWhatsApp"
-        >
-          <!-- Búsqueda: patrón flex (sin absolute en input; skill modales / iOS) -->
-          <div
-            class="mb-4 flex items-center gap-0 rounded-xl border-2 border-gray-200 bg-gray-50 focus-within:border-[#1B5E37] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B5E37]/40"
-          >
-            <span class="pointer-events-none flex shrink-0 items-center pl-3 text-gray-400">
-              <MagnifyingGlassIcon class="h-5 w-5" />
-            </span>
-            <input
-              ref="inputBusquedaSocioNotificarRef"
-              v-model="busquedaSocio"
-              type="text"
-              autocomplete="off"
-              inputmode="search"
-              enterkeyhint="search"
-              :readonly="bloquearTecladoBusquedaSocioNotificar"
-              placeholder="Buscar por nombre o teléfono..."
-              class="min-h-[48px] min-w-0 flex-1 border-0 bg-transparent py-3 pr-3 text-base text-gray-900 outline-none focus:ring-0"
-              @pointerdown="handleBusquedaSocioNotificarPointerdown"
-              @keydown="handleBusquedaSocioNotificarKeydown"
-            />
-          </div>
-
-          <div class="space-y-2">
-            <button
-              v-for="sn in sociosFiltrados"
-              :key="sn.id"
-              type="button"
-              class="flex min-h-[48px] w-full touch-manipulation items-center gap-3 rounded-xl p-3 text-left transition-colors [-webkit-tap-highlight-color:transparent]"
-              :class="[
-                !loadingEstadoSocio
-                  ? 'cursor-pointer bg-gray-50 hover:bg-emerald-50/90 active:bg-emerald-100/80'
-                  : 'cursor-wait bg-gray-100 opacity-70',
-              ]"
-              :disabled="loadingEstadoSocio"
-              @click.stop="generarComprobanteEstadoSocio(sn)"
-            >
-              <img
-                :src="getAvatarUrl(sn.socio?.nombre || sn.id, sn.socio?.avatar_seed)"
-                :alt="sn.socio?.nombre || 'Socio'"
-                class="h-11 w-11 shrink-0 rounded-full border-2 border-[#1B5E37]/35 object-cover"
-              />
-              <div class="min-w-0 flex-1">
-                <p class="truncate text-sm font-medium text-gray-900 sm:text-base">{{ sn.socio?.nombre }}</p>
-                <p class="truncate text-xs text-gray-500 sm:text-sm">
-                  {{ sn.socio?.telefono ? `Tel: ${sn.socio.telefono}` : 'Sin teléfono' }}
-                </p>
-              </div>
-              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1B5E37] shadow-sm">
-                <DocumentCheckIcon class="h-4 w-4 text-white" />
-              </div>
-            </button>
-
-            <div v-if="sociosFiltrados.length === 0" class="py-8 text-center">
-              <p class="text-sm text-gray-500">No se encontraron socios</p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          v-show="hayNatiscrollModalWhatsApp"
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
-          aria-hidden="true"
-        >
-          <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-white/95 via-white/50 to-transparent"
-            aria-hidden="true"
-          />
-          <div class="relative z-[2] flex justify-center px-5 pb-1 pt-10">
-            <div
-              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20"
-            >
-              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white">
-                Desliza para ver más
-              </p>
-              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6"
-      >
-        <button
-          type="button"
-          class="btn-modal-secondary w-full touch-manipulation [-webkit-tap-highlight-color:transparent]"
-          @click="cerrarModalWhatsApp"
-        >
-          Cerrar
-        </button>
-      </div>
-    </ModalWrapper>
-
-    <!-- Modal Comprobante de Estado (natillerapp-modals: velo 70 %, cabecera compacta, cuerpo scroll + natiscroll, pie fijo) -->
-    <ModalWrapper
-      :show="!!modalComprobanteEstadoSocio && !!comprobanteEstadoSocio"
-      :z-index="60"
-      align="bottom"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative my-0 w-full max-h-[90dvh] flex min-h-0 flex-col overflow-hidden rounded-t-2xl border border-gray-200/60 bg-white shadow-2xl sm:my-4 sm:max-h-[90vh] sm:max-w-md sm:rounded-2xl"
-      card-max-width="28rem"
-      @close="cerrarModalComprobanteEstadoSocio"
-    >
-      <!-- Móvil: icono | títulos | X -->
-      <div class="flex-shrink-0 bg-[#1B5E37] text-white sm:hidden">
-        <div class="flex min-h-[4.2rem] items-center gap-2 pb-3 pl-3 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))]">
-          <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-            <DocumentCheckIcon class="h-5 w-5 text-[#1B5E37]" />
-          </div>
-          <div class="min-w-0 flex-1 text-left">
-            <h3 class="font-display text-base font-bold leading-tight text-white">
-              Comprobante de estado
-            </h3>
-            <p class="mt-0.5 text-[0.6875rem] leading-snug text-white/90">
-              Vista previa y envío
-            </p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="cerrarModalComprobanteEstadoSocio"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-      <!-- Desktop: tres columnas, X sin absolute (iOS-safe) -->
-      <div class="hidden flex-shrink-0 bg-[#1B5E37] text-white sm:block">
-        <div class="flex items-start px-4 pb-5 pt-[max(1rem,env(safe-area-inset-top))]">
-          <div class="w-11 flex-shrink-0" aria-hidden="true" />
-          <div class="flex min-w-0 flex-1 flex-col items-center text-center">
-            <div class="flex h-[3.2rem] w-[3.2rem] flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
-              <DocumentCheckIcon class="h-6 w-6 text-[#1B5E37]" />
-            </div>
-            <h3 class="mt-2.5 font-display text-lg font-bold leading-tight text-white">
-              Comprobante de estado
-            </h3>
-            <p class="mt-1 px-1 text-xs leading-snug text-white/90">
-              Vista previa y envío
-            </p>
-          </div>
-          <button
-            type="button"
-            class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 active:bg-white/20 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            aria-label="Cerrar"
-            @click="cerrarModalComprobanteEstadoSocio"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
-        <div
-          ref="scrollAreaModalComprobanteEstadoSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-gray-50 px-4 pb-4 pt-4 [-webkit-overflow-scrolling:touch] sm:px-5 sm:pb-5 sm:pt-5"
-          @scroll.passive="programarNatiscrollComprobanteEstadoSocio"
-        >
-        <!-- Comprobante visual (mismo ref para exportar a imagen) -->
-        <div
-          v-if="comprobanteEstadoSocio"
-          ref="comprobanteEstadoRef"
-          class="mx-auto overflow-hidden rounded-2xl bg-white"
-          style="width: 360px; max-width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); font-family: system-ui, -apple-system, sans-serif;"
-        >
-          <div class="comprobante-content" style="background: #ecfdf5; padding: 20px 16px; color: #1f2937;">
-            <!-- Título -->
-            <div style="text-align: center; margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
-                  Estado del socio
-                </h1>
-              </div>
-            </div>
-
-            <!-- Socio -->
-            <div style="background: white; padding: 12px 14px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px; text-align: center;">
-              <p style="color: #9ca3af; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
-              <p style="font-size: 18px; font-weight: 800; margin: 0; color: #111827;">{{ comprobanteEstadoSocio.socio?.nombre || 'Socio' }}</p>
-            </div>
-
-            <!-- Resumen en tarjetas -->
-            <div style="display: flex; flex-direction: column; gap: 10px;">
-              <!-- Cuota actual -->
-              <div v-if="(comprobanteEstadoSocio.cuotasPendientes || 0) > 0 || (comprobanteEstadoSocio.totalPendiente || 0) > 0" style="background: #fef3c7; padding: 10px 12px; border-radius: 10px; border: 1px solid #fde68a;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="color: #b45309; font-weight: 700; font-size: 12px;">Cuota actual {{ comprobanteEstadoSocio.cuotasPendientes ? `(${comprobanteEstadoSocio.cuotasPendientes})` : '' }}</span>
-                  <span style="font-weight: 800; color: #d97706; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalPendiente || 0) }}</span>
-                </div>
-                <div v-if="(comprobanteEstadoSocio.cuotasPendientesList || []).length > 0" style="font-size: 10px; color: #92400e; display: flex; flex-direction: column; gap: 2px;">
-                  <span v-for="(item, i) in comprobanteEstadoSocio.cuotasPendientesList" :key="'p-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
-                </div>
-              </div>
-              <!-- Cuotas en mora -->
-              <div v-if="(comprobanteEstadoSocio.cuotasMora || 0) > 0 || (comprobanteEstadoSocio.totalMora || 0) > 0" style="background: #fef2f2; padding: 10px 12px; border-radius: 10px; border: 1px solid #fecaca;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="color: #b91c1c; font-weight: 700; font-size: 12px;">Cuotas en mora {{ comprobanteEstadoSocio.cuotasMora ? `(${comprobanteEstadoSocio.cuotasMora})` : '' }}</span>
-                  <span style="font-weight: 800; color: #dc2626; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalMora || 0) }}</span>
-                </div>
-                <div v-if="(comprobanteEstadoSocio.cuotasMoraList || []).length > 0" style="font-size: 10px; color: #991b1b; display: flex; flex-direction: column; gap: 2px;">
-                  <span v-for="(item, i) in comprobanteEstadoSocio.cuotasMoraList" :key="'m-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
-                </div>
-              </div>
-              <!-- Sanciones a pagar -->
-              <div v-if="(comprobanteEstadoSocio.totalSancionesPendientes || 0) > 0" style="background: #fff1f2; padding: 10px 12px; border-radius: 10px; border: 1px solid #ffe4e6;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="color: #be123c; font-weight: 700; font-size: 12px;">Sanciones a pagar</span>
-                  <span style="font-weight: 800; color: #e11d48; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalSancionesPendientes) }}</span>
-                </div>
-                <div v-if="(comprobanteEstadoSocio.sancionesDesglose || []).length > 0" style="font-size: 10px; color: #be123c; display: flex; flex-direction: column; gap: 2px;">
-                  <span v-for="(item, i) in comprobanteEstadoSocio.sancionesDesglose" :key="'s-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
-                </div>
-              </div>
-              <!-- Actividades pendientes (a la fecha) -->
-              <div v-if="(comprobanteEstadoSocio.actividadesPendientesTotal || 0) > 0" style="background: #eff6ff; padding: 10px 12px; border-radius: 10px; border: 1px solid #bfdbfe;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="color: #1d4ed8; font-weight: 700; font-size: 12px;">Actividades pendientes (a la fecha)</span>
-                  <span style="font-weight: 800; color: #2563eb; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.actividadesPendientesTotal) }}</span>
-                </div>
-                <div v-if="(comprobanteEstadoSocio.actividadesPendientesDesglose || []).length > 0" style="font-size: 10px; color: #1d4ed8; display: flex; flex-direction: column; gap: 2px;">
-                  <span v-for="(item, i) in comprobanteEstadoSocio.actividadesPendientesDesglose" :key="'act-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
-                </div>
-              </div>
-              <!-- Cuotas de préstamos pendientes (a la fecha) -->
-              <div v-if="(comprobanteEstadoSocio.totalPrestamosPendiente || 0) > 0" style="background: #faf5ff; padding: 10px 12px; border-radius: 10px; border: 1px solid #f3e8ff;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                  <span style="color: #6b21a8; font-weight: 700; font-size: 12px;">Cuotas de préstamos pendientes (a la fecha)</span>
-                  <span style="font-weight: 800; color: #7e22ce; font-size: 15px;">${{ formatMoney(comprobanteEstadoSocio.totalPrestamosPendiente) }}</span>
-                </div>
-                <div v-if="(comprobanteEstadoSocio.prestamosPendientesDesglose || []).length > 0" style="font-size: 10px; color: #6b21a8; display: flex; flex-direction: column; gap: 2px;">
-                  <span v-for="(item, i) in comprobanteEstadoSocio.prestamosPendientesDesglose" :key="'pr-' + i">{{ item.periodo }}: ${{ formatMoney(item.valor) }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Totalizado: saldo + 4×1000 + total consignar (sin texto largo) -->
-            <div style="margin-top: 14px; background: white; border-radius: 14px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 2px solid #1d4ed8;">
-              <p style="color: #1e40af; font-size: 10px; font-weight: 800; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">Totalizado</p>
-              <template v-if="(comprobanteEstadoSocio.totalAPagar || 0) > 0">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #475569;">Total a pagar</span>
-                    <span style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-variant-numeric: tabular-nums;">${{ formatMoney(comprobanteEstadoSocio.totalAPagar) }}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">
-                    <span style="font-size: 12px; font-weight: 700; color: #475569;">4×1000</span>
-                    <span style="font-size: 15px; font-weight: 800; color: #1d4ed8; font-variant-numeric: tabular-nums;">${{ formatMoney(comprobanteEstadoSocio.valor4x1000 || 0) }}</span>
-                  </div>
-                  <div
-                    style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; padding: 10px 10px 8px; border-top: 2px solid #93c5fd; border-radius: 10px; background: #eff6ff;"
-                  >
-                    <span style="font-size: 11px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.2;">Total a pagar para estar al día</span>
-                    <span style="font-size: 22px; font-weight: 900; color: #1d4ed8; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; line-height: 1; flex-shrink: 0;">${{ formatMoney(comprobanteEstadoSocio.totalAPagarCon4x1000 != null ? comprobanteEstadoSocio.totalAPagarCon4x1000 : (comprobanteEstadoSocio.totalAPagar || 0) + (comprobanteEstadoSocio.valor4x1000 || 0)) }}</span>
-                  </div>
-                </div>
-              </template>
-              <p v-else style="font-size: 22px; font-weight: 800; margin: 0; color: #059669; line-height: 1.2;">Al día ✓</p>
-            </div>
-
-            <!-- Footer -->
-            <div style="text-align: center; margin-top: 16px;">
-              <p style="color: #9ca3af; font-size: 10px; margin: 0 0 4px 0;">
-                Generado el {{ new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) }}
-              </p>
-              <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
-                <span style="color: #d1d5db;">✨</span>
-                <p style="color: #d1d5db; font-size: 10px; font-weight: 600; margin: 0;">NATILLERAPP</p>
-                <span style="color: #d1d5db;">✨</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        <!-- Natiscroll: velo + hint (skill modales) -->
-        <div
-          v-show="hayNatiscrollComprobanteEstadoSocio"
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
-          aria-hidden="true"
-        >
-          <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-gray-50/95 via-gray-50/45 to-transparent"
-            aria-hidden="true"
-          />
-          <div class="relative z-[2] flex justify-center px-5 pb-2 pt-10">
-            <div
-              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20"
-            >
-              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white">
-                Desliza para ver más
-              </p>
-              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pie fijo (skill natillerapp-modals) -->
-      <div
-        class="flex-shrink-0 space-y-3 border-t border-gray-200 bg-white px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-6"
-      >
-        <div class="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            class="btn-modal-primary inline-flex flex-1 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            :disabled="generandoImagenEstadoSocio"
-            @click="descargarComprobanteEstadoSocio"
-          >
-            <ArrowDownTrayIcon class="h-5 w-5 shrink-0" />
-            Descargar
-          </button>
-          <button
-            v-if="esMobile"
-            type="button"
-            class="btn-modal-primary inline-flex flex-1 items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
-            :disabled="generandoImagenEstadoSocio || !comprobanteEstadoSocio?.socio?.telefono"
-            @click="enviarComprobanteEstadoSocioWhatsApp"
-          >
-            <ChatBubbleLeftIcon class="h-5 w-5 shrink-0" />
-            Enviar por WhatsApp
-          </button>
-        </div>
-        <button
-          type="button"
-          class="btn-modal-secondary w-full touch-manipulation [-webkit-tap-highlight-color:transparent]"
-          @click="cerrarModalComprobanteEstadoSocio"
-        >
-          Cerrar
-        </button>
-      </div>
-    </ModalWrapper>
-
     <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
     <ModalWrapper
       :show="!!modalDetalle"
@@ -3336,6 +2954,62 @@
             </table>
           </div>
         </div>
+        <!-- Detalle de ingresos y egresos a utilidades -->
+        <div v-else-if="detalleAjustesAbierto" class="space-y-4">
+          <button
+            type="button"
+            @click="cerrarCapaDesglose"
+            class="flex items-center gap-2 text-natillera-600 hover:text-natillera-800 font-medium text-sm"
+          >
+            <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
+            Volver al desglose
+          </button>
+          <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ingresos y egresos a utilidades</h4>
+          <div v-if="detalleAjustes.loading" class="flex justify-center py-10">
+            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
+          </div>
+          <div v-else-if="detalleAjustes.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
+            No hay movimientos registrados contra utilidades.
+          </div>
+          <div v-else class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table class="w-full text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-gray-100 text-left font-semibold text-gray-600">
+                  <th class="px-3 py-2.5">Concepto</th>
+                  <th class="px-3 py-2.5">Fecha</th>
+                  <th class="hidden px-3 py-2.5 sm:table-cell">Forma</th>
+                  <th class="px-3 py-2.5 text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(item, i) in detalleAjustes.lista"
+                  :key="item.id"
+                  class="border-t border-gray-100"
+                  :class="i % 2 === 0 ? 'bg-white' : 'bg-gray-50/80'"
+                >
+                  <td class="px-3 py-2.5 text-gray-800">{{ item.descripcion }}</td>
+                  <td class="whitespace-nowrap px-3 py-2.5 text-gray-600">{{ item.fecha ? formatDate(item.fecha) : '—' }}</td>
+                  <td class="hidden px-3 py-2.5 text-gray-500 sm:table-cell">{{ item.formaPago }}</td>
+                  <td
+                    class="whitespace-nowrap px-3 py-2.5 text-right font-semibold tabular-nums"
+                    :class="item.esIngreso ? 'text-green-600' : 'text-red-600'"
+                  >
+                    {{ item.esIngreso ? '+' : '−' }} ${{ formatMoney(item.monto) }}
+                  </td>
+                </tr>
+                <tr class="border-t-2 border-gray-300 bg-gray-100 font-semibold text-gray-800">
+                  <td class="px-3 py-2.5">Neto</td>
+                  <td class="px-3 py-2.5"></td>
+                  <td class="hidden px-3 py-2.5 sm:table-cell"></td>
+                  <td class="px-3 py-2.5 text-right tabular-nums text-natillera-700">
+                    ${{ formatMoney(detalleAjustes.lista.reduce((s, it) => s + (it.esIngreso ? it.monto : -it.monto), 0)) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
         <!-- Vista "En desarrollo" para otros conceptos -->
         <div v-else-if="conceptoEnDesarrollo" class="space-y-4">
           <button
@@ -3398,13 +3072,34 @@
         <!-- Egresos e ingresos de utilidades (solo si hay algún valor) -->
         <div v-if="(estadisticas.egresosUtilidades ?? 0) > 0 || (estadisticas.ingresosUtilidades ?? 0) > 0" class="mt-4 pt-4 border-t border-gray-200 space-y-2">
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Egresos e ingresos</h4>
-          <div v-if="(estadisticas.egresosUtilidades ?? 0) > 0" class="flex items-center justify-between gap-3 py-2 px-3 rounded-xl bg-red-50 border border-red-100">
+          <!-- Pulsables, como el resto del desglose: la cifra sola no deja cuadrar nada. -->
+          <div
+            v-if="(estadisticas.egresosUtilidades ?? 0) > 0"
+            role="button"
+            tabindex="0"
+            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-red-100 bg-red-50 px-3 py-2 transition-colors hover:border-red-200 hover:bg-red-100/70"
+            @click="cargarDetalleAjustes()"
+            @keydown.enter="cargarDetalleAjustes()"
+          >
             <p class="text-sm font-medium text-red-800">Egresos de utilidades</p>
-            <span class="font-bold text-red-600 tabular-nums">− ${{ formatMoney(estadisticas.egresosUtilidades) }}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-red-600 tabular-nums">− ${{ formatMoney(estadisticas.egresosUtilidades) }}</span>
+              <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-red-400" />
+            </div>
           </div>
-          <div v-if="(estadisticas.ingresosUtilidades ?? 0) > 0" class="flex items-center justify-between gap-3 py-2 px-3 rounded-xl bg-green-50 border border-green-100">
+          <div
+            v-if="(estadisticas.ingresosUtilidades ?? 0) > 0"
+            role="button"
+            tabindex="0"
+            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-green-100 bg-green-50 px-3 py-2 transition-colors hover:border-green-200 hover:bg-green-100/70"
+            @click="cargarDetalleAjustes()"
+            @keydown.enter="cargarDetalleAjustes()"
+          >
             <p class="text-sm font-medium text-green-800">Ingresos a utilidades</p>
-            <span class="font-bold text-green-600 tabular-nums">+ ${{ formatMoney(estadisticas.ingresosUtilidades) }}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-green-600 tabular-nums">+ ${{ formatMoney(estadisticas.ingresosUtilidades) }}</span>
+              <ChevronRightIcon class="h-4 w-4 flex-shrink-0 text-green-400" />
+            </div>
           </div>
         </div>
         <!-- Sin desglose -->
@@ -3866,7 +3561,6 @@
               :key="'cma-' + socioMora.id"
               type="button"
               class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-red-50/40 active:bg-red-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
-              :disabled="loadingEstadoSocio"
               :aria-label="`Ver estado del socio ${socioMora.nombre || ''}`"
               @click="abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora)"
             >
@@ -3909,7 +3603,6 @@
               :key="'pma-' + p.prestamoId"
               type="button"
               class="flex w-full min-h-[48px] touch-manipulation items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-violet-50/40 active:bg-violet-50/60 disabled:cursor-wait disabled:opacity-60 [-webkit-tap-highlight-color:transparent]"
-              :disabled="loadingEstadoSocio"
               :aria-label="`Ver estado del socio ${p.nombreSocio || ''}`"
               @click="abrirComprobanteEstadoDesdeAlertaPrestamo(p)"
             >
@@ -3976,7 +3669,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { toPng } from 'html-to-image'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { 
   ArrowRightOnRectangleIcon,
@@ -3988,7 +3680,6 @@ import {
   UsersIcon,
   CurrencyDollarIcon,
   BanknotesIcon,
-  ArrowDownTrayIcon,
   CalendarIcon,
   ChatBubbleLeftIcon,
   XMarkIcon,
@@ -4054,6 +3745,7 @@ import { recaudadoIndicador, utilidadIndicador } from '../../utils/indicadoresNa
 import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
 import LoadingScreen from '../../components/LoadingScreen.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import { calcularEstadoRealCuota } from '../../composables/useEstadoSocio'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useModalStack } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
@@ -4323,100 +4015,6 @@ const notificationStore = useNotificationStore()
 const invitacionARechazarCompacta = ref(null)
 const procesandoInvitacionCompacta = ref(null)
 const dashboardSidebar = inject('dashboardSidebar', null)
-const modalWhatsApp = ref(false)
-const scrollAreaModalWhatsApp = ref(null)
-/** Natiscroll — selector socio / comprobante estado (Notificar) */
-const hayNatiscrollModalWhatsApp = ref(false)
-let rafNatiscrollModalWhatsApp = null
-
-function actualizarNatiscrollModalWhatsApp() {
-  const el = scrollAreaModalWhatsApp.value
-  if (!el) {
-    hayNatiscrollModalWhatsApp.value = false
-    return
-  }
-  const umbral = 10
-  hayNatiscrollModalWhatsApp.value =
-    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
-}
-
-function programarNatiscrollModalWhatsApp() {
-  if (rafNatiscrollModalWhatsApp != null) {
-    cancelAnimationFrame(rafNatiscrollModalWhatsApp)
-  }
-  rafNatiscrollModalWhatsApp = requestAnimationFrame(() => {
-    rafNatiscrollModalWhatsApp = null
-    actualizarNatiscrollModalWhatsApp()
-  })
-}
-
-watch(modalWhatsApp, async (abierto) => {
-  if (abierto) {
-    bloquearTecladoBusquedaSocioNotificar.value = true
-    await nextTick()
-    inputBusquedaSocioNotificarRef.value?.focus({ preventScroll: true })
-    programarNatiscrollModalWhatsApp()
-  } else {
-    if (rafNatiscrollModalWhatsApp != null) {
-      cancelAnimationFrame(rafNatiscrollModalWhatsApp)
-      rafNatiscrollModalWhatsApp = null
-    }
-    hayNatiscrollModalWhatsApp.value = false
-  }
-})
-
-const modalComprobanteEstadoSocio = ref(false)
-const comprobanteEstadoSocio = ref(null)
-const loadingEstadoSocio = ref(false)
-const comprobanteEstadoRef = ref(null)
-const generandoImagenEstadoSocio = ref(false)
-const scrollAreaModalComprobanteEstadoSocio = ref(null)
-/** Natiscroll — modal comprobante de estado (velo + «Desliza para ver más») */
-const hayNatiscrollComprobanteEstadoSocio = ref(false)
-let rafNatiscrollComprobanteEstadoSocio = null
-
-function actualizarNatiscrollComprobanteEstadoSocio() {
-  const el = scrollAreaModalComprobanteEstadoSocio.value
-  if (!el) {
-    hayNatiscrollComprobanteEstadoSocio.value = false
-    return
-  }
-  const umbral = 10
-  hayNatiscrollComprobanteEstadoSocio.value =
-    el.scrollTop + el.clientHeight < el.scrollHeight - umbral
-}
-
-function programarNatiscrollComprobanteEstadoSocio() {
-  if (rafNatiscrollComprobanteEstadoSocio != null) {
-    cancelAnimationFrame(rafNatiscrollComprobanteEstadoSocio)
-  }
-  rafNatiscrollComprobanteEstadoSocio = requestAnimationFrame(() => {
-    rafNatiscrollComprobanteEstadoSocio = null
-    actualizarNatiscrollComprobanteEstadoSocio()
-  })
-}
-
-function cerrarModalComprobanteEstadoSocio() {
-  modalComprobanteEstadoSocio.value = false
-  comprobanteEstadoSocio.value = null
-}
-
-const modalComprobanteEstadoSocioAbierto = computed(
-  () => !!modalComprobanteEstadoSocio.value && !!comprobanteEstadoSocio.value
-)
-
-watch(modalComprobanteEstadoSocioAbierto, async (abierto) => {
-  if (abierto) {
-    await nextTick()
-    programarNatiscrollComprobanteEstadoSocio()
-  } else {
-    if (rafNatiscrollComprobanteEstadoSocio != null) {
-      cancelAnimationFrame(rafNatiscrollComprobanteEstadoSocio)
-      rafNatiscrollComprobanteEstadoSocio = null
-    }
-    hayNatiscrollComprobanteEstadoSocio.value = false
-  }
-})
 const modalDetalle = ref(false)
 const modalConfigMeses = ref(false)
 const modalBuscarComprobante = ref(false)
@@ -4466,6 +4064,10 @@ const ETIQUETAS_TIPO_ACTIVIDAD = { otro: 'Otros', bingo: 'Bingos', venta: 'Venta
 const etiquetaDetalleOtros = computed(() => ETIQUETAS_TIPO_ACTIVIDAD[detalleOtrosTipo.value] || 'Actividades')
 const detalleOtros = ref({ loading: false, porActividad: [] })
 const otrosDesplegados = ref({})
+/** Detalle de los movimientos apuntados contra utilidades desde el cuadre de caja. */
+const detalleAjustesAbierto = ref(false)
+const detalleAjustes = ref({ loading: false, lista: [] })
+
 const detalleSancionesAbierto = ref(false)
 const detalleSanciones = ref({ loading: false, lista: [], sancionesRetiro: [], totalRetiro: 0 })
 const detallePrestamosAbierto = ref(false)
@@ -4479,24 +4081,6 @@ const cuotasSocio = ref([])
 const cuotasSocioPorMes = ref([])
 const socioParaCuotas = ref(null)
 const seccionActiva = ref('finanzas')
-const busquedaSocio = ref('')
-/** Input modal Notificar: foco inicial sin teclado (readonly hasta primer gesto del usuario; iOS/Android). */
-const inputBusquedaSocioNotificarRef = ref(null)
-const bloquearTecladoBusquedaSocioNotificar = ref(true)
-
-function handleBusquedaSocioNotificarPointerdown() {
-  if (!bloquearTecladoBusquedaSocioNotificar.value) return
-  bloquearTecladoBusquedaSocioNotificar.value = false
-  nextTick(() => {
-    inputBusquedaSocioNotificarRef.value?.focus()
-  })
-}
-
-function handleBusquedaSocioNotificarKeydown() {
-  if (!bloquearTecladoBusquedaSocioNotificar.value) return
-  // Desktop / teclado físico: quitar readonly en la misma pulsación para no perder la primera tecla
-  bloquearTecladoBusquedaSocioNotificar.value = false
-}
 const codigoBusqueda = ref('')
 const comprobanteEncontrado = ref(null)
 const infoComprobanteAntiguo = ref(null)
@@ -4585,8 +4169,6 @@ let intervaloMensajeCarga = null
 // Variable para mantener el índice anterior fuera del intervalo
 let indiceMensajeAnterior = -1
 // Bloquear scroll del body cuando las modales están abiertas
-useBodyScrollLock(modalWhatsApp)
-useBodyScrollLock(modalComprobanteEstadoSocioAbierto)
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalConfigMeses)
 useBodyScrollLock(modalBuscarComprobante)
@@ -4745,26 +4327,6 @@ const fechaInicioCorta = computed(() => {
   return `Desde ${day}/${month}/${year}`
 })
 // Socios filtrados por búsqueda en el modal de WhatsApp
-const sociosFiltrados = computed(() => {
-  if (!natillera.value?.socios_natillera) return []
-  if (!busquedaSocio.value.trim()) return natillera.value.socios_natillera
-  
-  const busqueda = busquedaSocio.value.toLowerCase().trim()
-  return natillera.value.socios_natillera.filter(sn => 
-    sn.socio?.nombre?.toLowerCase().includes(busqueda) ||
-    sn.socio?.telefono?.includes(busqueda)
-  )
-})
-// Natiscroll: al filtrar búsqueda el alto del cuerpo cambia; sin remediar, el hint queda visible con 1 fila (sin scroll).
-watch(
-  [modalWhatsApp, sociosFiltrados, busquedaSocio],
-  async () => {
-    if (!modalWhatsApp.value) return
-    await nextTick()
-    programarNatiscrollModalWhatsApp()
-  },
-  { flush: 'post' }
-)
 // Cuotas agrupadas por mes y año
 const cuotasAgrupadasPorMes = computed(() => {
   if (!cuotasSocioPorMes.value || cuotasSocioPorMes.value.length === 0) return []
@@ -4856,6 +4418,7 @@ const COLORES_UTILIDAD_TIPO = {
   evento: '#2EBA74',
   otro: '#F47B3E',
   actividades_en_curso: '#2EBA74',
+  utilidades_adicionales: '#3B82F6',
 }
 
 const COLORES_GRAFICO_UTILIDAD_ROTACION = [
@@ -4868,9 +4431,26 @@ const COLORES_GRAFICO_UTILIDAD_ROTACION = [
   '#E91E63',
 ]
 
+/*
+ * Donut de utilidades.
+ *
+ * Incluye los movimientos manuales a utilidades como una porción más, porque SÍ son
+ * utilidad del fondo: entran al neto y se reparten en el cierre. Lo que no hacen es
+ * aparecer en la lista «Por tipo», que es para lo que el fondo recogió por su actividad
+ * —rifas, sanciones, intereses—; ahí se verían dos veces, junto al bloque de ingresos.
+ *
+ * Por eso la porción se añade aquí y no en `utilidadesDesglose`: cuenta una vez en el
+ * neto, se ve una vez en la lista y aparece en el gráfico, que era lo pedido.
+ */
 const utilidadesCategoriaGrafico = computed(() => {
   const raw = estadisticas.value.utilidadesDesglose || []
   const items = raw.filter((i) => (i.value || 0) > 0)
+
+  const netoAjustes = Math.max(0, Number(estadisticas.value.ingresosUtilidades || 0) - Number(estadisticas.value.egresosUtilidades || 0))
+  if (netoAjustes > 0) {
+    items.push({ id: 'utilidades_adicionales', label: 'Ingresos a utilidades', value: netoAjustes })
+  }
+
   const total = items.reduce((s, i) => s + (Number(i.value) || 0), 0)
   if (total <= 0) {
     return { segments: [], total: 0, conicGradient: 'conic-gradient(#e5e7eb 0% 100%)' }
@@ -4904,17 +4484,24 @@ const utilidadesCategoriaGrafico = computed(() => {
 })
 
 /** Egresos/ingresos del rubro utilidades: el donut sigue siendo 100% «recogidas» por categoría; esto enlaza con el neto. */
+/*
+ * Egresos e ingresos del rubro utilidades.
+ *
+ * `utilidadesRecogidas` cuenta solo lo que el fondo GANÓ por su actividad; los ajustes
+ * manuales contra utilidades viven aquí y se aplican al neto. El tipo
+ * `utilidades_adicionales` se excluye a propósito del desglose por categoría (ver
+ * `stores/natilleras.js`) para no contarlo en los dos sitios.
+ */
 const ajustesUtilidadesGrafico = computed(() => {
   const s = estadisticas.value
   const recogidas = Math.max(0, Number(s.utilidadesRecogidas) || 0)
   const egresos = Math.max(0, Number(s.egresosUtilidades) || 0)
   const ingresos = Math.max(0, Number(s.ingresosUtilidades) || 0)
-  const neto = Math.max(0, recogidas - egresos + ingresos)
   return {
     recogidas,
     egresos,
     ingresos,
-    neto,
+    neto: Math.max(0, recogidas - egresos + ingresos),
     tieneAjustes: egresos > 0 || ingresos > 0,
   }
 })
@@ -6525,6 +6112,11 @@ const resumenSocio = computed(() => {
     alDia: pendientes.length === 0 && enMora.length === 0
   }
 })
+/*
+ * La tarjeta de «Utilidades por categoría» depende de una consulta que tarda: sin este
+ * flag el hueco no existe y la tarjeta aparece de golpe empujando el resto de la vista.
+ */
+const cargandoEstadisticas = ref(false)
 const estadisticas = ref({
   totalSocios: 0,
   sociosActivos: 0,
@@ -6598,7 +6190,13 @@ async function calcularEstadisticasAsync() {
   
   cargarIndicadoresServidor()
 
-  const stats = await natillerasStore.calcularEstadisticas(natillera.value)
+  cargandoEstadisticas.value = true
+  let stats = null
+  try {
+    stats = await natillerasStore.calcularEstadisticas(natillera.value)
+  } finally {
+    cargandoEstadisticas.value = false
+  }
   estadisticas.value = stats || {
     totalSocios: 0,
     sociosActivos: 0,
@@ -6823,6 +6421,49 @@ function cerrarDetalleOtros() {
   detalleOtros.value = { loading: false, porActividad: [] }
   otrosDesplegados.value = {}
 }
+/**
+ * Los ingresos y egresos del rubro utilidades, uno a uno.
+ *
+ * La sección solo mostraba dos totales y no había forma de saber de dónde salían: para
+ * cuadrar «+$1.209» había que ir a Movimientos y filtrar a mano.
+ */
+async function cargarDetalleAjustes() {
+  const natilleraId = id.value || route.params.id
+  if (!natilleraId) return
+  detalleAjustesAbierto.value = true
+  detalleAjustes.value = { loading: true, lista: [] }
+  try {
+    const { data, error } = await supabase
+      .from('movimientos_fondo')
+      .select('id, tipo, monto, forma_pago, descripcion, fecha, destino_ingreso, origen_egreso')
+      .eq('natillera_id', natilleraId)
+      .or('destino_ingreso.eq.utilidades,origen_egreso.eq.utilidades')
+      .order('fecha', { ascending: false })
+    if (error) throw error
+
+    const lista = (data || [])
+      .filter(m => (m.tipo === 'entrada' && m.destino_ingreso === 'utilidades') ||
+                   (m.tipo === 'salida' && m.origen_egreso === 'utilidades'))
+      .map(m => ({
+        id: m.id,
+        fecha: m.fecha || null,
+        descripcion: (m.descripcion || '').trim() || (m.tipo === 'entrada' ? 'Ingreso a utilidades' : 'Egreso de utilidades'),
+        formaPago: String(m.forma_pago || '').toLowerCase() === 'transferencia' ? 'Transferencia' : 'Efectivo',
+        esIngreso: m.tipo === 'entrada',
+        monto: parseFloat(m.monto) || 0
+      }))
+    detalleAjustes.value = { loading: false, lista }
+  } catch (e) {
+    console.error('Error cargando detalle de ingresos y egresos a utilidades:', e)
+    detalleAjustes.value = { loading: false, lista: [] }
+  }
+}
+
+function cerrarDetalleAjustes() {
+  detalleAjustesAbierto.value = false
+  detalleAjustes.value = { loading: false, lista: [] }
+}
+
 async function cargarDetalleSanciones() {
   const natilleraId = id.value || route.params.id
   if (!natilleraId) return
@@ -7060,6 +6701,7 @@ function cerrarModalDesglose() {
   detalleOtrosAbierto.value = false
   detalleSancionesAbierto.value = false
   detallePrestamosAbierto.value = false
+  detalleAjustesAbierto.value = false
   conceptoEnDesarrollo.value = null
 }
 function abrirConceptoPorTipo(item) {
@@ -7075,6 +6717,7 @@ function abrirConceptoPorTipo(item) {
     detalleRifasAbierto.value = false
     detalleSancionesAbierto.value = false
     detallePrestamosAbierto.value = false
+    detalleAjustesAbierto.value = false
   } else if (item.id === 'sanciones') {
     cargarDetalleSanciones()
     conceptoEnDesarrollo.value = null
@@ -7117,6 +6760,7 @@ const detalleDesgloseAbierto = computed(() =>
   detalleOtrosAbierto.value ||
   detalleSancionesAbierto.value ||
   detallePrestamosAbierto.value ||
+  detalleAjustesAbierto.value ||
   !!conceptoEnDesarrollo.value
 )
 
@@ -7125,6 +6769,7 @@ function volverAlDesglose() {
   if (detalleOtrosAbierto.value) cerrarDetalleOtros()
   if (detalleSancionesAbierto.value) cerrarDetalleSanciones()
   if (detallePrestamosAbierto.value) cerrarDetallePrestamos()
+  if (detalleAjustesAbierto.value) cerrarDetalleAjustes()
   conceptoEnDesarrollo.value = null
 }
 
@@ -7208,400 +6853,23 @@ function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
 }
 // Las funciones formatDate y formatDateWithTime ahora se importan desde utils/formatDate.js
 // para evitar problemas de zona horaria. Las funciones locales fueron eliminadas.
-function cerrarModalWhatsApp() {
-  modalWhatsApp.value = false
-  busquedaSocio.value = ''
-  bloquearTecladoBusquedaSocioNotificar.value = true
+/*
+ * Tocar una alerta de mora lleva a la página «Notificar» con ese socio ya abierto: es
+ * el mismo estado de cuenta que se manda desde allí.
+ */
+function abrirNotificarSocio(socioNatilleraId) {
+  if (!socioNatilleraId) return
+  router.push({ path: `/natilleras/${id.value}/notificar`, query: { socio: socioNatilleraId } })
 }
 
-// Calcular estado del socio para el comprobante (ahorro, cuotas, sanciones, actividades, préstamos)
-async function calcularEstadoSocioParaComprobante(sn) {
-  const natilleraId = props.id || route.params.id
-  const diasGracia = natillera.value?.reglas_multas?.dias_gracia || 3
-
-  const resumen = await sociosStore.obtenerResumenSocio(sn.id)
-  const cuotas = resumen?.cuotas || []
-
-  let totalAhorrado = 0
-  let cuotasPendientes = 0
-  let cuotasMora = 0
-  let totalPendiente = 0
-  let totalMora = 0
-  let totalSancionesPendientes = 0
-  const cuotasPendientesList = []
-  const cuotasMoraList = []
-  const sancionesDesglose = []
-
-  const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
-  const sancionesMap = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
-
-  cuotas.forEach(cuota => {
-    const estadoReal = calcularEstadoRealCuota(cuota, diasGracia)
-    const valorCuota = parseFloat(cuota.valor_cuota || 0)
-    const valorPagado = parseFloat(cuota.valor_pagado || 0)
-    const deuda = valorCuota - valorPagado
-    const periodo = formatoPeriodoCuotaComprobante(cuota)
-
-    if (estadoReal === 'pagada') {
-      totalAhorrado += valorCuota
-      return
-    }
-    if (estadoReal === 'mora') {
-      cuotasMora++
-      totalMora += deuda
-      cuotasMoraList.push({ periodo, valor: deuda })
-      const sancion = sancionesMap[cuota.id] ?? parseFloat(cuota.valor_multa || 0)
-      if (sancion > 0) {
-        totalSancionesPendientes += sancion
-        sancionesDesglose.push({ periodo, valor: sancion })
-      }
-    } else if (estadoReal === 'pendiente') {
-      cuotasPendientes++
-      totalPendiente += deuda
-      cuotasPendientesList.push({ periodo, valor: deuda })
-      const sancion = parseFloat(cuota.valor_multa || 0)
-      if (sancion > 0) {
-        totalSancionesPendientes += sancion
-        sancionesDesglose.push({ periodo, valor: sancion })
-      }
-    }
-  })
-
-  // Actividades pendientes solo "a la fecha": solo periodos ya vencidos o el periodo actual (nunca futuros)
-  let actividadesPendientesTotal = 0
-  const actividadesPendientesDesglose = []
-  const mesesCortoAct = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  try {
-    const hoy = new Date()
-    const mesActual = hoy.getMonth() + 1
-    const anioActual = hoy.getFullYear()
-    const quincenaActual = hoy.getDate() <= 15 ? 1 : 2
-
-    const { data: sociosActividad } = await supabase
-      .from('socios_actividad')
-      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion, fecha_limite_pago)')
-      .eq('socio_natillera_id', sn.id)
-    if (sociosActividad && sociosActividad.length > 0) {
-      sociosActividad.forEach(sa => {
-        const asignado = parseFloat(sa.valor_asignado || 0)
-        const pagado = parseFloat(sa.valor_pagado || 0)
-        if (asignado <= pagado) return
-
-        const mes = sa.mes_pago != null ? Number(sa.mes_pago) : null
-        const anio = sa.anio_pago != null ? Number(sa.anio_pago) : null
-        const quincena = sa.quincena_pago != null ? Number(sa.quincena_pago) : null
-        // Fecha límite de pago (rifas y actividades con vencimiento): prioridad sobre mes/anio/quincena
-        const fechaLimitePago = sa.actividad?.fecha_limite_pago
-
-        let esPeriodoALaFecha = false
-
-        if (fechaLimitePago) {
-          // Rifas y actividades con fecha límite: solo mostrar si la fecha actual es SUPERIOR a la fecha límite (ya venció) y está pendiente
-          try {
-            let fechaLimite
-            if (typeof fechaLimitePago === 'string' && fechaLimitePago.includes('-')) {
-              const [y, m, d] = fechaLimitePago.split('-').map(Number)
-              fechaLimite = new Date(y, (m || 1) - 1, d || 1)
-              fechaLimite.setHours(23, 59, 59, 999)
-            } else {
-              fechaLimite = new Date(fechaLimitePago)
-            }
-            const hoyEod = new Date(hoy)
-            hoyEod.setHours(23, 59, 59, 999)
-            esPeriodoALaFecha = hoyEod.getTime() > fechaLimite.getTime()
-          } catch (e) {
-            esPeriodoALaFecha = false
-          }
-        } else {
-          // Sin fecha límite: usar periodo mes/anio/quincena (excluir siempre periodos futuros)
-          if (anio == null || mes == null) {
-            esPeriodoALaFecha = false
-          } else {
-            if (anio > anioActual) esPeriodoALaFecha = false
-            else if (anio === anioActual && mes > mesActual) esPeriodoALaFecha = false
-            else if (anio === anioActual && mes === mesActual) {
-              if (quincena == null || quincena === 0) {
-                esPeriodoALaFecha = true
-              } else if (quincena <= quincenaActual) {
-                esPeriodoALaFecha = true
-              } else {
-                esPeriodoALaFecha = false
-              }
-            } else {
-              esPeriodoALaFecha = true
-            }
-          }
-        }
-
-        if (esPeriodoALaFecha) {
-          const valorPendiente = asignado - pagado
-          actividadesPendientesTotal += valorPendiente
-          const descripcion = sa.actividad?.descripcion || (mes && anio ? `${mesesCortoAct[mes - 1] || ''} ${anio}` + (quincena === 1 ? ' - 1ra quincena' : quincena === 2 ? ' - 2da quincena' : '') : 'Actividad')
-          actividadesPendientesDesglose.push({ periodo: descripcion.trim() || 'Actividad', valor: valorPendiente })
-        }
-      })
-    }
-  } catch (e) {
-    console.warn('Error cargando actividades pendientes:', e)
-  }
-
-  // Solo cuotas de préstamos pendientes a la fecha (fecha_proyectada <= hoy), no el valor total del préstamo
-  let totalPrestamosPendiente = 0
-  let cuotasPrestamosPendientes = 0
-  const prestamosPendientesDesglose = []
-  try {
-    const hoy = new Date()
-    hoy.setHours(23, 59, 59, 999)
-
-    const { data: prestamos } = await supabase
-      .from('prestamos')
-      .select('id')
-      .eq('socio_natillera_id', sn.id)
-      .in('estado', ['activo', 'pagado'])
-    if (prestamos && prestamos.length > 0) {
-      const prestamoIds = prestamos.map(p => p.id)
-      const { data: planPagos } = await supabase
-        .from('plan_pagos_prestamo')
-        .select('valor_cuota, valor_pagado, pagada, fecha_proyectada, numero_cuota')
-        .in('prestamo_id', prestamoIds)
-      if (planPagos) {
-        planPagos.forEach(pp => {
-          if (pp.pagada) return
-          const fechaProyectada = pp.fecha_proyectada ? new Date(pp.fecha_proyectada) : null
-          if (fechaProyectada && fechaProyectada.getTime() > hoy.getTime()) return // cuota futura, no incluir
-          cuotasPrestamosPendientes++
-          const valorCuota = parseFloat(pp.valor_cuota || 0)
-          const valorPagado = parseFloat(pp.valor_pagado || 0)
-          const pendiente = Math.max(0, valorCuota - valorPagado)
-          totalPrestamosPendiente += pendiente
-          const periodo = fechaProyectada
-            ? fechaProyectada.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }).replace(/\./g, '') + (pp.numero_cuota != null ? ` (cuota ${pp.numero_cuota})` : '')
-            : (pp.numero_cuota != null ? `Cuota ${pp.numero_cuota}` : 'Préstamo')
-          prestamosPendientesDesglose.push({ periodo, valor: pendiente })
-        })
-      }
-    }
-  } catch (e) {
-    console.warn('Error cargando préstamos pendientes:', e)
-  }
-
-  // Total a pagar (base para 4x1000 si paga por transferencia)
-  const totalAPagar = totalPendiente + totalMora + totalSancionesPendientes + actividadesPendientesTotal + totalPrestamosPendiente
-  const valor4x1000 = Math.round(totalAPagar * 0.004)
-  const totalAPagarCon4x1000 = totalAPagar + valor4x1000
-
-  return {
-    socio: sn.socio || { nombre: 'Socio', telefono: sn.socio?.telefono },
-    nombreNatillera: natillera.value?.nombre || 'Natillera',
-    totalAhorrado,
-    cuotasPendientes,
-    cuotasMora,
-    totalPendiente,
-    totalMora,
-    cuotasPendientesList,
-    cuotasMoraList,
-    totalSancionesPendientes,
-    sancionesDesglose,
-    actividadesPendientesTotal,
-    actividadesPendientesDesglose,
-    totalPrestamosPendiente,
-    cuotasPrestamosPendientes,
-    prestamosPendientesDesglose,
-    totalAPagar,
-    valor4x1000,
-    totalAPagarCon4x1000
-  }
+function abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora) {
+  abrirNotificarSocio(socioMora?.id)
 }
 
-function formatoPeriodoCuotaComprobante(cuota) {
-  let mes = cuota.mes
-  let anio = cuota.anio
-  const quincena = cuota.quincena != null ? Number(cuota.quincena) : null
-  if ((mes == null || anio == null) && cuota.fecha_limite) {
-    const str = String(cuota.fecha_limite)
-    if (str.includes('-')) {
-      const [y, m] = str.split('-')
-      anio = parseInt(y, 10)
-      mes = parseInt(m, 10)
-    }
-  }
-  const mesesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  const mesLabel = (mes >= 1 && mes <= 12) ? mesesCorto[mes - 1] : `Mes ${mes}`
-  let label = `${mesLabel} ${anio || ''}`
-  if (quincena === 1) label += ' - 1ra quincena'
-  else if (quincena === 2) label += ' - 2da quincena'
-  return label
+function abrirComprobanteEstadoDesdeAlertaPrestamo(p) {
+  abrirNotificarSocio(p?.socio_natillera_id)
 }
 
-/** Resuelve `socios_natillera` para comprobante desde id (alertas de mora) o objeto mínimo si no está en lista. */
-function socioNatilleraParaComprobanteDesdeId(socioNatilleraId, socioFallback) {
-  const list = natillera.value?.socios_natillera || []
-  const sn = list.find(s => String(s.id) === String(socioNatilleraId))
-  if (sn) return sn
-  const fb =
-    socioFallback && typeof socioFallback === 'object'
-      ? socioFallback
-      : { nombre: typeof socioFallback === 'string' ? socioFallback : 'Socio' }
-  return { id: socioNatilleraId, socio: fb }
-}
-
-/** Tap en alerta «cuotas en mora» → mismo flujo que Notificar al elegir socio (comprobante directo). */
-async function abrirComprobanteEstadoDesdeAlertaCuotasMora(socioMora) {
-  const socioFb = socioMora.socio || (socioMora.nombre ? { nombre: socioMora.nombre } : null)
-  const sn = socioNatilleraParaComprobanteDesdeId(socioMora.id, socioFb)
-  await generarComprobanteEstadoSocio(sn)
-}
-
-/** Tap en alerta «préstamos en mora» → estado del socio (mismo comprobante). */
-async function abrirComprobanteEstadoDesdeAlertaPrestamo(p) {
-  const socioFb = p.socio || (p.nombreSocio ? { nombre: p.nombreSocio } : null)
-  const sn = socioNatilleraParaComprobanteDesdeId(p.socio_natillera_id, socioFb)
-  await generarComprobanteEstadoSocio(sn)
-}
-
-async function generarComprobanteEstadoSocio(sn) {
-  if (loadingEstadoSocio.value) return
-  if (postCargaModalesTimeoutId != null) {
-    clearTimeout(postCargaModalesTimeoutId)
-    postCargaModalesTimeoutId = null
-  }
-  loadingEstadoSocio.value = true
-  try {
-    const estado = await calcularEstadoSocioParaComprobante(sn)
-    comprobanteEstadoSocio.value = estado
-    cerrarModalWhatsApp()
-    modalTodasLasAlertas.value = false
-    modalDetalle.value = false
-    modalConfigMeses.value = false
-    cerrarModalBuscarComprobante()
-    cerrarModalCuotasSocio()
-    modalSociosEnMora.value = false
-    cerrarModalDesglose()
-    modalSinSocios.value = false
-    cerrarRecordatorioModal()
-    modalComprobanteEstadoSocio.value = true
-    await nextTick()
-  } catch (e) {
-    console.error('Error generando comprobante de estado:', e)
-    alert('No se pudo generar el comprobante. Intenta de nuevo.')
-  } finally {
-    loadingEstadoSocio.value = false
-  }
-}
-
-function textoComprobanteEstadoSocio(estado) {
-  const total = estado.totalAPagar || 0
-  const cuatroPorMil = estado.valor4x1000 || 0
-  const totalCon4x1000 = estado.totalAPagarCon4x1000 != null ? estado.totalAPagarCon4x1000 : total + cuatroPorMil
-
-  let text = '*_Abre la imagen para ver toda la información_*\n\n'
-  text += '*Totalizado*\n\n'
-  if (total > 0) {
-    text += `Total a pagar: *$${formatMoney(total)}*\n`
-    text += `4×1000: *$${formatMoney(cuatroPorMil)}*\n`
-    text += `*Total a pagar para estar al día:* *$${formatMoney(totalCon4x1000)}*\n`
-  } else {
-    text += '✅ Al día\n'
-  }
-  return text.trim()
-}
-
-async function descargarComprobanteEstadoSocio() {
-  if (!comprobanteEstadoRef.value || !comprobanteEstadoSocio.value) return
-  generandoImagenEstadoSocio.value = true
-  try {
-    await nextTick()
-    await new Promise(r => setTimeout(r, 150))
-    const dataUrl = await toPng(comprobanteEstadoRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
-    })
-    const nombre = (comprobanteEstadoSocio.value.socio?.nombre || 'socio').replace(/\s+/g, '-')
-    const link = document.createElement('a')
-    link.download = `estado-socio-${nombre}.png`
-    link.href = dataUrl
-    link.click()
-  } catch (e) {
-    console.error('Error descargando comprobante:', e)
-    alert('No se pudo descargar la imagen. Intenta de nuevo.')
-  } finally {
-    generandoImagenEstadoSocio.value = false
-  }
-}
-
-async function enviarComprobanteEstadoSocioWhatsApp() {
-  if (!comprobanteEstadoRef.value || !comprobanteEstadoSocio.value) return
-  const telefono = (comprobanteEstadoSocio.value.socio?.telefono || '').replace(/\D/g, '')
-  if (!telefono) {
-    alert('Este socio no tiene teléfono registrado.')
-    return
-  }
-  generandoImagenEstadoSocio.value = true
-  try {
-    await nextTick()
-    await new Promise(r => setTimeout(r, 150))
-    const dataUrl = await toPng(comprobanteEstadoRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
-    })
-    const numero = telefono.length === 10 ? '57' + telefono : telefono
-    const texto = textoComprobanteEstadoSocio(comprobanteEstadoSocio.value)
-    const nombre = (comprobanteEstadoSocio.value.socio?.nombre || 'socio').replace(/\s+/g, '-')
-
-    try {
-      const blob = await (await fetch(dataUrl)).blob()
-      const file = new File([blob], `estado-socio-${nombre}.png`, { type: 'image/png' })
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Estado del socio',
-          text: texto
-        })
-        return
-      }
-    } catch (shareErr) {
-      console.warn('Web Share no disponible o cancelado:', shareErr)
-    }
-
-    const link = document.createElement('a')
-    link.download = `estado-socio-${nombre}.png`
-    link.href = dataUrl
-    link.click()
-    setTimeout(() => {
-      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
-      alert('La imagen se descargó. Adjúntala en WhatsApp para enviarla al socio.')
-    }, 500)
-  } catch (e) {
-    console.error('Error enviando comprobante por WhatsApp:', e)
-    alert('No se pudo generar la imagen. Abriendo WhatsApp solo con texto.')
-    const numero = telefono.length === 10 ? '57' + telefono : telefono
-    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(textoComprobanteEstadoSocio(comprobanteEstadoSocio.value))}`, '_blank')
-  } finally {
-    generandoImagenEstadoSocio.value = false
-  }
-}
-
-function enviarWhatsApp(socioNatillera, cerrarModal = true) {
-  const telefono = socioNatillera.socio?.telefono?.replace(/\D/g, '')
-  if (!telefono) {
-    alert('Este socio no tiene teléfono registrado')
-    return
-  }
-  // Usar el mensaje configurado con las variables reemplazadas
-  const mensaje = configStore.generarMensajeIndividual(
-    socioNatillera.socio?.nombre,
-    formatMoney(socioNatillera.valor_cuota_individual)
-  )
-  const url = `https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`
-  window.open(url, '_blank')
-  if (cerrarModal) {
-    cerrarModalWhatsApp()
-  }
-}
 function aplicarAccionPendienteBarraLateral() {
   const p = pendingNatilleraSidebarAction.value
   if (!p || String(p.natilleraId) !== String(props.id || route.params.id)) return
@@ -7612,7 +6880,7 @@ function aplicarAccionPendienteBarraLateral() {
   } else if (t === 'invitar' && puedeInvitarColaboradores.value) {
     nextTick(() => abrirFormularioInvitarColaborador())
   } else if (t === 'notificar' && puedeNotificar.value) {
-    modalWhatsApp.value = true
+    router.push(`/natilleras/${id.value}/notificar`)
   }
   clearPendingNatilleraSidebarAction()
 }
@@ -7668,66 +6936,6 @@ function getMesEmoji(mes) {
 // - Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
 // - En Mora: fecha_actual > fecha_vencimiento
 // - Pagada: valor_pagado >= valor_cuota
-function calcularEstadoRealCuota(cuota, diasGracia) {
-  const valorCuota = cuota.valor_cuota || 0
-  const valorPagado = cuota.valor_pagado || 0
-  
-  // Pagada: valor_pagado >= valor_cuota (según REGLAS.md, sin incluir sanción)
-  if (valorPagado >= valorCuota) {
-    return 'pagada'
-  }
-  
-  if (!cuota.fecha_limite) return cuota.estado || 'programada'
-  
-  const fechaActual = new Date()
-  fechaActual.setHours(0, 0, 0, 0)
-  
-  // Parsear fecha_limite correctamente para evitar problemas de zona horaria
-  // Si viene como string "YYYY-MM-DD", crear la fecha en hora local, no UTC
-  let fechaLimite
-  if (typeof cuota.fecha_limite === 'string' && cuota.fecha_limite.includes('-')) {
-    const [anio, mes, dia] = cuota.fecha_limite.split('-').map(Number)
-    fechaLimite = new Date(anio, mes - 1, dia) // mes - 1 porque Date usa 0-11 para meses
-  } else {
-    fechaLimite = new Date(cuota.fecha_limite)
-  }
-  fechaLimite.setHours(0, 0, 0, 0)
-  
-  // Obtener fecha_vencimiento: usar el campo directamente si existe, o calcularlo
-  let fechaVencimiento
-  if (cuota.fecha_vencimiento) {
-    // Usar fecha_vencimiento directamente si existe en la cuota
-    if (typeof cuota.fecha_vencimiento === 'string' && cuota.fecha_vencimiento.includes('-')) {
-      const [anio, mes, dia] = cuota.fecha_vencimiento.split('-').map(Number)
-      fechaVencimiento = new Date(anio, mes - 1, dia)
-    } else {
-      fechaVencimiento = new Date(cuota.fecha_vencimiento)
-    }
-  } else {
-    // Si no existe, calcularla como fecha_limite + dias_gracia (fallback)
-    fechaVencimiento = new Date(fechaLimite)
-    fechaVencimiento.setDate(fechaVencimiento.getDate() + diasGracia)
-  }
-  fechaVencimiento.setHours(0, 0, 0, 0)
-  
-  // Programada: fecha_actual < fecha_limite
-  if (fechaActual < fechaLimite) {
-    return 'programada'
-  }
-  
-  // Pendiente: fecha_limite <= fecha_actual <= fecha_vencimiento
-  if (fechaActual >= fechaLimite && fechaActual <= fechaVencimiento) {
-    return 'pendiente'
-  }
-  
-  // En Mora: fecha_actual > fecha_vencimiento
-  if (fechaActual > fechaVencimiento) {
-    return 'mora'
-  }
-  
-  // Por defecto, mantener el estado original
-  return cuota.estado || 'programada'
-}
 function verPrestamoEnMora(item) {
   if (!id.value || id.value === 'undefined' || id.value === 'null') {
     console.warn('ID de natillera inválido, redirigiendo al dashboard', id.value)
@@ -8101,7 +7309,7 @@ function handleModalBack(modalRef, modalName) {
   watch(modalRef, (isOpen) => {
     if (isOpen) {
       // Verificar si hay otras modales abiertas
-const hayOtrasModales = modalComprobanteEstadoSocio.value || modalWhatsApp.value || modalDetalle.value ||
+const hayOtrasModales = modalDetalle.value ||
                               modalConfigMeses.value || modalBuscarComprobante.value ||
                               (modalName !== 'sociosEnMora' && modalSociosEnMora.value) ||
                               (modalName !== 'cuotasSocio' && modalCuotasSocio.value)
@@ -8140,28 +7348,6 @@ function handlePopState(event) {
     // El siguiente "atrás" naturalmente cerrará esa modal
     // Si no hay otras modales, no hacer nada más porque ya hay una entrada en el historial
     // que representa el estado "sin modales" (fue agregada cuando se abrió esta modal)
-    return
-  }
-  
-  // Modal Comprobante Estado Socio (z-50) - se abre después de cerrar WhatsApp, no hay modal debajo
-  if (modalComprobanteEstadoSocio.value) {
-    cerrarModalComprobanteEstadoSocio()
-    return
-  }
-  // Modal WhatsApp (z-50)
-  if (modalWhatsApp.value) {
-    modalWhatsApp.value = false
-    // Si hay otra modal abierta debajo, agregar su estado al historial
-    if (modalDetalle.value) {
-      history.pushState({ modal: 'detalle' }, '', window.location.href)
-    } else if (modalConfigMeses.value) {
-      history.pushState({ modal: 'configMeses' }, '', window.location.href)
-    } else if (modalBuscarComprobante.value) {
-      history.pushState({ modal: 'buscarComprobante' }, '', window.location.href)
-    } else {
-      // No hay otras modales, volver a la página anterior
-      router.back()
-    }
     return
   }
   
@@ -8208,8 +7394,6 @@ function handlePopState(event) {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 // Registrar watchers para cada modal
-handleModalBack(modalComprobanteEstadoSocio, 'comprobanteEstado')
-handleModalBack(modalWhatsApp, 'whatsapp')
 handleModalBack(modalDetalle, 'detalle')
 handleModalBack(modalConfigMeses, 'configMeses')
 handleModalBack(modalBuscarComprobante, 'buscarComprobante')
@@ -8529,14 +7713,6 @@ onMounted(async () => {
 
 
 onUnmounted(() => {
-  if (rafNatiscrollModalWhatsApp != null) {
-    cancelAnimationFrame(rafNatiscrollModalWhatsApp)
-    rafNatiscrollModalWhatsApp = null
-  }
-  if (rafNatiscrollComprobanteEstadoSocio != null) {
-    cancelAnimationFrame(rafNatiscrollComprobanteEstadoSocio)
-    rafNatiscrollComprobanteEstadoSocio = null
-  }
   if (postCargaModalesTimeoutId != null) {
     clearTimeout(postCargaModalesTimeoutId)
     postCargaModalesTimeoutId = null

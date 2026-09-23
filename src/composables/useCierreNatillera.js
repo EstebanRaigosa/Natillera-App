@@ -245,6 +245,8 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
     const baseAdministracion = administracionCfg.base === 'utilidades' ? 'utilidades' : 'total'
 
     const totalUtilidadesBruto = Object.values(montosPorTipo).reduce((acc, v) => acc + v, 0)
+    // Copia antes de escalar por administración: es lo que de verdad generó la natillera.
+    const montosPorTipoBruto = { ...montosPorTipo }
     const montoBase = baseAdministracion === 'total'
       ? totalAhorro + totalUtilidadesBruto
       : totalUtilidadesBruto
@@ -326,6 +328,9 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
       socios,
       totalAhorro,
       utilidadesPorTipo: montosPorTipo,
+      utilidadesPorTipoBruto: montosPorTipoBruto,
+      totalUtilidades,
+      totalUtilidadesBruto: round2(totalUtilidadesBruto),
       participantesCierre,
       // Lo que el acumulador decía frente a lo que de verdad se recaudó: si difieren,
       // conviene verlo antes de cerrar y no después.

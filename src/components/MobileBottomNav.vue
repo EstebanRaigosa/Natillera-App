@@ -57,6 +57,39 @@
       </div>
     </Transition>
 
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2 scale-95"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0 scale-100"
+      leave-to-class="opacity-0 translate-y-2 scale-95"
+    >
+      <div
+        v-if="menuAccionesAbierto && acciones.length > 0"
+        role="menu"
+        aria-label="Acciones de la natillera"
+        class="absolute bottom-full right-2 z-[5] mb-2 flex max-w-[calc(100vw-1rem)] flex-wrap justify-end gap-1.5 rounded-2xl border border-white/15 bg-[#12331f] p-2 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.55)]"
+        @click.stop
+      >
+        <button
+          v-for="accion in acciones"
+          :key="accion.clave"
+          type="button"
+          role="menuitem"
+          class="flex min-h-[44px] min-w-[60px] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-1.5 transition-colors [-webkit-tap-highlight-color:transparent]"
+          :class="[
+            accion.esActual ? 'bg-white/20' : 'hover:bg-white/10 active:bg-white/15',
+            accion.peligro ? 'text-rose-200' : 'text-white'
+          ]"
+          @click="elegirAccion(accion.clave)"
+        >
+          <component :is="accion.icono" class="h-5 w-5 flex-shrink-0" />
+          <span class="text-[10px] font-semibold leading-tight">{{ accion.etiqueta }}</span>
+        </button>
+      </div>
+    </Transition>
+
     <div class="flex items-end justify-around gap-0.5 px-1 max-w-screen-sm mx-auto relative z-[3]">
       <!-- Inicio / Detalle Natillera -->
       <router-link
@@ -241,7 +274,7 @@
         :class="cajaActiva ? 'nav-item--active' : 'nav-item--inactive'"
         aria-haspopup="menu"
         :aria-expanded="menuCajaAbierto"
-        @click.stop="menuCajaAbierto = !menuCajaAbierto"
+        @click.stop="alternarMenu('caja')"
       >
         <div
           v-if="cajaActiva"
@@ -271,31 +304,39 @@
         <span class="text-[10px] sm:text-[11px] leading-tight font-semibold">Caja</span>
       </button>
 
-      <!-- Configuración -->
-      <router-link
+      <!--
+        Acciones: herramientas de la natillera (buscar comprobante, invitar, notificar,
+        configurar, cerrar), con el mismo menú flotante de «Caja». Sustituye al botón
+        de Configuración, que ahora es una de las acciones.
+      -->
+      <button
         v-if="natilleraId"
-        :to="`/natilleras/${natilleraId}/configuracion`"
-        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
-        :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'nav-item--active' : 'nav-item--inactive'"
+        id="tour-bottom-nav-acciones"
+        type="button"
+        class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation [-webkit-tap-highlight-color:transparent]"
+        :class="accionesActiva ? 'nav-item--active' : 'nav-item--inactive'"
+        aria-haspopup="menu"
+        :aria-expanded="menuAccionesAbierto"
+        @click.stop="alternarMenu('acciones')"
       >
         <div
-          v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
+          v-if="accionesActiva"
           class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full shadow-md"
           aria-hidden="true"
         />
-        <Cog6ToothIconSolid
-          v-if="isActive(`/natilleras/${natilleraId}/configuracion`)"
+        <WrenchScrewdriverIconSolid
+          v-if="accionesActiva"
           class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 transition-all text-white"
         />
-        <Cog6ToothIcon
+        <WrenchScrewdriverIcon
           v-else
           class="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 transition-all"
         />
         <span
           class="text-[10px] sm:text-[11px] leading-tight font-semibold transition-colors"
-          :class="isActive(`/natilleras/${natilleraId}/configuracion`) ? 'text-white' : ''"
-        >Config</span>
-      </router-link>
+          :class="accionesActiva ? 'text-white' : ''"
+        >Acciones</span>
+      </button>
       <router-link
         v-else
         to="/configuracion"
@@ -333,10 +374,17 @@ import { useNotificationStore } from '../stores/notifications'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
 
-defineProps({
+const props = defineProps({
   /** Oculta la barra cuando el menú lateral está abierto (móvil) */
-  forceHidden: { type: Boolean, default: false }
+  forceHidden: { type: Boolean, default: false },
+  /**
+   * Acciones de la natillera que el usuario puede usar, ya filtradas por permisos
+   * (las arma DashboardLayout): [{ clave, etiqueta, icono, esActual, peligro? }].
+   */
+  acciones: { type: Array, default: () => [] }
 })
+
+const emit = defineEmits(['accion'])
 
 // En Safari de iOS la barra de direcciones vive abajo y se pinta encima del
 // contenido, tapando esta barra. `tapadoInferior` es lo que hay que levantarla
@@ -448,7 +496,8 @@ import {
   Cog6ToothIcon,
   ReceiptPercentIcon,
   ScaleIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/vue/24/outline'
 import {
   HomeIcon as HomeIconSolid,
@@ -457,7 +506,8 @@ import {
   BanknotesIcon as BanknotesIconSolid,
   CalendarIcon as CalendarIconSolid,
   WalletIcon as WalletIconSolid,
-  Cog6ToothIcon as Cog6ToothIconSolid
+  Cog6ToothIcon as Cog6ToothIconSolid,
+  WrenchScrewdriverIcon as WrenchScrewdriverIconSolid
 } from '@heroicons/vue/24/solid'
 
 const route = useRoute()
@@ -551,18 +601,39 @@ function irACaja(ruta) {
   router.push(ruta)
 }
 
-/* Tocar fuera lo cierra, como cualquier desplegable. El botón de Caja para el evento
-   con `@click.stop`, así que su propio toque no llega aquí y no lo cierra y reabre. */
-function cerrarMenuCajaFuera() {
-  menuCajaAbierto.value = false
+/* ------------------------------- Espacio «Acciones» ------------------------------ */
+
+const menuAccionesAbierto = ref(false)
+
+// Un solo menú flotante a la vez: abrir uno cierra el otro.
+function alternarMenu(cual) {
+  const abrirCaja = cual === 'caja' && !menuCajaAbierto.value
+  const abrirAcciones = cual === 'acciones' && !menuAccionesAbierto.value
+  menuCajaAbierto.value = abrirCaja
+  menuAccionesAbierto.value = abrirAcciones
 }
 
-watch(menuCajaAbierto, (abierto) => {
-  if (abierto) document.addEventListener('click', cerrarMenuCajaFuera)
-  else document.removeEventListener('click', cerrarMenuCajaFuera)
+function elegirAccion(clave) {
+  menuAccionesAbierto.value = false
+  emit('accion', clave)
+}
+
+// Activo estando en cualquiera de las pantallas a las que lleva (configurar, notificar…).
+const accionesActiva = computed(() => props.acciones.some(a => a.esActual))
+
+/* Tocar fuera los cierra, como cualquier desplegable. Los botones de la barra paran el
+   evento con `@click.stop`, así que su propio toque no llega aquí y no cierra y reabre. */
+function cerrarMenusFuera() {
+  menuCajaAbierto.value = false
+  menuAccionesAbierto.value = false
+}
+
+watch([menuCajaAbierto, menuAccionesAbierto], ([caja, acciones]) => {
+  if (caja || acciones) document.addEventListener('click', cerrarMenusFuera)
+  else document.removeEventListener('click', cerrarMenusFuera)
 })
 
-onUnmounted(() => document.removeEventListener('click', cerrarMenuCajaFuera))
+onUnmounted(() => document.removeEventListener('click', cerrarMenusFuera))
 
 // El espacio se pinta activo estando en cualquiera de las dos pantallas que agrupa,
 // para que la barra no diga «no estás en ningún sitio» cuando sí lo estás.
@@ -577,6 +648,7 @@ const cajaActiva = computed(() => {
 // Con el botón «atrás» del teléfono la hoja debe cerrarse como cualquier otra capa.
 watch(() => route.fullPath, () => {
   menuCajaAbierto.value = false
+  menuAccionesAbierto.value = false
 })
 
 // Navegar a la primera natillera activa con la sección especificada

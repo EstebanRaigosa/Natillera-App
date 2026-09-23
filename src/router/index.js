@@ -28,6 +28,7 @@ const CuadreCaja = () => import('../views/cuadre/CuadreCaja.vue')
 const ConciliacionCaja = () => import('../views/conciliacion/ConciliacionCaja.vue')
 const Movimientos = () => import('../views/movimientos/Movimientos.vue')
 const PagosSocios = () => import('../views/pagos/PagosSocios.vue')
+const NotificarSocios = () => import('../views/notificar/NotificarSocios.vue')
 const NatilleraConfiguracion = () => import('../views/natilleras/NatilleraConfiguracion.vue')
 const Configuracion = () => import('../views/configuracion/Configuracion.vue')
 const MiCuenta = () => import('../views/usuario/MiCuenta.vue')
@@ -38,6 +39,7 @@ const DesignSystemDemo = () => import('../views/demo/DesignSystemDemo.vue')
 // Soporte: carga diferida para que el módulo no engorde el arranque (RNF-12)
 const Soporte = () => import('../views/soporte/Soporte.vue')
 const SoporteAdmin = () => import('../views/admin/SoporteAdmin.vue')
+const TraficoAdmin = () => import('../views/admin/TraficoAdmin.vue')
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -157,6 +159,13 @@ const routes = [
         meta: { title: 'Conciliación de caja' }
       },
       {
+        path: 'natilleras/:id/notificar',
+        name: 'NotificarSocios',
+        component: NotificarSocios,
+        props: true,
+        meta: { title: 'Notificar' }
+      },
+      {
         path: 'natilleras/:id/pagos',
         name: 'PagosSocios',
         component: PagosSocios,
@@ -218,6 +227,14 @@ const routes = [
         // Sin `props: true`: la vista lee el parámetro con useRoute y así puede
         // reaccionar a que la ruta cambie sin remontarse.
         meta: { title: 'Soporte' }
+      },
+      {
+        // Mismo criterio que el panel de soporte: el guard evita el paseo inútil, pero
+        // quien manda es RLS — `accesos_usuario` solo abre el tráfico ajeno al superadmin.
+        path: 'admin/trafico',
+        name: 'TraficoAdmin',
+        component: TraficoAdmin,
+        meta: { title: 'Tráfico', requiresSuperAdmin: true }
       },
       {
         // El guard es comodidad de interfaz: aunque alguien fuerce la ruta,

@@ -39,6 +39,11 @@ function aNumero(valor) {
  * @returns {Promise<{porTipo: object, total: number, registrado: number, diferencia: number, error?: string}>}
  */
 export async function calcularUtilidadesReales(natilleraId, opciones = {}) {
+  /*
+   * `conRegistrado` trae además lo que dice el acumulador, para poder contrastarlo. Solo
+   * lo necesita el cierre; el desglose del detalle no lo usa y se ahorra una consulta.
+   */
+  const conRegistrado = opciones.conRegistrado !== false
   const porTipo = { sanciones: 0, prestamos: 0, rifas: 0, bingo: 0, venta: 0, evento: 0, otro: 0, utilidades_adicionales: 0 }
   if (!natilleraId) return { porTipo, total: 0, registrado: 0, diferencia: 0 }
 
@@ -90,11 +95,13 @@ export async function calcularUtilidadesReales(natilleraId, opciones = {}) {
         .select('tipo, monto, destino_ingreso, origen_egreso')
         .eq('natillera_id', natilleraId)
         .or('destino_ingreso.eq.utilidades,origen_egreso.eq.utilidades'),
-      supabase
-        .from('utilidades_clasificadas')
-        .select('monto')
-        .eq('natillera_id', natilleraId)
-        .is('fecha_cierre', null),
+      conRegistrado
+        ? supabase
+            .from('utilidades_clasificadas')
+            .select('monto')
+            .eq('natillera_id', natilleraId)
+            .is('fecha_cierre', null)
+        : { data: [] },
       /*
        * El interés de MORA cobrado en los abonos. Es la única utilidad que no se puede
        * recalcular: no queda en ninguna columna del préstamo ni de su plan —solo se
