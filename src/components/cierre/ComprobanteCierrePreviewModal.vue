@@ -120,6 +120,7 @@
 </template>
 
 <script setup>
+import { numeroWhatsApp } from '../../utils/telefono'
 import { computed, nextTick, ref, watch } from 'vue'
 import { toPng } from 'html-to-image'
 import { ArrowDownTrayIcon, ChatBubbleLeftIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
@@ -216,7 +217,7 @@ function enviarWhatsApp() {
 // chat con el texto; la imagen hay que adjuntarla a mano.
 function abrirWhatsAppConTexto() {
   descargar()
-  const numero = telefono.value.length === 10 ? '57' + telefono.value : telefono.value
+  const numero = numeroWhatsApp(telefono.value)
   window.open(`https://wa.me/${numero}?text=${encodeURIComponent(props.texto)}`, '_blank')
   emit('sin-compartir')
 }

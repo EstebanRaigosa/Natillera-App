@@ -41,10 +41,7 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-8">
-      <div class="animate-spin w-8 h-8 border-4 border-[color:var(--brand-primary)] border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-gray-500 mt-3 text-sm">Cargando colaboradores…</p>
-    </div>
+    <CargaCaja v-if="loading" texto="Cargando colaboradores" />
 
     <!-- Lista de colaboradores -->
     <div v-else class="space-y-3">
@@ -744,6 +741,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useColaboradoresStore, PERMISOS_DISPONIBLES, PERMISOS_POR_ROL } from '../stores/colaboradores'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import ModalWrapper from './ModalWrapper.vue'
+import CargaCaja from './carga/CargaCaja.vue'
 import { supabase } from '../lib/supabase'
 import {
   UserPlusIcon,

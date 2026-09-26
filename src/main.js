@@ -153,4 +153,9 @@ pinia.use(createPersistedState({ storage: sessionStorage }))
 app.use(pinia)
 app.use(router)
 
-app.mount('#app')
+/*
+ * Se monta cuando el router ya resolvió la primera ruta. La portada llega pre-renderizada
+ * dentro de #app: montar antes vaciaría ese HTML y dejaría la pantalla en blanco mientras
+ * la guarda de «/» averigua si hay sesión. Si la navegación inicial falla, se monta igual.
+ */
+router.isReady().finally(() => app.mount('#app'))

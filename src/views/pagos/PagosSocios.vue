@@ -35,7 +35,7 @@
       </div>
     </header>
 
-    <LoadingScreen :visible="cargando" text="Reuniendo los pagos de cada socio" />
+    <CargaPantalla :visible="cargando" text="Reuniendo los pagos de cada socio" />
 
     <template v-if="!cargando">
       <div
@@ -469,7 +469,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import PagoFila from '../../components/pagos/PagoFila.vue'
 import {
   usePagosSocios,

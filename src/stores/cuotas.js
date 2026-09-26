@@ -2757,10 +2757,13 @@ export const useCuotasStore = defineStore('cuotas', () => {
       // Lanzar operaciones secundarias en paralelo (no bloquean el retorno)
       const tareasSecundarias = []
 
-      // 1. Actualizar mora automática
-      tareasSecundarias.push(
-        actualizarEstadoMoraAutomatico().catch(e => console.warn('actualizarEstadoMoraAutomatico:', e.message))
-      )
+      // 1. Actualizar mora automática. La carga rápida (muchos pagos seguidos) lo omite y
+      // recalcula una sola vez al final: hacerlo por cada pago relee toda la natillera.
+      if (!options.omitirRecalculoMora) {
+        tareasSecundarias.push(
+          actualizarEstadoMoraAutomatico().catch(e => console.warn('actualizarEstadoMoraAutomatico:', e.message))
+        )
+      }
 
       // 2. Registrar utilidad de sanción (fire-and-forget)
       const debeRegistrarUtilidad = !tieneNoCalcularMulta && sancionQuitada && valorSancionPagada > 0

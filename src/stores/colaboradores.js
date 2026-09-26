@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
+import { nivelesDePermisos, nivelesTodos, banderasDeNiveles, permisosParaGuardar, NIVELES_COLABORADOR_INICIAL } from '../permisos/modulos'
 
 /**
  * Roles disponibles para colaboradores
@@ -30,48 +31,14 @@ export const PERMISOS_DISPONIBLES = {
 }
 
 /**
- * Permisos por defecto según el rol
+ * Permisos por defecto según el rol, derivados de las plantillas de src/permisos/modulos.js
+ * (antes eran tablas a mano y el visor quedaba con casi todo en true). Incluyen `modulos`,
+ * que es lo que lee la base de datos; las banderas quedan por compatibilidad.
  */
 export const PERMISOS_POR_ROL = {
-  co_administrador: {
-    ver: true,
-    editar_socios: true,
-    gestionar_cuotas: true,
-    gestionar_prestamos: true,
-    gestionar_actividades: true,
-    ver_auditoria: true,
-    configurar: true,
-    buscar_comprobante: true,
-    invitar_colaboradores: true,
-    notificar: true,
-    cerrar_natillera: false
-  },
-  colaborador: {
-    ver: true,
-    editar_socios: false,
-    gestionar_cuotas: true,
-    gestionar_prestamos: false,
-    gestionar_actividades: false,
-    ver_auditoria: false,
-    configurar: false,
-    buscar_comprobante: true,
-    invitar_colaboradores: true,
-    notificar: true,
-    cerrar_natillera: true
-  },
-  visor: {
-    ver: true,
-    editar_socios: true,
-    gestionar_cuotas: true,
-    gestionar_prestamos: true,
-    gestionar_actividades: true,
-    ver_auditoria: true,
-    configurar: true,
-    buscar_comprobante: true,
-    invitar_colaboradores: false,
-    notificar: false,
-    cerrar_natillera: false
-  }
+  co_administrador: permisosParaGuardar('co_administrador'),
+  colaborador: permisosParaGuardar('colaborador', NIVELES_COLABORADOR_INICIAL),
+  visor: permisosParaGuardar('visor')
 }
 
 export const useColaboradoresStore = defineStore('colaboradores', () => {
@@ -704,14 +671,8 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
           .single()
 
         if (natillera?.admin_id === user.id) {
-          permisoActual.value = {
-            rol: 'administrador',
-            esAdmin: true,
-            permisos: Object.keys(PERMISOS_DISPONIBLES).reduce((acc, key) => {
-              acc[key] = true
-              return acc
-            }, {})
-          }
+          const niveles = nivelesTodos('gestionar')
+          permisoActual.value = { rol: 'administrador', esAdmin: true, niveles, permisos: banderasDeNiveles(niveles) }
           return permisoActual.value
         }
       }
@@ -725,11 +686,10 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
         .maybeSingle()
 
       if (colaborador) {
-        permisoActual.value = {
-          rol: colaborador.rol,
-          esAdmin: false,
-          permisos: colaborador.permisos
-        }
+        // Niveles por opción (misma lógica que la base de datos) y, de ellos, las banderas
+        // que aún consultan varias pantallas: un visor ya no hereda banderas en true.
+        const niveles = nivelesDePermisos(colaborador.rol, colaborador.permisos)
+        permisoActual.value = { rol: colaborador.rol, esAdmin: false, niveles, permisos: banderasDeNiveles(niveles) }
         return permisoActual.value
       }
 

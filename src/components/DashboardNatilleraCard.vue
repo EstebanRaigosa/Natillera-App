@@ -9,30 +9,6 @@
         : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
-    <div
-      v-if="ribbonOtroUsuario"
-      class="pointer-events-none absolute right-0 top-0 z-20 h-32 w-32 overflow-hidden"
-      aria-hidden="true"
-    >
-      <span
-        class="absolute right-[-42px] top-7 w-[11.5rem] bg-amber-200 py-1.5 text-center text-[9px] font-bold uppercase leading-tight tracking-wide text-amber-950 shadow-sm ring-1 ring-amber-500/65"
-        style="transform: rotate(45deg)"
-      >
-        De otro usuario
-      </span>
-    </div>
-    <div
-      v-else-if="ribbonCompartida"
-      class="pointer-events-none absolute right-0 top-0 z-20 h-28 w-28 overflow-hidden"
-      aria-hidden="true"
-    >
-      <span
-        class="absolute right-[-36px] top-6 w-40 bg-yellow-100 py-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-950 shadow-sm ring-1 ring-yellow-400/80"
-        style="transform: rotate(45deg)"
-      >
-        Compartida
-      </span>
-    </div>
 
     <div
       class="natillera-card-header relative flex min-h-[4.5rem] shrink-0 items-start overflow-hidden bg-gradient-to-br from-[#166534] via-[#166534] to-[#124a2c] px-3 pb-3 pt-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] sm:min-h-[4.75rem] sm:px-4 sm:pb-3.5 sm:pt-3.5"
@@ -64,9 +40,9 @@
       </div>
       <router-link
         :to="detalleUrl"
-        class="relative z-10 block min-w-0 w-full"
+        class="relative z-10 flex min-w-0 w-full items-start gap-2"
       >
-        <div class="min-w-0 pr-1">
+        <div class="min-w-0 flex-1 pr-1">
           <h3
             class="font-body text-base font-bold leading-snug tracking-tight text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.2)]"
           >
@@ -78,6 +54,10 @@
             {{ lineaPeriodicidad }}
           </p>
         </div>
+        <span :class="['etiqueta-natillera', 'etiqueta-natillera--cabecera', `etiqueta-natillera--${etiqueta.tipo}`]">
+          <component :is="etiqueta.icono" class="h-3.5 w-3.5" stroke-width="2" aria-hidden="true" />
+          {{ etiqueta.texto }}
+        </span>
       </router-link>
     </div>
 
@@ -220,30 +200,6 @@
         : 'transition-all duration-300 ease-out lg:hover:-translate-y-0.5 lg:hover:border-emerald-200/90 lg:hover:shadow-lg motion-reduce:transition-none motion-reduce:lg:hover:translate-y-0 motion-reduce:lg:hover:shadow-sm',
     ]"
   >
-    <div
-      v-if="ribbonOtroUsuario"
-      class="pointer-events-none absolute right-0 top-0 z-20 h-32 w-32 overflow-hidden"
-      aria-hidden="true"
-    >
-      <span
-        class="absolute right-[-42px] top-7 w-[11.5rem] bg-amber-200 py-1.5 text-center text-[9px] font-bold uppercase leading-tight tracking-wide text-amber-950 shadow-sm ring-1 ring-amber-500/65"
-        style="transform: rotate(45deg)"
-      >
-        De otro usuario
-      </span>
-    </div>
-    <div
-      v-else-if="ribbonCompartida"
-      class="pointer-events-none absolute right-0 top-0 z-20 h-28 w-28 overflow-hidden"
-      aria-hidden="true"
-    >
-      <span
-        class="absolute right-[-36px] top-6 w-40 bg-yellow-100 py-1 text-center text-[10px] font-bold uppercase tracking-[0.12em] text-yellow-950 shadow-sm ring-1 ring-yellow-400/80"
-        style="transform: rotate(45deg)"
-      >
-        Compartida
-      </span>
-    </div>
 
     <div
       class="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-2xl"
@@ -256,13 +212,19 @@
       :to="detalleUrl"
       class="relative z-[1] flex min-w-0 flex-1 flex-col gap-3"
     >
-      <div class="min-w-0">
-        <h3 class="font-body text-base font-bold leading-snug text-gray-900">
-          {{ natillera.nombre }}
-        </h3>
-        <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
-          {{ lineaPeriodicidad }}
-        </p>
+      <div class="flex min-w-0 items-start gap-2">
+        <div class="min-w-0 flex-1">
+          <h3 class="font-body text-base font-bold leading-snug text-gray-900">
+            {{ natillera.nombre }}
+          </h3>
+          <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+            {{ lineaPeriodicidad }}
+          </p>
+        </div>
+        <span :class="['etiqueta-natillera', `etiqueta-natillera--${etiqueta.tipo}`]">
+          <component :is="etiqueta.icono" class="h-3.5 w-3.5" stroke-width="2" aria-hidden="true" />
+          {{ etiqueta.texto }}
+        </span>
       </div>
       <div class="grid w-full min-w-0 grid-cols-2 gap-2">
         <div class="min-w-0 rounded-md border border-gray-100/90 bg-gray-50/70 px-2.5 py-1.5 text-left sm:py-2">
@@ -364,7 +326,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { TrashIcon, UserGroupIcon, CalendarIcon, BanknotesIcon, SparklesIcon } from '@heroicons/vue/24/outline'
+import { TrashIcon, UserGroupIcon, CalendarIcon, BanknotesIcon, SparklesIcon, KeyIcon, ShareIcon, EyeIcon } from '@heroicons/vue/24/outline'
 import { parseDateLocal } from '../utils/formatDate'
 import { formatearMesAnio } from '../utils/natilleraFormat'
 import PinThumbIcon from './PinThumbIcon.vue'
@@ -388,6 +350,17 @@ const props = defineProps({
 defineEmits(['toggle-pin', 'delete'])
 
 const detalleUrl = computed(() => `/natilleras/${props.natillera.id}`)
+
+/*
+ * Qué relación tiene la cuenta con la natillera, en una etiqueta junto al nombre. Antes
+ * eran cintas cruzadas en la esquina; ahora es el mismo formato de la tarjeta de socio
+ * («Socio»), para que las cuatro se lean igual: Propia · Compartida · De otro usuario · Socio.
+ */
+const etiqueta = computed(() => {
+  if (props.ribbonOtroUsuario) return { tipo: 'otro', texto: 'De otro usuario', icono: EyeIcon }
+  if (props.ribbonCompartida) return { tipo: 'compartida', texto: 'Compartida', icono: ShareIcon }
+  return { tipo: 'propia', texto: 'Propia', icono: KeyIcon }
+})
 
 const estadoNatillera = computed(() =>
   String(props.natillera.estado || 'activa').toLowerCase() === 'cerrada'
@@ -438,3 +411,31 @@ function formatoMoneda(valor) {
   }).format(n)
 }
 </script>
+
+<style scoped>
+/*
+ * Etiqueta de relación con la natillera (misma forma que «Socio» en la tarjeta de socio).
+ * Paleta pensada contra el verde de marca: blanco para lo propio (lo normal), el acento
+ * naranja de la marca para «Socio», azul cielo para «Compartida» (frío, vecino del verde,
+ * no choca con el naranja) y pizarra para la vista interna de superadmin. Rellenos claros
+ * con texto oscuro: se leen igual sobre la cabecera verde que sobre el blanco de la fila.
+ */
+.etiqueta-natillera {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.etiqueta-natillera--propia { background: #ffffff; color: #1B5E37; box-shadow: inset 0 0 0 1px rgba(27, 94, 55, 0.22); }
+.etiqueta-natillera--compartida { background: #e0f2fe; color: #0c4a6e; box-shadow: inset 0 0 0 1px rgba(12, 74, 110, 0.18); }
+.etiqueta-natillera--otro { background: #e2e8f0; color: #1e293b; box-shadow: inset 0 0 0 1px rgba(30, 41, 59, 0.15); }
+/* Sobre la cabecera verde, una sombra leve la despega del fondo. */
+.etiqueta-natillera--cabecera { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22); }
+</style>

@@ -7,10 +7,11 @@
       :descripcion="`${socios.length} ${socios.length === 1 ? 'socio recibe' : 'socios reciben'} ${Number(formActividad.cantidadNumerosPorSocio) || 0} ${(Number(formActividad.cantidadNumerosPorSocio) || 0) === 1 ? 'número' : 'números'} al azar.`"
     />
     <!-- Un pago toca la fila, su desglose y las utilidades del fondo: se acompaña la espera -->
-    <CargaCuadricula
-      :show="registrandoCobroSocio || registrandoCobro"
-      titulo="Registrando el pago"
-      descripcion="Actualizando los valores y las utilidades del fondo."
+    <CargaCaja
+      :visible="registrandoCobroSocio || registrandoCobro"
+      flotante
+      texto="Registrando el pago"
+      detalle="Actualizando los valores y las utilidades del fondo."
     />
     <!-- Page header (DS) — patrón unificado Socios/Cuotas/Préstamos/Actividades -->
     <header ref="headerRef" class="ds-page-header">
@@ -41,6 +42,7 @@
           <!-- Móvil: a ancho completo bajo el título; con el texto en la fila del título
                se comía el ancho y «Actividades» quedaba partido -->
           <button
+            v-if="!soloLectura"
             type="button"
             data-guia="actividades-cobrar"
             class="ds-btn ds-btn--secondary ds-btn--block sm:w-auto"
@@ -50,6 +52,7 @@
             <span>Registrar pago</span>
           </button>
           <button
+            v-if="!soloLectura"
             type="button"
             data-guia="actividades-nueva"
             class="ds-btn ds-btn--primary ds-btn--block sm:w-auto"
@@ -61,6 +64,10 @@
         </div>
       </div>
     </header>
+    <div v-if="soloLectura && permisos.cargado.value" class="ds-callout">
+      <InformationCircleIcon class="ds-callout__icon h-5 w-5" />
+      <p><span class="ds-callout__title">Solo lectura.</span> Puedes ver las actividades, pero no registrar ni cambiar nada.</p>
+    </div>
     <!-- Modal explicativo «Liquidar vs En curso». Solo se abre la primera vez en cada
          natillera: al cerrarlo se marca como visto (sin checkbox), por eso no hay opción
          de «no mostrar de nuevo». -->
@@ -230,7 +237,7 @@
           Las actividades generan fondos adicionales para la natillera
         </p>
       </div>
-      <div class="ds-empty-state__body">
+      <div v-if="!soloLectura" class="ds-empty-state__body">
         <button
           type="button"
           class="ds-btn ds-btn--primary ds-btn--block"
@@ -315,6 +322,7 @@
       <!-- Vista Normal: todas las actividades sin agrupar -->
       <div v-if="!vistaAgrupada" class="space-y-4">
         <ActividadCard
+          :solo-lectura="soloLectura"
           v-for="(actividad, idx) in actividadesFiltradas"
           :key="actividad.id"
           :data-guia="idx === 0 ? 'actividades-tarjeta' : undefined"
@@ -430,6 +438,7 @@
                     <ArrowDownTrayIcon class="w-5 h-5" />
                   </button>
                   <button
+                    v-if="!soloLectura"
                     @click.stop="confirmarEliminarGrupo(item)"
                     class="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors text-gray-400 hover:text-rose-600 hover:bg-rose-50 touch-manipulation"
                     title="Eliminar serie completa"
@@ -448,6 +457,7 @@
                 <!-- Hilo índigo a la izquierda: deja claro que las filas cuelgan de la serie -->
                 <div class="space-y-1.5 border-l-2 border-indigo-200 pl-3">
                   <ActividadCard
+                    :solo-lectura="soloLectura"
                     v-for="actividad in item.actividades"
                     :key="actividad.id"
                     :data-guia-actividad="actividad.id"
@@ -469,6 +479,7 @@
           <!-- Actividad suelta (sin serie) -->
           <template v-else-if="item.tipo === 'individual' && item.actividad && item.actividad.id">
             <ActividadCard
+              :solo-lectura="soloLectura"
               :key="item.actividad.id"
               :actividad="item.actividad"
               @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
@@ -486,7 +497,7 @@
     <!-- FAB: la acción principal sigue a mano cuando la cabecera sale de pantalla -->
     <Transition name="ds-fab">
       <button
-        v-if="mostrarFab"
+        v-if="mostrarFab && !soloLectura"
         type="button"
         class="ds-fab"
         aria-label="Registrar actividad"
@@ -592,7 +603,7 @@
 
           <!-- Paso 2: sus actividades pendientes -->
           <template v-else>
-            <p v-if="cargandoPendientesCobro" class="py-8 text-center text-sm text-slate-500">Buscando lo que debe…</p>
+            <CargaCaja v-if="cargandoPendientesCobro" texto="Buscando lo que debe" />
             <template v-else-if="pendientesSocioCobro.length === 0">
               <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center">
                 <p class="text-sm font-semibold text-slate-700">Nada por cobrar</p>
@@ -1830,7 +1841,7 @@
 
                 <!-- Cobrar solo esta actividad, sin pasar por la cuota del socio. El formulario
                      es en línea (no abre otro modal): anidar overlays rompe iOS. -->
-                <div v-if="puedeCobrarSocio(socioAct)" class="mt-2.5">
+                <div v-if="puedeCobrarSocio(socioAct) && !soloLectura" class="mt-2.5">
                   <button
                     v-if="socioACobrar !== socioAct.id"
                     type="button"
@@ -1921,7 +1932,7 @@
                 </div>
                 <!-- Eliminar el pago del socio. La confirmación es en línea (no abre otro modal):
                      este bloque vive dentro del modal de detalle y anidar overlays rompe iOS. -->
-                <div v-if="getValorPagadoSocio(socioAct) > 0" class="mt-2.5">
+                <div v-if="getValorPagadoSocio(socioAct) > 0 && !soloLectura" class="mt-2.5">
                   <button
                     v-if="pagoAEliminar !== socioAct.id"
                     type="button"
@@ -1985,6 +1996,7 @@
                         <p class="text-xs text-gray-500 truncate">Números no asignados a socios</p>
                       </div>
                       <button
+                        v-if="!soloLectura"
                         @click="abrirModalAsignarFaltante(faltante)"
                         class="hidden sm:flex shrink-0 px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg items-center gap-2 text-sm"
                       >
@@ -2036,7 +2048,7 @@
                       </div>
                     </div>
                     <!-- Botón Asignar al final (solo móvil) -->
-                    <div class="mt-4 pt-3 border-t border-gray-300 sm:hidden">
+                    <div v-if="!soloLectura" class="mt-4 pt-3 border-t border-gray-300 sm:hidden">
                       <button
                         @click="abrirModalAsignarFaltante(faltante)"
                         class="w-full px-4 py-2 bg-gradient-to-r from-natillera-500 to-emerald-600 hover:from-natillera-600 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm"
@@ -2055,7 +2067,7 @@
         </div>
         <!-- Footer de acciones fijo -->
         <!-- Footer de liquidación: solo disponible (visible + habilitado) para actividades tipo rifa -->
-        <div v-if="actividadSeleccionada.tipo === 'rifa'" class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div v-if="actividadSeleccionada.tipo === 'rifa' && !soloLectura" class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             @click="abrirModalLiquidar"
@@ -2469,7 +2481,7 @@
               <p class="font-bold text-sm text-gray-800">Pagos de la rifa</p>
               <p v-if="saldoPendienteRifa > 0" class="text-xs text-red-600 font-semibold">Faltan ${{ formatMoney(saldoPendienteRifa) }}</p>
             </div>
-            <p v-if="cargandoPagosRifaLiquidada" class="text-xs text-gray-500 py-2">Cargando pagos...</p>
+            <CargaCaja v-if="cargandoPagosRifaLiquidada" texto="Cargando pagos de la rifa" />
             <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-gray-500 italic py-2">No hay números asignados en esta rifa.</p>
             <template v-else>
               <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 mb-2" role="tablist">
@@ -2555,7 +2567,7 @@
           </button>
           <!-- Solo en desarrollo: revertir liquidación para pruebas -->
           <button 
-            v-if="isDev"
+            v-if="isDev && !soloLectura"
             type="button"
             @click="revertirLiquidacionRifa"
             :disabled="revertiendoLiquidacion"
@@ -3668,6 +3680,7 @@
   </div>
 </template>
 <script setup>
+import { numeroWhatsApp } from '../../utils/telefono'
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
@@ -3679,10 +3692,12 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'
 import CargaCuadricula from '../../components/CargaCuadricula.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { useRegistrarPagoActividad, generarComprobanteDirecto } from '../../composables/useRegistrarPagoActividad'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { useAuthStore } from '../../stores/auth'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import ActividadesSkeleton from '../../components/ActividadesSkeleton.vue'
 
 import BackButton from '../../components/BackButton.vue'
@@ -3759,6 +3774,10 @@ const props = defineProps({
 const route = useRoute()
 const authStore = useAuthStore()
 const id = props.id || route.params.id
+const permisos = usePermisosNatillera(id)
+// Quien solo tiene «ver» no llega a los botones de escritura. Lo que de verdad bloquea es
+// la base de datos (RLS); esto evita que el usuario pulse algo que acabaría en error.
+const soloLectura = computed(() => !permisos.puedeGestionar('actividades'))
 const actividades = ref([])
 const loading = ref(false)
 const cargaInicial = ref(true) // true hasta que fetchActividades resuelva la primera carga (muestra skeleton)
@@ -3798,6 +3817,7 @@ function cobroValido(socioAct) {
   return valor > 0 && valor <= pendienteSocio(socioAct)
 }
 function abrirCobroSocio(socioAct) {
+  if (soloLectura.value) return
   cancelarEliminarPago()
   socioACobrar.value = socioAct.id
   formCobro.valor = pendienteSocio(socioAct)
@@ -3808,6 +3828,7 @@ function cancelarCobroSocio() {
   formCobro.valor = 0
 }
 async function confirmarCobroSocio(socioAct) {
+  if (soloLectura.value) return
   if (registrandoCobro.value || !cobroValido(socioAct)) return
   registrandoCobro.value = true
   const inicio = Date.now()
@@ -3885,6 +3906,7 @@ const totalCobroSocio = computed(() =>
 const hayAlgoQueCobrar = computed(() => totalCobroSocio.value > 0)
 
 async function abrirModalCobroSocio() {
+  if (soloLectura.value) return
   modalCobroSocio.value = true
   pasoCobro.value = 'socio'
   busquedaSocioCobro.value = ''
@@ -3897,6 +3919,7 @@ async function abrirModalCobroSocio() {
 }
 
 async function elegirSocioCobro(socioNatillera) {
+  if (soloLectura.value) return
   socioCobro.value = socioNatillera
   pasoCobro.value = 'actividades'
   cargandoPendientesCobro.value = true
@@ -3946,6 +3969,7 @@ function volverAElegirSocio() {
  * es un solo pago, aunque por dentro sean varias filas de `socios_actividad`.
  */
 async function registrarCobroSocio() {
+  if (soloLectura.value) return
   if (registrandoCobroSocio.value || !hayAlgoQueCobrar.value) return
   registrandoCobroSocio.value = true
   const inicio = Date.now()
@@ -4059,7 +4083,7 @@ async function compartirComprobanteActividad() {
     const telefono = String(comprobanteActividad.value?.socioTelefono || '').replace(/\D/g, '')
     if (telefono) {
       const mensaje = `${comprobanteActividad.value?.socioNombre} · Comprobante ${comprobanteActividad.value?.codigo}`
-      window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+      window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
     }
   } catch (e) {
     // El usuario cancelando el diálogo de compartir no es un error que reportar
@@ -4693,6 +4717,7 @@ function getValorPagadoSocio(socioAct) {
 // Abre la confirmación en línea y calcula el impacto real (utilidades, cuota que lo cobró,
 // números de rifa) para que el usuario vea qué se va a revertir antes de confirmar.
 async function pedirConfirmacionEliminarPago(socioAct) {
+  if (soloLectura.value) return
   cancelarCobroSocio() // un solo formulario en línea abierto a la vez
   pagoAEliminar.value = socioAct.id
   previewPago.value = null
@@ -4716,6 +4741,7 @@ function cancelarEliminarPago() {
 }
 
 async function confirmarEliminarPagoActividad(socioAct) {
+  if (soloLectura.value) return
   if (eliminandoPagoActividad.value) return
   eliminandoPagoActividad.value = true
   try {
@@ -5694,6 +5720,7 @@ function handlePremioEntregadoInput(event) {
   event.target.value = formatNumberWithSeparator(parsedValue)
 }
 async function abrirModalLiquidar() {
+  if (soloLectura.value) return
   // Solo permitir liquidar actividades de tipo rifa
   if (!actividadSeleccionada.value || actividadSeleccionada.value.tipo !== 'rifa') {
     notificationStore.error('Solo se pueden liquidar actividades de tipo rifa', 'Error')
@@ -5874,6 +5901,7 @@ watch(modalGanadorRifa, (abierto) => {
   cargarPagosRifaLiquidada(actividadSeleccionada.value.id)
 })
 function abrirModalFormaPagoLiquidacion(actividad) {
+  if (soloLectura.value) return
   actividadParaFormaPago.value = actividad
   formFormaPagoLiquidacion.forma_pago = (actividad.forma_pago_liquidacion || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
 }
@@ -5901,6 +5929,7 @@ async function abrirModalMiembrosPagaron(actividad) {
 // Registrar gastos de una actividad finalizada (no rifa): edita el total de gastos y
 // recalcula la utilidad (ingresos - gastos).
 function abrirModalRegistrarGastos(actividad) {
+  if (soloLectura.value) return
   actividadParaGastos.value = actividad
   formGastos.gastos = Number(actividad.gastos) || 0
   modalRegistrarGastos.value = true
@@ -5910,6 +5939,7 @@ const utilidadGastosPreview = computed(() => {
   return ing - (Number(formGastos.gastos) || 0)
 })
 async function guardarGastos() {
+  if (soloLectura.value) return
   const act = actividadParaGastos.value
   if (!act?.id) return
   guardandoGastos.value = true
@@ -5933,6 +5963,7 @@ async function guardarGastos() {
   }
 }
 async function guardarFormaPagoLiquidacion() {
+  if (soloLectura.value) return
   const act = actividadParaFormaPago.value
   if (!act?.id) return
   const nuevaForma = (formFormaPagoLiquidacion.forma_pago || 'efectivo').toLowerCase().trim() === 'transferencia' ? 'transferencia' : 'efectivo'
@@ -5968,6 +5999,7 @@ async function guardarFormaPagoLiquidacion() {
 }
 /** Solo dev: revierte una rifa liquidada a "en curso" (elimina utilidades_clasificadas, movimiento premio, actualiza actividad) */
 async function revertirLiquidacionRifa() {
+  if (soloLectura.value) return
   const act = actividadSeleccionada.value
   if (!act || act.tipo !== 'rifa' || act.estado !== 'liquidada') {
     notificationStore.error('Solo se puede revertir una rifa en estado liquidada', 'Error')
@@ -6106,6 +6138,7 @@ function abrirModalGanadoresGrupo(grupo) {
   grupoGanadoresSeleccionado.value = grupo
 }
 async function guardarLiquidacion() {
+  if (soloLectura.value) return
   if (!actividadSeleccionada.value) {
     notificationStore.error('Error: actividad no seleccionada', 'Error')
     return
@@ -6124,6 +6157,7 @@ async function guardarLiquidacion() {
   await confirmarLiquidacion()
 }
 async function confirmarLiquidacion() {
+  if (soloLectura.value) return
   loading.value = true
   try {
     const totalRecaudado = totalRecaudadoLiquidar.value
@@ -6311,6 +6345,7 @@ async function confirmarLiquidacion() {
   }
 }
 function abrirModalVenta(numero) {
+  if (soloLectura.value) return
   numeroSeleccionado.value = numero
   formVentaRifa.numero = numero
   formVentaRifa.nombreComprador = ''
@@ -6331,6 +6366,7 @@ function abrirModalVenta(numero) {
   modalVentaRifa.value = true
 }
 function abrirModalPagar(numero) {
+  if (soloLectura.value) return
   const numeroData = numerosRifa.value[numero]
   if (!numeroData || (numeroData.estado !== 'vendido' && numeroData.estado !== 'pagado')) return
   
@@ -6341,6 +6377,7 @@ function abrirModalPagar(numero) {
   modalPagarRifa.value = true
 }
 async function guardarVentaRifa() {
+  if (soloLectura.value) return
   if (!formVentaRifa.nombreComprador || !formVentaRifa.socioVendedor || !formVentaRifa.valor || formVentaRifa.valor <= 0) {
     notificationStore.error('Debe completar todos los campos requeridos', 'Error')
     return
@@ -6395,6 +6432,7 @@ async function guardarVentaRifa() {
   }
 }
 async function guardarPagoRifa() {
+  if (soloLectura.value) return
   if (!formPagarRifa.numero) {
     notificationStore.error('Error: número no válido', 'Error')
     return
@@ -6927,6 +6965,7 @@ function etiquetaCuandoJuegoRifa(cuandoJuegoRifa) {
   return o ? o.label : (cuandoJuegoRifa || '—')
 }
 async function handleCrearActividad() {
+  if (soloLectura.value) return
   loading.value = true
   try {
     // Determinar si es rifa manual (necesario para validaciones y creación)
@@ -7740,6 +7779,7 @@ watch(() => formActividad.tipo, (nuevoTipo) => {
 })
 // Función para abrir modal de asignar faltante
 async function abrirModalAsignarFaltante(faltante) {
+  if (soloLectura.value) return
   faltanteSeleccionado.value = faltante
   socioSeleccionadoParaFaltante.value = ''
   
@@ -7752,6 +7792,7 @@ async function abrirModalAsignarFaltante(faltante) {
 }
 // Al hacer clic en "Asignar números": si hay varios meses, mostrar confirmación; si no, asignar solo en este mes
 function alHacerClicAsignarFaltante() {
+  if (soloLectura.value) return
   if (actividadesDeLaSerieActual.value.length > 1) {
     modalConfirmarAsignarFaltanteTodosMeses.value = true
   } else {
@@ -7760,11 +7801,13 @@ function alHacerClicAsignarFaltante() {
 }
 // Cerrar modal de confirmación y ejecutar asignación en todos los meses
 function confirmarAsignarFaltanteTodosMeses() {
+  if (soloLectura.value) return
   modalConfirmarAsignarFaltanteTodosMeses.value = false
   confirmarAsignarFaltante(true)
 }
 // Función para confirmar asignación de faltante a socio (asignarEnTodosLosMeses: true = en todas las actividades del grupo)
 async function confirmarAsignarFaltante(asignarEnTodosLosMeses = false) {
+  if (soloLectura.value) return
   if (!socioSeleccionadoParaFaltante.value || !faltanteSeleccionado.value) {
     notificationStore.error('Debe seleccionar un socio', 'Error')
     return
@@ -7878,9 +7921,11 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutsideDesplegable)
 })
 function confirmarEliminarActividad(actividad) {
+  if (soloLectura.value) return
   actividadAEliminar.value = actividad
 }
 async function eliminarActividadConfirmado() {
+  if (soloLectura.value) return
   if (!actividadAEliminar.value) return
   eliminando.value = true
   const actividadId = actividadAEliminar.value.id
@@ -7922,9 +7967,11 @@ async function eliminarActividadConfirmado() {
   }
 }
 function confirmarEliminarGrupo(grupo) {
+  if (soloLectura.value) return
   grupoAEliminar.value = grupo
 }
 async function eliminarGrupoConfirmado() {
+  if (soloLectura.value) return
   if (!grupoAEliminar.value || !grupoAEliminar.value.actividades) return
   eliminandoGrupo.value = true
   const grupo = grupoAEliminar.value

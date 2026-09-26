@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <LoadingScreen :visible="cargando && sesiones.length === 0" text="Midiendo el pulso de la app" />
+    <CargaPantalla :visible="cargando && sesiones.length === 0" text="Midiendo el pulso de la app" />
 
     <template v-if="!cargando || sesiones.length > 0">
       <div
@@ -216,7 +216,7 @@ import {
   UsersIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import { supabase } from '../../lib/supabase'
 
 /*

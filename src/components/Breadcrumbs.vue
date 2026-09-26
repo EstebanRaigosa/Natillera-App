@@ -68,7 +68,8 @@ const breadcrumbs = computed(() => {
       })
     }
     // Socios
-    else if (path.includes('/socios')) {
+    // `/socios` como segmento: «/socios-en-la-app» (Invitar socios) no es Socios
+    else if (/\/socios(\/|$)/.test(path)) {
       crumbs.push({
         label: 'Socios',
         to: null

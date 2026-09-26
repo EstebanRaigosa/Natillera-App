@@ -72,65 +72,72 @@
                 <span class="sidebar-option-label">Inicio</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('socios')"
                 id="tour-sidebar-socios"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/socios') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/socios') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/socios')"
               >
                 <UsersIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Socios</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('cuotas')"
                 id="tour-sidebar-cuotas"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/cuotas') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/cuotas') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/cuotas')"
               >
                 <CurrencyDollarIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Cuotas</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('prestamos')"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/prestamos') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/prestamos') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/prestamos')"
               >
                 <BanknotesIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Préstamos</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('actividades')"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/actividades') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/actividades') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/actividades')"
               >
                 <CalendarIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Actividades</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('caja')"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/pagos') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/pagos') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/pagos')"
               >
                 <ReceiptPercentIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Pagos</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('caja')"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/conciliacion') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/conciliacion') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/conciliacion')"
               >
                 <ScaleIcon class="w-5 h-5 shrink-0" />
                 <span class="sidebar-option-label">Conciliación</span>
               </button>
               <button
+                v-if="permisosNat.puedeVer('caja')"
                 type="button"
                 class="nav-link nav-link-option w-full text-left"
-                :class="{ 'nav-link-active': route.path.startsWith('/natilleras/' + natilleraIdRuta + '/movimientos') }"
+                :class="{ 'nav-link-active': rutaEnSeccion(route.path, '/natilleras/' + natilleraIdRuta + '/movimientos') }"
                 @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/movimientos')"
               >
                 <ArrowsRightLeftIcon class="w-5 h-5 shrink-0" />
@@ -155,16 +162,27 @@
               <span class="sidebar-option-label">Buscar comprobante</span>
             </button>
             <button
-              v-if="puedeAccionSidebar('invitar_colaboradores')"
+              v-if="permisosNat.puedeVer('administradores')"
               type="button"
               class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.name === 'AdministradoresNatillera' }"
               @click="ejecutarAccionNatillera('invitar')"
             >
-              <UserPlusIcon class="w-5 h-5 shrink-0" />
-              <span class="sidebar-option-label">Invitar Colaborador</span>
+              <ShieldCheckIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Administradores</span>
             </button>
             <button
-              v-if="puedeAccionSidebar('configurar')"
+              v-if="permisosNat.puedeVer('socios')"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.name === 'SociosEnApp' }"
+              @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/socios-en-la-app')"
+            >
+              <UserPlusIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Invitar socios</span>
+            </button>
+            <button
+              v-if="permisosNat.puedeVer('configuracion')"
               type="button"
               class="nav-link nav-link-option w-full text-left"
               @click="abrirRutaDesdeSidebar('/natilleras/' + natilleraIdRuta + '/configuracion')"
@@ -189,6 +207,61 @@
             >
               <DocumentCheckIcon class="w-5 h-5 shrink-0" />
               <span class="sidebar-option-label">Cerrar Natillera</span>
+            </button>
+          </div>
+
+          <!--
+            Portal del socio: la barra lateral no tiene natillera de admin que mostrar, así que
+            ofrece lo del socio. Las secciones las publica la página (usePortalNavegacion), las
+            mismas de la barra inferior del móvil; tocarlas hace lo mismo que allí.
+          -->
+          <div v-if="esPortal && portalNav.secciones.value.length > 0" class="sidebar-section space-y-1">
+            <p class="sidebar-section-heading">Mi natillera</p>
+            <button
+              v-for="item in menuPortal"
+              :key="item.valor"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': portalNav.activa.value === item.valor }"
+              :aria-current="portalNav.activa.value === item.valor ? 'page' : undefined"
+              @click="elegirSeccionPortal(item.valor)"
+            >
+              <component :is="item.icono" class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">{{ item.etiqueta }}</span>
+            </button>
+            <!-- Solo si además la administra (dueño o colaborador) -->
+            <button
+              v-if="portalNav.natilleraQueAdministra.value"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              @click="abrirRutaDesdeSidebar('/natilleras/' + portalNav.natilleraQueAdministra.value)"
+            >
+              <Cog6ToothIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label">Administrar esta natillera</span>
+            </button>
+          </div>
+
+          <!-- Otras natilleras donde también es socio: saltar de un portal a otro sin pasar por el inicio -->
+          <div v-if="esPortal && portalNav.misNatilleras.value.length > 1" class="sidebar-section space-y-1">
+            <p class="sidebar-section-heading">Mis natilleras</p>
+            <button
+              v-for="n in portalNav.misNatilleras.value"
+              :key="n.socio_natillera_id"
+              type="button"
+              class="nav-link nav-link-option w-full text-left"
+              :class="{ 'nav-link-active': route.params.socioNatilleraId === n.socio_natillera_id }"
+              :aria-current="route.params.socioNatilleraId === n.socio_natillera_id ? 'page' : undefined"
+              @click="abrirRutaDesdeSidebar('/mi-natillera/' + n.socio_natillera_id)"
+            >
+              <WalletIcon class="w-5 h-5 shrink-0" />
+              <span class="sidebar-option-label min-w-0 flex-1 truncate">{{ n.natillera_nombre }}</span>
+              <span
+                v-if="n.cuotas_mora > 0"
+                class="ml-auto h-2 w-2 shrink-0 rounded-full bg-rose-300"
+                :title="`${n.cuotas_mora} ${n.cuotas_mora === 1 ? 'cuota' : 'cuotas'} en mora`"
+                aria-hidden="true"
+              />
+              <span v-if="n.cuotas_mora > 0" class="sr-only">(con cuotas en mora)</span>
             </button>
           </div>
 
@@ -438,15 +511,21 @@
     <MobileBottomNav
       :force-hidden="sidebarOpen && esViewportMovil"
       :acciones="accionesBarraInferior"
+      :modulos-ocultos="modulosOcultos"
       @accion="ejecutarAccionBarraInferior"
     />
+
+    <!-- Solicitudes de socios para usar la app: lo primero que ve el admin al entrar -->
+    <SolicitudesVinculoModal />
+    <!-- Autorización de datos: se pide una vez por versión de la política (Ley 1581) -->
+    <ConsentimientoLegal />
 
     <!-- Acceso flotante al soporte: se le dice si hay barra inferior para que
          mantenga su zona segura por encima de ella. El botón no navega: abre el
          chat sobre la pantalla en la que estés, sin perder lo que estabas
          haciendo. -->
     <BotonSoporte
-      :hay-barra-inferior="!!natilleraIdRuta"
+      :hay-barra-inferior="!!natilleraIdRuta || route.name === 'PortalSocio'"
       @abrir="chatSoporteAbierto = true"
       @abrir-panel="abrirPanelSoporte"
     />
@@ -479,6 +558,7 @@
 </template>
 
 <script setup>
+import { rutaEnSeccion } from '../utils/rutaActiva'
 import { ref, computed, onMounted, onUnmounted, watch, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
@@ -490,6 +570,9 @@ import { getLastNatilleraId } from '../utils/lastNatillera'
 import { natilleraPrestamosDeshabilitados } from '../utils/natilleraPrestamos'
 import { isDev, isLocalhost } from '../config/environment'
 import { requestNatilleraSidebarAction } from '../composables/useNatilleraSidebarActions'
+import { usePortalNavegacion } from '../composables/usePortalNavegacion'
+import { usePermisosNatillera } from '../composables/usePermisosNatillera'
+import { CLAVES_MODULOS } from '../permisos/modulos'
 
 // Detectar modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -511,14 +594,21 @@ import {
   MagnifyingGlassIcon,
   DocumentCheckIcon,
   UserPlusIcon,
+  ShieldCheckIcon,
   CircleStackIcon,
-  ArrowsRightLeftIcon, ArrowUturnLeftIcon
+  ArrowsRightLeftIcon, ArrowUturnLeftIcon,
+  DocumentTextIcon,
+  SparklesIcon,
+  UserGroupIcon,
+  WalletIcon
 } from '@heroicons/vue/24/outline'
 import { isBodyScrollLocked } from '../composables/useBodyScrollLock'
 import { useScrollRestoration } from '../composables/useScrollRestoration'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
 import InvitacionesPendientes from '../components/InvitacionesPendientes.vue'
 import MobileBottomNav from '../components/MobileBottomNav.vue'
+import SolicitudesVinculoModal from '../components/vinculo/SolicitudesVinculoModal.vue'
+import ConsentimientoLegal from '../components/legal/ConsentimientoLegal.vue'
 import BotonSoporte from '../components/soporte/BotonSoporte.vue'
 import ChatSoporteFlotante from '../components/soporte/ChatSoporteFlotante.vue'
 import PanelSoporteAdminModal from '../components/soporte/PanelSoporteAdminModal.vue'
@@ -576,6 +666,39 @@ const esViewportMovil = ref(false)
 let sidebarHoverTimeout = null // Timeout para cerrar el sidebar con delay
 
 const permisosNatilleraSidebar = ref(null)
+
+// ─── Permisos por opción (Nada / Ver / Gestionar) de la natillera abierta ───
+// El menú muestra solo lo que se puede ver; el router ya bloquea las rutas en «Nada».
+const permisosNat = usePermisosNatillera(computed(() => {
+  const id = route.params.id
+  return id && id !== 'undefined' && id !== 'null' ? String(id) : null
+}))
+const modulosOcultos = computed(() =>
+  permisosNat.cargado.value ? CLAVES_MODULOS.filter(m => !permisosNat.puedeVer(m)) : []
+)
+
+// ─── Portal del socio en la barra lateral ───
+const portalNav = usePortalNavegacion()
+const esPortal = computed(() => route.name === 'PortalSocio')
+const ICONOS_PORTAL = {
+  aportes: CurrencyDollarIcon,
+  ganancias: SparklesIcon,
+  prestamos: BanknotesIcon,
+  actividades: CalendarIcon,
+  grupo: UserGroupIcon
+}
+const menuPortal = computed(() => [
+  { valor: 'resumen', etiqueta: 'Resumen', icono: HomeIcon },
+  ...portalNav.secciones.value.map(s => ({ ...s, icono: ICONOS_PORTAL[s.valor] || CalendarIcon })),
+  { valor: 'estado', etiqueta: 'Estado de cuenta', icono: DocumentTextIcon }
+])
+function elegirSeccionPortal(valor) {
+  if (typeof window !== 'undefined' && window.innerWidth < 1024) sidebarOpen.value = false
+  portalNav.elegir(valor)
+}
+watch([esPortal, () => authStore.user?.id], ([enPortal, usuarioId]) => {
+  if (enPortal) portalNav.cargarMisNatilleras(usuarioId)
+}, { immediate: true })
 
 const natilleraIdRuta = computed(() => {
   const id = route.params.id
@@ -662,11 +785,17 @@ const hayInvitacionesPendientes = computed(
  * infiere administrador desde lista local / natillera en store (misma lógica que en vistas).
  */
 const permisosEfectivosSidebar = computed(() => {
-  const desdeApi = permisosNatilleraSidebar.value
-  if (desdeApi) return desdeApi
-
   const id = natilleraIdRuta.value
   if (!id) return null
+
+  // El super admin va antes que la API: si además es colaborador de esa natillera, la API
+  // devuelve sus permisos de colaborador (sin «cerrar», p. ej.) y le escondía acciones.
+  if (isSuperAdmin.value) {
+    return { rol: 'administrador', esAdmin: true, permisos: null }
+  }
+
+  const desdeApi = permisosNatilleraSidebar.value
+  if (desdeApi) return desdeApi
 
   const ctx = natilleraEnContexto.value
   const uid = authStore.user?.id
@@ -682,10 +811,6 @@ const permisosEfectivosSidebar = computed(() => {
 
   const na = natillerasStore.natilleraActual
   if (na && String(na.id) === id && na.admin_id === uid) {
-    return { rol: 'administrador', esAdmin: true, permisos: null }
-  }
-
-  if (isSuperAdmin.value) {
     return { rol: 'administrador', esAdmin: true, permisos: null }
   }
 
@@ -773,21 +898,28 @@ const accionesBarraInferior = computed(() => {
   const base = `/natilleras/${id}`
   const acciones = [
     { clave: 'buscar', permiso: 'buscar_comprobante', etiqueta: 'Buscar', icono: MagnifyingGlassIcon },
-    { clave: 'invitar', permiso: 'invitar_colaboradores', etiqueta: 'Invitar', icono: UserPlusIcon },
+    // «Admins» (escudo) es quien ADMINISTRA la natillera; «Invitar» (persona+) trae a los
+    // SOCIOS a la app para que vean lo suyo. Antes, «Invitar» y «En app»: se confundían.
+    { clave: 'invitar', modulo: 'administradores', etiqueta: 'Admins', icono: ShieldCheckIcon, ruta: `${base}/administradores` },
+    { clave: 'socios_app', modulo: 'socios', etiqueta: 'Invitar', icono: UserPlusIcon, ruta: `${base}/socios-en-la-app` },
     { clave: 'notificar', permiso: 'notificar', etiqueta: 'Notificar', icono: ChatBubbleLeftRightIcon, ruta: `${base}/notificar` },
     // Configuración va siempre: antes tenía su propio botón en la barra para todos, y
     // quien no puede configurar la abre en solo lectura.
-    { clave: 'configurar', permiso: null, etiqueta: 'Config.', icono: Cog6ToothIcon, ruta: `${base}/configuracion` },
+    { clave: 'configurar', modulo: 'configuracion', etiqueta: 'Config.', icono: Cog6ToothIcon, ruta: `${base}/configuracion` },
     { clave: 'cerrar', permiso: 'cerrar_natillera', etiqueta: 'Cerrar', icono: DocumentCheckIcon, ruta: `${base}/cierre`, peligro: true }
   ]
   return acciones
-    .filter(a => !a.permiso || puedeAccionSidebar(a.permiso))
-    .map(a => ({ ...a, esActual: !!a.ruta && route.path.startsWith(a.ruta) }))
+    .filter(a => (!a.modulo || permisosNat.puedeVer(a.modulo)) && (!a.permiso || puedeAccionSidebar(a.permiso)))
+    .map(a => ({ ...a, esActual: !!a.ruta && rutaEnSeccion(route.path, a.ruta) }))
 })
 
 function ejecutarAccionBarraInferior(clave) {
   if (clave === 'configurar') {
     router.push(`/natilleras/${natilleraIdRuta.value}/configuracion`)
+    return
+  }
+  if (clave === 'socios_app') {
+    router.push(`/natilleras/${natilleraIdRuta.value}/socios-en-la-app`)
     return
   }
   ejecutarAccionNatillera(clave)
@@ -798,6 +930,12 @@ function ejecutarAccionNatillera(tipo) {
   if (!id) return
   if (tipo === 'cerrar') {
     router.push(`/natilleras/${id}/cierre`)
+    cerrarSidebar()
+    return
+  }
+  // Administradores es una página propia (antes, una modal oculta en el detalle).
+  if (tipo === 'invitar') {
+    router.push(`/natilleras/${id}/administradores`)
     cerrarSidebar()
     return
   }

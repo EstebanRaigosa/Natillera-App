@@ -9,40 +9,46 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="canonical" href="https://natillerapp.com/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no, interactive-widget=resizes-visual" />
-    <!-- SEO: palabras clave Natillera, plataforma, aplicación -->
-    <title>Natillerapp – Plataforma y aplicación para gestionar tu Natillera</title>
-    <meta name="description" content="Plataforma gratuita y aplicación web para gestionar natilleras. Funciona en celular y computadora. Ahorro colectivo, cuotas, socios y préstamos en una sola app." />
-    <meta name="keywords" content="natillera, plataforma natillera, aplicación natillera, app natillera, gestión natillera, ahorro colectivo, natilleras comunitarias, administrar natillera, cuotas natillera" />
+    <!--
+      SEO: estos son los datos de la portada («/»), que llega pre-renderizada en el build
+      (scripts/prerender-publico.mjs). En las demás rutas los ajusta el router
+      (src/utils/seoRuta.js): título, descripción, canonical y noindex en lo privado.
+    -->
+    <title>Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre</title>
+    <meta name="description" content="Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora." />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#1B5E37" />
     <!-- Preconnect + dns-prefetch a Supabase para mejorar tiempo de primera carga -->
     <link rel="preconnect" href="https://vdtjacwpvqfifahkrqxp.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://vdtjacwpvqfifahkrqxp.supabase.co" />
     <!-- Open Graph (Facebook, LinkedIn, compartir en redes) -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://natillerapp.com/" />
-    <meta property="og:title" content="Natillerapp – Plataforma y aplicación para tu Natillera" />
-    <meta property="og:description" content="Plataforma gratuita para gestionar natilleras. Úsala en celular o computadora. Ahorro colectivo transparente y fácil." />
-    <!-- Añade public/og-image.png (1200×630 px) para vista previa al compartir -->
-    <meta property="og:image" content="https://natillerapp.com/og-image.png" />
-    <meta property="og:locale" content="es_ES" />
+    <meta property="og:title" content="Natillerapp – App gratis para llevar tu natillera" />
+    <meta property="og:description" content="Cuotas, multas, préstamos, rifas y el cierre de fin de año en un solo lugar. Gratis, en el celular o la computadora." />
+    <meta property="og:image" content="https://natillerapp.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Natillerapp, la app para gestionar tu natillera" />
+    <meta property="og:locale" content="es_CO" />
     <meta property="og:site_name" content="Natillerapp" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Natillerapp – Plataforma y aplicación para tu Natillera" />
-    <meta name="twitter:description" content="Plataforma gratuita para gestionar natilleras. Úsala en celular o computadora." />
-    <meta name="twitter:image" content="https://natillerapp.com/og-image.png" />
+    <meta name="twitter:title" content="Natillerapp – App gratis para llevar tu natillera" />
+    <meta name="twitter:description" content="Cuotas, multas, préstamos, rifas y el cierre de fin de año en un solo lugar." />
+    <meta name="twitter:image" content="https://natillerapp.com/og-image.jpg" />
     <!-- Datos estructurados para buscadores (WebApplication, web + móvil) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Natillerapp",
-      "description": "Plataforma gratuita para gestionar natilleras. Aplicación web que funciona en celular y en computadora. Ahorro colectivo, cuotas y socios.",
+      "description": "App gratuita para gestionar natilleras: cuotas y multas, préstamos entre socios, rifas y actividades, caja y cierre de fin de año. Funciona en celular y en computadora.",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web, Android, iOS",
+      "inLanguage": "es-CO",
       "url": "https://natillerapp.com/",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "COP" }
     }
     </script>
     <!-- Meta tags específicos para iOS -->

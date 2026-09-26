@@ -123,10 +123,7 @@
       <!-- Lista de usuarios -->
       <div class="flex-1 space-y-4">
         <!-- Loading -->
-        <div v-if="usersStore.loading" class="text-center py-12">
-          <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p class="text-gray-500 text-sm">Cargando usuarios...</p>
-        </div>
+        <CargaCaja v-if="usersStore.loading" texto="Cargando usuarios" />
 
         <!-- Error -->
         <div v-else-if="usersStore.error" class="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600">
@@ -382,6 +379,7 @@ import {
 import { getAvatarUrl } from '../../utils/avatars'
 import { formatDate } from '../../utils/formatDate'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 
 const usersStore = useUsersStore()

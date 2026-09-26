@@ -4,17 +4,8 @@
     class="flex-1 min-h-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] bg-[#F6F7F5] px-4 py-4"
     @scroll.passive="alDesplazar"
   >
-    <!-- Carga inicial: esqueleto de burbujas -->
-    <div v-if="cargandoInicial" class="space-y-3" aria-hidden="true">
-      <div v-for="n in 4" :key="n" :class="['flex', n % 2 === 0 ? 'justify-end' : 'justify-start']">
-        <div
-          :class="[
-            'h-16 animate-pulse rounded-2xl bg-gray-200',
-            n % 2 === 0 ? 'w-3/5 rounded-br-md' : 'w-2/3 rounded-bl-md',
-          ]"
-        />
-      </div>
-    </div>
+    <!-- Carga inicial -->
+    <CargaCaja v-if="cargandoInicial" texto="Cargando mensajes" />
 
     <template v-else>
       <!-- Paginación hacia atrás: nunca se trae la conversación entera (RNF-04) -->
@@ -86,6 +77,7 @@
 import { nextTick, ref, watch } from 'vue'
 import { CheckCircleIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 import BurbujaMensaje from './BurbujaMensaje.vue'
+import CargaCaja from '../carga/CargaCaja.vue'
 
 const props = defineProps({
   /** Conversación que se está mostrando: al cambiar, el hilo baja al final. */

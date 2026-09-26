@@ -44,21 +44,73 @@
     <AjustesNotificaciones />
     <AjustesBotonSoporte />
 
+    <!-- ── Tus datos (Ley 1581): qué aceptaste y cómo ejercer tus derechos ── -->
+    <section class="card">
+      <div class="flex items-start gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8F5E9] text-[#1B5E37]">
+          <ShieldCheckIcon class="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div class="min-w-0 flex-1">
+          <h2 class="font-display text-lg font-bold text-gray-900">Tus datos</h2>
+          <p class="text-sm text-gray-500">
+            <template v-if="aceptadoEn">Aceptaste la política el {{ aceptadoEn }}.</template>
+            <template v-else>Puedes consultar, corregir o pedir que borremos tus datos.</template>
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <router-link :to="{ name: 'PoliticaDatos' }" class="btn-modal-secondary !min-h-[44px] px-4 text-sm">Política de datos</router-link>
+        <router-link :to="{ name: 'Terminos' }" class="btn-modal-secondary !min-h-[44px] px-4 text-sm">Términos</router-link>
+        <a :href="enlaceSolicitud" class="btn-modal-primary !min-h-[44px] px-4 text-sm">Pedir mis datos o borrarlos</a>
+      </div>
+    </section>
+
     <UsernameModal :show="editandoNombre" @close="editandoNombre = false" @saved="editandoNombre = false" />
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { PencilSquareIcon } from '@heroicons/vue/24/outline'
+import { computed, ref, watch } from 'vue'
+import { PencilSquareIcon, ShieldCheckIcon } from '@heroicons/vue/24/outline'
 import AjustesNotificaciones from '../../components/soporte/AjustesNotificaciones.vue'
 import AjustesBotonSoporte from '../../components/soporte/AjustesBotonSoporte.vue'
 import UsernameModal from '../../components/UsernameModal.vue'
 import { useAuthStore } from '../../stores/auth'
 import { getAvatarUrl } from '../../utils/avatars'
+import { supabase } from '../../lib/supabase'
+import { formatDate } from '../../utils/formatDate'
+import { RESPONSABLE, VERSION_LEGAL } from '../../legal/responsable'
 
 const auth = useAuthStore()
 const editandoNombre = ref(false)
 
 const avatar = computed(() => getAvatarUrl(auth.userEmail || auth.userName))
+
+// Fecha en que aceptó la versión vigente (la constancia que exige la ley).
+const aceptadoEn = ref('')
+watch(() => auth.user?.id, async usuarioId => {
+  aceptadoEn.value = ''
+  if (!usuarioId) return
+  const { data } = await supabase
+    .from('consentimientos_legales')
+    .select('aceptado_en')
+    .eq('usuario_id', usuarioId)
+    .eq('version', VERSION_LEGAL)
+    .limit(1)
+  aceptadoEn.value = data?.[0]?.aceptado_en ? formatDate(data[0].aceptado_en) : ''
+}, { immediate: true })
+
+// Consulta o reclamo por correo, con lo que la ley pide ya escrito para que solo complete.
+const enlaceSolicitud = computed(() => {
+  const asunto = 'Solicitud sobre mis datos personales'
+  const cuerpo = [
+    'Hola, quiero (marca una): conocer mis datos / corregirlos / que los borren / revocar la autorización.',
+    '',
+    `Nombre: ${auth.userName || ''}`,
+    `Correo de la cuenta: ${auth.userEmail || ''}`,
+    'Número de documento: ',
+    'Detalle: '
+  ].join('\n')
+  return `mailto:${RESPONSABLE.correo}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`
+})
 </script>

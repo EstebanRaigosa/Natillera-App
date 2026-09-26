@@ -12,7 +12,16 @@
             <h1 class="ds-page-header__title">Socios</h1>
             <p class="ds-page-header__sub hidden sm:block">Gestiona los participantes y sus cuotas personalizadas</p>
           </div>
-          <!-- Móvil: CTA primario en línea con el título (sm+ usa el bloque de actions) -->
+          <!-- Móvil: invitar (icono) + CTA primario en línea con el título (sm+ usa el bloque de actions) -->
+          <button
+            v-if="!esVisor"
+            type="button"
+            class="ds-btn ds-btn--secondary sm:hidden socios-header-add"
+            aria-label="Invitar socios a la app"
+            @click="irASociosEnApp"
+          >
+            <LinkIcon class="w-5 h-5" />
+          </button>
           <button
             v-if="!esVisor"
             type="button"
@@ -37,6 +46,15 @@
           <button
             v-if="!esVisor"
             type="button"
+            class="ds-btn ds-btn--secondary"
+            @click="irASociosEnApp"
+          >
+            <LinkIcon class="w-4 h-4" />
+            <span>Invitar socios</span>
+          </button>
+          <button
+            v-if="!esVisor"
+            type="button"
             class="ds-btn ds-btn--primary"
             aria-label="Agregar nuevo socio"
             @click="abrirModalAgregar"
@@ -48,14 +66,28 @@
       </div>
     </header>
 
-    <!-- Estado: cargando -->
-    <div v-if="cargaInicial && sociosStore.loading" class="text-center py-12">
-      <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
-      <p class="text-slate-400 mt-4 text-sm">Cargando socios…</p>
-    </div>
+    <!-- Solicitudes para usar la app: el admin las aprueba (sabe quién es quién) -->
+    <button
+      v-if="!esVisor && solicitudesVinculo.length > 0"
+      type="button"
+      class="solicitudes-aviso"
+      @click="irASociosEnApp"
+    >
+      <span class="solicitudes-aviso__icono" aria-hidden="true"><UserPlusIcon class="w-5 h-5" /></span>
+      <span class="min-w-0 flex-1 text-left">
+        <span class="solicitudes-aviso__titulo">
+          {{ solicitudesVinculo.length === 1 ? '1 socio quiere usar la app' : `${solicitudesVinculo.length} socios quieren usar la app` }}
+        </span>
+        <span class="solicitudes-aviso__sub">Revisa con qué cuenta lo pidieron y apruébalos</span>
+      </span>
+      <ChevronRightIcon class="w-5 h-5 shrink-0" aria-hidden="true" />
+    </button>
+
+    <!-- Entrar a la vista sin datos: pantalla de carga completa (CLAUDE.md 2.1) -->
+    <CargaPantalla :visible="cargandoPrimeraVez" text="Cargando socios" />
 
     <!-- Empty state: sin socios registrados (DS) -->
-    <div v-else-if="!cargaInicial && sociosStore.sociosNatillera.length === 0" class="ds-empty-state">
+    <div v-if="!cargandoPrimeraVez && !cargaInicial && sociosStore.sociosNatillera.length === 0" class="ds-empty-state">
       <div class="ds-empty-state__header">
         <div class="ds-empty-state__icon-wrap">
           <UsersIcon class="w-7 h-7" />
@@ -80,7 +112,7 @@
 
     <!-- Tabla de socios (toolbar + tabla/lista + paginación) -->
     <section
-      v-else
+      v-else-if="!cargandoPrimeraVez"
       class="bg-white rounded-2xl border border-[color:var(--surface-divider)] shadow-[var(--shadow-xs)] overflow-hidden"
     >
       <!-- Toolbar: búsqueda + filtros -->
@@ -188,6 +220,10 @@
                   </p>
                   <p class="text-xs text-slate-400 truncate mt-0.5">
                     {{ sn.socio?.telefono || 'Sin teléfono' }}
+                  </p>
+                  <p v-if="sn.socio?.usuario_id" class="socio-vinculado mt-1">
+                    <CheckBadgeIcon class="w-3.5 h-3.5" aria-hidden="true" />
+                    Usa la app
                   </p>
                 </td>
                 <td>
@@ -313,6 +349,10 @@
                   <p class="flex items-center gap-1 mt-0.5 text-[11px] text-slate-500 truncate leading-tight">
                     <PhoneIcon class="w-3 h-3 flex-shrink-0 text-slate-400" aria-hidden="true" />
                     <span class="truncate">{{ sn.socio?.telefono || 'Sin teléfono' }}</span>
+                  </p>
+                  <p v-if="sn.socio?.usuario_id" class="socio-vinculado mt-1">
+                    <CheckBadgeIcon class="w-3.5 h-3.5" aria-hidden="true" />
+                    Usa la app
                   </p>
                 </div>
               </div>
@@ -554,6 +594,34 @@
             </div>
           </div>
 
+          <!-- Cuenta en la app: con qué correo se vinculó el socio (o que aún no lo hizo) -->
+          <div class="socio-cuenta" :class="{ 'is-vinculado': socioSeleccionado?.socio?.usuario_id }">
+            <component
+              :is="socioSeleccionado?.socio?.usuario_id ? CheckBadgeIcon : LinkIcon"
+              class="socio-cuenta__icono"
+              aria-hidden="true"
+            />
+            <div class="min-w-0 flex-1">
+              <template v-if="socioSeleccionado?.socio?.usuario_id">
+                <p class="socio-cuenta__titulo">Usa la app</p>
+                <p class="socio-cuenta__detalle">{{ socioSeleccionado.socio.vinculado_email || 'Cuenta vinculada' }}</p>
+              </template>
+              <template v-else>
+                <p class="socio-cuenta__titulo">Aún no usa la app</p>
+                <p class="socio-cuenta__detalle">Se vincula con el enlace de «Invitar socios».</p>
+              </template>
+            </div>
+            <button
+              v-if="socioSeleccionado?.socio?.usuario_id && !esVisor"
+              type="button"
+              class="socio-cuenta__accion"
+              :disabled="desvinculando"
+              @click="desvincularSocio(socioSeleccionado)"
+            >
+              {{ desvinculando ? '…' : 'Desvincular' }}
+            </button>
+          </div>
+
           <!-- Resumen Financiero — fijo, siempre visible (no desplegable) -->
           <section class="detalle-resumen" aria-labelledby="detalle-resumen-titulo">
             <div class="flex items-center gap-2 px-0.5">
@@ -673,7 +741,7 @@
                 </div>
                 <a
                   v-if="socioSeleccionado?.socio?.telefono"
-                  :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
+                  :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="ds-btn ds-btn--secondary !min-h-[36px] !py-1.5 !px-3 !text-xs flex-shrink-0"
@@ -1278,10 +1346,15 @@
                   id="agregar-socio-telefono"
                   v-model="formSocio.telefono"
                   type="tel"
+                  inputmode="tel"
+                  autocomplete="tel"
                   class="ds-input flex-1"
-                  :class="{ 'ds-input--error': errorTelefonoDuplicado }"
+                  :class="{ 'ds-input--error': errorTelefonoDuplicado || !!errorFormatoTelefono }"
+                  :aria-invalid="errorTelefonoDuplicado || !!errorFormatoTelefono"
+                  aria-describedby="agregar-socio-telefono-ayuda"
                   placeholder="3001234567"
                   required
+                  @blur="telefonoTocado = true"
                 />
                 <button
                   v-if="contactPickerDisponible"
@@ -1295,11 +1368,14 @@
                   <span class="hidden sm:inline">Contactos</span>
                 </button>
               </div>
-              <p v-if="errorTelefonoDuplicado" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+              <p v-if="errorTelefonoDuplicado" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
                 Este número de teléfono ya está registrado para otro socio.
               </p>
-              <p v-else class="text-xs text-slate-500 mt-1.5 leading-snug">
-                Número único requerido para recordatorios de pago.
+              <p v-else-if="errorFormatoTelefono" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
+                {{ errorFormatoTelefono }}
+              </p>
+              <p v-else id="agregar-socio-telefono-ayuda" class="text-xs text-slate-500 mt-1.5 leading-snug">
+                Celular de 10 dígitos, único por socio. Si es de otro país, escríbelo con + y el indicativo (+52…). Se usa para WhatsApp y para que entre a la app.
                 <span v-if="contactPickerDisponible" class="block">
                   Usa el botón “Contactos” para elegir desde tu agenda.
                 </span>
@@ -1355,6 +1431,10 @@
 
             <!-- Acciones (mismo scroll, safe-area) -->
             <div class="pt-4 border-t border-[color:var(--surface-divider)] space-y-2.5">
+              <!-- El admin es el responsable de los datos de sus socios (Ley 1581): lo declara al registrarlos -->
+              <p v-if="!socioEditando" class="text-xs text-slate-500">
+                Al agregarlo confirmas que tienes su autorización para registrar sus datos.
+              </p>
               <button
                 type="submit"
                 class="btn-modal-primary relative w-full overflow-hidden"
@@ -1493,10 +1573,7 @@
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pt-4 pb-5 space-y-4 bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalCuotasSocio"
         >
-          <div v-if="loadingCuotasSocio" class="text-center py-10">
-            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-            <p class="text-gray-500 text-sm">Cargando cuotas…</p>
-          </div>
+          <CargaCaja v-if="loadingCuotasSocio" texto="Cargando cuotas" />
 
           <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-10 px-2">
             <p class="text-gray-500 text-sm">No hay cuotas registradas</p>
@@ -2050,10 +2127,67 @@
             </div>
           </section>
 
+          <!--
+            Préstamo pendiente: lo que se le devuelve (ya sin la sanción) puede pagar lo que
+            debe. Naranja, un tono distinto del rosa de la sanción y del verde de lo que se
+            lleva: es dinero que tampoco sale, pero por otra razón.
+          -->
+          <section
+            v-if="loadingPrestamosRetiro || deudaPrestamosRetiro > 0"
+            class="retiro-prestamo"
+            :class="{ 'is-active': cruzarPrestamoRetiro && deudaPrestamosRetiro > 0 }"
+          >
+            <p v-if="loadingPrestamosRetiro" class="px-4 py-3.5 text-sm text-slate-500">Revisando préstamos…</p>
+            <template v-else>
+              <button
+                type="button"
+                class="retiro-prestamo__cabecera"
+                :aria-pressed="cruzarPrestamoRetiro"
+                @click="cruzarPrestamoRetiro = !cruzarPrestamoRetiro"
+              >
+                <span class="retiro-prestamo__icono" aria-hidden="true">
+                  <BanknotesIcon class="h-5 w-5" />
+                </span>
+                <span class="min-w-0 flex-1 text-left">
+                  <span class="retiro-prestamo__titulo">Debe ${{ formatMoney(deudaPrestamosRetiro) }} de préstamo</span>
+                  <span class="retiro-prestamo__sub">Pagarlo con lo que se le devuelve</span>
+                </span>
+                <span class="retiro-prestamo__switch" aria-hidden="true">
+                  <span class="retiro-prestamo__bolita"></span>
+                </span>
+              </button>
+
+              <div class="retiro-prestamo__cuerpo">
+                <div class="modal-data-list">
+                  <div class="modal-data-list__row">
+                    <span class="modal-data-list__label">Saldo del préstamo</span>
+                    <span class="modal-data-list__value tabular-nums">${{ formatMoney(saldoPrestamosRetiro) }}</span>
+                  </div>
+                  <div v-if="moraPrestamosRetiro > 0" class="modal-data-list__row">
+                    <span class="modal-data-list__label">Mora a hoy</span>
+                    <span class="modal-data-list__value modal-data-list__value--danger tabular-nums">${{ formatMoney(moraPrestamosRetiro) }}</span>
+                  </div>
+                </div>
+                <p v-if="cruzarPrestamoRetiro && pagoPrestamosRetiro > 0" class="retiro-prestamo__nota">
+                  <template v-if="saldoPendienteRetiro > 0">
+                    Alcanza para <strong>${{ formatMoney(pagoPrestamosRetiro) }}</strong>.
+                    Queda debiendo <strong>${{ formatMoney(saldoPendienteRetiro) }}</strong>.
+                  </template>
+                  <template v-else>
+                    Se paga completo: <strong>${{ formatMoney(pagoPrestamosRetiro) }}</strong>.
+                  </template>
+                </p>
+                <p v-else-if="!cruzarPrestamoRetiro" class="retiro-prestamo__nota">
+                  Se le entrega todo y el préstamo sigue abierto por ${{ formatMoney(deudaPrestamosRetiro) }}.
+                </p>
+              </div>
+            </template>
+          </section>
+
           <!-- 2. La cifra que manda -->
           <section class="retiro-hero">
             <p class="retiro-hero__label">
-              {{ desactivarSancionar && valorFondoDesactivar > 0
+              {{ hayRepartoRetiro
                   ? `Cómo se reparte el ahorro de ${primerNombreSocioARetirar}`
                   : `Se le entrega a ${primerNombreSocioARetirar}` }}
             </p>
@@ -2061,10 +2195,10 @@
               Calculando…
             </p>
             <p
-              v-else-if="!desactivarSancionar || valorFondoDesactivar <= 0"
+              v-else-if="!hayRepartoRetiro"
               class="retiro-hero__valor tabular-nums"
             >
-              ${{ formatMoney(valorEntregarDesactivar) }}
+              ${{ formatMoney(entregaFinalRetiro) }}
             </p>
             <!--
               El reparto explícito: quién se lleva qué. Antes era una nota al pie y el
@@ -2072,17 +2206,26 @@
               mitad de la decisión.
             -->
             <div
-              v-if="!loadingTotalesDesactivar && desactivarSancionar && valorFondoDesactivar > 0"
+              v-if="!loadingTotalesDesactivar && hayRepartoRetiro"
               class="retiro-reparto"
             >
               <div class="retiro-reparto__col">
                 <span class="retiro-reparto__label">Se lleva el socio</span>
                 <span class="retiro-reparto__valor retiro-reparto__valor--socio tabular-nums">
-                  ${{ formatMoney(valorEntregarDesactivar) }}
+                  ${{ formatMoney(entregaFinalRetiro) }}
                 </span>
               </div>
-              <span class="retiro-reparto__sep" aria-hidden="true"></span>
-              <div class="retiro-reparto__col">
+              <template v-if="pagoPrestamosRetiro > 0">
+                <span class="retiro-reparto__sep" aria-hidden="true"></span>
+                <div class="retiro-reparto__col">
+                  <span class="retiro-reparto__label">Paga préstamo</span>
+                  <span class="retiro-reparto__valor retiro-reparto__valor--prestamo tabular-nums">
+                    ${{ formatMoney(pagoPrestamosRetiro) }}
+                  </span>
+                </div>
+              </template>
+              <span v-if="desactivarSancionar && valorFondoDesactivar > 0" class="retiro-reparto__sep" aria-hidden="true"></span>
+              <div v-if="desactivarSancionar && valorFondoDesactivar > 0" class="retiro-reparto__col">
                 <span class="retiro-reparto__label">Queda en el fondo</span>
                 <span class="retiro-reparto__valor retiro-reparto__valor--fondo tabular-nums">
                   ${{ formatMoney(valorFondoDesactivar) }}
@@ -2294,7 +2437,7 @@
                 Movimientos automáticos
               </p>
               <p class="text-xs text-emerald-800/85 mt-0.5 leading-snug">
-                Si al desactivarse se generó liquidación (comprobante de salida), se revertirán automáticamente los movimientos de caja y la sanción por retiro asociados.
+                Se deshace la liquidación del retiro: vuelve a la caja la plata que salió, se quita la sanción de las utilidades y, si su ahorro pagó un préstamo, el préstamo vuelve a quedar con ese saldo (y se descuenta la mora que se había cobrado).
               </p>
             </div>
           </div>
@@ -2376,18 +2519,18 @@
       card-max-width="28rem"
       @close="!generandoImagenDesactivacion && cerrarComprobanteDesactivacion()"
     >
-      <!-- Cabecera warning (ámbar) — continuidad visual con la modal de desactivar -->
-      <div class="flex-shrink-0 bg-[color:var(--brand-warning)] text-white">
+      <!-- Cabecera verde de marca: la misma del ticket que va dentro -->
+      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
           <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <DocumentTextIcon class="w-5 h-5 text-[color:var(--brand-warning)]" />
+            <DocumentTextIcon class="w-5 h-5 text-[color:var(--brand-primary)]" />
           </div>
           <div class="min-w-0 flex-1 text-left">
             <h3 class="font-display font-bold text-white text-base leading-tight truncate">
-              Comprobante de salida
+              Comprobante de retiro
             </h3>
             <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
-              Liquidación por salida de la natillera
+              Liquidación del socio al retirarse
             </p>
           </div>
           <button
@@ -2404,13 +2547,13 @@
           <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
             <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
-              <DocumentTextIcon class="w-6 h-6 text-[color:var(--brand-warning)]" />
+              <DocumentTextIcon class="w-6 h-6 text-[color:var(--brand-primary)]" />
             </div>
             <h3 class="font-display font-bold text-white text-lg leading-tight">
-              Comprobante de salida
+              Comprobante de retiro
             </h3>
             <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
-              Liquidación por salida de la natillera
+              Liquidación del socio al retirarse
             </p>
           </div>
           <button
@@ -2429,83 +2572,14 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalComprobanteDesactivacion"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--surface-soft,#f8fafc)] overscroll-contain [-webkit-overflow-scrolling:touch] px-4 sm:px-5 py-4"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#eef2ee] overscroll-contain [-webkit-overflow-scrolling:touch] px-4 sm:px-5 py-4"
           @scroll.passive="programarNatiscrollModalComprobanteDesactivacion"
         >
-        <div
-          ref="comprobanteDesactivacionRef"
-          class="bg-white rounded-2xl overflow-hidden mx-auto"
-          style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-width: 340px;"
-        >
-          <div style="background: #fffbeb; padding: 14px 12px; color: #1f2937;">
-            <div style="text-align: center; margin-bottom: 16px;">
-              <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink: 0;">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-                <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: #111827; letter-spacing: -0.5px;">
-                  Liquidación por Salida
-                </h1>
-              </div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); margin-bottom: 10px;">
-              <div style="text-align: center; margin-bottom: 10px;">
-                <p style="color: #6b7280; font-size: 9px; margin: 0 0 4px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">VALOR A ENTREGAR</p>
-                <p style="font-size: 26px; font-weight: 900; margin: 0 0 6px 0; letter-spacing: -1px; color: #b45309;">
-                  ${{ formatMoney(comprobanteDesactivacion?.valorEntregar) }}
-                </p>
-                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1.5px solid #fcd34d; border-radius: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
-                  <span style="width: 5px; height: 5px; background: #d97706; border-radius: 50%; display: inline-block;"></span>
-                  <p style="color: #b45309; font-size: 9px; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">SALIDA DE LA NATILLERA</p>
-                </div>
-                <p v-if="comprobanteDesactivacion?.codigoComprobante" style="color: #9ca3af; font-size: 11px; margin: 6px 0 0 0; font-weight: 500; letter-spacing: 0.3px; font-family: 'Courier New', monospace;">
-                  {{ comprobanteDesactivacion.codigoComprobante }}
-                </p>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-                <div>
-                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Socio</p>
-                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.2;">{{ comprobanteDesactivacion?.socioNombre }}</p>
-                </div>
-                <div>
-                  <p style="color: #9ca3af; font-size: 8px; margin: 0 0 3px 0; font-weight: 700; text-transform: uppercase;">Fecha</p>
-                  <p style="font-weight: 600; font-size: 11px; margin: 0; color: #111827; line-height: 1.4;">{{ comprobanteDesactivacion?.fecha }}</p>
-                </div>
-              </div>
-            </div>
-            <div style="margin-bottom: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);">
-              <p style="color: #6b7280; font-size: 9px; margin: 0 0 8px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;">RESUMEN</p>
-              <div style="display: flex; flex-direction: column; gap: 6px;">
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: #065f46; font-size: 11px; font-weight: 600;">Total ahorrado</span>
-                  <span style="font-size: 13px; font-weight: 700; color: #065f46;">${{ formatMoney(comprobanteDesactivacion?.totalAhorrado || 0) }}</span>
-                </div>
-                <div v-if="(comprobanteDesactivacion?.valorFondo || 0) > 0" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                  <span style="color: #991b1b; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; min-width: 0;">
-                    <span style="white-space: nowrap;">Sanción por retiro</span>
-                    <span style="display: inline-flex; align-items: center; padding: 1px 6px; border-radius: 999px; background: #fecaca; color: #991b1b; font-size: 10px; font-weight: 800; line-height: 1.4; white-space: nowrap;">
-                      {{ porcentajeSancionComprobante }}%
-                    </span>
-                  </span>
-                  <span style="font-size: 13px; font-weight: 700; color: #dc2626; white-space: nowrap;">${{ formatMoney(comprobanteDesactivacion?.valorFondo) }}</span>
-                </div>
-                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
-                  <span style="color: #b45309; font-size: 11px; font-weight: 700;">Valor a entregar</span>
-                  <span style="font-size: 14px; font-weight: 800; color: #b45309;">${{ formatMoney(comprobanteDesactivacion?.valorEntregar) }}</span>
-                </div>
-              </div>
-            </div>
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%;"></div>
-                <p style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 10px; margin: 0; font-weight: 700;">Natillerapp</p>
-                <div style="width: 3px; height: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 50%;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ComprobanteRetiroSocio
+          v-if="comprobanteDesactivacion"
+          :datos="comprobanteDesactivacion"
+          :fluido="true"
+        />
         </div>
 
         <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
@@ -2515,7 +2589,7 @@
           aria-hidden="true"
         >
           <div
-            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-[var(--surface-soft,#f8fafc)]/95 via-[var(--surface-soft,#f8fafc)]/55 to-transparent"
+            class="absolute inset-x-0 bottom-0 z-0 h-24 bg-gradient-to-t from-[#eef2ee]/95 via-[#eef2ee]/55 to-transparent"
             aria-hidden="true"
           />
           <div class="relative z-[2] flex justify-center px-5 pb-3 pt-10">
@@ -2532,39 +2606,47 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-row gap-2.5">
         <button
           type="button"
           class="ds-btn modal-btn-download flex-1"
-          :disabled="generandoImagenDesactivacion"
+          :disabled="!imagenDesactivacion"
           @click="descargarComprobanteDesactivacion"
         >
-          <svg
-            v-if="generandoImagenDesactivacion"
-            class="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <ArrowDownTrayIcon v-else class="w-4 h-4" />
-          {{ generandoImagenDesactivacion ? 'Generando…' : 'Descargar' }}
+          <ArrowDownTrayIcon class="w-4 h-4" />
+          Descargar
         </button>
+        <!--
+          Sin await antes de `navigator.share`: la imagen ya está hecha
+          (`prepararImagenDesactivacion`). Safari solo abre el menú de compartir si la
+          llamada va pegada al toque.
+        -->
         <button
           type="button"
           class="ds-btn modal-btn-whatsapp flex-1"
-          :class="{ 'is-disabled': !comprobanteDesactivacion?.socioTelefono }"
-          :disabled="generandoImagenDesactivacion || !comprobanteDesactivacion?.socioTelefono"
+          :disabled="!imagenDesactivacion"
           @click="compartirWhatsAppDesactivacion"
         >
           <ChatBubbleLeftIcon class="w-4 h-4" />
-          Compartir
+          {{ imagenDesactivacion ? 'Compartir' : 'Preparando…' }}
         </button>
       </div>
     </ModalWrapper>
+
+    <!--
+      Copia del comprobante de retiro a 380 px fijos, fuera de pantalla: es la que se
+      convierte en imagen. La vista previa se ajusta al ancho del modal y saldría
+      distinta en cada teléfono.
+    -->
+    <div
+      v-if="comprobanteDesactivacion"
+      class="pointer-events-none fixed left-[-10000px] top-0"
+      aria-hidden="true"
+    >
+      <div ref="comprobanteDesactivacionRef" style="padding: 16px; background: #eef2ee;">
+        <ComprobanteRetiroSocio :datos="comprobanteDesactivacion" />
+      </div>
+    </div>
 
     <!--
       Modal de Progreso de Creación de Socio.
@@ -2832,6 +2914,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition, TransitionGroup, inject } from 'vue'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute, useRouter } from 'vue-router'
 import { useSociosStore } from '../../stores/socios'
 import { useCuotasStore } from '../../stores/cuotas'
@@ -2840,6 +2923,7 @@ import { useConfiguracionStore } from '../../stores/configuracion'
 import { useNotificationStore } from '../../stores/notifications'
 import { natilleraPrestamosDeshabilitados } from '../../utils/natilleraPrestamos'
 import { normalizeText } from '../../utils/normalizeText.js'
+import { normalizarCelular, esTelefonoValido, errorCelular, numeroWhatsApp } from '../../utils/telefono'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -2859,7 +2943,12 @@ import {
 } from '../../composables/usePrimerSocioCuotasMesTour'
 import { pedirGuiaDetalle } from '../../composables/useTourDetalleNatillera'
 import { toPng } from 'html-to-image'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import ComprobanteRetiroSocio from '../../components/estado/ComprobanteRetiroSocio.vue'
+import { cargarDeudaPrestamosSocio, registrarAbonoPrestamo, revertirAbonoPrestamo } from '../../composables/usePagoPrestamo'
+import { EVENTO_SOLICITUDES, EVENTO_SOLICITUDES_CAMBIO } from '../../composables/useSolicitudesVinculo'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
 
 import BackButton from '../../components/BackButton.vue'
@@ -2896,7 +2985,9 @@ import {
   SparklesIcon,
   CheckIcon,
   BuildingOffice2Icon,
-  ReceiptPercentIcon
+  ReceiptPercentIcon,
+  LinkIcon,
+  CheckBadgeIcon,
 } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -3051,25 +3142,16 @@ const totalesCuotasSocioModal = computed(() => {
   }
 })
 
-// Porcentaje de sanción aplicado a mostrar en la línea "Sanción por retiro" del comprobante.
-// Si vino explícito (comprobante recién generado) lo usamos; si no, lo derivamos de los importes.
-const porcentajeSancionComprobante = computed(() => {
-  const c = comprobanteDesactivacion.value
-  if (!c) return '0'
-  let pct = Number(c.porcentajeSancion)
-  if (!Number.isFinite(pct) || pct <= 0) {
-    const fondo = Number(c.valorFondo) || 0
-    const entregar = Number(c.valorEntregar) || 0
-    const base = fondo + entregar
-    pct = base > 0 ? (fondo / base) * 100 : 0
-  }
-  if (pct <= 0) return '0'
-  const redondeado = Math.round(pct * 10) / 10
-  return Number.isInteger(redondeado) ? String(redondeado) : redondeado.toFixed(1).replace(/\.0$/, '')
-})
 
 const errorSocio = ref('')
 const errorTelefonoDuplicado = ref(false)
+// El aviso de formato sale al salir del campo o al llegar a 10 dígitos, no con la primera tecla.
+const telefonoTocado = ref(false)
+const errorFormatoTelefono = computed(() => {
+  const escrito = formSocio.telefono || ''
+  if (!telefonoTocado.value && normalizarCelular(escrito).length < 10) return ''
+  return errorCelular(escrito)
+})
 const mostrarContacto = ref(false)
 const mostrarAdvertenciaCuota = ref(false)
 const cuotasSocio = ref([])
@@ -3106,6 +3188,88 @@ const desactivando = ref(false)
 const comprobanteDesactivacion = ref(null)
 const comprobanteDesactivacionRef = ref(null)
 const generandoImagenDesactivacion = ref(false)
+/** Imagen del comprobante de retiro ya generada ({ dataUrl, archivo }), lista para compartir sin esperas. */
+const imagenDesactivacion = ref(null)
+
+/*
+ * Préstamos vivos del socio que se retira: [{ id, saldo, mora, total, cuotasVencidasOrdenadas }].
+ * Lo que se le devuelve (ya sin la sanción) puede pagarlos; por defecto se cruza, porque
+ * es lo que dice cualquier reglamento: nadie se va con plata debiendo plata.
+ */
+/*
+ * «Socios en la app» (invitar, aprobar, cuentas vinculadas) es una página propia:
+ * SociosEnApp.vue. Aquí solo queda el aviso de solicitudes pendientes que lleva a ella.
+ */
+function irASociosEnApp() {
+  router.push({ name: 'SociosEnApp', params: { id } })
+}
+
+const solicitudesVinculo = ref([])
+const desvinculando = ref(false)
+
+async function cargarSolicitudesVinculo() {
+  if (!id) return
+  const { data, error } = await supabase
+    .from('solicitudes_vinculo')
+    .select('id, socio_id, usuario_id, cuenta_email, cuenta_nombre, cuenta_telefono, creado_en')
+    .eq('natillera_id', id)
+    .eq('estado', 'pendiente')
+    .order('creado_en', { ascending: true })
+  if (error) {
+    console.error('Error cargando solicitudes de vínculo:', error)
+    return
+  }
+  solicitudesVinculo.value = data || []
+}
+
+// El socio puede volver a pedir acceso con el enlace: por eso no se pide confirmación.
+async function desvincularSocio(sn) {
+  if (!sn?.socio?.id) return
+  desvinculando.value = true
+  try {
+    const { error } = await supabase.rpc('desvincular_socio', { p_socio_id: sn.socio.id })
+    if (error) throw error
+    sn.socio.usuario_id = null
+    sn.socio.vinculado_email = null
+    sn.socio.vinculado_en = null
+    notificationStore.success(`${sn.socio.nombre || 'El socio'} ya no está vinculado a esa cuenta`, 'Desvinculado')
+  } catch (e) {
+    console.error('Error desvinculando socio:', e)
+    notificationStore.error('No se pudo desvincular', 'Error')
+  } finally {
+    desvinculando.value = false
+  }
+}
+
+/*
+ * Si se aprueba o rechaza desde el aviso global (layout), reflejarlo aquí sin recargar:
+ * quitar la solicitud y marcar al socio como vinculado.
+ */
+function alResolverSolicitudFuera(evento) {
+  const { solicitud, aprobada } = evento.detail || {}
+  if (!solicitud) return
+  solicitudesVinculo.value = solicitudesVinculo.value.filter(s =>
+    aprobada ? s.socio_id !== solicitud.socio_id : s.id !== solicitud.id)
+  if (!aprobada) return
+  const sn = (sociosStore.sociosNatillera || []).find(x => x.socio?.id === solicitud.socio_id)
+  if (sn?.socio) {
+    sn.socio.usuario_id = solicitud.usuario_id
+    sn.socio.vinculado_email = solicitud.cuenta_email
+  }
+}
+onMounted(() => {
+  cargarSolicitudesVinculo()
+  window.addEventListener(EVENTO_SOLICITUDES, alResolverSolicitudFuera)
+  // Llegó una solicitud nueva (tiempo real, desde el aviso global): refrescar el aviso.
+  window.addEventListener(EVENTO_SOLICITUDES_CAMBIO, cargarSolicitudesVinculo)
+})
+onUnmounted(() => {
+  window.removeEventListener(EVENTO_SOLICITUDES, alResolverSolicitudFuera)
+  window.removeEventListener(EVENTO_SOLICITUDES_CAMBIO, cargarSolicitudesVinculo)
+})
+const prestamosRetiro = ref([])
+const loadingPrestamosRetiro = ref(false)
+const cruzarPrestamoRetiro = ref(true)
 const comprobantesSalidaGuardados = ref({})
 const loadingComprobanteSalida = ref(false)
 useBodyScrollLock(computed(() => !!socioADesactivar.value))
@@ -3119,6 +3283,9 @@ useBodyScrollLock(computed(() => !!socioAActivar.value))
 const guardando = ref(false)
 const eliminando = ref(false)
 const cargaInicial = ref(true) // Solo true durante la primera carga
+// Primera entrada a la vista: pantalla completa. Las recargas posteriores no la muestran,
+// para no tapar la lista que el usuario ya tiene delante.
+const cargandoPrimeraVez = computed(() => cargaInicial.value && sociosStore.loading)
 const miRol = ref(null)
 
 // FAB flotante: aparece cuando el header sale del viewport
@@ -3232,6 +3399,9 @@ watch(
     desactivarSancionar,
     desactivarPorcentajeSancion,
     loadingTotalesDesactivar,
+    // La sección del préstamo aparece al llegar la consulta y cambia el alto del cuerpo.
+    loadingPrestamosRetiro,
+    cruzarPrestamoRetiro,
   ],
   () => {
     if (socioADesactivar.value) {
@@ -3680,9 +3850,13 @@ const periodicidadNatillera = computed(() => {
 })
 
 // Verificar si el usuario es visor
-const esVisor = computed(() => {
-  return miRol.value === 'visor'
-})
+/*
+ * Solo lectura según el nivel en «Socios» (Nada / Ver / Gestionar). Antes solo miraba si el
+ * rol era visor, y un colaborador sin permiso de socios podía escribir. El nombre se queda
+ * `esVisor` porque la plantilla lo usa en muchos sitios; hoy significa «no puede gestionar».
+ */
+const permisosNat = usePermisosNatillera(computed(() => props.id || route.params.id))
+const esVisor = computed(() => !permisosNat.puedeGestionar('socios'))
 
 // FAB flotante: aparece cuando el header sale del viewport y no hay modal abierto
 const mostrarFab = computed(() =>
@@ -3856,6 +4030,7 @@ async function abrirModalAgregar() {
   
   // IMPORTANTE: Resetear el formulario completamente antes de abrir el modal
   // para asegurar que no haya valores residuales
+  telefonoTocado.value = false
   Object.assign(formSocio, {
     nombre: '',
     documento: '',
@@ -3894,6 +4069,8 @@ function editarSocio(sn) {
   formSocio.documento = sn.socio?.documento || ''
   formSocio.email = sn.socio?.email || ''
   formSocio.telefono = sn.socio?.telefono || ''
+  // Al editar se avisa de una vez si el número guardado no es un celular válido.
+  telefonoTocado.value = true
   formSocio.valor_cuota = sn.valor_cuota_individual
   formSocio.periodicidad = sn.periodicidad || 'mensual'
   formSocio.avatar_seed = sn.socio?.avatar_seed || ''
@@ -3906,6 +4083,7 @@ function cerrarModal() {
   socioEditando.value = null
   errorSocio.value = ''
   errorTelefonoDuplicado.value = false
+  telefonoTocado.value = false
   mostrarContacto.value = false
   mostrarAvatares.value = false
   mostrarAdvertenciaCuota.value = false
@@ -3924,31 +4102,7 @@ function cerrarModal() {
 // Función auxiliar para limpiar y formatear número de teléfono
 // Quita el indicativo de país (57 o +57) para dejar solo el número
 function limpiarNumeroTelefono(telefono) {
-  if (!telefono) return ''
-  // Remover caracteres no numéricos excepto el signo +
-  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
-  
-  // Si comienza con +, quitar el signo
-  if (numeroLimpio.startsWith('+')) {
-    numeroLimpio = numeroLimpio.substring(1)
-  }
-  
-  // Quitar el indicativo de Colombia (57) si está presente
-  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
-  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-    numeroLimpio = numeroLimpio.substring(2)
-  }
-  
-  // Si solo tiene caracteres no numéricos, limpiar todo
-  if (!numeroLimpio || numeroLimpio.length === 0) {
-    numeroLimpio = telefono.replace(/\D/g, '')
-    // Aplicar la misma lógica de quitar el indicativo
-    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-      numeroLimpio = numeroLimpio.substring(2)
-    }
-  }
-  
-  return numeroLimpio
+  return normalizarCelular(telefono)
 }
 
 // Función para abrir el selector de contactos del dispositivo móvil
@@ -4185,6 +4339,13 @@ async function handleGuardarSocio() {
     // Validar que el teléfono esté presente y no esté vacío
     if (!formSocio.telefono || formSocio.telefono.trim() === '') {
       errorSocio.value = 'El número de teléfono es obligatorio'
+      guardando.value = false
+      return
+    }
+
+    if (!esTelefonoValido(formSocio.telefono)) {
+      telefonoTocado.value = true
+      errorSocio.value = errorCelular(formSocio.telefono) || 'Escribe un celular de 10 dígitos que empiece por 3, o uno de otro país con + y el indicativo.'
       guardando.value = false
       return
     }
@@ -4724,6 +4885,34 @@ const valorFondoDesactivar = computed(() => {
   return rec * (pct / 100)
 })
 
+const saldoPrestamosRetiro = computed(() => prestamosRetiro.value.reduce((s, p) => s + p.saldo, 0))
+const moraPrestamosRetiro = computed(() => prestamosRetiro.value.reduce((s, p) => s + p.mora, 0))
+const deudaPrestamosRetiro = computed(() => saldoPrestamosRetiro.value + moraPrestamosRetiro.value)
+// Se paga lo que alcance de lo que se le devuelve: si debe más, queda debiendo el resto.
+const pagoPrestamosRetiro = computed(() => {
+  if (!cruzarPrestamoRetiro.value) return 0
+  return Math.round(Math.max(0, Math.min(deudaPrestamosRetiro.value, valorEntregarDesactivar.value)))
+})
+const saldoPendienteRetiro = computed(() => Math.max(0, deudaPrestamosRetiro.value - pagoPrestamosRetiro.value))
+const entregaFinalRetiro = computed(() => Math.max(0, valorEntregarDesactivar.value - pagoPrestamosRetiro.value))
+const hayRepartoRetiro = computed(() =>
+  (desactivarSancionar.value && valorFondoDesactivar.value > 0) || pagoPrestamosRetiro.value > 0
+)
+
+async function cargarPrestamosRetiro(socioNatilleraId) {
+  loadingPrestamosRetiro.value = true
+  prestamosRetiro.value = []
+  try {
+    const nat = natillerasStore.natilleraActual?.id === id ? natillerasStore.natilleraActual : null
+    prestamosRetiro.value = await cargarDeudaPrestamosSocio(socioNatilleraId, nat)
+  } catch (e) {
+    console.error('Error cargando préstamos del socio a retirar:', e)
+    notificationStore.error('No se pudieron revisar sus préstamos', 'Error')
+  } finally {
+    loadingPrestamosRetiro.value = false
+  }
+}
+
 async function cargarTotalesDesactivar(socioNatilleraId) {
   if (!socioNatilleraId || !id) return
   loadingTotalesDesactivar.value = true
@@ -4773,7 +4962,9 @@ function abrirModalDesactivar(sn) {
   desactivarSancionar.value = pctConfigurado > 0
   desactivarPorcentajeSancion.value = pctConfigurado
   desactivarFormaPago.value = 'efectivo'
+  cruzarPrestamoRetiro.value = true
   cargarTotalesDesactivar(sn.id)
+  cargarPrestamosRetiro(sn.id)
 }
 
 function cerrarModalDesactivar() {
@@ -4781,6 +4972,8 @@ function cerrarModalDesactivar() {
   desactivarSancionar.value = false
   desactivarPorcentajeSancion.value = 0
   desactivarFormaPago.value = 'efectivo'
+  prestamosRetiro.value = []
+  cruzarPrestamoRetiro.value = true
 }
 
 function abrirModalActivar(sn) {
@@ -4802,11 +4995,13 @@ async function confirmarActivarSocio() {
     // Si existe comprobante de salida, revertir los movimientos que se hicieron al desactivar
     const { data: comprobante, error: errComp } = await supabase
       .from('comprobantes_salida')
-      .select('socio_nombre, valor_entregar, valor_sancion')
+      .select('socio_nombre, valor_entregar, valor_sancion, detalle_prestamos')
       .eq('socio_natillera_id', sn.id)
       .maybeSingle()
+    // Sin poder leer el comprobante no se sabe qué deshacer: mejor no activar a medias.
+    if (errComp) throw new Error(`No se pudo leer el comprobante de salida: ${errComp.message}`)
 
-    if (!errComp && comprobante) {
+    if (comprobante) {
       const valorEntregar = parseFloat(comprobante.valor_entregar) || 0
       const valorSancion = parseFloat(comprobante.valor_sancion) || 0
       const totalSalida = valorEntregar + valorSancion
@@ -4867,8 +5062,26 @@ async function confirmarActivarSocio() {
         }
       }
 
-      // Eliminar comprobante de salida (el socio vuelve a estar activo, ya no aplica el comprobante)
-      await supabase.from('comprobantes_salida').delete().eq('socio_natillera_id', sn.id)
+      // Deshacer el cruce con sus préstamos: vuelve a deber lo que se pagó con su ahorro,
+      // porque la liquidación que lo pagó acaba de revertirse arriba.
+      for (const d of (comprobante.detalle_prestamos || [])) {
+        await revertirAbonoPrestamo({
+          prestamoId: d.prestamo_id,
+          pagoId: d.pago_id,
+          abono: d.abono,
+          mora: d.mora,
+          formaPago: d.forma_pago,
+          natilleraId
+        })
+      }
+
+      // Eliminar comprobante de salida (el socio vuelve a estar activo, ya no aplica). Se
+      // comprueba que de verdad se borró: si queda, la próxima reactivación lo revertiría otra vez.
+      const { data: borrados, error: errBorrar } = await supabase
+        .from('comprobantes_salida').delete().eq('socio_natillera_id', sn.id).select('id')
+      if (errBorrar || !borrados?.length) {
+        throw new Error(`No se pudo borrar el comprobante de salida${errBorrar ? `: ${errBorrar.message}` : ''}`)
+      }
       delete comprobantesSalidaGuardados.value[sn.id]
     }
 
@@ -4908,56 +5121,67 @@ function cerrarComprobanteDesactivacion() {
   comprobanteDesactivacion.value = null
 }
 
-async function descargarComprobanteDesactivacion() {
-  if (!comprobanteDesactivacionRef.value) return
+/*
+ * La imagen se genera al abrir el comprobante, no al tocar «Compartir»: Safari solo abre
+ * el menú de compartir si `navigator.share` va pegado al toque, y el `await` de generar
+ * la imagen hacía caducar el gesto.
+ */
+let turnoImagenDesactivacion = 0
+function nombreArchivoDesactivacion() {
+  return `comprobante-retiro-${(comprobanteDesactivacion.value?.socioNombre || 'socio').trim().replace(/\s+/g, '-')}.png`
+}
+async function prepararImagenDesactivacion() {
+  imagenDesactivacion.value = null
+  if (!comprobanteDesactivacion.value) return
+  const turno = ++turnoImagenDesactivacion
   generandoImagenDesactivacion.value = true
   try {
-    const dataUrl = await toPng(comprobanteDesactivacionRef.value, {
-      quality: 1,
-      pixelRatio: 2,
-      backgroundColor: '#fffbeb'
-    })
-    const link = document.createElement('a')
-    link.href = dataUrl
-    link.download = `comprobante-salida-${(comprobanteDesactivacion.value?.socioNombre || 'socio').replace(/\s+/g, '-')}-${Date.now()}.png`
-    link.click()
+    await nextTick()
+    if (!comprobanteDesactivacionRef.value) return
+    const dataUrl = await toPng(comprobanteDesactivacionRef.value, { backgroundColor: '#eef2ee', pixelRatio: 2, cacheBust: true })
+    const blob = await (await fetch(dataUrl)).blob()
+    if (turno !== turnoImagenDesactivacion) return
+    imagenDesactivacion.value = { dataUrl, archivo: new File([blob], nombreArchivoDesactivacion(), { type: 'image/png' }) }
   } catch (e) {
-    console.error('Error descargando comprobante:', e)
-    notificationStore.error('No se pudo generar la imagen', 'Error')
+    console.error('Error generando la imagen del comprobante de retiro:', e)
   } finally {
-    generandoImagenDesactivacion.value = false
+    if (turno === turnoImagenDesactivacion) generandoImagenDesactivacion.value = false
   }
 }
+watch(comprobanteDesactivacion, prepararImagenDesactivacion)
 
-async function compartirWhatsAppDesactivacion() {
-  if (!comprobanteDesactivacion.value || !comprobanteDesactivacionRef.value) return
-  generandoImagenDesactivacion.value = true
-  try {
-    const dataUrl = await toPng(comprobanteDesactivacionRef.value, {
-      quality: 1,
-      pixelRatio: 2,
-      backgroundColor: '#fffbeb'
-    })
-    const nombreArchivo = `comprobante-salida-${(comprobanteDesactivacion.value.socioNombre || 'socio').replace(/\s+/g, '-')}-${Date.now()}.png`
-    const blob = await fetch(dataUrl).then(r => r.blob())
-    const file = new File([blob], nombreArchivo, { type: 'image/png' })
-    const tel = comprobanteDesactivacion.value.socioTelefono?.replace(/\D/g, '') || ''
-    if (tel && navigator.share && navigator.canShare?.({ files: [file] })) {
-      await navigator.share({
-        title: 'Comprobante de salida',
-        text: `Liquidación por salida de la natillera - ${comprobanteDesactivacion.value.socioNombre}`,
-        files: [file]
-      })
-    } else if (tel) {
-      const url = `https://wa.me/57${tel}?text=${encodeURIComponent('Comprobante de salida de la natillera - Natillerapp')}`
-      window.open(url, '_blank')
+function descargarComprobanteDesactivacion() {
+  if (!imagenDesactivacion.value) return
+  const enlace = document.createElement('a')
+  enlace.href = imagenDesactivacion.value.dataUrl
+  enlace.download = nombreArchivoDesactivacion()
+  enlace.click()
+}
+
+function compartirWhatsAppDesactivacion() {
+  const c = comprobanteDesactivacion.value
+  const img = imagenDesactivacion.value
+  if (!c || !img) return
+  const texto = `*👆 Abre la imagen para ver el detalle de tu liquidación*\n\nHola ${(c.socioNombre || '').split(/\s+/)[0]}, esta es tu liquidación por retiro de la natillera.`
+  const datos = { files: [img.archivo], title: 'Liquidación por retiro', text: texto }
+  const tel = (c.socioTelefono || '').replace(/\D/g, '')
+  // Sin menú de compartir (escritorio): se descarga y, si hay número, se abre el chat.
+  const abrirChat = () => {
+    descargarComprobanteDesactivacion()
+    if (!tel) {
+      notificationStore.info('La imagen se descargó. El socio no tiene teléfono: envíala desde WhatsApp.', 'Comprobante')
+      return
     }
-  } catch (e) {
-    console.error('Error compartiendo comprobante:', e)
-    notificationStore.error('No se pudo compartir', 'Error')
-  } finally {
-    generandoImagenDesactivacion.value = false
+    const numero = numeroWhatsApp(tel)
+    window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
   }
+  if (navigator.canShare?.(datos)) {
+    navigator.share(datos).catch(err => {
+      if (err?.name !== 'AbortError') abrirChat()
+    })
+    return
+  }
+  abrirChat()
 }
 
 async function confirmarDesactivarSocio() {
@@ -4971,7 +5195,62 @@ async function confirmarDesactivarSocio() {
   const formaPago = (desactivarFormaPago.value || 'efectivo').toLowerCase().trim()
   const formaPagoNorm = formaPago === 'transferencia' ? 'transferencia' : 'efectivo'
   const nombreSocio = sn.socio?.nombre || 'Socio'
+  const pagoPrestamos = pagoPrestamosRetiro.value
+  const saldoPendientePrestamo = saldoPendienteRetiro.value
+  const detallePrestamos = []
+  // Lo que ya se escribió, para deshacerlo si algo posterior falla (no hay transacción).
+  const hecho = { comprobante: false, sancionId: null, salidaId: null }
   try {
+    /*
+     * Cruce con los préstamos, lo primero: es lo más delicado y, si falla, el socio sigue
+     * activo y no se ha movido nada más. Cada abono va por el mismo camino que «Abonar» en
+     * Préstamos (mora aparte, plan recalculado). En el cuadre queda como un pago de
+     * préstamo por la misma forma de pago que la liquidación, que sale completa: lo que
+     * de verdad deja la caja es la diferencia, justo lo que el socio se lleva.
+     */
+    if (pagoPrestamos > 0) {
+      const nat = natillerasStore.natilleraActual?.id === id ? natillerasStore.natilleraActual : { id: natilleraId }
+      let restante = pagoPrestamos
+      for (const prestamo of prestamosRetiro.value) {
+        if (restante <= 0) break
+        const valor = Math.min(restante, prestamo.total)
+        if (valor <= 0) continue
+        const r = await registrarAbonoPrestamo({ prestamo, valor, formaPago: formaPagoNorm, natillera: nat, nombreSocio })
+        detallePrestamos.push({
+          prestamo_id: prestamo.id,
+          pago_id: r.pagoId,
+          abono: r.abono,
+          mora: r.mora,
+          saldo_restante: r.saldoNuevo,
+          forma_pago: formaPagoNorm
+        })
+        restante -= valor
+      }
+    }
+
+    /*
+     * El comprobante va justo después del cruce y antes de mover plata: es lo que la
+     * reactivación lee para deshacer el retiro (abonos incluidos). Si no se puede guardar,
+     * se aborta; antes el error solo iba a la consola y la reactivación leía un
+     * comprobante viejo, dejando el préstamo pagado con plata que volvía a la caja.
+     */
+    const codigoComprobante = generarCodigoComprobanteSalida()
+    const fechaComprobante = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    const { error: errComprobante } = await supabase.from('comprobantes_salida').upsert({
+      socio_natillera_id: sn.id,
+      socio_nombre: nombreSocio,
+      socio_telefono: sn.socio?.telefono || null,
+      fecha: fechaComprobante,
+      total_ahorrado: tot.totalAhorrado || 0,
+      valor_sancion: valorFondo,
+      valor_entregar: valorEntregar,
+      codigo_comprobante: codigoComprobante,
+      valor_prestamo: pagoPrestamos,
+      detalle_prestamos: detallePrestamos
+    }, { onConflict: 'socio_natillera_id' })
+    if (errComprobante) throw new Error(`No se pudo guardar el comprobante de salida: ${errComprobante.message}`)
+    hecho.comprobante = true
+
     // Sanción por retiro → utilidades (con forma de pago para cuadre)
     if (desactivarSancionar.value && desactivarPorcentajeSancion.value > 0 && valorFondo > 0) {
       const insertUtilidad = {
@@ -4981,71 +5260,77 @@ async function confirmarDesactivarSocio() {
         forma_pago: formaPagoNorm,
         descripcion: `Sanción por retiro: ${nombreSocio}`
       }
-      const { error } = await supabase.from('utilidades_clasificadas').insert(insertUtilidad)
+      const { data: filaSancion, error } = await supabase.from('utilidades_clasificadas').insert(insertUtilidad).select('id').single()
       if (error) throw error
+      hecho.sancionId = filaSancion?.id || null
     }
     // Salida en movimientos_fondo: total entregado al socio + sanción (se descuenta de efectivo o transferencia)
     const totalSalida = valorEntregar + valorFondo
     if (totalSalida > 0) {
       const descripcionSalida = `Liquidación por salida - ${nombreSocio}`
-      const { error: errMov } = await supabase.from('movimientos_fondo').insert({
+      const { data: filaSalida, error: errMov } = await supabase.from('movimientos_fondo').insert({
         natillera_id: natilleraId,
         tipo: 'salida',
         monto: totalSalida,
         forma_pago: formaPagoNorm,
         descripcion: descripcionSalida,
         fecha: new Date().toISOString().split('T')[0]
-      })
+      }).select('id').single()
       if (errMov) throw errMov
+      hecho.salidaId = filaSalida?.id || null
     }
     const resultado = await sociosStore.cambiarEstadoSocio(sn.id, 'inactivo')
-    if (resultado.success) {
-      if (modalDetalle.value && socioSeleccionado.value?.id === sn.id) {
-        modalDetalle.value = false
-        socioSeleccionado.value = null
-      }
-      const codigoComprobante = generarCodigoComprobanteSalida()
-      const fechaComprobante = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-      const porcentajeSancionAplicado = desactivarSancionar.value && desactivarPorcentajeSancion.value > 0
-        ? Math.min(100, Math.max(0, Number(desactivarPorcentajeSancion.value) || 0))
-        : 0
-      const datosComprobante = {
-        socioNombre: sn.socio?.nombre || 'Socio',
-        socioTelefono: sn.socio?.telefono || null,
-        fecha: fechaComprobante,
-        totalAhorrado: tot.totalAhorrado || 0,
-        totalActividades: tot.totalActividades || 0,
-        totalSancionesPagadas: tot.totalSancionesPagadas || 0,
-        valorEntregar,
-        valorFondo,
-        porcentajeSancion: porcentajeSancionAplicado,
-        codigoComprobante
-      }
-      const { error: errComprobante } = await supabase.from('comprobantes_salida').upsert({
-        socio_natillera_id: sn.id,
-        socio_nombre: datosComprobante.socioNombre,
-        socio_telefono: datosComprobante.socioTelefono || null,
-        fecha: fechaComprobante,
-        total_ahorrado: datosComprobante.totalAhorrado,
-        valor_sancion: datosComprobante.valorFondo,
-        valor_entregar: datosComprobante.valorEntregar,
-        codigo_comprobante: codigoComprobante
-      }, { onConflict: 'socio_natillera_id' })
-      if (errComprobante) console.error('Error guardando comprobante de salida:', errComprobante)
-      comprobanteDesactivacion.value = datosComprobante
-      comprobantesSalidaGuardados.value[sn.id] = { ...datosComprobante }
-      cerrarModalDesactivar()
-      await nextTick()
-      notificationStore.warning(
-        `${sn.socio?.nombre || 'El socio'} fue retirado de la natillera`,
-        'Socio retirado',
-        2500
-      )
-    } else {
-      notificationStore.error(resultado.error || 'No se pudo desactivar', 'Error')
+    if (!resultado.success) throw new Error(resultado.error || 'No se pudo desactivar')
+    if (modalDetalle.value && socioSeleccionado.value?.id === sn.id) {
+      modalDetalle.value = false
+      socioSeleccionado.value = null
     }
+    const porcentajeSancionAplicado = desactivarSancionar.value && desactivarPorcentajeSancion.value > 0
+      ? Math.min(100, Math.max(0, Number(desactivarPorcentajeSancion.value) || 0))
+      : 0
+    const datosComprobante = {
+      socioNombre: sn.socio?.nombre || 'Socio',
+      socioTelefono: sn.socio?.telefono || null,
+      fecha: fechaComprobante,
+      totalAhorrado: tot.totalAhorrado || 0,
+      totalActividades: tot.totalActividades || 0,
+      totalSancionesPagadas: tot.totalSancionesPagadas || 0,
+      valorEntregar,
+      valorFondo,
+      porcentajeSancion: porcentajeSancionAplicado,
+      valorPrestamo: pagoPrestamos,
+      saldoPendientePrestamo,
+      codigoComprobante
+    }
+    comprobanteDesactivacion.value = datosComprobante
+    comprobantesSalidaGuardados.value[sn.id] = { ...datosComprobante }
+    cerrarModalDesactivar()
+    await nextTick()
+    notificationStore.warning(
+      `${sn.socio?.nombre || 'El socio'} fue retirado de la natillera`,
+      'Socio retirado',
+      2500
+    )
   } catch (e) {
     console.error('Error al desactivar socio:', e)
+    // Deshacer lo que alcanzó a escribirse, en orden inverso: el socio sigue activo y la
+    // caja, las utilidades y el préstamo quedan como estaban antes del retiro.
+    try {
+      if (hecho.salidaId) await supabase.from('movimientos_fondo').delete().eq('id', hecho.salidaId)
+      if (hecho.sancionId) await supabase.from('utilidades_clasificadas').delete().eq('id', hecho.sancionId)
+      if (hecho.comprobante) await supabase.from('comprobantes_salida').delete().eq('socio_natillera_id', sn.id)
+    } catch (errRev) {
+      console.error('No se pudo deshacer el retiro:', errRev)
+    }
+    // Si el cruce ya se hizo y lo que venía después falló, el préstamo no debe quedar
+    // abonado con una plata que no salió del retiro.
+    for (const d of detallePrestamos.reverse()) {
+      try {
+        await revertirAbonoPrestamo({ prestamoId: d.prestamo_id, pagoId: d.pago_id, abono: d.abono, mora: d.mora, formaPago: d.forma_pago, natilleraId })
+      } catch (errRev) {
+        console.error('No se pudo deshacer el abono del retiro:', errRev)
+      }
+    }
     notificationStore.error(e?.message || 'Error al retirar el socio', 'Error')
   } finally {
     desactivando.value = false
@@ -5721,7 +6006,7 @@ function enviarWhatsAppCuota(cuotaData) {
     )
   }
   
-  const url = `https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`
+  const url = `https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`
   window.open(url, '_blank')
 }
 
@@ -5787,7 +6072,7 @@ function handleArchivoCSV(event) {
             nombre: socio.nombre,
             valor_cuota: parseInt(socio.valor_cuota) || 50000,
             cantidad_cuotas: parseInt(socio.cantidad_cuotas) || 1,
-            telefono: socio.telefono.trim(), // Obligatorio y único
+            telefono: normalizarCelular(socio.telefono), // Obligatorio, único y celular
             email: socio.email || null,
             documento: socio.documento || null
           })
@@ -5817,6 +6102,15 @@ async function importarSocios() {
     return
   }
 
+  // Celulares: se validan todos antes de importar, para no dejar la importación a medias.
+  const conCelularInvalido = sociosPreview.value.filter(s => !esTelefonoValido(s.telefono))
+  if (conCelularInvalido.length > 0) {
+    const nombres = conCelularInvalido.slice(0, 5).map(s => `${s.nombre} (${s.telefono})`).join(', ')
+    const resto = conCelularInvalido.length > 5 ? ` y ${conCelularInvalido.length - 5} más` : ''
+    errorImportar.value = `Corrige el teléfono de: ${nombres}${resto}. Cada socio necesita un celular de 10 dígitos que empiece por 3, o uno de otro país con + y el indicativo.`
+    return
+  }
+
   importando.value = true
   errorImportar.value = ''
   exitoImportar.value = ''
@@ -5839,7 +6133,7 @@ async function importarSocios() {
         nombre: socio.nombre,
         documento: socio.documento,
         email: socio.email,
-        telefono: socio.telefono.trim() // Asegurar que esté limpio
+        telefono: normalizarCelular(socio.telefono)
       },
       socio.valor_cuota,
       'mensual' // Periodicidad por defecto para importación
@@ -5930,7 +6224,7 @@ async function verComprobanteSalida(sn) {
   loadingComprobanteSalida.value = true
   const { data: row, error } = await supabase
     .from('comprobantes_salida')
-    .select('socio_nombre, socio_telefono, fecha, total_ahorrado, valor_sancion, valor_entregar, codigo_comprobante')
+    .select('socio_nombre, socio_telefono, fecha, total_ahorrado, valor_sancion, valor_entregar, codigo_comprobante, valor_prestamo, detalle_prestamos')
     .eq('socio_natillera_id', sn.id)
     .maybeSingle()
   loadingComprobanteSalida.value = false
@@ -5952,6 +6246,8 @@ async function verComprobanteSalida(sn) {
       valorFondo: valorFondoRow,
       valorEntregar: valorEntregarRow,
       porcentajeSancion: porcentajeDerivado,
+      valorPrestamo: parseFloat(row.valor_prestamo) || 0,
+      saldoPendientePrestamo: (row.detalle_prestamos || []).reduce((s, d) => s + (Number(d.saldo_restante) || 0), 0),
       codigoComprobante: row.codigo_comprobante
     }
     comprobantesSalidaGuardados.value[sn.id] = { ...comprobanteDesactivacion.value }
@@ -8028,12 +8324,206 @@ onUnmounted(() => {
   box-shadow: inset 0 0 0 1px #ec4899;
 }
 
+/* ─── Vínculo del socio con su cuenta (portal de socios) ─── */
+.socio-vinculado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--brand-primary-soft);
+  color: var(--brand-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.socio-cuenta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: var(--radius-lg, 0.875rem);
+  border: 1px dashed var(--surface-divider-strong, #cbd5e1);
+  background: #f8fafc;
+}
+.socio-cuenta.is-vinculado {
+  border-style: solid;
+  border-color: rgba(27, 94, 55, 0.2);
+  background: linear-gradient(135deg, #eef7f0 0%, #fff 70%);
+}
+.socio-cuenta__icono {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+.socio-cuenta.is-vinculado .socio-cuenta__icono { color: var(--brand-primary); }
+.socio-cuenta__titulo {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.socio-cuenta__detalle {
+  margin-top: 0.0625rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.socio-cuenta__accion {
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #b91c1c;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.socio-cuenta__accion:hover:not(:disabled) { background: #fef2f2; }
+
+/* ─── Solicitudes para usar la app ─── */
+.solicitudes-aviso {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg, 0.875rem);
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: linear-gradient(135deg, #fffbeb 0%, #fff 70%);
+  color: #92400e;
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.solicitudes-aviso__icono {
+  display: flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #fef3c7;
+  color: #b45309;
+}
+.solicitudes-aviso__titulo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #78350f;
+}
+.solicitudes-aviso__sub {
+  display: block;
+  font-size: 0.75rem;
+  color: #92400e;
+  opacity: 0.85;
+}
+/*
+ * Préstamo pendiente al retirarse. Misma estructura que la sanción (cabecera con
+ * interruptor + cuerpo), en naranja: también es dinero que no se lleva el socio, pero no
+ * se queda en el fondo como utilidad, paga su deuda. Encendida por defecto.
+ */
+.retiro-prestamo {
+  border-radius: 1rem;
+  border: 1px solid var(--surface-divider-strong, #cbd5e1);
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 200ms ease, background-color 200ms ease;
+}
+.retiro-prestamo.is-active {
+  border-color: rgba(194, 65, 12, 0.3);
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 62%);
+}
+.retiro-prestamo__cabecera {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.retiro-prestamo__icono {
+  display: flex;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+  color: #94a3b8;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+.retiro-prestamo.is-active .retiro-prestamo__icono { background: #ffedd5; color: #c2410c; }
+.retiro-prestamo__titulo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #334155;
+}
+.retiro-prestamo.is-active .retiro-prestamo__titulo { color: #9a3412; }
+.retiro-prestamo__sub {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #94a3b8;
+}
+.retiro-prestamo.is-active .retiro-prestamo__sub { color: #c2410c; opacity: 0.85; }
+.retiro-prestamo__switch {
+  position: relative;
+  display: inline-flex;
+  height: 1.625rem;
+  width: 2.875rem;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  transition: background-color 200ms ease;
+}
+.retiro-prestamo.is-active .retiro-prestamo__switch { background: #ea580c; }
+.retiro-prestamo__bolita {
+  position: absolute;
+  left: 0.1875rem;
+  height: 1.25rem;
+  width: 1.25rem;
+  border-radius: 9999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.retiro-prestamo.is-active .retiro-prestamo__bolita { transform: translate3d(1.25rem, 0, 0); }
+.retiro-prestamo__cuerpo { padding: 0 1rem 1rem; }
+.retiro-prestamo__nota {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #9a3412;
+}
+.retiro-reparto__valor--prestamo { color: #c2410c; }
+/* Con tres columnas (socio · préstamo · fondo) la cifra se ajusta al ancho del teléfono. */
+.retiro-reparto__valor { font-size: clamp(1rem, 4.6vw, 1.375rem); }
+
 @media (prefers-reduced-motion: reduce) {
   .retiro-sancion,
   .retiro-sancion__icono,
   .retiro-sancion__switch,
   .retiro-sancion__bolita,
-  .retiro-pct {
+  .retiro-pct,
+  .retiro-prestamo,
+  .retiro-prestamo__icono,
+  .retiro-prestamo__switch,
+  .retiro-prestamo__bolita {
     transition: none;
   }
 }

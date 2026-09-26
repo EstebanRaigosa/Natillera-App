@@ -119,6 +119,7 @@
       <!-- Socios -->
       <router-link
         v-if="natilleraId"
+        v-show="!oculto('socios')"
         id="tour-bottom-nav-socios"
         :to="`/natilleras/${natilleraId}/socios`"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
@@ -155,6 +156,7 @@
       <!-- Cuotas -->
       <router-link
         v-if="natilleraId"
+        v-show="!oculto('cuotas')"
         id="tour-bottom-nav-cuotas"
         :to="`/natilleras/${natilleraId}/cuotas`"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
@@ -191,6 +193,7 @@
       <!-- Préstamos -->
       <button
         v-if="natilleraId"
+        v-show="!oculto('prestamos')"
         type="button"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation [-webkit-tap-highlight-color:transparent]"
         :class="isActive(`/natilleras/${natilleraId}/prestamos`) ? 'nav-item--active' : 'nav-item--inactive'"
@@ -227,6 +230,7 @@
       <!-- Actividades -->
       <router-link
         v-if="natilleraId"
+        v-show="!oculto('actividades')"
         :to="`/natilleras/${natilleraId}/actividades`"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation"
         :class="isActive(`/natilleras/${natilleraId}/actividades`) ? 'nav-item--active' : 'nav-item--inactive'"
@@ -268,6 +272,7 @@
       -->
       <button
         v-if="natilleraId"
+        v-show="!oculto('caja')"
         id="tour-bottom-nav-caja"
         type="button"
         class="nav-item flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 max-w-[52px] rounded-xl px-1.5 py-1.5 min-h-[44px] transition-all duration-200 relative touch-manipulation [-webkit-tap-highlight-color:transparent]"
@@ -367,6 +372,7 @@
 </template>
 
 <script setup>
+import { rutaEnSeccion } from '../utils/rutaActiva'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../stores/natilleras'
@@ -381,8 +387,12 @@ const props = defineProps({
    * Acciones de la natillera que el usuario puede usar, ya filtradas por permisos
    * (las arma DashboardLayout): [{ clave, etiqueta, icono, esActual, peligro? }].
    */
-  acciones: { type: Array, default: () => [] }
+  acciones: { type: Array, default: () => [] },
+  /** Opciones en «Nada» para este usuario (socios, cuotas…): su pestaña no se muestra. */
+  modulosOcultos: { type: Array, default: () => [] }
 })
+
+const oculto = modulo => props.modulosOcultos.includes(modulo)
 
 const emit = defineEmits(['accion'])
 
@@ -558,8 +568,8 @@ function isActive(path) {
     // Está activo solo si es exactamente la ruta de detalle (no subrutas como /socios, /cuotas, etc.)
     return route.path === path
   }
-  // Para rutas de natilleras (socios, cuotas, etc.), verificar si la ruta comienza con el path
-  return route.path.startsWith(path)
+  // Para rutas de natilleras (socios, cuotas, etc.), la ruta o una de sus subrutas
+  return rutaEnSeccion(route.path, path)
 }
 
 /* --------------------------------- Espacio «Caja» ---------------------------- */
@@ -576,21 +586,21 @@ const opcionesCaja = computed(() => {
       etiqueta: 'Pagos',
       icono: ReceiptPercentIcon,
       ruta: `${base}/pagos`,
-      esActual: route.path.startsWith(`${base}/pagos`)
+      esActual: rutaEnSeccion(route.path, `${base}/pagos`)
     },
     {
       clave: 'conciliacion',
       etiqueta: 'Conciliar',
       icono: ScaleIcon,
       ruta: `${base}/conciliacion`,
-      esActual: route.path.startsWith(`${base}/conciliacion`)
+      esActual: rutaEnSeccion(route.path, `${base}/conciliacion`)
     },
     {
       clave: 'movimientos',
       etiqueta: 'Movim.',
       icono: ArrowsRightLeftIcon,
       ruta: `${base}/movimientos`,
-      esActual: route.path.startsWith(`${base}/movimientos`)
+      esActual: rutaEnSeccion(route.path, `${base}/movimientos`)
     }
   ]
 })
@@ -640,9 +650,9 @@ onUnmounted(() => document.removeEventListener('click', cerrarMenusFuera))
 const cajaActiva = computed(() => {
   if (!natilleraId.value) return false
   const base = `/natilleras/${natilleraId.value}`
-  return route.path.startsWith(`${base}/pagos`) ||
-    route.path.startsWith(`${base}/conciliacion`) ||
-    route.path.startsWith(`${base}/movimientos`)
+  return rutaEnSeccion(route.path, `${base}/pagos`) ||
+    rutaEnSeccion(route.path, `${base}/conciliacion`) ||
+    rutaEnSeccion(route.path, `${base}/movimientos`)
 })
 
 // Con el botón «atrás» del teléfono la hoja debe cerrarse como cualquier otra capa.

@@ -203,7 +203,7 @@
                   :class="vistaActiva === 'socio' ? 'bg-[#166534] text-white' : 'text-gray-600 hover:text-gray-900'"
                   @click="vistaActiva = 'socio'"
                 >
-                  De socios
+                  Como socio
                 </button>
               </div>
             </div>
@@ -337,9 +337,8 @@
       </div>
 
       <!-- Loading - Solo mostrar si NO está verificando el modal y NO se está eliminando una natillera -->
-      <div v-if="natillerasStore.loading && !verificandoModal && !eliminandoNatillera" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-12 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
-        <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto"></div>
-        <p class="text-gray-500 mt-4 font-medium">Cargando natilleras...</p>
+      <div v-if="natillerasStore.loading && !verificandoModal && !eliminandoNatillera" class="relative bg-gradient-to-br from-white via-natillera-50/30 to-emerald-50/20 rounded-3xl p-2 border border-natillera-200/50 shadow-xl backdrop-blur-sm text-center overflow-hidden">
+        <CargaCaja texto="Cargando natilleras" />
       </div>
 
       <!-- Vista: Todas (Propias + Compartidas) -->
@@ -376,6 +375,13 @@
             :show-delete="puedeEliminarNatillera(natillera) && natillera.es_propia"
             @toggle-pin="togglePinNatillera(natillera.id)"
             @delete="confirmarEliminarNatillera(natillera)"
+          />
+          <!-- Natilleras donde esta cuenta es socio: misma cuadrícula, con su cinta -->
+          <DashboardNatilleraSocioCard
+            v-for="item in natillerasSocioFiltradas"
+            :key="`socio-${item.socio_natillera_id}`"
+            :item="item"
+            :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
           />
 
           <router-link
@@ -511,28 +517,42 @@
         </div>
       </template>
 
-      <!-- Vista: Como socio -->
+      <!--
+        Vista: Como socio. Natilleras donde esta cuenta está vinculada como socio (el admin
+        aprobó su solicitud desde el enlace de invitación). Cada tarjeta lleva a su estado
+        de cuenta, de solo lectura.
+      -->
       <template v-else-if="vistaActiva === 'socio'">
-        <div v-if="!esSocioEnAlgunaNatillera" class="w-full flex justify-center">
+        <div v-if="solicitudesSocioPendientes.length > 0" class="socio-pendientes">
+          <ClockIcon class="h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+          <p class="min-w-0 text-sm text-amber-900">
+            <strong>Esperando aprobación:</strong>
+            {{ solicitudesSocioPendientes.map(s => s.natillera_nombre).join(', ') }}.
+            Cuando el administrador la apruebe, aparecerá aquí.
+          </p>
+        </div>
+
+        <div v-if="natillerasSocioPortal.length === 0" class="w-full flex justify-center">
           <DashboardPropiedadSinResultados
-            titulo="No se encontraron natilleras como socio"
-            descripcion="No estás registrado como socio en ninguna natillera. Revisa «Todas» o las compartidas."
+            titulo="Aún no eres socio en ninguna natillera"
+            descripcion="Pídele al administrador de tu natillera el enlace de invitación y entra desde ahí con esta cuenta."
             @ver-todas="vistaActiva = 'todas'"
           />
         </div>
         <div
           v-else
-          class="relative rounded-2xl border border-orange-200/70 bg-gradient-to-br from-white via-orange-50/40 to-amber-50/30 p-8 sm:p-10 text-center shadow-sm"
+          :class="
+            vistaLayout === 'tarjetas'
+              ? 'grid gap-5 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3'
+              : 'space-y-3'
+          "
         >
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 mb-4">
-            <UserIcon class="w-8 h-8 text-orange-600" />
-          </div>
-          <h3 class="font-display font-bold text-gray-800 text-lg sm:text-xl mb-2">
-            Natilleras como socio
-          </h3>
-          <p class="text-gray-600 text-sm sm:text-base max-w-md mx-auto">
-            Pronto verás aquí las natilleras en las que participas como socio. Mientras tanto, revisa la pestaña «Todas» si te han compartido alguna.
-          </p>
+          <DashboardNatilleraSocioCard
+            v-for="item in natillerasSocioPortal"
+            :key="item.socio_natillera_id"
+            :item="item"
+            :variant="vistaLayout === 'tarjetas' ? 'grid' : 'list'"
+          />
         </div>
       </template>
     </div>
@@ -628,7 +648,7 @@
       @confirm="confirmarRechazarInvitacion"
     />
 
-    <LoadingScreen
+    <CargaPantalla
       :visible="verificandoModal && !eliminandoNatillera"
       :text="mensajeCargaActual"
     />
@@ -742,13 +762,15 @@ import {
   emailInvitadorDestacado,
   textoExpiracionInvitacionColaborador as textoExpiracionInvitacion,
 } from '../utils/invitacionesColaborador'
-import LoadingScreen from '../components/LoadingScreen.vue'
+import CargaPantalla from '../components/carga/CargaPantalla.vue'
+import CargaCaja from '../components/carga/CargaCaja.vue'
 import ModalWrapper from '../components/ModalWrapper.vue'
 import RechazarInvitacionConfirmModal from '../components/RechazarInvitacionConfirmModal.vue'
 import DashboardEmptySinNatilleras from '../components/DashboardEmptySinNatilleras.vue'
 import DashboardPropiedadSinResultados from '../components/DashboardPropiedadSinResultados.vue'
 import DashboardFiltroSinResultados from '../components/DashboardFiltroSinResultados.vue'
 import DashboardNatilleraCard from '../components/DashboardNatilleraCard.vue'
+import DashboardNatilleraSocioCard from '../components/DashboardNatilleraSocioCard.vue'
 import PiggyBankIcon from '../components/icons/PiggyBankIcon.vue'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { detectIosPlatform } from '../composables/useIsIos'
@@ -798,6 +820,25 @@ const fondoPorNatillera = ref({}) // fondoTotal por natillera (mismo valor que e
 const statsPorNatillera = ref({}) // { totalRecaudadoNeto, utilidadesRecogidas, fondoTotal } por id
 const mostrarModalCrearNatillera = ref(false)
 const natillerasDondeEsSocio = ref([])
+/** Natilleras donde esta cuenta es socio vinculado (portal_mis_natilleras). */
+const natillerasSocioPortal = ref([])
+// Ya se consultó en esta visita: la fase 3 (modal de bienvenida) no repite la consulta.
+let socioCargado = false
+/** Solicitudes de vínculo que aún no aprueba el admin. */
+const solicitudesSocioPendientes = ref([])
+
+/*
+ * Las de socio en «Todas»: con el mismo filtro de estado, y sin repetir una natillera que
+ * además se administra o se comparte (ahí ya sale su tarjeta normal).
+ */
+const natillerasSocioFiltradas = computed(() => {
+  const yaListadas = new Set(todasLasNatilleras.value.map(n => n.id))
+  return natillerasSocioPortal.value.filter(n => {
+    if (yaListadas.has(n.natillera_id)) return false
+    if (filtro.value === 'todas') return true
+    return String(n.natillera_estado || 'activa').toLowerCase() === filtro.value
+  })
+})
 const verificandoModal = ref(true) // Estado para la animación de carga
 const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
 const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
@@ -1016,26 +1057,26 @@ const mostrandoListadosVista = computed(() => {
   return 0
 })
 
-// Verificar si el usuario es socio en alguna natillera
+/*
+ * Natilleras donde el usuario es socio. Antes se buscaba por correo (socios.email), pero
+ * solo 1 de cada 5 socios tiene correo y nada garantizaba que fuera de quien entra. Ahora
+ * sale del vínculo aprobado por el admin (socios.usuario_id), vía la base de datos.
+ */
 async function verificarNatillerasDondeEsSocio() {
   try {
     if (!usuarioAutenticado.value) return
-    
-    // Una sola query con join: socios -> socios_natillera
-    const { data: socios, error } = await supabase
-      .from('socios')
-      .select('socios_natillera(natillera_id)')
-      .eq('email', usuarioAutenticado.value.email)
-      .limit(1)
-    
-    if (error || !socios || socios.length === 0) {
-      natillerasDondeEsSocio.value = []
-      return
-    }
-    
-    natillerasDondeEsSocio.value = (socios[0].socios_natillera || []).map(sn => sn.natillera_id)
+    const [{ data: mias, error }, { data: pendientes }] = await Promise.all([
+      supabase.rpc('portal_mis_natilleras'),
+      supabase.rpc('portal_mis_solicitudes')
+    ])
+    if (error) throw error
+    natillerasSocioPortal.value = mias || []
+    natillerasDondeEsSocio.value = (mias || []).map(n => n.natillera_id)
+    solicitudesSocioPendientes.value = pendientes || []
+    socioCargado = true
   } catch (e) {
     console.error('Error verificando natilleras donde es socio:', e)
+    natillerasSocioPortal.value = []
     natillerasDondeEsSocio.value = []
   }
 }
@@ -1289,7 +1330,7 @@ async function finalizarVerificacionYMostrarModal() {
   finalizandoVerificacion.value = true
   
   try {
-    await verificarNatillerasDondeEsSocio()
+    if (!socioCargado) await verificarNatillerasDondeEsSocio()
     
     if (natillerasStore.loading) {
       finalizandoVerificacion.value = false
@@ -1787,8 +1828,22 @@ async function inicializarComponente() {
     cargarPineadas(user.id),
     natillerasStore.fetchTodasLasNatilleras({ user }),
     invitacionesPromise,
-    perfilPromise
+    perfilPromise,
+    /*
+     * Natilleras donde es socio: en la fase 1 y no en la 3. La 3 solo corre si no hay
+     * natilleras propias (es la del modal de bienvenida), así que quien administra una
+     * natillera y a la vez es socio de otra nunca veía la segunda.
+     */
+    verificarNatillerasDondeEsSocio()
   ])
+
+  // Si solo es socio (no administra ni colabora), lo suyo es ver esa pestaña.
+  if (
+    todasLasNatilleras.value.length === 0 &&
+    (natillerasSocioPortal.value.length > 0 || solicitudesSocioPendientes.value.length > 0)
+  ) {
+    vistaActiva.value = 'socio'
+  }
 
   // Mostrar contenido inmediatamente: quitar pantalla de carga
   const tieneNatilleras = todasLasNatilleras.value.length > 0
@@ -1860,10 +1915,24 @@ onActivated(async () => {
 
   // Si ya hay natilleras cargadas, actualizar solo el total del fondo al volver
   calcularTotalFondo()
+  // …y las de socio: el admin pudo aprobar su solicitud mientras estaba en otra pantalla.
+  verificarNatillerasDondeEsSocio()
 })
 </script>
 
 <style scoped>
+/* ─── Vista «Como socio» ─── */
+.socio-pendientes {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-bottom: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(180, 83, 9, 0.25);
+  background: #fffbeb;
+}
+
 /* Animación de pulso y brillo */
 @keyframes pulse-glow {
   0%, 100% {

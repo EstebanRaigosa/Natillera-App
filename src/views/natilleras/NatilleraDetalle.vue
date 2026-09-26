@@ -5,7 +5,7 @@
       <div class="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-natillera-200/30 to-emerald-200/20 rounded-full blur-3xl"></div>
       <div class="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-teal-200/30 to-natillera-200/20 rounded-full blur-3xl"></div>
     </div>
-    <LoadingScreen
+    <CargaPantalla
       :visible="cargandoNatillera"
       :text="mensajeCargaActual"
     />
@@ -47,6 +47,17 @@
             <QuestionMarkCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
             <span class="hidden text-xs font-semibold sm:inline">¿Cómo funciona?</span>
           </button>
+          <!-- Admin que además es socio de esta natillera: su portal, sin volver al inicio a buscarla -->
+          <router-link
+            v-if="miSocioNatilleraId"
+            :to="{ name: 'PortalSocio', params: { socioNatilleraId: miSocioNatilleraId } }"
+            class="flex h-11 min-w-[2.75rem] flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#166534]/25 bg-white px-0 text-[#166534] shadow-sm transition-colors hover:bg-[#f0fdf4] active:bg-[#dcfce7] sm:h-auto sm:px-3 sm:py-2 sm:rounded-lg [-webkit-tap-highlight-color:transparent]"
+            title="Ver mi portal de socio"
+            aria-label="Ver mi portal de socio en esta natillera"
+          >
+            <UserCircleIcon class="h-5 w-5 flex-shrink-0 sm:h-4 sm:w-4" />
+            <span class="hidden text-xs font-semibold sm:inline">Mi portal</span>
+          </router-link>
           <button
             v-if="puedeUsarRecordatorio"
             type="button"
@@ -538,23 +549,12 @@
         manual no tiene nada que repartir en el donut, pero sí tiene un neto que enseñar.
         Antes se ocultaba la tarjeta entera y esa cifra desaparecía de la pantalla.
       -->
-      <!-- Placeholder mientras llegan las estadísticas: reserva el alto para que la tarjeta no salte. -->
+      <!-- Mientras llegan las estadísticas la tarjeta se queda con la carga dentro: reserva su sitio y la pantalla no salta. -->
       <section
         v-if="cargandoEstadisticas && utilidadesCategoriaGrafico.segments.length === 0 && !ajustesUtilidadesGrafico.tieneAjustes"
         class="mt-4 sm:mt-6 rounded-2xl border border-gray-200/80 bg-white shadow-sm overflow-hidden"
-        aria-hidden="true"
       >
-        <div class="px-5 pt-5 pb-2">
-          <div class="h-5 w-52 rounded bg-gray-200/80 animate-pulse"></div>
-        </div>
-        <div class="flex flex-col sm:flex-row items-center gap-6 px-5 pb-6 pt-4">
-          <div class="h-40 w-40 shrink-0 rounded-full bg-gray-200/70 animate-pulse"></div>
-          <div class="w-full space-y-3">
-            <div class="h-4 w-full rounded bg-gray-200/70 animate-pulse"></div>
-            <div class="h-4 w-4/5 rounded bg-gray-200/70 animate-pulse"></div>
-            <div class="h-4 w-3/5 rounded bg-gray-200/70 animate-pulse"></div>
-          </div>
-        </div>
+        <CargaCaja texto="Cargando utilidades por categoría" />
       </section>
 
       <section
@@ -758,7 +758,7 @@
               </div>
               <a 
                 v-if="socioSeleccionado?.socio?.telefono"
-                :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
+                :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                 target="_blank"
                 class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg flex-shrink-0"
               >
@@ -1375,10 +1375,7 @@
         <!-- Contenido -->
         <div class="overflow-y-auto flex-1 p-4 sm:p-6 space-y-3 sm:space-y-4">
           <!-- Estado de carga -->
-          <div v-if="loadingCuotasSocio" class="text-center py-12">
-            <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p class="text-gray-500 text-sm">Cargando cuotas...</p>
-          </div>
+          <CargaCaja v-if="loadingCuotasSocio" texto="Cargando cuotas" />
           
           <!-- Sin cuotas -->
           <div v-else-if="cuotasSocioPorMes.length === 0" class="text-center py-12">
@@ -2592,9 +2589,7 @@
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Rifas liquidadas</h4>
-          <div v-if="detalleRifas.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
-          </div>
+          <CargaCaja v-if="detalleRifas.loading" texto="Cargando rifas liquidadas" />
           <div v-else-if="!detalleRifas.porMes || detalleRifas.porMes.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay rifas liquidadas.
           </div>
@@ -2704,9 +2699,7 @@
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">{{ etiquetaDetalleOtros }} (por descripción de actividad)</h4>
-          <div v-if="detalleOtros.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
-          </div>
+          <CargaCaja v-if="detalleOtros.loading" texto="Cargando utilidades por actividad" />
           <div v-else-if="!detalleOtros.porActividad || detalleOtros.porActividad.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay utilidades registradas en {{ etiquetaDetalleOtros.toLowerCase() }}.
           </div>
@@ -2786,9 +2779,7 @@
             <ChevronLeftIcon class="w-4 h-4 flex-shrink-0" />
             Volver al desglose
           </button>
-          <div v-if="detalleSanciones.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
-          </div>
+          <CargaCaja v-if="detalleSanciones.loading" texto="Cargando multas" />
           <template v-else>
             <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Multas pagadas (cuotas)</h4>
             <p
@@ -2903,9 +2894,7 @@
             <span class="font-semibold text-sky-700">normales</span> entra a medida que se
             paga cada cuota, así que aquí solo aparece lo ya cobrado.
           </p>
-          <div v-if="detallePrestamos.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
-          </div>
+          <CargaCaja v-if="detallePrestamos.loading" texto="Cargando intereses de préstamos" />
           <div v-else-if="!detallePrestamos.lista || detallePrestamos.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay intereses de préstamos registrados.
           </div>
@@ -2965,9 +2954,7 @@
             Volver al desglose
           </button>
           <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Ingresos y egresos a utilidades</h4>
-          <div v-if="detalleAjustes.loading" class="flex justify-center py-10">
-            <ArrowPathIcon class="w-8 h-8 text-natillera-400 animate-spin" />
-          </div>
+          <CargaCaja v-if="detalleAjustes.loading" texto="Cargando movimientos de utilidades" />
           <div v-else-if="detalleAjustes.lista.length === 0" class="text-center py-8 text-gray-500 text-sm">
             No hay movimientos registrados contra utilidades.
           </div>
@@ -3268,9 +3255,7 @@
           <div
             class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
           >
-            <div v-if="loadingRecordatorios" class="py-6 text-center text-xs font-medium text-gray-700 sm:text-sm">
-              Cargando recordatorios…
-            </div>
+            <CargaCaja v-if="loadingRecordatorios" texto="Cargando recordatorios" />
             <div v-else-if="listRecordatorios.length > 0" class="space-y-2">
               <article
                 v-for="(item, idx) in listRecordatorios"
@@ -3644,17 +3629,6 @@
         @confirm="confirmarRechazarInvitacionCompacta"
       />
     </div>
-    <!-- Componente ColaboradoresManager oculto para acceder a sus métodos -->
-    <div class="hidden">
-      <ColaboradoresManager
-        ref="colaboradoresManagerRef"
-        :natillera-id="id"
-        :admin-id="natillera?.admin_id"
-        :admin-email="adminActual?.email || ''"
-        :admin-nombre="adminActual?.nombre || adminActual?.email || ''"
-        :es-admin="esAdmin"
-      />
-    </div>
     <!--
       Guía de bienvenida. Se muestra sola las dos primeras visitas a esta
       pantalla (ver useTourDetalleNatillera.js) y se puede volver a lanzar.
@@ -3667,6 +3641,7 @@
     />
 </template>
 <script setup>
+import { numeroWhatsApp } from '../../utils/telefono'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -3698,7 +3673,6 @@ import {
   Cog6ToothIcon,
   CalendarDaysIcon,
   PlusIcon,
-  ArrowPathIcon,
   Bars3Icon,
   SparklesIcon,
   Squares2X2Icon,
@@ -3724,7 +3698,6 @@ import { useAuthStore } from '../../stores/auth'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import { supabase } from '../../lib/supabase'
-import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
 import RechazarInvitacionConfirmModal from '../../components/RechazarInvitacionConfirmModal.vue'
 import { useNotificationStore } from '../../stores/notifications'
 import {
@@ -3743,9 +3716,11 @@ import {
 } from '../../composables/useTourDetalleNatillera'
 import { recaudadoIndicador, utilidadIndicador } from '../../utils/indicadoresNatillera'
 import PiggyBankIcon from '../../components/icons/PiggyBankIcon.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import { calcularEstadoRealCuota } from '../../composables/useEstadoSocio'
+import { actualizarFotoGananciasSiToca } from '../../composables/usePortalGanancias'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useModalStack } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
@@ -4074,7 +4049,6 @@ const detallePrestamosAbierto = ref(false)
 const detallePrestamos = ref({ loading: false, lista: [] })
 const conceptoEnDesarrollo = ref(null)
 const loadingCuotasSocio = ref(false)
-const colaboradoresManagerRef = ref(null)
 const vistaSimplificadaCuotas = ref(false)
 const socioSeleccionado = ref(null)
 const cuotasSocio = ref([])
@@ -4184,6 +4158,28 @@ const id = computed(() => props.id || route.params.id)
 /** Natillera actual (debe declararse antes de computeds/watch que la usan; evita TDZ al evaluar sociosFiltrados etc.) */
 const natillera = computed(() => natillerasStore.natilleraActual)
 
+/*
+ * Si esta cuenta, además de administrar, es socio vinculado de esta natillera, la cabecera
+ * ofrece ir directo a su portal. Sale del mismo vínculo que usa el Dashboard
+ * (portal_mis_natilleras); si la consulta falla, el botón simplemente no aparece.
+ */
+const miSocioNatilleraId = ref(null)
+let turnoMiPortal = 0
+async function buscarMiPortal(natilleraId) {
+  const turno = ++turnoMiPortal
+  miSocioNatilleraId.value = null
+  if (!natilleraId) return
+  const { data, error } = await supabase.rpc('portal_mis_natilleras')
+  // Si se cambió de natillera mientras respondía, esta respuesta ya no aplica.
+  if (turno !== turnoMiPortal) return
+  if (error) {
+    console.warn('No se pudo consultar el vínculo como socio:', error)
+    return
+  }
+  miSocioNatilleraId.value = (data || []).find(n => n.natillera_id === natilleraId)?.socio_natillera_id || null
+}
+watch(() => natillera.value?.id, buscarMiPortal, { immediate: true })
+
 /** Todas las invitaciones pendientes (visibles en cualquier natillera que abra el socio) */
 const misInvitacionesPendientesDetalle = computed(() => {
   const list = colaboradoresStore.misInvitaciones || []
@@ -4278,11 +4274,6 @@ function abrirConfigMeses() {
     anio: natillera.value?.anio || new Date().getFullYear()
   }
   modalConfigMeses.value = true
-}
-function abrirFormularioInvitarColaborador() {
-  if (colaboradoresManagerRef.value) {
-    colaboradoresManagerRef.value.abrirModalInvitar()
-  }
 }
 async function guardarConfigMeses() {
   const result = await natillerasStore.actualizarNatillera(props.id || route.params.id, {
@@ -4893,7 +4884,6 @@ function cerrarModalTodosMovimientos() {
 
 // Usuario autenticado y admin
 const usuarioAutenticado = ref(null)
-const adminActual = ref(null)
 const miRol = ref(null)
 const misPermisos = ref(null)
 // Verificar si el usuario es superusuario
@@ -5134,20 +5124,6 @@ const puedeNotificar = computed(() => {
   if (!misPermisos.value) return false
   return misPermisos.value.permisos?.notificar === true
 })
-// Cargar información del administrador actual
-async function cargarAdminActual() {
-  if (!natillera.value?.admin_id) return
-  try {
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('id, email, nombre')
-      .eq('id', natillera.value.admin_id)
-      .single()
-    adminActual.value = data
-  } catch (e) {
-    console.error('Error cargando administrador actual:', e)
-  }
-}
 // Función para buscar comprobante
 // Función auxiliar para calcular el total a pagar de una cuota incluyendo todos los conceptos
 async function calcularTotalAPagarCompleto(cuota) {
@@ -6878,7 +6854,8 @@ function aplicarAccionPendienteBarraLateral() {
   if (t === 'buscar' && puedeBuscarComprobante.value) {
     modalBuscarComprobante.value = true
   } else if (t === 'invitar' && puedeInvitarColaboradores.value) {
-    nextTick(() => abrirFormularioInvitarColaborador())
+    // Administradores es una página propia (AdministradoresNatillera.vue)
+    router.push(`/natilleras/${id.value}/administradores`)
   } else if (t === 'notificar' && puedeNotificar.value) {
     router.push(`/natilleras/${id.value}/notificar`)
   }
@@ -7299,7 +7276,7 @@ function enviarWhatsAppCuota(cuotaData) {
     )
   }
   
-  const url = `https://wa.me/57${telefonoLimpio}?text=${encodeURIComponent(mensaje)}`
+  const url = `https://wa.me/${numeroWhatsApp(telefonoLimpio)}?text=${encodeURIComponent(mensaje)}`
   window.open(url, '_blank')
 }
 // Observar cuando se abre la modal para poner el foco en el input
@@ -7552,9 +7529,6 @@ onMounted(async () => {
 
     const idsSociosSnMount = natilleraResult?.socios_natillera?.map((s) => s.id).filter(Boolean) ?? []
 
-    // Cargar información del administrador (no crítico, puede ser en paralelo)
-    cargarAdminActual().catch(err => console.warn('Error cargando admin:', err))
-    
     // Para admin: asignar permisos de inmediato (no requiere query).
     // Para colaborador: asignar defaults y cargar en background.
     if (natillera.value) {
@@ -7581,6 +7555,13 @@ onMounted(async () => {
     }
     
     cargandoNatillera.value = false
+
+    // Foto de ganancias para el portal de los socios vinculados: la calcula quien administra,
+    // en segundo plano y como mucho cada 3 h (usePortalGanancias). Espera a que termine lo
+    // visible para no competir con la carga de la pantalla.
+    if (esAdmin.value) {
+      setTimeout(() => { actualizarFotoGananciasSiToca(natillera.value) }, 4000)
+    }
 
     // Fase 2: Cargar datos secundarios EN SEGUNDO PLANO (no bloquean la UI)
     const configCache = natillera.value

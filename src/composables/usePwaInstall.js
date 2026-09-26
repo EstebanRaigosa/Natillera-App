@@ -22,7 +22,7 @@ let inicializado = false
 const esIOS = detectIosPlatform()
 
 /** ¿Standalone? (lanzada desde el icono de inicio, no desde el navegador) */
-function esModoStandalone() {
+export function esModoStandalone() {
   if (typeof window === 'undefined') return false
   return (
     window.matchMedia?.('(display-mode: standalone)')?.matches === true ||

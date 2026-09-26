@@ -114,16 +114,7 @@
           </button>
         </p>
 
-        <!-- Esqueleto mientras carga: reserva el alto de la lista -->
-        <ul v-if="cargando" class="notificar-filas" aria-hidden="true">
-          <li v-for="n in 6" :key="n" class="notificar-fila notificar-fila--esqueleto">
-            <span class="h-11 w-11 shrink-0 rounded-full bg-gray-200/80" />
-            <span class="flex-1 space-y-2">
-              <span class="block h-3.5 w-2/3 rounded bg-gray-200/80" />
-              <span class="block h-3 w-1/3 rounded bg-gray-200/70" />
-            </span>
-          </li>
-        </ul>
+        <CargaCaja v-if="cargando" texto="Cargando socios" />
 
         <ul v-else-if="sociosVisibles.length > 0" class="notificar-filas">
           <li v-for="sn in sociosVisibles" :key="sn.id">
@@ -206,10 +197,7 @@
             </div>
           </div>
 
-          <div v-if="calculandoEstado" class="notificar-cargando">
-            <span class="notificar-cargando__rueda" aria-hidden="true" />
-            <p class="text-sm font-medium text-gray-600">Calculando su estado…</p>
-          </div>
+          <CargaCaja v-if="calculandoEstado" texto="Calculando su estado" />
 
           <div v-else-if="errorEstado" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
             {{ errorEstado }}
@@ -272,6 +260,7 @@
 </template>
 
 <script setup>
+import { numeroWhatsApp } from '../../utils/telefono'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
@@ -288,6 +277,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import ComprobanteEstadoSocio from '../../components/estado/ComprobanteEstadoSocio.vue'
 import { supabase } from '../../lib/supabase'
 import { useColaboradoresStore } from '../../stores/colaboradores'
@@ -523,7 +513,7 @@ function enviarWhatsApp() {
       alert('La imagen se descargó. El socio no tiene teléfono registrado: envíala desde WhatsApp.')
       return
     }
-    const numero = telefono.length === 10 ? '57' + telefono : telefono
+    const numero = numeroWhatsApp(telefono)
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, '_blank')
     alert('La imagen se descargó. Adjúntala en WhatsApp para enviarla al socio.')
   }
@@ -671,11 +661,6 @@ function enviarWhatsApp() {
   background: var(--brand-primary-soft);
   box-shadow: 0 0 0 1px var(--brand-primary) inset;
 }
-.notificar-fila--esqueleto {
-  cursor: default;
-  -webkit-animation: notificar-pulso 1.4s ease-in-out infinite;
-  animation: notificar-pulso 1.4s ease-in-out infinite;
-}
 
 /* ─── Semáforo ─── */
 .notificar-estado {
@@ -740,22 +725,6 @@ function enviarWhatsApp() {
   border: 1px solid rgba(27, 94, 55, 0.18);
   background: linear-gradient(135deg, #eef7f0 0%, #fff 70%);
   box-shadow: var(--shadow-xs);
-}
-.notificar-cargando {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 3rem 1rem;
-}
-.notificar-cargando__rueda {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 9999px;
-  border: 3px solid rgba(27, 94, 55, 0.15);
-  border-top-color: var(--brand-primary);
-  -webkit-animation: notificar-giro 0.8s linear infinite;
-  animation: notificar-giro 0.8s linear infinite;
 }
 .notificar-preview {
   padding: 1rem;
@@ -855,12 +824,6 @@ function enviarWhatsApp() {
   .notificar-volver { display: none; }
 }
 
-/* ─── Animaciones ─── */
-@-webkit-keyframes notificar-giro { to { -webkit-transform: rotate(360deg); } }
-@keyframes notificar-giro { to { transform: rotate(360deg); } }
-@-webkit-keyframes notificar-pulso { 50% { opacity: 0.55; } }
-@keyframes notificar-pulso { 50% { opacity: 0.55; } }
-
 @media (prefers-reduced-motion: reduce) {
   .notificar-kpi,
   .notificar-fila,
@@ -869,7 +832,5 @@ function enviarWhatsApp() {
   .notificar-whatsapp { transition: none; }
   .notificar-kpi:active,
   .notificar-whatsapp:active:not(:disabled) { transform: none; }
-  .notificar-fila--esqueleto,
-  .notificar-cargando__rueda { -webkit-animation: none; animation: none; }
 }
 </style>

@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <LoadingScreen
+    <CargaPantalla
       :visible="loading"
       text="Calculando cuadre de caja"
     />
@@ -1159,6 +1159,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
 import { supabase } from '../../lib/supabase'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -1170,7 +1171,7 @@ import { SOCIO_FONDO } from '../../composables/useLibroCaja'
 import BackButton from '../../components/BackButton.vue'
 
 import ModalWrapper from '../../components/ModalWrapper.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -1416,11 +1417,9 @@ const esAdmin = computed(() => {
   return (natillera.value?.admin_id && authStore.user?.id === natillera.value?.admin_id) || esSuperUsuario.value
 })
 const misPermisos = ref(null)
-const puedeGestionarCuotas = computed(() => {
-  if (esAdmin.value) return true
-  if (esSuperUsuario.value) return true // Superusuario tiene todos los permisos
-  return misPermisos.value?.permisos?.gestionar_cuotas === true
-})
+// Editar movimientos del cuadre es gestionar «Caja» (antes se usaba la bandera de cuotas).
+const permisosNat = usePermisosNatillera(id)
+const puedeGestionarCuotas = computed(() => permisosNat.cargado.value && permisosNat.puedeGestionar('caja'))
 
 // Totales esperados: calculados desde detalleItems (fuente fiable) + movimientos
 // detalleItems incluye: cuotas, sanciones, actividades, GMF 4×1000 (historial transferencias), préstamos (negativo)

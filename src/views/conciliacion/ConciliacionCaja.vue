@@ -53,7 +53,7 @@
       </div>
     </header>
 
-    <LoadingScreen :visible="cargando" text="Reconstruyendo el libro de caja" />
+    <CargaPantalla :visible="cargando" text="Reconstruyendo el libro de caja" />
 
     <template v-if="!cargando">
       <div
@@ -282,6 +282,39 @@
             </article>
           </div>
 
+          <!--
+            4×1000 recogido: plata que los socios pagan al consignar para cubrir el impuesto
+            del banco. No es ahorro ni utilidad, pero entra a la cuenta y suma en el saldo
+            de transferencia, así que aquí se ve cuánto hay de eso de un vistazo.
+          -->
+          <div
+            v-if="gmfTotal > 0"
+            class="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3"
+          >
+            <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+              <BuildingLibraryIcon class="h-5 w-5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-bold text-gray-900">4×1000 recogido</p>
+              <p class="text-xs text-gray-500">
+                {{ gmfCantidad }} {{ gmfCantidad === 1 ? 'pago' : 'pagos' }} por transferencia · va dentro del saldo de transferencia
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="font-display text-lg font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(gmfTotal) }}</p>
+              <p v-if="gmfPeriodo !== gmfTotal" class="text-xs tabular-nums text-gray-500">
+                ${{ formatMoney(gmfPeriodo) }} en este periodo
+              </p>
+            </div>
+            <button
+              type="button"
+              class="min-h-[44px] w-full touch-manipulation rounded-lg text-xs font-semibold text-[#1B5E37] hover:bg-[#E8F5E9] sm:w-auto sm:px-3"
+              @click="verGmfEnLibro"
+            >
+              Ver en el libro
+            </button>
+          </div>
+
           <div
             v-if="apuntesFuturos.length > 0"
             class="flex items-start gap-2 rounded-xl bg-sky-50 px-4 py-3 text-xs leading-relaxed text-sky-900"
@@ -364,7 +397,7 @@
         </section>
 
         <!-- ================= El libro: «¿dónde está la diferencia?» ================= -->
-        <section class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <section id="libro-caja" class="scroll-mt-4 rounded-2xl border border-gray-200 bg-white shadow-sm">
           <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-4 py-4 sm:px-5">
             <div class="min-w-0">
               <h2 class="font-display text-base font-bold text-gray-800 sm:text-lg">Movimientos del periodo</h2>
@@ -768,6 +801,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
 import {
   ScaleIcon,
@@ -794,7 +828,7 @@ import {
   ListBulletIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
 import ConciliacionAyudaModal from '../../components/conciliacion/ConciliacionAyudaModal.vue'
@@ -833,7 +867,9 @@ const esAdmin = computed(() => {
   return natillera.value.admin_id === authStore.user.id
 })
 
-const puedeConciliar = computed(() => esAdmin.value || misPermisos.value?.permisos?.gestionar_cuotas === true)
+// Conciliar es gestionar «Caja» (antes se usaba la bandera de cuotas).
+const permisosNat = usePermisosNatillera(id)
+const puedeConciliar = computed(() => permisosNat.cargado.value && permisosNat.puedeGestionar('caja'))
 
 /* ------------------------- Periodo abierto y saldo base ----------------------- */
 
@@ -983,6 +1019,25 @@ const filtroFormaPago = ref('todos')
 const filtroConceptos = ref([])
 const filtroSocio = ref('')
 const filtroBusqueda = ref('')
+
+/* ------------------------------- 4×1000 (GMF) ---------------------------------- */
+const apuntesGmf = computed(() => apuntes.value.filter(a => a.tipo === 'gmf_4x1000'))
+const gmfTotal = computed(() => apuntesGmf.value.reduce((suma, a) => suma + a.monto, 0))
+const gmfCantidad = computed(() => apuntesGmf.value.length)
+const gmfPeriodo = computed(() =>
+  apuntesPeriodo.value.filter(a => a.tipo === 'gmf_4x1000').reduce((suma, a) => suma + a.monto, 0)
+)
+
+// Deja el libro filtrado solo por 4×1000 y sin rango, para ver cada cobro con su socio.
+function verGmfEnLibro() {
+  filtroConceptos.value = ['gmf_4x1000']
+  filtroDesde.value = ''
+  filtroHasta.value = ''
+  filtroFormaPago.value = 'todos'
+  filtroSocio.value = ''
+  filtroBusqueda.value = ''
+  document.getElementById('libro-caja')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 const ordenAscendente = ref(false)
 
 const opcionesFormaPago = [

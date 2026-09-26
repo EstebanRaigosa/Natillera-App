@@ -70,14 +70,58 @@ export function calcularEstadoRealCuota(cuota, diasGracia) {
   return cuota.estado || 'programada'
 }
 
+/*
+ * Consulta los datos del socio como admin (Notificar) y calcula su estado. El cálculo en
+ * sí es `construirEstadoSocio`, que el portal del socio usa con los datos que le entrega
+ * la base de datos (el socio no puede consultar estas tablas directamente).
+ */
 export async function calcularEstadoSocio(sn, natillera) {
-  const natilleraId = natillera?.id
-  const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
   const sociosStore = useSociosStore()
   const cuotasStore = useCuotasStore()
 
   const resumen = await sociosStore.obtenerResumenSocio(sn.id)
   const cuotas = resumen?.cuotas || []
+  const resultSanciones = await cuotasStore.calcularSancionesTotales(natillera?.id, cuotas)
+  const sancionesMap = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
+
+  let sociosActividad = []
+  try {
+    const { data } = await supabase
+      .from('socios_actividad')
+      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion, fecha_limite_pago)')
+      .eq('socio_natillera_id', sn.id)
+    sociosActividad = data || []
+  } catch (e) {
+    console.warn('Error cargando actividades pendientes:', e)
+  }
+
+  let planPagos = []
+  try {
+    const { data: prestamos } = await supabase
+      .from('prestamos')
+      .select('id')
+      .eq('socio_natillera_id', sn.id)
+      .in('estado', ['activo', 'pagado'])
+    if (prestamos?.length) {
+      const { data } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('valor_cuota, valor_pagado, pagada, fecha_proyectada, numero_cuota')
+        .in('prestamo_id', prestamos.map(p => p.id))
+      planPagos = data || []
+    }
+  } catch (e) {
+    console.warn('Error cargando préstamos pendientes:', e)
+  }
+
+  return construirEstadoSocio({ socio: sn.socio, natillera, cuotas, sancionesMap, sociosActividad, planPagos })
+}
+
+/*
+ * Estado de cuenta a partir de los datos, sin consultar nada. `sancionesMap` es la sanción
+ * recalculada por cuota (id → valor); si falta, se usa la guardada en la cuota.
+ */
+export function construirEstadoSocio({ socio, natillera, cuotas = [], sancionesMap = {}, sociosActividad = [], planPagos = [] }) {
+  const diasGracia = natillera?.reglas_multas?.dias_gracia || 3
 
   let totalAhorrado = 0
   let cuotasPendientes = 0
@@ -88,9 +132,6 @@ export async function calcularEstadoSocio(sn, natillera) {
   const cuotasPendientesList = []
   const cuotasMoraList = []
   const sancionesDesglose = []
-
-  const resultSanciones = await cuotasStore.calcularSancionesTotales(natilleraId, cuotas)
-  const sancionesMap = resultSanciones.success ? (resultSanciones.sanciones || {}) : {}
 
   cuotas.forEach(cuota => {
     const estadoReal = calcularEstadoRealCuota(cuota, diasGracia)
@@ -134,10 +175,6 @@ export async function calcularEstadoSocio(sn, natillera) {
     const anioActual = hoy.getFullYear()
     const quincenaActual = hoy.getDate() <= 15 ? 1 : 2
 
-    const { data: sociosActividad } = await supabase
-      .from('socios_actividad')
-      .select('valor_asignado, valor_pagado, mes_pago, anio_pago, quincena_pago, actividad:actividades(descripcion, fecha_limite_pago)')
-      .eq('socio_natillera_id', sn.id)
     if (sociosActividad && sociosActividad.length > 0) {
       sociosActividad.forEach(sa => {
         const asignado = parseFloat(sa.valor_asignado || 0)
@@ -199,7 +236,7 @@ export async function calcularEstadoSocio(sn, natillera) {
       })
     }
   } catch (e) {
-    console.warn('Error cargando actividades pendientes:', e)
+    console.warn('Error calculando actividades pendientes:', e)
   }
 
   // Solo cuotas de préstamos pendientes a la fecha (fecha_proyectada <= hoy), no el valor total del préstamo
@@ -210,36 +247,24 @@ export async function calcularEstadoSocio(sn, natillera) {
     const hoy = new Date()
     hoy.setHours(23, 59, 59, 999)
 
-    const { data: prestamos } = await supabase
-      .from('prestamos')
-      .select('id')
-      .eq('socio_natillera_id', sn.id)
-      .in('estado', ['activo', 'pagado'])
-    if (prestamos && prestamos.length > 0) {
-      const prestamoIds = prestamos.map(p => p.id)
-      const { data: planPagos } = await supabase
-        .from('plan_pagos_prestamo')
-        .select('valor_cuota, valor_pagado, pagada, fecha_proyectada, numero_cuota')
-        .in('prestamo_id', prestamoIds)
-      if (planPagos) {
-        planPagos.forEach(pp => {
-          if (pp.pagada) return
-          const fechaProyectada = pp.fecha_proyectada ? new Date(pp.fecha_proyectada) : null
-          if (fechaProyectada && fechaProyectada.getTime() > hoy.getTime()) return // cuota futura, no incluir
-          cuotasPrestamosPendientes++
-          const valorCuota = parseFloat(pp.valor_cuota || 0)
-          const valorPagado = parseFloat(pp.valor_pagado || 0)
-          const pendiente = Math.max(0, valorCuota - valorPagado)
-          totalPrestamosPendiente += pendiente
-          const periodo = fechaProyectada
-            ? fechaProyectada.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }).replace(/\./g, '') + (pp.numero_cuota != null ? ` (cuota ${pp.numero_cuota})` : '')
-            : (pp.numero_cuota != null ? `Cuota ${pp.numero_cuota}` : 'Préstamo')
-          prestamosPendientesDesglose.push({ periodo, valor: pendiente })
-        })
-      }
+    if (planPagos?.length) {
+      planPagos.forEach(pp => {
+        if (pp.pagada) return
+        const fechaProyectada = pp.fecha_proyectada ? new Date(pp.fecha_proyectada) : null
+        if (fechaProyectada && fechaProyectada.getTime() > hoy.getTime()) return // cuota futura, no incluir
+        cuotasPrestamosPendientes++
+        const valorCuota = parseFloat(pp.valor_cuota || 0)
+        const valorPagado = parseFloat(pp.valor_pagado || 0)
+        const pendiente = Math.max(0, valorCuota - valorPagado)
+        totalPrestamosPendiente += pendiente
+        const periodo = fechaProyectada
+          ? fechaProyectada.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' }).replace(/\./g, '') + (pp.numero_cuota != null ? ` (cuota ${pp.numero_cuota})` : '')
+          : (pp.numero_cuota != null ? `Cuota ${pp.numero_cuota}` : 'Préstamo')
+        prestamosPendientesDesglose.push({ periodo, valor: pendiente })
+      })
     }
   } catch (e) {
-    console.warn('Error cargando préstamos pendientes:', e)
+    console.warn('Error calculando préstamos pendientes:', e)
   }
 
   // Total a pagar (base para 4x1000 si paga por transferencia)
@@ -248,7 +273,7 @@ export async function calcularEstadoSocio(sn, natillera) {
   const totalAPagarCon4x1000 = totalAPagar + valor4x1000
 
   return {
-    socio: sn.socio || { nombre: 'Socio', telefono: sn.socio?.telefono },
+    socio: socio || { nombre: 'Socio' },
     nombreNatillera: natillera?.nombre || 'Natillera',
     totalAhorrado,
     cuotasPendientes,

@@ -1,44 +1,9 @@
 <template>
   <div>
-    <!-- Pantalla completa (desktop: cubre panel marca + formulario; evita que solo se vea en la columna del formulario) -->
-    <Teleport to="body">
-      <div
-        v-if="isLoading"
-        class="welcome-oauth-overlay fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/[0.97] backdrop-blur-[3px] min-[1024px]:bg-gradient-to-br min-[1024px]:from-white min-[1024px]:via-emerald-50/35 min-[1024px]:to-white pt-[max(2.5rem,env(safe-area-inset-top,0px))] pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))]"
-        role="status"
-        aria-live="polite"
-        aria-label="Cargando"
-      >
-        <div
-          class="welcome-oauth-loading flex w-full max-w-md flex-col items-center justify-center rounded-2xl border border-natillera-200/90 bg-gradient-to-b from-natillera-50 via-white to-natillera-50/40 py-10 px-5 shadow-[0_8px_30px_-12px_rgba(20,83,45,0.12)]"
-        >
-          <div class="welcome-oauth-loading__logo-wrap">
-            <img
-              :src="logoIconSrc"
-              alt=""
-              class="welcome-oauth-loading__logo"
-              width="120"
-              height="120"
-              decoding="async"
-              draggable="false"
-            />
-          </div>
-          <p class="mt-5 text-center text-[0.9375rem] font-semibold text-natillera-900 tracking-tight">
-            {{ loadingMessage }}
-          </p>
-          <p class="mt-1 text-center text-xs font-medium text-natillera-800/75">
-            Conectando con tu cuenta…
-          </p>
-          <div class="welcome-oauth-loading__progress mt-5 w-full max-w-[200px]">
-            <div class="welcome-oauth-loading__track">
-              <div class="welcome-oauth-loading__bar" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Teleport>
+    <!-- Pantalla completa estándar (ya va en Teleport a body y cubre panel marca + formulario) -->
+    <CargaPantalla :visible="isLoading" :text="loadingMessage" />
 
-    <!-- Vista de error de OAuth (cancelación o error) — condiciones explícitas: el v-if de carga está dentro de Teleport y no puede usar v-else-if -->
+    <!-- Vista de error de OAuth (cancelación o error) — condiciones explícitas: la carga es otro componente (con Teleport) y no puede encadenar v-else-if -->
     <template v-if="!isLoading && oauthError">
       <div class="flex flex-col items-center gap-6 mb-8">
         <!-- Icono de error -->
@@ -217,7 +182,7 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
 import AppBrand from '../../components/AppBrand.vue'
-import logoIconSrc from '../../../assets/logo_icon.png'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import { resolvePostLoginLocation } from '../../utils/postLoginRoute'
 
 const router = useRouter()
@@ -391,80 +356,3 @@ function goToLogin() {
 }
 </script>
 
-<style scoped>
-.welcome-oauth-loading__logo-wrap {
-  position: relative;
-  width: min(38vw, 7.75rem);
-  height: min(38vw, 7.75rem);
-  min-width: 6rem;
-  min-height: 6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: welcome-oauth-spin 1.1s linear infinite;
-  will-change: transform;
-}
-
-.welcome-oauth-loading__logo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  max-width: 120px;
-  max-height: 120px;
-  object-fit: contain;
-  object-position: center;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  pointer-events: none;
-}
-
-@keyframes welcome-oauth-spin {
-  from {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  to {
-    transform: translate3d(0, 0, 0) rotate(360deg);
-  }
-}
-
-.welcome-oauth-loading__track {
-  width: 100%;
-  height: 3px;
-  border-radius: 9999px;
-  background: rgba(22, 101, 52, 0.15);
-  overflow: hidden;
-}
-
-.welcome-oauth-loading__bar {
-  width: 40%;
-  height: 100%;
-  border-radius: 9999px;
-  background: linear-gradient(90deg, #15803d, #22c55e);
-  animation: welcome-oauth-progress 1.8s ease-in-out infinite;
-}
-
-@keyframes welcome-oauth-progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(150%);
-  }
-  100% {
-    transform: translateX(150%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .welcome-oauth-loading__logo-wrap {
-    animation: none;
-    will-change: auto;
-  }
-
-  .welcome-oauth-loading__bar {
-    animation: none;
-    width: 55%;
-    transform: none;
-  }
-}
-</style>

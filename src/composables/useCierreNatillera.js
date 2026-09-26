@@ -268,9 +268,14 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
       TIPOS_UTILIDAD.forEach(t => { utilidadesPorConceptoPorSocio[sn.id][t] = 0 })
     })
 
+    /*
+     * También se reparten los netos negativos (p. ej. gastos pagados con utilidades que
+     * superan lo que entró como utilidad adicional). Antes se saltaban con `monto <= 0`:
+     * el total de utilidades sí los restaba, pero a cada socio no, y se repartía de más.
+     */
     TIPOS_UTILIDAD.forEach(tipo => {
       const monto = montosPorTipo[tipo]
-      if (monto <= 0) return
+      if (!monto) return
       const modo = getModoDistribucion(configCierre, tipo)
       const dist = distribuirMonto(monto, sociosConAhorroParaDist, modo, totalAhorro)
       Object.keys(dist).forEach(snId => {

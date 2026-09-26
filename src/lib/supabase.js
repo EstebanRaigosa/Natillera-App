@@ -20,6 +20,14 @@ export function clearAuthStorageMode() {
   localStorage.removeItem(AUTH_STORAGE_MODE_KEY)
 }
 
+/**
+ * true si quien inició sesión marcó «Recordarme» (o entró por un camino que siempre
+ * recuerda). Con eso la sesión no caduca por inactividad: ver `useSessionTimeout`.
+ */
+export function recordarSesion() {
+  return getAuthStorageMode() === 'local'
+}
+
 function getAuthStorageMode() {
   if (typeof window === 'undefined') return 'local'
   const v = localStorage.getItem(AUTH_STORAGE_MODE_KEY)

@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { isDev, isLocalhost, devLog } from '../config/environment'
-import { resolvePostLoginLocation } from '../utils/postLoginRoute'
+import { resolvePostLoginLocation, guardarDestinoPendiente } from '../utils/postLoginRoute'
 import { setLastNatilleraId } from '../utils/lastNatillera'
+import { aplicarSeoRuta } from '../utils/seoRuta'
+import { esModoStandalone } from '../composables/usePwaInstall'
+import { MODULO_DE_RUTA, MODULOS } from '../permisos/modulos'
 
 // Layouts: estáticos (se usan inmediatamente)
 import AuthLayout from '../layouts/AuthLayout.vue'
@@ -10,6 +13,9 @@ import DashboardLayout from '../layouts/DashboardLayout.vue'
 
 // Auth views: estáticas (primer paint)
 import Login from '../views/auth/Login.vue'
+// Portada pública: estática porque es lo primero que pinta quien llega sin sesión, y su
+// HTML ya viene pre-renderizado en el build (el chunk no debe hacerlo esperar).
+import Landing from '../views/publico/Landing.vue'
 
 // Todas las demás vistas: carga diferida para reducir bundle inicial
 const Register = () => import('../views/auth/Register.vue')
@@ -40,6 +46,11 @@ const DesignSystemDemo = () => import('../views/demo/DesignSystemDemo.vue')
 const Soporte = () => import('../views/soporte/Soporte.vue')
 const SoporteAdmin = () => import('../views/admin/SoporteAdmin.vue')
 const TraficoAdmin = () => import('../views/admin/TraficoAdmin.vue')
+const UnirmeNatillera = () => import('../views/invitaciones/UnirmeNatillera.vue')
+const PortalSocio = () => import('../views/portal/PortalSocio.vue')
+const SociosEnApp = () => import('../views/socios/SociosEnApp.vue')
+const PaginaLegal = () => import('../views/legal/PaginaLegal.vue')
+const AdministradoresNatillera = () => import('../views/natilleras/AdministradoresNatillera.vue')
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -47,8 +58,66 @@ const isDevMode = isDev || isLocalhost
 // Rutas base de la aplicación
 const routes = [
   {
+    /*
+     * Portada pública. Con sesión no se muestra: se va directo a la última natillera,
+     * como antes hacía el redirect a /dashboard. Sin sesión es la página que indexa
+     * Google, y viene pre-renderizada en el build.
+     */
     path: '/',
-    redirect: '/dashboard'
+    name: 'Inicio',
+    component: Landing,
+    meta: {
+      publico: true,
+      tituloCompleto: 'Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre',
+      descripcion: 'Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora.'
+    },
+    async beforeEnter() {
+      const authStore = useAuthStore()
+      if (!authStore.initialSessionResolved) {
+        await Promise.race([
+          authStore.initialSessionReady,
+          new Promise(resolve => setTimeout(resolve, 3000))
+        ])
+      }
+      if (authStore.isAuthenticated) return resolvePostLoginLocation(authStore.user)
+      // La PWA instalada no es para conocer la app sino para usarla: sin sesión, al login.
+      // Cubre también las instaladas con el start_url viejo («/»), que iOS congela al instalar.
+      if (esModoStandalone()) return { name: 'Login' }
+      return true
+    }
+  },
+  {
+    /*
+     * Enlace que el admin comparte en el grupo de WhatsApp para que cada socio vincule su
+     * cuenta. Público (se abre sin sesión: saluda y pide iniciarla) y sin `meta.publico`,
+     * para que no lo indexe Google.
+     */
+    path: '/unirme/:codigo',
+    name: 'UnirmeNatillera',
+    component: UnirmeNatillera,
+    props: true,
+    meta: { title: 'Unirme a mi natillera' }
+  },
+  {
+    // Documentos legales: públicos (se leen antes de crear la cuenta) e indexables.
+    path: '/privacidad',
+    name: 'PoliticaDatos',
+    component: PaginaLegal,
+    meta: {
+      publico: true,
+      title: 'Política de Tratamiento de Datos',
+      descripcion: 'Qué datos trata Natillerapp, para qué, con quién los comparte y cómo ejercer tus derechos según la Ley 1581 de 2012.'
+    }
+  },
+  {
+    path: '/terminos',
+    name: 'Terminos',
+    component: PaginaLegal,
+    meta: {
+      publico: true,
+      title: 'Términos y condiciones',
+      descripcion: 'Las reglas para usar Natillerapp, la app para llevar las cuentas de tu natillera.'
+    }
   },
   {
     path: '/auth',
@@ -82,7 +151,11 @@ const routes = [
         path: 'que-es-natillerapp',
         name: 'QueEsNatillerapp',
         component: QueEsNatillerapp,
-        meta: { title: 'Qué es Natillerapp' }
+        meta: {
+          title: 'Qué es Natillerapp',
+          publico: true,
+          descripcion: 'Qué es una natillera y cómo Natillerapp te ayuda a llevarla: socios, cuotas, préstamos y actividades en una app gratuita para celular y computadora.'
+        }
       }
     ]
   },
@@ -124,6 +197,22 @@ const routes = [
         meta: { title: 'Socios' }
       },
       {
+        // Dueño, co-administradores, colaboradores y visores: invitar, permisos y accesos
+        path: 'natilleras/:id/administradores',
+        name: 'AdministradoresNatillera',
+        component: AdministradoresNatillera,
+        props: true,
+        meta: { title: 'Administradores' }
+      },
+      {
+        // Invitar, aprobar y administrar las cuentas con que los socios entran a la app
+        path: 'natilleras/:id/socios-en-la-app',
+        name: 'SociosEnApp',
+        component: SociosEnApp,
+        props: true,
+        meta: { title: 'Invitar socios' }
+      },
+      {
         path: 'natilleras/:id/cuotas/:mes?',
         name: 'Cuotas',
         component: Cuotas,
@@ -157,6 +246,14 @@ const routes = [
         component: ConciliacionCaja,
         props: true,
         meta: { title: 'Conciliación de caja' }
+      },
+      {
+        // Portal del socio (solo lectura). La base de datos solo responde si esta cuenta
+        // está vinculada a ese socio: no hace falta más guardia aquí.
+        path: 'mi-natillera/:socioNatilleraId',
+        name: 'PortalSocio',
+        component: PortalSocio,
+        meta: { title: 'Mi natillera' }
       },
       {
         path: 'natilleras/:id/notificar',
@@ -325,9 +422,31 @@ router.beforeEach(async (to, from, next) => {
       }
 
       if (!authStore.isAuthenticated) {
+        // Recordar a dónde iba: tras iniciar sesión se vuelve ahí (invitaciones, enlaces).
+        guardarDestinoPendiente(to.fullPath)
         next({ name: 'Login' })
         return
       }
+    }
+  }
+
+  // Permisos por opción de la natillera: en «Nada» la ruta no se abre (antes cualquiera con
+  // el enlace entraba a cualquier pantalla). La base de datos igual protege los datos; esto
+  // evita pantallas vacías o a medio cargar. Si no se pudo preguntar, se deja pasar.
+  const moduloRuta = MODULO_DE_RUTA[to.name]
+  if (moduloRuta && to.params.id && authStore.isAuthenticated) {
+    try {
+      const { cargarNivelesNatillera, alcanza } = await import('../composables/usePermisosNatillera')
+      const { niveles } = await cargarNivelesNatillera(String(to.params.id))
+      if (!alcanza(niveles?.[moduloRuta], 'ver')) {
+        const { useNotificationStore } = await import('../stores/notifications')
+        const modulo = MODULOS.find(m => m.clave === moduloRuta)
+        useNotificationStore().warning(`No tienes acceso a ${modulo?.nombre || 'esa opción'} en esta natillera.`, 'Sin permiso')
+        next(from.name ? false : { name: 'NatilleraDetalle', params: { id: to.params.id } })
+        return
+      }
+    } catch (e) {
+      console.warn('No se pudieron comprobar los permisos de la ruta:', e)
     }
   }
 
@@ -367,13 +486,8 @@ router.beforeEach(async (to, from, next) => {
 
 // Guard para hacer scroll al inicio en cada navegación (excepto NatilleraDetalle que tiene su lógica especial)
 router.afterEach((to, from) => {
-  // Actualizar el título de la página
-  const title = to.matched.find(record => record.meta.title)?.meta.title
-  if (title) {
-    document.title = `${title} | Natillerapp`
-  } else {
-    document.title = 'Natillerapp'
-  }
+  // Título, descripción, canonical y robots de la ruta (utils/seoRuta.js)
+  aplicarSeoRuta(to)
 
   const authStore = useAuthStore()
   const uid = authStore.user?.id

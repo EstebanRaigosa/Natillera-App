@@ -10,9 +10,8 @@
       </div>
 
       <!-- Loading -->
-      <div v-if="loading" class="bg-white rounded-2xl shadow-xl p-8 text-center">
-        <div class="animate-spin w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p class="text-gray-600">Procesando invitación...</p>
+      <div v-if="loading" class="bg-white rounded-2xl shadow-xl px-8 text-center">
+        <CargaCaja texto="Procesando invitación" />
       </div>
 
       <!-- Error -->
@@ -137,6 +136,7 @@ import { supabase } from '../../lib/supabase'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { getNatilleraAvatarUrl } from '../../utils/avatars'
 import RechazarInvitacionConfirmModal from '../../components/RechazarInvitacionConfirmModal.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import {
   UserGroupIcon,
   CheckCircleIcon,

@@ -1,5 +1,6 @@
 <template>
-  <div class="auth-nova nova-card-surface relative p-5 sm:p-6 lg:p-8 sm:max-h-[90vh] overflow-y-auto">
+  <!-- La tarjeta blanca la pone AuthLayout -->
+  <div class="auth-nova relative">
     <div class="relative z-10">
       <header class="text-center mb-5 space-y-2">
         <h2 class="nova-section-title">Crear cuenta</h2>
@@ -99,6 +100,17 @@
           </div>
         </div>
 
+        <!-- Autorización previa y expresa (Ley 1581): sin marcarla no se crea la cuenta -->
+        <label v-if="!successMessage" class="registro-legal">
+          <input v-model="aceptaLegal" type="checkbox" class="registro-legal__check" />
+          <span>
+            Acepto la
+            <router-link :to="{ name: 'PoliticaDatos' }" target="_blank" class="nova-link">Política de Tratamiento de Datos</router-link>
+            y los
+            <router-link :to="{ name: 'Terminos' }" target="_blank" class="nova-link">Términos</router-link>.
+          </span>
+        </label>
+
         <button
           v-if="!successMessage"
           type="submit"
@@ -164,6 +176,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
+import { VERSION_LEGAL, CLAVE_CONSENTIMIENTO_REGISTRO } from '../../legal/responsable'
 
 const authStore = useAuthStore()
 
@@ -176,6 +189,19 @@ const successMessage = ref('')
 const emailRegistrado = ref('')
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const aceptaLegal = ref(false)
+
+const MENSAJE_FALTA_LEGAL = 'Para crear tu cuenta debes aceptar la Política de Tratamiento de Datos y los Términos.'
+
+// La constancia se guarda en la base de datos al entrar por primera vez (ConsentimientoLegal):
+// antes de confirmar el correo no hay sesión con que escribirla.
+function recordarAceptacion() {
+  try {
+    localStorage.setItem(CLAVE_CONSENTIMIENTO_REGISTRO, JSON.stringify({ version: VERSION_LEGAL, fecha: new Date().toISOString() }))
+  } catch {
+    // Sin almacenamiento (modo privado): el aviso se lo pedirá al entrar.
+  }
+}
 
 async function handleRegister() {
   errorMessage.value = ''
@@ -190,6 +216,12 @@ async function handleRegister() {
     errorMessage.value = 'La contraseña debe tener al menos 6 caracteres'
     return
   }
+
+  if (!aceptaLegal.value) {
+    errorMessage.value = MENSAJE_FALTA_LEGAL
+    return
+  }
+  recordarAceptacion()
 
   const result = await authStore.register(email.value, password.value, nombre.value)
   
@@ -210,6 +242,11 @@ async function handleRegister() {
 
 async function handleGoogleLogin() {
   errorMessage.value = ''
+  if (!aceptaLegal.value) {
+    errorMessage.value = MENSAJE_FALTA_LEGAL
+    return
+  }
+  recordarAceptacion()
   const result = await authStore.loginWithGoogle()
   
   if (!result.success) {
@@ -217,3 +254,8 @@ async function handleGoogleLogin() {
   }
 }
 </script>
+
+<style scoped>
+.registro-legal { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 0.875rem; line-height: 1.45; color: hsl(var(--muted-foreground)); cursor: pointer; touch-action: manipulation; }
+.registro-legal__check { width: 1.375rem; height: 1.375rem; flex-shrink: 0; margin-top: 0.0625rem; accent-color: #1B5E37; }
+</style>

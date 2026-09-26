@@ -3,34 +3,11 @@ import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { useCuotasStore } from './cuotas'
+import { normalizarCelular } from '../utils/telefono'
 
-// Función auxiliar para quitar el indicativo de país del teléfono
+// Forma guardada del teléfono: 10 dígitos si es de Colombia, +indicativo si es de otro país.
 function quitarIndicativoTelefono(telefono) {
-  if (!telefono) return ''
-  // Remover caracteres no numéricos excepto el signo +
-  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
-  
-  // Si comienza con +, quitar el signo
-  if (numeroLimpio.startsWith('+')) {
-    numeroLimpio = numeroLimpio.substring(1)
-  }
-  
-  // Quitar el indicativo de Colombia (57) si está presente
-  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
-  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-    numeroLimpio = numeroLimpio.substring(2)
-  }
-  
-  // Si solo tiene caracteres no numéricos, limpiar todo
-  if (!numeroLimpio || numeroLimpio.length === 0) {
-    numeroLimpio = telefono.replace(/\D/g, '')
-    // Aplicar la misma lógica de quitar el indicativo
-    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-      numeroLimpio = numeroLimpio.substring(2)
-    }
-  }
-  
-  return numeroLimpio.trim()
+  return normalizarCelular(telefono)
 }
 
 export const useSociosStore = defineStore('socios', () => {

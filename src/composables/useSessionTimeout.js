@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../lib/supabase'
+import { supabase, recordarSesion } from '../lib/supabase'
 
 /**
  * Composable para manejar el timeout de sesión por inactividad.
@@ -60,7 +60,8 @@ export function useSessionTimeout(timeoutMinutes = 15, backgroundMinutes = timeo
       timeoutId.value = null
     }
     
-    if (authStore.isAuthenticated) {
+    // «Recordarme»: la sesión no caduca por inactividad; solo al cerrar sesión.
+    if (authStore.isAuthenticated && !recordarSesion()) {
       timeoutId.value = setTimeout(() => {
         handleTimeout()
       }, timeoutMs)
@@ -169,7 +170,7 @@ export function useSessionTimeout(timeoutMinutes = 15, backgroundMinutes = timeo
    * Marca que la página pasó a background (solo visibilitychange)
    */
   function markAsBackground() {
-    if (!authStore.isAuthenticated) {
+    if (!authStore.isAuthenticated || recordarSesion()) {
       try { localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY) } catch { /* Safari private mode */ }
       return
     }
@@ -191,7 +192,7 @@ export function useSessionTimeout(timeoutMinutes = 15, backgroundMinutes = timeo
    * Verifica y maneja cuando la página vuelve a ser visible
    */
   function handleReturnToForeground() {
-    if (!authStore.isAuthenticated) {
+    if (!authStore.isAuthenticated || recordarSesion()) {
       try { localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY) } catch { /* Safari private mode */ }
       return
     }
@@ -316,7 +317,7 @@ export function useSessionTimeout(timeoutMinutes = 15, backgroundMinutes = timeo
    * pero esta guarda actúa como capa de seguridad adicional.
    */
   function checkOnStart() {
-    if (!authStore.isAuthenticated) {
+    if (!authStore.isAuthenticated || recordarSesion()) {
       localStorage.removeItem(BACKGROUND_TIMESTAMP_KEY)
       return
     }

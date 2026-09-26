@@ -350,12 +350,14 @@ async function register(email, password, nombre) {
     }
   }
 
-  async function loginWithGoogle() {
+  async function loginWithGoogle(options = {}) {
     try {
       loading.value = true
       error.value = null
 
-      setAuthStorageMode('local')
+      // Igual que con correo: sin «Recordarme», la sesión vive solo mientras el navegador
+      // esté abierto. La preferencia sobrevive a la redirección de Google (localStorage).
+      setAuthStorageMode(options.rememberMe === false ? 'session' : 'local')
 
       // URL de redirección según el entorno (desarrollo o producción)
       // Usamos /auth/welcome para que Welcome.vue maneje tanto éxito como errores

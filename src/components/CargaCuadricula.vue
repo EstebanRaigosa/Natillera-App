@@ -1,35 +1,20 @@
 <template>
   <!--
-    Pantalla de espera con la cuadrícula animada. La usan el reparto de números de una rifa
-    automática y el registro de un pago: operaciones cortas que tocan varias tablas y en las
-    que dejar el formulario quieto parece que se colgó.
-    Va en Teleport a body: dentro de la modal, un ancestro con transform rompería el fixed
-    (manual iOS §6). No usa ModalWrapper porque no es un diálogo: no se cierra ni se toca,
-    solo acompaña a una operación que ya está en marcha.
+    Caja de carga flotante (ver carga/CargaCaja.vue) con una figura propia para la rifa:
+    los 100 números encendiéndose en cascada mientras se reparten al azar.
   -->
-  <Teleport to="body">
-    <Transition name="gen-fundido">
-      <div
-        v-if="show"
-        class="gen-capa fixed inset-0 z-[70] flex items-center justify-center p-4"
-        role="status"
-        aria-live="polite"
-      >
-        <div class="absolute inset-0 bg-[#C8D9C8]/80 backdrop-blur-[2px]"></div>
-        <div class="relative w-full max-w-[19rem] rounded-2xl border border-gray-200/60 bg-white p-5 text-center shadow-2xl">
-          <!-- El «cuadradillo»: los 100 números de la rifa encendiéndose en cascada -->
-          <div class="gen-grilla mx-auto" aria-hidden="true">
-            <span v-for="n in 100" :key="n" class="gen-celda" :style="{ '--i': n - 1 }"></span>
-          </div>
-          <p class="mt-4 font-display text-base font-bold text-gray-800">{{ titulo }}</p>
-          <p v-if="descripcion" class="mt-1 text-xs text-gray-500">{{ descripcion }}</p>
-        </div>
+  <CargaCaja :visible="show" flotante :texto="titulo" :detalle="descripcion">
+    <template #figura>
+      <div class="gen-grilla mx-auto" aria-hidden="true">
+        <span v-for="n in 100" :key="n" class="gen-celda" :style="{ '--i': n - 1 }"></span>
       </div>
-    </Transition>
-  </Teleport>
+    </template>
+  </CargaCaja>
 </template>
 
 <script setup>
+import CargaCaja from './carga/CargaCaja.vue'
+
 defineProps({
   show: { type: Boolean, default: false },
   titulo: { type: String, default: 'Un momento' },
@@ -38,11 +23,6 @@ defineProps({
 </script>
 
 <style scoped>
-.gen-capa {
-  /* Nada que tocar mientras se reparte; además corta el pinch-zoom en iOS */
-  touch-action: none;
-}
-
 .gen-grilla {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
@@ -73,23 +53,10 @@ defineProps({
   70% { background: #86efac; transform: scale(1); }
 }
 
-.gen-fundido-enter-active,
-.gen-fundido-leave-active {
-  transition: opacity 0.2s ease;
-}
-.gen-fundido-enter-from,
-.gen-fundido-leave-to {
-  opacity: 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .gen-celda {
     animation: none;
     background: #86efac;
-  }
-  .gen-fundido-enter-active,
-  .gen-fundido-leave-active {
-    transition-duration: 0.01ms;
   }
 }
 </style>

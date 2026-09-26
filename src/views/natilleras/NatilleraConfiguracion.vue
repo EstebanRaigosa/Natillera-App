@@ -60,29 +60,8 @@
           <div v-if="seccionActiva === 'basica'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
             <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
             <div class="relative p-5 sm:p-6 space-y-4">
-              <!-- Pantalla de carga al guardar -->
-              <ModalWrapper
-                :show="guardandoBasica"
-                :z-index="100"
-                overlay-class="fixed inset-0 z-[100] flex items-center justify-center"
-                card-class="relative flex flex-col items-center gap-6 p-8 rounded-3xl bg-white/95 shadow-2xl border border-white/20 max-w-sm mx-4"
-                card-max-width="24rem"
-              >
-                    <div class="relative">
-                      <div class="w-20 h-20 rounded-full border-4 border-natillera-200 border-t-natillera-500 animate-spin"></div>
-                      <div class="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-emerald-500 animate-spin" style="animation-duration: 1.5s; animation-direction: reverse;"></div>
-                      <div class="absolute inset-2 w-16 h-16 rounded-full bg-gradient-to-br from-natillera-400 to-emerald-500 opacity-20 animate-pulse"></div>
-                    </div>
-                    <div class="text-center">
-                      <p class="text-lg font-bold text-gray-800">Guardando configuración</p>
-                      <p class="text-sm text-gray-500 mt-1">Un momento por favor...</p>
-                    </div>
-                    <div class="flex gap-1">
-                      <span class="w-2 h-2 rounded-full bg-natillera-500 animate-bounce" style="animation-delay: 0ms"></span>
-                      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style="animation-delay: 150ms"></span>
-                      <span class="w-2 h-2 rounded-full bg-teal-500 animate-bounce" style="animation-delay: 300ms"></span>
-                    </div>
-              </ModalWrapper>
+              <!-- Guardando: caja de carga flotante (carga/CargaCaja.vue) -->
+              <CargaCaja :visible="guardandoBasica" flotante texto="Guardando configuración" detalle="Un momento" />
 
               <!--
                 Pestañas de Configuración General con el segmentado del design system
@@ -890,6 +869,67 @@
                 </div>
               </div>
 
+              <!-- Tab Portal de socios: qué ve cada socio vinculado -->
+              <div v-if="tabGeneralActiva === 'portal'" class="cfg-tab space-y-5">
+                <section class="cfg-card">
+                  <header class="cfg-card__header">
+                    <span class="cfg-card__icono"><SparklesIcon class="w-5 h-5" /></span>
+                    <div class="min-w-0">
+                      <p class="cfg-card__overline">Su dinero</p>
+                      <h3 class="cfg-card__titulo">Ganancias estimadas</h3>
+                      <p class="cfg-card__sub">Su parte de las utilidades y lo que recibiría al cierre.</p>
+                    </div>
+                  </header>
+                  <div class="cfg-card__body space-y-3">
+                    <label class="cfg-switch">
+                      <input type="checkbox" v-model="configPortal.mostrar_ganancias" class="cfg-switch__input" :disabled="esVisor" />
+                      <span class="cfg-switch__pista" aria-hidden="true"></span>
+                      <span class="min-w-0">
+                        <span class="cfg-switch__titulo">Mostrar sus ganancias a cada socio</span>
+                        <span class="cfg-switch__ayuda">
+                          {{ configPortal.mostrar_ganancias
+                            ? 'Las ve rotuladas como estimadas, con cómo se reparte cada concepto.'
+                            : 'Solo ve lo que ha ahorrado y lo que debe.' }}
+                        </span>
+                      </span>
+                    </label>
+                    <p class="text-xs leading-relaxed text-gray-500">
+                      Se calculan igual que en el cierre, cada vez que abres la natillera (como mucho cada
+                      3 horas) o calculas el cierre.
+                    </p>
+                  </div>
+                </section>
+
+                <section class="cfg-card">
+                  <header class="cfg-card__header">
+                    <span class="cfg-card__icono"><UserGroupIcon class="w-5 h-5" /></span>
+                    <div class="min-w-0">
+                      <p class="cfg-card__overline">Transparencia</p>
+                      <h3 class="cfg-card__titulo">Lo que ve del grupo</h3>
+                      <p class="cfg-card__sub">Nunca se muestran teléfonos, documentos, correos ni saldos de otros socios.</p>
+                    </div>
+                  </header>
+                  <div class="cfg-card__body">
+                    <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Lo que ve del grupo">
+                      <button
+                        v-for="nivel in NIVELES_TRANSPARENCIA"
+                        :key="nivel.value"
+                        type="button"
+                        role="radio"
+                        :aria-checked="configPortal.nivel_transparencia === nivel.value"
+                        :disabled="esVisor"
+                        :class="['cfg-opcion', configPortal.nivel_transparencia === nivel.value ? 'is-selected' : '']"
+                        @click="configPortal.nivel_transparencia = nivel.value"
+                      >
+                        <span class="cfg-opcion__marca" aria-hidden="true"><CheckIcon class="w-3 h-3" /></span>
+                        <span class="cfg-opcion__titulo">{{ nivel.label }}</span>
+                        <span class="cfg-opcion__ayuda">{{ nivel.ayuda }}</span>
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </div>
+
               <!-- Tab Cierre de Natillera -->
               <div v-if="tabGeneralActiva === 'cierre'" class="cfg-tab">
                 <div class="ds-callout mb-5">
@@ -1601,10 +1641,7 @@
                 </div>
 
                 <!-- Lista de usuarios -->
-                <div v-if="buscandoUsuarios && !usuariosCargados" class="mt-4 text-center py-8">
-                  <div class="animate-spin w-8 h-8 border-4 border-natillera-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <p class="text-sm text-gray-500">Cargando usuarios...</p>
-                </div>
+                <CargaCaja v-if="buscandoUsuarios && !usuariosCargados" texto="Cargando usuarios" />
 
                 <div v-else-if="usuariosEncontrados.length > 0" class="mt-4 max-h-60 overflow-y-auto border border-gray-200 rounded-xl">
                   <div class="p-2 bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
@@ -1678,58 +1715,24 @@
         </Transition>
       </div>
 
-      <!-- === COLABORADORES === -->
-      <div class="space-y-3">
-        <button
-          @click="seccionActiva = seccionActiva === 'colaboradores' ? null : 'colaboradores'"
-          :class="[
-            'w-full relative overflow-hidden rounded-2xl border transition-all duration-300 touch-manipulation',
-            seccionActiva === 'colaboradores'
-              ? 'bg-[var(--brand-primary)] border-transparent shadow-lg'
-              : 'bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md'
-          ]"
-        >
-          <div class="relative p-4 sm:p-5 flex items-center gap-4">
-            <div :class="['w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-[var(--brand-primary-soft)]']">
-              <UserGroupIcon :class="['w-6 h-6', seccionActiva === 'colaboradores' ? 'text-white' : 'text-[var(--brand-primary)]']" />
-            </div>
-            <div class="flex-1 text-left min-w-0">
-              <h3 :class="['text-lg font-display font-bold', seccionActiva === 'colaboradores' ? 'text-white' : 'text-gray-800']">
-                Colaboradores
-              </h3>
-              <p :class="['text-sm', seccionActiva === 'colaboradores' ? 'text-white/80' : 'text-gray-500']">
-                Gestiona quién puede acceder a esta natillera
-              </p>
-            </div>
-            <div :class="['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', seccionActiva === 'colaboradores' ? 'bg-white/20' : 'bg-gray-100']">
-              <ChevronDownIcon :class="['w-5 h-5 transition-transform duration-300', seccionActiva === 'colaboradores' ? 'text-white rotate-180' : 'text-gray-500']" />
-            </div>
+      <!-- === ADMINISTRADORES: página propia (AdministradoresNatillera.vue) === -->
+      <router-link
+        :to="{ name: 'AdministradoresNatillera', params: { id } }"
+        class="w-full relative overflow-hidden rounded-2xl border bg-white border-gray-200 shadow-sm hover:border-gray-300 hover:shadow-md transition-all duration-300 touch-manipulation block"
+      >
+        <div class="relative p-4 sm:p-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--brand-primary-soft)]">
+            <UserGroupIcon class="w-6 h-6 text-[var(--brand-primary)]" />
           </div>
-        </button>
-
-        <!-- Contenido Colaboradores -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="opacity-0 -translate-y-2"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 -translate-y-2"
-        >
-          <div v-if="seccionActiva === 'colaboradores'" class="relative overflow-hidden bg-white rounded-2xl shadow-sm border border-gray-200 ml-4 sm:ml-6">
-            <div class="absolute top-0 left-0 w-1 h-full bg-[var(--brand-primary)]"></div>
-            <div class="relative p-5 sm:p-6">
-              <ColaboradoresManager
-                :natillera-id="id"
-                :admin-id="natillera?.admin_id"
-                :admin-email="adminActual?.email || ''"
-                :admin-nombre="adminActual?.nombre || adminActual?.email || ''"
-                :es-admin="esAdmin"
-              />
-            </div>
+          <div class="flex-1 text-left min-w-0">
+            <h3 class="text-lg font-display font-bold text-gray-800">Administradores</h3>
+            <p class="text-sm text-gray-500">Quién puede entrar a esta natillera y qué puede hacer</p>
           </div>
-        </Transition>
-      </div>
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gray-100">
+            <ChevronRightIcon class="w-5 h-5 text-gray-500" />
+          </div>
+        </div>
+      </router-link>
     </div>
 
     <!-- Mensaje de éxito/error -->
@@ -1745,6 +1748,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { cargarNivelesNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { useConfiguracionStore } from '../../stores/configuracion'
@@ -1754,10 +1758,9 @@ import { useCuotasStore } from '../../stores/cuotas'
 import { parseReglasInteresPrestamo } from '../../utils/natilleraPrestamos'
 import { supabase } from '../../lib/supabase'
 import { calcularUtilidadesReales } from '../../composables/useUtilidadesReales'
-import ColaboradoresManager from '../../components/ColaboradoresManager.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 
 import BackButton from '../../components/BackButton.vue'
-import ModalWrapper from '../../components/ModalWrapper.vue'
 import SwitchSegmentado from '../../components/SwitchSegmentado.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { 
@@ -1790,6 +1793,8 @@ import {
   ArrowTrendingUpIcon,
   ClipboardDocumentListIcon,
   ArchiveBoxIcon,
+  DevicePhoneMobileIcon,
+  SparklesIcon,
   InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 
@@ -1902,7 +1907,8 @@ const TABS_GENERAL = [
   { value: 'periodo', corto: 'Período', largo: 'Período', icono: CalendarDaysIcon },
   { value: 'prestamos', corto: 'Préstamos', largo: 'Préstamos', icono: BanknotesIcon },
   { value: 'sanciones', corto: 'Sanciones', largo: 'Sanciones por mora', icono: ExclamationTriangleIcon },
-  { value: 'cierre', corto: 'Cierre', largo: 'Cierre de natillera', icono: ArchiveBoxIcon }
+  { value: 'cierre', corto: 'Cierre', largo: 'Cierre de natillera', icono: ArchiveBoxIcon },
+  { value: 'portal', corto: 'Portal', largo: 'Portal de socios', icono: DevicePhoneMobileIcon }
 ]
 
 /*
@@ -2003,22 +2009,20 @@ const esAdmin = computed(() => {
 })
 
 // Verificar si el usuario es visor
+/*
+ * Solo lectura si su nivel en «Configuración» no es gestionar. Antes la lógica estaba al
+ * revés: solo bloqueaba a un visor que SÍ tuviera el permiso de configurar, y cualquier otro
+ * colaborador podía cambiarlo todo. `esVisor` conserva el nombre porque la plantilla lo usa.
+ */
 async function verificarRolVisor() {
   try {
     if (!id.value) return
-    
-    const rol = await colaboradoresStore.obtenerMiRol(id.value)
-    
-    // Verificar si es visor y tiene permiso de configurar
-    if (rol === 'visor') {
-      const tienePermisoConfigurar = await colaboradoresStore.tienePermiso(id.value, 'configurar')
-      esVisor.value = tienePermisoConfigurar
-    } else {
-      esVisor.value = false
-    }
+    const { niveles } = await cargarNivelesNatillera(id.value)
+    esVisor.value = niveles?.configuracion !== 'gestionar'
   } catch (e) {
-    console.error('Error verificando rol visor:', e)
-    esVisor.value = false
+    console.error('Error comprobando el permiso de configuración:', e)
+    // Ante la duda, sin editar: la base de datos igual rechazaría el cambio.
+    esVisor.value = true
   }
 }
 
@@ -2062,6 +2066,17 @@ const configCierre = ref({
   utilidades_adicionales: 'equitativa', // Ingresos a 'utilidades' desde el Cuadre de Caja
   administracion: { porcentaje: 0, base: 'total' }
 })
+
+/*
+ * Lo que ve cada socio en su portal (Especificaciones/portal-socio, RF-09 y RF-14). La base de
+ * datos aplica esta configuración: lo que se oculta aquí no llega al celular del socio.
+ */
+const configPortal = ref({ mostrar_ganancias: true, nivel_transparencia: 0 })
+const NIVELES_TRANSPARENCIA = [
+  { value: 0, label: 'Solo lo suyo', ayuda: 'Sus cuotas, préstamos y ganancias. Nada de los demás.' },
+  { value: 1, label: 'Totales del grupo', ayuda: 'Además: ahorro total, socios, prestado y utilidades. Sin nombres.' },
+  { value: 2, label: 'Quién está al día', ayuda: 'Además: nombre y estado de cada socio. Nunca montos.' }
+]
 
 /** Atajos: el 2 % es lo que suele fijar el reglamento; el 0 sirve para desactivarlo. */
 const PORCENTAJES_ADMINISTRACION = [0, 1, 2, 3]
@@ -2334,6 +2349,10 @@ async function guardarConfigBasica() {
     anio_inicio: configPeriodo.value.anio_inicio,
     mes_fin: configPeriodo.value.mes_fin,
     anio: configPeriodo.value.anio,
+    config_portal_socio: {
+      mostrar_ganancias: configPortal.value.mostrar_ganancias !== false,
+      nivel_transparencia: Number(configPortal.value.nivel_transparencia) || 0
+    },
     // Las reglas de préstamos ya no tienen botón propio: se guardan con el resto.
     reglas_interes: {
       activo: configPrestamos.value.activo !== false,
@@ -2726,6 +2745,12 @@ function actualizarValoresDesdeNatillera() {
       }
     }
     
+    const portal = natillera.value?.config_portal_socio || {}
+    configPortal.value = {
+      mostrar_ganancias: portal.mostrar_ganancias !== false,
+      nivel_transparencia: [0, 1, 2].includes(Number(portal.nivel_transparencia)) ? Number(portal.nivel_transparencia) : 0
+    }
+
     // Cargar configuración de sanciones
     const sanciones = reglasMultas.sanciones || {}
     if (Object.keys(sanciones).length > 0) {

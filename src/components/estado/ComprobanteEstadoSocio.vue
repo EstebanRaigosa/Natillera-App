@@ -11,14 +11,14 @@
   >
     <div style="position: relative; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 10px 30px -12px rgba(15, 83, 45, 0.35);">
       <!-- Cabecera -->
-      <div style="background: #1B5E37; color: #ffffff; padding: 18px 20px 16px;">
+      <div :style="{ padding: `18px ${margen} 16px` }" style="background: #1B5E37; color: #ffffff;">
         <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.75);">Estado de cuenta</p>
         <p style="margin: 6px 0 0; font-size: 19px; font-weight: 800; line-height: 1.2;">{{ nombre }}</p>
         <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">Corte al {{ fecha }}</p>
       </div>
 
       <!-- Secciones -->
-      <div style="padding: 6px 20px 4px;">
+      <div :style="{ padding: `6px ${margen} 4px` }">
         <template v-if="secciones.length > 0">
           <div
             v-for="(seccion, i) in secciones"
@@ -28,7 +28,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
               <span style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                 <span :style="{ width: '8px', height: '8px', borderRadius: '9999px', background: seccion.color, flexShrink: 0 }" />
-                <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #334155;">{{ seccion.titulo }}</span>
+                <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #334155; overflow-wrap: anywhere;">{{ seccion.titulo }}</span>
                 <span
                   v-if="seccion.items.length > 0"
                   style="font-size: 11px; font-weight: 700; color: #94a3b8;"
@@ -67,7 +67,7 @@
       </div>
 
       <!-- Totales -->
-      <div v-if="total > 0" style="padding: 4px 20px 18px;">
+      <div v-if="total > 0" :style="{ padding: `4px ${margen} 18px` }">
         <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.9; color: #475569;">
           <span>Subtotal</span>
           <span style="font-weight: 700; color: #0f172a; white-space: nowrap;">${{ formatMoney(total) }}</span>
@@ -81,7 +81,7 @@
         </div>
         <div style="margin-top: 10px; border-radius: 14px; background: #1B5E37; color: #ffffff; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
           <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.3; color: rgba(255,255,255,0.85);">Total para<br>estar al día</span>
-          <span style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap;">${{ formatMoney(totalFinal) }}</span>
+          <span :style="{ fontSize: fluido ? 'clamp(20px, 6.4vw, 26px)' : '26px' }" style="font-weight: 800; letter-spacing: -0.02em; white-space: nowrap;">${{ formatMoney(totalFinal) }}</span>
         </div>
       </div>
     </div>
@@ -102,6 +102,10 @@ const props = defineProps({
   /** true en la vista previa (se ajusta al modal); false para generar la imagen. */
   fluido: { type: Boolean, default: false }
 })
+
+// Margen lateral: en pantalla (fluido) se afina para que quepa en móviles angostos; la
+// imagen conserva los 20 px de siempre.
+const margen = computed(() => (props.fluido ? '16px' : '20px'))
 
 const nombre = computed(() => props.estado?.socio?.nombre || 'Socio')
 const fecha = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })

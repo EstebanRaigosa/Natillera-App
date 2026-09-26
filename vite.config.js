@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { VitePWA } from 'vite-plugin-pwa'
+import { prerenderPublico } from './scripts/prerender-publico.mjs'
 
 /** Evita que otro hook de config deje allowedHosts distinto de `true` (túneles/ngrok). */
 function vitePluginForceAllowedHosts() {
@@ -36,6 +37,28 @@ function vitePluginNgrokHostRewrite() {
   }
 }
 
+/**
+ * Pre-render de la portada (SEO): ver scripts/prerender-publico.mjs. Va en `writeBundle`
+ * con `order: 'pre'` para terminar antes de que vite-plugin-pwa arme el precache; si no,
+ * el service worker quedaría apuntando a un index.html que ya cambió y sin app.html.
+ */
+function vitePluginPrerenderPublico() {
+  let config
+  return {
+    name: 'natillera-prerender-publico',
+    apply: 'build',
+    configResolved(c) { config = c },
+    writeBundle: {
+      sequential: true,
+      order: 'pre',
+      async handler() {
+        if (config.build.ssr) return
+        await prerenderPublico({ root: config.root, outDir: config.build.outDir })
+      }
+    }
+  }
+}
+
 // Sin https:// en el valor. Ej: abc123.ngrok-free.dev — mejora HMR/WebSocket detrás del túnel.
 const devPublicHost = process.env.VITE_DEV_PUBLIC_HOST?.replace(/^https?:\/\//, '').split('/')[0]
 
@@ -44,6 +67,7 @@ export default defineConfig({
     vitePluginNgrokHostRewrite(),
     vitePluginForceAllowedHosts(),
     vue(),
+    vitePluginPrerenderPublico(),
     // Polyfill para 'stream' - xlsx-js-style lo usa internamente
     nodePolyfills({ include: ['stream'] }),
     // PWA: service worker que precachea el shell (JS/CSS/HTML) para que, cuando el
@@ -95,7 +119,9 @@ export default defineConfig({
         short_name: 'Natillerapp',
         description: 'Plataforma para gestionar tu natillera: ahorro colectivo, cuotas, socios y préstamos.',
         lang: 'es',
-        start_url: '/',
+        // La PWA abre en el login (con sesión, el router sigue a la última natillera),
+        // no en la portada, que es para quien aún no conoce la app.
+        start_url: '/auth/login',
         scope: '/',
         display: 'standalone',
         background_color: '#ffffff',

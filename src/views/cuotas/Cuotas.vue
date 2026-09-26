@@ -2,12 +2,18 @@
   <!-- Skeleton de carga al entrar a Cuotas (reemplaza la pantalla de carga full-screen) -->
   <CuotasPageSkeleton v-if="inicializando" :filas="6" />
 
-  <!-- Reenvío de comprobante o registro de pago (mismo LoadingBox lg) -->
-  <LoadingBox
-    :visible="mostrarLoadingBoxCarga"
-    size="lg"
-    :text="textoLoadingBoxCarga"
-    :aria-label="ariaLoadingBoxCarga"
+  <!-- Reenvío de comprobante o registro de pago: caja de carga flotante -->
+  <CargaCaja
+    :visible="mostrarCargaOperacion"
+    flotante
+    :texto="textoCargaOperacion"
+  />
+
+  <CargaRapidaPagosModal
+    :show="modalCargaRapida"
+    :natillera-id="id"
+    :natillera-nombre="natilleraNombre"
+    @close="requestCloseTopModal"
   />
 
   <!-- Guía rápida de Cuotas en carrusel: ya no sale sola (la sustituye el recorrido); ?ayuda=1 la abre -->
@@ -362,6 +368,16 @@
             <span>Generar Cuotas</span>
           </button>
           <button
+            v-if="MOSTRAR_CARGA_RAPIDA && !esVisor && mostrarBotonRegistrarPago"
+            type="button"
+            class="ds-btn ds-btn--secondary"
+            aria-label="Carga rápida de pagos"
+            @click="modalCargaRapida = true"
+          >
+            <TableCellsIcon class="w-4 h-4" />
+            <span>Carga rápida</span>
+          </button>
+          <button
             id="tour-cuotas-registrar-pago-desktop"
             v-if="!esVisor && mostrarBotonRegistrarPago"
             type="button"
@@ -386,17 +402,28 @@
       </div>
 
       <!-- Móvil: botón registrar pago a ancho completo dentro del header (sm+ usa el bloque de actions) -->
-      <button
-        id="tour-cuotas-registrar-pago-mobile"
-        v-if="!esVisor && mostrarBotonRegistrarPago"
-        type="button"
-        class="ds-btn ds-btn--primary sm:hidden w-full mt-3"
-        aria-label="Registrar pago"
-        @click="abrirModalRegistrarPagoSelector"
-      >
-        <BanknotesIcon class="w-5 h-5" />
-        <span>Registrar Pago</span>
-      </button>
+      <div v-if="!esVisor && mostrarBotonRegistrarPago" class="mt-3 flex gap-2 sm:hidden">
+        <button
+          id="tour-cuotas-registrar-pago-mobile"
+          type="button"
+          class="ds-btn ds-btn--primary flex-1"
+          aria-label="Registrar pago"
+          @click="abrirModalRegistrarPagoSelector"
+        >
+          <BanknotesIcon class="w-5 h-5" />
+          <span>Registrar Pago</span>
+        </button>
+        <button
+          v-if="MOSTRAR_CARGA_RAPIDA"
+          type="button"
+          class="ds-btn ds-btn--secondary flex-shrink-0"
+          aria-label="Carga rápida de pagos"
+          @click="modalCargaRapida = true"
+        >
+          <TableCellsIcon class="w-5 h-5" />
+          <span>Carga rápida</span>
+        </button>
+      </div>
     </header>
 
     <!-- Tabs + Indicadores (bloque unificado) -->
@@ -698,24 +725,7 @@
     </div>
 
     <!-- Generando cuotas del mes: spinner con mensaje explícito (operación con escritura en BD) -->
-    <div v-if="generandoCuotas" class="flex flex-col items-center justify-center py-16 px-4">
-      <div class="relative">
-        <!-- Fondo con pulso suave -->
-        <div class="absolute inset-0 w-20 h-20 -m-2 bg-natillera-100 rounded-full animate-pulse"></div>
-        <!-- Círculo exterior -->
-        <div class="relative w-16 h-16 border-4 border-natillera-200 rounded-full"></div>
-        <!-- Círculo interior giratorio -->
-        <div class="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-natillera-500 border-r-natillera-400 rounded-full animate-spin"></div>
-        <!-- Icono central -->
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <svg class="w-6 h-6 text-natillera-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        </div>
-      </div>
-      <p class="text-gray-700 mt-6 font-semibold text-lg">Preparando cuotas del mes...</p>
-      <p class="text-gray-400 text-sm mt-1">Generando cuotas para los socios</p>
-    </div>
+    <CargaCaja v-if="generandoCuotas" texto="Preparando cuotas del mes" detalle="Generando cuotas para los socios" />
 
     <!-- Cargando / cambio de mes: skeleton de tarjetas (evita salto brusco mientras recalcula) -->
     <CuotasSkeleton
@@ -2065,10 +2075,7 @@
           </div>
 
           <!-- Cargando transacciones -->
-          <div v-else-if="cargandoTransaccionesEliminar" class="flex flex-col items-center justify-center gap-3 py-8">
-            <div class="inline-block h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-[#1B5E37]"></div>
-            <p class="text-sm font-medium text-gray-600">Cargando pagos registrados...</p>
-          </div>
+          <CargaCaja v-else-if="cargandoTransaccionesEliminar" texto="Cargando pagos registrados" />
 
           <!-- Sin transacciones: pago antiguo. Se revierte el pago completo de la cuota. -->
           <div v-else-if="transaccionesEliminarPago.length === 0 && !modoDirectoEliminar" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
@@ -2122,10 +2129,7 @@
             </div>
 
             <!-- Impacto de la eliminación -->
-            <div v-if="cargandoPreviewEliminar" class="flex items-center justify-center gap-3 py-6">
-              <div class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-[#1B5E37]"></div>
-              <p class="text-sm text-gray-600">Calculando qué se revertirá...</p>
-            </div>
+            <CargaCaja v-if="cargandoPreviewEliminar" texto="Calculando qué se revertirá" />
 
             <div v-else-if="previewEliminarPago" class="space-y-3">
               <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
@@ -2566,9 +2570,7 @@
             </div>
 
             <!-- Loading state -->
-            <div v-if="cargandoHistorialPagos" class="flex items-center justify-center py-6 sm:py-8">
-              <div class="animate-spin rounded-full h-7 w-7 sm:h-8 sm:w-8 border-b-2 border-indigo-600"></div>
-            </div>
+            <CargaCaja v-if="cargandoHistorialPagos" texto="Cargando historial de pagos" />
 
             <!-- Lista de pagos -->
             <div v-else-if="historialPagosCuota.length > 0" class="space-y-2 sm:space-y-3">
@@ -3838,11 +3840,10 @@
       </div>
     </ModalWrapper>
 
-    <LoadingBox
+    <CargaCaja
       :visible="preparandoModalPago"
-      size="md"
-      text="Preparando registro de pago"
-      aria-label="Preparando registro de pago"
+      flotante
+      texto="Preparando registro de pago"
     />
 
     <!-- Modal Registrar Pago: patrón natillerapp-modals (ModalWrapper, cabecera #1B5E37, cuerpo scroll, pie safe-area) -->
@@ -4263,10 +4264,8 @@
                   <div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
                 </div>
               </div>
-              <div v-if="cargandoActividades" class="p-6 flex flex-col items-center justify-center gap-3 border-t border-gray-100 bg-white">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-500"></div>
-                <p class="text-sm font-medium text-gray-600">Cargando actividades pendientes...</p>
-                <p class="text-xs text-gray-400">Obteniendo valores y estados</p>
+              <div v-if="cargandoActividades" class="border-t border-gray-100 bg-white">
+                <CargaCaja texto="Cargando actividades pendientes" detalle="Obteniendo valores y estados" />
               </div>
 
               <template v-else>
@@ -4393,10 +4392,8 @@
                   <div class="h-3 w-24 bg-gray-100 rounded animate-pulse"></div>
                 </div>
               </div>
-              <div v-if="cargandoCuotasPrestamos" class="p-6 flex flex-col items-center justify-center gap-3 border-t border-gray-100 bg-white">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-2 border-blue-200 border-t-blue-500"></div>
-                <p class="text-sm font-medium text-gray-600">Cargando cuotas de préstamos pendientes...</p>
-                <p class="text-xs text-gray-400">Obteniendo valores y estados</p>
+              <div v-if="cargandoCuotasPrestamos" class="border-t border-gray-100 bg-white">
+                <CargaCaja texto="Cargando cuotas de préstamos pendientes" detalle="Obteniendo valores y estados" />
               </div>
 
               <template v-else>
@@ -7030,7 +7027,7 @@
               </div>
               <a 
                 v-if="socioSeleccionado?.socio?.telefono"
-                :href="`https://wa.me/57${socioSeleccionado.socio.telefono.replace(/\D/g, '')}`"
+                :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                 target="_blank"
                 class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg flex-shrink-0"
               >
@@ -7215,7 +7212,9 @@
 </template>
 
 <script setup>
+import { numeroWhatsApp } from '../../utils/telefono'
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute, useRouter } from 'vue-router'
 import { useCuotasStore, capitalCuotaCompleto, cuotaPagadaDentroDePlazo, fechaPagoPerdonada } from '../../stores/cuotas'
 import { useSociosStore } from '../../stores/socios'
@@ -7225,7 +7224,7 @@ import { useAuthStore } from '../../stores/auth'
 import { supabase } from '../../lib/supabase'
 import { normalizeText } from '../../utils/normalizeText.js'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../../composables/useAuditoria'
-import { aplicarRecaudoRifaLiquidada } from '../../composables/useRecaudoRifaLiquidada'
+import { generarCodigoComprobante, pagarActividadesDeCuota, pagarCuotasPrestamoDeCuota } from '../../composables/usePagoConceptosCuota'
 import { toPng } from 'html-to-image'
 import { 
   QuestionMarkCircleIcon,
@@ -7280,7 +7279,8 @@ import { getCurrentDateISO, fechaPagoAIso } from '../../utils/formatDate'
 
 import BackButton from '../../components/BackButton.vue'
 import CuotasPageSkeleton from '../../components/CuotasPageSkeleton.vue'
-import LoadingBox from '../../components/LoadingBox.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
+import CargaRapidaPagosModal from '../../components/cuotas/CargaRapidaPagosModal.vue'
 import CuotasSkeleton from '../../components/CuotasSkeleton.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import CuotasAyudaModal from '../../components/CuotasAyudaModal.vue'
@@ -7469,6 +7469,11 @@ const modificacionRegistrada = ref(null)
 const modalModificacion = ref(false)
 /** Flujo «Registrar pago»: elegir socio y cuota del mes antes de abrir el modal de pago. */
 const modalRegistrarPagoSelector = ref(false)
+// Carga rápida: pasar lo del cuaderno (varios meses y socios) de una vez.
+// Oculta por ahora: la entrada no se ofrece hasta dar por buena la nueva forma de cargarla.
+// Para volver a mostrarla, poner esto en true (la modal y su lógica siguen enteras).
+const MOSTRAR_CARGA_RAPIDA = false
+const modalCargaRapida = ref(false)
 const pasoRegistrarPagoSelector = ref('socio')
 const busquedaRegistrarPagoSocio = ref('')
 const soloPendientesOMoraRegistrarPago = ref(false)
@@ -7972,7 +7977,7 @@ const cargandoActividades = ref(false) // Estado de carga de actividades
 const actividadesSeleccionadas = ref(new Set()) // IDs de actividades seleccionadas
 const actividadesDeLaCuotaActual = ref(new Set()) // IDs de actividades que corresponden al periodo de la cuota actual (no se pueden deseleccionar)
 const actividadesPendientesPorSocio = ref({}) // Total de actividades pendientes por socio_natillera_id
-const mostrandoAnimacionPago = ref(false) // Activo mientras se procesa el pago (LoadingBox + bloqueandoRegistroPago)
+const mostrandoAnimacionPago = ref(false) // Activo mientras se procesa el pago (CargaCaja + bloqueandoRegistroPago)
 const cambiandoMes = ref(false) // Activo mientras se recalcula/renderiza la lista al cambiar de mes (muestra skeleton)
 const cuotasPrestamosPendientes = ref([]) // Cuotas de préstamos pendientes del socio
 const cuotasPrestamosDesplegableAbierto = ref(false) // Estado del desplegable de cuotas de préstamos
@@ -7998,16 +8003,14 @@ watch([mostrandoAnimacionPago, loadingPago, modalPago], ([animacion, loading, mo
   bloqueandoRegistroPago.value = animacion || (loading && modal)
 }, { immediate: true })
 
-const mostrarLoadingBoxCarga = computed(
+const mostrarCargaOperacion = computed(
   () => cargandoComprobanteReenvio.value || bloqueandoRegistroPago.value
 )
 
-const textoLoadingBoxCarga = computed(() => {
+const textoCargaOperacion = computed(() => {
   if (cargandoComprobanteReenvio.value) return 'Preparando comprobante de pago'
   return 'Registrando pago'
 })
-
-const ariaLoadingBoxCarga = computed(() => textoLoadingBoxCarga.value)
 
 // Configuración de meses de la natillera
 const mesInicio = ref(1)
@@ -8497,6 +8500,15 @@ const { requestCloseTop: requestCloseTopModal, replaceTop: replaceTopModal, hasO
     show: () => { modalHistorialAjustes.value = true },
     dismiss: () => {
       modalHistorialAjustes.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
+  cargaRapida: {
+    isOpen: computed(() => !!modalCargaRapida.value),
+    hide: () => { modalCargaRapida.value = false },
+    show: () => { modalCargaRapida.value = true },
+    dismiss: () => {
+      modalCargaRapida.value = false
       if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     }
   },
@@ -9986,9 +9998,13 @@ const mesParam = computed(() => {
 const resumen = computed(() => cuotasStore.calcularResumenCuotas())
 
 // Verificar si el usuario es visor
-const esVisor = computed(() => {
-  return miRol.value === 'visor'
-})
+/*
+ * Solo lectura según el nivel en «Cuotas» (Nada / Ver / Gestionar). Antes solo miraba si el
+ * rol era visor. El nombre se queda `esVisor` porque la plantilla lo usa en muchos sitios;
+ * hoy significa «no puede gestionar cuotas».
+ */
+const permisosNat = usePermisosNatillera(computed(() => props.id || route.params.id))
+const esVisor = computed(() => !permisosNat.puedeGestionar('cuotas'))
 
 const mostrarBotonRegistrarPago = computed(() => {
   return (
@@ -12390,21 +12406,6 @@ function getTotalActividadesSeleccionadas() {
 }
 
 // Registrar pagos de actividades seleccionadas
-/**
- * Reparte por forma de pago lo abonado a una actividad en esta transacción. Con pago mixto
- * se usa el mismo ratio que la fila; sin forma conocida va a `otro`, que en utilidades es
- * la fila sin forma de pago.
- */
-function repartoPorFormaDePago(valorPagado, formaPagoAct, options) {
-  if (formaPagoAct === 'efectivo') return { efectivo: valorPagado, transferencia: 0, otro: 0 }
-  if (formaPagoAct === 'transferencia') return { efectivo: 0, transferencia: valorPagado, otro: 0 }
-  if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
-    const efectivo = Math.round(valorPagado * ((options.valorEfectivo || 0) / options.valorPagado))
-    return { efectivo, transferencia: valorPagado - efectivo, otro: 0 }
-  }
-  return { efectivo: 0, transferencia: 0, otro: valorPagado }
-}
-
 async function registrarPagosActividades(valorTotalActividades, tipoPago = null, options = {}) {
   if (!cuotaSeleccionada.value || actividadesSeleccionadas.value.size === 0) return
   
@@ -12434,17 +12435,6 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
       return // No continuar si no tenemos natillera_id
     }
     
-    // Forma de pago con la que se paga la cuota (se guarda en socios_actividad al pagar actividad desde cuota)
-    const formaPagoAct = (tipoPago && ['efectivo', 'transferencia', 'mixto'].includes((tipoPago || '').toLowerCase()))
-      ? (tipoPago || '').toLowerCase()
-      : null
-
-    // La actividad se paga con la fecha que el usuario eligió en el modal de la cuota, no con
-    // la del servidor. El trigger `update_estado_socio_actividad` solo pone NOW() si la columna
-    // llega vacía, así que mandarla explícitamente basta para que respete la del formulario.
-    const fechaPagoIso = fechaPagoAIso(options.fechaPago)
-    const fechaCausacionIso = new Date().toISOString()
-    
     // Obtener las actividades seleccionadas con sus valores pendientes e información de la actividad
     const actividadesParaPagar = actividadesPendientes.value
       .filter(a => actividadesSeleccionadas.value.has(a.id))
@@ -12457,171 +12447,13 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
         valor_asignado: a.valor_asignado || 0
       }))
     
-    // Calcular el total de actividades seleccionadas
-    const totalActividades = actividadesParaPagar.reduce((sum, a) => sum + a.valor_pendiente, 0)
-    
-    // Si el valor total es mayor o igual al total de actividades, pagar todas completamente
-    // Si es menor, distribuir proporcionalmente
-    let valorRestante = valorTotalActividades
-    
-    // Array para rastrear los pagos por tipo de actividad para utilidades
-    const pagosPorTipoUtilidad = {} // { tipo: { liquidada: valor, en_curso: valor } }
-
-    // Las rifas ya liquidadas van aparte: su recaudo y su ganancia son de la rifa concreta,
-    // no del montón «rifas», así que se anotan con su actividad y su forma de pago.
-    const pagosRifaLiquidada = [] // [{ actividadId, efectivo, transferencia, otro }]
-    
-    // Preparar updates de todas las actividades (sin loops de unicidad)
-    const updatesActividades = []
-    
-    if (valorRestante >= totalActividades) {
-      for (const actividad of actividadesParaPagar) {
-        const nuevoValorPagado = actividad.valor_asignado
-        const valorPagadoEnEstaTransaccion = actividad.valor_pendiente
-        const codigoComprobante = generarCodigoComprobante()
-        
-        // Queda saldada en esta pasada: la fecha de pago es la del formulario.
-        const datosActualizar = {
-          valor_pagado: nuevoValorPagado,
-          codigo_comprobante: codigoComprobante,
-          fecha_pago: fechaPagoIso,
-          fecha_causacion: fechaCausacionIso
-        }
-        if (formaPagoAct != null) datosActualizar.forma_pago = formaPagoAct
-        if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
-          const ratioEf = (options.valorEfectivo || 0) / options.valorPagado
-          datosActualizar.valor_pagado_efectivo = Math.round(valorPagadoEnEstaTransaccion * ratioEf)
-          datosActualizar.valor_pagado_transferencia = valorPagadoEnEstaTransaccion - datosActualizar.valor_pagado_efectivo
-        }
-        
-        updatesActividades.push({ actividad, datosActualizar, valorPagadoEnEstaTransaccion })
-      }
-    } else {
-      for (const actividad of actividadesParaPagar) {
-        if (valorRestante <= 0) break
-        const porcentaje = actividad.valor_pendiente / totalActividades
-        const valorAPagar = Math.min(valorRestante, Math.round(actividad.valor_pendiente * porcentaje))
-        const nuevoValorPagado = actividad.valor_pagado_actual + valorAPagar
-        const codigoComprobante = nuevoValorPagado >= actividad.valor_asignado ? generarCodigoComprobante() : null
-        
-        // `fecha_pago` marca cuándo quedó saldada la actividad, así que solo se escribe si este
-        // abono la termina de cubrir. La causación, en cambio, la lleva cualquier abono: registra
-        // que hoy se movió algo en esa fila.
-        const datosActualizar = { valor_pagado: nuevoValorPagado, fecha_causacion: fechaCausacionIso }
-        if (codigoComprobante) datosActualizar.codigo_comprobante = codigoComprobante
-        if (nuevoValorPagado >= actividad.valor_asignado) datosActualizar.fecha_pago = fechaPagoIso
-        if (formaPagoAct != null) datosActualizar.forma_pago = formaPagoAct
-        if (formaPagoAct === 'mixto' && options.valorPagado > 0) {
-          const ratioEf = (options.valorEfectivo || 0) / options.valorPagado
-          datosActualizar.valor_pagado_efectivo = Math.round(valorAPagar * ratioEf)
-          datosActualizar.valor_pagado_transferencia = valorAPagar - (datosActualizar.valor_pagado_efectivo || 0)
-        }
-        
-        updatesActividades.push({ actividad, datosActualizar, valorPagadoEnEstaTransaccion: valorAPagar })
-        valorRestante -= valorAPagar
-      }
-    }
-    
-    // Ejecutar TODOS los updates de actividades en paralelo
-    const resultados = await Promise.allSettled(
-      updatesActividades.map(({ actividad, datosActualizar }) =>
-        supabase.from('socios_actividad').update(datosActualizar).eq('id', actividad.id)
-      )
-    )
-    
-    // Rastrear resultados para utilidades
-    resultados.forEach((res, idx) => {
-      const { actividad, valorPagadoEnEstaTransaccion } = updatesActividades[idx]
-      if (res.status === 'rejected' || res.value?.error) {
-        console.error(`Error actualizando actividad ${actividad.id}:`, res.value?.error || res.reason)
-        return
-      }
-      if (actividad.actividad) {
-        const estadoActividad = actividad.actividad.estado
-        const tipoActividad = actividad.actividad.tipo || 'otro'
-        const tipoUtilidad = tipoActividad === 'rifa' ? 'rifas' : tipoActividad
-        if (!pagosPorTipoUtilidad[tipoUtilidad]) pagosPorTipoUtilidad[tipoUtilidad] = { liquidada: 0, en_curso: 0 }
-        if (estadoActividad === 'liquidada') {
-          pagosPorTipoUtilidad[tipoUtilidad].liquidada += valorPagadoEnEstaTransaccion
-        } else if (tipoUtilidad !== 'rifas') {
-          pagosPorTipoUtilidad[tipoUtilidad].en_curso += valorPagadoEnEstaTransaccion
-        }
-        if (tipoUtilidad === 'rifas' && estadoActividad === 'liquidada' && valorPagadoEnEstaTransaccion > 0) {
-          // El mixto se parte con el mismo ratio que ya se aplicó a la fila, para que la
-          // utilidad de la rifa quede repartida por forma de pago igual que su recaudo.
-          const reparto = repartoPorFormaDePago(valorPagadoEnEstaTransaccion, formaPagoAct, options)
-          pagosRifaLiquidada.push({ actividadId: actividad.actividad.id, ...reparto })
-        }
-      }
+    await pagarActividadesDeCuota({
+      natilleraId,
+      actividades: actividadesParaPagar,
+      valorTotal: valorTotalActividades,
+      tipoPago,
+      options
     })
-    
-    // Rifas liquidadas: mover sus totales y su ganancia. También en segundo plano, y con
-    // los fallos en consola: un problema aquí no debe tumbar un pago que ya se registró.
-    if (pagosRifaLiquidada.length > 0) {
-      ;(async () => {
-        for (const pago of pagosRifaLiquidada) {
-          const res = await aplicarRecaudoRifaLiquidada(pago.actividadId, pago)
-          if (res?.problemas?.length) console.error('Recaudo posterior de rifa liquidada:', res.problemas)
-        }
-      })()
-    }
-
-    // Fire-and-forget: registrar utilidades en background (no bloquea el retorno)
-    if (natilleraId && Object.keys(pagosPorTipoUtilidad).length > 0) {
-      ;(async () => {
-        for (const [tipoUtilidad, pagos] of Object.entries(pagosPorTipoUtilidad)) {
-          if (tipoUtilidad === 'rifas') continue
-
-          if (pagos.liquidada > 0) {
-            try {
-              const queryLiquidada = (q) => {
-                let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
-                if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
-                else chain = chain.is('forma_pago', null)
-                return chain
-              }
-              const { data: existLiquidada } = await queryLiquidada(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
-              const montoFinalLiquidada = (parseFloat(existLiquidada?.monto) || 0) + pagos.liquidada
-              if (existLiquidada) {
-                await supabase.from('utilidades_clasificadas')
-                  .update({ monto: montoFinalLiquidada, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`, updated_at: new Date().toISOString() })
-                  .eq('id', existLiquidada.id)
-              } else {
-                const insertLiquidada = { natillera_id: natilleraId, tipo: tipoUtilidad, monto: montoFinalLiquidada, fecha_cierre: null, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades liquidadas)`, detalles: {} }
-                if (formaPagoAct != null) insertLiquidada.forma_pago = formaPagoAct
-                await supabase.from('utilidades_clasificadas').insert(insertLiquidada)
-              }
-            } catch (errLiquidada) {
-              console.error(`Error registrando utilidad de ${tipoUtilidad} (liquidada):`, errLiquidada)
-            }
-          }
-
-          if (pagos.en_curso > 0) {
-            try {
-              const queryEnCurso = (q) => {
-                let chain = q.eq('natillera_id', natilleraId).eq('tipo', tipoUtilidad).is('fecha_cierre', null)
-                if (formaPagoAct != null) chain = chain.eq('forma_pago', formaPagoAct)
-                else chain = chain.is('forma_pago', null)
-                return chain
-              }
-              const { data: existEnCurso } = await queryEnCurso(supabase.from('utilidades_clasificadas').select('id, monto')).maybeSingle()
-              const montoFinalEnCurso = (parseFloat(existEnCurso?.monto) || 0) + pagos.en_curso
-              if (existEnCurso) {
-                await supabase.from('utilidades_clasificadas')
-                  .update({ monto: montoFinalEnCurso, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`, updated_at: new Date().toISOString() })
-                  .eq('id', existEnCurso.id)
-              } else {
-                const insertEnCurso = { natillera_id: natilleraId, tipo: tipoUtilidad, monto: montoFinalEnCurso, fecha_cierre: null, descripcion: `Utilidad de ${tipoUtilidad} (incluye pagos de actividades en curso)`, detalles: {} }
-                if (formaPagoAct != null) insertEnCurso.forma_pago = formaPagoAct
-                await supabase.from('utilidades_clasificadas').insert(insertEnCurso)
-              }
-            } catch (errEnCurso) {
-              console.error(`Error registrando utilidad de ${tipoUtilidad} (en curso):`, errEnCurso)
-            }
-          }
-        }
-      })()
-    }
   } catch (error) {
     console.error('Error registrando pagos de actividades:', error)
   }
@@ -12631,231 +12463,36 @@ async function registrarPagosActividades(valorTotalActividades, tipoPago = null,
 async function registrarPagosCuotasPrestamos(valorTotalCuotasPrestamos, tipoPago = null, options = {}) {
   if (!cuotaSeleccionada.value || cuotasPrestamosSeleccionadas.value.size === 0) return []
 
-  const detalleLineasPrestamo = []
-  try {
-    // Forma de pago de la cuota natillera (efectivo / transferencia / mixto). Se propaga
-    // a pagos_prestamo y plan_pagos_prestamo para que el cuadre lea el desglose correcto.
-    const tp = (tipoPago || '').toLowerCase()
-    const formaPagoCp = ['efectivo', 'transferencia', 'mixto'].includes(tp) ? tp : null
-    const valorTotalPago = parseFloat(options.valorPagado) || 0
-    const valorEfTotal = parseFloat(options.valorEfectivo) || 0
-    const ratioEf = formaPagoCp === 'mixto' && valorTotalPago > 0
-      ? valorEfTotal / valorTotalPago
-      : (formaPagoCp === 'efectivo' ? 1 : (formaPagoCp === 'transferencia' ? 0 : 1))
-    const splitMonto = (monto) => {
-      const ef = formaPagoCp === 'mixto' ? Math.round(monto * ratioEf) : (formaPagoCp === 'transferencia' ? 0 : monto)
-      const tr = monto - ef
-      return { ef, tr }
-    }
-    const formaPagoParaCuota = (vEf, vTr) => {
-      if (vEf > 0 && vTr > 0) return 'mixto'
-      if (vEf > 0) return 'efectivo'
-      if (vTr > 0) return 'transferencia'
-      return formaPagoCp
-    }
+  // Datos de socio y natillera para registrar en las filas
+  const nombreSocio = cuotaSeleccionada.value?.socio_natillera?.socio?.nombre
+    || cuotaSeleccionada.value?.socio_natillera?.nombre
+    || null
+  const nombreNatillera = natilleraNombre.value || null
 
-    // Datos de socio y natillera para registrar en las filas
-    const nombreSocio = cuotaSeleccionada.value?.socio_natillera?.socio?.nombre
-      || cuotaSeleccionada.value?.socio_natillera?.nombre
-      || null
-    const nombreNatillera = natilleraNombre.value || null
+  // Obtener las cuotas de préstamos seleccionadas con sus valores pendientes
+  const cuotasPrestamosParaPagar = cuotasPrestamosPendientes.value
+    .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
+    .map(cp => ({
+      id: cp.id,
+      prestamo_id: cp.prestamo_id,
+      numero_cuota: cp.numero_cuota,
+      valor_cuota: cp.valor_cuota,
+      valor_pagado_actual: cp.valor_pagado || 0,
+      valor_pagado_efectivo_actual: parseFloat(cp.valor_pagado_efectivo) || 0,
+      valor_pagado_transferencia_actual: parseFloat(cp.valor_pagado_transferencia) || 0,
+      valor_pendiente: cp.valor_pendiente,
+      fecha_proyectada: cp.fecha_proyectada
+    }))
 
-    // Obtener las cuotas de préstamos seleccionadas con sus valores pendientes
-    const cuotasPrestamosParaPagar = cuotasPrestamosPendientes.value
-      .filter(cp => cuotasPrestamosSeleccionadas.value.has(cp.id))
-      .map(cp => ({
-        id: cp.id,
-        prestamo_id: cp.prestamo_id,
-        numero_cuota: cp.numero_cuota,
-        valor_cuota: cp.valor_cuota,
-        valor_pagado_actual: cp.valor_pagado || 0,
-        valor_pagado_efectivo_actual: parseFloat(cp.valor_pagado_efectivo) || 0,
-        valor_pagado_transferencia_actual: parseFloat(cp.valor_pagado_transferencia) || 0,
-        valor_pendiente: cp.valor_pendiente,
-        fecha_proyectada: cp.fecha_proyectada
-      }))
-
-    // Calcular el total de cuotas de préstamos seleccionadas
-    const totalCuotasPrestamos = cuotasPrestamosParaPagar.reduce((sum, cp) => sum + cp.valor_pendiente, 0)
-
-    // Agrupar cuotas por préstamo para registrar pagos por préstamo
-    const pagosPorPrestamo = {}
-    cuotasPrestamosParaPagar.forEach(cp => {
-      if (!pagosPorPrestamo[cp.prestamo_id]) {
-        pagosPorPrestamo[cp.prestamo_id] = {
-          prestamo_id: cp.prestamo_id,
-          cuotas: [],
-          valorTotal: 0
-        }
-      }
-      pagosPorPrestamo[cp.prestamo_id].cuotas.push(cp)
-      pagosPorPrestamo[cp.prestamo_id].valorTotal += cp.valor_pendiente
-    })
-
-    // Si el valor total es mayor o igual al total de cuotas, pagar todas completamente
-    // Si es menor, distribuir proporcionalmente
-    let valorRestante = valorTotalCuotasPrestamos
-    // Fecha elegida en el modal de pago (o ahora, si no se indicó). Mantiene pagos_prestamo y
-    // plan_pagos_prestamo alineados con cuotas.fecha_pago e historial_pagos_cuota.fecha_pago.
-    const fechaPago = fechaPagoAIso(options.fechaPago)
-    const fechaCausacion = new Date().toISOString()
-
-    // Procesar todos los préstamos en paralelo
-    const prestamoIds = Object.keys(pagosPorPrestamo)
-
-    // Id de la transacción en historial_pagos_cuota que origina estos abonos. Se enlaza en
-    // pagos_prestamo.historial_pago_cuota_id (migración 019) para poder revertir el abono exacto
-    // si más tarde se elimina el pago. El insert del historial corre en segundo plano dentro del
-    // store, así que se espera con tope: si tarda o falla, el abono se registra igual sin enlace.
-    const historialPagoCuotaId = options.historialPagoIdPromise
-      ? await Promise.race([
-          options.historialPagoIdPromise.catch(() => null),
-          new Promise(resolve => setTimeout(() => resolve(null), 4000)),
-        ])
-      : null
-
-    // Pre-obtener saldos de todos los préstamos en una sola query
-    const { data: prestamosData } = await supabase
-      .from('prestamos')
-      .select('id, saldo_actual, estado')
-      .in('id', prestamoIds)
-    const prestamosMap = new Map((prestamosData || []).map(p => [p.id, p]))
-
-    const promesasPrestamos = prestamoIds.map(async (prestamoId) => {
-      const infoPrestamo = pagosPorPrestamo[prestamoId]
-      const cuotasDelPrestamo = infoPrestamo.cuotas
-      const proporcionPrestamo = infoPrestamo.valorTotal / totalCuotasPrestamos
-      const valorAPagarPrestamo = Math.min(valorRestante, valorTotalCuotasPrestamos * proporcionPrestamo)
-
-      if (valorAPagarPrestamo <= 0) return
-
-      const codigoComprobante = generarCodigoComprobante()
-      const splitPrestamo = splitMonto(valorAPagarPrestamo)
-
-      // Pre-calcular qué cuotas va a tocar este abono y cuánto a cada una,
-      // para poder guardarlo en pagos_prestamo.numeros_cuota.
-      const cuotasOrdenadas = [...cuotasDelPrestamo].sort((a, b) => a.numero_cuota - b.numero_cuota)
-      const aplicacionesCuota = []
-      let restanteParaPlan = valorAPagarPrestamo
-      for (const cp of cuotasOrdenadas) {
-        if (restanteParaPlan <= 0) break
-        const aPagar = Math.min(restanteParaPlan, cp.valor_pendiente)
-        if (aPagar > 0) aplicacionesCuota.push({ cuota: cp, valor: aPagar })
-        restanteParaPlan -= aPagar
-      }
-      const numerosCuotaTocados = aplicacionesCuota.map(a => a.cuota.numero_cuota)
-
-      const datosPago = {
-        prestamo_id: prestamoId,
-        valor: valorAPagarPrestamo,
-        fecha: fechaPago,
-        fecha_causacion: fechaCausacion,
-        nombre_socio: nombreSocio,
-        nombre_natillera: nombreNatillera,
-        codigo_comprobante: codigoComprobante,
-        valor_efectivo: splitPrestamo.ef,
-        valor_transferencia: splitPrestamo.tr,
-        numeros_cuota: numerosCuotaTocados.length > 0 ? numerosCuotaTocados : null,
-        origen: 'cuota_natillera'
-      }
-      if (historialPagoCuotaId) datosPago.historial_pago_cuota_id = historialPagoCuotaId
-
-      // Insertar pago + actualizar préstamo en paralelo
-      const prestamo = prestamosMap.get(prestamoId)
-      const saldoAnterior = parseFloat(prestamo?.saldo_actual || 0)
-      const nuevoSaldo = Math.max(0, saldoAnterior - valorAPagarPrestamo)
-      let nuevoEstado = prestamo?.estado || 'activo'
-      if (nuevoSaldo <= 0 && nuevoEstado === 'activo') nuevoEstado = 'pagado'
-
-      const [pagoResInicial] = await Promise.all([
-        supabase.from('pagos_prestamo').insert(datosPago).select().single(),
-        supabase.from('prestamos').update({ saldo_actual: nuevoSaldo, estado: nuevoEstado }).eq('id', prestamoId)
-      ])
-
-      // Si la migración 019 aún no se aplicó, la columna de enlace no existe: reintentar sin ella
-      // para no perder el abono (el pago se registra igual, solo sin trazabilidad para revertirlo).
-      let pagoRes = pagoResInicial
-      if (pagoRes.error && datosPago.historial_pago_cuota_id
-          && String(pagoRes.error.message || '').includes('historial_pago_cuota_id')) {
-        console.warn('pagos_prestamo: falta la columna historial_pago_cuota_id (migración 019). Registrando el abono sin enlace.')
-        const { historial_pago_cuota_id: _omitido, ...datosPagoSinEnlace } = datosPago
-        pagoRes = await supabase.from('pagos_prestamo').insert(datosPagoSinEnlace).select().single()
-      }
-
-      if (pagoRes.error) {
-        console.error(`Error insertando pago de préstamo ${prestamoId}:`, pagoRes.error)
-        return
-      }
-
-      // Aplicar las cuotas pre-calculadas
-      const updatesCuotas = []
-      for (const aplicacion of aplicacionesCuota) {
-        const cuotaPrestamo = aplicacion.cuota
-        const valorAPagarCuota = aplicacion.valor
-        const nuevoValorPagado = cuotaPrestamo.valor_pagado_actual + valorAPagarCuota
-        const estaCompleta = nuevoValorPagado >= cuotaPrestamo.valor_cuota
-
-        const splitCuota = splitMonto(valorAPagarCuota)
-        const nuevoValorEf = cuotaPrestamo.valor_pagado_efectivo_actual + splitCuota.ef
-        const nuevoValorTr = cuotaPrestamo.valor_pagado_transferencia_actual + splitCuota.tr
-
-        const datosActualizar = {
-          valor_pagado: nuevoValorPagado,
-          valor_pagado_efectivo: nuevoValorEf,
-          valor_pagado_transferencia: nuevoValorTr,
-          forma_pago: formaPagoParaCuota(nuevoValorEf, nuevoValorTr),
-          // Igual que en actividades: `fecha_pago` solo cuando la cuota del plan queda saldada
-          // (se escribe más abajo); la causación la lleva cualquier abono.
-          fecha_causacion: fechaCausacion,
-          nombre_socio: nombreSocio,
-          socio_nombre: nombreSocio,
-          // Enlace a la cuota natillera desde la que se abonó. Es lo único que
-          // permite distinguir «se pagó junto con la cuota» de «se pagó desde
-          // Préstamos»: sin él, la lista y el comprobante adivinaban por fecha o
-          // por período y colaban abonos hechos desde el otro módulo.
-          cuota_id: cuotaSeleccionada.value.id
-        }
-        if (estaCompleta) {
-          datosActualizar.pagada = true
-          datosActualizar.fecha_pago = fechaPago
-          if (cuotaPrestamo.fecha_proyectada) {
-            const d = new Date(cuotaPrestamo.fecha_proyectada)
-            if (!isNaN(d.getTime())) {
-              datosActualizar.mes = d.getMonth() + 1
-              datosActualizar.anio = d.getFullYear()
-              datosActualizar.quincena = d.getDate() <= 15 ? 1 : 2
-            }
-          }
-        }
-
-        updatesCuotas.push(
-          supabase.from('plan_pagos_prestamo').update(datosActualizar).eq('id', cuotaPrestamo.id)
-            .then(res => {
-              if (!res.error && valorAPagarCuota > 0) {
-                detalleLineasPrestamo.push({
-                  nombre: `Cuota préstamo #${cuotaPrestamo.numero_cuota}`,
-                  valor: valorAPagarCuota,
-                  numero_cuota: cuotaPrestamo.numero_cuota,
-                  prestamo_id: cuotaPrestamo.prestamo_id
-                })
-              } else if (res.error) {
-                console.error(`Error actualizando plan_pagos_prestamo ${cuotaPrestamo.id}:`, res.error)
-              }
-            })
-        )
-      }
-
-      await Promise.allSettled(updatesCuotas)
-      valorRestante -= valorAPagarPrestamo
-    })
-
-    await Promise.allSettled(promesasPrestamos)
-
-    return detalleLineasPrestamo
-  } catch (error) {
-    console.error('Error registrando pagos de cuotas de préstamos:', error)
-    return detalleLineasPrestamo
-  }
+  return pagarCuotasPrestamoDeCuota({
+    cuotaId: cuotaSeleccionada.value.id,
+    nombreSocio,
+    nombreNatillera,
+    cuotasPrestamo: cuotasPrestamosParaPagar,
+    valorTotal: valorTotalCuotasPrestamos,
+    tipoPago,
+    options
+  })
 }
 
 async function cargarCuotasPrestamosPendientes(cuota) {
@@ -14078,17 +13715,6 @@ function seleccionarValorPagoEditar(event) {
   
   // Seleccionar el texto del input
   setTimeout(() => input.select(), 0)
-}
-
-// Función para generar código único de comprobante
-function generarCodigoComprobante() {
-  // Generar código alfanumérico único: 8 caracteres
-  const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Sin I, O, 0, 1 para evitar confusión
-  let codigo = ''
-  for (let i = 0; i < 8; i++) {
-    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length))
-  }
-  return codigo
 }
 
 async function guardarEdicionCuota() {
@@ -16122,7 +15748,7 @@ async function compartirWhatsApp() {
         if (telefono) {
           const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
           const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
           
           // Registrar auditoría de envío de comprobante (fallback)
           if (pagoRegistrado.value?.cuotaId) {
@@ -16158,7 +15784,7 @@ async function compartirWhatsApp() {
       if (telefono) {
         const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
         const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
-        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
         
         // Registrar auditoría de envío de comprobante (solo texto)
         if (pagoRegistrado.value?.cuotaId) {
@@ -16311,7 +15937,7 @@ async function compartirWhatsAppModificacion() {
         if (telefono) {
           const periodo = modificacionRegistrada.value?.periodo || 'N/A'
           const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
-          window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+          window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
         }
       }, 500)
       
@@ -16324,7 +15950,7 @@ async function compartirWhatsAppModificacion() {
       if (telefono) {
         const periodo = modificacionRegistrada.value?.periodo || 'N/A'
         const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
-        window.open(`https://wa.me/57${telefono}?text=${encodeURIComponent(mensaje)}`, '_blank')
+        window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
       }
     }
   } finally {

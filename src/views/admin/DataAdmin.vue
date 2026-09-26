@@ -112,9 +112,7 @@
               Actualizar
             </button>
           </div>
-          <div v-if="loading" class="text-center py-8">
-            <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          </div>
+          <CargaCaja v-if="loading" texto="Cargando usuarios y natilleras" />
           <div v-else class="space-y-6">
             <!-- Por Usuario -->
             <div
@@ -258,9 +256,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando usuarios" />
         <div v-else>
           <div v-if="usuarios.length === 0" class="text-center py-12 text-gray-500">
             <p>No hay usuarios disponibles o se requiere configuración especial en Supabase.</p>
@@ -301,9 +297,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando natilleras" />
         <div v-else class="space-y-4">
           <div
             v-for="natillera in natilleras"
@@ -376,9 +370,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando socios" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -415,9 +407,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando relaciones" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -463,9 +453,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando cuotas" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -514,9 +502,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando préstamos" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -564,9 +550,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando actividades" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -605,9 +589,7 @@
             Actualizar
           </button>
         </div>
-        <div v-if="loading" class="text-center py-8">
-          <div class="w-12 h-12 border-4 border-natillera-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando historial" />
         <div v-else class="overflow-x-auto">
           <table class="w-full">
             <thead class="bg-gray-50">
@@ -639,6 +621,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { supabase } from '../../lib/supabase'
 
 import BackButton from '../../components/BackButton.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { 
   XMarkIcon,
   UserGroupIcon,

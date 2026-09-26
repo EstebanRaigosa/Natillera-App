@@ -1,0 +1,120 @@
+/*
+ * Animaciones de las pantallas públicas (portada y cuenta). Globales y con prefijo `lp-`:
+ * la portada se pre-renderiza con un build SSR aparte y así no depende de los atributos
+ * de alcance de `scoped`. Solo `transform` y `opacity` (van por GPU), con prefijo
+ * -webkit- para Safari. Todo se activa bajo `.lp-vivo`, que se pone al montar.
+ */
+.lp-halo, .lp-flotar, .lp-burbuja {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.lp-vivo .lp-halo { -webkit-animation: lp-respirar 4s ease-in-out infinite; animation: lp-respirar 4s ease-in-out infinite; }
+.lp-vivo .lp-titilar { -webkit-animation: lp-titilar 3.6s ease-in-out infinite; animation: lp-titilar 3.6s ease-in-out infinite; }
+.lp-vivo .lp-flotar { -webkit-animation: lp-flotar 4.5s ease-in-out infinite; animation: lp-flotar 4.5s ease-in-out infinite; }
+.lp-vivo .lp-burbuja { -webkit-animation: lp-burbuja 5s ease-out infinite; animation: lp-burbuja 5s ease-out infinite; }
+
+@-webkit-keyframes lp-respirar {
+  0%, 100% { opacity: 0.85; -webkit-transform: scale(0.96); }
+  50% { opacity: 1; -webkit-transform: scale(1.04); }
+}
+@keyframes lp-respirar {
+  0%, 100% { opacity: 0.85; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@-webkit-keyframes lp-titilar { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.9; } }
+@keyframes lp-titilar { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.9; } }
+@-webkit-keyframes lp-flotar {
+  0%, 100% { -webkit-transform: translate3d(0, 0, 0); }
+  50% { -webkit-transform: translate3d(0, -8px, 0); }
+}
+@keyframes lp-flotar {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+/* El comprobante «llega»: aparece, se queda y se va para volver a llegar. */
+@-webkit-keyframes lp-burbuja {
+  0% { opacity: 0; -webkit-transform: translate3d(-10px, 12px, 0) scale(0.85); }
+  12% { opacity: 1; -webkit-transform: translate3d(0, 0, 0) scale(1); }
+  80% { opacity: 1; -webkit-transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; -webkit-transform: translate3d(0, -6px, 0) scale(1); }
+}
+@keyframes lp-burbuja {
+  0% { opacity: 0; transform: translate3d(-10px, 12px, 0) scale(0.85); }
+  12% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  80% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  100% { opacity: 0; transform: translate3d(0, -6px, 0) scale(1); }
+}
+
+/*
+ * Aparición al hacer scroll (Landing.vue pone `.lp-visible` con IntersectionObserver).
+ * En los grupos, cada hijo entra con un pequeño retraso según su posición (hasta 8).
+ */
+.lp-vivo .lp-revelar,
+.lp-vivo .lp-revelar-grupo > * {
+  opacity: 0;
+  -webkit-transform: translate3d(0, 28px, 0);
+  transform: translate3d(0, 28px, 0);
+  -webkit-transition: opacity 0.7s ease-out, -webkit-transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp-vivo .lp-revelar.lp-visible,
+.lp-vivo .lp-revelar-grupo.lp-visible > * {
+  opacity: 1;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+.lp-vivo .lp-revelar--tarde { -webkit-transition-delay: 0.15s; transition-delay: 0.15s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(2) { -webkit-transition-delay: 0.08s; transition-delay: 0.08s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(3) { -webkit-transition-delay: 0.16s; transition-delay: 0.16s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(4) { -webkit-transition-delay: 0.24s; transition-delay: 0.24s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(5) { -webkit-transition-delay: 0.32s; transition-delay: 0.32s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(6) { -webkit-transition-delay: 0.40s; transition-delay: 0.40s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(7) { -webkit-transition-delay: 0.48s; transition-delay: 0.48s; }
+.lp-vivo .lp-revelar-grupo > :nth-child(8) { -webkit-transition-delay: 0.56s; transition-delay: 0.56s; }
+
+/* Alcancía del hero: los anillos giran despacio y una moneda entra por la ranura. */
+.lp-girar, .lp-deposito { transform-box: fill-box; transform-origin: 50% 50%; }
+.lp-vivo .lp-girar { -webkit-animation: lp-girar 40s linear infinite; animation: lp-girar 40s linear infinite; }
+.lp-vivo .lp-girar--inverso { -webkit-animation-direction: reverse; animation-direction: reverse; }
+.lp-vivo .lp-deposito { -webkit-animation: lp-deposito 3.2s ease-in infinite; animation: lp-deposito 3.2s ease-in infinite; }
+@-webkit-keyframes lp-girar { to { -webkit-transform: rotate(360deg); } }
+@keyframes lp-girar { to { transform: rotate(360deg); } }
+/* Aparece arriba, baja hasta perderse detrás del cuerpo y espera antes de repetir. */
+@-webkit-keyframes lp-deposito {
+  0% { opacity: 0; -webkit-transform: translate3d(0, -18px, 0); }
+  15% { opacity: 1; -webkit-transform: translate3d(0, 0, 0); }
+  35% { opacity: 1; -webkit-transform: translate3d(0, 0, 0); }
+  60%, 100% { opacity: 1; -webkit-transform: translate3d(0, 64px, 0); }
+}
+@keyframes lp-deposito {
+  0% { opacity: 0; transform: translate3d(0, -18px, 0); }
+  15% { opacity: 1; transform: translate3d(0, 0, 0); }
+  35% { opacity: 1; transform: translate3d(0, 0, 0); }
+  60%, 100% { opacity: 1; transform: translate3d(0, 64px, 0); }
+}
+
+/* Sin movimiento: con «reducir movimiento» o en modo ligero (equipos modestos) no se anima nada. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-vivo .lp-halo, .lp-vivo .lp-titilar, .lp-vivo .lp-flotar, .lp-vivo .lp-burbuja,
+  .lp-vivo .lp-girar, .lp-vivo .lp-deposito {
+    -webkit-animation: none; animation: none;
+  }
+}
+html[data-ligero] .lp-vivo .lp-halo, html[data-ligero] .lp-vivo .lp-titilar,
+html[data-ligero] .lp-vivo .lp-flotar, html[data-ligero] .lp-vivo .lp-burbuja,
+html[data-ligero] .lp-vivo .lp-girar, html[data-ligero] .lp-vivo .lp-deposito {
+  -webkit-animation: none; animation: none;
+}
+
+/* Aparición al scroll: sin movimiento, todo visible desde el principio. */
+@media (prefers-reduced-motion: reduce) {
+  .lp-vivo .lp-revelar,
+  .lp-vivo .lp-revelar-grupo > * {
+    opacity: 1; -webkit-transform: none; transform: none; -webkit-transition: none; transition: none;
+  }
+}
+html[data-ligero] .lp-vivo .lp-revelar,
+html[data-ligero] .lp-vivo .lp-revelar-grupo > * {
+  opacity: 1; -webkit-transform: none; transform: none; -webkit-transition: none; transition: none;
+}

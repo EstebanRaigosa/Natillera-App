@@ -255,10 +255,7 @@
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="p-12 text-center">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-natillera-500"></div>
-          <p class="mt-4 text-gray-500">Cargando registros...</p>
-        </div>
+        <CargaCaja v-if="loading" texto="Cargando registros" />
 
         <!-- Tabla -->
         <div v-else-if="registros.length > 0" class="overflow-x-auto">
@@ -567,6 +564,7 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useUsersStore } from '../../stores/users'
 import { useAuthStore } from '../../stores/auth'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import {
   ClipboardDocumentListIcon,

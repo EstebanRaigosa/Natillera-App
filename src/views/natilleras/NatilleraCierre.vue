@@ -1,12 +1,8 @@
 <template>
   <div :style="{ '--hueco-barra-app': huecoBarraApp + 'px' }">
     <div class="mx-auto max-w-6xl pb-2 lg:pb-6">
-      <div v-if="inicializando" class="flex flex-col items-center justify-center py-32 px-4">
-        <div class="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F5E9]">
-          <div class="h-8 w-8 animate-spin rounded-full border-[3px] border-[#1B5E37] border-t-transparent" />
-        </div>
-        <p class="text-gray-600 font-medium">Preparando la liquidación…</p>
-        <p class="text-sm text-gray-400 mt-1">Un momento</p>
+      <div v-if="inicializando" class="py-22 px-4">
+        <CargaCaja texto="Preparando la liquidación" detalle="Un momento" />
       </div>
 
       <div
@@ -97,10 +93,8 @@
           </nav>
         </header>
 
-        <div v-if="calculandoCierre" class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white/70 py-24">
-          <div class="mb-4 h-10 w-10 animate-spin rounded-full border-[3px] border-[#1B5E37] border-t-transparent" />
-          <p class="font-medium text-gray-700">Calculando datos de cierre…</p>
-          <p class="mt-1 text-sm text-gray-400">Consultando ahorros, utilidades y descuentos</p>
+        <div v-if="calculandoCierre" class="rounded-2xl border border-dashed border-gray-200 bg-white/70 py-14">
+          <CargaCaja texto="Calculando datos de cierre" detalle="Consultando ahorros, utilidades y descuentos" />
         </div>
 
         <!--
@@ -511,11 +505,13 @@ import { useNatillerasStore } from '../../stores/natilleras'
 import { useColaboradoresStore } from '../../stores/colaboradores'
 import { useNotificationStore } from '../../stores/notifications'
 import { supabase } from '../../lib/supabase'
+import CargaCaja from '../../components/carga/CargaCaja.vue'
 import DesgloseUtilidadesModal from '../../components/DesgloseUtilidadesModal.vue'
 import SocioCierreModal from '../../components/cierre/SocioCierreModal.vue'
 import ExportarCierreModal from '../../components/cierre/ExportarCierreModal.vue'
 import ComprobanteCierrePreviewModal from '../../components/cierre/ComprobanteCierrePreviewModal.vue'
 import { useHuecoBarraInferior } from '../../composables/useHuecoBarraInferior'
+import { guardarFotoGanancias } from '../../composables/usePortalGanancias'
 import { calcularCierreNatillera, getModoDistribucion, TIPOS_UTILIDAD as TIPOS_UTILIDAD_CIERRE } from '../../composables/useCierreNatillera'
 
 const props = defineProps({
@@ -792,6 +788,9 @@ async function calcularDatosCierre() {
       return
     }
     administracionCierre.value = result.administracion || null
+    // Ya que está calculado, se guarda como foto para el portal de los socios.
+    guardarFotoGanancias(nid, result, natillera.value.config_cierre)
+      .catch(e => console.warn('No se pudo guardar la foto de ganancias del portal:', e))
     utilidadesCierre.value = {
       bruto: result.totalUtilidadesBruto || 0,
       neto: result.totalUtilidades || 0,

@@ -238,6 +238,13 @@
             Regístrate gratis
           </router-link>
         </p>
+        <!-- Quien entra con Google sin registrarse acepta en el aviso al entrar; aquí se informa -->
+        <p class="mt-3 text-xs" style="color: hsl(var(--muted-foreground))">
+          Al entrar aceptas la
+          <router-link :to="{ name: 'PoliticaDatos' }" class="underline underline-offset-2">Política de Tratamiento de Datos</router-link>
+          y los
+          <router-link :to="{ name: 'Terminos' }" class="underline underline-offset-2">Términos</router-link>.
+        </p>
       </div>
     </div>
 
@@ -500,15 +507,20 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 const showPassword = ref(false)
-const rememberMe = ref(false)
+// Marcada por defecto: es una app de uso diario y casi siempre en el propio teléfono.
+const rememberMe = ref(true)
 
 const REMEMBER_ME_PREF_KEY = 'natillerapp-login-remember'
+// Con «Recordarme» también se recuerda el correo, para no escribirlo cada vez.
+const CORREO_RECORDADO_KEY = 'natillerapp-login-email'
 
 onMounted(() => {
   try {
     const saved = localStorage.getItem(REMEMBER_ME_PREF_KEY)
     if (saved === '1') rememberMe.value = true
     else if (saved === '0') rememberMe.value = false
+    const correo = localStorage.getItem(CORREO_RECORDADO_KEY)
+    if (correo && !email.value) email.value = correo
   } catch {
     /* ignore */
   }
@@ -519,10 +531,21 @@ onMounted(() => {
 watch(rememberMe, (v) => {
   try {
     localStorage.setItem(REMEMBER_ME_PREF_KEY, v ? '1' : '0')
+    // Desmarcar es pedir que no quede rastro en este dispositivo: se olvida el correo.
+    if (!v) localStorage.removeItem(CORREO_RECORDADO_KEY)
   } catch {
     /* ignore */
   }
 })
+
+function recordarCorreo() {
+  try {
+    if (rememberMe.value) localStorage.setItem(CORREO_RECORDADO_KEY, email.value.trim())
+    else localStorage.removeItem(CORREO_RECORDADO_KEY)
+  } catch {
+    /* ignore */
+  }
+}
 
 onUnmounted(() => {
   window.removeEventListener('resize', actualizarInfoPantalla)
@@ -579,6 +602,7 @@ async function handleLogin() {
       rememberMe: rememberMe.value,
     })
     if (result.success) {
+      recordarCorreo()
       const [loc] = await Promise.all([
         resolvePostLoginLocation(authStore.user),
         natillerasStore.fetchTodasLasNatilleras({ user: authStore.user }).catch(() => {})
@@ -595,7 +619,7 @@ async function handleLogin() {
 
 async function handleGoogleLogin() {
   errorMessage.value = ''
-  const result = await authStore.loginWithGoogle()
+  const result = await authStore.loginWithGoogle({ rememberMe: rememberMe.value })
   if (!result.success) {
     errorMessage.value = result.error || 'Error al iniciar sesión con Google'
   }
@@ -749,20 +773,9 @@ function resetearEstadoTelefono() {
   width: 100%;
 }
 
+/* La tarjeta blanca la pone AuthLayout en todos los tamaños. */
 .login-card {
-  background: white;
-  border-radius: 1rem;
-  padding: 2rem 1.5rem;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-}
-
-@media (min-width: 1024px) {
-  .login-card {
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-    padding: 0;
-  }
+  background: transparent;
 }
 
 /* Input fields — contenedor con borde; contraseña en fila (ojito siempre dentro) */

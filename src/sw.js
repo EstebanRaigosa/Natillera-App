@@ -51,7 +51,9 @@ cleanupOutdatedCaches()
 // SPA: una navegación sin red cae al shell. La denylist reproduce
 // `navigateFallbackDenylist`: ni Supabase ni los proxies de API deben acabar
 // devolviendo el HTML de la aplicación.
-registerRoute(new NavigationRoute(createHandlerBoundToURL('/index.html'), {
+// Al cascarón vacío (`app.html`), no a `index.html`: este trae la portada pre-renderizada
+// y la dejaría ver un instante en cualquier ruta de la app.
+registerRoute(new NavigationRoute(createHandlerBoundToURL('/app.html'), {
   denylist: [/^\/api-/, /supabase\.co/, /^\/sw\.js$/, /^\/manifest\.webmanifest$/],
 }))
 

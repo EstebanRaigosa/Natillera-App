@@ -30,6 +30,7 @@
           :class="esLiquidada ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'"
         >{{ esLiquidada ? 'Liquidada' : 'En curso' }}</span>
         <button
+          v-if="!soloLectura"
           type="button"
           @click.stop="$emit('eliminar')"
           class="-my-1.5 -mr-1.5 ml-auto flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-gray-300 transition-colors hover:bg-rose-50 hover:text-rose-600 touch-manipulation"
@@ -102,7 +103,7 @@
           Ver valores
         </button>
         <button
-          v-if="esRifaLiquidada"
+          v-if="(esRifaLiquidada) && !soloLectura"
           type="button"
           @click.stop="$emit('cambiar-forma-pago')"
           class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 active:scale-95 touch-manipulation"
@@ -120,7 +121,7 @@
           Quién pagó
         </button>
         <button
-          v-if="esNoRifaLiquidada"
+          v-if="(esNoRifaLiquidada) && !soloLectura"
           type="button"
           @click.stop="$emit('registrar-gastos')"
           class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 active:scale-95 touch-manipulation"
@@ -177,6 +178,7 @@
           </div>
         </div>
         <button
+          v-if="!soloLectura"
           type="button"
           @click.stop="$emit('eliminar')"
           class="-m-1 p-2 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex-shrink-0 touch-manipulation"
@@ -242,6 +244,7 @@
             Valores
           </button>
           <button
+          v-if="!soloLectura"
             type="button"
             @click.stop="$emit('cambiar-forma-pago')"
             class="inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
@@ -265,6 +268,7 @@
           Miembros
         </button>
         <button
+          v-if="!soloLectura"
           type="button"
           @click.stop="$emit('registrar-gastos')"
           class="inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
@@ -301,6 +305,8 @@ const props = defineProps({
   etiquetaPeriodo: { type: String, default: '' },
   // Variante de una línea para las actividades dentro de una serie
   compacta: { type: Boolean, default: false },
+  // Sin permiso de gestionar actividades: se ocultan eliminar, cambiar pago y gastos
+  soloLectura: { type: Boolean, default: false },
 })
 
 defineEmits(['click', 'eliminar', 'ver-desglose', 'cambiar-forma-pago', 'ver-miembros', 'registrar-gastos'])

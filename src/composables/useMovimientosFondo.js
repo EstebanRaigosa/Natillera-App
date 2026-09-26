@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { supabase } from '../lib/supabase'
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from './useAuditoria'
+import { recalcularFotoGanancias } from './usePortalGanancias'
 
 /**
  * Movimientos de fondo — ingresos, egresos y traslados que no vienen de una cuota,
@@ -373,6 +374,15 @@ export function useMovimientosFondo(idNatillera) {
   /**
    * Ingreso o egreso: una sola fila.
    */
+  /*
+   * Lo que entra o sale del bolsillo de utilidades cambia las ganancias de cada socio: la
+   * foto del portal se recalcula ya, en segundo plano, para que el socio no vea una cifra vieja.
+   */
+  function refrescarGananciasSiToca(...registros) {
+    const toca = registros.some(r => r?.destino_ingreso === 'utilidades' || r?.origen_egreso === 'utilidades')
+    if (toca) recalcularFotoGanancias(idNatillera.value)
+  }
+
   async function crearMovimiento({ direccion, monto, formaPago, descripcion, fecha, bolsillo }) {
     const tipo = direccion === 'ingreso' ? 'entrada' : 'salida'
     const registro = {
@@ -395,6 +405,7 @@ export function useMovimientosFondo(idNatillera) {
     if (fallo) throw traducirFallo(fallo)
 
     filas.value = [{ ...data, monto: parseFloat(data.monto) || 0 }, ...filas.value]
+    refrescarGananciasSiToca(data)
     auditar(auditoria.registrarCreacion(
       'movimientos_fondo',
       data.id,
@@ -515,6 +526,7 @@ export function useMovimientosFondo(idNatillera) {
     if (fallo) throw traducirFallo(fallo)
 
     reemplazarFilas([data])
+    refrescarGananciasSiToca(fila, data)
     auditar(auditoria.registrarActualizacion(
       'movimientos_fondo',
       fila.id,
@@ -544,6 +556,7 @@ export function useMovimientosFondo(idNatillera) {
 
     const borrados = new Set((data || []).map(d => d.id))
     filas.value = filas.value.filter(f => !borrados.has(f.id))
+    refrescarGananciasSiToca(...grupo.filas)
     auditar(auditoria.registrarEliminacion(
       'movimientos_fondo',
       ids[0],

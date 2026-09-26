@@ -65,6 +65,18 @@ Patrón base: `ModalWrapper` con cabecera marca **compacta** (~20 % menos que la
 
 **No** sustituir `ModalWrapper` por un `div` fijo genérico sin justificación en comentario y sin cubrir iOS.
 
+## 2.1 Pantallas de carga
+
+Son tres, en `src/components/carga/`, todas con la misma figura (la alcancía dentro de un anillo que gira). **No** crear spinners caseros (`animate-spin` grandes, colores sueltos) para estados de carga:
+
+| Caso | Componente |
+|---|---|
+| Entrar a una vista que aún no tiene datos | `<CargaPantalla :visible text>` (pantalla completa, fondo verde noche) |
+| Una sección, lista, pestaña o modal esperando su contenido | `<CargaCaja v-if texto detalle>` (en línea) |
+| Operación en curso que bloquea la página (registrar pago, reenviar comprobante) | `<CargaCaja :visible flotante texto detalle>` (sobre velo salvia) |
+
+`CargaCaja` acepta un slot `figura` para una animación propia (la rifa usa la cuadrícula de `CargaCuadricula.vue`). Quedan aparte, a propósito: los skeletons por página (Cuotas, Préstamos, Actividades) y los giros pequeños dentro de botones.
+
 ## 3. Stack del proyecto
 
 - **Framework**: Vue 3 (Composition API + `<script setup>`)

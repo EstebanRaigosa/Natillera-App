@@ -49,7 +49,7 @@
       </div>
     </header>
 
-    <LoadingScreen :visible="cargando" text="Cargando los movimientos del fondo" />
+    <CargaPantalla :visible="cargando" text="Cargando los movimientos del fondo" />
 
     <template v-if="!cargando">
       <div
@@ -419,6 +419,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
 import {
   ArrowsRightLeftIcon,
@@ -439,7 +440,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
-import LoadingScreen from '../../components/LoadingScreen.vue'
+import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import MovimientoFormModal from '../../components/movimientos/MovimientoFormModal.vue'
 import MovimientoDetalleModal from '../../components/movimientos/MovimientoDetalleModal.vue'
 import EliminarMovimientoModal from '../../components/movimientos/EliminarMovimientoModal.vue'
@@ -497,7 +498,9 @@ const esAdmin = computed(() => {
 })
 
 // Mismo criterio que el RLS de la tabla: quien puede gestionar cuotas puede mover el fondo.
-const puedeEscribir = computed(() => esAdmin.value || misPermisos.value?.permisos?.gestionar_cuotas === true)
+// Registrar o cambiar movimientos es gestionar «Caja» (antes se usaba la bandera de cuotas).
+const permisosNat = usePermisosNatillera(id)
+const puedeEscribir = computed(() => permisosNat.cargado.value && permisosNat.puedeGestionar('caja'))
 
 /* ------------- Saldo esperado: solo para contar el efecto al guardar ---------- */
 

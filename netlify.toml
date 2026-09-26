@@ -2,9 +2,11 @@
   command = "npm run build"
   publish = "dist"
 
+# Las rutas de la app caen al cascarón vacío. `index.html` es la portada pre-renderizada
+# (SEO) y solo se sirve en «/», porque Netlify entrega primero los archivos que existen.
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/app.html"
   status = 200
 
 # El service worker y su registro NO deben cachearse en el navegador/CDN, o los usuarios
