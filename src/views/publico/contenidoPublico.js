@@ -9,6 +9,30 @@
 
 export const URL_SITIO = 'https://natillerapp.com'
 
+/*
+ * Título y descripción de cada página pública. Los lee el router (seoRuta.js, al navegar)
+ * y el pre-render del build (los escribe en el HTML de cada página). Así el buscador y las
+ * redes, que no siempre ejecutan JavaScript, reciben lo mismo que ve el usuario.
+ */
+export const SEO_PAGINAS = {
+  '/': {
+    titulo: 'Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre',
+    descripcion: 'Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora.'
+  },
+  '/que-es-una-natillera': {
+    titulo: 'Qué es una natillera y cómo funciona: guía para crear la tuya | Natillerapp',
+    descripcion: 'Qué es una natillera, cómo funciona, cómo crear una paso a paso, qué reglas acordar y cómo se reparten las ganancias al final del año.'
+  },
+  '/privacidad': {
+    titulo: 'Política de Tratamiento de Datos | Natillerapp',
+    descripcion: 'Qué datos trata Natillerapp, para qué, con quién los comparte y cómo ejercer tus derechos según la Ley 1581 de 2012.'
+  },
+  '/terminos': {
+    titulo: 'Términos y condiciones | Natillerapp',
+    descripcion: 'Las reglas para usar Natillerapp, la app para llevar las cuentas de tu natillera.'
+  }
+}
+
 export const FUNCIONES = [
   {
     clave: 'cuotas',

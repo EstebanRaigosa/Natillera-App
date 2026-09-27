@@ -1,5 +1,6 @@
-/* Natillerapp Design System — tipografía única: Mulish (variable, 200..1000 + italic) */
-@import url('https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap');
+/* Natillerapp Design System — tipografía única: Mulish (variable, 200..1000 + italic).
+   Se carga con <link> en index.html, no con @import aquí: el @import encadenaba
+   HTML → este CSS → CSS de Google → fuente, y retrasaba el titular de la portada. */
 
 @import "tailwindcss";
 

@@ -10,14 +10,19 @@
     <link rel="canonical" href="https://natillerapp.com/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover, shrink-to-fit=no, interactive-widget=resizes-visual" />
     <!--
-      SEO: estos son los datos de la portada («/»), que llega pre-renderizada en el build
-      (scripts/prerender-publico.mjs). En las demás rutas los ajusta el router
-      (src/utils/seoRuta.js): título, descripción, canonical y noindex en lo privado.
+      SEO: estos son los datos de la portada («/»). En el build, scripts/prerender-publico.mjs
+      escribe el título, la descripción, el canonical y el Open Graph de cada página pública
+      (textos en src/views/publico/contenidoPublico.js) y deja noindex en el cascarón de la
+      app. Al navegar los ajusta el router (src/utils/seoRuta.js).
     -->
     <title>Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre</title>
     <meta name="description" content="Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora." />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#1B5E37" />
+    <!-- Mulish (tipografía de la marca). Aquí y no con @import en el CSS: así se pide en paralelo. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap" />
     <!-- Preconnect + dns-prefetch a Supabase para mejorar tiempo de primera carga -->
     <link rel="preconnect" href="https://vdtjacwpvqfifahkrqxp.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://vdtjacwpvqfifahkrqxp.supabase.co" />
@@ -51,7 +56,21 @@
       "operatingSystem": "Web, Android, iOS",
       "inLanguage": "es-CO",
       "url": "https://natillerapp.com/",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "COP" }
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "COP" },
+      "image": "https://natillerapp.com/og-natillerapp.jpg",
+      "featureList": "Cuotas y multas por mora, préstamos entre socios con plan de pagos, rifas y actividades, libro de caja y conciliación, cierre y reparto de fin de año, comprobantes por WhatsApp",
+      "publisher": { "@id": "https://natillerapp.com/#organizacion" }
+    }
+    </script>
+    <!-- Quién está detrás de la app: ayuda a Google a asociar la marca con el sitio y el logo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://natillerapp.com/#organizacion",
+      "name": "Natillerapp",
+      "url": "https://natillerapp.com/",
+      "logo": "https://natillerapp.com/android-chrome-512x512.png"
     }
     </script>
     <!-- Meta tags específicos para iOS -->

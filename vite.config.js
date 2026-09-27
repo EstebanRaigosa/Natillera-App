@@ -38,7 +38,7 @@ function vitePluginNgrokHostRewrite() {
 }
 
 /**
- * Pre-render de la portada (SEO): ver scripts/prerender-publico.mjs. Va en `writeBundle`
+ * Pre-render de las páginas públicas (SEO): ver scripts/prerender-publico.mjs. Va en `writeBundle`
  * con `order: 'pre'` para terminar antes de que vite-plugin-pwa arme el precache; si no,
  * el service worker quedaría apuntando a un index.html que ya cambió y sin app.html.
  */
@@ -186,6 +186,8 @@ export default defineConfig({
     }),
   ],
   build: {
+    // El pre-render de las páginas públicas lo lee para enlazar el CSS de cada vista.
+    manifest: true,
     // index + xlsx siguen siendo grandes; el aviso es orientativo
     chunkSizeWarningLimit: 1800,
     rollupOptions: {
@@ -205,7 +207,9 @@ export default defineConfig({
           if (/[/\\]node_modules[/\\](xlsx|xlsx-js-style)[/\\]/.test(id)) return 'xlsx'
           if (id.includes('html2canvas') || id.includes('html-to-image')) return 'html-capture'
           if (id.includes('@heroicons')) return 'heroicons'
-          if (id.includes('driver.js')) return 'driver'
+          // Sin el CSS: main.js lo importa al arrancar y, en el mismo chunk, arrastraba la
+          // librería entera a la portada. Solo la usan los tours, dentro de la app.
+          if (id.includes('driver.js') && !id.endsWith('.css')) return 'driver'
           // Core Vue: orden importa (router antes que coincidencia genérica "vue")
           if (id.includes('vue-router')) return 'vue-router'
           if (id.includes('pinia')) return 'pinia'

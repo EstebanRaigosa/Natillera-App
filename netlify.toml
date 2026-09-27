@@ -2,8 +2,32 @@
   command = "npm run build"
   publish = "dist"
 
-# Las rutas de la app caen al cascarón vacío. `index.html` es la portada pre-renderizada
-# (SEO) y solo se sirve en «/», porque Netlify entrega primero los archivos que existen.
+# Dirección anterior de la guía: 301 para que Google pase lo ganado a la nueva.
+[[redirects]]
+  from = "/auth/que-es-natillerapp"
+  to = "/que-es-una-natillera"
+  status = 301
+
+# Páginas públicas pre-renderizadas (scripts/prerender-publico.mjs): cada una con su HTML,
+# su título y su canonical. Explícitas y antes del comodín, que las mandaría al cascarón
+# (con noindex). Al añadir una página pública, añadirla aquí y en PAGINAS del script.
+[[redirects]]
+  from = "/que-es-una-natillera"
+  to = "/que-es-una-natillera.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacidad"
+  to = "/privacidad.html"
+  status = 200
+
+[[redirects]]
+  from = "/terminos"
+  to = "/terminos.html"
+  status = 200
+
+# Las rutas de la app caen al cascarón vacío (con noindex). `index.html` es la portada
+# pre-renderizada y solo se sirve en «/», porque Netlify entrega primero los archivos que existen.
 [[redirects]]
   from = "/*"
   to = "/app.html"

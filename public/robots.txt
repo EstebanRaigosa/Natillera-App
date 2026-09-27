@@ -1,6 +1,7 @@
 # Natillerapp - robots.txt
-# La portada y «Qué es Natillerapp» son públicas. La app (datos de cada natillera) no
-# tiene nada que indexar: se le cierra el paso para no gastar rastreo en pantallas de login.
+# La portada, la guía «Qué es una natillera» y las páginas legales son públicas. La app
+# (datos de cada natillera) no tiene nada que indexar: se le cierra el paso para no gastar
+# rastreo en pantallas de login.
 User-agent: *
 Allow: /
 Disallow: /dashboard

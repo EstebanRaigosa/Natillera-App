@@ -45,11 +45,14 @@ export function aplicarSeoRuta(to) {
   const canonical = document.head.querySelector('link[rel="canonical"]')
   const ogUrl = document.head.querySelector('meta[property="og:url"]')
   if (publico) {
-    const url = URL_SITIO + (to.path === '/' ? '/' : to.path)
+    // Sin barra final: «/privacidad/» también abre la página y no debe declararse aparte.
+    const url = URL_SITIO + (to.path === '/' ? '/' : to.path.replace(/\/+$/, ''))
     fijar('link[rel="canonical"]', { tag: 'link', attrs: { rel: 'canonical' } }, 'href', url)
     fijar('meta[property="og:url"]', { tag: 'meta', attrs: { property: 'og:url' } }, 'content', url)
     fijar('meta[property="og:title"]', { tag: 'meta', attrs: { property: 'og:title' } }, 'content', document.title)
     fijar('meta[property="og:description"]', { tag: 'meta', attrs: { property: 'og:description' } }, 'content', descripcion)
+    fijar('meta[name="twitter:title"]', { tag: 'meta', attrs: { name: 'twitter:title' } }, 'content', document.title)
+    fijar('meta[name="twitter:description"]', { tag: 'meta', attrs: { name: 'twitter:description' } }, 'content', descripcion)
   } else {
     canonical?.remove()
     ogUrl?.remove()

@@ -11,7 +11,7 @@
       · Escritorio (lg): una tarjeta centrada partida en dos, escena a la izquierda y
         formulario a la derecha, separados por una ola blanca.
 
-    «Qué es Natillerapp» trae su propio artículo con fondo: va sin tarjeta, a todo el ancho.
+    La guía «Qué es una natillera» trae su propio artículo con fondo: va sin tarjeta, a todo el ancho.
   -->
   <div class="relative min-h-screen min-h-[100dvh] overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#154a2d] text-white">
     <DestellosFondo class="hidden lg:block" />
@@ -105,19 +105,19 @@
             <!-- En el celular estos enlaces van dentro de la hoja; en escritorio, debajo de la tarjeta -->
             <nav aria-label="Más información" class="relative mt-4 flex flex-wrap justify-center gap-x-5 gap-y-1 text-sm lg:hidden">
               <RouterLink v-if="!enPwa" to="/" class="inline-flex min-h-[44px] items-center font-semibold text-[#1B5E37]">← Volver al inicio</RouterLink>
-              <RouterLink :to="{ name: 'QueEsNatillerapp' }" class="inline-flex min-h-[44px] items-center font-semibold text-[#1B5E37]">¿Qué es Natillerapp?</RouterLink>
+              <RouterLink :to="{ name: 'QueEsNatillerapp' }" class="inline-flex min-h-[44px] items-center font-semibold text-[#1B5E37]">¿Qué es una natillera?</RouterLink>
             </nav>
           </div>
         </div>
 
         <nav aria-label="Más información" class="mt-4 hidden flex-wrap justify-center gap-x-5 gap-y-1 text-sm lg:flex">
           <RouterLink v-if="!enPwa" to="/" class="inline-flex min-h-[44px] items-center font-semibold text-white/75 hover:text-white">← Volver al inicio</RouterLink>
-          <RouterLink :to="{ name: 'QueEsNatillerapp' }" class="inline-flex min-h-[44px] items-center font-semibold text-white/75 hover:text-white">¿Qué es Natillerapp?</RouterLink>
+          <RouterLink :to="{ name: 'QueEsNatillerapp' }" class="inline-flex min-h-[44px] items-center font-semibold text-white/75 hover:text-white">¿Qué es una natillera?</RouterLink>
         </nav>
       </div>
     </div>
 
-    <!-- ============ Sin tarjeta: «Qué es Natillerapp» ============ -->
+    <!-- ============ Sin tarjeta: guía «Qué es una natillera» ============ -->
     <div
       v-else
       class="relative z-10 mx-auto max-w-6xl px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-6 lg:pt-8"

@@ -41,10 +41,11 @@
 
       <div class="relative z-10 mx-auto grid max-w-6xl items-center gap-6 px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:grid-cols-[1.15fr_1fr] lg:gap-10 lg:pb-24 lg:pt-12">
         <div>
-          <p class="text-sm font-bold tracking-[0.18em] text-[#9fd9b1]">AHORRO EN COMUNIDAD</p>
+          <p class="text-sm font-bold tracking-[0.18em] text-[#9fd9b1]">LA APP PARA TU NATILLERA</p>
+          <!-- El H1 nombra lo que la gente busca («natillera»): es la señal más fuerte de la página tras el título. -->
           <h1 class="mt-3 max-w-xl font-display text-4xl font-light leading-[1.08] tracking-tight sm:text-6xl">
             Ahorra en grupo,<br />
-            <span class="font-extrabold">crece en comunidad</span>
+            <span class="font-extrabold">crece con tu natillera</span>
           </h1>
           <p class="mt-5 max-w-md text-base leading-relaxed text-white/80 sm:text-lg">
             Cuotas, multas, préstamos, rifas y el cierre de fin de año en una app gratis.
@@ -353,6 +354,10 @@
               <p class="px-5 pb-5 text-sm leading-relaxed text-white/70">{{ item.respuesta }}</p>
             </details>
           </div>
+          <p class="lp-revelar mt-5 text-center text-sm text-white/70">
+            ¿Vas a armar una?
+            <RouterLink to="/que-es-una-natillera" class="inline-flex min-h-[44px] touch-manipulation items-center font-bold text-[#b9f0cc] underline underline-offset-4 hover:text-white">Guía: qué es una natillera y cómo crearla</RouterLink>
+          </p>
 
           <div class="lp-revelar mt-14 text-center">
             <p class="font-display text-2xl font-extrabold sm:text-3xl">Tu natillera, en orden desde hoy</p>
@@ -400,7 +405,7 @@
           <ul class="mt-2 text-sm">
             <li><RouterLink to="/auth/register" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Crear cuenta</RouterLink></li>
             <li><RouterLink to="/auth/login" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Iniciar sesión</RouterLink></li>
-            <li><RouterLink to="/auth/que-es-natillerapp" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Qué es Natillerapp</RouterLink></li>
+            <li><RouterLink to="/que-es-una-natillera" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Qué es una natillera</RouterLink></li>
             <li><RouterLink to="/privacidad" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Tratamiento de datos</RouterLink></li>
             <li><RouterLink to="/terminos" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Términos y condiciones</RouterLink></li>
           </ul>
@@ -408,7 +413,7 @@
       </div>
 
       <p class="relative bg-[#07170f] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 text-center text-xs text-white/45">
-        © 2025 Natillerapp
+        © {{ ANIO }} Natillerapp
       </p>
     </footer>
   </div>
@@ -488,6 +493,9 @@ const ORBITA = [0.35, 2.1, 3.6, 5.3].map((t, i) => {
  * Las animaciones arrancan cuando la app ya montó. El HTML pre-renderizado llega quieto;
  * si se animara desde ahí, al montar Vue el DOM se reemplaza y todo empezaría otra vez.
  */
+// Año del pie: se fija al pre-renderizar y el navegador lo recalcula igual al montar.
+const ANIO = new Date().getFullYear()
+
 const vivo = ref(false)
 
 /*

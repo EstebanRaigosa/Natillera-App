@@ -6,16 +6,23 @@ import { setLastNatilleraId } from '../utils/lastNatillera'
 import { aplicarSeoRuta } from '../utils/seoRuta'
 import { esModoStandalone } from '../composables/usePwaInstall'
 import { MODULO_DE_RUTA, MODULOS } from '../permisos/modulos'
+import { SEO_PAGINAS } from '../views/publico/contenidoPublico'
 
-// Layouts: estáticos (se usan inmediatamente)
+// Layouts: AuthLayout estático (login y guía, primer paint sin sesión)
 import AuthLayout from '../layouts/AuthLayout.vue'
-import DashboardLayout from '../layouts/DashboardLayout.vue'
 
 // Auth views: estáticas (primer paint)
 import Login from '../views/auth/Login.vue'
 // Portada pública: estática porque es lo primero que pinta quien llega sin sesión, y su
 // HTML ya viene pre-renderizado en el build (el chunk no debe hacerlo esperar).
 import Landing from '../views/publico/Landing.vue'
+
+/*
+ * El layout de la app, diferido: arrastraba al arranque los tours (driver.js), la barra
+ * de navegación y el soporte, y todo eso lo descargaba también quien solo mira la portada
+ * pública. Con sesión, el service worker lo tiene precacheado y carga igual de rápido.
+ */
+const DashboardLayout = () => import('../layouts/DashboardLayout.vue')
 
 // Todas las demás vistas: carga diferida para reducir bundle inicial
 const Register = () => import('../views/auth/Register.vue')
@@ -51,6 +58,7 @@ const PortalSocio = () => import('../views/portal/PortalSocio.vue')
 const SociosEnApp = () => import('../views/socios/SociosEnApp.vue')
 const PaginaLegal = () => import('../views/legal/PaginaLegal.vue')
 const AdministradoresNatillera = () => import('../views/natilleras/AdministradoresNatillera.vue')
+const PaginaNoEncontrada = () => import('../views/publico/PaginaNoEncontrada.vue')
 
 // Helper para detectar si estamos en modo desarrollo
 const isDevMode = isDev || isLocalhost
@@ -68,8 +76,8 @@ const routes = [
     component: Landing,
     meta: {
       publico: true,
-      tituloCompleto: 'Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre',
-      descripcion: 'Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora.'
+      tituloCompleto: SEO_PAGINAS['/'].titulo,
+      descripcion: SEO_PAGINAS['/'].descripcion
     },
     async beforeEnter() {
       const authStore = useAuthStore()
@@ -105,8 +113,8 @@ const routes = [
     component: PaginaLegal,
     meta: {
       publico: true,
-      title: 'Política de Tratamiento de Datos',
-      descripcion: 'Qué datos trata Natillerapp, para qué, con quién los comparte y cómo ejercer tus derechos según la Ley 1581 de 2012.'
+      tituloCompleto: SEO_PAGINAS['/privacidad'].titulo,
+      descripcion: SEO_PAGINAS['/privacidad'].descripcion
     }
   },
   {
@@ -115,10 +123,35 @@ const routes = [
     component: PaginaLegal,
     meta: {
       publico: true,
-      title: 'Términos y condiciones',
-      descripcion: 'Las reglas para usar Natillerapp, la app para llevar las cuentas de tu natillera.'
+      tituloCompleto: SEO_PAGINAS['/terminos'].titulo,
+      descripcion: SEO_PAGINAS['/terminos'].descripcion
     }
   },
+  {
+    /*
+     * Guía «Qué es una natillera»: la página con más texto del sitio, la que compite por
+     * las búsquedas de quien quiere armar una. Fuera de /auth (no es una pantalla de
+     * cuenta), pero con el mismo AuthLayout, que la pinta a todo el ancho sin tarjeta.
+     */
+    path: '/que-es-una-natillera',
+    component: AuthLayout,
+    children: [
+      {
+        path: '',
+        name: 'QueEsNatillerapp',
+        component: QueEsNatillerapp,
+        meta: {
+          publico: true,
+          tituloCompleto: SEO_PAGINAS['/que-es-una-natillera'].titulo,
+          descripcion: SEO_PAGINAS['/que-es-una-natillera'].descripcion
+        }
+      }
+    ]
+  },
+  // Dirección anterior de la guía: los enlaces viejos siguen funcionando (en Netlify es un 301).
+  { path: '/auth/que-es-natillerapp', redirect: '/que-es-una-natillera' },
+  // La portada también existe como archivo; que no se abra como página vacía.
+  { path: '/index.html', redirect: '/' },
   {
     path: '/auth',
     component: AuthLayout,
@@ -146,16 +179,6 @@ const routes = [
         name: 'ResetPassword',
         component: ResetPassword,
         meta: { title: 'Restablecer Contraseña' }
-      },
-      {
-        path: 'que-es-natillerapp',
-        name: 'QueEsNatillerapp',
-        component: QueEsNatillerapp,
-        meta: {
-          title: 'Qué es Natillerapp',
-          publico: true,
-          descripcion: 'Qué es una natillera y cómo Natillerapp te ayuda a llevarla: socios, cuotas, préstamos y actividades en una app gratuita para celular y computadora.'
-        }
       }
     ]
   },
@@ -365,6 +388,17 @@ const routes = [
       //   meta: { devOnly: true }
       // }] : [])
     ]
+  },
+  {
+    /*
+     * Cualquier dirección que no existe. Antes pintaba una página vacía, y para Google
+     * era un «soft 404»: una página en blanco que respondía como si existiera. Sin
+     * `meta.publico`, así que va con noindex.
+     */
+    path: '/:pathMatch(.*)*',
+    name: 'PaginaNoEncontrada',
+    component: PaginaNoEncontrada,
+    meta: { title: 'Página no encontrada' }
   }
 ]
 
