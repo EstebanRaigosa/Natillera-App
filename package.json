@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "scrape:loteria": "node scripts/scrape-loteria-catalogo.mjs",
     "vapid:keys": "node scripts/generar-claves-vapid.mjs",
-    "badge:notificacion": "node scripts/generar-badge-notificacion.mjs"
+    "badge:notificacion": "node scripts/generar-badge-notificacion.mjs",
+    "og:imagen": "node scripts/generar-og-image.mjs"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -28,6 +29,7 @@
     "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@vitejs/plugin-vue": "^6.0.1",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
