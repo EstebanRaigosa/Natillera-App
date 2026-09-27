@@ -110,12 +110,12 @@
           <div class="lp-revelar mx-auto max-w-2xl text-center">
             <p class="text-sm font-bold tracking-[0.18em] text-[#9fd9b1]">TODO EN UN LUGAR</p>
             <h2 class="mt-3 font-display text-3xl font-light uppercase tracking-[0.06em] sm:text-4xl">
-              La natillera <span class="font-extrabold">sin enredos</span>
+              Administra tu natillera <span class="font-extrabold">sin enredos</span>
             </h2>
             <p class="mt-4 text-base leading-relaxed text-white/70">
               Una <strong class="text-white">natillera</strong> es un grupo de ahorro colectivo: amigos, familia o compañeros
               aportan una cuota fija, se prestan entre ellos y al final del año reparten el ahorro con las ganancias.
-              Natillerapp lleva esas cuentas por ti.
+              Natillerapp es la plataforma web y la app que lleva esas cuentas por ti.
             </p>
           </div>
 

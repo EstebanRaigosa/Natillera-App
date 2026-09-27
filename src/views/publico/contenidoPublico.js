@@ -16,8 +16,8 @@ export const URL_SITIO = 'https://natillerapp.com'
  */
 export const SEO_PAGINAS = {
   '/': {
-    titulo: 'Natillerapp – App gratis para llevar tu natillera: cuotas, préstamos y cierre',
-    descripcion: 'Lleva tu natillera sin cuadernos ni planillas: cuotas y multas, préstamos entre socios, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora.'
+    titulo: 'Natillerapp – App y plataforma web para administrar tu natillera',
+    descripcion: 'Plataforma web y app para administrar tu natillera sin cuadernos: cuotas, multas, préstamos, rifas, caja y cierre de fin de año. Gratis, en el celular o la computadora.'
   },
   '/que-es-una-natillera': {
     titulo: 'Qué es una natillera y cómo funciona: guía para crear la tuya | Natillerapp',
@@ -89,8 +89,8 @@ export const PREGUNTAS = [
     respuesta: 'Sí. Puedes crear tu cuenta y administrar tu natillera sin pagar nada.'
   },
   {
-    pregunta: '¿Funciona en el celular?',
-    respuesta: 'Sí. Funciona en el navegador del celular y de la computadora, y se puede instalar en la pantalla de inicio de Android y de iPhone para abrirla como una app.'
+    pregunta: '¿Es una app o una página web?',
+    respuesta: 'Las dos cosas. Natillerapp es una plataforma web: entras en línea desde el navegador del celular, la tablet o la computadora, sin descargar nada. Si prefieres, la instalas en la pantalla de inicio de Android o de iPhone y se abre como una aplicación. Tu natillera es la misma en todos los equipos.'
   },
   {
     pregunta: '¿Puedo administrar varias natilleras?',

@@ -97,7 +97,8 @@
         <section :id="SECCIONES[5].id" class="scroll-mt-6">
           <h2 class="font-display text-xl font-extrabold text-natillera-800 sm:text-2xl">{{ SECCIONES[5].titulo }}</h2>
           <p class="mt-3">
-            Natillerapp reemplaza el cuaderno y la planilla de Excel. Funciona en el celular, la tablet y la computadora, y se puede instalar como app.
+            Natillerapp es una plataforma web y una app para administrar natilleras: reemplaza el cuaderno y la planilla de Excel por un programa que hace las cuentas solo.
+            Funciona en línea desde el celular, la tablet o la computadora, y se puede instalar como aplicación.
           </p>
           <ul class="mt-4 grid gap-3 sm:grid-cols-2">
             <li v-for="f in FUNCIONES" :key="f.clave" class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
