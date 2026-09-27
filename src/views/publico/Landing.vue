@@ -16,28 +16,7 @@
     <section class="relative overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#1B5E37]">
       <DestellosFondo />
 
-      <header class="relative z-20 pt-[env(safe-area-inset-top)]">
-        <div class="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <RouterLink to="/" class="flex min-h-[44px] items-center gap-2" aria-label="Natillerapp, inicio">
-            <img src="/favicon.svg" alt="" width="32" height="32" class="h-8 w-8" />
-            <span class="font-display text-lg font-extrabold tracking-[0.02em] text-white">Natillerapp</span>
-          </RouterLink>
-          <nav aria-label="Principal" class="flex items-center gap-1">
-            <a href="#funciones" class="hidden min-h-[44px] items-center px-3 text-sm font-semibold text-white/80 hover:text-white md:inline-flex">Funciones</a>
-            <a href="#como-funciona" class="hidden min-h-[44px] items-center px-3 text-sm font-semibold text-white/80 hover:text-white md:inline-flex">Cómo funciona</a>
-            <a href="#preguntas" class="hidden min-h-[44px] items-center px-3 text-sm font-semibold text-white/80 hover:text-white md:inline-flex">Preguntas</a>
-            <RouterLink to="/auth/login" class="inline-flex min-h-[44px] touch-manipulation items-center px-3 text-sm font-bold text-white hover:text-[#b9e4c6]">
-              Iniciar sesión
-            </RouterLink>
-            <RouterLink
-              to="/auth/register"
-              class="hidden min-h-[44px] touch-manipulation items-center rounded-full border border-white/25 bg-white/10 px-4 text-sm font-bold text-white hover:bg-white/20 sm:inline-flex"
-            >
-              Crear cuenta
-            </RouterLink>
-          </nav>
-        </div>
-      </header>
+      <CabeceraPublica en-portada />
 
       <div class="relative z-10 mx-auto grid max-w-6xl items-center gap-6 px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-16 lg:grid-cols-[1.15fr_1fr] lg:gap-10 lg:pb-24 lg:pt-12">
         <div>
@@ -381,41 +360,7 @@
       </section>
     </main>
 
-    <!-- ===================== Pie con paisaje ===================== -->
-    <footer class="relative overflow-hidden bg-gradient-to-b from-[#07170f] via-[#0b2a1a] to-[#1B5E37]">
-      <div class="relative z-10 mx-auto grid max-w-6xl gap-8 px-4 pb-10 pt-4 sm:grid-cols-[1.2fr_1fr_1fr] sm:px-6">
-        <div>
-          <p class="flex items-center gap-2">
-            <img src="/favicon.svg" alt="" width="28" height="28" class="h-7 w-7" />
-            <span class="font-display text-lg font-extrabold">Natillerapp</span>
-          </p>
-          <p class="mt-2 text-sm text-white/60">Ahorro colectivo en orden.</p>
-        </div>
-        <nav aria-label="La app">
-          <p class="text-xs font-bold tracking-[0.16em] text-[#9fd9b1]">LA APP</p>
-          <ul class="mt-2 text-sm">
-            <li><a href="#funciones" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Funciones</a></li>
-            <li><a href="#como-funciona" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Cómo funciona</a></li>
-            <li><a href="#soporte" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Soporte</a></li>
-            <li><a href="#preguntas" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Preguntas frecuentes</a></li>
-          </ul>
-        </nav>
-        <nav aria-label="Cuenta">
-          <p class="text-xs font-bold tracking-[0.16em] text-[#9fd9b1]">TU CUENTA</p>
-          <ul class="mt-2 text-sm">
-            <li><RouterLink to="/auth/register" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Crear cuenta</RouterLink></li>
-            <li><RouterLink to="/auth/login" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Iniciar sesión</RouterLink></li>
-            <li><RouterLink to="/que-es-una-natillera" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Qué es una natillera</RouterLink></li>
-            <li><RouterLink to="/privacidad" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Tratamiento de datos</RouterLink></li>
-            <li><RouterLink to="/terminos" class="inline-flex min-h-[40px] items-center text-white/75 hover:text-white">Términos y condiciones</RouterLink></li>
-          </ul>
-        </nav>
-      </div>
-
-      <p class="relative bg-[#07170f] pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 text-center text-xs text-white/45">
-        © {{ ANIO }} Natillerapp
-      </p>
-    </footer>
+    <PiePublico en-portada />
   </div>
 </template>
 
@@ -429,16 +374,16 @@ import {
   ChatBubbleLeftRightIcon,
   ChevronDownIcon,
   PaperClipIcon,
-  CurrencyDollarIcon,
   ExclamationTriangleIcon,
   FlagIcon,
-  ScaleIcon,
   TicketIcon,
-  TrophyIcon,
   WalletIcon
 } from '@heroicons/vue/24/outline'
 import { FUNCIONES, PASOS, PREGUNTAS, SOPORTE } from './contenidoPublico'
 import DestellosFondo from '../../components/publico/DestellosFondo.vue'
+import CabeceraPublica from '../../components/publico/CabeceraPublica.vue'
+import PiePublico from '../../components/publico/PiePublico.vue'
+import { ICONOS_FUNCION as ICONOS, COLOR_FUNCION as COLOR_ICONO } from '../../components/publico/iconosFunciones'
 import { ESTRELLAS } from '../../components/publico/escenaAhorro'
 import EscenaAlcancia from '../../components/publico/EscenaAlcancia.vue'
 import '../../components/publico/animacionesPublico.css'
@@ -447,25 +392,6 @@ const ICONOS_SOPORTE = {
   chat: ChatBubbleLeftRightIcon,
   adjuntos: PaperClipIcon,
   aviso: BellAlertIcon
-}
-
-const ICONOS = {
-  cuotas: CurrencyDollarIcon,
-  prestamos: BanknotesIcon,
-  actividades: TrophyIcon,
-  caja: ScaleIcon,
-  cierre: CalendarDaysIcon,
-  whatsapp: ChatBubbleLeftRightIcon
-}
-
-// Círculos de icono: tonos de la marca y el dorado de las monedas como acento.
-const COLOR_ICONO = {
-  cuotas: 'bg-gradient-to-br from-[#2d7a4d] to-[#1B5E37]',
-  prestamos: 'bg-gradient-to-br from-[#d9a52e] to-[#b8841a]',
-  actividades: 'bg-gradient-to-br from-[#3f9a67] to-[#23704a]',
-  caja: 'bg-gradient-to-br from-[#2d7a4d] to-[#14502f]',
-  cierre: 'bg-gradient-to-br from-[#d9a52e] to-[#b8841a]',
-  whatsapp: 'bg-gradient-to-br from-[#3f9a67] to-[#1B5E37]'
 }
 
 const CONCEPTOS = [
@@ -493,9 +419,6 @@ const ORBITA = [0.35, 2.1, 3.6, 5.3].map((t, i) => {
  * Las animaciones arrancan cuando la app ya montó. El HTML pre-renderizado llega quieto;
  * si se animara desde ahí, al montar Vue el DOM se reemplaza y todo empezaría otra vez.
  */
-// Año del pie: se fija al pre-renderizar y el navegador lo recalcula igual al montar.
-const ANIO = new Date().getFullYear()
-
 const vivo = ref(false)
 
 /*

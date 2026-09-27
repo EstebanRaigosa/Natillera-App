@@ -10,8 +10,7 @@ import { createSSRApp, h } from 'vue'
 import { createRouter, createMemoryHistory, RouterView } from 'vue-router'
 import { renderToString } from 'vue/server-renderer'
 import Landing from './Landing.vue'
-import AuthLayout from '../../layouts/AuthLayout.vue'
-import QueEsNatillerapp from '../auth/QueEsNatillerapp.vue'
+import GuiaNatillera from './GuiaNatillera.vue'
 import PaginaLegal from '../legal/PaginaLegal.vue'
 
 export { faqJsonLd, SEO_PAGINAS, URL_SITIO } from './contenidoPublico'
@@ -24,7 +23,7 @@ export async function render(url = '/') {
     history: createMemoryHistory(),
     routes: [
       { path: '/', component: Landing },
-      { path: '/que-es-una-natillera', component: AuthLayout, children: [{ path: '', name: 'QueEsNatillerapp', component: QueEsNatillerapp }] },
+      { path: '/que-es-una-natillera', name: 'QueEsNatillerapp', component: GuiaNatillera },
       { path: '/privacidad', name: 'PoliticaDatos', component: PaginaLegal },
       { path: '/terminos', name: 'Terminos', component: PaginaLegal },
       { path: '/auth/login', name: 'Login', component: vacio },

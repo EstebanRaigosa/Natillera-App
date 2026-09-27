@@ -1,6 +1,6 @@
 <template>
   <!--
-    Pantallas de cuenta (login, registro, bienvenida, restablecer, «qué es»). Mismo mundo
+    Pantallas de cuenta (login, registro, bienvenida, restablecer). Mismo mundo
     visual que la portada: fondo del verde bosque al #1B5E37 con destellos, y la escena del
     ahorro (components/publico).
 
@@ -11,7 +11,6 @@
       · Escritorio (lg): una tarjeta centrada partida en dos, escena a la izquierda y
         formulario a la derecha, separados por una ola blanca.
 
-    La guía «Qué es una natillera» trae su propio artículo con fondo: va sin tarjeta, a todo el ancho.
   -->
   <div class="relative min-h-screen min-h-[100dvh] overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#154a2d] text-white">
     <DestellosFondo class="hidden lg:block" />
@@ -25,7 +24,7 @@
     </div>
 
     <!-- ============ Con formulario ============ -->
-    <div v-if="conTarjeta" class="relative z-10 flex min-h-screen min-h-[100dvh] lg:items-center lg:justify-center lg:px-6 lg:py-10">
+    <div class="relative z-10 flex min-h-screen min-h-[100dvh] lg:items-center lg:justify-center lg:px-6 lg:py-10">
       <div class="flex w-full flex-col lg:max-w-[64rem]">
         <div
           class="flex min-h-screen min-h-[100dvh] flex-col text-gray-900 lg:grid lg:min-h-0 lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden lg:rounded-[1.75rem] lg:bg-white lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.65)]"
@@ -39,7 +38,7 @@
               Alcancía del celular: a la derecha, asomada sobre la ola. Por eso en el celular
               el logo y el saludo van alineados a la izquierda (centrados la pisarían).
             -->
-            <EscenaAlcancia compacta class="absolute bottom-6 right-2 w-[8.5rem] sm:bottom-8 sm:right-6 sm:w-[11rem] lg:hidden" />
+            <EscenaAlcancia compacta disco-translucido class="absolute bottom-6 right-2 w-[8.5rem] sm:bottom-8 sm:right-6 sm:w-[11rem] lg:hidden" />
 
             <div class="relative z-10 flex flex-col items-start px-5 pt-[max(0.75rem,env(safe-area-inset-top,0px))] text-left lg:p-10">
               <RouterLink to="/" class="inline-flex min-h-[44px] items-center gap-2.5" aria-label="Natillerapp, ir al inicio">
@@ -116,23 +115,6 @@
         </nav>
       </div>
     </div>
-
-    <!-- ============ Sin tarjeta: guía «Qué es una natillera» ============ -->
-    <div
-      v-else
-      class="relative z-10 mx-auto max-w-6xl px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] sm:px-6 lg:pt-8"
-    >
-      <RouterLink to="/" class="inline-flex min-h-[44px] items-center gap-2.5" aria-label="Natillerapp, ir al inicio">
-        <img src="/favicon.svg" alt="" width="44" height="44" class="h-11 w-11" />
-        <span class="font-display text-2xl font-extrabold tracking-[0.01em]">Natillerapp</span>
-      </RouterLink>
-      <div class="mt-6">
-        <router-view />
-      </div>
-      <nav aria-label="Más información" class="mt-5 flex justify-center text-sm">
-        <RouterLink v-if="!enPwa" to="/" class="inline-flex min-h-[44px] items-center font-semibold text-white/75 hover:text-white">← Volver al inicio</RouterLink>
-      </nav>
-    </div>
   </div>
 </template>
 
@@ -144,7 +126,6 @@ import EscenaAlcancia from '../components/publico/EscenaAlcancia.vue'
 import DestellosFondo from '../components/publico/DestellosFondo.vue'
 
 const route = useRoute()
-const conTarjeta = computed(() => route.name !== 'QueEsNatillerapp')
 
 // En la PWA instalada «Volver al inicio» no lleva a ningún lado: «/» redirige al login.
 const enPwa = esModoStandalone()

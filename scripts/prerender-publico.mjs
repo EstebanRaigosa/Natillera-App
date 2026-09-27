@@ -31,7 +31,7 @@ import { pathToFileURL } from 'node:url'
  */
 const PAGINAS = [
   { ruta: '/', archivo: 'index.html' },
-  { ruta: '/que-es-una-natillera', archivo: 'que-es-una-natillera.html', vista: 'src/views/auth/QueEsNatillerapp.vue', articulo: true },
+  { ruta: '/que-es-una-natillera', archivo: 'que-es-una-natillera.html', vista: 'src/views/publico/GuiaNatillera.vue', articulo: true },
   { ruta: '/privacidad', archivo: 'privacidad.html', vista: 'src/views/legal/PaginaLegal.vue' },
   { ruta: '/terminos', archivo: 'terminos.html', vista: 'src/views/legal/PaginaLegal.vue' }
 ]

@@ -28,7 +28,7 @@ const DashboardLayout = () => import('../layouts/DashboardLayout.vue')
 const Register = () => import('../views/auth/Register.vue')
 const Welcome = () => import('../views/auth/Welcome.vue')
 const ResetPassword = () => import('../views/auth/ResetPassword.vue')
-const QueEsNatillerapp = () => import('../views/auth/QueEsNatillerapp.vue')
+const GuiaNatillera = () => import('../views/publico/GuiaNatillera.vue')
 const Dashboard = () => import('../views/Dashboard.vue')
 const NatilleraDetalle = () => import('../views/natilleras/NatilleraDetalle.vue')
 const NatilleraCierre = () => import('../views/natilleras/NatilleraCierre.vue')
@@ -130,23 +130,16 @@ const routes = [
   {
     /*
      * Guía «Qué es una natillera»: la página con más texto del sitio, la que compite por
-     * las búsquedas de quien quiere armar una. Fuera de /auth (no es una pantalla de
-     * cuenta), pero con el mismo AuthLayout, que la pinta a todo el ancho sin tarjeta.
+     * las búsquedas de quien quiere armar una. Página propia con el estilo de la portada.
      */
     path: '/que-es-una-natillera',
-    component: AuthLayout,
-    children: [
-      {
-        path: '',
-        name: 'QueEsNatillerapp',
-        component: QueEsNatillerapp,
-        meta: {
-          publico: true,
-          tituloCompleto: SEO_PAGINAS['/que-es-una-natillera'].titulo,
-          descripcion: SEO_PAGINAS['/que-es-una-natillera'].descripcion
-        }
-      }
-    ]
+    name: 'QueEsNatillerapp',
+    component: GuiaNatillera,
+    meta: {
+      publico: true,
+      tituloCompleto: SEO_PAGINAS['/que-es-una-natillera'].titulo,
+      descripcion: SEO_PAGINAS['/que-es-una-natillera'].descripcion
+    }
   },
   // Dirección anterior de la guía: los enlaces viejos siguen funcionando (en Netlify es un 301).
   { path: '/auth/que-es-natillerapp', redirect: '/que-es-una-natillera' },
