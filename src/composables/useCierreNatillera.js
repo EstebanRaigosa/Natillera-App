@@ -37,6 +37,9 @@ export function getModoDistribucion(config, tipo) {
   const actividades = config.actividades || {}
   const modoActividades = config.modoActividades || 'general'
   if (modoActividades === 'general') return actividades.general || 'equitativa'
+  // La configuración guarda la rifa como 'rifa' (singular, como `actividades.tipo`), pero
+  // la utilidad se clasifica como 'rifas': sin esto el modo elegido para rifas se ignoraba.
+  if (tipo === 'rifas') return actividades.rifas || actividades.rifa || 'equitativa'
   return actividades[tipo] || 'equitativa'
 }
 
@@ -83,6 +86,40 @@ function distribuirMonto(totalMonto, sociosConAhorro, modo, totalAhorro) {
 }
 
 /**
+ * Lo que el socio recibe de cada cosa con la administración ya descontada, para que su
+ * liquidación muestre valores netos y no una línea de administración aparte.
+ *
+ * La administración del socio se reparte sobre su propia base (ahorro + utilidades, o
+ * solo utilidades) en la misma proporción. El redondeo lo absorbe el último valor, así
+ * que ahorro + utilidades netas = total a entregar, al centavo.
+ */
+function valoresNetosDeAdministracion({ ahorro, utilidadesPorConcepto, utilidadesTotal, aporteAdministracion, baseAdministracion }) {
+  const incluyeAhorro = baseAdministracion === 'total'
+  const base = (incluyeAhorro ? ahorro : 0) + utilidadesTotal
+  if (!aporteAdministracion || base <= 0) {
+    return { ahorro, utilidadesPorConcepto, utilidadesTotal }
+  }
+  const factor = (base - aporteAdministracion) / base
+  const netosPorConcepto = {}
+  Object.entries(utilidadesPorConcepto).forEach(([tipo, monto]) => {
+    netosPorConcepto[tipo] = round2(monto * factor)
+  })
+  let utilidadesNetas = round2(Object.values(netosPorConcepto).reduce((s, v) => s + v, 0))
+  if (incluyeAhorro) {
+    return {
+      ahorro: round2(ahorro + utilidadesTotal - aporteAdministracion - utilidadesNetas),
+      utilidadesPorConcepto: netosPorConcepto,
+      utilidadesTotal: utilidadesNetas
+    }
+  }
+  // Solo utilidades: el ahorro queda intacto y el redondeo va al concepto más grande.
+  const objetivo = round2(utilidadesTotal - aporteAdministracion)
+  const mayor = Object.keys(netosPorConcepto).sort((a, b) => netosPorConcepto[b] - netosPorConcepto[a])[0]
+  if (mayor) netosPorConcepto[mayor] = round2(netosPorConcepto[mayor] + objetivo - utilidadesNetas)
+  return { ahorro, utilidadesPorConcepto: netosPorConcepto, utilidadesTotal: objetivo }
+}
+
+/**
  * Calcula el cierre de la natillera: ahorro por socio, utilidades por concepto, totales.
  * @param {string} natilleraId - UUID de la natillera
  * @param {object} options - { configCierre?, fechaCorte? } (configCierre si ya se tiene; si no, se obtiene de la natillera)
@@ -117,7 +154,7 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
         .is('fecha_cierre', null),
       supabase
         .from('prestamos')
-        .select('socio_natillera_id, saldo_actual')
+        .select('id, socio_natillera_id, saldo_actual, interes_anticipado, interes_total')
         .in('socio_natillera_id', ids)
         .in('estado', ['activo', 'pendiente']),
       supabase
@@ -157,8 +194,8 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
      *
      * Antes solo sumaban las cuotas COMPLETAS: quien había abonado parte de una cuota
      * perdía ese dinero en el cierre —no se le acreditaba— y encima se le descontaba lo
-     * que faltaba. Pagaba dos veces por la misma cuota a medias. Ahora el abono suma al
-     * ahorro y la deuda sigue siendo solo lo que falta, que es como cuadra.
+     * que faltaba. Ahora el abono suma al ahorro, y lo que falta no se descuenta (ver
+     * `descuentos` más abajo): solo se informa.
      *
      * Las cuotas `programada` (periodos futuros) no son deuda todavía, pero si alguien
      * pagó por adelantado ese dinero está en la caja y es suyo: se le acredita igual.
@@ -204,6 +241,33 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
     const utilidadesRegistradas = utilidadesFilas.reduce((s, row) => s + (parseFloat(row.monto) || 0), 0)
 
     /*
+     * Interés corriente que el cierre cobra y antes no repartía.
+     *
+     * En un préstamo de interés corriente, `saldo_actual` es capital + interés − abonos,
+     * y ese saldo entero se le descuenta al socio al cerrar. Pero como utilidad solo
+     * contaba el interés de las cuotas del plan ya pagadas: el resto se cobraba y no le
+     * llegaba a nadie (en una natillera real, $36.250 de un préstamo de $500.000). Al
+     * cierre, todo el interés del préstamo queda cobrado —abonado o descontado—, igual
+     * que el anticipado, que ya entraba completo.
+     */
+    const corrientesActivos = prestamos.filter(p => !p.interes_anticipado && (parseFloat(p.saldo_actual) || 0) > 0)
+    if (corrientesActivos.length) {
+      const { data: planPagado, error: errPlan } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('prestamo_id, interes')
+        .in('prestamo_id', corrientesActivos.map(p => p.id))
+        .eq('pagada', true)
+      if (errPlan) throw errPlan
+      const interesContado = {}
+      ;(planPagado || []).forEach(c => {
+        interesContado[c.prestamo_id] = (interesContado[c.prestamo_id] || 0) + (parseFloat(c.interes) || 0)
+      })
+      const interesPorCausar = corrientesActivos.reduce((s, p) =>
+        s + Math.max(0, (parseFloat(p.interes_total) || 0) - (interesContado[p.id] || 0)), 0)
+      montosPorTipo.prestamos = round2(montosPorTipo.prestamos + interesPorCausar)
+    }
+
+    /*
      * Utilidades adicionales: ya vienen en el cálculo, pero ahí no se filtran por fecha de
      * corte. Si el cierre se hace a una fecha pasada, se recalculan aquí acotando.
      *
@@ -226,17 +290,19 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
     /*
      * Administración: el porcentaje que el reglamento le reconoce a quien administra.
      *
-     * Se saca ANTES de repartir, porque lo que se reparte es lo que queda después de
-     * pagarla. La base es configurable porque no todos los reglamentos dicen lo mismo:
+     * La base es configurable porque no todos los reglamentos dicen lo mismo:
      *
      *   · 'total' (por defecto) — un porcentaje de todo lo recogido, ahorros incluidos.
      *     Es lo que suele decir el reglamento para cubrir los gastos de gestión.
      *   · 'utilidades' — solo sobre lo que el fondo ganó.
      *
-     * El descuento sale primero de las utilidades, escalando cada concepto por igual para
-     * respetar su modo de reparto. Si no alcanzan —solo puede pasar con base 'total'—, el
-     * resto se reparte entre los socios en proporción a su ahorro, que es lo único justo
-     * cuando se está tocando el ahorro de cada uno.
+     * NO se saca de las utilidades antes de repartirlas: cada concepto se reparte
+     * completo entre los socios activos —una rifa de $2.620.000 entre 30 da $87.333 a
+     * cada uno, que es la cuenta que hace el grupo— y la administración va aparte, como
+     * una línea más de cada socio: el porcentaje sobre su propia base (ahorro +
+     * utilidades, o solo utilidades). La suma da lo mismo que el porcentaje sobre el
+     * total. Antes se escalaba cada concepto y la rifa salía a $72.939 sin que se viera
+     * por qué.
      */
     const administracionCfg = configCierre.administracion || {}
     const porcentajeAdministracion = Math.max(0, Math.min(100, parseFloat(administracionCfg.porcentaje) || 0))
@@ -245,7 +311,6 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
     const baseAdministracion = administracionCfg.base === 'utilidades' ? 'utilidades' : 'total'
 
     const totalUtilidadesBruto = Object.values(montosPorTipo).reduce((acc, v) => acc + v, 0)
-    // Copia antes de escalar por administración: es lo que de verdad generó la natillera.
     const montosPorTipoBruto = { ...montosPorTipo }
     const montoBase = baseAdministracion === 'total'
       ? totalAhorro + totalUtilidadesBruto
@@ -253,14 +318,6 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
     const montoAdministracion = porcentajeAdministracion > 0
       ? round2(Math.max(0, montoBase) * porcentajeAdministracion / 100)
       : 0
-
-    const administracionDeUtilidades = Math.min(montoAdministracion, Math.max(0, totalUtilidadesBruto))
-    const administracionDeAhorro = round2(montoAdministracion - administracionDeUtilidades)
-
-    if (administracionDeUtilidades > 0 && totalUtilidadesBruto > 0) {
-      const factor = (totalUtilidadesBruto - administracionDeUtilidades) / totalUtilidadesBruto
-      TIPOS_UTILIDAD.forEach(t => { montosPorTipo[t] = round2(montosPorTipo[t] * factor) })
-    }
 
     const utilidadesPorConceptoPorSocio = {}
     sociosNatillera.forEach(sn => {
@@ -283,6 +340,23 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
       })
     })
 
+    // Administración de cada socio sobre su propia base; el último absorbe el redondeo
+    // para que la suma sea exactamente `montoAdministracion`.
+    const administracionPorSocio = {}
+    if (montoAdministracion > 0) {
+      let suma = 0
+      sociosNatillera.forEach((sn, i) => {
+        if (i === sociosNatillera.length - 1) {
+          administracionPorSocio[sn.id] = round2(montoAdministracion - suma)
+          return
+        }
+        const utilidadesSocio = Object.values(utilidadesPorConceptoPorSocio[sn.id]).reduce((acc, v) => acc + v, 0)
+        const baseSocio = baseAdministracion === 'total' ? (ahorroPorSocio[sn.id] || 0) + utilidadesSocio : utilidadesSocio
+        administracionPorSocio[sn.id] = round2(Math.max(0, baseSocio) * porcentajeAdministracion / 100)
+        suma += administracionPorSocio[sn.id]
+      })
+    }
+
     const prestamosPorSocio = {}
     prestamos.forEach(p => {
       if (!prestamosPorSocio[p.socio_natillera_id]) prestamosPorSocio[p.socio_natillera_id] = []
@@ -291,18 +365,23 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
 
     const socios = sociosNatillera.map(sn => {
       const ahorro = round2(ahorroPorSocio[sn.id] || 0)
-      // Solo se llena cuando la administración no cupo entera en las utilidades.
-      const aporteAdministracion = administracionDeAhorro > 0 && totalAhorro > 0
-        ? round2(administracionDeAhorro * (ahorro / totalAhorro))
-        : 0
+      const aporteAdministracion = administracionPorSocio[sn.id] || 0
       const utilidadesPorConcepto = utilidadesPorConceptoPorSocio[sn.id] || {}
       const utilidadesTotal = round2(Object.values(utilidadesPorConcepto).reduce((s, v) => s + v, 0))
       const totalAEntregar = round2(ahorro + utilidadesTotal - aporteAdministracion)
+      const neto = valoresNetosDeAdministracion({ ahorro, utilidadesPorConcepto, utilidadesTotal, aporteAdministracion, baseAdministracion })
       const prestamosSocio = prestamosPorSocio[sn.id] || []
       const totalPrestamosPendientes = round2(prestamosSocio.reduce((s, p) => s + (parseFloat(p.saldo_actual) || 0), 0))
+      /*
+       * Las cuotas sin pagar NO se descuentan. El ahorro ya es solo lo que el socio puso;
+       * descontarle además lo que no puso lo cobraba dos veces, y esa plata —que nunca
+       * entró a la caja— se quedaba sin dueño: el total entregado no cuadraba con lo
+       * recogido (en una natillera real, $1.338.000 de 32 cuotas en mora). Quien no pagó
+       * una cuota simplemente no tiene ese ahorro. Se sigue informando cuánto le falta.
+       */
       const cuotasDeuda = cuotasPorSocio[sn.id]?.deuda || []
       const valorCuotasDeuda = round2(cuotasDeuda.reduce((s, c) => s + Math.max(0, (parseFloat(c.valor_cuota) || 0) - (parseFloat(c.valor_pagado) || 0)), 0))
-      const descuentos = round2(totalPrestamosPendientes + valorCuotasDeuda)
+      const descuentos = totalPrestamosPendientes
       const totalFinal = round2(totalAEntregar - descuentos)
       const pagadas = cuotasPorSocio[sn.id]?.pagadas || []
       const deuda = cuotasPorSocio[sn.id]?.deuda || []
@@ -314,12 +393,15 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
         utilidadesPorConcepto,
         utilidadesTotal,
         aporteAdministracion,
+        neto,
         totalAEntregar,
         descuentos,
         descuentosDesglose: {
           prestamosPendientes: totalPrestamosPendientes,
-          cuotasSinPagar: valorCuotasDeuda
+          // Ya no se descuentan (ver arriba); en cero, las pantallas no pintan la línea.
+          cuotasSinPagar: 0
         },
+        valorCuotasSinPagar: valorCuotasDeuda,
         totalFinal,
         cantidadCuotasPagadas: pagadas.length,
         cantidadCuotasDeuda: deuda.length,
@@ -345,8 +427,9 @@ export async function calcularCierreNatillera(natilleraId, options = {}) {
         porcentaje: porcentajeAdministracion,
         base: baseAdministracion,
         monto: montoAdministracion,
-        deUtilidades: round2(administracionDeUtilidades),
-        deAhorro: administracionDeAhorro
+        // Ya no se descuenta de las utilidades antes de repartir: va por socio.
+        deUtilidades: 0,
+        deAhorro: montoAdministracion
       }
     }
   } catch (err) {

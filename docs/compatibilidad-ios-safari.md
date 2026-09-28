@@ -1,8 +1,10 @@
 # Manual de compatibilidad iOS / Safari — Natillerapp
 
 > Manual de referencia con **lo aprendido en este proyecto** y **lo que aún nos falta cubrir**, alineado con nuestro stack.
-> Complementa (no reemplaza) las skills `ios-safari-compat` (checklist técnico) y `natillerapp-modals` (patrón de modales).
-> Si vas a **crear o modificar** un componente/vista/modal/CSS, la skill es de lectura obligatoria; este manual explica **el porqué** y da el mapa completo.
+> Complementa la skill `natillerapp-modals` (patrón de modales) y el checklist de `CLAUDE.md` §1. No existe ninguna skill `ios-safari-compat`: este manual es la referencia.
+> Si vas a **crear o modificar** un componente/vista/modal/CSS, léelo; explica **el porqué** y da el mapa completo.
+
+**Versión mínima de iOS: 15.4** (suelo duro) · **16.4** para verse completa y para push. Tailwind 4 genera `@layer` y colores `oklch()` sin alternativa: por debajo de Safari 15.4 la app sale sin estilos. `color-mix` (16.2) y `@property` (16.4) sí traen alternativa. `dvh` y `:has()` son 15.4. El JS lo transpila Vite a `safari14`.
 
 **Stack relevante:** Vue 3 (`<script setup>`) · Tailwind 4 · Supabase · Vite · PWA (`vite-plugin-pwa` + Workbox) · Pinia (`pinia-plugin-persistedstate`) · xlsx-js-style · html2canvas · driver.js.
 
@@ -55,7 +57,7 @@ En [index.html](../index.html):
 ```
 
 - **`viewport-fit=cover`** es lo que habilita `env(safe-area-inset-*)`. Sin él, las safe-areas valen 0.
-- **`interactive-widget=resizes-visual`**: cuando aparece el teclado, redimensiona el *visual viewport* en vez de empujar el layout. Clave para que los modales con inputs no salten.
+- **`interactive-widget=resizes-visual`**: solo lo entiende Chromium (Android). **Safari lo ignora**: en iOS el teclado nunca redimensiona el viewport de layout, solo el visual. Lo que tenga que adaptarse al teclado en iPhone escucha `visualViewport` (ver `useAltoDisponible`).
 - **`format-detection: telephone=no`**: evita que Safari convierta números (cuotas, montos, cédulas) en enlaces telefónicos azules.
 - `maximum-scale=5.0` + `user-scalable=yes`: **no** bloqueamos el zoom (accesibilidad). No lo pongas en `1.0`/`no`.
 
@@ -71,7 +73,9 @@ min-height: 100dvh;                /* dynamic viewport height, se ajusta a la ba
 min-height: -webkit-fill-available; /* Safari viejo */
 ```
 
-En Tailwind usamos `min-h-[100dvh]` / `max-h-[90dvh]` y en móvil `max-h-[90dvh] sm:max-h-[90vh]`. Aplica en: pantallas de carga (`LoadingScreen`, `LoadingBox`), layouts raíz, auth y cards de modal.
+En Tailwind usamos `min-h-[100dvh]` / `max-h-[90dvh]` y en móvil `max-h-[90dvh] sm:max-h-[90vh]`.
+
+> **Trampa (sept. 2026):** `min-h-screen min-h-[100dvh]` **no** es una cascada de fallback. Tailwind 4 ordena las utilidades alfabéticamente y `.min-h-screen` (100vh) sale *después* de `.min-h-[100dvh]` en el CSS compilado: gana 100vh. El fallback se escribe `min-h-screen supports-[height:100dvh]:min-h-[100dvh]` (las variantes van después de las utilidades base). Aplica en: pantallas de carga (`LoadingScreen`, `LoadingBox`), layouts raíz, auth y cards de modal.
 
 ---
 
@@ -114,6 +118,14 @@ Implementado en [src/composables/useTapadoInferior.js](../src/composables/useTap
 
 **Dónde más aplica:** cualquier cosa anclada al fondo del viewport. Además de `MobileBottomNav`, los modales con `align="bottom"` de `ModalWrapper` se alinean igual al borde inferior del layout: si su pie de acciones aparece tapado en iPhone, es este mismo problema.
 
+**En los modales** `ModalWrapper` usa `useTapadoInferior` y publica `--tapado-inferior` en su contenedor iOS. Las hojas `align="bottom"` van pegadas al borde (el contenedor no pone padding inferior) y su pie lleva:
+
+```html
+<div class="… pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+```
+
+`useTapadoInferior` es una medición compartida: un solo juego de listeners para toda la app, por muchas instancias que lo usen.
+
 **No se ha verificado en iPhone real** (ver §16): el arreglo está razonado y compila, pero la comprobación en dispositivo sigue pendiente.
 
 ---
@@ -126,7 +138,7 @@ Implementado en [src/composables/useTapadoInferior.js](../src/composables/useTap
 
 - **iOS:** bloquea con `overflow: hidden` + `touch-action: none` + `height: 100%` en `<body>`/`<html>`. **NO** usa `position: fixed` y **NO toca `<main>`**. Motivo: si `<main>` recibe `overflow:hidden`/`position:fixed`, Safari **recorta o no muestra** los modales `position: fixed` que viven dentro de `<main>`.
 - **Android:** usa el método clásico `position: fixed` + `top: -scrollY` en `body` y `main`.
-- **Contador global `lockCount`:** solo se desbloquea cuando **ninguna** modal queda abierta. Evita el bug de encadenar modales (p. ej. "Registrar pago" → "Comprobante"): al cerrar la primera no se libera el scroll si la segunda sigue abierta.
+- **Contador global `lockCount`:** solo el **primer** modal bloquea (transición 0→1) y solo se desbloquea cuando **ninguna** modal queda abierta. Bloquear en cada apertura guardaba, con modales encadenados, la posición del documento ya bloqueado (0) y se perdía el scroll. Evita el bug de encadenar modales (p. ej. "Registrar pago" → "Comprobante"): al cerrar la primera no se libera el scroll si la segunda sigue abierta.
 - **Preservar posición de scroll:** la vista puede guardar `window.__scrollPositionBeforeModal` **antes** de abrir el modal; el lock la usa para no perder el scroll al abrir/cerrar.
 
 Uso:
@@ -144,6 +156,8 @@ Hay también `isBodyScrollLocked` (ref global readonly) para que el layout suba 
 Detalle completo en la skill **`natillerapp-modals`**. Lo esencial para iOS:
 
 - **Nunca** montes un `<div class="fixed inset-0">` a mano salvo excepción documentada. `ModalWrapper` ya bifurca iOS (`.modal-wrapper-ios`) vs Android/desktop.
+- **En iOS la card es `overflow: hidden` y flex-column.** El scroll no puede ir en `card-class` (`overflow-y-auto` ahí no hace nada): tiene que haber un cuerpo `min-h-0 flex-1 overflow-y-auto`. Si no, el final del modal queda cortado e inalcanzable.
+- **El velo cierra con `click`, nunca con `touchstart`.** Si el modal desaparece al posar el dedo, el click que iOS sintetiza al levantarlo cae sobre lo que haya debajo (clic fantasma).
 - La **X de cerrar va por flexbox, nunca `position: absolute`.** Como el modal usa `transform` en un ancestro (iOS), un `absolute right-0` se desalinea (se ve a la izquierda). La X es un hermano `flex-shrink-0` al final de la fila.
 - Igual con los **iconos dentro de inputs de búsqueda**: nada de `absolute + top-1/2 -translate-y-1/2`. Safari cambia la altura del input al enfocar (`type="search"`) y descentra el icono. Usa contenedor `flex items-center` con el borde/ring en el contenedor.
 - Footer de acciones con `pb-[max(1.25rem,env(safe-area-inset-bottom))]`, siempre visible; scroll interno del cuerpo con `overscroll-contain [-webkit-overflow-scrolling:touch]`; **natiscroll** ("Desliza para ver más") obligatorio cuando el cuerpo puede desbordar.
@@ -154,7 +168,8 @@ Detalle completo en la skill **`natillerapp-modals`**. Lo esencial para iOS:
 
 Bajo `@supports (-webkit-touch-callout: none)` en [src/style.css](../src/style.css):
 
-- `touch-action: manipulation` en botones/enlaces → elimina el delay de 300 ms al tocar.
+- `touch-action: manipulation` en botones/enlaces → elimina el delay de 300 ms al tocar. En `body` también `manipulation`, **no** `pan-x pan-y`: eso bloquea el zoom con pellizco, que dejamos activo a propósito.
+- **«Tocar fuera para cerrar»**: iOS no dispara `click` en `document` al tocar algo no interactivo. Escuchar `pointerdown` (o `touchstart` pasivo) además de `click`.
 - `-webkit-tap-highlight-color` con verde de marca translúcido (no el flash gris feo por defecto).
 - **Área táctil mínima 44×44 px** (`h-11 w-11` / `min-block-size: 44px`). Estándar Apple; botones más chicos se fallan al tocar.
 - `pointer-events: none` en **hijos** de un botón (iconos, spans): así el tap siempre cae en el `<button>` padre y no en un hijo.
@@ -174,6 +189,7 @@ backface-visibility: hidden;
 ```
 
 - **Recuerda §0.3:** un ancestro con `transform`/`filter`/`will-change` convierte a sus hijos `fixed` en "fixed relativo al ancestro". Si un overlay debe cubrir toda la pantalla, asegúrate de que ningún padre transformado lo esté conteniendo.
+- **PROHIBIDO** `transform` en selectores genéricos (`[class*="card"]`, `[class*="overflow"]`, `[class*="fixed"]`, `img, svg`). Hasta sept. 2026 `style.css` los tenía: convertían `<main>` en bloque contenedor (los `fixed` sin Teleport scrolleaban con la página) y creaban cientos de capas de composición (más memoria, más descartes de pestaña). La capa GPU se pone por clase concreta.
 - **PROHIBIDO** en reglas iOS genéricas: `opacity: 1 !important` y `display: block !important`. Rompen las transiciones de Vue (`<Transition>`) y los layouts `flex`. (En [useBodyScrollLock.js](../src/composables/useBodyScrollLock.js) sí se fuerzan `opacity/visibility/transform` **puntualmente sobre los modales concretos** tras abrir, no de forma global — esa es la diferencia).
 
 ---
@@ -203,6 +219,7 @@ Backdrops de modal: velo salvia `bg-[#C8D9C8]/70` con `backdrop-blur-[2px]` (And
 
 - **`font-size ≥ 16px` en todo input/textarea/select.** Con menos, iOS **hace zoom** al enfocar y descoloca el layout. Acotado en `style.css` bajo `@supports`.
 - **No** apliques `appearance: none` a `<select>` de forma global: rompe la flecha del picker nativo de iOS. Solo en selects con estilo custom explícito.
+- **Tampoco a checkbox, radio ni date.** Sin `@tailwindcss/forms` y con el reset de Tailwind (`border: 0`, fondo transparente), una casilla sin apariencia nativa **no se ve**. El bloque iOS de `style.css` excluye esos tipos y les pone `accent-color` de marca.
 - El teclado que aparece se maneja con `interactive-widget=resizes-visual` (§2) para que no empuje el layout completo.
 
 ---
@@ -275,7 +292,8 @@ pinia.use(createPersistedState({ storage: sessionStorage }))
 Aprendizajes y trampas alrededor de generar archivos/imágenes en el iPhone:
 
 - **Export XLSX** (`xlsx-js-style`): requiere polyfill de `stream` (`vite-plugin-node-polyfills`) y un `manualChunks` cuidadoso en [vite.config.js](../vite.config.js) para que el chunk `xlsx` quede **100% async** (solo se carga al exportar) y no arrastre un ciclo `xlsx↔vendor` que dispara un TDZ (`Cannot access 'be' before initialization`) en el arranque. Ese bug se ve como app que no carga en móvil.
-- **Descarga de Blob en iOS Safari:** el atributo `download` de `<a>` es poco fiable en iOS; a menudo el archivo **abre en una pestaña nueva** en vez de descargarse. Verifica siempre el flujo de exportar/compartir **en un iPhone real**, no solo en desktop.
+- **Descarga de Blob en iOS Safari:** el atributo `download` de `<a>` es poco fiable en iOS; a menudo el archivo **abre en una pestaña nueva** en vez de descargarse. En iOS entregamos imágenes y Excel con `navigator.share({ files })` y dejamos la descarga como reserva. Verifica siempre el flujo **en un iPhone real**.
+- **`navigator.share` y `window.open` necesitan el gesto.** Nada de `await` antes (ni `toPng`, ni `fetch`, ni `import()`): la imagen se prepara **al abrir** el comprobante y el botón comparte un `File` ya hecho. Un `window.open` dentro de un `.catch` o un `setTimeout` lo bloquea el antipopups. Patrón de referencia: `ComprobanteVariasCuotasModal.vue`.
 - **`html2canvas`** (comprobantes como imagen): en iOS puede renderizar mal fuentes, sombras o `backdrop-filter`. Mantén el nodo a capturar simple y prueba en dispositivo.
 - **Compartir nativo:** para archivos/imágenes, la Web Share API (`navigator.share` con `files`) suele dar mejor UX en iOS que forzar descarga — a evaluar si seguimos teniendo fricción.
 
@@ -288,13 +306,15 @@ Gaps identificados, ordenados por impacto. No están todos resueltos hoy — son
 | # | Tema | Riesgo iOS | Acción sugerida |
 |---|------|-----------|-----------------|
 | 1 | **Descarga de archivos** (XLSX/comprobantes) | `download` no fiable; abre en pestaña | Probar en iPhone real; evaluar `navigator.share({ files })` como camino iOS. |
-| 2 | **Flujo de actualización del SW** | `skipWaiting` puede refrescar a mitad de uso | Considerar toast "Nueva versión disponible → recargar" en vez de auto. |
+| 2 | ~~**Flujo de actualización del SW**~~ | Resuelto: prompt + `SKIP_WAITING` (§12) | — |
 | 3 | **Modo standalone (app instalada)** | Enlaces externos abren en Safari y "sacan" al usuario; no hay barra para volver | Revisar navegación externa y estados de "volver"; detectar `display-mode: standalone`. |
-| 4 | **`sessionStorage`/`localStorage` en Navegación Privada (iOS viejo)** | Puede lanzar excepción al escribir | Envolver accesos de storage en try/catch (persistedstate y auth). |
+| 4 | **Storage bloqueado** («Bloquear todas las cookies») | `localStorage` lanza `SecurityError` | Auth (`lib/supabase.js`), router y modo ligero ya con try/catch; persistedstate ya lo hace. Quedan accesos sueltos en vistas. |
 | 5 | **Persistencia de sesión Supabase en PWA standalone** | Storage particionado puede cerrar sesión al reabrir | Verificar que el login sobrevive a cerrar/abrir la PWA instalada. |
 | 6 | **Subida de fotos HEIC** (iPhone) | Formato HEIC no siempre soportado aguas abajo | Confirmar que los avatares/adjuntos aceptan/convierten HEIC. |
 | 7 | **Copiar al portapapeles** | `navigator.clipboard` exige gesto de usuario en iOS | Asegurar que "copiar" se dispara dentro del handler del tap. |
-| 8 | **Notificaciones push** | Solo iOS 16.4+ y **únicamente** en PWA instalada | Si se implementan, documentar el requisito de instalación. |
+| 8 | ~~**Notificaciones push**~~ | Resuelto: permiso dentro del gesto y diagnóstico «instálala» en iOS | — |
+| 12 | **Chunk que no carga tras desplegar** | «Importing a module script failed.» y navegación muerta | Resuelto: `router.onError` + `vite:preloadError` recargan una vez. |
+| 13 | **`hardwareConcurrency` en iOS** | WebKit lo fija (2 o 4) sea cual sea el chip | No usarlo como señal en iOS: `useModoLigero` y `slow-device` ya lo excluyen. |
 | 9 | **Inputs de fecha/hora nativos** | El picker de iOS difiere mucho del de Android | Revisar formularios con `type="date"`/`time` en iPhone. |
 | 10 | **`position: sticky` en scroll anidado** | Comportamiento intermitente en Safari | Auditar headers sticky dentro de contenedores scrolleables. |
 | 11 | **Fugas de RAF/observers** | Trabajo huérfano si no se cancela al cerrar modal | Cancelar `requestAnimationFrame` y desconectar observers en `onUnmounted`. |
@@ -338,7 +358,7 @@ Trabajamos en Windows y **Safari no existe para Windows**, así que:
 | Scroll lock | [src/composables/useBodyScrollLock.js](../src/composables/useBodyScrollLock.js) |
 | Overflow de modal | [src/composables/useModalBodyScrollOverflow.js](../src/composables/useModalBodyScrollOverflow.js) |
 | Modal wrapper | [src/components/ModalWrapper.vue](../src/components/ModalWrapper.vue) |
-| Pantallas de carga | [src/components/LoadingScreen.vue](../src/components/LoadingScreen.vue), [LoadingScreenIos.vue](../src/components/LoadingScreenIos.vue), [LoadingBox.vue](../src/components/LoadingBox.vue) |
+| Pantallas de carga | [src/components/carga/](../src/components/carga/) (`CargaPantalla`, `CargaCaja`, `CargaBoton`) |
 | Skeletons | [src/components/CuotasPageSkeleton.vue](../src/components/CuotasPageSkeleton.vue), [PrestamosSkeleton.vue](../src/components/PrestamosSkeleton.vue) |
 | Chrome inferior de Safari | [src/composables/useTapadoInferior.js](../src/composables/useTapadoInferior.js) |
 | Bottom nav | [src/components/MobileBottomNav.vue](../src/components/MobileBottomNav.vue) |
@@ -348,6 +368,6 @@ Trabajamos en Windows y **Safari no existe para Windows**, así que:
 | PWA / SW / chunks | [vite.config.js](../vite.config.js) |
 | Bootstrap (clases iOS, persistedstate) | [src/main.js](../src/main.js) |
 
-**Skills relacionadas:** `ios-safari-compat` (checklist técnico) · `natillerapp-modals` (patrón de modales).
+**Skills relacionadas:** `natillerapp-modals` (patrón de modales) · `natillerapp-recorrido-guiado` (recorridos).
 </content>
 </invoke>

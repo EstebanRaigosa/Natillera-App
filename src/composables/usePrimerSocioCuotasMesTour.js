@@ -1,5 +1,6 @@
 import { driver } from 'driver.js'
 import { isTourEnabled } from '../config/toursEnabled'
+import { crearSesionRecorrido } from './recorridoDriverSeguro'
 
 /** Clave antigua (un solo tour): si existe, no se muestran ni el grid ni el detalle. */
 const LEGACY_STORAGE = (id) => `primer_socio_cuotas_mes_tour_v1_${id}`
@@ -236,20 +237,22 @@ export function startPrimerSocioCuotasNavHighlight(opts) {
 
   const isDesktop = window.innerWidth >= 1024
   const cuotasSelector = isDesktop ? '#tour-sidebar-cuotas' : '#tour-bottom-nav-cuotas'
+  const sesion = crearSesionRecorrido({ alForzarCierre: () => clearSidebarAfterTour?.() })
 
   const run = (attempt = 0) => {
     if (isDesktop) prepareSidebarForTour?.()
     const el = document.querySelector(cuotasSelector)
     if (!el || el.getClientRects().length === 0) {
       if (attempt < 12) {
-        window.setTimeout(() => run(attempt + 1), 200)
+        sesion.esperar(() => run(attempt + 1), 200)
         return
       }
+      sesion.terminar()
       clearSidebarAfterTour?.()
       return
     }
 
-    const d = driver({
+    const d = sesion.usarDriver(driver({
       animate: true,
       allowClose: true,
       disableActiveInteraction: true,
@@ -261,6 +264,8 @@ export function startPrimerSocioCuotasNavHighlight(opts) {
       showProgress: false,
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
+        sesion.terminar()
+        if (sesion.cancelada) return
         clearSidebarAfterTour?.()
       },
       steps: [
@@ -294,13 +299,13 @@ export function startPrimerSocioCuotasNavHighlight(opts) {
           }
         }
       ]
-    })
+    }))
 
     d.drive(0)
   }
 
-  window.requestAnimationFrame(() => {
-    setTimeout(() => run(0), isDesktop ? 150 : 300)
+  sesion.alSiguienteFrame(() => {
+    sesion.esperar(() => run(0), isDesktop ? 150 : 300)
   })
 }
 
@@ -316,6 +321,8 @@ export function startPrimerSocioCuotasMesTour(opts) {
   if (!isTourEnabled('primerSocioCuotasNav')) return
   if (typeof window === 'undefined' || !natilleraId) return
 
+  const sesion = crearSesionRecorrido({ alForzarCierre: () => clearSidebarAfterTour?.() })
+
   const run = (attempt = 0) => {
     // Resaltar el botón «Registrar Pago» visible según viewport (móvil o escritorio).
     const btnPagoMobile = document.querySelector('#tour-cuotas-registrar-pago-mobile')
@@ -330,15 +337,16 @@ export function startPrimerSocioCuotasMesTour(opts) {
     if (!btnPagoSelector) {
       // El botón aún no está visible (vista cargando): reintentar antes de rendirse.
       if (attempt < 12) {
-        window.setTimeout(() => run(attempt + 1), 250)
+        sesion.esperar(() => run(attempt + 1), 250)
         return
       }
+      sesion.terminar()
       clearSidebarAfterTour?.()
       markPrimerSocioCuotasMesGridTourDone(natilleraId)
       return
     }
 
-    const d = driver({
+    const d = sesion.usarDriver(driver({
       animate: true,
       allowClose: true,
       disableActiveInteraction: true,
@@ -350,6 +358,8 @@ export function startPrimerSocioCuotasMesTour(opts) {
       showProgress: false,
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
+        sesion.terminar()
+        if (sesion.cancelada) return
         clearSidebarAfterTour?.()
         markPrimerSocioCuotasMesGridTourDone(natilleraId)
       },
@@ -383,13 +393,13 @@ export function startPrimerSocioCuotasMesTour(opts) {
           }
         }
       ]
-    })
+    }))
 
     d.drive(0)
   }
 
-  window.requestAnimationFrame(() => {
-    setTimeout(() => run(0), 300)
+  sesion.alSiguienteFrame(() => {
+    sesion.esperar(() => run(0), 300)
   })
 }
 
@@ -402,6 +412,8 @@ export function startPrimerCuotasDetalleSocioTour(opts) {
   const { natilleraId, onDone, puedeDemoCambioMes } = opts || {}
   if (!isTourEnabled('cuotasDetalleSocio')) return
   if (typeof window === 'undefined' || !natilleraId) return
+
+  const sesion = crearSesionRecorrido({ alForzarCierre: resetDetalleTourDriverState })
 
   const run = (attempt = 0) => {
     const card = document.querySelector('#tour-primer-flujo-socio-cuota-card')
@@ -496,14 +508,15 @@ export function startPrimerCuotasDetalleSocioTour(opts) {
 
     if (!steps.length) {
       if (attempt < 12) {
-        window.setTimeout(() => run(attempt + 1), 200)
+        sesion.esperar(() => run(attempt + 1), 200)
         return
       }
+      sesion.terminar()
       onDone?.()
       return
     }
 
-    const d = driver({
+    const d = sesion.usarDriver(driver({
       animate: true,
       allowClose: true,
       disableActiveInteraction: true,
@@ -519,17 +532,19 @@ export function startPrimerCuotasDetalleSocioTour(opts) {
       doneBtnText: 'Entendido',
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
+        sesion.terminar()
         resetDetalleTourDriverState()
+        if (sesion.cancelada) return
         onDone?.()
       },
       steps
-    })
+    }))
 
     detalleTourDriver = d
     d.drive(0)
   }
 
-  window.requestAnimationFrame(() => {
-    setTimeout(() => run(0), 350)
+  sesion.alSiguienteFrame(() => {
+    sesion.esperar(() => run(0), 350)
   })
 }

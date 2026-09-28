@@ -1,5 +1,5 @@
 <template>
-  <div class="crear-natillera-wizard min-h-screen min-h-[100dvh] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] font-[family-name:var(--font-body)]">
+  <div class="crear-natillera-wizard min-h-screen supports-[height:100dvh]:min-h-[100dvh] pb-[max(3rem,calc(env(safe-area-inset-bottom,0px)+1.5rem))] font-[family-name:var(--font-body)]">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 relative">
       <div class="pt-3 sm:pt-4 mb-6">
         <div class="flex flex-row items-center gap-3 sm:gap-4">
@@ -850,9 +850,7 @@
           class="wizard-btn-primary wizard-footer-btn-primary flex-1 min-w-0 sm:flex-none sm:w-auto sm:min-w-[192px] flex items-center justify-center gap-2 font-semibold text-white shadow-sm disabled:opacity-60"
           :disabled="natillerasStore.loading"
         >
-          <svg v-if="natillerasStore.loading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
+          <CargaBoton v-if="natillerasStore.loading" pequena />
           <span>{{ natillerasStore.loading ? 'Creando...' : 'Crear Natillera' }}</span>
         </button>
         </div>
@@ -864,6 +862,7 @@
 </template>
 
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
 import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useNatillerasStore } from '../../stores/natilleras'
@@ -1307,6 +1306,16 @@ async function handleSubmit() {
   animation: wizard-fade-in 0.35s ease-out;
 }
 
+@-webkit-keyframes wizard-fade-in {
+  from {
+    opacity: 0;
+    -webkit-transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+  }
+}
 @keyframes wizard-fade-in {
   from {
     opacity: 0;
@@ -1318,23 +1327,17 @@ async function handleSubmit() {
   }
 }
 
-/* Animación de pulso lento para decoraciones */
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.05);
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 4s ease-in-out infinite;
-}
-
 /* Animación de entrada escalonada */
+@-webkit-keyframes fade-in-up {
+  from {
+    opacity: 0;
+    -webkit-transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+  }
+}
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -1360,23 +1363,17 @@ async function handleSubmit() {
 .stagger-7 { animation-delay: 0.7s; }
 .stagger-8 { animation-delay: 0.8s; }
 
-/* Animación scale-x para la línea decorativa */
-@keyframes scale-x {
+/* Animación de entrada para el icono de check */
+@-webkit-keyframes scale-in {
   0% {
-    transform: scaleX(0);
-    transform-origin: left;
+    -webkit-transform: scale(0) rotate(-180deg);
+    opacity: 0;
   }
   100% {
-    transform: scaleX(1);
-    transform-origin: left;
+    -webkit-transform: scale(1) rotate(0deg);
+    opacity: 1;
   }
 }
-
-.animate-scale-x {
-  animation: scale-x 0.8s ease-out 0.3s forwards;
-}
-
-/* Animación de entrada para el icono de check */
 @keyframes scale-in {
   0% {
     transform: scale(0) rotate(-180deg);
@@ -1393,6 +1390,14 @@ async function handleSubmit() {
 }
 
 /* Animación shimmer para el toggle */
+@-webkit-keyframes shimmer-toggle {
+  0% {
+    -webkit-transform: translateX(-100%);
+  }
+  100% {
+    -webkit-transform: translateX(100%);
+  }
+}
 @keyframes shimmer-toggle {
   0% {
     transform: translateX(-100%);

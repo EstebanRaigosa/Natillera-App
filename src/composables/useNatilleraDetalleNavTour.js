@@ -1,6 +1,7 @@
 import { driver } from 'driver.js'
 import { isTourEnabled } from '../config/toursEnabled'
 import { peekPendingCuotasDetalleTour } from './usePrimerSocioCuotasMesTour'
+import { crearSesionRecorrido } from './recorridoDriverSeguro'
 
 /** Misma clave base que useNatilleraMenuTour: indica que terminó el recorrido inicial en Socios / menú móvil. */
 const PREREQ_MENU_TOUR = (id) => `natillera_menu_acciones_tour_v3_${id}`
@@ -90,7 +91,18 @@ export function startNatilleraDetalleNavTour(opts) {
     return false
   }
 
+  // Si se corta al salir de la vista no se da por visto: se limpia la barra lateral y nada más
+  // (onTourEnd tocaría estado de una vista que ya se está desmontando).
+  const sesion = crearSesionRecorrido({
+    alForzarCierre: () => {
+      closeSidebar?.()
+      clearSidebarAfterTour?.()
+    }
+  })
+
   const finish = () => {
+    sesion.terminar()
+    if (sesion.cancelada) return
     closeSidebar?.()
     clearSidebarAfterTour?.()
     markNatilleraDetalleNavTourDone(userId)
@@ -99,7 +111,7 @@ export function startNatilleraDetalleNavTour(opts) {
 
   if (isDesktop) {
     prepareSidebarForTour?.()
-    const d = driver({
+    const d = sesion.usarDriver(driver({
       animate: true,
       allowClose: true,
       disableActiveInteraction: true,
@@ -115,6 +127,8 @@ export function startNatilleraDetalleNavTour(opts) {
       doneBtnText: 'Entendido',
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
+        sesion.terminar()
+        if (sesion.cancelada) return
         clearSidebarAfterTour?.()
         markNatilleraDetalleNavTourDone(userId)
         onTourEnd?.({ started: true })
@@ -141,9 +155,9 @@ export function startNatilleraDetalleNavTour(opts) {
           }
         }
       ]
-    })
-    window.requestAnimationFrame(() => {
-      setTimeout(() => {
+    }))
+    sesion.alSiguienteFrame(() => {
+      sesion.esperar(() => {
         onTourStart?.()
         d.drive(0)
       }, 120)
@@ -151,7 +165,7 @@ export function startNatilleraDetalleNavTour(opts) {
     return true
   }
 
-  const d = driver({
+  const d = sesion.usarDriver(driver({
     animate: true,
     allowClose: true,
     disableActiveInteraction: true,
@@ -188,7 +202,7 @@ export function startNatilleraDetalleNavTour(opts) {
           align: 'start',
           onNextClick: (_el, _step, { driver: drv }) => {
             openSidebar?.()
-            setTimeout(() => drv.moveNext(), 420)
+            sesion.esperar(() => drv.moveNext(), 420)
           }
         }
       },
@@ -202,15 +216,15 @@ export function startNatilleraDetalleNavTour(opts) {
           align: 'start',
           onPrevClick: (_el, _step, { driver: drv }) => {
             closeSidebar?.()
-            setTimeout(() => drv.movePrevious(), 200)
+            sesion.esperar(() => drv.movePrevious(), 200)
           }
         }
       }
     ]
-  })
+  }))
 
-  window.requestAnimationFrame(() => {
-    setTimeout(() => {
+  sesion.alSiguienteFrame(() => {
+    sesion.esperar(() => {
       onTourStart?.()
       d.drive(0)
     }, 200)

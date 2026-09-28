@@ -29,6 +29,18 @@ export const MAX_BYTES_ADJUNTO = 5 * 1024 * 1024
 export const MIMES_ADMITIDOS = [
   'image/png', 'image/jpeg', 'image/webp', 'image/heic', 'application/pdf', 'text/plain',
 ]
+/*
+ * Lo que se ofrece en el `accept` del selector: lo mismo sin HEIC. Si el accept
+ * incluye `image/heic`, iOS entrega la foto de la galería en HEIC tal cual; sin
+ * él, la transcodifica a JPEG al elegirla, que es lo que se puede ver en
+ * cualquier navegador. Un HEIC que llegue igualmente (p. ej. desde Archivos) se
+ * sigue aceptando en la validación y se intenta convertir a JPEG al prepararlo.
+ */
+export const MIMES_SELECTOR = MIMES_ADMITIDOS.filter((mime) => mime !== 'image/heic')
+// HEIF es el mismo contenedor que HEIC con otra etiqueta: se admite al elegirlo
+// porque se convierte a JPEG; si no se puede convertir, el redactor lo rechaza
+// (el servidor solo admite `image/heic` como tal).
+const MIMES_CONVERTIBLES = ['image/heif']
 export const CATEGORIAS = [
   { valor: 'error', etiqueta: 'Algo no funciona' },
   { valor: 'duda', etiqueta: 'Tengo una duda' },
@@ -562,7 +574,7 @@ export const useSoporteStore = defineStore('soporte', () => {
    * negarse a enviar algo que sí cabe.
    */
   function validarTipoArchivo(archivo) {
-    if (!MIMES_ADMITIDOS.includes(archivo.type)) return `«${archivo.name}» no es un tipo de archivo admitido`
+    if (!MIMES_ADMITIDOS.includes(archivo.type) && !MIMES_CONVERTIBLES.includes(archivo.type)) return `«${archivo.name}» no es un tipo de archivo admitido`
     return null
   }
 

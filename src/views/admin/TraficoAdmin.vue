@@ -442,6 +442,10 @@ onUnmounted(() => {
   animation: trafico-pulso 2s ease-in-out infinite;
 }
 
+@-webkit-keyframes trafico-pulso {
+  0%, 100% { opacity: 1; -webkit-transform: scale(1); }
+  50% { opacity: 0.45; -webkit-transform: scale(0.8); }
+}
 @keyframes trafico-pulso {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.45; transform: scale(0.8); }
@@ -452,6 +456,10 @@ onUnmounted(() => {
   animation: trafico-entrada 2s ease-out;
 }
 
+@-webkit-keyframes trafico-entrada {
+  0% { background-color: rgba(27, 94, 55, 0.12); }
+  100% { background-color: transparent; }
+}
 @keyframes trafico-entrada {
   0% { background-color: rgba(27, 94, 55, 0.12); }
   100% { background-color: transparent; }

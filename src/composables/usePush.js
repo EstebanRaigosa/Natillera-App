@@ -6,6 +6,22 @@ import { supabase } from '../lib/supabase'
 // `platform === 'MacIntel'` que sí resuelve este, ni excluía Android.
 import { detectIosPlatform } from './useIsIos'
 
+// Los consejos de Chrome (campana tachada, candado, Ctrl+Shift+R) no existen en iOS: allí el
+// permiso de la app instalada vive en los Ajustes del sistema. Un texto que mande a buscar
+// la campana deja al usuario de iPhone buscando algo que no está.
+const AJUSTES_IOS = 'En el iPhone se activan en Ajustes → Notificaciones → Natillerapp.'
+
+function esMovil() {
+  if (detectIosPlatform()) return true
+  return typeof navigator !== 'undefined' && /Android|Mobi/i.test(navigator.userAgent || '')
+}
+
+/** Cómo desbloquear los avisos después de haberlos denegado, según la plataforma. */
+export function comoPermitirAvisos() {
+  if (detectIosPlatform()) return `El iPhone bloqueó los avisos. ${AJUSTES_IOS}`
+  return 'El navegador bloqueó los avisos. Puedes permitirlos desde los ajustes del sitio.'
+}
+
 /**
  * Notificaciones push del navegador para el soporte (RF-13).
  *
@@ -64,7 +80,9 @@ async function esperarServiceWorker(msLimite = 12000) {
 
   const limite = new Promise((_, rechazar) =>
     setTimeout(() => rechazar(new Error(
-      'El service worker no llegó a activarse. Recarga con Ctrl+Shift+R y vuelve a intentarlo.',
+      esMovil()
+        ? 'La app no terminó de prepararse. Ciérrala del todo, vuelve a abrirla e inténtalo otra vez.'
+        : 'El service worker no llegó a activarse. Recarga con Ctrl+Shift+R y vuelve a intentarlo.',
     )), msLimite))
 
   return await Promise.race([navigator.serviceWorker.ready, limite])
@@ -193,9 +211,11 @@ export function usePush() {
 
       if (permiso === 'sin_respuesta') {
         estado.value = 'sin_conceder'
-        error.value = 'El navegador no llegó a preguntar. Suele pasar cuando Chrome usa avisos '
-          + 'discretos: busca el icono de campana tachada en la barra de direcciones y permite las '
-          + 'notificaciones, o entra en el candado → Configuración del sitio → Notificaciones → Permitir.'
+        error.value = detectIosPlatform()
+          ? `El iPhone no llegó a preguntar. ${AJUSTES_IOS}`
+          : 'El navegador no llegó a preguntar. Suele pasar cuando Chrome usa avisos '
+            + 'discretos: busca el icono de campana tachada en la barra de direcciones y permite las '
+            + 'notificaciones, o entra en el candado → Configuración del sitio → Notificaciones → Permitir.'
         return false
       }
 
@@ -208,8 +228,10 @@ export function usePush() {
         // pone un icono discreto en la barra de direcciones. Sin este aviso, el
         // usuario se queda mirando un botón que no hace nada.
         estado.value = 'sin_conceder'
-        error.value = 'El navegador no concedió el permiso. Si no viste ningún aviso, busca el icono '
-          + 'de campana o candado a la izquierda de la dirección web y permite las notificaciones.'
+        error.value = detectIosPlatform()
+          ? `El iPhone no concedió el permiso. ${AJUSTES_IOS}`
+          : 'El navegador no concedió el permiso. Si no viste ningún aviso, busca el icono '
+            + 'de campana o candado a la izquierda de la dirección web y permite las notificaciones.'
         return false
       }
 

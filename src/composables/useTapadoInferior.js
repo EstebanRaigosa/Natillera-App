@@ -4,6 +4,67 @@ import { detectIosPlatform } from './useIsIos'
 /** Por encima de esto no es el chrome del navegador, es el teclado. */
 const MAXIMO_CHROME_PX = 160
 
+const tapado = ref(0)
+let suscriptores = 0
+let raf = null
+
+const enStandalone = () =>
+  (typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.navigator?.standalone === true)) === true
+
+const aplica = () => typeof window !== 'undefined' && detectIosPlatform() && !enStandalone()
+
+function medir() {
+  if (!aplica()) {
+    tapado.value = 0
+    return
+  }
+  const vv = window.visualViewport
+  if (!vv) {
+    tapado.value = 0
+    return
+  }
+  const alturaLayout = document.documentElement?.clientHeight || window.innerHeight || 0
+  // `offsetTop` descuenta lo que el visual viewport ya está desplazado dentro
+  // del de layout (pinch-zoom); sin él, el cálculo se va con el zoom activo.
+  const visibleHastaAbajo = vv.height + vv.offsetTop
+  const diferencia = Math.round(alturaLayout - visibleHastaAbajo)
+
+  // Con el teclado abierto la diferencia se dispara a varios cientos de píxeles.
+  // Levantar la barra ahí la dejaría flotando a media pantalla, así que en ese
+  // caso se deja donde está: el teclado ya tapa la zona y no hay nada que salvar.
+  tapado.value = diferencia > 0 && diferencia <= MAXIMO_CHROME_PX ? diferencia : 0
+}
+
+function programar() {
+  if (raf != null) cancelAnimationFrame(raf)
+  raf = requestAnimationFrame(() => {
+    raf = null
+    medir()
+  })
+}
+
+function escuchar() {
+  // `window.resize` no basta: contraer o expandir la barra de Safari mueve el
+  // visual viewport sin disparar resize ni scroll en `window`.
+  window.addEventListener('resize', programar)
+  window.addEventListener('orientationchange', programar)
+  window.visualViewport?.addEventListener('resize', programar)
+  window.visualViewport?.addEventListener('scroll', programar)
+}
+
+function dejarDeEscuchar() {
+  if (raf != null) {
+    cancelAnimationFrame(raf)
+    raf = null
+  }
+  window.removeEventListener('resize', programar)
+  window.removeEventListener('orientationchange', programar)
+  window.visualViewport?.removeEventListener('resize', programar)
+  window.visualViewport?.removeEventListener('scroll', programar)
+}
+
 /**
  * Píxeles del viewport de layout que quedan ocultos por debajo del área visible.
  *
@@ -21,68 +82,19 @@ const MAXIMO_CHROME_PX = 160
  * barra de Safari, y en Android el chrome vive arriba. Devuelve 0 en el resto,
  * de modo que el `bottom: 0` de siempre sigue mandando.
  *
+ * La medición es compartida: un solo juego de listeners para toda la app, por
+ * muchos componentes (cada ModalWrapper, las barras inferiores) que la usen.
+ *
  * @returns {{ tapado: import('vue').Ref<number>, medir: () => void }}
  */
 export function useTapadoInferior() {
-  const tapado = ref(0)
-
-  const enStandalone = () =>
-    (typeof window !== 'undefined' &&
-      (window.matchMedia?.('(display-mode: standalone)').matches ||
-        window.navigator?.standalone === true)) === true
-
-  const aplica = () => typeof window !== 'undefined' && detectIosPlatform() && !enStandalone()
-
-  function medir() {
-    if (!aplica()) {
-      tapado.value = 0
-      return
-    }
-    const vv = window.visualViewport
-    if (!vv) {
-      tapado.value = 0
-      return
-    }
-    const alturaLayout = document.documentElement?.clientHeight || window.innerHeight || 0
-    // `offsetTop` descuenta lo que el visual viewport ya está desplazado dentro
-    // del de layout (pinch-zoom); sin él, el cálculo se va con el zoom activo.
-    const visibleHastaAbajo = vv.height + vv.offsetTop
-    const diferencia = Math.round(alturaLayout - visibleHastaAbajo)
-
-    // Con el teclado abierto la diferencia se dispara a varios cientos de píxeles.
-    // Levantar la barra ahí la dejaría flotando a media pantalla, así que en ese
-    // caso se deja donde está: el teclado ya tapa la zona y no hay nada que salvar.
-    tapado.value = diferencia > 0 && diferencia <= MAXIMO_CHROME_PX ? diferencia : 0
-  }
-
-  let raf = null
-  function programar() {
-    if (raf != null) cancelAnimationFrame(raf)
-    raf = requestAnimationFrame(() => {
-      raf = null
-      medir()
-    })
-  }
-
   onMounted(() => {
+    if (suscriptores++ === 0) escuchar()
     programar()
-    // `window.resize` no basta: contraer o expandir la barra de Safari mueve el
-    // visual viewport sin disparar resize ni scroll en `window`.
-    window.addEventListener('resize', programar)
-    window.addEventListener('orientationchange', programar)
-    window.visualViewport?.addEventListener('resize', programar)
-    window.visualViewport?.addEventListener('scroll', programar)
   })
 
   onBeforeUnmount(() => {
-    if (raf != null) {
-      cancelAnimationFrame(raf)
-      raf = null
-    }
-    window.removeEventListener('resize', programar)
-    window.removeEventListener('orientationchange', programar)
-    window.visualViewport?.removeEventListener('resize', programar)
-    window.visualViewport?.removeEventListener('scroll', programar)
+    if (--suscriptores === 0) dejarDeEscuchar()
   })
 
   return { tapado, medir: programar }

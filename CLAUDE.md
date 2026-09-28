@@ -55,6 +55,10 @@ Están documentadas en el manual, pero se repiten lo bastante como para listarla
 - **Los consejos de Chrome no valen en iOS.** Chrome tiene un modo de avisos discretos que deja `requestPermission()` pendiente para siempre; iOS no. Un mensaje de ayuda que mande a buscar «el icono de campana» manda al usuario de iOS a buscar algo que no existe: ramificar por `detectIosPlatform()`.
 - **Push en iOS solo con la PWA instalada** (iOS >= 16.4). Sin instalar, el diagnóstico útil no es «no soportado» sino «instálala».
 - **Detección de iOS:** usar siempre `detectIosPlatform()` de `src/composables/useIsIos.js`. Nada de regex sueltos: no cubren `platform === 'MacIntel'` ni excluyen Android.
+- **`navigator.share` y `window.open` mueren fuera del gesto**, igual que el permiso de notificaciones: nada de `await` (captura de imagen, `fetch`, `import()`) antes. La imagen se prepara al abrir el comprobante; patrón en `ComprobanteVariasCuotasModal.vue`.
+- **`min-h-screen min-h-[100dvh]` deja 100vh**: Tailwind 4 ordena alfabéticamente y `min-h-screen` sale después. Escribir `min-h-screen supports-[height:100dvh]:min-h-[100dvh]`.
+- **En iOS la card de `ModalWrapper` es `overflow: hidden`**: el scroll va en un cuerpo `min-h-0 flex-1 overflow-y-auto`, nunca en `card-class`, o el final del modal queda inalcanzable.
+- **Nada de `appearance: none` ni `transform` en selectores genéricos** del bloque iOS de `style.css`: lo primero dejó invisibles las casillas; lo segundo rompía los `fixed` dentro de `<main>`.
 - **La barra de Safari no es safe-area.** Desde iOS 15 el navegador dibuja su barra de direcciones abajo y **encima** del contenido; `env(safe-area-inset-bottom)` describe el home indicator y vale ~0 justo ahí. Lo anclado con `fixed bottom-0` (bottom nav, pies de modal `align="bottom"`) queda tapado. Se mide con `visualViewport` vía `useTapadoInferior` y se **suma al padding**, nunca moviendo `bottom` —eso deja un hueco a la vista—. Detalle en `docs/compatibilidad-ios-safari.md` §4.1.
 
 ## 2. Modales y overlays
@@ -67,15 +71,16 @@ Patrón base: `ModalWrapper` con cabecera marca **compacta** (~20 % menos que la
 
 ## 2.1 Pantallas de carga
 
-Son tres, en `src/components/carga/`, todas con la misma figura (la alcancía dentro de un anillo que gira). **No** crear spinners caseros (`animate-spin` grandes, colores sueltos) para estados de carga:
+Son cuatro, en `src/components/carga/`, todas con la misma figura (la alcancía dentro de un anillo que gira). **No** crear spinners caseros (`animate-spin` grandes, colores sueltos) para estados de carga:
 
 | Caso | Componente |
 |---|---|
 | Entrar a una vista que aún no tiene datos | `<CargaPantalla :visible text>` (pantalla completa, fondo verde noche) |
 | Una sección, lista, pestaña o modal esperando su contenido | `<CargaCaja v-if texto detalle>` (en línea) |
 | Operación en curso que bloquea la página (registrar pago, reenviar comprobante) | `<CargaCaja :visible flotante texto detalle>` (sobre velo salvia) |
+| **Cualquier botón** esperando su operación (iniciar sesión, guardar, registrar, eliminar, descargar) | `<CargaBoton v-if texto>` en botones grandes de entrada; `<CargaBoton v-if pequena />` en botones de modal, compactos o de solo icono (el botón pone su propio texto «Guardando…») · **Excepción: Préstamos** usa `CargaCaja flotante` para todas sus operaciones, y el botón solo se deshabilita |
 
-`CargaCaja` acepta un slot `figura` para una animación propia (la rifa usa la cuadrícula de `CargaCuadricula.vue`). Quedan aparte, a propósito: los skeletons por página (Cuotas, Préstamos, Actividades) y los giros pequeños dentro de botones.
+`CargaCaja` acepta un slot `figura` para una animación propia (la rifa usa la cuadrícula de `CargaCuadricula.vue`). Quedan aparte, a propósito: los skeletons por página (Cuotas, Préstamos, Actividades) y los iconos de refrescar (`ArrowPathIcon` que gira), que ya son el propio icono del botón.
 
 ## 3. Stack del proyecto
 

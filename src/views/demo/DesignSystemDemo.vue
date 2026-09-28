@@ -472,7 +472,7 @@ nati.show({
         <!-- Cuerpo (un solo scroll) + acciones al final -->
         <div
           ref="scrollAreaModalEstandar"
-          class="h-full overflow-y-auto bg-white px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 [-webkit-overflow-scrolling:touch] overscroll-contain"
+          class="h-full overflow-y-auto bg-white px-6 pt-5 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-4 [-webkit-overflow-scrolling:touch] overscroll-contain"
           @scroll.passive="programarNatiscrollModalEstandar"
         >
           <p class="text-sm text-slate-700 leading-relaxed">
@@ -582,7 +582,7 @@ nati.show({
              No usar pie fijo — la skill `natillerapp-modals` lo desaconseja. -->
         <div
           ref="scrollAreaModalScroll"
-          class="h-full overflow-y-auto bg-white px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 scrollbar-thin [-webkit-overflow-scrolling:touch] overscroll-contain"
+          class="h-full overflow-y-auto bg-white px-6 pt-5 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-4 scrollbar-thin [-webkit-overflow-scrolling:touch] overscroll-contain"
           @scroll.passive="programarNatiscrollModalScroll"
         >
           <p class="text-sm text-slate-700 leading-relaxed">

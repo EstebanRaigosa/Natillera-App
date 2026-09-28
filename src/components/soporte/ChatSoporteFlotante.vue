@@ -95,6 +95,7 @@ import { ArrowsPointingInIcon, ArrowsPointingOutIcon, LifebuoyIcon, XMarkIcon } 
 import ModalWrapper from '../ModalWrapper.vue'
 import PanelConversaciones from './PanelConversaciones.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useAltoVisible } from '../../composables/useAltoVisible'
 import { useBotonSoporte } from '../../composables/useBotonSoporte'
 
 const props = defineProps({
@@ -112,6 +113,7 @@ watch(() => props.show, (visible) => { if (!visible) maximizado.value = false })
 
 const abierto = computed(() => props.show)
 useBodyScrollLock(abierto)
+useAltoVisible(abierto)
 
 /*
  * El panel se abre del lado donde esté el botón: verlo salir desde la esquina
@@ -135,11 +137,20 @@ const clasesOverlay = computed(() => {
     : 'fixed inset-0 z-[70] flex items-end justify-center p-0 sm:items-end sm:justify-end sm:p-6 overflow-hidden overscroll-contain'
 })
 
+/*
+ * Alto móvil acotado al visual viewport (`--alto-visible`, useAltoVisible): con
+ * el teclado de iOS abierto `dvh` no cambia y la hoja quedaba más alta que lo
+ * visible, así que Safari la desplazaba y la cabecera se salía por arriba.
+ * Se suma `--tapado-inferior` (lo publica ModalWrapper en iOS) porque sin
+ * teclado el pie ya se levanta ese tanto con padding: la hoja debe llegar hasta
+ * el borde del viewport de layout, no quedarse corta por encima de la barra.
+ * En `sm+` mandan las clases `sm:h-*`.
+ */
 const clasesCard = computed(() => {
   const base = 'relative flex w-full min-h-0 flex-col overflow-hidden border border-gray-200/60 bg-white shadow-2xl'
   return maximizado.value
-    ? `${base} h-[100dvh] rounded-none sm:h-full sm:max-w-none sm:rounded-2xl`
-    : `${base} h-[88dvh] rounded-t-2xl sm:h-[min(38rem,80vh)] sm:w-[24rem] sm:rounded-2xl`
+    ? `${base} h-[calc(var(--alto-visible,100dvh)+var(--tapado-inferior,0px))] rounded-none sm:h-full sm:max-w-none sm:rounded-2xl`
+    : `${base} h-[min(88dvh,calc(var(--alto-visible,100dvh)+var(--tapado-inferior,0px)))] rounded-t-2xl sm:h-[min(38rem,80vh)] sm:w-[24rem] sm:rounded-2xl`
 })
 
 </script>

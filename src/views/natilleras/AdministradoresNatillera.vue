@@ -150,14 +150,20 @@
                       <CheckIcon v-if="copiado === c.id" class="h-5 w-5" />
                       <ClipboardDocumentIcon v-else class="h-5 w-5" />
                     </button>
-                    <button type="button" class="adm-icono adm-icono--whatsapp" :aria-label="`Avisar a ${c.email_usuario} por WhatsApp`" title="Avisar por WhatsApp" @click="avisarWhatsApp(c)">
-                      <ChatBubbleLeftIcon class="h-5 w-5" />
+                    <button type="button" class="adm-icono" :aria-label="`Avisar a ${c.email_usuario} por WhatsApp`" title="Avisar por WhatsApp" @click="avisarWhatsApp(c)">
+                      <IconoWhatsApp class="h-5 w-5 flex-shrink-0" />
                     </button>
                     <button type="button" class="adm-icono adm-icono--peligro" :aria-label="`Cancelar la invitación de ${c.email_usuario}`" title="Cancelar invitación" @click="accion = { id: c.id, modo: 'cancelar' }">
                       <XMarkIcon class="h-5 w-5" />
                     </button>
                   </div>
                 </div>
+                <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
+                     `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
+                <p v-if="reservaWhatsApp?.id === c.id" class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+                  No se pudo abrir el menú de compartir.
+                  <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+                </p>
                 <div v-if="accion?.id === c.id && accion.modo === 'cancelar'" class="adm-panel adm-panel--peligro">
                   <p class="text-sm text-red-800">¿Cancelar esta invitación? El enlace dejará de servir.</p>
                   <div class="mt-2 flex gap-2">
@@ -223,10 +229,16 @@
                 <p class="adm-fila__dato">{{ recienInvitado.email_usuario }} la verá al entrar a la app.</p>
               </div>
             </div>
-            <button type="button" class="ds-btn ds-btn--block adm-btn-whatsapp" @click="avisarWhatsApp(recienInvitado)">
-              <ChatBubbleLeftIcon class="h-4 w-4" aria-hidden="true" />
+            <button type="button" class="btn-compartir w-full" @click="avisarWhatsApp(recienInvitado)">
+              <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
               Avisarle por WhatsApp
             </button>
+            <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
+                 `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
+            <p v-if="reservaWhatsApp?.id === recienInvitado.id" class="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+              No se pudo abrir el menú de compartir.
+              <a :href="reservaWhatsApp.url" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+            </p>
             <button type="button" class="ds-btn ds-btn--secondary ds-btn--block" @click="copiarEnlace(recienInvitado)">
               <CheckIcon v-if="copiado === recienInvitado.id" class="h-4 w-4" aria-hidden="true" />
               <ClipboardDocumentIcon v-else class="h-4 w-4" aria-hidden="true" />
@@ -275,7 +287,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ArrowPathIcon,
-  ChatBubbleLeftIcon,
   CheckIcon,
   ChevronDownIcon,
   ClipboardDocumentIcon,
@@ -289,6 +300,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import EditorRol from '../../components/colaboradores/EditorRol.vue'
 import { supabase } from '../../lib/supabase'
@@ -515,16 +527,22 @@ async function copiarEnlace(c) {
  * El menú del sistema deja elegir el chat; sin él (escritorio), wa.me abre WhatsApp para
  * escogerlo. Nada asíncrono antes de `navigator.share`: Safari exige que vaya pegado al toque.
  */
+/** `{ id, url }` de la invitación cuyo menú de compartir falló: se le ofrece un enlace. */
+const reservaWhatsApp = ref(null)
+
 function avisarWhatsApp(c) {
   const texto = textoInvitacion(c)
-  const abrirWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`
+  reservaWhatsApp.value = null
   if (navigator.share) {
     navigator.share({ text: texto }).catch(err => {
-      if (err?.name !== 'AbortError') abrirWhatsApp()
+      if (err?.name === 'AbortError') return
+      reservaWhatsApp.value = { id: c.id, url }
     })
     return
   }
-  abrirWhatsApp()
+  // Sin menú del sistema (escritorio) el `window.open` sí va dentro del toque.
+  window.open(url, '_blank')
 }
 
 // ─── Carga ───
@@ -715,8 +733,6 @@ onUnmounted(() => {
 .adm-icono:disabled { opacity: 0.5; }
 .adm-icono--peligro { color: #b91c1c; }
 .adm-icono--peligro:hover { background: #fef2f2; }
-.adm-icono--whatsapp { color: #16a34a; }
-.adm-icono--whatsapp:hover { background: #dcfce7; }
 .adm-salir {
   min-height: 2.75rem;
   padding: 0 0.875rem;
@@ -746,12 +762,6 @@ onUnmounted(() => {
 
 /* ─── Invitar ─── */
 .adm-invitar { display: flex; flex-direction: column; gap: 0.875rem; }
-.adm-btn-whatsapp {
-  background: #16a34a;
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.32);
-}
-.adm-btn-whatsapp:hover { background: #15803d; }
 .adm-texto-boton {
   min-height: 2.75rem;
   font-size: 0.875rem;

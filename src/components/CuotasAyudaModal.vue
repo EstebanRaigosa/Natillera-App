@@ -321,7 +321,7 @@
     </div>
 
     <!-- ── Footer de acciones ── -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[max(1.1rem,env(safe-area-inset-bottom))]">
+    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[calc(max(1.1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="mb-3 flex items-center justify-center gap-1.5">
         <button
           v-for="(p, i) in pasos"

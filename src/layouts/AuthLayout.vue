@@ -12,7 +12,7 @@
         formulario a la derecha, separados por una ola blanca.
 
   -->
-  <div class="relative min-h-screen min-h-[100dvh] overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#154a2d] text-white">
+  <div class="relative min-h-screen supports-[height:100dvh]:min-h-[100dvh] overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#154a2d] text-white">
     <DestellosFondo class="hidden lg:block" />
 
     <!-- BETA: en la esquina en escritorio; en el celular va junto al logo para no montarse encima -->
@@ -24,10 +24,10 @@
     </div>
 
     <!-- ============ Con formulario ============ -->
-    <div class="relative z-10 flex min-h-screen min-h-[100dvh] lg:items-center lg:justify-center lg:px-6 lg:py-10">
+    <div class="relative z-10 flex min-h-screen supports-[height:100dvh]:min-h-[100dvh] lg:items-center lg:justify-center lg:px-6 lg:py-10">
       <div class="flex w-full flex-col lg:max-w-[64rem]">
         <div
-          class="flex min-h-screen min-h-[100dvh] flex-col text-gray-900 lg:grid lg:min-h-0 lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden lg:rounded-[1.75rem] lg:bg-white lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.65)]"
+          class="flex min-h-screen supports-[height:100dvh]:min-h-[100dvh] flex-col text-gray-900 lg:grid lg:min-h-0 lg:grid-cols-[1.05fr_1fr] lg:overflow-hidden lg:rounded-[1.75rem] lg:bg-white lg:shadow-[0_40px_80px_-30px_rgba(0,0,0,0.65)]"
         >
           <!-- Escena: cabecera en el celular, mitad izquierda en escritorio -->
           <!-- En el celular es baja a propósito: el botón de Google tiene que verse sin desplazar. -->

@@ -1,3 +1,5 @@
+import { detectIosPlatform } from './useIsIos'
+
 /**
  * Modo ligero: adapta la app al dispositivo y a la red que tiene delante.
  *
@@ -32,6 +34,11 @@ function preferenciaGuardada() {
 
 export function detectarEquipoModesto() {
   if (typeof navigator === 'undefined') return false
+
+  // WebKit fija `hardwareConcurrency` en iOS (2 o 4, según versión) para evitar el
+  // fingerprinting, sea cual sea el chip: con `<= 4` TODOS los iPhone entraban en
+  // modo ligero. En iOS no hay señal fiable de hardware, así que no se usa.
+  if (detectIosPlatform()) return false
 
   const nucleos = navigator.hardwareConcurrency
   const memoria = navigator.deviceMemory

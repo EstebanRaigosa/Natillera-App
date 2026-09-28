@@ -2,6 +2,7 @@
   <nav
     v-if="natilleraId"
     id="tour-mobile-bottom-nav"
+    ref="navRef"
     class="mobile-bottom-nav mobile-bottom-nav--shell lg:hidden fixed bottom-0 left-0 right-0 z-[49] app-shell-nav-bg rounded-t-3xl pt-3 overflow-visible shadow-[0_-4px_24px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out"
     :class="[
       forceHidden ? 'translate-y-[110%] pointer-events-none opacity-0' : 'translate-y-0 opacity-100',
@@ -638,12 +639,29 @@ function cerrarMenusFuera() {
   menuAccionesAbierto.value = false
 }
 
+/* Solo con `click` no basta en iOS: Safari no emite click al tocar zonas no interactivas
+   (texto, fondos de tarjeta), y el menú quedaba abierto. `pointerdown` llega siempre; se
+   ignora dentro de la barra porque ahí están los propios menús y sus botones, que siguen
+   decidiendo con su `click` (si no, el mismo toque cerraría y volvería a abrir). */
+const navRef = ref(null)
+function cerrarMenusAlTocarFuera(evento) {
+  if (navRef.value?.contains(evento.target)) return
+  cerrarMenusFuera()
+}
+
+function dejarDeEscucharFuera() {
+  document.removeEventListener('click', cerrarMenusFuera)
+  document.removeEventListener('pointerdown', cerrarMenusAlTocarFuera)
+}
+
 watch([menuCajaAbierto, menuAccionesAbierto], ([caja, acciones]) => {
-  if (caja || acciones) document.addEventListener('click', cerrarMenusFuera)
-  else document.removeEventListener('click', cerrarMenusFuera)
+  dejarDeEscucharFuera()
+  if (!caja && !acciones) return
+  document.addEventListener('click', cerrarMenusFuera)
+  document.addEventListener('pointerdown', cerrarMenusAlTocarFuera, { passive: true })
 })
 
-onUnmounted(() => document.removeEventListener('click', cerrarMenusFuera))
+onUnmounted(dejarDeEscucharFuera)
 
 // El espacio se pinta activo estando en cualquiera de las dos pantallas que agrupa,
 // para que la barra no diga «no estás en ningún sitio» cuando sí lo estás.

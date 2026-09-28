@@ -11,7 +11,9 @@ import { parseReglasInteresPrestamo, diasGraciaPrestamo } from '../utils/natille
 /** Devuelve mes (1-12), anio y quincena (1 o 2) desde fecha_proyectada para plan_pagos_prestamo */
 export function periodoDesdeFechaProyectada(fechaProyectada) {
   if (!fechaProyectada) return { mes: null, anio: null, quincena: null }
-  const d = new Date(fechaProyectada)
+  // Fecha local: `new Date('2026-04-01')` es medianoche UTC, que en Colombia es el 31 de
+  // marzo, y la cuota quedaba en el mes (y la quincena) anterior.
+  const d = parseDateLocal(String(fechaProyectada).slice(0, 10))
   if (isNaN(d.getTime())) return { mes: null, anio: null, quincena: null }
   const dia = d.getDate()
   return {
@@ -87,6 +89,89 @@ export function desglosarAbonoConMora(valor, cuotasVencidasOrdenadas, tasaMora, 
   }
   const moraPagada = Math.round(mora)
   return { moraPagada, abonoAPrestamo: Math.max(0, Math.round(total - moraPagada)) }
+}
+
+/** Mora que quedó guardada como pendiente en cuotas ya pagadas (plan_pagos_prestamo.mora_pendiente). */
+export function moraPendienteGuardada(cuotasConMoraPendiente) {
+  return Math.round((cuotasConMoraPendiente || []).reduce((s, c) => s + (parseFloat(c.mora_pendiente) || 0), 0))
+}
+
+/** Cuotas del plan con mora pendiente guardada, de la más antigua a la más nueva. */
+export function cuotasConMoraPendienteDe(plan) {
+  return (plan || [])
+    .filter(c => (parseFloat(c.mora_pendiente) || 0) > 0)
+    .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
+    .map(c => ({ id: c.id, mora_pendiente: parseFloat(c.mora_pendiente) || 0, fecha_proyectada: c.fecha_proyectada, numero_cuota: c.numero_cuota }))
+}
+
+/*
+ * Desglose de un abono, cobrando o no la mora.
+ *
+ *  · cobrarMora: primero la mora que quedó pendiente de abonos anteriores (la más vieja
+ *    primero), y luego lo de siempre (desglosarAbonoConMora): la mora de las cuotas
+ *    vencidas, proporcional a lo que se paga. El resto baja el saldo.
+ *  · sin cobrar: todo el valor va a las cuotas. La mora que ya generaron las cuotas que
+ *    este abono cubre se guarda como pendiente en cada una (si no, al saldarse dejaría de
+ *    existir). Lo que quede sin cubrir sigue generando mora al vuelo, como antes.
+ *
+ * Las cuotas vencidas deben traer `id` (del plan) para poder guardar su mora.
+ * @returns {{ moraPagada: number, abonoAPrestamo: number, moraDiferida: number, movimientos: {plan_id: string, delta: number}[] }}
+ */
+export function desglosarAbono({
+  valor, cuotasVencidasOrdenadas, cuotasConMoraPendiente = [], tasaMora, fechaCorte, diasGracia = 0, cobrarMora = true
+}) {
+  const total = Math.max(0, parseFloat(valor) || 0)
+  const movimientos = []
+
+  if (cobrarMora) {
+    let restante = total
+    let pendienteCobrada = 0
+    for (const c of cuotasConMoraPendiente || []) {
+      if (restante <= 0) break
+      const m = Math.round(parseFloat(c.mora_pendiente) || 0)
+      if (m <= 0) continue
+      const toma = Math.min(m, restante)
+      movimientos.push({ plan_id: c.id, delta: -toma })
+      pendienteCobrada += toma
+      restante -= toma
+    }
+    const d = desglosarAbonoConMora(restante, cuotasVencidasOrdenadas, tasaMora, fechaCorte, diasGracia)
+    return { moraPagada: pendienteCobrada + d.moraPagada, abonoAPrestamo: d.abonoAPrestamo, moraDiferida: 0, movimientos }
+  }
+
+  let restante = total
+  let moraDiferida = 0
+  for (const c of cuotasVencidasOrdenadas || []) {
+    if (restante <= 0) break
+    const pendiente = Math.max(0, parseFloat(c.valor_cuota || 0) - parseFloat(c.valor_pagado || 0))
+    if (pendiente <= 0) continue
+    const cubre = Math.min(pendiente, restante)
+    const parte = Math.round(calcularMoraCuota(c, tasaMora, fechaCorte, diasGracia) * (cubre / pendiente))
+    if (parte > 0 && c.id) {
+      movimientos.push({ plan_id: c.id, delta: parte })
+      moraDiferida += parte
+    }
+    restante -= cubre
+  }
+  return { moraPagada: 0, abonoAPrestamo: Math.round(total), moraDiferida, movimientos }
+}
+
+/**
+ * Aplica (signo 1) o deshace (signo -1) los movimientos de mora pendiente de un abono.
+ * Nunca deja una cuota con mora pendiente negativa.
+ */
+export async function aplicarMovimientosMora(movimientos, signo = 1) {
+  for (const mov of movimientos || []) {
+    if (!mov?.plan_id || !mov.delta) continue
+    const { data, error } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('mora_pendiente')
+      .eq('id', mov.plan_id)
+      .maybeSingle()
+    if (error || !data) continue
+    const nuevo = Math.max(0, Math.round((parseFloat(data.mora_pendiente) || 0) + signo * mov.delta))
+    await supabase.from('plan_pagos_prestamo').update({ mora_pendiente: nuevo }).eq('id', mov.plan_id)
+  }
 }
 
 // Registra en el fondo común (utilidades_clasificadas) el interés de mora COBRADO
@@ -595,7 +680,7 @@ export async function cargarDeudaPrestamosSocio(socioNatilleraId, natillera) {
 
   const { data: plan, error: errPlan } = await supabase
     .from('plan_pagos_prestamo')
-    .select('prestamo_id, numero_cuota, valor_cuota, valor_pagado, capital, fecha_proyectada, pagada')
+    .select('id, prestamo_id, numero_cuota, valor_cuota, valor_pagado, capital, fecha_proyectada, pagada, mora_pendiente')
     .in('prestamo_id', prestamos.map(p => p.id))
   if (errPlan) throw errPlan
 
@@ -606,8 +691,10 @@ export async function cargarDeudaPrestamosSocio(socioNatilleraId, natillera) {
       .filter(c => c.prestamo_id === p.id && !c.pagada && fechaLimiteSinMora(c, diasGracia) < hoy)
       .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
     const saldo = Math.max(0, Math.round(parseFloat(p.saldo_actual) || 0))
-    const mora = Math.round(calcularMoraPrestamo(cuotasVencidasOrdenadas, tasaMora, hoy, diasGracia))
-    return { id: p.id, monto: parseFloat(p.monto) || 0, saldo, mora, total: saldo + mora, cuotasVencidasOrdenadas }
+    // Mora = la que generan las cuotas vencidas hoy + la que quedó pendiente de abonos anteriores.
+    const cuotasConMoraPendiente = cuotasConMoraPendienteDe((plan || []).filter(c => c.prestamo_id === p.id))
+    const mora = Math.round(calcularMoraPrestamo(cuotasVencidasOrdenadas, tasaMora, hoy, diasGracia)) + moraPendienteGuardada(cuotasConMoraPendiente)
+    return { id: p.id, monto: parseFloat(p.monto) || 0, saldo, mora, total: saldo + mora, cuotasVencidasOrdenadas, cuotasConMoraPendiente }
   })
 }
 
@@ -624,9 +711,15 @@ export async function registrarAbonoPrestamo({
   const { tasaMora, diasGracia } = reglasMoraNatillera(natillera)
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
-  const { moraPagada, abonoAPrestamo } = desglosarAbonoConMora(
-    valor, prestamo.cuotasVencidasOrdenadas, tasaMora, hoy, diasGracia
-  )
+  const { moraPagada, abonoAPrestamo, movimientos } = desglosarAbono({
+    valor,
+    cuotasVencidasOrdenadas: prestamo.cuotasVencidasOrdenadas,
+    cuotasConMoraPendiente: prestamo.cuotasConMoraPendiente,
+    tasaMora,
+    fechaCorte: hoy,
+    diasGracia,
+    cobrarMora: true
+  })
   const fp = formaPago === 'transferencia' ? 'transferencia' : 'efectivo'
 
   const { data: pago, error: errPago } = await supabase
@@ -641,7 +734,9 @@ export async function registrarAbonoPrestamo({
       valor_transferencia: fp === 'transferencia' ? abonoAPrestamo : 0,
       nombre_socio: nombreSocio,
       nombre_natillera: natillera?.nombre || null,
-      origen
+      origen,
+      mora_cobrada: moraPagada,
+      mora_movimientos: movimientos.length ? movimientos : null
     })
     .select('id')
     .single()
@@ -655,6 +750,7 @@ export async function registrarAbonoPrestamo({
   if (errPrestamo) throw errPrestamo
 
   await recalcularPlanPagosPrestamo(prestamo.id)
+  await aplicarMovimientosMora(movimientos, 1)
   if (moraPagada > 0) await registrarMoraCobradaEnFondo(natillera?.id, moraPagada, fp)
 
   return { pagoId: pago.id, abono: abonoAPrestamo, mora: moraPagada, saldoNuevo }
@@ -665,6 +761,9 @@ export async function registrarAbonoPrestamo({
  * préstamo, reaplica el plan y descuenta la mora que se había llevado al fondo.
  */
 export async function revertirAbonoPrestamo({ prestamoId, pagoId, abono, mora, formaPago, natilleraId }) {
+  // Lo que el abono movió en la mora pendiente se deshace antes de borrarlo.
+  const { data: pagoPrevio } = await supabase.from('pagos_prestamo').select('mora_movimientos').eq('id', pagoId).maybeSingle()
+  await aplicarMovimientosMora(pagoPrevio?.mora_movimientos, -1)
   const { error: errBorrar } = await supabase.from('pagos_prestamo').delete().eq('id', pagoId)
   if (errBorrar) throw errBorrar
 
@@ -683,24 +782,49 @@ export async function revertirAbonoPrestamo({ prestamoId, pagoId, abono, mora, f
 
   await recalcularPlanPagosPrestamo(prestamoId)
   // Restar la mora es sumar un negativo en la misma fila acumulada.
-  if (Number(mora) > 0) await registrarMoraCobradaEnFondoNegativa(natilleraId, Number(mora), formaPago)
+  // El abono ya se deshizo: si la mora no se puede descontar, no se corta la reversión, se
+  // devuelve para que quien llama avise (y no quede contada en silencio).
+  if (Number(mora) > 0) {
+    try {
+      await registrarMoraCobradaEnFondoNegativa(natilleraId, Number(mora), formaPago)
+    } catch (e) {
+      console.error('No se pudo descontar la mora del fondo:', e)
+      return { moraSinDescontar: Math.round(Number(mora)) }
+    }
+  }
+  return { moraSinDescontar: 0 }
 }
 
-async function registrarMoraCobradaEnFondoNegativa(natilleraId, monto, formaPago) {
+export async function registrarMoraCobradaEnFondoNegativa(natilleraId, monto, formaPago) {
+  const valor = Math.round(Number(monto) || 0)
+  if (!natilleraId || valor <= 0) return
   const fp = formaPago === 'transferencia' ? 'transferencia' : 'efectivo'
-  const { data: fila } = await supabase
+  /*
+   * Antes, si no encontraba la fila (o había más de una y `maybeSingle` fallaba) no hacía
+   * nada y no decía nada: la mora de un cruce deshecho quedaba contada como ganada. Así se
+   * acumularon $17.933 de un retiro revertido. Ahora busca por la forma de pago y, si no
+   * está, en la otra; y si no puede descontar, lo lanza para que quien llama lo sepa.
+   */
+  const buscar = async (forma) => {
+    const { data, error } = await supabase
+      .from('utilidades_clasificadas')
+      .select('id, monto')
+      .eq('natillera_id', natilleraId)
+      .eq('tipo', 'prestamos')
+      .is('id_actividad', null)
+      .filter('detalles->>subtipo', 'eq', 'mora')
+      .is('fecha_cierre', null)
+      .eq('forma_pago', forma)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    if (error) throw error
+    return data?.[0] || null
+  }
+  const fila = (await buscar(fp)) || (await buscar(fp === 'transferencia' ? 'efectivo' : 'transferencia'))
+  if (!fila) throw new Error(`No se encontró la mora de préstamos en utilidades para descontar $${valor}`)
+  const { error } = await supabase
     .from('utilidades_clasificadas')
-    .select('id, monto')
-    .eq('natillera_id', natilleraId)
-    .eq('tipo', 'prestamos')
-    .is('id_actividad', null)
-    .filter('detalles->>subtipo', 'eq', 'mora')
-    .is('fecha_cierre', null)
-    .eq('forma_pago', fp)
-    .maybeSingle()
-  if (!fila) return
-  await supabase
-    .from('utilidades_clasificadas')
-    .update({ monto: Math.max(0, (parseFloat(fila.monto) || 0) - monto), updated_at: new Date().toISOString() })
+    .update({ monto: Math.max(0, (parseFloat(fila.monto) || 0) - valor), updated_at: new Date().toISOString() })
     .eq('id', fila.id)
+  if (error) throw error
 }

@@ -343,9 +343,14 @@
 
       <!-- Vista: Todas (Propias + Compartidas) -->
       <template v-else-if="vistaActiva === 'todas'">
-        <div v-if="todasLasNatillerasFiltradas.length === 0" class="w-full">
+        <!--
+          «Todas» incluye las de socio. Antes el vacío solo miraba propias y compartidas:
+          quien solo era socio (o cuya única compartida no pasaba el filtro) veía «no tienes
+          natilleras» y sus tarjetas de socio, que van en la cuadrícula de abajo, nunca salían.
+        -->
+        <div v-if="todasLasNatillerasFiltradas.length === 0 && natillerasSocioFiltradas.length === 0" class="w-full">
           <DashboardEmptySinNatilleras
-            v-if="todasLasNatilleras.length === 0"
+            v-if="todasLasNatilleras.length === 0 && natillerasSocioPortal.length === 0"
             class="w-full"
           />
           <div v-else class="flex w-full justify-center">
@@ -630,10 +635,7 @@
             >
               <span v-if="!natillerasStore.loading">Sí, Eliminar</span>
               <span v-else class="flex items-center justify-center gap-2">
-                <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+                <CargaBoton pequena />
                 Eliminando...
               </span>
             </button>
@@ -653,35 +655,43 @@
       :text="mensajeCargaActual"
     />
 
-    <!-- Modal para crear primera natillera -->
+    <!-- Modal para crear primera natillera.
+         Cabecera y acciones fijas, cuerpo con scroll propio: en iOS ModalWrapper deja la
+         tarjeta en `overflow: hidden` y, sin un cuerpo que se desplace, en pantallas bajas
+         (o en horizontal) los botones quedaban cortados y no había forma de llegar a ellos.
+         Sin natiscroll: el cuerpo son dos frases y cuatro viñetas; solo desborda en horizontal. -->
     <ModalWrapper
       :show="mostrarModalCrearNatillera && !verificandoModal"
       :z-index="50"
       align="center"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
       backdrop-class="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      card-class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 border border-gray-200 overflow-hidden"
+      card-class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden flex flex-col min-h-0 max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh]"
       @close="mostrarModalCrearNatillera = false"
     >
           <!-- Efectos decorativos de fondo -->
-          <div class="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse"></div>
-          <div class="absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 animate-pulse" style="animation-delay: 0.5s"></div>
-          
-          <div class="relative z-10">
-            <!-- Mensaje de Bienvenida -->
-            <div class="text-center mb-8 animate-fade-in-up">
-              <!-- Icono: círculo mismo tono que el botón principal -->
-              <div class="relative w-[5.25rem] h-[5.25rem] mx-auto mb-4 flex items-center justify-center">
-                <div
-                  class="flex h-full w-full items-center justify-center rounded-full bg-[hsl(152_55%_24%)] text-white shadow-[0_6px_20px_hsla(152,45%,18%,0.28)]"
-                >
-                  <PiggyBankIcon class="w-10 h-10 shrink-0" />
-                </div>
+          <div class="pointer-events-none absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" aria-hidden="true"></div>
+          <div class="pointer-events-none absolute bottom-0 left-0 w-56 h-56 bg-gradient-to-tr from-teal-400/20 to-green-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 animate-pulse" style="animation-delay: 0.5s" aria-hidden="true"></div>
+
+          <!-- Cabecera -->
+          <div class="relative z-10 flex-shrink-0 px-6 pt-6 sm:px-8 sm:pt-8 text-center animate-fade-in-up">
+            <!-- Icono: círculo mismo tono que el botón principal -->
+            <div class="relative w-[5.25rem] h-[5.25rem] mx-auto mb-4 flex items-center justify-center">
+              <div
+                class="flex h-full w-full items-center justify-center rounded-full bg-[hsl(152_55%_24%)] text-white shadow-[0_6px_20px_hsla(152,45%,18%,0.28)]"
+              >
+                <PiggyBankIcon class="w-10 h-10 shrink-0" />
               </div>
-              
-              <h2 class="text-2xl font-display font-bold text-gray-900 mb-3">
-                ¡Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>!
-              </h2>
+            </div>
+
+            <h2 class="text-2xl font-display font-bold text-gray-900 mb-3">
+              ¡Hola, <span class="text-[#166534]">{{ authStore.userName }}</span>!
+            </h2>
+          </div>
+
+          <!-- Cuerpo con scroll propio -->
+          <div class="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-6 sm:px-8">
+            <div class="text-center mb-8">
               <p class="text-gray-600 text-base leading-relaxed mb-4">
                 Estamos emocionados de tenerte aquí.
               </p>
@@ -693,7 +703,7 @@
             <div class="h-px w-full max-w-sm mx-auto mb-5 bg-[hsl(120_8%_88%)]" role="presentation" />
 
             <section
-              class="text-left max-w-sm mx-auto mb-8"
+              class="text-left max-w-sm mx-auto mb-6"
               aria-labelledby="modal-bienvenida-como-funciona"
             >
               <h3
@@ -721,13 +731,16 @@
                 </li>
               </ul>
             </section>
+          </div>
 
+          <!-- Acciones: siempre visibles, con safe-area y lo que tape la barra de Safari -->
+          <div class="relative z-10 flex-shrink-0 px-6 pt-4 sm:px-8 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:pb-8">
             <!-- Botones (misma forma píldora que tarjeta vacía; colores distintos) -->
             <div class="flex flex-col gap-3 max-w-sm mx-auto w-full">
               <router-link
                 :to="esSocioEnAlgunaNatillera ? '/dashboard' : '/natilleras/crear'"
                 @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
-                class="inline-flex w-full items-center justify-center gap-2 rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-white bg-[hsl(152_55%_24%)] hover:bg-[hsl(152_58%_20%)] shadow-[0_6px_20px_hsla(152,45%,18%,0.28)] hover:shadow-[0_8px_24px_hsla(152,45%,16%,0.32)] transition-[background,box-shadow,transform] active:scale-[0.98]"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-white bg-[hsl(152_55%_24%)] hover:bg-[hsl(152_58%_20%)] shadow-[0_6px_20px_hsla(152,45%,18%,0.28)] hover:shadow-[0_8px_24px_hsla(152,45%,16%,0.32)] transition-[background,box-shadow,transform] active:scale-[0.98] touch-manipulation"
               >
                 <span v-if="!esSocioEnAlgunaNatillera" class="text-xl font-semibold leading-none" aria-hidden="true">+</span>
                 <ArrowRightIcon v-else class="w-5 h-5 shrink-0" aria-hidden="true" />
@@ -737,7 +750,7 @@
               <button
                 type="button"
                 @click="marcarModalComoMostrado(); mostrarModalCrearNatillera = false"
-                class="inline-flex w-full items-center justify-center rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-[hsl(220_12%_26%)] bg-[hsl(120_12%_97%)] border border-[hsl(120_8%_88%)] hover:bg-[hsl(120_10%_94%)] hover:border-[hsl(120_8%_82%)] shadow-[0_4px_14px_hsla(152,20%,12%,0.08)] transition-[background,border-color,box-shadow,transform] active:scale-[0.98]"
+                class="inline-flex w-full items-center justify-center rounded-full py-3.5 px-6 text-[0.9375rem] font-bold text-[hsl(220_12%_26%)] bg-[hsl(120_12%_97%)] border border-[hsl(120_8%_88%)] hover:bg-[hsl(120_10%_94%)] hover:border-[hsl(120_8%_82%)] shadow-[0_4px_14px_hsla(152,20%,12%,0.08)] transition-[background,border-color,box-shadow,transform] active:scale-[0.98] touch-manipulation"
               >
                 Crear más tarde
               </button>
@@ -748,6 +761,7 @@
 </template>
 
 <script setup>
+import CargaBoton from '../components/carga/CargaBoton.vue'
 import { ref, computed, onMounted, onActivated, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useNatillerasStore } from '../stores/natilleras'
@@ -773,7 +787,6 @@ import DashboardNatilleraCard from '../components/DashboardNatilleraCard.vue'
 import DashboardNatilleraSocioCard from '../components/DashboardNatilleraSocioCard.vue'
 import PiggyBankIcon from '../components/icons/PiggyBankIcon.vue'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
-import { detectIosPlatform } from '../composables/useIsIos'
 import { 
   BanknotesIcon, 
   UsersIcon, 
@@ -831,15 +844,21 @@ const solicitudesSocioPendientes = ref([])
  * Las de socio en «Todas»: con el mismo filtro de estado, y sin repetir una natillera que
  * además se administra o se comparte (ahí ya sale su tarjeta normal).
  */
-const natillerasSocioFiltradas = computed(() => {
+const natillerasSocioVisibles = computed(() => {
   const yaListadas = new Set(todasLasNatilleras.value.map(n => n.id))
-  return natillerasSocioPortal.value.filter(n => {
-    if (yaListadas.has(n.natillera_id)) return false
-    if (filtro.value === 'todas') return true
-    return String(n.natillera_estado || 'activa').toLowerCase() === filtro.value
-  })
+  return natillerasSocioPortal.value.filter(n => !yaListadas.has(n.natillera_id))
 })
+const natillerasSocioFiltradas = computed(() => natillerasSocioVisibles.value.filter(n => {
+  if (filtro.value === 'todas') return true
+  return String(n.natillera_estado || 'activa').toLowerCase() === filtro.value
+}))
 const verificandoModal = ref(true) // Estado para la animación de carga
+// Bloqueo de scroll de la pantalla de carga con el composable común: el bloqueo propio que
+// había tocaba <main> en iOS (Safari recorta los fixed dentro de un main con overflow
+// hidden) y se saltaba el contador global, así que desbloqueaba con otro modal abierto.
+useBodyScrollLock(verificandoModal)
+// Bienvenida: sin bloqueo, arrastrar sobre el velo desplazaba la página de detrás.
+useBodyScrollLock(computed(() => mostrarModalCrearNatillera.value && !verificandoModal.value))
 const finalizandoVerificacion = ref(false) // Flag para evitar múltiples ejecuciones
 const sociosPorNatillera = ref({}) // Almacenar socios de cada natillera
 
@@ -1044,14 +1063,14 @@ const todasLasNatillerasFiltradas = computed(() => {
 })
 
 const totalListadosVista = computed(() => {
-  if (vistaActiva.value === 'todas') return todasLasNatilleras.value.length
+  if (vistaActiva.value === 'todas') return todasLasNatilleras.value.length + natillerasSocioVisibles.value.length
   if (vistaActiva.value === 'propias') return natillerasStore.natilleras.length
   if (vistaActiva.value === 'compartidas') return natillerasStore.natillerasCompartidas.length
   return 0
 })
 
 const mostrandoListadosVista = computed(() => {
-  if (vistaActiva.value === 'todas') return todasLasNatillerasFiltradas.value.length
+  if (vistaActiva.value === 'todas') return todasLasNatillerasFiltradas.value.length + natillerasSocioFiltradas.value.length
   if (vistaActiva.value === 'propias') return natillerasFiltradas.value.length
   if (vistaActiva.value === 'compartidas') return natillerasCompartidasFiltradas.value.length
   return 0
@@ -1141,94 +1160,6 @@ watch(
   }
 )
 
-// Pantalla de verificación inicial: guardar scroll y restaurar (evita salto en iOS/Android con scroll en <main>)
-let loaderScrollLockY = 0
-let loaderScrollLockMainY = 0
-
-function getLoaderScrollMain() {
-  return document.querySelector('main.overflow-y-auto')
-}
-
-function bloquearScroll() {
-  const html = document.documentElement
-  loaderScrollLockY = window.scrollY || html.scrollTop
-  const main = getLoaderScrollMain()
-  loaderScrollLockMainY = main ? main.scrollTop : 0
-
-  if (detectIosPlatform()) {
-    document.body.style.overflow = 'hidden'
-    document.body.style.position = 'relative'
-    document.body.style.height = '100%'
-    document.body.style.touchAction = 'none'
-    html.style.overflow = 'hidden'
-    html.style.height = '100%'
-    if (main) {
-      main.style.overflow = 'hidden'
-      main.style.touchAction = 'none'
-    }
-    return
-  }
-
-  document.body.style.overflow = 'hidden'
-  document.body.style.position = 'fixed'
-  document.body.style.top = `-${loaderScrollLockY}px`
-  document.body.style.left = '0'
-  document.body.style.right = '0'
-  document.body.style.width = '100%'
-  html.style.overflow = 'hidden'
-  const mainEl = getLoaderScrollMain()
-  if (mainEl) {
-    mainEl.style.position = 'fixed'
-    mainEl.style.top = `-${loaderScrollLockMainY}px`
-    mainEl.style.left = '0'
-    mainEl.style.right = '0'
-    mainEl.style.width = '100%'
-    mainEl.style.overflow = 'hidden'
-  }
-}
-
-function desbloquearScroll() {
-  const html = document.documentElement
-  const main = getLoaderScrollMain()
-
-  if (detectIosPlatform()) {
-    document.body.style.overflow = ''
-    document.body.style.position = ''
-    document.body.style.height = ''
-    document.body.style.touchAction = ''
-    html.style.overflow = ''
-    html.style.height = ''
-    if (main) {
-      main.style.overflow = ''
-      main.style.touchAction = ''
-      requestAnimationFrame(() => {
-        main.scrollTop = loaderScrollLockMainY
-      })
-    }
-    requestAnimationFrame(() => {
-      window.scrollTo(0, loaderScrollLockY)
-    })
-    return
-  }
-
-  document.body.style.overflow = ''
-  document.body.style.position = ''
-  document.body.style.top = ''
-  document.body.style.left = ''
-  document.body.style.right = ''
-  document.body.style.width = ''
-  html.style.overflow = ''
-  if (main) {
-    main.style.position = ''
-    main.style.top = ''
-    main.style.left = ''
-    main.style.right = ''
-    main.style.width = ''
-    main.style.overflow = ''
-    main.scrollTop = loaderScrollLockMainY
-  }
-  window.scrollTo(0, loaderScrollLockY)
-}
 
 // Variable para mantener el índice anterior fuera del intervalo
 let indiceMensajeAnterior = -1
@@ -1341,7 +1272,6 @@ async function finalizarVerificacionYMostrarModal() {
     
     if (!natillerasStore.loading && usuarioAutenticado.value) {
       detenerRotacionMensajes()
-      desbloquearScroll()
       verificandoModal.value = false
       
       await nextTick()
@@ -1358,13 +1288,11 @@ async function finalizarVerificacionYMostrarModal() {
 // Watch para controlar el bloqueo de scroll cuando se muestra/oculta la animación
 watch(verificandoModal, (mostrando) => {
   if (mostrando) {
-    bloquearScroll()
     // Iniciar rotación con un pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
       iniciarRotacionMensajes()
     }, 100)
   } else {
-    desbloquearScroll()
     detenerRotacionMensajes()
   }
 }, { immediate: true }) // immediate: true para que se ejecute al montar el componente
@@ -1849,7 +1777,6 @@ async function inicializarComponente() {
   const tieneNatilleras = todasLasNatilleras.value.length > 0
   if (tieneNatilleras && verificandoModal.value) {
     detenerRotacionMensajes()
-    desbloquearScroll()
     verificandoModal.value = false
   }
 
@@ -1898,7 +1825,6 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   detenerRotacionMensajes()
   detenerRotacionMensajesEliminacion()
-  desbloquearScroll()
 })
 
 // Cuando el usuario regresa a esta ruta (desde otra página)
@@ -1931,221 +1857,5 @@ onActivated(async () => {
   border-radius: 1rem;
   border: 1px solid rgba(180, 83, 9, 0.25);
   background: #fffbeb;
-}
-
-/* Animación de pulso y brillo */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), 0 0 40px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(34, 197, 94, 0.8), 0 0 60px rgba(16, 185, 129, 0.5), 0 0 80px rgba(16, 185, 129, 0.3);
-  }
-}
-
-/* Animación de escala continua */
-@keyframes scale-bounce {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-/* Animación de brillo deslizante */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-  }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
-  }
-}
-
-/* Animación de anillos de pulso */
-@keyframes ping-ring {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* Animación de borde pulsante */
-@keyframes border-pulse {
-  0%, 100% {
-    border-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-  }
-  50% {
-    border-color: rgba(255, 255, 255, 1);
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
-  }
-}
-
-/* Animación de contenido que rebota suavemente */
-@keyframes content-bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
-}
-
-/* Animación de rotación lenta del icono */
-@keyframes spin-slow {
-  0% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.1);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* Clase para la animación de shimmer */
-.animate-shimmer {
-  animation: shimmer 2s linear infinite;
-}
-
-/* Clase para la animación de ping ring */
-.animate-ping-ring {
-  animation: ping-ring 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-/* Clase para la animación de border pulse */
-.animate-border-pulse {
-  animation: border-pulse 1.5s ease-in-out infinite;
-}
-
-/* Clase para la animación de contenido */
-.animate-content-bounce {
-  animation: content-bounce 2s ease-in-out infinite;
-}
-
-/* Clase para la animación de spin slow */
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
-}
-
-/* Clase para el botón con pulso y brillo */
-.animate-pulse-button {
-  animation: pulse-glow 2s ease-in-out infinite, scale-bounce 1.5s ease-in-out infinite;
-}
-
-/* Animación de rotación suave */
-@keyframes spin-smooth {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin-smooth {
-  animation: spin-smooth 1s linear infinite;
-}
-
-/* Animación de barra de progreso */
-@keyframes progress {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-.animate-progress {
-  animation: progress 1.5s ease-in-out infinite;
-}
-
-/* Animación de rotación reversa */
-.animate-spin-reverse {
-  animation: spin-smooth 0.8s linear infinite reverse;
-}
-
-/* Animación de brillo pulsante para el centro */
-@keyframes glow-pulse {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
-  }
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
-}
-
-/* Animaciones de partículas flotantes */
-@keyframes float-1 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(10px, -15px) scale(1.2);
-    opacity: 1;
-  }
-}
-
-@keyframes float-2 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(-12px, 10px) scale(1.1);
-    opacity: 1;
-  }
-}
-
-@keyframes float-3 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(8px, 12px) scale(1.15);
-    opacity: 1;
-  }
-}
-
-.animate-float-1 {
-  animation: float-1 2s ease-in-out infinite;
-}
-
-.animate-float-2 {
-  animation: float-2 2.5s ease-in-out infinite;
-  animation-delay: 0.5s;
-}
-
-.animate-float-3 {
-  animation: float-3 2.2s ease-in-out infinite;
-  animation-delay: 1s;
-}
-
-/* Animación de fade in-out para el texto */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
 }
 </style>

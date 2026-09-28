@@ -85,6 +85,7 @@ import { EyeSlashIcon, InboxIcon } from '@heroicons/vue/24/outline'
 import { ChatBubbleOvalLeftEllipsisIcon } from '@heroicons/vue/24/solid'
 import { isBodyScrollLocked } from '../../composables/useBodyScrollLock'
 import { useBotonSoporte } from '../../composables/useBotonSoporte'
+import { useTapadoInferior } from '../../composables/useTapadoInferior'
 import { useSoporteStore } from '../../stores/soporte'
 import { useNotificationStore } from '../../stores/notifications'
 
@@ -123,7 +124,23 @@ const posicionLibre = ref(null)  // {x, y} solo mientras se arrastra
 
 // `window.innerWidth/innerHeight` no son reactivos: sin esta medida el botón se
 // quedaría colocado según el tamaño que tenía la ventana al montarse.
-const medida = ref({ ancho: 0, alto: 0 })
+const medida = ref({ ancho: 0, alto: 0, seguroAbajo: 0 })
+
+// Barra de Safari (iOS 15+) dibujada encima del borde inferior: no es safe-area.
+const { tapado } = useTapadoInferior()
+
+/*
+ * `env(safe-area-inset-bottom)` solo existe en CSS: para usarlo en el cálculo
+ * de posición se lee del alto de una sonda invisible que lo lleva como altura.
+ */
+function medirSeguroAbajo() {
+  const sonda = document.createElement('div')
+  sonda.style.cssText = 'position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none'
+  document.body.appendChild(sonda)
+  const valor = sonda.offsetHeight
+  sonda.remove()
+  return valor
+}
 
 const ladoMenu = computed(() => estado.lado)
 
@@ -150,8 +167,9 @@ const seMuestra = computed(() => {
 function zonaSegura() {
   const alto = medida.value.alto || window.innerHeight
   const ancho = medida.value.ancho || window.innerWidth
-  // La barra inferior de la natillera mide ~4.5rem; se le suma el safe-area.
-  const reservaAbajo = props.hayBarraInferior ? 88 : 24
+  // La barra inferior de la natillera mide ~4.5rem (88 px con su margen); a eso
+  // se le suman el home indicator (safe-area) y, en Safari, lo que tapa su barra.
+  const reservaAbajo = (props.hayBarraInferior ? 88 : 24) + (medida.value.seguroAbajo || 0) + tapado.value
   const bordeIzquierdo = ancho >= PX_BARRA_LATERAL_FIJA ? ANCHO_BARRA_LATERAL : 0
 
   return {
@@ -290,7 +308,7 @@ function alTocarFuera(evento) {
 }
 
 function alRedimensionar() {
-  medida.value = { ancho: window.innerWidth, alto: window.innerHeight }
+  medida.value = { ancho: window.innerWidth, alto: window.innerHeight, seguroAbajo: medirSeguroAbajo() }
 }
 
 onMounted(() => {

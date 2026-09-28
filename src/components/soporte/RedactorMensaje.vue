@@ -1,6 +1,10 @@
 <template>
+  <!--
+    `--tapado-inferior` lo publica ModalWrapper en Safari de iOS (barra de
+    direcciones inferior, que no es safe-area); fuera de un modal vale 0.
+  -->
   <div
-    class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+    class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
   >
     <!--
       Solo lectura: se explica el motivo en lugar de dejar un campo muerto
@@ -104,13 +108,18 @@
           type="file"
           class="hidden"
           multiple
-          :accept="MIMES_ADMITIDOS.join(',')"
+          :accept="MIMES_SELECTOR.join(',')"
           @change="elegirArchivos"
         />
 
         <!--
           text-base (16 px) es obligatorio: con menos, iOS hace zoom al enfocar el
           campo y deja la pantalla descolocada (RNF-02).
+          No se deshabilita durante el envío: un campo `disabled` pierde el foco,
+          iOS cierra el teclado y el focus() posterior (fuera del gesto) no lo
+          reabre. El doble envío lo impide `puedeEnviar`, que mira `enviando`, y
+          `readonly` evita que lo tecleado mientras tanto se pierda al limpiar el
+          borrador cuando el envío se confirma (readonly conserva el foco).
         -->
         <textarea
           ref="campo"
@@ -119,7 +128,9 @@
           :maxlength="MAX_CUERPO"
           :placeholder="marcador"
           class="max-h-32 min-h-[2.75rem] flex-1 resize-none rounded-2xl border border-gray-300 bg-white px-4 py-2.5 text-base leading-snug text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#1B5E37] focus:ring-2 focus:ring-[#1B5E37]/30"
-          :disabled="enviando"
+          enterkeyhint="send"
+          :readonly="enviando"
+          :aria-busy="enviando ? 'true' : 'false'"
           @input="alEscribir"
           @keydown.enter.exact.prevent="intentarEnviar"
         />
@@ -132,10 +143,7 @@
           @click="intentarEnviar"
         >
           <PaperAirplaneIcon v-if="!enviando" class="h-5 w-5" />
-          <svg v-else class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
+          <CargaBoton v-else pequena />
         </button>
       </div>
 
@@ -147,13 +155,14 @@
 </template>
 
 <script setup>
+import CargaBoton from '../carga/CargaBoton.vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import {
   ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
   PaperClipIcon, PlusIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import { MAX_ADJUNTOS, MIMES_ADMITIDOS, useSoporteStore } from '../../stores/soporte'
-import { comprimirImagen, crearVistaPrevia, esImagen, revocarVistasPrevias } from '../../utils/adjuntosSoporte'
+import { MAX_ADJUNTOS, MIMES_SELECTOR, useSoporteStore } from '../../stores/soporte'
+import { comprimirImagen, crearVistaPrevia, esHeic, esImagen, revocarVistasPrevias } from '../../utils/adjuntosSoporte'
 import { useNotificationStore } from '../../stores/notifications'
 
 const MAX_CUERPO = 4000
@@ -246,10 +255,27 @@ async function prepararImagen(entrada) {
     // El usuario pudo quitarlo mientras se comprimía.
     if (!archivos.value.includes(entrada)) return
     entrada.archivo = listo
+    if (esHeic(listo.type)) avisarHeicSinConvertir(entrada)
   } finally {
     entrada.preparando = false
     rechazarSiPesaDemasiado(entrada)
   }
+}
+
+/*
+ * El navegador no supo decodificar la foto HEIC (Safari < 17, Chrome). Un HEIC
+ * se envía como estaba —el servidor lo admite—, pero se avisa de que quizá no se
+ * vea en todos lados; HEIF el servidor no lo admite, así que se quita.
+ */
+function avisarHeicSinConvertir(entrada) {
+  const nombre = entrada.archivo.name
+  if (entrada.archivo.type === 'image/heic') {
+    notificaciones.alerta(`No pudimos convertir «${nombre}» a JPG: se enviará como HEIC y puede que no se vea en todos los equipos.`)
+    return
+  }
+  const indice = archivos.value.indexOf(entrada)
+  if (indice >= 0) quitarArchivo(indice)
+  notificaciones.alerta(`No pudimos convertir «${nombre}». Elige la foto desde la galería o guárdala como JPG.`)
 }
 
 function rechazarSiPesaDemasiado(entrada) {
@@ -281,14 +307,10 @@ onBeforeUnmount(() => {
 })
 
 /*
- * Al enviar, el campo se deshabilita y el navegador le quita el foco; cuando se
- * vuelve a habilitar, el foco no regresa solo. Escribiendo con el teclado eso
- * corta la conversación: cada mensaje obliga a volver a pinchar en el campo.
- *
- * Se recuerda si el campo tenía el foco en el momento de enviar y se le
- * devuelve al terminar. Así distinguimos los dos gestos sin adivinar: con Enter
- * el foco estaba en el campo y vuelve; pulsando el botón de enviar el foco
- * estaba en el botón, y ahí no lo robamos.
+ * Si el foco estaba en el campo al enviar (Enter), se le asegura al terminar;
+ * pulsando el botón de enviar el foco estaba en el botón, y ahí no lo robamos.
+ * El campo ya no se deshabilita, así que normalmente el foco no llega a irse y
+ * el teclado de iOS sigue abierto; esto cubre el caso de que algo lo quite.
  */
 let teniaFoco = false
 
@@ -301,9 +323,10 @@ function intentarEnviar() {
 watch(() => props.enviando, (enviandoAhora, enviandoAntes) => {
   if (!enviandoAntes || enviandoAhora || !teniaFoco) return
   teniaFoco = false
-  // nextTick: hay que esperar a que `disabled` desaparezca del DOM, o el focus()
-  // se pierde. Vale igual cuando el envío falla y el texto vuelve al campo.
-  nextTick(() => campo.value?.focus())
+  // Vale igual cuando el envío falla y el texto vuelve al campo.
+  nextTick(() => {
+    if (document.activeElement !== campo.value) campo.value?.focus()
+  })
 })
 
 /** El padre la llama cuando el envío se confirma: el texto solo se borra entonces. */

@@ -54,21 +54,9 @@ function applyLock() {
       main.setAttribute('data-scroll-y', savedScrollYMain.toString())
       // No aplicar height/overflow a main en iOS
     }
-
-    requestAnimationFrame(() => {
-      const modals = document.querySelectorAll(
-        '.fixed.inset-0, [class*="fixed"][class*="inset-0"], .modal-wrapper-ios'
-      )
-      modals.forEach(modal => {
-        if (modal && modal.style) {
-          modal.style.display = modal.style.display || 'flex'
-          modal.style.opacity = '1'
-          modal.style.visibility = 'visible'
-          modal.style.transform = 'translate3d(0, 0, 0)'
-          modal.style.webkitTransform = 'translate3d(0, 0, 0)'
-        }
-      })
-    })
+    // Aquí se forzaban opacity/visibility/transform en línea sobre todo `.fixed.inset-0` del
+    // documento, sin limpiarlos nunca. Con ModalWrapper (`.modal-wrapper-ios`) ya no hace falta,
+    // y a lo que sí alcanzaba (CargaCaja flotante) le quitaba el fundido de salida.
   } else {
     // Para Android y otros: usar el método original con position fixed
     document.body.style.position = 'fixed'
@@ -108,7 +96,11 @@ function applyUnlock() {
 
     requestAnimationFrame(() => {
       if (savedY > 0) {
+        // `html { scroll-behavior: smooth }` animaba la vuelta a la posición: se veía
+        // la página desplazarse sola al cerrar el modal.
+        html.style.scrollBehavior = 'auto'
         window.scrollTo(0, savedY)
+        html.style.scrollBehavior = ''
       }
     })
 
@@ -150,10 +142,13 @@ export function useBodyScrollLock(isOpen) {
   let thisInstanceLocked = false
 
   const lockBodyScroll = () => {
-    lockCount++
+    if (thisInstanceLocked) return
     thisInstanceLocked = true
+    // Solo el primer modal bloquea. Si cada apertura volviera a bloquear, con modales
+    // encadenados se guardaría como posición la del documento ya bloqueado (0) y como
+    // alto original el '100%' puesto por el bloqueo anterior: al cerrar todo, el scroll se perdía.
+    if (lockCount++ === 0) applyLock()
     updateLockedRef()
-    applyLock()
   }
 
   const unlockBodyScroll = () => {

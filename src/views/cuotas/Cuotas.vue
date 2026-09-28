@@ -169,7 +169,7 @@
     </div>
 
     <!-- Footer de acciones fijo -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="mb-3 flex items-baseline justify-between gap-2">
         <span class="font-display text-sm font-bold text-gray-800">Total atrasado</span>
         <span class="font-display text-base font-bold tabular-nums text-[#1B5E37]">
@@ -247,7 +247,7 @@
     </div>
     <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
       <div class="mx-auto mt-3 mb-2 h-1 w-10 shrink-0 rounded-full bg-gray-300 sm:hidden" aria-hidden="true" />
-      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:pt-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 sm:pt-5 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] [-webkit-overflow-scrolling:touch]">
         <!-- Cuadrícula de meses (config lista) -->
         <div v-if="configCargada" ref="rejillaMesesRef" class="grid grid-cols-3 gap-2.5">
           <button
@@ -1767,17 +1767,21 @@
                 <div class="flex items-center justify-center gap-2">
                   <button 
                     v-if="!esVisor && ((cuota.estadoReal || cuota.estado) === 'parcial' || (getTotalPagadoConActividadesSocio(cuota) > 0 && getTotalPagadoConActividadesSocio(cuota) < getTotalAPagarConActividadesSocio(cuota)))"
+                    type="button"
                     @click="abrirModalEditar(cuota)"
-                    class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                    class="min-h-11 min-w-11 px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
                     title="Editar cuota"
+                    aria-label="Editar cuota"
                   >
                     <PencilIcon class="w-3 h-3" />
                   </button>
                   <button 
                     v-if="!esVisor && (cuota.estadoReal || cuota.estado) === 'pagada'"
+                    type="button"
                     @click="abrirModalEditar(cuota)"
-                    class="px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1"
+                    class="min-h-11 min-w-11 px-2 py-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1 touch-manipulation"
                     title="Editar pago"
+                    aria-label="Editar pago"
                   >
                     <PencilIcon class="w-3 h-3" />
                   </button>
@@ -1802,7 +1806,7 @@
                     v-if="puedeEliminarPago(cuota)"
                     type="button"
                     @click.stop="abrirModalEliminarPago(cuota)"
-                    class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-lg transition-all flex items-center"
+                    class="min-h-11 min-w-11 px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-lg transition-all flex items-center justify-center touch-manipulation"
                     title="Eliminar un pago registrado"
                     aria-label="Eliminar un pago registrado"
                   >
@@ -1842,7 +1846,8 @@
     <!-- Botón flotante «Volver arriba». z-40, como el de Cierre: por debajo del chat de
          soporte (45) y de la barra inferior (49), cuyo desplegable de «Caja» tiene que
          quedar por encima. Con el z-[9999] de antes también se pintaba sobre el velo del
-         recorrido guiado (120). -->
+         recorrido guiado (120). En móvil suma lo que tapa la barra de Safari (iOS 15+),
+         que no es safe-area: sin eso el botón queda debajo de la barra de direcciones. -->
     <Teleport to="body">
       <Transition
         enter-active-class="transition duration-300 ease-out"
@@ -1855,7 +1860,8 @@
         <button
           v-if="mostrarBotonArriba && !hasOpenModal"
           @click="scrollToTop"
-          class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 w-12 h-12 bg-gradient-to-br from-natillera-600 to-emerald-600 hover:from-natillera-700 hover:to-emerald-700 rounded-full shadow-xl shadow-natillera-900/30 flex items-center justify-center text-white touch-manipulation transition-all ring-2 ring-white/80"
+          :style="{ '--tapado-volver': `${tapadoInferior}px` }"
+          class="fixed bottom-[calc(5rem+env(safe-area-inset-bottom,0px)+var(--tapado-volver,0px))] right-4 sm:bottom-6 sm:right-6 z-40 w-12 h-12 bg-gradient-to-br from-natillera-600 to-emerald-600 hover:from-natillera-700 hover:to-emerald-700 rounded-full shadow-xl shadow-natillera-900/30 flex items-center justify-center text-white touch-manipulation transition-all ring-2 ring-white/80"
           title="Volver arriba"
           aria-label="Volver arriba"
         >
@@ -1935,7 +1941,7 @@
           </p>
         </div>
       </div>
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <div class="flex gap-3">
           <button
             type="button"
@@ -2235,7 +2241,7 @@
       </div>
 
       <!-- Footer de acciones fijo -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <!-- Ya eliminado: solo queda cerrar -->
         <button
           v-if="resultadoEliminarPago"
@@ -2746,7 +2752,7 @@
       </div>
 
         <!-- Footer con acciones -->
-        <div class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex flex-shrink-0 gap-3 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button 
             type="button"
             @click="cerrarModalDetalleCuota"
@@ -2862,7 +2868,7 @@
         <div
           v-if="socioCuotasSel"
           ref="contenidoScrollCuotasSocioRef"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] space-y-4 overscroll-contain [-webkit-overflow-scrolling:touch]"
+          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pt-4 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-4 overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="programarNatiscrollModalCuotasSocio"
         >
           <!-- Resumen del mes: una tira compacta. El protagonista de la vista son las
@@ -3182,6 +3188,34 @@
 
             </div>
           </div>
+
+          <!--
+            Editar el socio sin salir de Cuotas: aquí es donde se nota que la cuota o la
+            periodicidad están mal. Abre el mismo formulario que Socios, y solo con permiso
+            para gestionar socios.
+          -->
+          <button
+            v-if="puedeEditarSocios && socioCuotasSel.socioNatilleraId"
+            type="button"
+            class="btn-modal-secondary w-full inline-flex items-center justify-center gap-2"
+            :disabled="abriendoEdicionSocio"
+            @click="abrirEditarSocio(socioCuotasSel.socioNatilleraId)"
+          >
+            <CargaBoton v-if="abriendoEdicionSocio" pequena />
+            <PencilSquareIcon v-else class="h-5 w-5" />
+            Editar socio (cuota, periodicidad, datos)
+          </button>
+
+          <!-- Un solo comprobante con varias cuotas pagadas: por concepto y con el total -->
+          <button
+            v-if="socioCuotasSel.socioNatilleraId"
+            type="button"
+            class="btn-modal-secondary w-full inline-flex items-center justify-center gap-2"
+            @click="abrirComprobanteVariasDelSocio"
+          >
+            <DocumentDuplicateIcon class="h-5 w-5" />
+            Comprobante de varias cuotas
+          </button>
         </div>
 
         <!-- Natiscroll: «Desliza para ver más» -->
@@ -3307,20 +3341,25 @@
             <div v-if="formCuotas.tipoGeneracion === 'unSocio'" class="space-y-3">
               <label class="block text-sm font-semibold text-gray-700">Seleccionar socio *</label>
               
-              <!-- Barra de búsqueda mejorada -->
-              <div class="relative">
-                <MagnifyingGlassIcon class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <!-- Barra de búsqueda: flex en vez de iconos `absolute` + translate, que en iOS
+                   se descolocan cuando el teclado reordena el layout (manual iOS §5.2). -->
+              <div class="flex items-center bg-white border-2 border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
+                <span class="pl-4 flex-shrink-0 text-gray-400 pointer-events-none" aria-hidden="true">
+                  <MagnifyingGlassIcon class="w-5 h-5" />
+                </span>
                 <input 
                   v-model="busquedaSocioCuotas"
                   type="text"
                   placeholder="Buscar socio por nombre..."
-                  class="w-full pl-11 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-natillera-500/50 focus:border-natillera-500 transition-all shadow-sm hover:shadow-md"
+                  aria-label="Buscar socio por nombre"
+                  class="flex-1 min-w-0 px-2 py-3 bg-transparent text-sm outline-none border-none focus:ring-0"
                 />
                 <button
                   v-if="busquedaSocioCuotas.trim()"
                   @click="busquedaSocioCuotas = ''"
                   type="button"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg transition-colors touch-manipulation"
+                  aria-label="Limpiar búsqueda"
                 >
                   <XMarkIcon class="w-4 h-4" />
                 </button>
@@ -3547,7 +3586,7 @@
           </div>
         </div>
       </div>
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <div class="flex gap-3">
           <button
             type="button"
@@ -3681,7 +3720,7 @@
             <button
               v-if="busquedaRegistrarPagoSocio.trim()"
               type="button"
-              class="pr-3 flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600"
+              class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 touch-manipulation"
               aria-label="Limpiar búsqueda"
               @click="busquedaRegistrarPagoSocio = ''"
             >
@@ -3829,7 +3868,7 @@
 
       </div>
 
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <button
           type="button"
           class="btn-modal-secondary w-full"
@@ -4539,7 +4578,7 @@
         </div>
 
       <!-- Pie fijo (fuera del scroll; skill natillerapp-modals) -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
         <div class="flex gap-3">
           <button 
             type="button"
@@ -4738,7 +4777,7 @@
       </div>
 
         <!-- Footer -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
             class="btn-modal-secondary w-full"
@@ -5022,7 +5061,7 @@
       </div>
 
       <!-- Pie fijo confirmar pago (fuera del scroll) -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 space-y-3 sm:px-6">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 space-y-3 sm:px-6">
         <button
           type="button"
           class="btn-modal-primary w-full"
@@ -5103,7 +5142,7 @@
           </div>
         </div>
 
-        <!-- Cuerpo: scroll único (contenido + acciones al final) -->
+        <!-- Cuerpo: solo el comprobante hace scroll; las acciones van en el pie fijo -->
         <div
           ref="scrollComprobanteRef"
           @scroll="verificarScrollComprobante"
@@ -5394,33 +5433,32 @@
           </div>
         </div>
 
-          <!-- Acciones al final del mismo scroll (sin footer fijo; safe-area iOS) -->
-          <div class="mt-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] border-t border-gray-200 space-y-3">
-            <div class="flex items-center justify-center gap-3 w-full">
+        </div>
+
+        <!-- Pie fijo (fuera del scroll; skill natillerapp-modals): Descargar y WhatsApp siempre
+             a la vista, sin tener que bajar hasta el final del comprobante. -->
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+            <div class="flex gap-3">
               <button
+                type="button"
+                class="btn-descargar flex-1"
+                :disabled="preparandoComprobantePago"
                 @click="descargarComprobante"
-                :disabled="generandoImagen"
-                class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);"
               >
                 <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
-                <span>{{ generandoImagen ? '...' : 'Descargar' }}</span>
+                <span>{{ preparandoComprobantePago ? 'Preparando…' : 'Descargar' }}</span>
               </button>
               <button
+                type="button"
+                class="btn-compartir flex-1"
+                :disabled="preparandoComprobantePago"
                 @click="compartirWhatsApp"
-                :disabled="generandoImagen"
-                :class="[
-                  'flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all',
-                  generandoImagen ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : ''
-                ]"
-                :style="generandoImagen ? {} : { background: '#16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.35)' }"
               >
-                <ShareIcon class="w-5 h-5 flex-shrink-0" />
-                <span>{{ generandoImagen ? '...' : 'Compartir' }}</span>
+                <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                <span>{{ preparandoComprobantePago ? 'Preparando…' : 'WhatsApp' }}</span>
               </button>
             </div>
           </div>
-        </div>
     </ModalWrapper>
 
     <!-- Modal Comprobante de Modificación -->
@@ -5457,7 +5495,7 @@
             <button
               type="button"
               @click="requestCloseTopModal"
-              class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors"
+              class="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 text-white border border-white/30 transition-colors touch-manipulation"
               aria-label="Cerrar"
             >
               <XMarkIcon class="w-5 h-5" />
@@ -5465,8 +5503,9 @@
           </div>
         </div>
 
-        <!-- Contenido con scroll -->
-        <div class="overflow-y-auto flex-1 p-3 sm:p-6 relative">
+        <!-- Contenido con scroll: `min-h-0` para que el flex-column de la tarjeta (en iOS
+             `overflow: hidden`) le deje encoger y aparezca la barra interna. -->
+        <div class="min-h-0 overflow-y-auto overscroll-contain flex-1 p-3 sm:p-6 relative [-webkit-overflow-scrolling:touch]">
           <!-- Comprobante Visual -->
           <div 
             id="comprobante-modificacion"
@@ -5625,54 +5664,32 @@
         </div>
 
         <!-- Footer fijo con botones de acción -->
-        <div class="border-t border-gray-200 bg-white p-4 flex-shrink-0 space-y-3">
-          <!-- Móvil: dos botones píldora lado a lado -->
-          <div class="flex sm:hidden flex-col items-center gap-4">
-            <div class="flex items-center justify-center gap-3 w-full">
-              <button 
-                @click="descargarComprobanteModificacion"
-                :disabled="generandoImagenModificacion"
-                class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                style="background: #2563eb; box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);"
-              >
-                <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
-                {{ generandoImagenModificacion ? '...' : 'Descargar' }}
-              </button>
-              <button 
-                @click="compartirWhatsAppModificacion"
-                :disabled="generandoImagenModificacion || !modificacionRegistrada?.socioTelefono"
-                :class="[
-                  'flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-full text-white font-semibold text-sm shadow-md transition-all',
-                  (generandoImagenModificacion || !modificacionRegistrada?.socioTelefono)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : ''
-                ]"
-                :style="(generandoImagenModificacion || !modificacionRegistrada?.socioTelefono) ? {} : { background: '#16a34a', boxShadow: '0 2px 8px rgba(22, 163, 74, 0.35)' }"
-                :title="!modificacionRegistrada?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
-              >
-                <ShareIcon class="w-5 h-5 flex-shrink-0" />
-                <span v-if="generandoImagenModificacion">...</span>
-                <span v-else-if="!modificacionRegistrada?.socioTelefono">Compartir</span>
-                <span v-else>Compartir</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Desktop: botones en columna -->
-          <div class="hidden sm:block space-y-3">
-            <button 
+        <div class="border-t border-gray-200 bg-white p-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
+          <!-- Misma fila en móvil y escritorio; WhatsApp solo en móvil, como antes -->
+          <div class="flex gap-3">
+            <button
+              type="button"
+              class="btn-descargar flex-1"
+              :disabled="preparandoComprobanteModificacion"
               @click="descargarComprobanteModificacion"
-              :disabled="generandoImagenModificacion"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowDownTrayIcon class="w-5 h-5" />
-              {{ generandoImagenModificacion ? 'Generando...' : 'Descargar Imagen' }}
+              <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+              <span>{{ preparandoComprobanteModificacion ? 'Preparando…' : 'Descargar' }}</span>
             </button>
-
-            <p class="text-xs text-gray-400 text-center">
-              💡 En celular podrás enviar la imagen directamente a WhatsApp
-            </p>
+            <button
+              type="button"
+              class="btn-compartir flex-1 sm:hidden"
+              :disabled="preparandoComprobanteModificacion || !modificacionRegistrada?.socioTelefono"
+              :title="!modificacionRegistrada?.socioTelefono ? 'No hay teléfono registrado para este socio' : ''"
+              @click="compartirWhatsAppModificacion"
+            >
+              <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+              <span>{{ preparandoComprobanteModificacion ? 'Preparando…' : 'WhatsApp' }}</span>
+            </button>
           </div>
+          <p class="hidden sm:block text-xs text-gray-400 text-center">
+            💡 En celular podrás enviar la imagen directamente a WhatsApp
+          </p>
         </div>
     </ModalWrapper>
 
@@ -5775,7 +5792,7 @@
       </div>
 
         <!-- Footer con botones -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button 
               @click="requestCloseTopModal"
@@ -6297,12 +6314,11 @@
         </div>
 
         <!-- Footer con botones (fijo, pegados al fondo del modal) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button 
               type="button"
               @click="cerrarModalEditarCuota()"
-              @touchstart.passive="cerrarModalEditarCuota()"
               class="btn-modal-secondary relative z-20 flex-1"
               style="pointer-events: auto !important; touch-action: manipulation !important; min-height: 44px;"
               >
@@ -6320,642 +6336,70 @@
         </div>
     </ModalWrapper>
 
-    <!-- Modal Editar Socio: en iOS ModalWrapper; en Android estructura actual -->
-    <ModalWrapper
+    <!--
+      Editar socio desde Cuotas: el mismo formulario y la misma regla de guardado que en
+      Socios (SocioFormModal + useEditarSocio). Aquí solo se edita; agregar es de Socios.
+    -->
+    <SocioFormModal
       :show="!!modalEditarSocio"
-      :z-index="50"
-      overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-4"
-      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
-      @close="cerrarModalEditarSocio"
-    >
-        <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
-          <!-- Efectos decorativos -->
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-          <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
-          
-          <div class="relative z-10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                <PencilIcon class="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 class="text-2xl font-display font-bold">
-                  Editar Socio
-                </h3>
-                <p class="text-white/90 text-sm">
-                  Modifica la información del socio
-                </p>
-              </div>
-            </div>
-            <button 
-              @click="cerrarModalEditarSocio"
-              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <XMarkIcon class="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+      :form="formSocio"
+      es-edicion
+      :periodicidad-natillera="periodicidadNatillera"
+      :guardando="guardandoSocio"
+      :error="errorSocio"
+      :error-telefono-duplicado="errorTelefonoDuplicadoSocio"
+      v-model:telefono-tocado="telefonoTocadoSocio"
+      @guardar="guardarSocioEditado"
+      @cerrar="cerrarModalEditarSocio"
+    />
+    <ComprobanteVariasCuotasModal
+      :show="!!(modalComprobanteVarias && comprobanteVariasDatos)"
+      :socio-natillera-id="comprobanteVariasDatos?.socioNatilleraId || ''"
+      :socio-nombre="comprobanteVariasDatos?.nombre || ''"
+      :socio-telefono="comprobanteVariasDatos?.telefono || ''"
+      :cuotas-iniciales="comprobanteVariasDatos?.cuotaIds || []"
+      :historial-ids="comprobanteVariasDatos?.historialIds || []"
+      :natillera-nombre="natilleraNombre || natillerasStore.natilleraActual?.nombre || ''"
+      @cerrar="modalComprobanteVarias = false"
+    />
+    <!--
+      Pago rápido: al elegir un socio en «Registrar pago» salen todas sus cuotas con saldo, de
+      cualquier mes, con todos sus conceptos. Se apila sobre el selector (useModalStack): cerrarlo
+      con «volver» devuelve a la lista de socios.
+    -->
+    <PagoRapidoSocioModal
+      :show="!!modalPagoRapido"
+      :natillera-id="id"
+      :natillera-nombre="natilleraNombre || natillerasStore.natilleraActual?.nombre || ''"
+      :socio-natillera-id="socioNatilleraIdRegistrarPago || ''"
+      @volver="modalPagoRapido = false"
+      @cerrar="cerrarPagoRapidoYSelector"
+      @detalle="abrirPagoDetalladoDesdeRapido"
+      @pagado="alPagarRapido"
+    />
+    <!-- Cambiar la periodicidad regenera todas las cuotas del socio: tarda, y se ve aquí -->
+    <CargaCaja
+      :visible="!!progresoEdicionSocio"
+      flotante
+      texto="Cambiando periodicidad"
+      :detalle="progresoEdicionSocio || ''"
+    />
 
-        <!-- Contenido -->
-        <div class="p-6">
-          <form @submit.prevent="handleGuardarSocio" class="space-y-4">
-            <!-- Selector de Avatar -->
-            <div>
-              <label class="label">Selecciona un avatar</label>
-              <div class="flex items-center gap-4 mb-3">
-                <img 
-                  :src="getAvatarUrl(formSocio.avatar_seed || formSocio.nombre || 'nuevo', null, formSocio.avatar_style)" 
-                  alt="Avatar seleccionado"
-                  class="w-16 h-16 rounded-xl bg-natillera-100 border-2 border-natillera-300"
-                />
-                <button 
-                  type="button"
-                  @click="mostrarAvatares = !mostrarAvatares"
-                  class="text-sm text-natillera-600 hover:text-natillera-700 font-medium"
-                >
-                  {{ mostrarAvatares ? 'Ocultar opciones' : 'Cambiar avatar' }}
-                </button>
-              </div>
-              <div v-show="mostrarAvatares" class="bg-gray-50 rounded-xl overflow-hidden">
-                <!-- Selector de estilo de avatar -->
-                <div class="p-3 border-b border-gray-200">
-                  <label class="text-xs text-gray-500 mb-2 block">Estilo de avatar</label>
-                  <div class="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'adventurer'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'adventurer'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      🎨 Aventurero
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'avataaars'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'avataaars'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      👤 Avataaars
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'big-smile'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'big-smile'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      😊 Sonrisa
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'bottts'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'bottts'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      🤖 Robot
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'lorelei'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'lorelei'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      ✨ Lorelei
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'micah'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'micah'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      🎭 Micah
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'miniavs'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'miniavs'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      🎪 Mini
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'open-peeps'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'open-peeps'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      👥 Open Peeps
-                    </button>
-                    <button
-                      type="button"
-                      @click="formSocio.avatar_style = 'personas'"
-                      :class="[
-                        'px-3 py-2 rounded-lg text-xs font-medium transition-all border-2',
-                        formSocio.avatar_style === 'personas'
-                          ? 'bg-natillera-500 text-white border-natillera-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
-                      ]"
-                    >
-                      👤 Personas
-                    </button>
-                  </div>
-                </div>
-                
-                <!-- Grid de avatares -->
-                <div class="grid grid-cols-5 gap-2 p-3 max-h-52 overflow-y-auto">
-                  <button
-                    v-for="seed in avatarSeeds"
-                    :key="seed"
-                    type="button"
-                    @click="formSocio.avatar_seed = seed"
-                    :class="[
-                      'p-1 rounded-lg transition-all',
-                      formSocio.avatar_seed === seed 
-                        ? 'ring-2 ring-natillera-500 bg-natillera-100' 
-                        : 'hover:bg-gray-100'
-                    ]"
-                  >
-                    <img 
-                      :src="getAvatarUrl(seed, null, formSocio.avatar_style)" 
-                      :alt="seed"
-                      class="w-10 h-10 rounded-lg"
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Nombre (obligatorio) -->
-            <div>
-              <label class="label">
-                Nombre completo <span class="text-red-500">*</span>
-              </label>
-              <input 
-                v-model="formSocio.nombre"
-                type="text" 
-                class="input-field"
-                placeholder="Ej: María García"
-                required
-              />
-            </div>
-
-            <!-- Cuota (obligatorio) -->
-            <div class="p-4 bg-natillera-50 rounded-xl border border-natillera-200">
-              <label class="label text-natillera-700">
-                💰 {{ textoLabelCuota }} <span class="text-red-500">*</span>
-              </label>
-              <div class="relative">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-                <input 
-                  :value="formatearValorCuota(formSocio.valor_cuota)"
-                  @input="handleValorCuotaInput($event)"
-                  @focus="seleccionarMontoCuota"
-                  @click="seleccionarMontoCuota"
-                  type="text" 
-                  class="input-field pl-8 text-lg font-semibold"
-                  placeholder="50.000"
-                  required
-                />
-              </div>
-              <p class="text-xs text-natillera-600 mt-2">
-                Este es el valor que el socio aportará en cada período
-              </p>
-            </div>
-
-            <!-- Periodicidad -->
-            <div>
-              <label class="label">
-                Periodicidad de pago
-              </label>
-              <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-3'">
-                <button
-                  type="button"
-                  @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
-                  :disabled="periodicidadNatillera === 'mensual'"
-                  :class="[
-                    'p-4 rounded-xl border-2 transition-all text-left w-full',
-                    formSocio.periodicidad === 'mensual'
-                      ? 'border-natillera-500 bg-natillera-50 ring-2 ring-natillera-200'
-                      : 'border-gray-200 bg-white hover:border-gray-300',
-                    periodicidadNatillera === 'mensual' ? 'cursor-default opacity-90' : ''
-                  ]"
-                >
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xl">📅</span>
-                    <span class="font-semibold" :class="formSocio.periodicidad === 'mensual' ? 'text-natillera-700' : 'text-gray-700'">
-                      Mensual
-                    </span>
-                    <span v-if="periodicidadNatillera === 'mensual'" class="ml-auto text-xs bg-natillera-200 text-natillera-700 px-2 py-0.5 rounded-full font-medium">
-                      Único
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-500">1 cuota por mes</p>
-                </button>
-                <button
-                  v-if="periodicidadNatillera === 'quincenal'"
-                  type="button"
-                  @click="formSocio.periodicidad = 'quincenal'"
-                  :class="[
-                    'p-4 rounded-xl border-2 transition-all text-left',
-                    formSocio.periodicidad === 'quincenal'
-                      ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
-                  ]"
-                >
-                  <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xl">🗓️</span>
-                    <span class="font-semibold" :class="formSocio.periodicidad === 'quincenal' ? 'text-purple-700' : 'text-gray-700'">
-                      Quincenal
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-500">2 cuotas por mes</p>
-                </button>
-              </div>
-              <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-gray-500 mt-2">
-                Esta natillera está configurada como mensual
-              </p>
-            </div>
-
-            <!-- Información de contacto (colapsable) -->
-            <div class="border border-gray-200 rounded-xl overflow-hidden">
-              <button 
-                type="button"
-                @click="mostrarContacto = !mostrarContacto"
-                class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-              >
-                <span class="font-medium text-gray-700">
-                  📱 Información de contacto
-                  <span class="text-gray-400 font-normal text-sm">(opcional)</span>
-                </span>
-                <ChevronDownIcon 
-                  :class="['w-5 h-5 text-gray-400 transition-transform', mostrarContacto ? 'rotate-180' : '']" 
-                />
-              </button>
-              
-              <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-gray-200">
-                <div>
-                  <label class="label">Teléfono / WhatsApp</label>
-                  <input 
-                    v-model="formSocio.telefono"
-                    type="tel" 
-                    class="input-field"
-                    placeholder="3001234567"
-                  />
-                  <p class="text-xs text-gray-400 mt-1">Para enviar recordatorios de pago</p>
-                </div>
-
-                <div>
-                  <label class="label">Correo electrónico</label>
-                  <input 
-                    v-model="formSocio.email"
-                    type="email" 
-                    class="input-field"
-                    placeholder="correo@ejemplo.com"
-                  />
-                </div>
-
-                <div>
-                  <label class="label">Documento de identidad</label>
-                  <input 
-                    v-model="formSocio.documento"
-                    type="text" 
-                    class="input-field"
-                    placeholder="Cédula (opcional)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div v-if="errorSocio" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-              {{ errorSocio }}
-            </div>
-
-            <div class="flex gap-3 pt-4">
-              <button 
-                type="button"
-                @click="cerrarModalEditarSocio"
-                class="btn-modal-secondary flex-1"
-                :disabled="estadoGuardadoSocio !== ''"
-              >
-                Cancelar
-              </button>
-              <button 
-                type="submit" 
-                class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-2"
-                :disabled="estadoGuardadoSocio !== ''"
-              >
-                <svg v-if="estadoGuardadoSocio !== ''" class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span v-if="estadoGuardadoSocio === 'guardando'">Guardando datos...</span>
-                <span v-else-if="estadoGuardadoSocio === 'generando'">Generando cuotas...</span>
-                <span v-else>Guardar Cambios</span>
-              </button>
-            </div>
-          </form>
-        </div>
-    </ModalWrapper>
-
-    <!-- Modal de Progreso de Actualización de Socio - DISEÑO ULTRA MODERNO -->
-    <ModalWrapper
-      :show="modalProgreso"
-      :z-index="60"
-      align="bottom"
-      :persistent="true"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-hidden overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full max-w-sm mx-auto sm:my-4"
-      card-max-width="24rem"
-    >
-          <div class="relative w-full">
-            <!-- Tarjeta principal con efecto 3D -->
-            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-emerald-500/20 overflow-hidden border border-white/50">
-              <!-- Gradiente superior decorativo -->
-              <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500 opacity-10"></div>
-              
-              <!-- Anillos orbitales decorativos (cuando está procesando) -->
-              <div v-if="!progresoCreacion.exito && !progresoCreacion.error" class="absolute inset-0 flex items-center justify-center pointer-events-none" style="top: -20px">
-                <div class="w-40 h-40 border border-emerald-200/30 rounded-full animate-orbit-slow"></div>
-                <div class="absolute w-32 h-32 border border-green-200/40 rounded-full animate-orbit-reverse"></div>
-              </div>
-
-              <div class="relative p-8 pb-10">
-                <!-- Icono principal con múltiples capas de animación -->
-                <div class="relative mx-auto mb-8 w-28 h-28">
-                  <!-- Aura exterior pulsante -->
-                  <div 
-                    :class="[
-                      'absolute -inset-4 rounded-full transition-all duration-700',
-                      progresoCreacion.exito 
-                        ? 'bg-emerald-400/20 animate-pulse-success' 
-                        : progresoCreacion.error && progresoCreacion.paso === 0
-                          ? 'bg-red-400/20 animate-pulse'
-                          : 'bg-gradient-to-r from-emerald-400/15 via-green-400/20 to-teal-400/15 animate-pulse-slow'
-                    ]"
-                  ></div>
-                  
-                  <!-- Anillo giratorio exterior -->
-                  <div 
-                    v-if="!progresoCreacion.exito && progresoCreacion.paso > 0"
-                    class="absolute -inset-2 rounded-full border-2 border-dashed border-emerald-300/40 animate-spin-very-slow"
-                  ></div>
-                  
-                  <!-- Círculo principal -->
-                  <div 
-                    :class="[
-                      'absolute inset-0 rounded-full flex items-center justify-center transition-all duration-700 transform',
-                      progresoCreacion.exito 
-                        ? 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-2xl shadow-emerald-500/50 scale-110' 
-                        : progresoCreacion.error && progresoCreacion.paso === 0
-                          ? 'bg-gradient-to-br from-red-400 via-rose-500 to-pink-500 shadow-2xl shadow-red-500/40'
-                          : 'bg-gradient-to-br from-emerald-400 via-green-500 to-teal-500 shadow-xl shadow-emerald-500/30'
-                    ]"
-                  >
-                    <!-- Efecto de brillo interior -->
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
-                    
-                    <!-- Estado: Actualizando socio -->
-                    <template v-if="progresoCreacion.paso === 1">
-                      <div class="relative">
-                        <UserIcon class="w-12 h-12 text-white drop-shadow-lg animate-bounce-gentle" />
-                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                          <PencilIcon class="w-3 h-3 text-emerald-500" />
-                        </div>
-                      </div>
-                    </template>
-                    
-                    <!-- Estado: Generando cuotas -->
-                    <template v-else-if="progresoCreacion.paso === 2">
-                      <div class="relative">
-                        <SparklesIcon class="w-12 h-12 text-white drop-shadow-lg animate-sparkle" />
-                        <!-- Mini estrellas que salen -->
-                        <div class="absolute -top-2 -right-2 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
-                        <div class="absolute -bottom-1 -left-2 w-1.5 h-1.5 bg-yellow-200 rounded-full animate-ping" style="animation-delay: 0.3s"></div>
-                      </div>
-                    </template>
-                    
-                    <!-- Estado: Completado con éxito -->
-                    <template v-else-if="progresoCreacion.paso === 3 && progresoCreacion.exito">
-                      <CheckCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-success-pop" />
-                    </template>
-                    
-                    <!-- Estado: Error -->
-                    <template v-else-if="progresoCreacion.error && progresoCreacion.paso === 0">
-                      <XCircleIcon class="w-14 h-14 text-white drop-shadow-lg animate-shake" />
-                    </template>
-                    
-                    <!-- Estado: Iniciando -->
-                    <template v-else>
-                      <div class="relative w-12 h-12">
-                        <div class="absolute inset-0 border-4 border-white/30 rounded-full"></div>
-                        <div class="absolute inset-0 border-4 border-transparent border-t-white rounded-full animate-spin"></div>
-                        <div class="absolute inset-2 border-2 border-transparent border-b-white/60 rounded-full animate-spin-reverse"></div>
-                      </div>
-                    </template>
-                  </div>
-                </div>
-
-                <!-- Nombre del socio con tipografía elegante -->
-                <h3 class="text-2xl font-display font-bold bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-clip-text text-transparent text-center mb-1">
-                  {{ progresoCreacion.nombreSocio }}
-                </h3>
-
-                <!-- Mensaje de progreso con animación sutil -->
-                <p 
-                  :class="[
-                    'text-center text-base font-medium mb-6 transition-all duration-500',
-                    progresoCreacion.exito ? 'text-emerald-600' : 
-                    progresoCreacion.error && progresoCreacion.paso === 0 ? 'text-red-500' : 'text-gray-500'
-                  ]"
-                >
-                  {{ progresoCreacion.mensaje }}
-                </p>
-
-                <!-- Timeline de pasos - Diseño minimalista y elegante -->
-                <div class="relative mb-8">
-                  <!-- Línea de conexión -->
-                  <div class="absolute top-4 left-8 right-8 h-0.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      class="h-full bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-700 ease-out rounded-full"
-                      :style="{ width: `${((progresoCreacion.paso - 1) / 2) * 100}%` }"
-                    ></div>
-                  </div>
-                  
-                  <div class="relative flex justify-between">
-                    <!-- Paso 1: Socio -->
-                    <div class="flex flex-col items-center">
-                      <div 
-                        :class="[
-                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 1 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
-                            : 'bg-gray-100 text-gray-400'
-                        ]"
-                      >
-                        <template v-if="progresoCreacion.paso > 1">
-                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                          </svg>
-                        </template>
-                        <UserIcon v-else-if="progresoCreacion.paso === 1" class="w-4 h-4" />
-                        <span v-else class="text-xs font-bold">1</span>
-                      </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 1 ? 'text-emerald-600' : 'text-gray-400']">Socio</span>
-                    </div>
-                    
-                    <!-- Paso 2: Cuotas -->
-                    <div class="flex flex-col items-center">
-                      <div 
-                        :class="[
-                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 2 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
-                            : 'bg-gray-100 text-gray-400'
-                        ]"
-                      >
-                        <template v-if="progresoCreacion.paso > 2">
-                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                          </svg>
-                        </template>
-                        <SparklesIcon v-else-if="progresoCreacion.paso === 2" class="w-4 h-4 animate-pulse" />
-                        <span v-else class="text-xs font-bold">2</span>
-                      </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 2 ? 'text-emerald-600' : 'text-gray-400']">Cuotas</span>
-                    </div>
-                    
-                    <!-- Paso 3: Listo -->
-                    <div class="flex flex-col items-center">
-                      <div 
-                        :class="[
-                          'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 transform',
-                          progresoCreacion.paso >= 3 
-                            ? 'bg-gradient-to-br from-emerald-400 to-green-500 text-white shadow-lg shadow-emerald-500/30 scale-110' 
-                            : 'bg-gray-100 text-gray-400'
-                        ]"
-                      >
-                        <template v-if="progresoCreacion.paso >= 3">
-                          <svg class="w-4 h-4 animate-check-draw" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                          </svg>
-                        </template>
-                        <span v-else class="text-xs font-bold">3</span>
-                      </div>
-                      <span :class="['text-xs mt-2 font-medium transition-colors', progresoCreacion.paso >= 3 ? 'text-emerald-600' : 'text-gray-400']">¡Listo!</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Badge de cuotas generadas - Diseño premium -->
-                <Transition
-                  enter-active-class="transition-all duration-500 ease-out"
-                  enter-from-class="opacity-0 scale-90 translate-y-4"
-                  enter-to-class="opacity-100 scale-100 translate-y-0"
-                >
-                  <div 
-                    v-if="progresoCreacion.paso >= 2 && progresoCreacion.cuotasGeneradas > 0"
-                    class="flex justify-center"
-                  >
-                    <div class="relative group">
-                      <!-- Glow effect -->
-                      <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 rounded-2xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                      
-                      <div class="relative flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 rounded-2xl">
-                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                          <SparklesIcon class="w-5 h-5 text-white" />
-                        </div>
-                        <div class="text-left">
-                          <p class="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
-                            {{ progresoCreacion.cuotasGeneradas }}
-                          </p>
-                          <p class="text-xs text-gray-500 font-medium">cuotas generadas</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Transition>
-
-                <!-- Mensaje de éxito final -->
-                <Transition
-                  enter-active-class="transition-all duration-700 delay-300"
-                  enter-from-class="opacity-0 translate-y-2"
-                  enter-to-class="opacity-100 translate-y-0"
-                >
-                  <div v-if="progresoCreacion.exito" class="mt-6 text-center">
-                    <p class="text-sm text-gray-400">El modal se cerrará automáticamente...</p>
-                  </div>
-                </Transition>
-
-                <!-- Mensaje de error con botón de cerrar -->
-                <div v-if="progresoCreacion.error && progresoCreacion.paso === 0" class="mt-6 text-center">
-                  <div class="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl">
-                    <p class="text-sm text-red-600">{{ progresoCreacion.error }}</p>
-                  </div>
-                  <button 
-                    @click="cerrarModalProgreso"
-                    class="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 hover:-translate-y-0.5 transition-all duration-300"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-
-              <!-- Barra de progreso inferior decorativa -->
-              <div class="h-1.5 bg-gray-100">
-                <div 
-                  v-if="progresoCreacion.paso > 0 && !progresoCreacion.error"
-                  class="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 transition-all duration-700 ease-out"
-                  :style="{ width: `${(progresoCreacion.paso / 3) * 100}%` }"
-                ></div>
-              </div>
-            </div>
-          </div>
-    </ModalWrapper>
-
-    <!-- Modal Detalle Socio: en iOS ModalWrapper; en Android estructura actual -->
+    <!-- Modal Detalle Socio. El scroll vive en el cuerpo, no en la tarjeta: en iOS ModalWrapper
+         fuerza la tarjeta a flex-column con `overflow: hidden`, y un `overflow-y-auto` puesto
+         en ella dejaba el contenido cortado sin poder desplazarlo. Es un modal centrado que no
+         toca el borde inferior (p-4 + 90dvh), así que el pie lleva safe-area pero no el tapado
+         de la barra de Safari: `dvh` ya lo descuenta. -->
     <ModalWrapper
       :show="!!modalDetalleSocio"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden overscroll-contain p-4"
-      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
+      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0"
+      card-max-width="28rem"
       @close="requestCloseTopModal"
     >
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+        <div class="flex-shrink-0 bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -6976,8 +6420,10 @@
                 </div>
               </div>
               <button 
+                type="button"
                 @click="requestCloseTopModal"
-                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                class="flex-shrink-0 w-11 h-11 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors touch-manipulation"
+                aria-label="Cerrar"
               >
                 <XMarkIcon class="w-5 h-5" />
               </button>
@@ -6986,7 +6432,7 @@
         </div>
 
         <!-- Contenido -->
-        <div class="p-6 space-y-5">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-5 [-webkit-overflow-scrolling:touch]">
           <!-- Valor de la cuota -->
           <div class="relative bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
             <div class="flex items-center gap-3 mb-2">
@@ -7029,8 +6475,9 @@
                 v-if="socioSeleccionado?.socio?.telefono"
                 :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                 target="_blank"
-                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg flex-shrink-0"
+                class="btn-compartir btn-compartir--sm flex-shrink-0"
               >
+                <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
                 WhatsApp
               </a>
             </div>
@@ -7062,8 +6509,9 @@
         </div>
 
         <!-- Footer -->
-        <div class="p-6 border-t border-gray-200 bg-gray-50">
+        <div class="flex-shrink-0 px-6 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] border-t border-gray-200 bg-gray-50">
           <button 
+            type="button"
             @click="requestCloseTopModal"
             class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
           >
@@ -7084,7 +6532,7 @@
     @close="requestCloseTopModal"
   >
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+        <div class="flex-shrink-0 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -7106,16 +6554,18 @@
               </div>
             </div>
             <button 
+              type="button"
               @click="requestCloseTopModal"
-              class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+              class="flex-shrink-0 flex h-11 w-11 items-center justify-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors touch-manipulation"
+              aria-label="Cerrar"
             >
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        <!-- Contenido -->
-        <div class="overflow-y-auto flex-1 p-6 space-y-4">
+        <!-- Contenido: `min-h-0` deja que el flex-column de la tarjeta lo encoja y haga scroll -->
+        <div class="min-h-0 overflow-y-auto overscroll-contain flex-1 p-6 space-y-4 [-webkit-overflow-scrolling:touch]">
           <!-- Recaudado en Efectivo -->
           <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-5 border-2 border-green-200 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between mb-2">
@@ -7199,8 +6649,8 @@
           </div>
         </div>
 
-        <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+        <!-- Footer: hoja inferior en móvil, así que suma la safe-area y lo que tapa la barra de Safari -->
+        <div class="border-t border-gray-200 bg-gray-50 px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <button 
             @click="requestCloseTopModal"
             class="w-full btn-primary bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
@@ -7212,7 +6662,14 @@
 </template>
 
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
+import SocioFormModal from '../../components/socios/SocioFormModal.vue'
+import ComprobanteVariasCuotasModal from '../../components/cuotas/ComprobanteVariasCuotasModal.vue'
+import PagoRapidoSocioModal from '../../components/cuotas/PagoRapidoSocioModal.vue'
+import { useNotificationStore } from '../../stores/notifications'
+import { useEditarSocio, cargarSocioNatillera, formularioSocioVacio, formularioDesdeSocio } from '../../composables/useEditarSocio'
 import { numeroWhatsApp } from '../../utils/telefono'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute, useRouter } from 'vue-router'
@@ -7256,6 +6713,8 @@ import {
   Squares2X2Icon,
   XMarkIcon,
   PencilIcon,
+  PencilSquareIcon,
+  DocumentDuplicateIcon,
   DocumentTextIcon,
   UserIcon,
   PhoneIcon,
@@ -7267,7 +6726,6 @@ import {
   XCircleIcon,
   ListBulletIcon,
   ExclamationTriangleIcon,
-  ShareIcon,
   BuildingOffice2Icon,
   BanknotesIcon,
   CreditCardIcon,
@@ -7297,6 +6755,8 @@ async function ensureXLSX() {
   }
 }
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { useTapadoInferior } from '../../composables/useTapadoInferior'
+import { detectIosPlatform } from '../../composables/useIsIos'
 import { useModalStack, __modalStackSync } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
 import { useNatiscroll } from '../../composables/useNatiscroll'
@@ -7314,6 +6774,7 @@ import {
   shouldShowPrimerSocioCuotasMesTour,
   startPrimerSocioCuotasMesTour
 } from '../../composables/usePrimerSocioCuotasMesTour'
+import { cerrarRecorridosDriver } from '../../composables/recorridoDriverSeguro'
 const props = defineProps({
   id: String,
   mes: String // Parámetro de ruta natilleras/:id/cuotas/:mes
@@ -7326,6 +6787,7 @@ const sociosStore = useSociosStore()
 const natillerasStore = useNatillerasStore()
 const colaboradoresStore = useColaboradoresStore()
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 const dashboardSidebar = inject('dashboardSidebar', null)
 
 // Verificar si el usuario es raigo.16@gmail.com
@@ -7485,7 +6947,14 @@ const { tieneScroll: tieneScrollRegistrarPagoSelector } = useModalBodyScrollOver
   contenidoScrollRegistrarPagoSelectorRef
 )
 const comprobanteModificacionRef = ref(null)
-const generandoImagenModificacion = ref(false)
+const preparadorComprobanteModificacion = crearPreparadorComprobante({
+  elemento: comprobanteModificacionRef,
+  origen: () => (modalModificacion.value ? modificacionRegistrada.value : null),
+  fondo: '#eff6ff',
+  nombreArchivo: () => `comprobante-modificacion-${modificacionRegistrada.value?.socioNombre?.replace(/\s+/g, '-') || 'modificacion'}-${Date.now()}.png`
+})
+const archivoComprobanteModificacion = preparadorComprobanteModificacion.archivo
+const preparandoComprobanteModificacion = preparadorComprobanteModificacion.preparando
 const modalDetalleCuota = ref(false)
 const cuotaDetalle = ref(null)
 const contenidoScrollDetalleCuotaRef = ref(null)
@@ -7745,10 +7214,13 @@ watch(modalHistorialAjustes, async (abierto) => {
   }
 })
 const modalEditarSocio = ref(false)
+const modalComprobanteVarias = ref(false)
+// Para quién y qué cuotas marcar: viene del modal del socio o de un pago rápido recién hecho.
+const comprobanteVariasDatos = ref(null)
+const modalPagoRapido = ref(false)
 // Guardar scroll de main y window antes de abrir modal (al hacer clic en la tarjeta)
 const scrollMainAntesModal = ref(0)
 const scrollWindowAntesModal = ref(0)
-const modalProgreso = ref(false)
 /** Tour detalle primer socio: bandera activa durante el tour guiado del detalle. */
 const tourGuiadoCuotasDetalleActivo = ref(false)
 const desplegableYaAbonadoOpen = ref(false)
@@ -7832,6 +7304,8 @@ const {
 useBodyScrollLock(preparandoModalPago)
 useBodyScrollLock(modalConfirmarPago)
 useBodyScrollLock(modalConfirmacion)
+// Compartido con el resto de la app: lo que tapa la barra de Safari abajo (botón «Volver arriba»).
+const { tapado: tapadoInferior } = useTapadoInferior()
 useBodyScrollLock(cargandoComprobanteReenvio)
 useBodyScrollLock(modalConfirmarBorrar)
 useBodyScrollLock(modalEliminarPago)
@@ -7843,7 +7317,6 @@ useBodyScrollLock(modalCuotasSocio)
 useBodyScrollLock(modalDetalleSocio)
 useBodyScrollLock(modalHistorialAjustes)
 useBodyScrollLock(modalEditarSocio)
-useBodyScrollLock(modalProgreso)
 useBodyScrollLock(modalSelectorRapidoMes)
 useBodyScrollLock(modalModificacion)
 useBodyScrollLock(modalRegistrarPagoSelector)
@@ -7870,26 +7343,18 @@ watch([modalRegistrarPagoSelector, pasoRegistrarPagoSelector], ([abierta, paso])
 useBodyScrollLock(bloqueandoRegistroPago)
 
 const socioSeleccionado = ref(null)
-const socioEditando = ref(null)
 const cuotasSocio = ref([])
-const mostrarAvatares = ref(false)
-const mostrarContacto = ref(false)
-const errorSocio = ref('')
-const estadoGuardadoSocio = ref('') // '', 'guardando', 'generando'
 const natilleraNombre = ref('')
 
-// Variables para el modal de progreso de actualización de socio
-const progresoCreacion = ref({
-  paso: 0, // 0: iniciando, 1: actualizando socio, 2: generando cuotas, 3: completado
-  mensaje: '',
-  cuotasGeneradas: 0,
-  cuotasTotales: 0,
-  error: null,
-  exito: false,
-  nombreSocio: ''
-})
 const comprobanteRef = ref(null)
-const generandoImagen = ref(false)
+const preparadorComprobantePago = crearPreparadorComprobante({
+  elemento: comprobanteRef,
+  origen: () => (modalConfirmacion.value ? pagoRegistrado.value : null),
+  fondo: '#ecfdf5',
+  nombreArchivo: () => `comprobante-${pagoRegistrado.value?.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
+})
+const archivoComprobantePago = preparadorComprobantePago.archivo
+const preparandoComprobantePago = preparadorComprobantePago.preparando
 const scrollComprobanteRef = ref(null)
 const scrollContainerGenerarCuotas = ref(null)
 const hayNatiscrollModalGenerarCuotas = ref(false)
@@ -8168,6 +7633,10 @@ const toggleTodasColumnas = () => {
 
 const abrirModalExportar = () => {
   modalExportar.value = true
+  // Precarga: en iOS el Excel se entrega con navigator.share, que exige no tener ningún
+  // await entre el toque en «Exportar» y la llamada. Con el módulo ya cargado, el clic
+  // llega al share de forma síncrona.
+  ensureXLSX().catch(() => {})
   // Si no hay columnas seleccionadas, seleccionar todas por defecto
   if (columnasSeleccionadas.value.length === 0) {
     columnasSeleccionadas.value = columnasDisponibles.map(c => c.key)
@@ -8180,7 +7649,9 @@ const exportarAExcel = async () => {
   exportando.value = true
 
   try {
-    await ensureXLSX()
+    // Solo se espera si la precarga de abrirModalExportar aún no terminó; en ese caso
+    // el share de iOS puede perder el gesto y se cae a writeFile (ver más abajo).
+    if (!XLSX) await ensureXLSX()
     // Preparar los datos para exportar
     const datosExportar = cuotasFiltradas.value.map(cuota => {
       const fila = {}
@@ -8409,6 +7880,30 @@ const exportarAExcel = async () => {
       : anioNatillera.value
     const nombreArchivo = `Cuotas_${mesNombre}_${anioParaArchivo}_${new Date().toISOString().split('T')[0]}.xlsx`
     
+    // iOS: `writeFile` descarga con <a download>, que en Safari abre una vista previa y en
+    // la PWA instalada a veces no hace nada. La hoja de compartir sí ofrece «Guardar en
+    // Archivos». Se cierra el modal cuando la hoja termina, para no mover el historial
+    // (useModalStack) mientras está abierta.
+    if (detectIosPlatform()) {
+      const datos = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+      const archivo = new File([datos], nombreArchivo, {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      })
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        navigator.share({ files: [archivo], title: nombreArchivo })
+          .catch(e => {
+            if (e?.name === 'AbortError') return
+            // NotAllowedError (gesto perdido) u otro fallo: la descarga clásica no necesita gesto.
+            XLSX.writeFile(wb, nombreArchivo)
+          })
+          .finally(() => {
+            exportando.value = false
+            requestCloseTopModal()
+          })
+        return
+      }
+    }
+
     // Descargar el archivo
     XLSX.writeFile(wb, nombreArchivo)
 
@@ -8511,6 +8006,12 @@ const { requestCloseTop: requestCloseTopModal, replaceTop: replaceTopModal, hasO
       modalCargaRapida.value = false
       if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
     }
+  },
+  pagoRapido: {
+    isOpen: computed(() => !!modalPagoRapido.value),
+    hide: () => { modalPagoRapido.value = false },
+    show: () => { modalPagoRapido.value = true },
+    dismiss: () => { modalPagoRapido.value = false }
   },
   registrarPagoSelector: {
     isOpen: computed(() => !!modalRegistrarPagoSelector.value),
@@ -8621,6 +8122,9 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  // Una navegación hecha desde código no pasa por popstate: sin esto el velo del recorrido
+  // quedaba encima de la pantalla siguiente.
+  cerrarRecorridosDriver()
   window.removeEventListener('resize', checkMobileView)
   if (scrollContainerMain) {
     scrollContainerMain.removeEventListener('scroll', handleScrollArriba)
@@ -8634,6 +8138,16 @@ onUnmounted(() => {
     cancelAnimationFrame(rafNatiscrollModalEliminarPago)
     rafNatiscrollModalEliminarPago = null
   }
+  if (rafNatiscrollModalPago != null) {
+    cancelAnimationFrame(rafNatiscrollModalPago)
+    rafNatiscrollModalPago = null
+  }
+  if (rafNatiscrollModalConfirmarPago != null) {
+    cancelAnimationFrame(rafNatiscrollModalConfirmarPago)
+    rafNatiscrollModalConfirmarPago = null
+  }
+  preparadorComprobantePago.cancelar()
+  preparadorComprobanteModificacion.cancelar()
 })
 
 // Lista de todos los meses
@@ -9042,6 +8556,7 @@ const cuotasAgrupadasPorSocio = computed(() => {
           nombre: socio?.nombre || 'Socio',
           avatar_seed: socio?.avatar_seed,
           avatar_style: socio?.avatar_style,
+          telefono: socio?.telefono || '',
           periodicidad: cuota.socio_natillera?.periodicidad
         },
         cuotas: [],
@@ -9197,7 +8712,8 @@ const enfocoBusquedaInicialHecho = ref(false)
 
 function esDispositivoMovilBusqueda() {
   if (typeof navigator === 'undefined' || typeof window === 'undefined') return false
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+  // detectIosPlatform cubre el iPad que se anuncia como MacIntel; el regex suelto no.
+  return detectIosPlatform() || /Android/i.test(navigator.userAgent || '') ||
          (window.innerWidth <= 768 && 'ontouchstart' in window)
 }
 function habilitarTecladoSoftBusqueda() {
@@ -12065,9 +11581,57 @@ function abrirModalRegistrarPagoSelector() {
   modalRegistrarPagoSelector.value = true
 }
 
+/*
+ * Elegir el socio abre el pago rápido: todas sus cuotas con saldo de cualquier mes, no solo
+ * las del periodo que se está viendo. El paso «cuotas del mes» del selector queda sin uso.
+ */
 function seleccionarSocioRegistrarPago(socioNatilleraId) {
   socioNatilleraIdRegistrarPago.value = socioNatilleraId
-  pasoRegistrarPagoSelector.value = 'cuotas'
+  modalPagoRapido.value = true
+}
+
+function cerrarPagoRapidoYSelector() {
+  modalPagoRapido.value = false
+  // El cierre restaura el selector debajo (pila de modales): se cierra también.
+  nextTick(() => { if (modalRegistrarPagoSelector.value) cerrarModalRegistrarPagoSelector() })
+}
+
+// «Pagar otro valor»: el modal de pago de siempre, apilado sobre el rápido.
+function abrirPagoDetalladoDesdeRapido(cuotaId) {
+  const cuota = cuotasStore.cuotas.find(c => c.id === cuotaId)
+  if (!cuota) {
+    notificationStore.error('No se encontró la cuota; recarga la vista.', 'Registrar pago')
+    return
+  }
+  abrirModalPago(cuota)
+}
+
+function alPagarRapido({ cuotaIds, historialIds, socio }) {
+  modalPagoRapido.value = false
+  nextTick(() => {
+    if (modalRegistrarPagoSelector.value) cerrarModalRegistrarPagoSelector()
+    comprobanteVariasDatos.value = {
+      socioNatilleraId: socio?.socioNatilleraId,
+      nombre: socio?.nombre || '',
+      telefono: socio?.telefono || '',
+      cuotaIds,
+      // Con los pagos exactos, el comprobante muestra solo lo de esta transacción.
+      historialIds: historialIds || []
+    }
+    modalComprobanteVarias.value = true
+  })
+}
+
+function abrirComprobanteVariasDelSocio() {
+  const sel = socioCuotasSel.value
+  if (!sel) return
+  comprobanteVariasDatos.value = {
+    socioNatilleraId: sel.socioNatilleraId,
+    nombre: sel.socio?.nombre || '',
+    telefono: sel.socio?.telefono || '',
+    cuotaIds: []
+  }
+  modalComprobanteVarias.value = true
 }
 
 function volverPasoSociosRegistrarPago() {
@@ -13079,241 +12643,102 @@ async function cargarCuotasPrestamosPagadasEditar(cuota) {
   }
 }
 
-// Formulario para editar socio
-const formSocio = reactive({
-  nombre: '',
-  documento: '',
-  email: '',
-  telefono: '',
-  valor_cuota: 50000,
-  periodicidad: 'mensual',
-  avatar_seed: '',
-  avatar_style: 'adventurer'
-})
-
-// Lista de seeds para avatares predefinidos
-const avatarSeeds = [
-  'Sofia', 'Luna', 'Valentina', 'Camila', 'Isabella',
-  'Mariana', 'Lucia', 'Gabriela', 'Daniela', 'Paula',
-  'Andrea', 'Carolina', 'Natalia', 'Alejandra', 'Victoria',
-  'Fernanda', 'Catalina', 'Sara', 'Laura', 'Maria',
-  'Ana', 'Elena', 'Rosa', 'Carmen', 'Julia',
-  'Claudia', 'Patricia', 'Monica', 'Sandra', 'Diana',
-  'Adriana', 'Gloria', 'Teresa', 'Liliana', 'Rocio',
-  'Paola', 'Angelica', 'Marcela', 'Lorena', 'Viviana',
-  'Johana', 'Tatiana', 'Yolanda', 'Pilar', 'Beatriz',
-  'Clara', 'Marta', 'Silvia', 'Esperanza', 'Blanca',
-  'Isabel', 'Cristina', 'Mercedes', 'Dolores', 'Amparo',
-  'Angela', 'Cecilia', 'Elisa', 'Francisca', 'Gisela',
-  'Helena', 'Ines', 'Jimena', 'Karina', 'Leticia',
-  'Magdalena', 'Nora', 'Olga', 'Rebeca', 'Susana',
-  'Ursula', 'Veronica', 'Wendy', 'Ximena', 'Zoe',
-  'Alicia', 'Bianca', 'Carla', 'Estefania', 'Fabiola',
-  'Carlos', 'Juan', 'Miguel', 'Andres', 'Luis',
-  'Jorge', 'David', 'Daniel', 'Felipe', 'Santiago',
-  'Sebastian', 'Alejandro', 'Ricardo', 'Fernando', 'Diego',
-  'Pablo', 'Eduardo', 'Gustavo', 'Oscar', 'Sergio',
-  'Roberto', 'Javier', 'Antonio', 'Manuel', 'Pedro',
-  'Francisco', 'Raul', 'Mario', 'Jaime', 'Hector',
-  'Alberto', 'Cesar', 'Hugo', 'Ivan', 'Rodrigo',
-  'Enrique', 'Gabriel', 'Nicolas', 'Camilo', 'Fabian',
-  'Leonardo', 'Cristian', 'Mauricio', 'Julian', 'Arturo',
-  'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon',
-  'Emilio', 'Rafael', 'Alfredo', 'Jose', 'Esteban',
-  'Adrian', 'Bruno', 'Cristobal', 'Dario', 'Federico',
-  'Gonzalo', 'Hernan', 'Ignacio', 'Joaquin', 'Kevin',
-  'Lucas', 'Mateo', 'Orlando', 'Patricio', 'Ramiro',
-  'Samuel', 'Tomas', 'Ulises', 'Valentin', 'Walter',
-  'Xavier', 'Yago', 'Zacarias', 'Agustin', 'Benjamin',
-  'Domingo', 'Efrain', 'Felix', 'Gerardo', 'Horacio'
-]
 
 // Periodicidad de la natillera actual
 const periodicidadNatillera = computed(() => {
   return natillerasStore.natilleraActual?.periodicidad || 'mensual'
 })
 
-// Texto del label de cuota según periodicidad
-const textoLabelCuota = computed(() => {
-  const periodicidad = formSocio.periodicidad
-  if (periodicidad === 'quincenal') {
-    return 'Valor de la cuota quincenal'
-  } else if (periodicidad === 'semanal') {
-    return 'Valor de la cuota semanal'
-  } else {
-    return 'Valor de la cuota mensual'
+// ---- Editar socio desde Cuotas (mismo formulario y regla que Socios) ----
+const { guardarEdicionSocio } = useEditarSocio()
+const formSocio = reactive(formularioSocioVacio())
+const socioEnEdicion = ref(null)
+const guardandoSocio = ref(false)
+const errorSocio = ref('')
+const errorTelefonoDuplicadoSocio = ref(false)
+const telefonoTocadoSocio = ref(false)
+const abriendoEdicionSocio = ref(false)
+// Texto del paso mientras se cambia la periodicidad; vacío = sin caja de carga.
+const progresoEdicionSocio = ref('')
+
+// Editar datos del socio es del módulo Socios: tener «gestionar» en Cuotas no alcanza.
+const puedeEditarSocios = computed(() => permisosNat.puedeGestionar('socios'))
+
+async function abrirEditarSocio(socioNatilleraId) {
+  if (!socioNatilleraId || abriendoEdicionSocio.value) return
+  abriendoEdicionSocio.value = true
+  try {
+    // Se trae fresco: la cuota agrupada no tiene todos los datos (documento, correo).
+    const sn = await cargarSocioNatillera(socioNatilleraId)
+    if (!sn) {
+      notificationStore.error('No se encontró el socio', 'Editar socio')
+      return
+    }
+    if (!natillerasStore.natilleraActual || natillerasStore.natilleraActual.id !== id) {
+      await natillerasStore.fetchNatillera(id)
+    }
+    socioEnEdicion.value = sn
+    Object.assign(formSocio, formularioDesdeSocio(sn))
+    errorSocio.value = ''
+    errorTelefonoDuplicadoSocio.value = false
+    // Al editar se avisa de una vez si el número guardado no es un celular válido.
+    telefonoTocadoSocio.value = true
+    modalEditarSocio.value = true
+  } catch (e) {
+    notificationStore.error(e?.message || 'No se pudo abrir el socio', 'Editar socio')
+  } finally {
+    abriendoEdicionSocio.value = false
   }
-})
-
-function verDetalleSocio(socioNatillera) {
-  // Abrir modal de edición directamente
-  editarSocio(socioNatillera)
-}
-
-function editarSocio(sn) {
-  guardarScrollMain() // guardar scroll al instante del clic
-  asignarScrollAntesDeAbrirModal()
-  socioEditando.value = sn
-  formSocio.nombre = sn.socio?.nombre || ''
-  formSocio.documento = sn.socio?.documento || ''
-  formSocio.email = sn.socio?.email || ''
-  formSocio.telefono = sn.socio?.telefono || ''
-  formSocio.valor_cuota = sn.valor_cuota_individual
-  formSocio.periodicidad = sn.periodicidad || 'mensual'
-  formSocio.avatar_seed = sn.socio?.avatar_seed || ''
-  formSocio.avatar_style = sn.socio?.avatar_style || 'adventurer'
-  mostrarAvatares.value = false
-  mostrarContacto.value = false
-  modalEditarSocio.value = true
-  nextTick(() => {
-    requestAnimationFrame(() => {
-      const main = document.querySelector('main')
-      if (main && scrollMainAntesModal.value > 0) main.scrollTop = scrollMainAntesModal.value
-    })
-  })
 }
 
 function cerrarModalEditarSocio() {
+  if (guardandoSocio.value) return
   modalEditarSocio.value = false
-  restaurarScrollMain()
-  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
-  socioEditando.value = null
+  socioEnEdicion.value = null
   errorSocio.value = ''
-  estadoGuardadoSocio.value = ''
-  mostrarContacto.value = false
-  mostrarAvatares.value = false
-  Object.assign(formSocio, {
-    nombre: '',
-    documento: '',
-    email: '',
-    telefono: '',
-    valor_cuota: 50000,
-    periodicidad: 'mensual',
-    avatar_seed: '',
-    avatar_style: 'adventurer'
-  })
+  errorTelefonoDuplicadoSocio.value = false
+  telefonoTocadoSocio.value = false
+  if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
-// Función para limpiar número de teléfono (igual que en Socios.vue)
-function limpiarNumeroTelefono(telefono) {
-  if (!telefono) return ''
-  // Remover caracteres no numéricos excepto el signo +
-  let numeroLimpio = telefono.replace(/[^\d+]/g, '')
-  
-  // Si comienza con +, quitar el signo
-  if (numeroLimpio.startsWith('+')) {
-    numeroLimpio = numeroLimpio.substring(1)
-  }
-  
-  // Quitar el indicativo de Colombia (57) si está presente
-  // Si el número tiene más de 10 dígitos y comienza con 57, quitar el 57
-  if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-    numeroLimpio = numeroLimpio.substring(2)
-  }
-  
-  // Si solo tiene caracteres no numéricos, limpiar todo
-  if (!numeroLimpio || numeroLimpio.length === 0) {
-    numeroLimpio = telefono.replace(/\D/g, '')
-    // Aplicar la misma lógica de quitar el indicativo
-    if (numeroLimpio.length > 10 && numeroLimpio.startsWith('57')) {
-      numeroLimpio = numeroLimpio.substring(2)
-    }
-  }
-  
-  return numeroLimpio
-}
-
-// Función para generar cuotas para un socio (igual que en Socios.vue)
-async function generarCuotasParaSocio(natilleraId, socioNatilleraId, natillera, valorCuota, periodicidad) {
+async function guardarSocioEditado() {
+  const sn = socioEnEdicion.value
+  if (!sn) return
+  const datos = { ...formSocio }
+  const cambiaPeriodicidad = (sn.periodicidad || 'mensual') !== (datos.periodicidad || 'mensual')
+  errorSocio.value = ''
+  errorTelefonoDuplicadoSocio.value = false
+  guardandoSocio.value = true
   try {
-    console.log('🚀 Iniciando generación optimizada de cuotas...')
-    console.log('📋 Datos para generación:', {
-      natilleraId,
-      socioNatilleraId,
-      valorCuota,
-      periodicidad,
-      natilleraDisponible: !!natillera,
-      natilleraNombre: natillera?.nombre,
-      natilleraMesInicio: natillera?.mes_inicio,
-      natilleraMesFin: natillera?.mes_fin,
-      natilleraAnio: natillera?.anio,
-      natilleraAnioInicio: natillera?.anio_inicio
+    const resultado = await guardarEdicionSocio({
+      natilleraId: id,
+      socioNatillera: sn,
+      datos,
+      alProgreso: paso => {
+        if (!cambiaPeriodicidad) return
+        if (paso.mensaje) progresoEdicionSocio.value = paso.mensaje
+      }
     })
-    
-    // Usar la nueva función batch que es ~10x más rápida
-    const result = await cuotasStore.generarCuotasBatchParaSocio(
-      natilleraId,
-      socioNatilleraId,
-      valorCuota,
-      periodicidad,
-      natillera
+    if (!resultado.ok) {
+      errorTelefonoDuplicadoSocio.value = !!resultado.telefonoDuplicado
+      errorSocio.value = resultado.error || 'No se pudieron guardar los cambios'
+      return
+    }
+    // Nombre, avatar o valor de cuota se ven en la lista: se recarga siempre.
+    await cuotasStore.fetchCuotasNatillera(id)
+    guardandoSocio.value = false
+    cerrarModalEditarSocio()
+    notificationStore.success(
+      cambiaPeriodicidad
+        ? `Periodicidad de ${datos.nombre} actualizada: ${resultado.cuotasGeneradas || 0} cuotas generadas`
+        : `Los datos de ${datos.nombre} han sido actualizados correctamente`,
+      'Cambios guardados',
+      3000
     )
-    
-    console.log('📊 Resultado de generación:', result)
-    
-    if (result.success) {
-      progresoCreacion.value.cuotasGeneradas = result.cuotasGeneradas
-      console.log(`✅ Cuotas generadas exitosamente en ${result.tiempoMs?.toFixed(0) || 0}ms`)
-    } else {
-      console.error('❌ Error en generación:', result.error)
-    }
-    
-    return result
-  } catch (error) {
-    console.error('❌ Error generando cuotas automáticas:', error)
-    return { success: false, error: error.message, cuotasGeneradas: 0 }
+  } finally {
+    guardandoSocio.value = false
+    progresoEdicionSocio.value = ''
   }
-}
-
-function cerrarModalProgreso() {
-  modalProgreso.value = false
-  progresoCreacion.value = {
-    paso: 0,
-    mensaje: '',
-    cuotasGeneradas: 0,
-    cuotasTotales: 0,
-    error: null,
-    exito: false,
-    nombreSocio: ''
-  }
-}
-
-// Formatear valor de cuota con separadores de miles
-function formatearValorCuota(value) {
-  if (!value && value !== 0) return ''
-  const numero = typeof value === 'string' ? value.replace(/\./g, '') : value
-  return new Intl.NumberFormat('es-CO').format(numero)
-}
-
-// Manejar input del valor de cuota
-function handleValorCuotaInput(event) {
-  const valorOriginal = event.target.value
-  // Remover puntos (separadores de miles) y cualquier carácter no numérico
-  const valorLimpio = valorOriginal.replace(/\./g, '').replace(/[^\d]/g, '')
-  
-  console.log('📝 Input de cuota (Cuotas.vue) - Valor original:', valorOriginal)
-  console.log('📝 Input de cuota (Cuotas.vue) - Valor limpio:', valorLimpio)
-  
-  if (valorLimpio === '') {
-    formSocio.valor_cuota = 0
-    console.log('📝 Input de cuota (Cuotas.vue) - Valor final: 0 (vacío)')
-  } else {
-    // Usar parseFloat para manejar números grandes correctamente (parseInt tiene límites)
-    const numero = parseFloat(valorLimpio)
-    if (!isNaN(numero) && numero >= 0) {
-      formSocio.valor_cuota = numero
-      console.log('📝 Input de cuota (Cuotas.vue) - Valor final parseado:', numero, 'Tipo:', typeof numero)
-      console.log('📝 Input de cuota (Cuotas.vue) - formSocio.valor_cuota actualizado a:', formSocio.valor_cuota)
-    } else {
-      console.warn('⚠️ Input de cuota (Cuotas.vue) - Valor no válido:', valorLimpio)
-    }
-  }
-}
-
-function seleccionarMontoCuota(event) {
-  const input = event?.target
-  if (!input || typeof input.select !== 'function') return
-  setTimeout(() => input.select(), 0)
 }
 
 function seleccionarValorPago(event) {
@@ -13379,322 +12804,6 @@ function seleccionarValorPago(event) {
   })
 }
 
-async function handleGuardarSocio() {
-  errorSocio.value = ''
-  estadoGuardadoSocio.value = 'guardando'
-
-  if (socioEditando.value) {
-    try {
-      console.log('🟢 handleGuardarSocio - Iniciando guardado')
-      console.log('🟢 socioEditando.value:', socioEditando.value)
-      console.log('🟢 formSocio:', formSocio)
-      
-      // Limpiar el teléfono y quitar el indicativo de país
-      const telefonoLimpio = limpiarNumeroTelefono(formSocio.telefono)
-      
-      // Detectar si cambió la periodicidad
-      const periodicidadAnterior = socioEditando.value.periodicidad || 'mensual'
-      const periodicidadNueva = formSocio.periodicidad || 'mensual'
-      const cambioPeriodicidad = periodicidadAnterior !== periodicidadNueva
-      
-      // Si cambió la periodicidad, necesitamos eliminar y regenerar cuotas
-      if (cambioPeriodicidad) {
-        // IMPORTANTE: Guardar TODOS los datos necesarios ANTES de cerrar el modal
-        // porque cerrarModalEditarSocio() resetea el formulario
-        const socioNatilleraId = socioEditando.value.id
-        const socioId = socioEditando.value.socio?.id || null
-        
-        // Guardar todos los valores del formulario antes de que se reseteen
-        const nombreGuardado = formSocio.nombre || socioEditando.value.socio?.nombre || ''
-        const telefonoGuardado = telefonoLimpio || socioEditando.value.socio?.telefono || ''
-        const emailGuardado = formSocio.email || socioEditando.value.socio?.email || null
-        const documentoGuardado = formSocio.documento || socioEditando.value.socio?.documento || null
-        const avatarSeedGuardado = formSocio.avatar_seed || socioEditando.value.socio?.avatar_seed || null
-        
-        // IMPORTANTE: Guardar el valor de cuota - usar el del formulario si es válido, sino el anterior
-        let valorCuotaGuardado = typeof formSocio.valor_cuota === 'string' 
-          ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
-          : Number(formSocio.valor_cuota) || 0
-        
-        // Si el valor del formulario es 0 o inválido, usar el valor anterior del socio
-        if (valorCuotaGuardado <= 0 || isNaN(valorCuotaGuardado)) {
-          valorCuotaGuardado = socioEditando.value.valor_cuota_individual || 0
-        }
-        
-        // Cerrar el modal de edición primero
-        cerrarModalEditarSocio()
-        
-        // Iniciar el modal de progreso
-        progresoCreacion.value = {
-          paso: 1,
-          mensaje: 'Actualizando periodicidad...',
-          cuotasGeneradas: 0,
-          cuotasTotales: 0,
-          error: null,
-          exito: false,
-          nombreSocio: nombreGuardado
-        }
-        modalProgreso.value = true
-
-        try {
-          // Paso 1: Actualizar datos del socio (sin periodicidad aún)
-          // IMPORTANTE: Usar los valores guardados antes de cerrar el modal
-          const datosActualizados = {
-            nombre: nombreGuardado,
-            telefono: telefonoGuardado
-          }
-          
-          // Solo incluir email si tiene valor (usar valor guardado)
-          if (emailGuardado && emailGuardado.trim() !== '') {
-            datosActualizados.email = emailGuardado.trim()
-          }
-          
-          // Solo incluir documento si tiene valor (no puede ser null por constraint de BD)
-          if (documentoGuardado && documentoGuardado.trim() !== '') {
-            datosActualizados.documento = documentoGuardado.trim()
-          }
-          
-          if (avatarSeedGuardado) {
-            datosActualizados.avatar_seed = avatarSeedGuardado
-          }
-
-          // OPTIMIZACIÓN: Verificar unicidad del teléfono y actualizar datos en paralelo si es posible
-          // (Solo si hay datos para actualizar)
-          if (socioId && Object.keys(datosActualizados).length > 2) { // Más que solo nombre y telefono
-            const [telefonoExiste, resultDatos] = await Promise.all([
-              sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId),
-              sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
-            ])
-            
-            if (!telefonoExiste) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-              estadoGuardadoSocio.value = ''
-              return
-            }
-            
-            if (!resultDatos.success) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
-              estadoGuardadoSocio.value = ''
-              return
-            }
-          } else if (socioId) {
-            // Si solo hay nombre y teléfono, verificar teléfono primero
-            const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId)
-            if (!telefonoExiste) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-              estadoGuardadoSocio.value = ''
-              return
-            }
-            
-            const resultDatos = await sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
-            if (!resultDatos.success) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
-              estadoGuardadoSocio.value = ''
-              return
-            }
-          }
-
-          // Paso 2: Eliminar todas las cuotas del socio
-          progresoCreacion.value.paso = 2
-          progresoCreacion.value.mensaje = 'Eliminando cuotas anteriores...'
-
-          const resultEliminar = await cuotasStore.eliminarTodasLasCuotasSocio(socioNatilleraId)
-          
-          if (!resultEliminar.success) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = resultEliminar.error || 'Error al eliminar las cuotas anteriores'
-            estadoGuardadoSocio.value = ''
-            return
-          }
-
-          // Paso 3: Actualizar periodicidad y valor de cuota
-          progresoCreacion.value.mensaje = 'Actualizando configuración...'
-          
-          // IMPORTANTE: Usar el valor de cuota guardado antes de cerrar el modal
-          const valorCuotaFinal = valorCuotaGuardado
-          
-          // Validar que el valor final sea válido
-          if (valorCuotaFinal <= 0 || isNaN(valorCuotaFinal)) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = 'El valor de la cuota debe ser mayor a cero'
-            estadoGuardadoSocio.value = ''
-            return
-          }
-
-          const result = await sociosStore.actualizarSocioNatillera(socioNatilleraId, {
-            valor_cuota_individual: valorCuotaFinal,
-            periodicidad: periodicidadNueva
-          })
-
-          if (!result.success) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = result.error || 'Error al actualizar la periodicidad'
-            estadoGuardadoSocio.value = ''
-            return
-          }
-
-          // Paso 4: Generar nuevas cuotas
-          progresoCreacion.value.paso = 2
-          progresoCreacion.value.mensaje = 'Generando cuotas con nueva periodicidad...'
-          
-          // Asegurar que la natillera esté cargada
-          let natillera = natillerasStore.natilleraActual
-          if (!natillera || natillera.id !== id) {
-            await natillerasStore.fetchNatillera(id)
-            natillera = natillerasStore.natilleraActual
-          }
-          
-          const resultCuotas = await generarCuotasParaSocio(
-            id,
-            socioNatilleraId,
-            natillera,
-            valorCuotaFinal,
-            periodicidadNueva
-          )
-
-          if (resultCuotas.success) {
-            progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
-            progresoCreacion.value.paso = 3
-            progresoCreacion.value.exito = true
-            progresoCreacion.value.mensaje = '¡Periodicidad actualizada exitosamente!'
-            
-            // OPTIMIZACIÓN: Recargar cuotas y actualizar socio en paralelo
-            await Promise.all([
-              cuotasStore.fetchCuotasNatillera(id),
-              sociosStore.fetchSociosNatillera(id)
-            ])
-            
-            // Cerrar modal después de 1.5 segundos
-            setTimeout(() => {
-              cerrarModalProgreso()
-            }, 1500)
-          } else {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = resultCuotas.error || 'Error al generar las nuevas cuotas'
-          }
-        } catch (error) {
-          progresoCreacion.value.paso = 0
-          progresoCreacion.value.error = error.message || 'Error inesperado al cambiar la periodicidad'
-        } finally {
-          estadoGuardadoSocio.value = ''
-        }
-        return
-      }
-
-      // Si no cambió la periodicidad, actualizar normalmente
-      // Actualizar cuota del socio en socios_natillera
-      // Asegurar que el valor sea un número y se guarde exactamente como se ingresa
-      const valorCuotaNumerico = typeof formSocio.valor_cuota === 'string' 
-        ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
-        : Number(formSocio.valor_cuota) || 0
-      
-      // Validar que el valor sea positivo
-      if (valorCuotaNumerico <= 0) {
-        errorSocio.value = 'El valor de la cuota debe ser mayor a cero'
-        estadoGuardadoSocio.value = ''
-        return
-      }
-      
-      console.log('🟢 handleGuardarSocio - Actualizando socio')
-      console.log('🟢 valor_cuota (formSocio):', formSocio.valor_cuota, 'Tipo:', typeof formSocio.valor_cuota)
-      console.log('🟢 valorCuotaNumerico calculado:', valorCuotaNumerico, 'Tipo:', typeof valorCuotaNumerico)
-      console.log('🟢 periodicidad:', formSocio.periodicidad)
-      console.log('🟢 IMPORTANTE: El valor debe guardarse exactamente como se ingresa, sin modificaciones por periodicidad')
-      
-      const datosParaActualizar = {
-        valor_cuota_individual: valorCuotaNumerico, // Valor exacto sin modificaciones
-        periodicidad: formSocio.periodicidad
-      }
-      
-      console.log('🟢 Datos para actualizar socios_natillera:', datosParaActualizar)
-      console.log('🟢 ID del socio_natillera:', socioEditando.value.id)
-      
-      const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, datosParaActualizar)
-      
-      console.log('🟢 Resultado de actualizarSocioNatillera:', result)
-
-      // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
-      if (socioEditando.value.socio?.id) {
-        // Verificar unicidad del teléfono dentro de la natillera (excepto el propio socio)
-        const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioEditando.value.socio.id)
-        if (!telefonoExiste) {
-          errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-          estadoGuardadoSocio.value = ''
-          return
-        }
-
-        const datosActualizados = {
-          nombre: formSocio.nombre,
-          telefono: telefonoLimpio,
-          email: formSocio.email || null,
-          documento: formSocio.documento || null
-        }
-        
-        // Solo incluir avatar_seed si se seleccionó uno
-        if (formSocio.avatar_seed) {
-          datosActualizados.avatar_seed = formSocio.avatar_seed
-        }
-        
-        // Incluir avatar_style si se seleccionó uno
-        if (formSocio.avatar_style) {
-          datosActualizados.avatar_style = formSocio.avatar_style
-        }
-        
-        const resultDatos = await sociosStore.actualizarDatosSocio(
-          socioEditando.value.socio.id, 
-          datosActualizados,
-          id // natilleraId
-        )
-        
-        if (!resultDatos.success) {
-          if (resultDatos.error?.includes('unique') || resultDatos.error?.includes('duplicate')) {
-            errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-          } else {
-            errorSocio.value = resultDatos.error || 'Error al actualizar los datos del socio'
-          }
-          estadoGuardadoSocio.value = ''
-          return
-        }
-      }
-
-      if (!result.success) {
-        console.error('❌ Error al actualizar socio_natillera:', result.error)
-        throw new Error(result.error || 'Error al actualizar la información del socio')
-      }
-
-      console.log('✅ Socio_natillera actualizado correctamente')
-      
-      if (result.success) {
-        // Los stores ya actualizan localmente los datos, no es necesario recargar
-        // Solo recargar cuotas si cambió el valor de cuota individual
-        const cuotaCambio = socioEditando.value.valor_cuota_individual !== valorCuotaNumerico
-        if (cuotaCambio) {
-          // Recargar cuotas para ver los cambios
-          await cuotasStore.fetchCuotasNatillera(id)
-        }
-        
-        // Recargar datos de los socios para actualizar la vista
-        await sociosStore.fetchSociosNatillera(id)
-        cargarConteoSocios() // Recargar conteo de socios también
-        estadoGuardadoSocio.value = ''
-        cerrarModalEditarSocio()
-      } else {
-        estadoGuardadoSocio.value = ''
-        errorSocio.value = result.error
-      }
-    } catch (error) {
-      console.error('Error en handleGuardarSocio:', error)
-      estadoGuardadoSocio.value = ''
-      errorSocio.value = 'Error al guardar los cambios. Por favor, intenta nuevamente.'
-    }
-  } else {
-    estadoGuardadoSocio.value = ''
-  }
-}
 
 // Manejar input del valor de la cuota en edición
 function handleValorPagoEditarInput(event) {
@@ -15590,372 +14699,265 @@ function generarImagenComprobante() {
   })
 }
 
-async function descargarComprobante() {
-  console.log('Iniciando descarga...')
-  
-  if (!comprobanteRef.value) {
-    alert('Error: El comprobante no está listo. Intenta de nuevo.')
-    return
+/*
+ * Imagen del comprobante lista ANTES del toque. Safari solo abre la hoja de compartir
+ * (navigator.share) y ventanas nuevas (window.open) dentro del gesto del usuario: con un
+ * `await toPng()` por delante rechazaba el share (NotAllowedError) y el antipopups se
+ * comía el wa.me de reserva. Por eso la imagen se genera al mostrarse el comprobante y
+ * los botones la usan de forma síncrona (mismo patrón que ComprobanteVariasCuotasModal).
+ *
+ * `origen` devuelve los datos del comprobante mientras su modal está abierto (o null):
+ * cada vez que cambia se descarta la imagen anterior y se genera otra.
+ */
+function crearPreparadorComprobante({ elemento, origen, fondo, nombreArchivo }) {
+  const archivo = ref(null)
+  const preparando = ref(false)
+  let temporizador = null
+  let version = 0
+
+  function cancelar() {
+    clearTimeout(temporizador)
+    temporizador = null
+    version++
+    archivo.value = null
+    preparando.value = false
   }
-  
-  generandoImagen.value = true
-  
-  try {
-    // Usar html-to-image para capturar el HTML directamente (mejor soporte para colores modernos)
-    console.log('Capturando comprobante HTML...')
-    
-    const dataUrl = await toPng(comprobanteRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
-    })
-    
-    console.log('Imagen generada, iniciando descarga...')
-    const link = document.createElement('a')
-    link.download = `comprobante-${pagoRegistrado.value?.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    console.log('Descarga completada')
-    
-    // Registrar auditoría de descarga de comprobante
-    if (pagoRegistrado.value) {
-      const auditoria = useAuditoria()
-      const cuotaIdParaAuditoria = pagoRegistrado.value.cuotaId || null
-      const natilleraIdParaAuditoria = id || null
-      
-      console.log('[Auditoría] Registrando descarga de comprobante:', {
-        tieneCuotaId: !!cuotaIdParaAuditoria,
-        cuotaId: cuotaIdParaAuditoria,
-        natilleraId: natilleraIdParaAuditoria,
-        pagoRegistrado: pagoRegistrado.value
-      })
-      
-      const promesaAuditoria = auditoria.registrar({
-        tipoAccion: 'DOWNLOAD',
-        entidad: 'comprobante',
-        entidadId: cuotaIdParaAuditoria,
-        descripcion: `Se descargó comprobante de pago de ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
-        natilleraId: natilleraIdParaAuditoria,
-        detalles: {
-          tipo_comprobante: 'pago_cuota',
-          codigo_comprobante: pagoRegistrado.value.codigoComprobante || null,
-          socio_nombre: pagoRegistrado.value.socioNombre || null,
-          valor: pagoRegistrado.value.valor || null,
-          valor_total: pagoRegistrado.value.valorPagadoTotal || null,
-          es_parcial: pagoRegistrado.value.esParcial || false,
-          cuota_id: cuotaIdParaAuditoria
-        }
-      })
-      
-      registrarAuditoriaEnSegundoPlano(promesaAuditoria)
-      
-      // También loguear el resultado para debug
-      promesaAuditoria.then(result => {
-        if (result.success) {
-          console.log('[Auditoría] ✅ Descarga registrada exitosamente:', result.id)
-        } else {
-          console.error('[Auditoría] ❌ Error registrando descarga:', result.error)
-        }
-      }).catch(error => {
-        console.error('[Auditoría] ❌ Excepción al registrar descarga:', error)
-      })
-    } else {
-      console.warn('[Auditoría] No se pudo registrar descarga: pagoRegistrado.value es null')
+
+  async function generar() {
+    const miVersion = ++version
+    await nextTick()
+    const el = elemento.value
+    if (!el) {
+      if (miVersion === version) preparando.value = false
+      return
     }
-  } catch (e) {
-    console.error('Error completo:', e)
-    alert('Error al generar la imagen: ' + e.message)
-  } finally {
-    generandoImagen.value = false
+    try {
+      const dataUrl = await toPng(el, { backgroundColor: fondo, pixelRatio: 2, quality: 1.0, cacheBust: true })
+      const blob = await (await fetch(dataUrl)).blob()
+      // Si el comprobante cambió o se cerró mientras se generaba, esta imagen ya no sirve.
+      if (miVersion !== version) return
+      archivo.value = new File([blob], nombreArchivo(), { type: 'image/png' })
+    } catch (e) {
+      if (miVersion !== version) return
+      console.error('Error generando la imagen del comprobante:', e)
+      notificationStore.error('No se pudo generar la imagen del comprobante. Toca de nuevo para reintentar.', 'Comprobante')
+    } finally {
+      if (miVersion === version) preparando.value = false
+    }
   }
+
+  function programar() {
+    cancelar()
+    if (!origen()) return
+    preparando.value = true
+    // Da tiempo a la transición de entrada del modal y a que se pinten fuentes e imágenes.
+    temporizador = setTimeout(generar, 350)
+  }
+
+  watch(origen, programar)
+  return { archivo, preparando, programar, cancelar }
 }
 
-async function compartirWhatsApp() {
-  if (!pagoRegistrado.value || !comprobanteRef.value) return
-  
-  generandoImagen.value = true
-  
-  try {
-    // Usar html-to-image para capturar el HTML directamente (mejor soporte para colores modernos)
-    const dataUrl = await toPng(comprobanteRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
+/*
+ * Guarda la imagen ya preparada. En iOS, <a download> sobre una imagen abre una vista
+ * previa (o no hace nada en la PWA instalada); la hoja de compartir ofrece «Guardar
+ * imagen». Debe llamarse de forma síncrona desde el clic, sin await por delante.
+ */
+function guardarImagenComprobante(archivo) {
+  if (detectIosPlatform() && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+    navigator.share({ files: [archivo] }).catch(e => {
+      if (e?.name !== 'AbortError') notificationStore.error('No se pudo guardar la imagen', 'Comprobante')
     })
-    
-    // Convertir dataUrl a blob
-    const response = await fetch(dataUrl)
-    const blob = await response.blob()
-    
-    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
-    const nombreArchivo = `comprobante-${pagoRegistrado.value.socioNombre?.replace(/\s+/g, '-') || 'pago'}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
-    
-    // Crear mensaje simple: Nombre del Socio - Período del pago
-    const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
-    const mensajeCompartir = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
-    
-    // Verificar si el navegador soporta Web Share API con archivos
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: `Comprobante de Pago - ${pagoRegistrado.value.socioNombre}`,
-        text: mensajeCompartir
+    return
+  }
+  const url = URL.createObjectURL(archivo)
+  const link = document.createElement('a')
+  link.download = archivo.name
+  link.href = url
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+function abrirWhatsAppConTexto(telefono, mensaje) {
+  window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
+}
+
+function descargarComprobante() {
+  const archivo = archivoComprobantePago.value
+  if (!archivo) {
+    // La imagen falló o aún no existe: se vuelve a preparar y el siguiente toque la usa.
+    preparadorComprobantePago.programar()
+    return
+  }
+  guardarImagenComprobante(archivo)
+
+  // Registrar auditoría de descarga de comprobante
+  if (!pagoRegistrado.value) return
+  const auditoria = useAuditoria()
+  const cuotaIdParaAuditoria = pagoRegistrado.value.cuotaId || null
+  const promesaAuditoria = auditoria.registrar({
+    tipoAccion: 'DOWNLOAD',
+    entidad: 'comprobante',
+    entidadId: cuotaIdParaAuditoria,
+    descripcion: `Se descargó comprobante de pago de ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
+    natilleraId: id || null,
+    detalles: {
+      tipo_comprobante: 'pago_cuota',
+      codigo_comprobante: pagoRegistrado.value.codigoComprobante || null,
+      socio_nombre: pagoRegistrado.value.socioNombre || null,
+      valor: pagoRegistrado.value.valor || null,
+      valor_total: pagoRegistrado.value.valorPagadoTotal || null,
+      es_parcial: pagoRegistrado.value.esParcial || false,
+      cuota_id: cuotaIdParaAuditoria
+    }
+  })
+  registrarAuditoriaEnSegundoPlano(promesaAuditoria)
+}
+
+function auditarEnvioComprobantePago(metodo, sufijo) {
+  const pago = pagoRegistrado.value
+  if (!pago?.cuotaId) return
+  const auditoria = useAuditoria()
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'SEND',
+    entidad: 'comprobante',
+    entidadId: pago.cuotaId,
+    descripcion: `Se envió comprobante de pago por WhatsApp${sufijo} a ${pago.socioNombre || 'socio'} (Código: ${pago.codigoComprobante || 'N/A'})`,
+    natilleraId: id,
+    detalles: {
+      tipo_comprobante: 'pago_cuota',
+      metodo_envio: metodo,
+      codigo_comprobante: pago.codigoComprobante,
+      socio_nombre: pago.socioNombre,
+      socio_telefono: pago.socioTelefono,
+      valor: pago.valor,
+      valor_total: pago.valorPagadoTotal,
+      es_parcial: pago.esParcial
+    }
+  }))
+}
+
+// Síncrono de principio a fin hasta navigator.share / window.open: ver crearPreparadorComprobante.
+function compartirWhatsApp() {
+  if (!pagoRegistrado.value) return
+  const archivo = archivoComprobantePago.value
+  if (!archivo) {
+    preparadorComprobantePago.programar()
+    return
+  }
+  const periodo = pagoRegistrado.value.periodo || pagoRegistrado.value.descripcionCuota || 'N/A'
+  const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
+
+  if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: `Comprobante de Pago - ${pagoRegistrado.value.socioNombre}`,
+      text: mensaje
+    })
+      .then(() => auditarEnvioComprobantePago('whatsapp', ''))
+      .catch(e => {
+        // AbortError = el usuario cerró la hoja: no es un fallo ni se abre WhatsApp.
+        if (e?.name === 'AbortError') return
+        console.error('Error compartiendo:', e)
+        notificationStore.error('No se pudo compartir la imagen. Descárgala y adjúntala en WhatsApp.', 'Comprobante')
       })
-      
-      // Registrar auditoría de envío de comprobante
-      if (pagoRegistrado.value?.cuotaId) {
+    return
+  }
+
+  // Sin compartir archivos (escritorio): descargar y abrir WhatsApp con el texto, todo
+  // dentro del mismo toque para que el antipopups no bloquee la ventana.
+  guardarImagenComprobante(archivo)
+  const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
+  if (telefono) {
+    abrirWhatsAppConTexto(telefono, mensaje)
+    auditarEnvioComprobantePago('whatsapp_fallback', ' (fallback)')
+  }
+  notificationStore.success('La imagen se descargó: adjúntala en el chat de WhatsApp.', 'Comprobante', 4000)
+}
+
+function descargarComprobanteModificacion() {
+  const archivo = archivoComprobanteModificacion.value
+  if (!archivo) {
+    preparadorComprobanteModificacion.programar()
+    return
+  }
+  guardarImagenComprobante(archivo)
+
+  // Registrar auditoría de descarga de comprobante
+  const mod = modificacionRegistrada.value
+  if (!mod) return
+  const auditoria = useAuditoria()
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'DOWNLOAD',
+    entidad: 'comprobante',
+    entidadId: mod.cuotaId,
+    descripcion: `Se descargó comprobante de modificación de ${mod.socioNombre || 'socio'} (Código anterior: ${mod.codigoAnterior || 'N/A'}, Código nuevo: ${mod.codigoNuevo || 'N/A'})`,
+    natilleraId: id,
+    detalles: {
+      tipo_comprobante: 'modificacion_cuota',
+      codigo_comprobante_anterior: mod.codigoAnterior,
+      codigo_comprobante_nuevo: mod.codigoNuevo,
+      socio_nombre: mod.socioNombre,
+      valor_anterior: mod.valorAnterior,
+      valor_nuevo: mod.valorNuevo
+    }
+  }))
+}
+
+// Síncrono hasta navigator.share / window.open: ver crearPreparadorComprobante.
+function compartirWhatsAppModificacion() {
+  const mod = modificacionRegistrada.value
+  if (!mod) return
+  const archivo = archivoComprobanteModificacion.value
+  if (!archivo) {
+    preparadorComprobanteModificacion.programar()
+    return
+  }
+  const periodo = mod.periodo || 'N/A'
+  const mensaje = `${mod.socioNombre || 'Socio'} - Modificación: ${periodo}`
+
+  if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: 'Comprobante de Modificación',
+      text: mensaje
+    })
+      .then(() => {
+        if (!mod.cuotaId) return
         const auditoria = useAuditoria()
         registrarAuditoriaEnSegundoPlano(auditoria.registrar({
           tipoAccion: 'SEND',
           entidad: 'comprobante',
-          entidadId: pagoRegistrado.value.cuotaId,
-          descripcion: `Se envió comprobante de pago por WhatsApp a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
-          natilleraId: id,
-          detalles: {
-            tipo_comprobante: 'pago_cuota',
-            metodo_envio: 'whatsapp',
-            codigo_comprobante: pagoRegistrado.value.codigoComprobante,
-            socio_nombre: pagoRegistrado.value.socioNombre,
-            socio_telefono: pagoRegistrado.value.socioTelefono,
-            valor: pagoRegistrado.value.valor,
-            valor_total: pagoRegistrado.value.valorPagadoTotal,
-            es_parcial: pagoRegistrado.value.esParcial
-          }
-        }))
-      }
-    } else {
-      // Fallback: descargar y abrir WhatsApp con mensaje
-      const dataUrl = await toPng(comprobanteRef.value, {
-        backgroundColor: '#ecfdf5',
-        pixelRatio: 2,
-        quality: 1.0,
-        cacheBust: true
-      })
-      const link = document.createElement('a')
-      link.download = `comprobante-${pagoRegistrado.value?.socioNombre?.replace(/\s+/g, '-')}.png`
-      link.href = dataUrl
-      link.click()
-      
-      // Esperar un poco y abrir WhatsApp
-      setTimeout(() => {
-        const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
-        if (telefono) {
-          const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
-          const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
-          window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
-          
-          // Registrar auditoría de envío de comprobante (fallback)
-          if (pagoRegistrado.value?.cuotaId) {
-            const auditoria = useAuditoria()
-            registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-              tipoAccion: 'SEND',
-              entidad: 'comprobante',
-              entidadId: pagoRegistrado.value.cuotaId,
-              descripcion: `Se envió comprobante de pago por WhatsApp (fallback) a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
-              natilleraId: id,
-              detalles: {
-                tipo_comprobante: 'pago_cuota',
-                metodo_envio: 'whatsapp_fallback',
-                codigo_comprobante: pagoRegistrado.value.codigoComprobante,
-                socio_nombre: pagoRegistrado.value.socioNombre,
-                socio_telefono: pagoRegistrado.value.socioTelefono,
-                valor: pagoRegistrado.value.valor,
-                valor_total: pagoRegistrado.value.valorPagadoTotal,
-                es_parcial: pagoRegistrado.value.esParcial
-              }
-            }))
-          }
-        }
-      }, 500)
-      
-      alert('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.')
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error('Error compartiendo:', e)
-      // Fallback: solo abrir WhatsApp con texto
-      const telefono = pagoRegistrado.value.socioTelefono?.replace(/\D/g, '')
-      if (telefono) {
-        const periodo = pagoRegistrado.value?.periodo || pagoRegistrado.value?.descripcionCuota || 'N/A'
-        const mensaje = `${pagoRegistrado.value.socioNombre || 'Socio'} - ${periodo}`
-        window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
-        
-        // Registrar auditoría de envío de comprobante (solo texto)
-        if (pagoRegistrado.value?.cuotaId) {
-          const auditoria = useAuditoria()
-          registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-            tipoAccion: 'SEND',
-            entidad: 'comprobante',
-            entidadId: pagoRegistrado.value.cuotaId,
-            descripcion: `Se envió comprobante de pago por WhatsApp (solo texto) a ${pagoRegistrado.value.socioNombre || 'socio'} (Código: ${pagoRegistrado.value.codigoComprobante || 'N/A'})`,
-            natilleraId: id,
-            detalles: {
-              tipo_comprobante: 'pago_cuota',
-              metodo_envio: 'whatsapp_texto',
-              codigo_comprobante: pagoRegistrado.value.codigoComprobante,
-              socio_nombre: pagoRegistrado.value.socioNombre,
-              socio_telefono: pagoRegistrado.value.socioTelefono,
-              valor: pagoRegistrado.value.valor,
-              valor_total: pagoRegistrado.value.valorPagadoTotal,
-              es_parcial: pagoRegistrado.value.esParcial
-            }
-          }))
-        }
-      }
-    }
-  } finally {
-    generandoImagen.value = false
-  }
-}
-
-async function descargarComprobanteModificacion() {
-  console.log('Iniciando descarga de comprobante de modificación...')
-  
-  if (!comprobanteModificacionRef.value) {
-    alert('Error: El comprobante no está listo. Intenta de nuevo.')
-    return
-  }
-  
-  generandoImagenModificacion.value = true
-  
-  try {
-    const dataUrl = await toPng(comprobanteModificacionRef.value, {
-      backgroundColor: '#eff6ff',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
-    })
-    
-    console.log('Imagen generada, iniciando descarga...')
-    const link = document.createElement('a')
-    link.download = `comprobante-modificacion-${modificacionRegistrada.value?.socioNombre?.replace(/\s+/g, '-') || 'modificacion'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    console.log('Descarga completada')
-    
-    // Registrar auditoría de descarga de comprobante
-    if (modificacionRegistrada.value) {
-      const auditoria = useAuditoria()
-      registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-        tipoAccion: 'DOWNLOAD',
-        entidad: 'comprobante',
-        entidadId: modificacionRegistrada.value.cuotaId,
-        descripcion: `Se descargó comprobante de modificación de ${modificacionRegistrada.value.socioNombre || 'socio'} (Código anterior: ${modificacionRegistrada.value.codigoAnterior || 'N/A'}, Código nuevo: ${modificacionRegistrada.value.codigoNuevo || 'N/A'})`,
-        natilleraId: id,
-        detalles: {
-          tipo_comprobante: 'modificacion_cuota',
-          codigo_comprobante_anterior: modificacionRegistrada.value.codigoAnterior,
-          codigo_comprobante_nuevo: modificacionRegistrada.value.codigoNuevo,
-          socio_nombre: modificacionRegistrada.value.socioNombre,
-          valor_anterior: modificacionRegistrada.value.valorAnterior,
-          valor_nuevo: modificacionRegistrada.value.valorNuevo
-        }
-      }))
-    }
-  } catch (e) {
-    console.error('Error completo:', e)
-    alert('Error al generar la imagen: ' + e.message)
-  } finally {
-    generandoImagenModificacion.value = false
-  }
-}
-
-async function compartirWhatsAppModificacion() {
-  if (!modificacionRegistrada.value || !comprobanteModificacionRef.value) return
-  
-  generandoImagenModificacion.value = true
-  
-  try {
-    const dataUrl = await toPng(comprobanteModificacionRef.value, {
-      backgroundColor: '#eff6ff',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
-    })
-    
-    const response = await fetch(dataUrl)
-    const blob = await response.blob()
-    
-    const nombreArchivo = `comprobante-modificacion-${modificacionRegistrada.value.socioNombre?.replace(/\s+/g, '-') || 'modificacion'}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
-    
-    const periodo = modificacionRegistrada.value?.periodo || 'N/A'
-    const mensajeCompartir = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
-    
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: 'Comprobante de Modificación',
-        text: mensajeCompartir
-      })
-      
-      // Registrar auditoría de envío de comprobante
-      if (modificacionRegistrada.value?.cuotaId) {
-        const auditoria = useAuditoria()
-        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-          tipoAccion: 'SEND',
-          entidad: 'comprobante',
-          entidadId: modificacionRegistrada.value.cuotaId,
-          descripcion: `Se envió comprobante de modificación por WhatsApp a ${modificacionRegistrada.value.socioNombre || 'socio'} (Código anterior: ${modificacionRegistrada.value.codigoAnterior || 'N/A'}, Código nuevo: ${modificacionRegistrada.value.codigoNuevo || 'N/A'})`,
+          entidadId: mod.cuotaId,
+          descripcion: `Se envió comprobante de modificación por WhatsApp a ${mod.socioNombre || 'socio'} (Código anterior: ${mod.codigoAnterior || 'N/A'}, Código nuevo: ${mod.codigoNuevo || 'N/A'})`,
           natilleraId: id,
           detalles: {
             tipo_comprobante: 'modificacion_cuota',
             metodo_envio: 'whatsapp_share',
-            codigo_comprobante_anterior: modificacionRegistrada.value.codigoAnterior,
-            codigo_comprobante_nuevo: modificacionRegistrada.value.codigoNuevo,
-            socio_nombre: modificacionRegistrada.value.socioNombre,
-            socio_telefono: modificacionRegistrada.value.socioTelefono,
-            valor_anterior: modificacionRegistrada.value.valorAnterior,
-            valor_nuevo: modificacionRegistrada.value.valorNuevo
+            codigo_comprobante_anterior: mod.codigoAnterior,
+            codigo_comprobante_nuevo: mod.codigoNuevo,
+            socio_nombre: mod.socioNombre,
+            socio_telefono: mod.socioTelefono,
+            valor_anterior: mod.valorAnterior,
+            valor_nuevo: mod.valorNuevo
           }
         }))
-      }
-    } else {
-      // Fallback: descargar y abrir WhatsApp con mensaje
-      const dataUrl = await toPng(comprobanteModificacionRef.value, {
-        backgroundColor: '#eff6ff',
-        pixelRatio: 2,
-        quality: 1.0,
-        cacheBust: true
       })
-      const link = document.createElement('a')
-      link.download = `comprobante-modificacion-${modificacionRegistrada.value?.socioNombre?.replace(/\s+/g, '-')}.png`
-      link.href = dataUrl
-      link.click()
-      
-      setTimeout(() => {
-        const telefono = modificacionRegistrada.value.socioTelefono?.replace(/\D/g, '')
-        if (telefono) {
-          const periodo = modificacionRegistrada.value?.periodo || 'N/A'
-          const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
-          window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
-        }
-      }, 500)
-      
-      alert('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.')
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error('Error compartiendo:', e)
-      const telefono = modificacionRegistrada.value.socioTelefono?.replace(/\D/g, '')
-      if (telefono) {
-        const periodo = modificacionRegistrada.value?.periodo || 'N/A'
-        const mensaje = `${modificacionRegistrada.value.socioNombre || 'Socio'} - Modificación: ${periodo}`
-        window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
-      }
-    }
-  } finally {
-    generandoImagenModificacion.value = false
+      .catch(e => {
+        if (e?.name === 'AbortError') return
+        console.error('Error compartiendo:', e)
+        notificationStore.error('No se pudo compartir la imagen. Descárgala y adjúntala en WhatsApp.', 'Comprobante')
+      })
+    return
   }
+
+  // Sin compartir archivos: descargar y abrir WhatsApp dentro del mismo toque.
+  guardarImagenComprobante(archivo)
+  const telefono = mod.socioTelefono?.replace(/\D/g, '')
+  if (telefono) abrirWhatsAppConTexto(telefono, mensaje)
+  notificationStore.success('La imagen se descargó: adjúntala en el chat de WhatsApp.', 'Comprobante', 4000)
 }
 
 function cerrarConfirmacion() {
@@ -17567,8 +16569,10 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  /* 44×44 táctil (iOS) sin agrandar la barra: el margen negativo absorbe el exceso. */
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px -8px 0;
   border-radius: 9999px;
   color: #64748b;
   background: transparent;
@@ -17651,7 +16655,9 @@ onUnmounted(() => {
   scrollbar-width: none;
   scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
-  touch-action: pan-x;
+  /* pan-y también: si no, un deslizamiento vertical que empieza sobre las pestañas
+     no desplaza la página en iOS y la pantalla parece bloqueada. */
+  touch-action: pan-x pan-y;
   padding-top: 6px;
 }
 .carrusel-meses::-webkit-scrollbar {
@@ -17699,20 +16705,40 @@ onUnmounted(() => {
 .fade-mobile-right {
   background: linear-gradient(to left, rgb(243 244 246) 0%, rgba(243, 244, 246, 0) 100%);
 }
-/* Chevron pequeño para móvil */
+/* Chevron pequeño para móvil: el círculo visible sigue midiendo 28px, pero el botón
+   ocupa 44×44 (mínimo táctil de iOS); el margen negativo lo recoloca donde estaba. */
 .chevron-mobile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -0.5rem;
+  border-radius: 9999px;
+  background: transparent;
+  border: 0;
+  color: rgb(75 85 99);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.chevron-mobile::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -0.875rem 0 0 -0.875rem;
   width: 1.75rem;
   height: 1.75rem;
   border-radius: 9999px;
   background-color: rgba(255, 255, 255, 0.95);
   border: 1px solid rgb(229 231 235);
-  color: rgb(75 85 99);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+.chevron-mobile:active::before {
+  background-color: rgb(229 231 235);
+}
+.chevron-mobile > svg {
+  position: relative;
 }
 
 @keyframes bounce-subtle {
@@ -17749,167 +16775,39 @@ onUnmounted(() => {
   }
 }
 
-@keyframes progress {
-  0% {
-    width: 0%;
-    transform: translateX(0);
-  }
-  50% {
-    width: 70%;
-    transform: translateX(0);
-  }
-  100% {
-    width: 100%;
-    transform: translateX(0);
-  }
-}
-
-.progress-bar {
-  animation: progress 2s ease-in-out infinite;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-}
-
-/* Animación de barra de progreso para el registro de pago (más rápida) */
-@keyframes progress-animated-fast {
-  0% {
-    width: 0%;
-    transform: translateX(0);
-  }
-  50% {
-    width: 70%;
-    transform: translateX(0);
-  }
-  100% {
-    width: 100%;
-    transform: translateX(0);
-  }
-}
-
-.progress-bar-animated-fast {
-  animation: progress-animated-fast 1.2s ease-in-out infinite;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-  will-change: width, transform;
-}
-
-/* Pantalla de carga "Preparando registro de pago" */
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes progressSlide {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(400%); }
-}
-.preparando-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 2s ease-in-out infinite;
-}
-.preparando-fade-in-up-1 {
-  animation: fadeInUp 0.4s ease-out 0.2s both;
-}
-.preparando-fade-in-up-2 {
-  animation: fadeInUp 0.4s ease-out 0.35s both;
-}
-.preparando-progress-slide {
-  animation: progressSlide 1.5s ease-in-out infinite;
-}
-
-/* Animación de flotación para partículas (más rápida) */
-@keyframes float-fast {
+/* Safari < 15 solo reconoce las animaciones con prefijo (manual iOS §9). */
+@-webkit-keyframes bounce-subtle {
   0%, 100% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0.4;
-  }
-  25% {
-    transform: translateY(-15px) rotate(3deg);
-    opacity: 0.6;
+    -webkit-transform: translateY(0);
+    opacity: 1;
   }
   50% {
-    transform: translateY(-30px) rotate(-3deg);
+    -webkit-transform: translateY(4px);
     opacity: 0.8;
   }
-  75% {
-    transform: translateY(-15px) rotate(3deg);
-    opacity: 0.6;
-  }
 }
 
-.animate-float-fast {
-  animation: float-fast 1.8s ease-in-out infinite;
-}
-
-/* Animaciones rápidas optimizadas */
-@keyframes spin-fast {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes spin-fast-reverse {
-  from {
-    transform: rotate(360deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes bounce-fast {
-  0%, 100% {
-    transform: translateY(0);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-  }
-  50% {
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-  }
-}
-
-@keyframes ping-fast {
+@-webkit-keyframes pulse-gentle {
   0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  75%, 100% {
-    transform: scale(2);
     opacity: 0;
+    -webkit-transform: scale(0.95);
   }
-}
-
-@keyframes pulse-fast {
-  0%, 100% {
+  5% {
     opacity: 1;
+    -webkit-transform: scale(1);
   }
-  50% {
-    opacity: 0.5;
+  15% {
+    opacity: 1;
+    -webkit-transform: scale(1);
   }
-}
-
-.animate-spin-fast {
-  animation: spin-fast 1.2s linear infinite;
-}
-
-.animate-spin-fast-reverse {
-  animation: spin-fast-reverse 0.9s linear infinite;
-}
-
-.animate-bounce-fast {
-  animation: bounce-fast 1s ease-in-out infinite;
-}
-
-.animate-ping-fast {
-  animation: ping-fast 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-.animate-pulse-fast {
-  animation: pulse-fast 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  20% {
+    opacity: 0;
+    -webkit-transform: scale(0.95);
+  }
+  100% {
+    opacity: 0;
+    -webkit-transform: scale(0.95);
+  }
 }
 
 /* Estilos responsivos para el comprobante en móvil */

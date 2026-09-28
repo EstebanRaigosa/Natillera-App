@@ -44,6 +44,15 @@
             <span>Importar CSV</span>
           </button>
           <button
+            v-if="!esVisor && natilleraYaEmpezo"
+            type="button"
+            class="ds-btn ds-btn--secondary"
+            @click="modalPonerAlDia = true"
+          >
+            <CheckBadgeIcon class="w-4 h-4" />
+            <span>Poner al día</span>
+          </button>
+          <button
             v-if="!esVisor"
             type="button"
             class="ds-btn ds-btn--secondary"
@@ -65,6 +74,38 @@
         </div>
       </div>
     </header>
+
+    <!--
+      Natillera que empezó antes de pasarse a la app: sus socios nacen con los meses
+      anteriores en mora aunque ya pagaron. El aviso lleva al proceso masivo; en el celular
+      es la entrada, porque la cabecera solo tiene iconos.
+    -->
+    <button
+      v-if="!esVisor && natilleraYaEmpezo && cantidadSociosCuotasEnMora > 0"
+      type="button"
+      class="al-dia-aviso mb-3"
+      @click="modalPonerAlDia = true"
+    >
+      <span class="al-dia-aviso__icono" aria-hidden="true"><CheckBadgeIcon class="w-5 h-5" /></span>
+      <span class="min-w-0 flex-1 text-left">
+        <span class="al-dia-aviso__titulo">
+          {{ cantidadSociosCuotasEnMora === 1 ? '1 socio en mora' : `${cantidadSociosCuotasEnMora} socios en mora` }}
+        </span>
+        <span class="al-dia-aviso__sub">¿Ya pagaron por fuera de la app? Regístralos de una vez.</span>
+      </span>
+      <span class="al-dia-aviso__cta">
+        Poner al día
+        <ChevronRightIcon class="w-4 h-4" aria-hidden="true" />
+      </span>
+    </button>
+
+    <PonerAlDiaMasivoModal
+      :show="!!modalPonerAlDia"
+      :natillera-id="id"
+      :natillera-nombre="natillerasStore.natilleraActual?.nombre || ''"
+      :socios="sociosStore.sociosNatillera"
+      @close="modalPonerAlDia = false"
+    />
 
     <!-- Solicitudes para usar la app: el admin las aprueba (sabe quién es quién) -->
     <button
@@ -250,46 +291,48 @@
                   </span>
                 </td>
                 <td>
-                  <div class="flex items-center justify-end gap-0.5">
+                  <!-- Las mismas píldoras con texto de la tarjeta móvil: los iconos solos no
+                       decían qué hacía cada botón. Solo «Eliminar» queda en icono, con title. -->
+                  <div class="flex items-center justify-end gap-1.5">
                     <template v-if="sn.estado === 'activo'">
                       <button
                         type="button"
-                        class="action-btn action-btn--brand"
-                        title="Ver cuotas"
+                        class="card-pill card-pill--tabla card-pill--brand"
                         aria-label="Ver cuotas del socio"
                         @click.stop="verCuotasSocio(sn)"
                       >
-                        <CurrencyDollarIcon class="w-5 h-5" />
+                        <CurrencyDollarIcon class="w-4 h-4" />
+                        Cuotas
                       </button>
                       <button
                         v-if="!esVisor"
                         type="button"
-                        class="action-btn action-btn--info"
-                        title="Editar"
+                        class="card-pill card-pill--tabla card-pill--info"
                         aria-label="Editar socio"
                         @click.stop="editarSocio(sn)"
                       >
-                        <PencilIcon class="w-5 h-5" />
+                        <PencilIcon class="w-4 h-4" />
+                        Editar
                       </button>
                       <button
                         v-if="!esVisor"
                         type="button"
-                        class="action-btn action-btn--warning"
-                        title="Retirar"
+                        class="card-pill card-pill--tabla card-pill--warning"
                         aria-label="Retirar socio de la natillera"
                         @click.stop="abrirModalDesactivar(sn)"
                       >
-                        <XCircleIcon class="w-5 h-5" />
+                        <XCircleIcon class="w-4 h-4" />
+                        Retirar
                       </button>
                       <button
                         v-if="!esVisor"
                         type="button"
-                        class="action-btn action-btn--danger"
+                        class="card-pill card-pill--tabla card-pill--danger card-pill--icon"
                         title="Eliminar socio"
                         aria-label="Eliminar socio"
                         @click.stop="confirmarEliminarSocio(sn)"
                       >
-                        <TrashIcon class="w-5 h-5" />
+                        <TrashIcon class="w-4 h-4" />
                       </button>
                     </template>
                     <button
@@ -591,8 +634,77 @@
                   ? 'Este socio ha cumplido con todas sus cuotas.'
                   : `Debe ${resumenSocio.cuotasPendientes + resumenSocio.cuotasMora} cuota${(resumenSocio.cuotasPendientes + resumenSocio.cuotasMora) === 1 ? '' : 's'}.` }}
               </span>
+              <!-- Ya pagó por fuera de la app (natillera que empezó antes de crearla aquí) -->
+              <button
+                v-if="!resumenSocio.alDia && !esVisor && !alDiaDetalle.abierto"
+                type="button"
+                class="poner-al-dia__abrir"
+                @click="abrirPonerAlDia"
+              >
+                <CheckCircleIcon class="h-4 w-4" aria-hidden="true" />
+                Ponerlo al día
+              </button>
             </div>
           </div>
+
+          <!--
+            Poner al día, dentro del mismo detalle: cuántas cuotas vencidas se registran, cuánto
+            suman y cómo pagó. Cada una queda pagada en su fecha límite, sin multa (usePonerAlDia).
+          -->
+          <div v-if="alDiaDetalle.abierto" class="poner-al-dia">
+            <CargaCaja v-if="alDiaDetalle.cargando" texto="Buscando cuotas vencidas" />
+            <template v-else-if="alDiaDetalle.cuotas.length > 0">
+              <div class="flex items-center gap-2.5">
+                <span class="poner-al-dia__sello" aria-hidden="true"><CheckBadgeIcon class="w-5 h-5" /></span>
+                <div class="min-w-0">
+                  <p class="poner-al-dia__titulo">Ponerlo al día</p>
+                  <p class="poner-al-dia__sub">{{ rangoPonerAlDia }}</p>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <div class="detalle-metric">
+                  <p class="detalle-metric__label">Cuotas</p>
+                  <p class="detalle-metric__value">{{ alDiaDetalle.cuotas.length }}</p>
+                </div>
+                <div class="detalle-metric detalle-metric--positivo">
+                  <p class="detalle-metric__label">{{ total4x1000PonerAlDia > 0 ? 'Con 4×1000' : 'Suman' }}</p>
+                  <p class="detalle-metric__value">$ {{ formatMoney(totalPonerAlDia + total4x1000PonerAlDia) }}</p>
+                </div>
+              </div>
+              <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span class="ds-overline">Cómo pagó</span>
+                <SwitchSegmentado v-model="alDiaDetalle.formaPago" :opciones="OPCIONES_FORMA_PAGO_AL_DIA" />
+                <label v-if="alDiaDetalle.formaPago === 'transferencia'" class="poner-al-dia__opcion" :class="{ 'is-activa': alDiaDetalle.cobrar4x1000 }">
+                  <input v-model="alDiaDetalle.cobrar4x1000" type="checkbox" class="sr-only" />
+                  <span class="poner-al-dia__caja" aria-hidden="true"><CheckIcon v-if="alDiaDetalle.cobrar4x1000" class="h-3.5 w-3.5" /></span>
+                  Cobrar 4×1000
+                </label>
+              </div>
+              <p class="poner-al-dia__nota">
+                <InformationCircleIcon class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+                <span>Cada cuota queda pagada en su fecha límite, sin multa, y entra a la caja.</span>
+              </p>
+              <div class="mt-3 grid grid-cols-2 gap-2.5">
+                <button type="button" class="btn-modal-secondary" @click="cerrarPonerAlDia">Cancelar</button>
+                <button type="button" class="btn-modal-primary" @click="confirmarPonerAlDia">Ponerlo al día</button>
+              </div>
+            </template>
+            <template v-else>
+              <div class="flex items-start gap-2.5">
+                <span class="poner-al-dia__sello" aria-hidden="true"><CheckBadgeIcon class="w-5 h-5" /></span>
+                <p class="poner-al-dia__sub pt-1">
+                  No tiene cuotas vencidas por registrar: lo que debe aún no ha llegado a su fecha límite.
+                </p>
+              </div>
+              <button type="button" class="btn-modal-secondary mt-3 w-full" @click="cerrarPonerAlDia">Entendido</button>
+            </template>
+          </div>
+          <CargaCaja
+            :visible="alDiaDetalle.guardando"
+            flotante
+            texto="Poniendo al día"
+            :detalle="alDiaDetalle.total ? `Cuota ${alDiaDetalle.hechas} de ${alDiaDetalle.total}` : 'Un momento'"
+          />
 
           <!-- Cuenta en la app: con qué correo se vinculó el socio (o que aún no lo hizo) -->
           <div class="socio-cuenta" :class="{ 'is-vinculado': socioSeleccionado?.socio?.usuario_id }">
@@ -744,9 +856,9 @@
                   :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="ds-btn ds-btn--secondary !min-h-[36px] !py-1.5 !px-3 !text-xs flex-shrink-0"
+                  class="btn-compartir btn-compartir--sm flex-shrink-0"
                 >
-                  <ChatBubbleLeftIcon class="w-4 h-4" />
+                  <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
                   WhatsApp
                 </a>
               </div>
@@ -797,7 +909,7 @@
       </div>
 
       <!-- Footer fijo: 2 filas con jerarquía clara. Siempre visible. Hereda safe-area-bottom. -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-2">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
         <!-- Fila 1: acciones principales (peso fuerte) -->
         <div class="flex flex-col-reverse sm:flex-row gap-2">
           <button
@@ -938,7 +1050,7 @@
                   <input
                     ref="inputArchivoCsv"
                     type="file"
-                    accept=".csv"
+                    accept=".csv,text/csv,text/comma-separated-values,text/plain"
                     class="hidden"
                     tabindex="-1"
                     @change="handleArchivoCSV"
@@ -963,11 +1075,12 @@
             </p>
             <div class="max-h-48 overflow-y-auto rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] overflow-hidden">
               <table class="w-full text-sm">
-                <thead class="bg-[color:var(--surface-muted)] sticky top-0 z-[1]">
+                <!-- sticky en cada th y no en thead: Safari no respeta position:sticky en thead/tr -->
+                <thead>
                   <tr>
-                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Nombre</th>
-                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
-                    <th class="text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Nombre</th>
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">Cuota</th>
+                    <th class="sticky top-0 z-[1] bg-[color:var(--surface-muted)] text-left p-3 font-semibold text-slate-600 text-xs uppercase tracking-wide">
                       Teléfono <span class="text-[color:var(--brand-danger)]">*</span>
                     </th>
                   </tr>
@@ -1020,7 +1133,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -1035,462 +1148,28 @@
           :disabled="sociosPreview.length === 0 || importando"
           @click="importarSocios"
         >
-          <svg
-            v-if="importando"
-            class="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <CargaBoton v-if="importando" pequena />
           <ArrowUpTrayIcon v-else class="w-4 h-4" />
           {{ importando ? 'Importando…' : (sociosPreview.length > 0 ? `Importar ${sociosPreview.length} socios` : 'Importar socios') }}
         </button>
       </div>
     </ModalWrapper>
 
-    <!-- Modal Agregar/Editar Socio: cabecera marca compacta + DS inputs/buttons + un solo scroll -->
-    <ModalWrapper
+    <!-- Agregar / editar socio: formulario compartido con Cuotas (SocioFormModal) -->
+    <SocioFormModal
       :show="!!modalAgregar"
-      :z-index="50"
-      align="bottom"
-      :persistent="true"
-      :ios-soft-backdrop="true"
-      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain"
-      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
-      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
-      card-max-width="28rem"
-      @close="cerrarModal"
-    >
-      <!-- Cabecera marca (compacta ~20% según skill: X siempre en flex, nunca absolute) -->
-      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
-        <!-- Móvil: una sola fila [icono | títulos | X] -->
-        <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
-          <div class="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <PencilIcon v-if="socioEditando" class="w-5 h-5 text-[color:var(--brand-primary)]" />
-            <UserPlusIcon v-else class="w-5 h-5 text-[color:var(--brand-primary)]" />
-          </div>
-          <div class="min-w-0 flex-1 text-left">
-            <h3 class="font-display font-bold text-white text-base leading-tight">
-              {{ socioEditando ? 'Editar socio' : 'Agregar socio' }}
-            </h3>
-            <p class="text-[0.6875rem] text-white/85 leading-snug mt-0.5 truncate">
-              {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar' }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
-            aria-label="Cerrar"
-            :disabled="guardando"
-            @click="cerrarModal"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-
-        <!-- Desktop / tablet: bloque centrado [w-11 vacío | centro icono+títulos | X w-11] -->
-        <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
-          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
-          <div class="flex-1 min-w-0 flex flex-col items-center text-center">
-            <div class="w-11 h-11 mb-2 bg-white rounded-full flex items-center justify-center shadow-sm">
-              <PencilIcon v-if="socioEditando" class="w-6 h-6 text-[color:var(--brand-primary)]" />
-              <UserPlusIcon v-else class="w-6 h-6 text-[color:var(--brand-primary)]" />
-            </div>
-            <h3 class="font-display font-bold text-white text-lg leading-tight">
-              {{ socioEditando ? 'Editar socio' : 'Agregar socio' }}
-            </h3>
-            <p class="text-xs text-white/85 leading-snug mt-1 max-w-[20rem]">
-              {{ socioEditando ? 'Actualiza los datos del participante' : 'Completa los datos para registrar un nuevo socio' }}
-            </p>
-          </div>
-          <button
-            type="button"
-            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-40 disabled:pointer-events-none"
-            aria-label="Cerrar"
-            :disabled="guardando"
-            @click="cerrarModal"
-          >
-            <XMarkIcon class="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-
-      <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div
-          ref="scrollAreaModalAgregarSocio"
-          class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch]"
-          @scroll.passive="programarNatiscrollModalAgregarSocio"
-        >
-          <form
-            id="form-agregar-socio"
-            class="space-y-5 px-5 sm:px-6 pt-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
-            @submit.prevent="handleGuardarSocio"
-          >
-            <!-- Avatar -->
-            <div>
-              <label class="ds-label">Avatar del socio</label>
-              <div class="flex items-center gap-3">
-                <img
-                  :src="getAvatarUrl(formSocio.avatar_seed || 'nuevo', formSocio.avatar_seed, formSocio.avatar_style)"
-                  alt="Avatar seleccionado"
-                  class="w-14 h-14 rounded-full bg-[color:var(--brand-primary-soft)] border border-[color:var(--surface-divider-strong)] object-cover flex-shrink-0"
-                />
-                <button
-                  type="button"
-                  class="ds-btn ds-btn--secondary"
-                  :aria-expanded="mostrarAvatares"
-                  @click="mostrarAvatares = !mostrarAvatares"
-                >
-                  <SparklesIcon class="w-4 h-4" />
-                  {{ mostrarAvatares ? 'Ocultar opciones' : 'Cambiar avatar' }}
-                </button>
-              </div>
-              <div
-                v-show="mostrarAvatares"
-                class="mt-3 rounded-[var(--radius-md)] border border-[color:var(--surface-divider)] bg-[color:var(--surface-muted)] overflow-hidden"
-              >
-                <div class="grid grid-cols-5 gap-2 p-3 max-h-52 overflow-y-auto">
-                  <button
-                    v-for="seed in avatarSeeds"
-                    :key="seed"
-                    type="button"
-                    :aria-label="`Elegir avatar ${seed}`"
-                    :class="[
-                      'p-1 rounded-[var(--radius-md)] transition-all touch-manipulation',
-                      formSocio.avatar_seed === seed
-                        ? 'ring-2 ring-[color:var(--brand-primary)] bg-white'
-                        : 'hover:bg-white/70'
-                    ]"
-                    @click="formSocio.avatar_seed = seed; mostrarAvatares = false"
-                  >
-                    <img
-                      :src="getAvatarUrl(seed, seed, formSocio.avatar_style)"
-                      :alt="seed"
-                      class="w-10 h-10 rounded-[var(--radius-sm)] object-cover"
-                      loading="lazy"
-                      @error="handleAvatarError($event, seed)"
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Nombre -->
-            <div>
-              <label for="agregar-socio-nombre" class="ds-label">
-                Nombre completo <span class="text-[color:var(--brand-danger)]">*</span>
-              </label>
-              <input
-                id="agregar-socio-nombre"
-                ref="inputNombreSocio"
-                v-model="formSocio.nombre"
-                type="text"
-                class="ds-input"
-                placeholder="Ej: María García"
-                required
-              />
-            </div>
-
-            <!-- Periodicidad -->
-            <div>
-              <label class="ds-label">Periodicidad de pago</label>
-              <div :class="periodicidadNatillera === 'mensual' ? '' : 'grid grid-cols-2 gap-2.5'">
-                <button
-                  type="button"
-                  :disabled="periodicidadNatillera === 'mensual'"
-                  :class="[
-                    'periodicidad-opcion',
-                    formSocio.periodicidad === 'mensual' ? 'periodicidad-opcion--activa' : '',
-                    periodicidadNatillera === 'mensual' ? 'periodicidad-opcion--unica' : ''
-                  ]"
-                  @click="periodicidadNatillera !== 'mensual' && (formSocio.periodicidad = 'mensual')"
-                >
-                  <CalendarIcon class="w-5 h-5 flex-shrink-0" />
-                  <div class="min-w-0 flex-1 text-left">
-                    <p class="font-semibold text-sm leading-tight">Mensual</p>
-                    <p class="text-[0.6875rem] text-slate-500 mt-0.5">1 cuota por mes</p>
-                  </div>
-                  <span
-                    v-if="periodicidadNatillera === 'mensual'"
-                    class="ds-badge ds-badge--brand flex-shrink-0"
-                  >
-                    Único
-                  </span>
-                  <CheckCircleIcon
-                    v-else-if="formSocio.periodicidad === 'mensual'"
-                    class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
-                  />
-                </button>
-                <button
-                  v-if="periodicidadNatillera === 'quincenal'"
-                  type="button"
-                  :class="[
-                    'periodicidad-opcion',
-                    formSocio.periodicidad === 'quincenal' ? 'periodicidad-opcion--activa' : ''
-                  ]"
-                  @click="formSocio.periodicidad = 'quincenal'"
-                >
-                  <CalendarDaysIcon class="w-5 h-5 flex-shrink-0" />
-                  <div class="min-w-0 flex-1 text-left">
-                    <p class="font-semibold text-sm leading-tight">Quincenal</p>
-                    <p class="text-[0.6875rem] text-slate-500 mt-0.5">2 cuotas por mes</p>
-                  </div>
-                  <CheckCircleIcon
-                    v-if="formSocio.periodicidad === 'quincenal'"
-                    class="w-4 h-4 text-[color:var(--brand-primary)] flex-shrink-0"
-                  />
-                </button>
-              </div>
-              <p v-if="periodicidadNatillera === 'mensual'" class="text-xs text-slate-500 mt-2">
-                Esta natillera está configurada como mensual.
-              </p>
-            </div>
-
-            <!-- Cuota (campo destacado) -->
-            <div class="cuota-bloque">
-              <label for="agregar-socio-cuota" class="ds-label flex items-center gap-1.5">
-                <CurrencyDollarIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-                {{ textoLabelCuota }} <span class="text-[color:var(--brand-danger)]">*</span>
-              </label>
-              <div class="relative">
-                <span class="cuota-bloque__prefix">$</span>
-                <input
-                  id="agregar-socio-cuota"
-                  :value="formatearValorCuota(formSocio.valor_cuota)"
-                  type="text"
-                  inputmode="numeric"
-                  class="ds-input cuota-bloque__input"
-                  placeholder="120.000"
-                  required
-                  @input="handleValorCuotaInput($event)"
-                  @focus="seleccionarMontoCuota"
-                  @click="seleccionarMontoCuota"
-                  @blur="handleValorCuotaBlur"
-                />
-              </div>
-              <p class="text-xs text-[color:var(--brand-primary)] mt-2">
-                Valor que el socio aportará en cada período.
-              </p>
-
-              <!-- Aviso al editar (callout warning consistente con DS) -->
-              <div v-if="socioEditando" class="cuota-aviso">
-                <ExclamationTriangleIcon class="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-                <p class="text-xs text-amber-800 flex-1 leading-snug">
-                  Este cambio afectará todas las cuotas generadas para este socio.
-                </p>
-                <div class="relative flex-shrink-0">
-                  <button
-                    type="button"
-                    data-advertencia-button
-                    class="inline-flex items-center justify-center w-7 h-7 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-full transition-colors touch-manipulation"
-                    title="Ver más detalles"
-                    aria-label="Ver detalles del impacto"
-                    @click.stop="mostrarAdvertenciaCuota = !mostrarAdvertenciaCuota"
-                  >
-                    <InformationCircleIcon class="w-4 h-4" />
-                  </button>
-                  <Transition
-                    enter-active-class="transition-all duration-200 ease-out"
-                    enter-from-class="opacity-0 translate-y-2 scale-95"
-                    enter-to-class="opacity-100 translate-y-0 scale-100"
-                    leave-active-class="transition-all duration-150 ease-in"
-                    leave-from-class="opacity-100 translate-y-0 scale-100"
-                    leave-to-class="opacity-0 translate-y-2 scale-95"
-                  >
-                    <div
-                      v-show="mostrarAdvertenciaCuota"
-                      data-advertencia-tooltip
-                      class="absolute bottom-full right-0 mb-2 w-72 max-w-[calc(100vw-2rem)] p-3 bg-amber-50 border border-amber-200 rounded-[var(--radius-md)] shadow-xl z-50"
-                      @click.stop
-                    >
-                      <div class="absolute bottom-0 right-3 translate-y-1/2 rotate-45 w-2.5 h-2.5 bg-amber-50 border-r border-b border-amber-200"></div>
-                      <p class="text-xs font-semibold text-amber-900 mb-1.5 flex items-center gap-1.5">
-                        <ExclamationTriangleIcon class="w-3.5 h-3.5" />
-                        Al modificar este valor:
-                      </p>
-                      <ul class="text-[11px] text-amber-800 space-y-1.5 leading-relaxed">
-                        <li class="flex items-start gap-1.5">
-                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
-                          <span>Se actualizarán <strong>todas las cuotas</strong> generadas para este socio.</span>
-                        </li>
-                        <li class="flex items-start gap-1.5">
-                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
-                          <span><strong>Valor mayor:</strong> las cuotas pagadas pasan a pagos parciales.</span>
-                        </li>
-                        <li class="flex items-start gap-1.5">
-                          <span class="text-amber-600 mt-0.5 flex-shrink-0">•</span>
-                          <span><strong>Valor menor:</strong> se mantienen pagadas con nota.</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </Transition>
-                </div>
-              </div>
-            </div>
-
-            <!-- Teléfono -->
-            <div>
-              <label for="agregar-socio-telefono" class="ds-label flex items-center justify-between gap-2">
-                <span class="inline-flex items-center gap-1.5">
-                  <PhoneIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-                  Teléfono / WhatsApp <span class="text-[color:var(--brand-danger)]">*</span>
-                </span>
-                <span class="text-[0.6875rem] font-normal text-slate-500">único por socio</span>
-              </label>
-              <div class="flex gap-2">
-                <input
-                  id="agregar-socio-telefono"
-                  v-model="formSocio.telefono"
-                  type="tel"
-                  inputmode="tel"
-                  autocomplete="tel"
-                  class="ds-input flex-1"
-                  :class="{ 'ds-input--error': errorTelefonoDuplicado || !!errorFormatoTelefono }"
-                  :aria-invalid="errorTelefonoDuplicado || !!errorFormatoTelefono"
-                  aria-describedby="agregar-socio-telefono-ayuda"
-                  placeholder="3001234567"
-                  required
-                  @blur="telefonoTocado = true"
-                />
-                <button
-                  v-if="contactPickerDisponible"
-                  type="button"
-                  class="ds-btn ds-btn--secondary flex-shrink-0 !px-3"
-                  title="Seleccionar contacto del teléfono"
-                  aria-label="Seleccionar contacto"
-                  @click.stop.prevent="abrirSelectorContactos"
-                >
-                  <UserIcon class="w-4 h-4" />
-                  <span class="hidden sm:inline">Contactos</span>
-                </button>
-              </div>
-              <p v-if="errorTelefonoDuplicado" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
-                Este número de teléfono ya está registrado para otro socio.
-              </p>
-              <p v-else-if="errorFormatoTelefono" id="agregar-socio-telefono-ayuda" class="text-xs text-[color:var(--brand-danger)] font-medium mt-1.5">
-                {{ errorFormatoTelefono }}
-              </p>
-              <p v-else id="agregar-socio-telefono-ayuda" class="text-xs text-slate-500 mt-1.5 leading-snug">
-                Celular de 10 dígitos, único por socio. Si es de otro país, escríbelo con + y el indicativo (+52…). Se usa para WhatsApp y para que entre a la app.
-                <span v-if="contactPickerDisponible" class="block">
-                  Usa el botón “Contactos” para elegir desde tu agenda.
-                </span>
-              </p>
-            </div>
-
-            <!-- Información de contacto adicional (colapsable) -->
-            <div class="rounded-[var(--radius-lg)] border border-[color:var(--surface-divider)] overflow-hidden">
-              <button
-                type="button"
-                class="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[color:var(--surface-muted)] hover:bg-[color:var(--brand-primary-soft)] transition-colors text-left touch-manipulation min-h-[48px]"
-                :aria-expanded="mostrarContacto"
-                @click="mostrarContacto = !mostrarContacto"
-              >
-                <span class="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                  <EnvelopeIcon class="w-4 h-4 text-[color:var(--brand-primary)]" />
-                  Información de contacto adicional
-                  <span class="text-slate-400 font-normal">(opcional)</span>
-                </span>
-                <ChevronDownIcon
-                  :class="['w-5 h-5 text-slate-400 transition-transform flex-shrink-0', mostrarContacto ? 'rotate-180' : '']"
-                />
-              </button>
-              <div v-show="mostrarContacto" class="p-4 space-y-4 border-t border-[color:var(--surface-divider)]">
-                <div>
-                  <label for="agregar-socio-email" class="ds-label">Correo electrónico</label>
-                  <input
-                    id="agregar-socio-email"
-                    v-model="formSocio.email"
-                    type="email"
-                    class="ds-input"
-                    placeholder="correo@ejemplo.com"
-                  />
-                </div>
-                <div>
-                  <label for="agregar-socio-documento" class="ds-label">Documento de identidad</label>
-                  <input
-                    id="agregar-socio-documento"
-                    v-model="formSocio.documento"
-                    type="text"
-                    class="ds-input"
-                    placeholder="Cédula (opcional)"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Error global -->
-            <div v-if="errorSocio" class="ds-callout" role="alert" style="background: #fee2e2; color: #991b1b;">
-              <ExclamationCircleIcon class="w-5 h-5 ds-callout__icon" style="color: #b91c1c;" />
-              <div>{{ errorSocio }}</div>
-            </div>
-
-            <!-- Acciones (mismo scroll, safe-area) -->
-            <div class="pt-4 border-t border-[color:var(--surface-divider)] space-y-2.5">
-              <!-- El admin es el responsable de los datos de sus socios (Ley 1581): lo declara al registrarlos -->
-              <p v-if="!socioEditando" class="text-xs text-slate-500">
-                Al agregarlo confirmas que tienes su autorización para registrar sus datos.
-              </p>
-              <button
-                type="submit"
-                class="btn-modal-primary relative w-full overflow-hidden"
-                :disabled="guardando"
-              >
-                <span :class="['inline-flex items-center justify-center gap-2 transition-opacity', guardando ? 'opacity-0' : 'opacity-100']">
-                  <CheckIcon class="w-5 h-5" />
-                  {{ socioEditando ? 'Guardar cambios' : 'Agregar socio' }}
-                </span>
-                <span
-                  v-if="guardando"
-                  class="absolute inset-0 inline-flex items-center justify-center gap-2"
-                >
-                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Guardando…</span>
-                </span>
-              </button>
-              <button
-                type="button"
-                class="btn-modal-secondary w-full"
-                :disabled="guardando"
-                @click="cerrarModal"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <div
-          v-show="hayNatiscrollModalAgregarSocio"
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
-          aria-hidden="true"
-        >
-          <div
-            class="absolute inset-x-0 bottom-0 z-0 h-36 bg-gradient-to-t from-white/88 via-white/40 to-transparent"
-            aria-hidden="true"
-          />
-          <div
-            class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
-          >
-            <div
-              class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
-            >
-              <p class="min-w-0 flex-1 text-left font-display text-[0.8125rem] font-semibold leading-snug text-white sm:text-sm">
-                Desliza para ver más
-              </p>
-              <ChevronDownIcon class="desliza-modal-hint__chevron h-5 w-5 shrink-0 text-white/95" stroke-width="2.25" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </ModalWrapper>
+      :form="formSocio"
+      :es-edicion="!!socioEditando"
+      :periodicidad-natillera="periodicidadNatillera"
+      :guardando="guardando"
+      :error="errorSocio"
+      :error-telefono-duplicado="errorTelefonoDuplicado"
+      v-model:telefono-tocado="telefonoTocado"
+      :ofrecer-al-dia="natilleraYaEmpezo"
+      @guardar="handleGuardarSocio"
+      @cerrar="cerrarModal"
+      @selector-contactos="alSelectorContactos"
+    />
 
     <!-- Modal Cuotas del Socio: patrón modales + natiscroll; lista compacta en rejilla -->
     <ModalWrapper
@@ -1684,11 +1363,11 @@
                     <button
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
                       type="button"
-                      class="cuotas-mobile-card__wsp"
+                      class="btn-compartir btn-compartir--sm flex-shrink-0"
                       aria-label="Enviar recordatorio por WhatsApp"
                       @click.stop="enviarWhatsAppCuota(cuotaData)"
                     >
-                      <ChatBubbleLeftIcon class="w-3.5 h-3.5" />
+                      <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
                       <span>WhatsApp</span>
                     </button>
                   </div>
@@ -1699,7 +1378,7 @@
           <!-- Desktop (md+): rejilla compacta de 5 columnas -->
           <div class="hidden md:block rounded-xl border border-gray-200/90 bg-white overflow-hidden shadow-sm pb-2">
             <div
-              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 px-2 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
+              class="sticky top-0 z-[1] grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.75rem] gap-x-1.5 px-2 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-semibold uppercase tracking-wide text-gray-500"
               role="row"
             >
               <span>Mes</span>
@@ -1713,7 +1392,7 @@
                 v-for="(cuotaData, idx) in cuotasSocioPorMes"
                 :key="`d-${cuotaData.id}-${idx}`"
                 role="row"
-                class="grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.25rem] gap-x-1.5 items-center px-2 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-natillera-500/40 focus-visible:ring-inset"
+                class="grid grid-cols-[minmax(0,4.5rem)_minmax(0,3.25rem)_1fr_minmax(0,4.25rem)_2.75rem] gap-x-1.5 items-center px-2 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-natillera-500/40 focus-visible:ring-inset"
                 :class="[
                   !esVisor ? 'cursor-pointer hover:bg-emerald-50/40 active:bg-emerald-50/60' : '',
                   cuotaData.estado === 'mora' && animacionesCuotasMora ? 'bg-red-50/50' : '',
@@ -1757,12 +1436,12 @@
                   <button
                     v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
                     type="button"
-                    class="h-9 w-9 rounded-lg bg-green-500 hover:bg-green-600 text-white flex items-center justify-center touch-manipulation shadow-sm"
+                    class="h-11 w-11 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] flex items-center justify-center touch-manipulation"
                     title="WhatsApp"
                     aria-label="Enviar recordatorio por WhatsApp"
                     @click="enviarWhatsAppCuota(cuotaData)"
                   >
-                    <ChatBubbleLeftIcon class="w-4 h-4" />
+                    <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
                   </button>
                 </div>
               </div>
@@ -1795,7 +1474,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible. Hereda safe-area-bottom. -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
         <button
           type="button"
           class="btn-modal-secondary w-full"
@@ -1959,7 +1638,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -1974,17 +1653,7 @@
           :disabled="eliminando"
           @click="eliminarSocioConfirmado"
         >
-          <svg
-            v-if="eliminando"
-            class="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <CargaBoton v-if="eliminando" pequena />
           <TrashIcon v-else class="w-4 h-4" />
           {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
         </button>
@@ -2319,7 +1988,7 @@
       </div>
 
       <!-- Footer fijo -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -2334,17 +2003,7 @@
           :disabled="desactivando"
           @click="confirmarDesactivarSocio"
         >
-          <svg
-            v-if="desactivando"
-            class="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <CargaBoton v-if="desactivando" pequena />
           <XCircleIcon v-else class="w-4 h-4" />
           {{ desactivando ? 'Retirando…' : 'Confirmar retiro' }}
         </button>
@@ -2474,7 +2133,7 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"
@@ -2489,17 +2148,7 @@
           :disabled="activando"
           @click="confirmarActivarSocio"
         >
-          <svg
-            v-if="activando"
-            class="animate-spin h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
+          <CargaBoton v-if="activando" pequena />
           <CheckCircleIcon v-else class="w-4 h-4" />
           {{ activando ? 'Activando…' : 'Confirmar activar' }}
         </button>
@@ -2606,14 +2255,14 @@
       </div>
 
       <!-- Footer fijo: siempre visible -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
         <button
           type="button"
-          class="ds-btn modal-btn-download flex-1"
+          class="btn-descargar flex-1"
           :disabled="!imagenDesactivacion"
           @click="descargarComprobanteDesactivacion"
         >
-          <ArrowDownTrayIcon class="w-4 h-4" />
+          <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
           Descargar
         </button>
         <!--
@@ -2623,11 +2272,11 @@
         -->
         <button
           type="button"
-          class="ds-btn modal-btn-whatsapp flex-1"
+          class="btn-compartir flex-1"
           :disabled="!imagenDesactivacion"
           @click="compartirWhatsAppDesactivacion"
         >
-          <ChatBubbleLeftIcon class="w-4 h-4" />
+          <ShareIcon class="w-5 h-5 flex-shrink-0" />
           {{ imagenDesactivacion ? 'Compartir' : 'Preparando…' }}
         </button>
       </div>
@@ -2666,19 +2315,19 @@
     >
           <div class="relative w-full">
             <!-- Tarjeta principal con efecto 3D -->
-            <div class="relative bg-white/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl shadow-natillera-700/20 overflow-hidden border border-white/50">
+            <div class="relative bg-white/95 rounded-[2rem] shadow-2xl shadow-natillera-700/20 overflow-hidden border border-white/50">
               <!-- Gradiente superior decorativo -->
               <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-br from-natillera-600 via-natillera-700 to-natillera-800 opacity-10"></div>
 
-              <!-- Anillos orbitales decorativos (cuando está procesando) -->
-              <div v-if="!progresoCreacion.exito && !progresoCreacion.error" class="absolute inset-0 flex items-center justify-center pointer-events-none" style="top: -20px">
-                <div class="w-40 h-40 border border-natillera-200/40 rounded-full animate-orbit-slow"></div>
-                <div class="absolute w-32 h-32 border border-natillera-300/40 rounded-full animate-orbit-reverse"></div>
-              </div>
 
               <div class="relative p-8 pb-10">
-                <!-- Icono principal con múltiples capas de animación -->
-                <div class="relative mx-auto mb-8 w-28 h-28">
+                <!--
+                  Mientras trabaja (crear, generar cuotas, poner al día): la alcancía de todas
+                  las esperas de la app (CLAUDE.md 2.1), no iconos ni giros propios.
+                -->
+                <FiguraAlcancia v-if="progresoProcesando" class="mx-auto mb-8 h-28 w-28" />
+                <!-- Éxito o error: el círculo de marca con su icono -->
+                <div v-else class="relative mx-auto mb-8 w-28 h-28">
                   <!-- Aura exterior pulsante -->
                   <div
                     :class="[
@@ -2913,6 +2562,13 @@
 </template>
 
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
+import { detectIosPlatform } from '../../composables/useIsIos'
+import { cerrarRecorridosDriver } from '../../composables/recorridoDriverSeguro'
+import SocioFormModal from '../../components/socios/SocioFormModal.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
+import { avatarSeeds, getAvatarUrl } from '../../utils/avatarSocio'
+import { useEditarSocio } from '../../composables/useEditarSocio'
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch, Transition, TransitionGroup, inject } from 'vue'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute, useRouter } from 'vue-router'
@@ -2944,6 +2600,10 @@ import {
 import { pedirGuiaDetalle } from '../../composables/useTourDetalleNatillera'
 import { toPng } from 'html-to-image'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
+import FiguraAlcancia from '../../components/carga/FiguraAlcancia.vue'
+import SwitchSegmentado from '../../components/SwitchSegmentado.vue'
+import PonerAlDiaMasivoModal from '../../components/socios/PonerAlDiaMasivoModal.vue'
+import { cuotasParaPonerAlDia, ponerSocioAlDia, total4x1000DeCuotas } from '../../composables/usePonerAlDia'
 import CargaPantalla from '../../components/carga/CargaPantalla.vue'
 import ModalWrapper from '../../components/ModalWrapper.vue'
 import ComprobanteRetiroSocio from '../../components/estado/ComprobanteRetiroSocio.vue'
@@ -2980,7 +2640,7 @@ import {
   DocumentTextIcon,
   CalendarIcon,
   CalendarDaysIcon,
-  ChatBubbleLeftIcon,
+  ShareIcon,
   TrashIcon,
   SparklesIcon,
   CheckIcon,
@@ -3001,36 +2661,12 @@ const cuotasStore = useCuotasStore()
 const natillerasStore = useNatillerasStore()
 const configStore = useConfiguracionStore()
 const notificationStore = useNotificationStore()
+const { guardarEdicionSocio } = useEditarSocio()
 const colaboradoresStore = useColaboradoresStore()
 const dashboardSidebar = inject('dashboardSidebar', null)
 
 const modalAgregar = ref(false)
-const scrollAreaModalAgregarSocio = ref(null)
-// Nota: la X de la cabecera es siempre visible en formularios largos (skill `natillerapp-modals`),
-// por eso ya no usamos `useModalBodyScrollOverflow` para alternar su visibilidad.
-const hayNatiscrollModalAgregarSocio = ref(false)
-let rafNatiscrollModalAgregarSocio = null
 
-function actualizarNatiscrollModalAgregarSocio() {
-  const el = scrollAreaModalAgregarSocio.value
-  if (!el || !modalAgregar.value) {
-    hayNatiscrollModalAgregarSocio.value = false
-    return
-  }
-  hayNatiscrollModalAgregarSocio.value =
-    el.scrollHeight > el.clientHeight + 1 &&
-    el.scrollTop + el.clientHeight < el.scrollHeight - 1
-}
-
-function programarNatiscrollModalAgregarSocio() {
-  if (rafNatiscrollModalAgregarSocio != null) cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
-  rafNatiscrollModalAgregarSocio = requestAnimationFrame(() => {
-    rafNatiscrollModalAgregarSocio = null
-    actualizarNatiscrollModalAgregarSocio()
-  })
-}
-
-const inputNombreSocio = ref(null)
 const modalDetalle = ref(false)
 const modalImportar = ref(false)
 const modalCuotasSocio = ref(false)
@@ -3038,26 +2674,6 @@ const animacionesCuotasMora = ref(true) // Controla si se muestran las animacion
 const modalProgreso = ref(false)
 
 // Bloquear scroll del body cuando las modales están abiertas
-useBodyScrollLock(modalAgregar)
-watch(modalAgregar, (open) => {
-  if (!open) {
-    hayNatiscrollModalAgregarSocio.value = false
-    return
-  }
-  nextTick(() => {
-    programarNatiscrollModalAgregarSocio()
-    requestAnimationFrame(() => {
-      const el = inputNombreSocio.value
-      if (el && typeof el.focus === 'function') {
-        try {
-          el.focus({ preventScroll: true })
-        } catch {
-          el.focus()
-        }
-      }
-    })
-  })
-})
 useBodyScrollLock(modalDetalle)
 useBodyScrollLock(modalImportar)
 useBodyScrollLock(modalCuotasSocio)
@@ -3147,13 +2763,6 @@ const errorSocio = ref('')
 const errorTelefonoDuplicado = ref(false)
 // El aviso de formato sale al salir del campo o al llegar a 10 dígitos, no con la primera tecla.
 const telefonoTocado = ref(false)
-const errorFormatoTelefono = computed(() => {
-  const escrito = formSocio.telefono || ''
-  if (!telefonoTocado.value && normalizarCelular(escrito).length < 10) return ''
-  return errorCelular(escrito)
-})
-const mostrarContacto = ref(false)
-const mostrarAdvertenciaCuota = ref(false)
 const cuotasSocio = ref([])
 const loadingDetalle = ref(false)
 const busqueda = ref('')
@@ -3599,6 +3208,14 @@ function habilitarTecladoSoftBusqueda() {
   inputModeBusqueda.value = 'text'
 }
 
+// Móvil: el foco programático de la búsqueda no debe abrir el teclado virtual.
+// detectIosPlatform cubre el iPad que se anuncia como MacIntel, que el regex dejaba fuera.
+function esDispositivoMovil() {
+  if (detectIosPlatform()) return true
+  if (/Android/i.test(navigator.userAgent)) return true
+  return window.innerWidth <= 768 && 'ontouchstart' in window
+}
+
 function enfocarInputBusquedaSocios() {
   // En móvil, evita el teclado virtual durante el focus inicial programático.
   // Se restaurará al primer touch/click/keydown del usuario sobre el input.
@@ -3695,149 +3312,30 @@ const formSocio = reactive({
   valor_cuota: 0, // Iniciar en 0 para forzar al usuario a ingresar un valor explícitamente
   periodicidad: 'mensual',
   avatar_seed: '',
-  avatar_style: 'adventurer'
+  avatar_style: 'adventurer',
+  // «Ya está al día»: al crearlo, registrar como pagadas sus cuotas ya vencidas (usePonerAlDia)
+  al_dia: false,
+  al_dia_forma_pago: 'efectivo',
+  al_dia_4x1000: false
 })
 
-const mostrarAvatares = ref(false)
-
-watch(
-  [mostrarContacto, mostrarAvatares, socioEditando],
-  () => {
-    if (modalAgregar.value) {
-      nextTick(() => programarNatiscrollModalAgregarSocio())
-    }
-  },
-  { flush: 'post' }
-)
-
-// Verificar si la Contact Picker API está disponible
-const contactPickerDisponible = ref(false)
-const razonNoDisponible = ref('')
-
-// Función auxiliar para detectar si estamos en un dispositivo móvil
-function esDispositivoMovil() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-         (window.innerWidth <= 768 && 'ontouchstart' in window)
-}
-
-// Detectar iOS / iPadOS / iPhone / iPod (cualquier navegador, incluido Chrome iOS).
-// En iOS todos los navegadores usan WebKit y NINGUNO soporta Contact Picker API.
-function esIosOIpadOS() {
-  const ua = navigator.userAgent || ''
-  if (/iPhone|iPad|iPod/i.test(ua)) return true
-  // iPadOS 13+ se reporta como Mac con touch (Apple cambió el UA en iPadOS).
-  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
-  return false
-}
-
-// Detectar Safari (macOS / iOS) — no soporta Contact Picker API.
-function esSafari() {
-  const ua = navigator.userAgent || ''
-  // Safari sin ser Chrome/Edge/Opera/Brave/Firefox
-  return /Safari/i.test(ua) && !/Chrome|Chromium|CriOS|EdgiOS|FxiOS|OPR|OPiOS|Brave/i.test(ua)
-}
-
-// Verificar disponibilidad de la Contact Picker API al montar el componente
-onMounted(() => {
-  // Lista de exclusión: contextos donde la Contact Picker API NO existe.
-  // Ocultar el botón directamente para no exponer una funcionalidad rota.
-  if (esIosOIpadOS()) {
-    razonNoDisponible.value = 'iOS no soporta la selección de contactos vía web.'
-    contactPickerDisponible.value = false
-    return
-  }
-  if (esSafari()) {
-    razonNoDisponible.value = 'Safari no soporta la selección de contactos vía web.'
-    contactPickerDisponible.value = false
-    return
-  }
-
-  // Solo dispositivos móviles (la API es exclusivamente móvil; en desktop no existe).
-  const esMovil = esDispositivoMovil()
-  if (!esMovil) {
-    razonNoDisponible.value = 'La función de contactos solo está disponible en dispositivos móviles'
-    contactPickerDisponible.value = false
-    return
-  }
-
-  // Requiere contexto seguro (HTTPS o localhost).
-  if (!window.isSecureContext) {
-    razonNoDisponible.value = 'Necesitas HTTPS para usar el selector de contactos.'
-    contactPickerDisponible.value = false
-    return
-  }
-
-  // Verificación final: la API debe existir y exponer un método select/pick callable.
-  try {
-    const contactsApi = navigator.contacts
-    if (contactsApi && typeof contactsApi.select === 'function') {
-      contactPickerDisponible.value = true
-      razonNoDisponible.value = ''
-    } else if (contactsApi && typeof contactsApi.pick === 'function') {
-      contactPickerDisponible.value = true
-      razonNoDisponible.value = ''
-    } else {
-      contactPickerDisponible.value = false
-      razonNoDisponible.value = 'Esta función requiere Chrome o Edge actualizados en Android.'
-    }
-  } catch {
-    contactPickerDisponible.value = false
-    razonNoDisponible.value = 'No se pudo verificar la API de contactos en este navegador.'
-  }
-
-  // Debug: mostrar información en consola (solo en desarrollo)
-  if (import.meta.env.DEV) {
-    console.log('Contact Picker API:', {
-      disponible: contactPickerDisponible.value,
-      esMovil,
-      esIos: esIosOIpadOS(),
-      esSafari: esSafari(),
-      isSecureContext: window.isSecureContext,
-      userAgent: navigator.userAgent,
-      tieneContacts: 'contacts' in navigator,
-      tieneSelect: 'contacts' in navigator && typeof navigator.contacts?.select === 'function',
-      tienePick: 'contacts' in navigator && typeof navigator.contacts?.pick === 'function',
-      razon: razonNoDisponible.value
-    })
-  }
+/*
+ * La natillera ya empezó (su primer mes es este o uno anterior) y genera cuotas solas: un
+ * socio nuevo nacería con cuotas vencidas. Solo entonces se ofrece «Ya está al día».
+ */
+const natilleraYaEmpezo = computed(() => {
+  const n = natillerasStore.natilleraActual
+  if (!n || n.id !== id || n.cuotas_automaticas === false) return false
+  const anio = Number(n.anio_inicio) || null
+  const mes = Number(n.mes_inicio) || null
+  if (!anio || !mes) return false
+  const hoy = new Date()
+  return anio * 12 + mes <= hoy.getFullYear() * 12 + hoy.getMonth() + 1
 })
 
-// Lista de seeds para avatares predefinidos
-const avatarSeeds = [
-  'Sofia', 'Luna', 'Valentina', 'Camila', 'Isabella',
-  'Mariana', 'Lucia', 'Gabriela', 'Daniela', 'Paula',
-  'Andrea', 'Carolina', 'Natalia', 'Alejandra', 'Victoria',
-  'Fernanda', 'Catalina', 'Sara', 'Laura', 'Maria',
-  'Ana', 'Elena', 'Rosa', 'Carmen', 'Julia',
-  'Claudia', 'Patricia', 'Monica', 'Sandra', 'Diana',
-  'Adriana', 'Gloria', 'Teresa', 'Liliana', 'Rocio',
-  'Paola', 'Angelica', 'Marcela', 'Lorena', 'Viviana',
-  'Johana', 'Tatiana', 'Yolanda', 'Pilar', 'Beatriz',
-  'Clara', 'Marta', 'Silvia', 'Esperanza', 'Blanca',
-  'Isabel', 'Cristina', 'Mercedes', 'Dolores', 'Amparo',
-  'Angela', 'Cecilia', 'Elisa', 'Francisca', 'Gisela',
-  'Helena', 'Ines', 'Jimena', 'Karina', 'Leticia',
-  'Magdalena', 'Nora', 'Olga', 'Rebeca', 'Susana',
-  'Ursula', 'Veronica', 'Wendy', 'Ximena', 'Zoe',
-  'Alicia', 'Bianca', 'Carla', 'Estefania', 'Fabiola',
-  'Carlos', 'Juan', 'Miguel', 'Andres', 'Luis',
-  'Jorge', 'David', 'Daniel', 'Felipe', 'Santiago',
-  'Sebastian', 'Alejandro', 'Ricardo', 'Fernando', 'Diego',
-  'Pablo', 'Eduardo', 'Gustavo', 'Oscar', 'Sergio',
-  'Roberto', 'Javier', 'Antonio', 'Manuel', 'Pedro',
-  'Francisco', 'Raul', 'Mario', 'Jaime', 'Hector',
-  'Alberto', 'Cesar', 'Hugo', 'Ivan', 'Rodrigo',
-  'Enrique', 'Gabriel', 'Nicolas', 'Camilo', 'Fabian',
-  'Leonardo', 'Cristian', 'Mauricio', 'Julian', 'Arturo',
-  'Victor', 'Guillermo', 'Alfonso', 'Ernesto', 'Ramon',
-  'Emilio', 'Rafael', 'Alfredo', 'Jose', 'Esteban',
-  'Adrian', 'Bruno', 'Cristobal', 'Dario', 'Federico',
-  'Gonzalo', 'Hernan', 'Ignacio', 'Joaquin', 'Kevin',
-  'Lucas', 'Mateo', 'Orlando', 'Patricio', 'Ramiro',
-  'Samuel', 'Tomas', 'Ulises', 'Valentin', 'Walter',
-  'Xavier', 'Yago', 'Zacarias', 'Agustin', 'Benjamin',
-  'Domingo', 'Efrain', 'Felix', 'Gerardo', 'Horacio'
-]
+
+
+
 
 // Periodicidad de la natillera actual
 const periodicidadNatillera = computed(() => {
@@ -3885,17 +3383,6 @@ const esAdmin = computed(() => {
   return natillera.admin_id === usuarioAutenticado.value.id
 })
 
-// Texto del label de cuota según periodicidad
-const textoLabelCuota = computed(() => {
-  const periodicidad = formSocio.periodicidad
-  if (periodicidad === 'quincenal') {
-    return 'Valor de la cuota quincenal'
-  } else if (periodicidad === 'semanal') {
-    return 'Valor de la cuota semanal'
-  } else {
-    return 'Valor de la cuota mensual'
-  }
-})
 
 // Resumen financiero del socio seleccionado
 const resumenSocio = computed(() => {
@@ -3935,92 +3422,8 @@ function formatMoney(value) {
   return new Intl.NumberFormat('es-CO').format(value || 0)
 }
 
-// Formatear valor de cuota con separadores de miles
-function formatearValorCuota(value) {
-  if (!value && value !== 0) return ''
-  const numero = typeof value === 'string' ? value.replace(/\./g, '') : value
-  return new Intl.NumberFormat('es-CO').format(numero)
-}
 
-// Manejar input del valor de cuota
-function handleValorCuotaInput(event) {
-  const valorOriginal = event.target.value
-  // Remover puntos (separadores de miles) y cualquier carácter no numérico
-  const valorLimpio = valorOriginal.replace(/\./g, '').replace(/[^\d]/g, '')
-  
-  console.log('📝 Input de cuota - Valor original del input:', valorOriginal)
-  console.log('📝 Input de cuota - Valor limpio (sin puntos):', valorLimpio)
-  console.log('📝 Input de cuota - formSocio.valor_cuota ANTES:', formSocio.valor_cuota)
-  
-  if (valorLimpio === '' || valorLimpio === '0') {
-    formSocio.valor_cuota = 0
-    console.log('📝 Input de cuota - Valor final: 0 (vacío o cero)')
-  } else {
-    // Usar parseFloat para manejar números grandes correctamente (parseInt tiene límites)
-    const numero = parseFloat(valorLimpio)
-    if (!isNaN(numero) && numero > 0) {
-      const valorAnterior = formSocio.valor_cuota
-      formSocio.valor_cuota = numero
-      console.log('✅ Input de cuota - Valor parseado:', numero, 'Tipo:', typeof numero)
-      console.log('✅ Input de cuota - formSocio.valor_cuota actualizado de', valorAnterior, 'a', formSocio.valor_cuota)
-      console.log('✅ Input de cuota - Verificación: formSocio.valor_cuota ===', formSocio.valor_cuota, ':', formSocio.valor_cuota === numero)
-    } else {
-      console.warn('⚠️ Input de cuota - Valor no válido (NaN o <= 0):', valorLimpio, '→', numero)
-    }
-  }
-}
 
-function seleccionarMontoCuota(event) {
-  const input = event?.target
-  if (!input || typeof input.select !== 'function') return
-  // El click puede mover el cursor después de seleccionar; diferimos el select()
-  setTimeout(() => input.select(), 0)
-}
-
-// Manejar blur del input para validar el valor final
-function handleValorCuotaBlur(event) {
-  const valorActual = formSocio.valor_cuota
-  console.log('👋 Blur del input - Valor final en formSocio.valor_cuota:', valorActual)
-  
-  // Si el valor es 0, asegurar que el campo esté vacío visualmente
-  if (valorActual === 0) {
-    event.target.value = ''
-  }
-}
-
-function getAvatarUrl(seed, avatarSeed = null, style = 'adventurer') {
-  // Usar DiceBear Avatars con el estilo seleccionado
-  // Si hay un avatar_seed guardado, usarlo; si no, usar el nombre
-  const finalSeed = avatarSeed || seed || 'default'
-  const encodedSeed = encodeURIComponent(finalSeed)
-  const avatarStyle = style || 'adventurer'
-  
-  // Colores de fondo según el estilo
-  const backgroundColors = {
-    'adventurer': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'avataaars': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'big-smile': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'bottts': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'lorelei': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'micah': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'miniavs': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'open-peeps': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf',
-    'personas': 'c0aede,d1d4f9,b6e3f4,ffd5dc,ffdfbf'
-  }
-  
-  const bgColors = backgroundColors[avatarStyle] || backgroundColors['adventurer']
-  // Asegurar que la URL esté correctamente formateada
-  return `https://api.dicebear.com/7.x/${avatarStyle}/svg?seed=${encodedSeed}&backgroundColor=${bgColors}`
-}
-
-function handleAvatarError(event, seed) {
-  // Si falla la carga, intentar con un seed por defecto
-  const img = event.target
-  const fallbackSeed = seed || img.alt || 'default'
-  // Intentar con un seed simple sin caracteres especiales
-  const simpleSeed = fallbackSeed.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-  img.src = getAvatarUrl(simpleSeed, simpleSeed, 'adventurer')
-}
 
 async function abrirModalAgregar() {
   // Asegurar que la natillera esté cargada para obtener su periodicidad
@@ -4039,7 +3442,10 @@ async function abrirModalAgregar() {
     valor_cuota: 0, // Iniciar en 0 para forzar al usuario a ingresar un valor
     periodicidad: 'mensual',
     avatar_seed: '',
-    avatar_style: 'adventurer'
+    avatar_style: 'adventurer',
+    al_dia: false,
+    al_dia_forma_pago: 'efectivo',
+    al_dia_4x1000: false
   })
   
   // Establecer la periodicidad inicial según la natillera
@@ -4074,7 +3480,6 @@ function editarSocio(sn) {
   formSocio.valor_cuota = sn.valor_cuota_individual
   formSocio.periodicidad = sn.periodicidad || 'mensual'
   formSocio.avatar_seed = sn.socio?.avatar_seed || ''
-  mostrarAvatares.value = false
   modalAgregar.value = true
 }
 
@@ -4084,9 +3489,6 @@ function cerrarModal() {
   errorSocio.value = ''
   errorTelefonoDuplicado.value = false
   telefonoTocado.value = false
-  mostrarContacto.value = false
-  mostrarAvatares.value = false
-  mostrarAdvertenciaCuota.value = false
   Object.assign(formSocio, {
     nombre: '',
     documento: '',
@@ -4095,7 +3497,10 @@ function cerrarModal() {
     valor_cuota: 0, // Resetear a 0 para forzar al usuario a ingresar un valor
     periodicidad: 'mensual',
     avatar_seed: '',
-    avatar_style: 'adventurer'
+    avatar_style: 'adventurer',
+    al_dia: false,
+    al_dia_forma_pago: 'efectivo',
+    al_dia_4x1000: false
   })
 }
 
@@ -4105,152 +3510,6 @@ function limpiarNumeroTelefono(telefono) {
   return normalizarCelular(telefono)
 }
 
-// Función para abrir el selector de contactos del dispositivo móvil
-async function abrirSelectorContactos() {
-  // Activar la bandera ANTES de cualquier acción async para que cualquier
-  // popstate disparado por el browser durante el ciclo del picker se ignore.
-  suprimirPopstateContactos = true
-
-  try {
-    // El Contact Picker API requiere contexto seguro (HTTPS o localhost)
-    if (!window.isSecureContext) {
-      notificationStore.error(
-        'Necesitas abrir la app por HTTPS para usar el selector de contactos.',
-        'Conexión no segura',
-        3500
-      )
-      return
-    }
-
-    // Verificar si la API está disponible
-    if (!('contacts' in navigator)) {
-      notificationStore.error(
-        'El selector de contactos no está disponible en este navegador',
-        'Función no disponible',
-        3000
-      )
-      return
-    }
-
-    let contactos = null
-
-    // Intentar usar la Contact Picker API estándar (Chrome/Edge en Android)
-    if ('select' in navigator.contacts) {
-      try {
-        const props = ['tel']
-        const opts = { multiple: false }
-        contactos = await navigator.contacts.select(props, opts)
-      } catch (error) {
-        console.error('Error al usar navigator.contacts.select:', error)
-        // Intentar con API alternativa
-        if ('pick' in navigator.contacts) {
-          contactos = await navigator.contacts.pick({ filterBy: ['tel'], multiple: false })
-        }
-      }
-    } else if ('pick' in navigator.contacts) {
-      // API alternativa
-      contactos = await navigator.contacts.pick({ filterBy: ['tel'], multiple: false })
-    }
-
-    if (contactos && contactos.length > 0) {
-      const contacto = contactos[0]
-      
-      // Extraer el número de teléfono - manejar diferentes formatos de respuesta
-      let numeroTelefono = ''
-      
-      // Formato 1: contacto.tel (array de strings)
-      if (contacto.tel && Array.isArray(contacto.tel) && contacto.tel.length > 0) {
-        numeroTelefono = contacto.tel[0]
-      } 
-      // Formato 2: contacto.tel (string único)
-      else if (contacto.tel && typeof contacto.tel === 'string') {
-        numeroTelefono = contacto.tel
-      }
-      // Formato 3: contacto.phoneNumbers (array de objetos)
-      else if (contacto.phoneNumbers && Array.isArray(contacto.phoneNumbers) && contacto.phoneNumbers.length > 0) {
-        const phoneNumber = contacto.phoneNumbers[0]
-        numeroTelefono = phoneNumber.value || phoneNumber.number || phoneNumber.tel || phoneNumber
-      }
-      // Formato 4: contacto.phoneNumber (string único)
-      else if (contacto.phoneNumber && typeof contacto.phoneNumber === 'string') {
-        numeroTelefono = contacto.phoneNumber
-      }
-
-      if (numeroTelefono) {
-        // Limpiar y formatear el número
-        formSocio.telefono = limpiarNumeroTelefono(numeroTelefono)
-        
-        // También intentar llenar el nombre si está vacío
-        if (!formSocio.nombre) {
-          if (contacto.name) {
-            formSocio.nombre = Array.isArray(contacto.name) ? contacto.name[0] : contacto.name
-          } else if (contacto.displayName) {
-            formSocio.nombre = contacto.displayName
-          } else if (contacto.givenName) {
-            const nombreCompleto = [contacto.givenName, contacto.familyName].filter(Boolean).join(' ')
-            if (nombreCompleto) {
-              formSocio.nombre = nombreCompleto
-            }
-          }
-        }
-
-        // También intentar llenar el email si está vacío
-        if (!formSocio.email) {
-          if (contacto.email) {
-            formSocio.email = Array.isArray(contacto.email) ? contacto.email[0] : contacto.email
-          } else if (contacto.emails && Array.isArray(contacto.emails) && contacto.emails.length > 0) {
-            const emailObj = contacto.emails[0]
-            formSocio.email = emailObj.value || emailObj.address || emailObj
-          }
-        }
-
-        notificationStore.success(
-          'Contacto seleccionado correctamente',
-          'Éxito',
-          2000
-        )
-      } else {
-        notificationStore.warning(
-          'El contacto seleccionado no tiene número de teléfono',
-          'Sin teléfono',
-          3000
-        )
-      }
-    } else {
-      // El usuario canceló la selección - no mostrar error
-      console.log('Selección de contacto cancelada')
-    }
-  } catch (error) {
-    console.error('Error al abrir selector de contactos:', error)
-    
-    // Manejar diferentes tipos de errores
-    if (error.name === 'AbortError' || error.name === 'NotAllowedError') {
-      notificationStore.warning(
-        'Permiso denegado o acción cancelada',
-        'Acceso a contactos',
-        3000
-      )
-    } else if (error.name === 'NotSupportedError') {
-      notificationStore.error(
-        'El selector de contactos no está soportado en este dispositivo',
-        'Función no soportada',
-        3000
-      )
-    } else {
-      notificationStore.error(
-        'Error al acceder a los contactos: ' + (error.message || 'Error desconocido'),
-        'Error',
-        4000
-      )
-    }
-  } finally {
-    // Mantener la supresión un breve lapso adicional: algunos navegadores
-    // disparan popstate justo después de que la promesa del picker resuelve.
-    setTimeout(() => {
-      suprimirPopstateContactos = false
-    }, 600)
-  }
-}
 
 function programarTourMenuNatilleraSiCorresponde(eraListaVaciaAntes, natilleraId) {
   if (!eraListaVaciaAntes || !natilleraId) return
@@ -4330,6 +3589,67 @@ function programarToursAnterioresPrimerSocio(natilleraId) {
   })
 }
 
+/*
+ * Edición: la regla vive en useEditarSocio (la misma que usa Cuotas). Aquí solo va lo de
+ * esta vista: el modal de progreso cuando cambia la periodicidad y refrescar el detalle.
+ */
+async function guardarEdicionDesdeSocios() {
+  const sn = socioEditando.value
+  const datos = { ...formSocio }
+  const cambiaPeriodicidad = (sn.periodicidad || 'mensual') !== (datos.periodicidad || 'mensual')
+
+  const refrescarDetalle = () => {
+    if (!modalDetalle.value || socioSeleccionado.value?.id !== sn.id) return
+    const actualizado = sociosStore.sociosNatillera.find(s => s.id === sn.id)
+    if (actualizado) socioSeleccionado.value = actualizado
+  }
+
+  if (cambiaPeriodicidad) {
+    // El formulario se cierra y el progreso toma su lugar: regenerar cuotas tarda.
+    cerrarModal()
+    progresoCreacion.value = {
+      paso: 1,
+      mensaje: 'Actualizando periodicidad...',
+      cuotasGeneradas: 0,
+      cuotasTotales: 0,
+      error: null,
+      exito: false,
+      nombreSocio: datos.nombre
+    }
+    modalProgreso.value = true
+  }
+
+  const resultado = await guardarEdicionSocio({
+    natilleraId: id,
+    socioNatillera: sn,
+    datos,
+    alProgreso: paso => Object.assign(progresoCreacion.value, paso)
+  })
+
+  // Cambiar el valor o la periodicidad rehace sus cuotas: la mora de la lista se recalcula.
+  if (resultado.ok && (cambiaPeriodicidad || Number(datos.valor_cuota) !== Number(sn.valor_cuota_individual))) {
+    refrescarCuotasNatillera()
+  }
+
+  if (cambiaPeriodicidad) {
+    if (resultado.ok) {
+      refrescarDetalle()
+      setTimeout(() => cerrarModalProgreso(), 1500)
+    }
+    return
+  }
+
+  if (!resultado.ok) {
+    if (resultado.telefonoDuplicado) errorTelefonoDuplicado.value = true
+    errorSocio.value = resultado.error
+    return
+  }
+
+  refrescarDetalle()
+  notificationStore.success(`Los datos de ${datos.nombre} han sido actualizados correctamente`, 'Cambios guardados', 3000)
+  cerrarModal()
+}
+
 async function handleGuardarSocio() {
   errorSocio.value = ''
   errorTelefonoDuplicado.value = false
@@ -4354,273 +3674,8 @@ async function handleGuardarSocio() {
     const telefonoLimpio = limpiarNumeroTelefono(formSocio.telefono)
 
     if (socioEditando.value) {
-      // Detectar si cambió la periodicidad
-      const periodicidadAnterior = socioEditando.value.periodicidad || 'mensual'
-      const periodicidadNueva = formSocio.periodicidad || 'mensual'
-      const cambioPeriodicidad = periodicidadAnterior !== periodicidadNueva
-
-      // Si cambió la periodicidad, necesitamos eliminar y regenerar cuotas
-      if (cambioPeriodicidad) {
-        // IMPORTANTE: Guardar TODOS los datos necesarios ANTES de cerrar el modal
-        // porque cerrarModal() resetea el formulario
-        const socioNatilleraId = socioEditando.value.id
-        const socioId = socioEditando.value.socio?.id || null
-        
-        // Guardar todos los valores del formulario antes de que se reseteen
-        const nombreGuardado = formSocio.nombre || socioEditando.value.socio?.nombre || ''
-        const telefonoGuardado = telefonoLimpio || socioEditando.value.socio?.telefono || ''
-        const emailGuardado = formSocio.email || socioEditando.value.socio?.email || null
-        const documentoGuardado = formSocio.documento || socioEditando.value.socio?.documento || null
-        const avatarSeedGuardado = formSocio.avatar_seed || socioEditando.value.socio?.avatar_seed || null
-        
-        // IMPORTANTE: Guardar el valor de cuota - usar el del formulario si es válido, sino el anterior
-        let valorCuotaGuardado = typeof formSocio.valor_cuota === 'string' 
-          ? parseFloat(formSocio.valor_cuota.replace(/\./g, '').replace(/[^\d.-]/g, '')) || 0
-          : Number(formSocio.valor_cuota) || 0
-        
-        // Si el valor del formulario es 0 o inválido, usar el valor anterior del socio
-        if (valorCuotaGuardado <= 0 || isNaN(valorCuotaGuardado)) {
-          valorCuotaGuardado = socioEditando.value.valor_cuota_individual || 0
-        }
-        
-        // Cerrar el modal de edición primero
-        cerrarModal()
-        
-        // Iniciar el modal de progreso
-        progresoCreacion.value = {
-          paso: 1,
-          mensaje: 'Actualizando periodicidad...',
-          cuotasGeneradas: 0,
-          cuotasTotales: 0,
-          error: null,
-          exito: false,
-          nombreSocio: nombreGuardado
-        }
-        modalProgreso.value = true
-
-        try {
-          // Paso 1: Actualizar datos del socio (sin periodicidad aún)
-          // IMPORTANTE: Usar los valores guardados antes de cerrar el modal
-          const datosActualizados = {
-            nombre: nombreGuardado,
-            telefono: telefonoGuardado
-          }
-          
-          // Solo incluir email si tiene valor (usar valor guardado)
-          if (emailGuardado && emailGuardado.trim() !== '') {
-            datosActualizados.email = emailGuardado.trim()
-          }
-          
-          // Solo incluir documento si tiene valor (no puede ser null por constraint de BD)
-          if (documentoGuardado && documentoGuardado.trim() !== '') {
-            datosActualizados.documento = documentoGuardado.trim()
-          }
-          
-          if (avatarSeedGuardado) {
-            datosActualizados.avatar_seed = avatarSeedGuardado
-          }
-
-          // OPTIMIZACIÓN: Verificar unicidad del teléfono y actualizar datos en paralelo si es posible
-          // (Solo si hay datos para actualizar)
-          if (socioId && Object.keys(datosActualizados).length > 2) { // Más que solo nombre y telefono
-            const [telefonoExiste, resultDatos] = await Promise.all([
-              sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId),
-              sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
-            ])
-            
-            if (!telefonoExiste) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-              guardando.value = false
-              return
-            }
-            
-            if (!resultDatos.success) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
-              guardando.value = false
-              return
-            }
-          } else if (socioId) {
-            // Si solo hay nombre y teléfono, verificar teléfono primero
-            const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioId)
-            if (!telefonoExiste) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-              guardando.value = false
-              return
-            }
-            
-            const resultDatos = await sociosStore.actualizarDatosSocio(socioId, datosActualizados, id)
-            if (!resultDatos.success) {
-              progresoCreacion.value.paso = 0
-              progresoCreacion.value.error = resultDatos.error || 'Error al actualizar los datos del socio'
-              guardando.value = false
-              return
-            }
-          }
-
-          // Paso 2: Eliminar todas las cuotas del socio
-          progresoCreacion.value.paso = 2
-          progresoCreacion.value.mensaje = 'Eliminando cuotas anteriores...'
-
-          const resultEliminar = await cuotasStore.eliminarTodasLasCuotasSocio(socioNatilleraId)
-          
-          if (!resultEliminar.success) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = resultEliminar.error || 'Error al eliminar las cuotas anteriores'
-            guardando.value = false
-            return
-          }
-
-          // Paso 3: Actualizar periodicidad y valor de cuota
-          progresoCreacion.value.mensaje = 'Actualizando configuración...'
-          
-          // IMPORTANTE: Usar el valor de cuota guardado antes de cerrar el modal
-          const valorCuotaFinal = valorCuotaGuardado
-          
-          // Validar que el valor final sea válido
-          if (valorCuotaFinal <= 0 || isNaN(valorCuotaFinal)) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = 'El valor de la cuota debe ser mayor a cero'
-            guardando.value = false
-            return
-          }
-
-          const result = await sociosStore.actualizarSocioNatillera(socioNatilleraId, {
-            valor_cuota_individual: valorCuotaFinal,
-            periodicidad: periodicidadNueva
-          })
-
-          if (!result.success) {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = result.error || 'Error al actualizar la periodicidad'
-            guardando.value = false
-            return
-          }
-
-          // Paso 4: Generar nuevas cuotas
-          progresoCreacion.value.paso = 2
-          progresoCreacion.value.mensaje = 'Generando cuotas con nueva periodicidad...'
-          
-          const natillera = natillerasStore.natilleraActual
-          const resultCuotas = await generarCuotasParaSocio(
-            id,
-            socioNatilleraId,
-            natillera,
-            valorCuotaFinal,
-            periodicidadNueva
-          )
-
-          if (resultCuotas.success) {
-            progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
-            progresoCreacion.value.paso = 3
-            progresoCreacion.value.exito = true
-            progresoCreacion.value.mensaje = '¡Periodicidad actualizada exitosamente!'
-            
-            // OPTIMIZACIÓN: Recargar cuotas y actualizar socio en paralelo
-            await Promise.all([
-              cuotasStore.fetchCuotasNatillera(id),
-              sociosStore.fetchSociosNatillera(id)
-            ])
-            
-            // Actualizar el socioSeleccionado si está abierto el modal de detalle
-            if (modalDetalle.value && socioSeleccionado.value?.id === socioNatilleraId) {
-              const socioActualizado = sociosStore.sociosNatillera.find(s => s.id === socioNatilleraId)
-              if (socioActualizado) {
-                socioSeleccionado.value = socioActualizado
-              }
-            }
-            
-            // Cerrar modal después de 1.5 segundos (reducido de 2)
-            setTimeout(() => {
-              cerrarModalProgreso()
-            }, 1500)
-          } else {
-            progresoCreacion.value.paso = 0
-            progresoCreacion.value.error = resultCuotas.error || 'Error al generar las nuevas cuotas'
-          }
-        } catch (error) {
-          progresoCreacion.value.paso = 0
-          progresoCreacion.value.error = error.message || 'Error inesperado al cambiar la periodicidad'
-        } finally {
-          guardando.value = false
-        }
-        return
-      }
-
-      // Si no cambió la periodicidad, actualizar normalmente
-      // Actualizar cuota del socio en socios_natillera
-      const result = await sociosStore.actualizarSocioNatillera(socioEditando.value.id, {
-        valor_cuota_individual: formSocio.valor_cuota,
-        periodicidad: formSocio.periodicidad
-      })
-
-      // Actualizar datos del socio en la tabla socios (nombre, teléfono, email, documento, avatar)
-      if (socioEditando.value.socio?.id) {
-        // Verificar unicidad del teléfono dentro de la natillera (excepto el propio socio)
-        const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id, socioEditando.value.socio.id)
-        if (!telefonoExiste) {
-          errorTelefonoDuplicado.value = true
-          errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-          guardando.value = false
-          return
-        }
-
-        const datosActualizados = {
-          nombre: formSocio.nombre,
-          telefono: telefonoLimpio,
-          email: formSocio.email || null,
-          documento: formSocio.documento || null
-        }
-        
-        // Solo incluir avatar_seed si se seleccionó uno
-        if (formSocio.avatar_seed) {
-          datosActualizados.avatar_seed = formSocio.avatar_seed
-        }
-        
-        const resultDatos = await sociosStore.actualizarDatosSocio(socioEditando.value.socio.id, datosActualizados, id)
-        
-        if (!resultDatos.success) {
-          if (resultDatos.error?.includes('unique') || resultDatos.error?.includes('duplicate')) {
-            errorTelefonoDuplicado.value = true
-            errorSocio.value = 'Este número de teléfono ya está registrado para otro socio en esta natillera'
-          } else {
-            errorSocio.value = resultDatos.error || 'Error al actualizar los datos del socio'
-          }
-          guardando.value = false
-          return
-        }
-      }
-
-      if (result.success) {
-        // Los stores ya actualizan localmente los datos, no es necesario recargar
-        // Solo recargar cuotas si cambió el valor de cuota individual
-        const cuotaCambio = socioEditando.value.valor_cuota_individual !== formSocio.valor_cuota
-        if (cuotaCambio) {
-          // Recargar cuotas solo si cambió el valor para actualizar las cuotas pendientes
-          cuotasStore.fetchCuotasNatillera(id)
-        }
-        
-        // Actualizar el socioSeleccionado si está abierto el modal de detalle
-        if (modalDetalle.value && socioSeleccionado.value?.id === socioEditando.value.id) {
-          const socioActualizado = sociosStore.sociosNatillera.find(s => s.id === socioEditando.value.id)
-          if (socioActualizado) {
-            socioSeleccionado.value = socioActualizado
-          }
-        }
-        
-        // Mostrar notificación de éxito
-        notificationStore.success(
-          `Los datos de ${formSocio.nombre} han sido actualizados correctamente`,
-          'Cambios guardados',
-          3000
-        )
-        
-        cerrarModal()
-      } else {
-        errorSocio.value = result.error
-      }
+      await guardarEdicionDesdeSocios()
+      return
     } else {
       // Agregar nuevo socio - verificar unicidad del teléfono dentro de la natillera
       const telefonoExiste = await sociosStore.verificarTelefonoUnico(telefonoLimpio, id)
@@ -4670,6 +3725,9 @@ async function handleGuardarSocio() {
         // Guardar los valores antes de cerrar el modal para no perderlos
         const valorCuotaGuardado = valorCuotaParaGuardar
         const periodicidadGuardada = periodicidadParaGuardar
+        const ponerAlDiaAlCrear = !!formSocio.al_dia && natilleraYaEmpezo.value
+        const formaPagoAlDia = formSocio.al_dia_forma_pago || 'efectivo'
+        const cobrar4x1000AlDia = formaPagoAlDia === 'transferencia' && !!formSocio.al_dia_4x1000
         
         cerrarModal() // Cerrar el modal de agregar socio
         
@@ -4753,11 +3811,37 @@ async function handleGuardarSocio() {
         if (resultCuotas.success) {
           progresoCreacion.value.cuotasGeneradas = resultCuotas.cuotasGeneradas
           progresoCreacion.value.cuotasTotales = resultCuotas.cuotasGeneradas
+
+          // «Ya está al día»: sus cuotas vencidas se registran como pagadas en su fecha límite.
+          let alDia = null
+          if (ponerAlDiaAlCrear) {
+            progresoCreacion.value.mensaje = 'Poniendo al día las cuotas anteriores...'
+            alDia = await ponerSocioAlDia({
+              socioNatillera: { id: socioNatilleraId, periodicidad: periodicidadFinal, socio: { nombre: datosSocio.nombre } },
+              natilleraId: id,
+              natilleraNombre: natillera?.nombre || null,
+              formaPago: formaPagoAlDia,
+              cobrar4x1000: cobrar4x1000AlDia,
+              alAvanzar: (hechas, total) => { progresoCreacion.value.mensaje = `Poniendo al día: cuota ${hechas} de ${total}` }
+            })
+          }
+
+          // «Al día» ya recarga al terminar; si no, se recarga aquí para que la mora se vea ya.
+          if (!alDia) refrescarCuotasNatillera()
+
           progresoCreacion.value.paso = 3
-          progresoCreacion.value.mensaje = '¡Socio creado exitosamente!'
           progresoCreacion.value.exito = true
+          if (alDia?.fallidas > 0) {
+            progresoCreacion.value.mensaje = 'Socio creado. Algunas cuotas no se pudieron poner al día.'
+            progresoCreacion.value.error = `${alDia.fallidas} de ${alDia.total} cuotas quedaron pendientes. Puedes reintentarlo desde el detalle del socio.`
+          } else if (alDia?.registradas > 0) {
+            progresoCreacion.value.mensaje = `¡Socio creado y al día! ${alDia.registradas} cuota${alDia.registradas === 1 ? '' : 's'} registrada${alDia.registradas === 1 ? '' : 's'}.`
+          } else {
+            progresoCreacion.value.mensaje = '¡Socio creado exitosamente!'
+          }
         } else {
           // Si hubo error en las cuotas pero el socio se creó, mostrar mensaje parcial
+          refrescarCuotasNatillera()
           progresoCreacion.value.paso = 3
           progresoCreacion.value.mensaje = 'Socio creado. Algunas cuotas no se generaron.'
           progresoCreacion.value.error = resultCuotas.error
@@ -4819,6 +3903,19 @@ async function handleGuardarSocio() {
 
 // Función OPTIMIZADA para generar cuotas automáticas para un socio nuevo
 // Usa batch insert para generar todas las cuotas en una sola operación
+/*
+ * Recargar las cuotas de la natillera en segundo plano. Es lo que recalcula la mora
+ * (`fetchCuotasNatillera`), y de ahí salen el aviso «N socios en mora» y el estado de cada
+ * socio en la lista: sin esto, un socio recién creado con cuotas vencidas no aparecía en
+ * mora hasta recargar la página.
+ */
+function refrescarCuotasNatillera() {
+  loadingCuotas.value = true
+  cuotasStore.fetchCuotasNatillera(id)
+    .catch(e => console.warn('Socios: recarga de cuotas', e))
+    .finally(() => { loadingCuotas.value = false })
+}
+
 async function generarCuotasParaSocio(natilleraId, socioNatilleraId, natillera, valorCuota, periodicidad) {
   try {
     console.log('🚀 Iniciando generación optimizada de cuotas...')
@@ -4859,6 +3956,11 @@ async function generarCuotasParaSocio(natilleraId, socioNatilleraId, natillera, 
     return { success: false, error: error.message, cuotasGeneradas: 0 }
   }
 }
+
+// El modal de progreso está trabajando: ni terminó bien ni falló al crear.
+const progresoProcesando = computed(() =>
+  !progresoCreacion.value.exito && !(progresoCreacion.value.error && progresoCreacion.value.paso === 0)
+)
 
 function cerrarModalProgreso() {
   modalProgreso.value = false
@@ -5065,7 +4167,7 @@ async function confirmarActivarSocio() {
       // Deshacer el cruce con sus préstamos: vuelve a deber lo que se pagó con su ahorro,
       // porque la liquidación que lo pagó acaba de revertirse arriba.
       for (const d of (comprobante.detalle_prestamos || [])) {
-        await revertirAbonoPrestamo({
+        const { moraSinDescontar } = await revertirAbonoPrestamo({
           prestamoId: d.prestamo_id,
           pagoId: d.pago_id,
           abono: d.abono,
@@ -5073,6 +4175,13 @@ async function confirmarActivarSocio() {
           formaPago: d.forma_pago,
           natilleraId
         })
+        if (moraSinDescontar > 0) {
+          notificationStore.warning(
+            `No se pudo quitar de utilidades la mora del cruce ($${formatMoney(moraSinDescontar)}). Revísalo en el desglose de intereses.`,
+            'Revisar mora',
+            8000
+          )
+        }
       }
 
       // Eliminar comprobante de salida (el socio vuelve a estar activo, ya no aplica). Se
@@ -5150,12 +4259,34 @@ async function prepararImagenDesactivacion() {
 }
 watch(comprobanteDesactivacion, prepararImagenDesactivacion)
 
-function descargarComprobanteDesactivacion() {
+function descargarPngDesactivacion() {
   if (!imagenDesactivacion.value) return
   const enlace = document.createElement('a')
   enlace.href = imagenDesactivacion.value.dataUrl
   enlace.download = nombreArchivoDesactivacion()
   enlace.click()
+}
+
+/**
+ * En iOS un <a download> sobre data URL no guarda nada: abre la imagen en otra pestaña o
+ * no hace nada, según la versión. Allí se guarda por el menú de compartir («Guardar
+ * imagen»), con el File ya preparado y sin await antes de share para no perder el gesto.
+ */
+function descargarComprobanteDesactivacion() {
+  const img = imagenDesactivacion.value
+  if (!img) return
+  if (!detectIosPlatform()) {
+    descargarPngDesactivacion()
+    return
+  }
+  const datos = { files: [img.archivo] }
+  if (!navigator.canShare?.(datos)) {
+    descargarPngDesactivacion()
+    return
+  }
+  navigator.share(datos).catch(err => {
+    if (err?.name !== 'AbortError') descargarPngDesactivacion()
+  })
 }
 
 function compartirWhatsAppDesactivacion() {
@@ -5167,7 +4298,7 @@ function compartirWhatsAppDesactivacion() {
   const tel = (c.socioTelefono || '').replace(/\D/g, '')
   // Sin menú de compartir (escritorio): se descarga y, si hay número, se abre el chat.
   const abrirChat = () => {
-    descargarComprobanteDesactivacion()
+    descargarPngDesactivacion()
     if (!tel) {
       notificationStore.info('La imagen se descargó. El socio no tiene teléfono: envíala desde WhatsApp.', 'Comprobante')
       return
@@ -5827,6 +4958,16 @@ let modalHistoryState = null
 // picker, lo que cerraba el modal de Agregar Socio sin que el usuario lo pidiera.
 let suprimirPopstateContactos = false
 
+// El formulario avisa cuando abre y cierra el selector. Al cerrar se mantiene la supresión
+// un momento: algunos navegadores disparan popstate justo después de resolver el picker.
+function alSelectorContactos(activo) {
+  if (activo) {
+    suprimirPopstateContactos = true
+    return
+  }
+  setTimeout(() => { suprimirPopstateContactos = false }, 600)
+}
+
 function handleModalBack(modalRef, modalName) {
   watch(modalRef, (isOpen) => {
     if (isOpen) {
@@ -6023,7 +5164,9 @@ Ana Martínez,100000,3004445678,,0987654322`
   link.href = URL.createObjectURL(blob)
   link.download = 'ejemplo_socios.csv'
   link.click()
-  URL.revokeObjectURL(link.href)
+  // Revocar en el acto cancela la descarga en Safari: la lee de forma asíncrona tras el click.
+  const url = link.href
+  setTimeout(() => URL.revokeObjectURL(url), 30000)
 }
 
 function handleArchivoCSV(event) {
@@ -6202,7 +5345,75 @@ function cerrarModalImportar() {
   if (inputArchivoCsv.value) inputArchivoCsv.value.value = ''
 }
 
+/*
+ * Poner al día desde el detalle: para un socio que ya pagó por fuera de la app (la
+ * natillera empezó antes de crearla aquí). Ver usePonerAlDia.
+ */
+const OPCIONES_FORMA_PAGO_AL_DIA = [
+  { value: 'efectivo', label: 'Efectivo' },
+  { value: 'transferencia', label: 'Transferencia' }
+]
+/** Proceso masivo: elegir qué socios poner al día (PonerAlDiaMasivoModal). */
+const modalPonerAlDia = ref(false)
+const alDiaDetalle = reactive({ abierto: false, cargando: false, guardando: false, cuotas: [], formaPago: 'efectivo', cobrar4x1000: false, hechas: 0, total: 0 })
+const totalPonerAlDia = computed(() => alDiaDetalle.cuotas.reduce((s, c) => s + c.pendiente, 0))
+const total4x1000PonerAlDia = computed(() => total4x1000DeCuotas(alDiaDetalle.cuotas, alDiaDetalle.formaPago, alDiaDetalle.cobrar4x1000))
+const rangoPonerAlDia = computed(() => {
+  const lista = alDiaDetalle.cuotas
+  if (!lista.length) return ''
+  const primera = formatDate(lista[0].fecha_limite)
+  const ultima = formatDate(lista[lista.length - 1].fecha_limite)
+  return primera === ultima ? primera : `del ${primera} al ${ultima}`
+})
+
+function cerrarPonerAlDia() {
+  Object.assign(alDiaDetalle, { abierto: false, cargando: false, guardando: false, cuotas: [], formaPago: 'efectivo', cobrar4x1000: false, hechas: 0, total: 0 })
+}
+
+async function abrirPonerAlDia() {
+  const sn = socioSeleccionado.value
+  if (!sn) return
+  Object.assign(alDiaDetalle, { abierto: true, cargando: true, cuotas: [] })
+  try {
+    alDiaDetalle.cuotas = await cuotasParaPonerAlDia(sn.id)
+  } catch (e) {
+    console.error('Poner al día: cuotas', e)
+    notificationStore.error('No se pudieron consultar las cuotas del socio. Intenta de nuevo.')
+    cerrarPonerAlDia()
+    return
+  }
+  alDiaDetalle.cargando = false
+}
+
+async function confirmarPonerAlDia() {
+  const sn = socioSeleccionado.value
+  if (!sn || alDiaDetalle.guardando || alDiaDetalle.cuotas.length === 0) return
+  alDiaDetalle.guardando = true
+  alDiaDetalle.total = alDiaDetalle.cuotas.length
+  alDiaDetalle.hechas = 0
+  const r = await ponerSocioAlDia({
+    socioNatillera: sn,
+    natilleraId: id,
+    natilleraNombre: natillerasStore.natilleraActual?.nombre || null,
+    formaPago: alDiaDetalle.formaPago,
+    cobrar4x1000: alDiaDetalle.cobrar4x1000,
+    cuotas: alDiaDetalle.cuotas,
+    alAvanzar: (hechas) => { alDiaDetalle.hechas = hechas }
+  })
+  // El resumen del detalle sale de sus cuotas: se recargan para que diga «al día».
+  const resumen = await sociosStore.obtenerResumenSocio(sn.id)
+  if (socioSeleccionado.value?.id === sn.id) cuotasSocio.value = resumen?.cuotas || []
+  cerrarPonerAlDia()
+  if (r.fallidas > 0) {
+    notificationStore.warning(`Se registraron ${r.registradas} de ${r.total} cuotas. Vuelve a intentarlo para las que faltan.`, 'Quedaron cuotas pendientes')
+  } else {
+    const con4x1000 = r.valor4x1000 > 0 ? ` más $${formatMoney(r.valor4x1000)} de 4×1000` : ''
+    notificationStore.success(`${r.registradas} cuota${r.registradas === 1 ? '' : 's'} registrada${r.registradas === 1 ? '' : 's'} por $${formatMoney(r.valor)}${con4x1000}.`, `${sn.socio?.nombre || 'El socio'} quedó al día`)
+  }
+}
+
 async function verDetalleSocio(sn) {
+  cerrarPonerAlDia()
   socioSeleccionado.value = sn
   loadingDetalle.value = true
   modalDetalle.value = true
@@ -6261,31 +5472,6 @@ async function verComprobanteSalida(sn) {
 }
 
 
-// Listener para cerrar el tooltip cuando se hace click fuera
-let clickOutsideListener = null
-
-watch(mostrarAdvertenciaCuota, (isOpen) => {
-  if (isOpen) {
-    // Agregar listener después de que Vue renderice
-    nextTick(() => {
-      clickOutsideListener = (event) => {
-        const tooltip = document.querySelector('[data-advertencia-tooltip]')
-        const button = event.target.closest('[data-advertencia-button]')
-        
-        if (tooltip && !tooltip.contains(event.target) && !button) {
-          mostrarAdvertenciaCuota.value = false
-        }
-      }
-      document.addEventListener('click', clickOutsideListener)
-    })
-  } else {
-    // Remover listener cuando se cierra
-    if (clickOutsideListener) {
-      document.removeEventListener('click', clickOutsideListener)
-      clickOutsideListener = null
-    }
-  }
-})
 
 // Watch para recargar la natillera cuando cambie el ID de la ruta o props
 watch(() => props.id || route.params.id, async (newId) => {
@@ -6574,17 +5760,38 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (rafNatiscrollModalAgregarSocio != null) {
-    cancelAnimationFrame(rafNatiscrollModalAgregarSocio)
-    rafNatiscrollModalAgregarSocio = null
-  }
+  // El velo de driver.js vive en <body>: sin esto, un recorrido abierto (o a punto de
+  // arrancar) sobrevive a la vista y tapa la pantalla siguiente.
+  cerrarRecorridosDriver()
+  // Todos los rAF del natiscroll: si el modal se desmonta con uno pendiente (volver deslizando
+  // en Safari cierra la vista a media animación), el callback mediría nodos ya quitados.
   if (rafNatiscrollModalCuotasSocio != null) {
     cancelAnimationFrame(rafNatiscrollModalCuotasSocio)
     rafNatiscrollModalCuotasSocio = null
   }
-  // Limpiar listener al desmontar
-  if (clickOutsideListener) {
-    document.removeEventListener('click', clickOutsideListener)
+  if (rafNatiscrollModalDetalleSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalDetalleSocio)
+    rafNatiscrollModalDetalleSocio = null
+  }
+  if (rafNatiscrollModalDesactivarSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalDesactivarSocio)
+    rafNatiscrollModalDesactivarSocio = null
+  }
+  if (rafNatiscrollModalEliminarSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalEliminarSocio)
+    rafNatiscrollModalEliminarSocio = null
+  }
+  if (rafNatiscrollModalComprobanteDesactivacion != null) {
+    cancelAnimationFrame(rafNatiscrollModalComprobanteDesactivacion)
+    rafNatiscrollModalComprobanteDesactivacion = null
+  }
+  if (rafNatiscrollModalImportar != null) {
+    cancelAnimationFrame(rafNatiscrollModalImportar)
+    rafNatiscrollModalImportar = null
+  }
+  if (rafNatiscrollModalActivarSocio != null) {
+    cancelAnimationFrame(rafNatiscrollModalActivarSocio)
+    rafNatiscrollModalActivarSocio = null
   }
   // Remover listener para el botón atrás
   window.removeEventListener('popstate', handlePopState)
@@ -6596,6 +5803,167 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Poner al día (detalle del socio): botón dentro del aviso ámbar y panel de confirmación */
+.poner-al-dia__abrir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  padding: 0 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: #fff;
+  color: #78350f;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  touch-action: manipulation;
+}
+.poner-al-dia__abrir:hover { background: #fffbeb; }
+.poner-al-dia {
+  border: 1px solid rgba(27, 94, 55, 0.2);
+  background: linear-gradient(180deg, #f6fbf7 0%, #fff 100%);
+  border-radius: var(--radius-lg, 0.875rem);
+  padding: 0.875rem;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(15, 23, 42, 0.05));
+}
+.poner-al-dia__sello {
+  display: flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--brand-primary-soft, #e8f5ec);
+  color: #1B5E37;
+}
+.poner-al-dia__titulo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9375rem;
+  color: #1B5E37;
+  line-height: 1.2;
+}
+.poner-al-dia__sub {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+.poner-al-dia__nota {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-md, 0.625rem);
+  background: #f0f7f2;
+  color: #1B5E37;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+.poner-al-dia__opcion {
+  position: relative; /* contiene la casilla oculta (sr-only): sin esto el foco desplaza el modal */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(27, 94, 55, 0.25);
+  background: #fff;
+  color: #1B5E37;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.poner-al-dia__opcion.is-activa {
+  background: var(--brand-primary-soft, #e8f5ec);
+  border-color: rgba(27, 94, 55, 0.45);
+}
+.poner-al-dia__opcion:focus-within { box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18); }
+.poner-al-dia__caja {
+  display: flex;
+  width: 1.125rem;
+  height: 1.125rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.3rem;
+  border: 1.5px solid rgba(27, 94, 55, 0.5);
+  background: #fff;
+}
+.poner-al-dia__opcion.is-activa .poner-al-dia__caja {
+  background: #1B5E37;
+  border-color: #1B5E37;
+  color: #fff;
+}
+
+/* Aviso de socios en mora que lleva al proceso masivo: tarjeta de marca con CTA en píldora */
+.al-dia-aviso {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.75rem;
+  padding: 0.75rem 0.875rem 0.75rem 1rem;
+  border-radius: var(--radius-lg, 0.875rem);
+  border: 1px solid rgba(27, 94, 55, 0.18);
+  background: linear-gradient(135deg, #f6fbf7 0%, #fff 65%);
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(15, 23, 42, 0.05));
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.al-dia-aviso:hover {
+  border-color: rgba(27, 94, 55, 0.35);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(15, 23, 42, 0.08));
+}
+.al-dia-aviso:focus-visible { box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.18); }
+.al-dia-aviso__icono {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: #1B5E37;
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(27, 94, 55, 0.1);
+}
+.al-dia-aviso__titulo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.al-dia-aviso__sub {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.al-dia-aviso__cta {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 2.25rem;
+  padding: 0 0.75rem 0 0.875rem;
+  border-radius: 9999px;
+  background: #1B5E37;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  /* En pantallas muy angostas la píldora se reduce a la flecha: el texto ya lo dice */
+  .al-dia-aviso__cta { padding: 0 0.5rem; font-size: 0; gap: 0; }
+  .al-dia-aviso__cta svg { width: 1.125rem; height: 1.125rem; }
+}
 /* ==========================================================================
    Tabla de Socios (DS) — toolbar, tabla desktop, lista móvil, paginación
    ========================================================================== */
@@ -6652,8 +6020,12 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  /* 44px de área táctil; los márgenes negativos la meten en el padding de la barra para
+     que la búsqueda no crezca al aparecer la X. */
+  width: 44px;
+  height: 44px;
+  margin: -0.4375rem -0.625rem -0.4375rem 0;
+  flex-shrink: 0;
   border-radius: 9999px;
   color: #64748b;
   background: transparent;
@@ -6862,6 +6234,14 @@ onUnmounted(() => {
   min-width: 32px;
   padding: 0.3125rem;
 }
+/* En la fila de la tabla no se reparten el ancho: cada una mide lo que su texto. */
+.card-pill--tabla {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0.3125rem 0.75rem;
+  white-space: nowrap;
+}
+.card-pill--tabla.card-pill--icon { min-width: 36px; padding: 0.3125rem; }
 .card-pill--brand   { background: var(--brand-primary-soft); color: var(--brand-primary); }
 .card-pill--info    { background: #dbeafe;                   color: #1d4ed8; }
 .card-pill--warning { background: #fef3c7;                   color: #b45309; }
@@ -6904,29 +6284,6 @@ onUnmounted(() => {
 .cuota-status--ok   { color: var(--brand-success); }
 .cuota-status--mora { color: var(--brand-warning); }
 
-/* ---------- Botones-icono de acción ---------- */
-.action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  color: #64748b;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  transition: background-color var(--transition-base), color var(--transition-base);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-.action-btn:hover  { background: rgba(15, 23, 42, 0.06); color: #0f172a; }
-.action-btn:active { transform: scale(0.96); }
-.action-btn--brand:hover   { background: var(--brand-primary-soft); color: var(--brand-primary); }
-.action-btn--info:hover    { background: #dbeafe; color: #1d4ed8; }
-.action-btn--warning:hover { background: #fef3c7; color: #b45309; }
-.action-btn--danger:hover  { background: #fee2e2; color: #b91c1c; }
-
 /* ---------- Pie de carga progresiva ---------- */
 .socios-mas {
   display: flex;
@@ -6964,7 +6321,8 @@ onUnmounted(() => {
   position: fixed;
   z-index: 40;
   right: max(1rem, env(safe-area-inset-right, 0px));
-  bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+  /* --tapado-inferior: la barra de Safari (iOS 15+) se dibuja encima del bottom nav y del FAB */
+  bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px) + var(--tapado-inferior, 0px));
   width: 56px;
   height: 56px;
   border-radius: 9999px;
@@ -6986,7 +6344,7 @@ onUnmounted(() => {
 .socios-fab:hover { background: var(--brand-primary-hover); }
 .socios-fab:active { transform: scale(0.96); }
 @media (min-width: 1024px) {
-  .socios-fab { bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)); }
+  .socios-fab { bottom: calc(max(1.5rem, env(safe-area-inset-bottom, 0px)) + var(--tapado-inferior, 0px)); }
 }
 
 .socios-fab-enter-active,
@@ -7005,91 +6363,12 @@ onUnmounted(() => {
   .socios-mobile-card,
   .socios-mobile-card__main,
   .socios-table__row,
-  .action-btn,
   .card-pill,
   .socios-fab,
   .socios-search__clear { -webkit-transform: translate3d(0, 0, 0); }
 }
 
-/* ==========================================================================
-   Modal Agregar / Editar Socio — bloques DS
-   ========================================================================== */
-
-/* Selector de periodicidad (Mensual / Quincenal) — tonos verde marca, sin morado */
-.periodicidad-opcion {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  width: 100%;
-  padding: 0.75rem 0.875rem;
-  min-height: 56px;
-  background: #fff;
-  border: 1.5px solid var(--surface-divider-strong);
-  border-radius: var(--radius-lg);
-  color: #475569;
-  cursor: pointer;
-  transition: border-color var(--transition-base),
-              background-color var(--transition-base),
-              box-shadow var(--transition-base);
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-  text-align: left;
-}
-.periodicidad-opcion:hover:not(:disabled) {
-  border-color: rgba(27, 94, 55, 0.40);
-}
-.periodicidad-opcion--activa {
-  border-color: var(--brand-primary);
-  background: var(--brand-primary-soft);
-  color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(27, 94, 55, 0.10);
-}
-.periodicidad-opcion--activa > svg:first-child { color: var(--brand-primary); }
-.periodicidad-opcion--unica {
-  cursor: default;
-  opacity: 0.95;
-}
-
-/* Bloque destacado de la cuota */
-.cuota-bloque {
-  padding: 1rem;
-  background: var(--brand-primary-soft);
-  border: 1px solid rgba(27, 94, 55, 0.18);
-  border-radius: var(--radius-lg);
-}
-.cuota-bloque__prefix {
-  position: absolute;
-  left: 0.875rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #64748b;
-  font-weight: 600;
-  font-size: 1rem;
-  pointer-events: none;
-}
-.cuota-bloque__input {
-  padding-left: 1.875rem;
-  font-size: 1.0625rem;
-  font-weight: 700;
-}
-
-/* Aviso warning dentro de la cuota (al editar) */
-.cuota-aviso {
-  margin-top: 0.625rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.625rem 0.75rem;
-  background: rgba(254, 243, 199, 0.7);
-  border: 1px solid rgba(180, 83, 9, 0.25);
-  border-radius: var(--radius-md);
-}
-
-/* iOS: forzar GPU en elementos del modal con transforms/transitions */
-@supports (-webkit-touch-callout: none) {
-  .periodicidad-opcion,
-  .cuota-bloque__input { -webkit-transform: translate3d(0, 0, 0); }
-}
+/* Formulario de agregar / editar socio: sus estilos viven en SocioFormModal.vue */
 
 /* Animación de entrada para las cuotas */
 @keyframes fade-in-up {
@@ -7925,31 +7204,6 @@ onUnmounted(() => {
   color: #475569;
   white-space: nowrap;
 }
-.cuotas-mobile-card__wsp {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: #16a34a;
-  color: #fff;
-  border: none;
-  border-radius: 9999px;
-  padding: 0.25rem 0.625rem;
-  min-height: 26px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  box-shadow: var(--shadow-sm);
-  transition: background-color 0.15s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.cuotas-mobile-card__wsp:hover {
-  background: #15803d;
-}
-.cuotas-mobile-card__wsp:active {
-  background: #166534;
-}
-
 /* === Modal Cuotas: bloque resumen al inicio === */
 .cuotas-resumen {
   display: flex;
@@ -8603,26 +7857,6 @@ onUnmounted(() => {
   box-shadow: none;
 }
 
-/* Botón Descargar (azul info) — modal comprobante de salida */
-.modal-btn-download {
-  background: #2563eb;
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.32);
-}
-.modal-btn-download:hover:not(:disabled) {
-  background: #1d4ed8;
-  box-shadow: 0 6px 16px -2px rgba(37, 99, 235, 0.4);
-}
-.modal-btn-download:active:not(:disabled) {
-  background: #1e40af;
-  box-shadow: 0 2px 6px -1px rgba(37, 99, 235, 0.3);
-}
-.modal-btn-download:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
 /* Botón success sólido (acción primaria de activar / éxito) */
 .modal-btn-success {
   background: var(--brand-success, #15803d);
@@ -8639,28 +7873,6 @@ onUnmounted(() => {
 }
 .modal-btn-success:disabled {
   opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Botón WhatsApp (verde marca WhatsApp) — modal comprobante de salida */
-.modal-btn-whatsapp {
-  background: #16a34a;
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.32);
-}
-.modal-btn-whatsapp:hover:not(:disabled) {
-  background: #15803d;
-  box-shadow: 0 6px 16px -2px rgba(22, 163, 74, 0.4);
-}
-.modal-btn-whatsapp:active:not(:disabled) {
-  background: #166534;
-  box-shadow: 0 2px 6px -1px rgba(22, 163, 74, 0.3);
-}
-.modal-btn-whatsapp:disabled,
-.modal-btn-whatsapp.is-disabled {
-  background: #e2e8f0;
-  color: #94a3b8;
   cursor: not-allowed;
   box-shadow: none;
 }

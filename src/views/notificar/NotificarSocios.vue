@@ -228,19 +228,35 @@
             <div class="notificar-acciones">
               <button
                 type="button"
-                class="ds-btn ds-btn--secondary flex-1"
+                class="btn-descargar flex-1"
                 :disabled="!imagen"
                 @click="descargar"
               >
-                <ArrowDownTrayIcon class="h-5 w-5" />
+                <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
                 Descargar
               </button>
-              <button type="button" class="notificar-whatsapp flex-1" :disabled="!imagen" @click="enviarWhatsApp">
-                <!-- Logo de WhatsApp: el globo genérico de Heroicons no se reconocía -->
-                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.2 1.87.12.57-.09 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35zM12.04 21.5h-.01a9.43 9.43 0 0 1-4.8-1.32l-.35-.2-3.57.93.95-3.48-.22-.36a9.4 9.4 0 0 1-1.45-5.03c0-5.2 4.24-9.44 9.45-9.44a9.4 9.4 0 0 1 6.68 2.77 9.38 9.38 0 0 1 2.76 6.68c0 5.21-4.24 9.45-9.44 9.45zm8.04-17.49A11.3 11.3 0 0 0 12.04.67C5.77.67.67 5.77.67 12.04c0 2 .52 3.96 1.52 5.68L.57 23.33l5.74-1.5a11.34 11.34 0 0 0 5.72 1.46h.01c6.27 0 11.37-5.1 11.37-11.37 0-3.04-1.18-5.9-3.33-8.05z"/></svg>
+              <button type="button" class="btn-compartir flex-1" :disabled="!imagen" @click="enviarWhatsApp">
+                <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
                 {{ imagen ? 'WhatsApp' : 'Preparando…' }}
               </button>
             </div>
+            <!--
+              Reserva si falla el menú de compartir. Abrir el chat solo desde el `.catch` no
+              sirve: ya no está dentro del toque y Safari bloquea el `window.open`. Un enlace
+              que el usuario toca sí abre.
+            -->
+            <p v-if="reservaWhatsApp" class="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+              No se pudo abrir el menú de compartir. Descarga la imagen y adjúntala en el chat.
+              <a
+                :href="reservaWhatsApp"
+                target="_blank"
+                rel="noopener"
+                class="mt-2 inline-flex min-h-11 touch-manipulation items-center gap-2 font-semibold text-[#1B5E37] underline"
+              >
+                <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                Abrir WhatsApp
+              </a>
+            </p>
           </template>
         </template>
       </section>
@@ -261,6 +277,7 @@
 
 <script setup>
 import { numeroWhatsApp } from '../../utils/telefono'
+import { detectIosPlatform } from '../../composables/useIsIos'
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toPng } from 'html-to-image'
@@ -277,6 +294,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import ComprobanteEstadoSocio from '../../components/estado/ComprobanteEstadoSocio.vue'
 import { supabase } from '../../lib/supabase'
@@ -475,6 +493,7 @@ function nombreArchivo() {
  */
 async function prepararImagen() {
   imagen.value = null
+  reservaWhatsApp.value = null
   if (!estado.value) return
   const turno = ++turnoImagen
   try {
@@ -489,10 +508,20 @@ async function prepararImagen() {
   }
 }
 
+/** Enlace a WhatsApp que se ofrece si el menú de compartir falla. */
+const reservaWhatsApp = ref(null)
+
 watch([estado, incluir4x1000], prepararImagen)
 
 function descargar() {
   if (!imagen.value) return
+  // En iOS `a.download` con un data URL abre la imagen en otra pestaña en lugar de
+  // guardarla; la hoja de compartir ofrece «Guardar imagen». Sin `await` antes: gesto.
+  const archivos = { files: [imagen.value.archivo] }
+  if (detectIosPlatform() && navigator.canShare?.(archivos)) {
+    navigator.share(archivos).catch(() => {})
+    return
+  }
   const enlace = document.createElement('a')
   enlace.download = nombreArchivo()
   enlace.href = imagen.value.dataUrl
@@ -519,8 +548,11 @@ function enviarWhatsApp() {
   }
   // Nada asíncrono antes del share: ver `prepararImagen`.
   if (navigator.canShare?.(datos)) {
+    reservaWhatsApp.value = null
     navigator.share(datos).catch(err => {
-      if (err?.name !== 'AbortError') abrirChat()
+      if (err?.name === 'AbortError') return
+      const numero = telefono ? numeroWhatsApp(telefono) : ''
+      reservaWhatsApp.value = `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`
     })
     return
   }
@@ -784,32 +816,6 @@ function enviarWhatsApp() {
   display: flex;
   gap: 0.75rem;
 }
-/* Verde de WhatsApp. Antes era #128C7E, el verde azulado de su marca antigua, que en
-   pantalla se leía como azul. #1DA851 se reconoce como WhatsApp y el texto blanco en
-   negrita sigue siendo legible (el #25D366 oficial deja el blanco sin contraste). */
-.notificar-whatsapp {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: var(--tap-min);
-  padding: 0.625rem 1.25rem;
-  border-radius: 9999px;
-  border: 0;
-  background: #1da851;
-  color: #fff;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 0.9375rem;
-  box-shadow: 0 6px 16px -6px rgba(29, 168, 81, 0.6);
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  transition: background-color var(--transition-base), transform var(--transition-fast);
-}
-.notificar-whatsapp:hover:not(:disabled) { background: #179245; }
-.notificar-whatsapp:active:not(:disabled) { transform: scale(0.98); }
-.notificar-whatsapp:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /*
  * Qué se ve en cada ancho. Va AL FINAL a propósito: pisa el `display` de las reglas de
@@ -828,9 +834,7 @@ function enviarWhatsApp() {
   .notificar-kpi,
   .notificar-fila,
   .notificar-switch,
-  .notificar-switch::after,
-  .notificar-whatsapp { transition: none; }
-  .notificar-kpi:active,
-  .notificar-whatsapp:active:not(:disabled) { transform: none; }
+  .notificar-switch::after { transition: none; }
+  .notificar-kpi:active { transform: none; }
 }
 </style>

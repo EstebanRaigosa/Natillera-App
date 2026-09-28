@@ -1,6 +1,7 @@
 import { driver } from 'driver.js'
 import { isTourEnabled } from '../config/toursEnabled'
 import { markNatilleraMenuTourDone } from './useNatilleraMenuTour'
+import { crearSesionRecorrido } from './recorridoDriverSeguro'
 
 const STORAGE_DONE = (id) => `primer_socio_socios_nav_tour_v1_${id}`
 const SESSION_PENDING = (id) => `primer_socio_nav_tour_pending_${id}`
@@ -58,17 +59,19 @@ export function startPrimerSocioSociosNavTour(opts) {
 
   const isDesktop = window.innerWidth >= 1024
   const selector = isDesktop ? '#tour-sidebar-socios' : '#tour-bottom-nav-socios'
+  const sesion = crearSesionRecorrido({ alForzarCierre: () => clearSidebarAfterTour?.() })
 
   const run = () => {
     const el = document.querySelector(selector)
     if (!el) {
+      sesion.terminar()
       clearSidebarAfterTour?.()
       markPrimerSocioSociosNavTourDone(natilleraId)
       markNatilleraMenuTourDone(natilleraId)
       return
     }
 
-    const d = driver({
+    const d = sesion.usarDriver(driver({
       animate: true,
       allowClose: true,
       disableActiveInteraction: true,
@@ -82,6 +85,9 @@ export function startPrimerSocioSociosNavTour(opts) {
       doneBtnText: 'Entendido',
       popoverClass: 'driver-popover-natillera',
       onDestroyed: () => {
+        sesion.terminar()
+        // Cortado al salir de la vista: ni se da por visto ni se encadena la navegación a Cuotas.
+        if (sesion.cancelada) return
         clearSidebarAfterTour?.()
         markPrimerSocioSociosNavTourDone(natilleraId)
         markNatilleraMenuTourDone(natilleraId)
@@ -100,19 +106,19 @@ export function startPrimerSocioSociosNavTour(opts) {
           }
         }
       ]
-    })
+    }))
 
     d.drive(0)
   }
 
   if (isDesktop) {
     prepareSidebarForTour?.()
-    window.requestAnimationFrame(() => {
-      setTimeout(run, 120)
+    sesion.alSiguienteFrame(() => {
+      sesion.esperar(run, 120)
     })
   } else {
-    window.requestAnimationFrame(() => {
-      setTimeout(run, 200)
+    sesion.alSiguienteFrame(() => {
+      sesion.esperar(run, 200)
     })
   }
 }

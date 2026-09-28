@@ -268,13 +268,15 @@
         <!-- Filtros -->
         <div class="flex flex-col gap-4 mb-4">
           <!-- Barra de búsqueda -->
-          <div class="relative">
-            <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <!-- Lupa por flex, no por `absolute`: en iOS el search cambia de alto al enfocar y la lupa se descolocaba -->
+          <div class="flex items-center rounded-xl border-2 border-gray-200 bg-white focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-200">
+            <span class="flex-shrink-0 pl-3 text-gray-400"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
             <input
               v-model.trim="filtroDetalleBusqueda"
               type="search"
               placeholder="Buscar por concepto o socio..."
-              class="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-gray-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 text-sm placeholder-gray-400"
+              aria-label="Buscar por concepto o socio"
+              class="min-w-0 flex-1 border-none bg-transparent pl-2 pr-4 py-2.5 text-sm placeholder-gray-400 outline-none focus:ring-0"
               autocomplete="off"
             />
           </div>
@@ -728,23 +730,28 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="relative w-full sm:max-w-lg max-h-[90vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+      card-class="relative w-full sm:max-w-lg max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh] min-h-0 bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
       card-max-width="32rem"
       @close="cerrarModalMovimiento"
     >
             <!-- Header -->
-            <div class="p-6 text-white bg-gradient-to-br from-teal-500 to-emerald-600">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold">{{ editandoMovimiento ? 'Editar Movimiento' : 'Nuevo Movimiento' }}</h3>
-                <button @click="cerrarModalMovimiento" class="p-2 rounded-lg hover:bg-white/20 transition-colors">
-                  <XMarkIcon class="w-6 h-6" />
+            <div class="flex-shrink-0 p-6 text-white bg-gradient-to-br from-teal-500 to-emerald-600">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="min-w-0 text-xl font-bold">{{ editandoMovimiento ? 'Editar Movimiento' : 'Nuevo Movimiento' }}</h3>
+                <button
+                  type="button"
+                  aria-label="Cerrar"
+                  @click="cerrarModalMovimiento"
+                  class="-mr-2 flex h-11 w-11 flex-shrink-0 touch-manipulation items-center justify-center rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  <XMarkIcon class="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
               <p class="text-white/90 text-sm mt-1">{{ editandoMovimiento ? 'Modifica los datos del movimiento' : 'Registra transferencias, ingresos o egresos' }}</p>
             </div>
 
             <!-- Contenido -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 space-y-6">
               <!-- Tipo de movimiento (solo si no está editando) -->
               <div v-if="!editandoMovimiento">
                 <label class="block text-sm font-semibold text-gray-700 mb-3">Tipo de movimiento</label>
@@ -920,8 +927,9 @@
               </div>
             </div>
 
-            <!-- Footer -->
-            <div class="p-6 border-t border-gray-200 flex gap-3">
+            <!-- Footer: en iOS la hoja ya no lleva padding inferior; la safe-area y lo que tape
+                 la barra de Safari los pone este pie. -->
+            <div class="flex flex-shrink-0 gap-3 border-t border-gray-200 px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
               <button
                 @click="cerrarModalMovimiento"
                 :disabled="guardandoMovimiento"
@@ -1158,6 +1166,7 @@
 </template>
 
 <script setup>
+import { cargarXlsx, guardarLibroXlsx, precargarXlsxEnIos, xlsxListo } from '../../utils/exportarXlsx'
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
@@ -1204,12 +1213,14 @@ import {
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
 let XLSX = null
-async function ensureXLSX() {
-  if (!XLSX) {
-    const mod = await import('xlsx-js-style')
-    XLSX = mod.default || mod
-  }
+// Devuelve null (sin nada que esperar) si ya está precargado: en iOS compartir el
+// archivo necesita que no haya ningún `await` entre el toque y `navigator.share`.
+function ensureXLSX() {
+  XLSX = xlsxListo()
+  if (XLSX) return null
+  return cargarXlsx().then(m => { XLSX = m })
 }
+onMounted(precargarXlsxEnIos)
 
 const route = useRoute()
 const id = computed(() => route.params.id)
@@ -1324,7 +1335,7 @@ const LABELS_UTILIDAD_SIMULADOR = {
   bingo: 'Bingos',
   venta: 'Ventas',
   evento: 'Eventos',
-  otro: 'Otros',
+  otro: 'Otras actividades',
   sanciones: 'Sanciones',
   utilidades_adicionales: 'Adicionales'
 }
@@ -1810,7 +1821,8 @@ async function exportarAExcel() {
   if (detalleFiltrado.value.length === 0) return
   exportando.value = true
   try {
-    await ensureXLSX()
+    const cargaXlsx = ensureXLSX()
+    if (cargaXlsx) await cargaXlsx
     const datosExportar = detalleFiltrado.value
       .slice()
       .sort((a, b) => {
@@ -2068,7 +2080,7 @@ async function exportarAExcel() {
       XLSX.utils.book_append_sheet(wb, movWs, movSheetName)
     }
     const nombreArchivo = `Cuadre_Caja_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
-    XLSX.writeFile(wb, nombreArchivo)
+    guardarLibroXlsx(XLSX, wb, nombreArchivo)
     notificationStore.success('Exportado a Excel correctamente', 'Éxito')
   } catch (e) {
     console.error('Error exportando a Excel:', e)
@@ -2081,7 +2093,8 @@ async function exportarSimuladorAExcel() {
   if (simuladorSociosFiltrados.value.length === 0) return
   exportandoSimulador.value = true
   try {
-    await ensureXLSX()
+    const cargaXlsx = ensureXLSX()
+    if (cargaXlsx) await cargaXlsx
     const datosExportar = simuladorSociosFiltrados.value.map(d => {
       const totalFinal = parseFloat(d.totalFinal) || 0
       const aEntregar = totalFinal >= 0 ? totalFinal : 0
@@ -2178,7 +2191,7 @@ async function exportarSimuladorAExcel() {
 
     XLSX.utils.book_append_sheet(wb, ws, 'Simulador de Cierre')
     const nombreArchivo = `Simulador_Cierre_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
-    XLSX.writeFile(wb, nombreArchivo)
+    guardarLibroXlsx(XLSX, wb, nombreArchivo)
     notificationStore.success('Exportado a Excel correctamente', 'Éxito')
   } catch (e) {
     console.error('Error exportando simulador a Excel:', e)
@@ -3844,6 +3857,14 @@ function handleClickOutsideDropdowns(e) {
     dropdownOrdenarAbierto.value = false
   }
 }
-onMounted(() => document.addEventListener('click', handleClickOutsideDropdowns))
-onUnmounted(() => document.removeEventListener('click', handleClickOutsideDropdowns))
+// Además de `click`, `touchstart`: Safari en iOS no emite click al tocar zonas no
+// interactivas (texto, fondos), y el desplegable se quedaba abierto.
+onMounted(() => {
+  document.addEventListener('click', handleClickOutsideDropdowns)
+  document.addEventListener('touchstart', handleClickOutsideDropdowns, { passive: true })
+})
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutsideDropdowns)
+  document.removeEventListener('touchstart', handleClickOutsideDropdowns)
+})
 </script>

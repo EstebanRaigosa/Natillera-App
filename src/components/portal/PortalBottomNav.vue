@@ -7,6 +7,7 @@
   -->
   <Teleport to="body">
     <nav
+      ref="barra"
       class="portal-nav lg:hidden fixed bottom-0 left-0 right-0 z-[49] app-shell-nav-bg rounded-t-3xl pt-3 shadow-[0_-4px_24px_rgba(0,0,0,0.25)]"
       :style="{ '--tapado-inferior': tapado + 'px' }"
       aria-label="Secciones de mi natillera"
@@ -155,15 +156,22 @@ function elegir(valor) {
   emit('elegir', valor)
 }
 
-// Tocar fuera cierra el menú, como cualquier desplegable.
-function cerrarFuera() {
+/*
+ * Tocar fuera cierra el menú, como cualquier desplegable. Con `pointerdown` y no
+ * `click` (igual que BotonSoporte): en iOS el `click` sobre zonas no
+ * interactivas no llega a `document`, y el menú se quedaba abierto. Lo que cae
+ * dentro de la barra lo resuelve `elegir` (incluido «Más», que alterna).
+ */
+const barra = ref(null)
+function cerrarFuera(evento) {
+  if (barra.value?.contains(evento.target)) return
   menuAbierto.value = false
 }
 watch(menuAbierto, abierto => {
-  if (abierto) document.addEventListener('click', cerrarFuera)
-  else document.removeEventListener('click', cerrarFuera)
+  if (abierto) document.addEventListener('pointerdown', cerrarFuera)
+  else document.removeEventListener('pointerdown', cerrarFuera)
 })
-onUnmounted(() => document.removeEventListener('click', cerrarFuera))
+onUnmounted(() => document.removeEventListener('pointerdown', cerrarFuera))
 </script>
 
 <style scoped>

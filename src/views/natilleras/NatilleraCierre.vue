@@ -171,7 +171,7 @@
                 <div v-if="totalDescontado > 0" class="flex min-h-[56px] items-center justify-between gap-3 px-4 py-2">
                   <dt class="min-w-0">
                     <span class="block text-sm text-gray-600">− Deudas descontadas</span>
-                    <span class="block text-xs text-gray-500">Préstamos y cuotas pendientes</span>
+                    <span class="block text-xs text-gray-500">Saldo de préstamos pendientes</span>
                   </dt>
                   <dd class="flex-shrink-0 font-display text-[15px] font-bold tabular-nums text-red-700">
                     −${{ formatMoney(totalDescontado) }}
@@ -481,17 +481,20 @@
 </template>
 
 <script setup>
+import { cargarXlsx, guardarLibroXlsx, precargarXlsxEnIos, xlsxListo } from '../../utils/exportarXlsx'
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 // xlsx-js-style (~600 KB) se carga de forma diferida solo al exportar: evita inflar
 // el chunk de la vista y rompe el ciclo de chunks xlsx<->vendor (error TDZ en runtime).
 let XLSX = null
-async function ensureXLSX() {
-  if (!XLSX) {
-    const mod = await import('xlsx-js-style')
-    XLSX = mod.default || mod
-  }
+// Devuelve null (sin nada que esperar) si ya está precargado: en iOS compartir el
+// archivo necesita que no haya ningún `await` entre el toque y `navigator.share`.
+function ensureXLSX() {
+  XLSX = xlsxListo()
+  if (XLSX) return null
+  return cargarXlsx().then(m => { XLSX = m })
 }
+onMounted(precargarXlsxEnIos)
 import {
   ArrowDownTrayIcon,
   ArrowUpIcon,
@@ -708,7 +711,7 @@ const LABELS_UTILIDAD_CIERRE = {
   bingo: 'Bingos',
   venta: 'Ventas',
   evento: 'Eventos',
-  otro: 'Otros',
+  otro: 'Otras actividades',
   sanciones: 'Sanciones',
   utilidades_adicionales: 'Adicionales'
 }
@@ -837,7 +840,8 @@ async function exportarCierreAExcel() {
   if (datosCierre.value.length === 0) return
   exportandoCierreExcel.value = true
   try {
-    await ensureXLSX()
+    const cargaXlsx = ensureXLSX()
+    if (cargaXlsx) await cargaXlsx
     const datosOrdenados = [...datosCierre.value].sort((a, b) => {
       const nombreA = (a.socio?.nombre || '').toLowerCase()
       const nombreB = (b.socio?.nombre || '').toLowerCase()
@@ -940,7 +944,7 @@ async function exportarCierreAExcel() {
     construirHojaUtilidadesPorSocio(wb, datosOrdenados)
 
     const nombreArchivo = `Cierre_Natillera_${(natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
-    XLSX.writeFile(wb, nombreArchivo)
+    guardarLibroXlsx(XLSX, wb, nombreArchivo)
     notificationStore.exito('El archivo se descargó correctamente.', 'Excel exportado')
   } catch (e) {
     console.error('Error exportando cierre a Excel:', e)
@@ -1103,10 +1107,10 @@ function textoComprobanteSocio(dato) {
   const lineas = [
     `Hola ${nombre}, este es tu comprobante del cierre de *${nombreNatillera}*.`,
     '',
-    `Ahorro: $${formatMoney(dato.ahorro)}`,
-    `Utilidades: $${formatMoney(dato.utilidades)}`
+    // Netos de administración, igual que el comprobante: al socio no se le muestra aparte.
+    `Ahorro: $${formatMoney(dato.neto?.ahorro ?? dato.ahorro)}`,
+    `Utilidades: $${formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidades)}`
   ]
-  if ((dato.aporteAdministracion || 0) > 0) lineas.push(`Administración: −$${formatMoney(dato.aporteAdministracion)}`)
   if ((dato.descuentos || 0) > 0) lineas.push(`Descuentos: −$${formatMoney(dato.descuentos)}`)
   lineas.push('')
   lineas.push(totalFinal >= 0
@@ -1144,7 +1148,7 @@ function htmlComprobanteSocio(dato) {
           </tr>
           <tr>
             <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Total Ahorro</td>
-            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.ahorro)}</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.neto?.ahorro ?? dato.ahorro)}</td>
           </tr>
           <tr>
             <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Descuentos</td>
@@ -1152,7 +1156,7 @@ function htmlComprobanteSocio(dato) {
           </tr>
           <tr>
             <td style="border: 1px solid #d1d5db; padding: 6px 10px; font-weight: 600; color: #374151;">Ganancias</td>
-            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.utilidadesTotal)}</td>
+            <td style="border: 1px solid #d1d5db; padding: 6px 10px; text-align: right; color: #111827;" colspan="3">$${formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidadesTotal)}</td>
           </tr>
           <tr>
             <td style="border: 1px solid #d1d5db; padding: 8px 10px; font-weight: 700; background-color: #e5e7eb; color: #000000; text-transform: uppercase;">Total a entregar</td>
@@ -1189,18 +1193,72 @@ function exportarComprobanteCierrePdf() {
   const nombreNatillera = natillera.value?.nombre || 'Natillera'
   const partes = seleccionados.map(d => htmlComprobanteSocio(d, nombreNatillera))
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comprobante de cierre - ${nombreNatillera}</title><style>body{font-family:system-ui,sans-serif;padding:1rem}.socio{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid #eee}</style></head><body><h1 style="margin-bottom:1.5rem">Comprobante de cierre - ${nombreNatillera}</h1>${partes.map(p => `<div class="socio">${p}</div>`).join('')}</body></html>`
-  const w = window.open('', '_blank')
-  if (!w) {
-    alert('Permite ventanas emergentes para exportar el comprobante.')
+  imprimirEnIframe(html)
+}
+
+// Se imprime desde un iframe oculto de la propia página y no desde `window.open`:
+// en iOS `print()` no bloquea, así que el `close()` que venía detrás cerraba la
+// ventana antes de que saliera el diálogo; y en la PWA instalada `window.open`
+// abre Safari fuera de la app (o nada). El iframe tampoco depende de permitir
+// ventanas emergentes.
+let iframeImpresion = null
+let temporizadorRetiroImpresion = null
+
+function retirarIframeImpresion() {
+  if (temporizadorRetiroImpresion) {
+    clearTimeout(temporizadorRetiroImpresion)
+    temporizadorRetiroImpresion = null
+  }
+  iframeImpresion?.remove()
+  iframeImpresion = null
+}
+
+function imprimirEnIframe(html) {
+  retirarIframeImpresion()
+  const iframe = document.createElement('iframe')
+  iframe.setAttribute('aria-hidden', 'true')
+  iframe.setAttribute('tabindex', '-1')
+  // Fuera de la vista pero con tamaño real: con `display:none` o 0×0 Safari
+  // imprime una página en blanco.
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:600px;border:0;opacity:0;pointer-events:none'
+  document.body.appendChild(iframe)
+  iframeImpresion = iframe
+
+  const ventana = iframe.contentWindow
+  const doc = iframe.contentDocument || ventana?.document
+  if (!ventana || !doc) {
+    retirarIframeImpresion()
+    alert('No se pudo preparar el comprobante para imprimir.')
     return
   }
-  w.document.write(html)
-  w.document.close()
-  w.focus()
-  setTimeout(() => {
-    w.print()
-    w.close()
-  }, 250)
+  doc.open()
+  doc.write(html)
+  doc.close()
+
+  let impreso = false
+  const imprimir = () => {
+    if (impreso || iframeImpresion !== iframe) return
+    impreso = true
+    ventana.addEventListener('afterprint', () => {
+      // Un respiro: en algunos navegadores `afterprint` llega antes de soltar el documento.
+      setTimeout(() => { if (iframeImpresion === iframe) retirarIframeImpresion() }, 500)
+    }, { once: true })
+    ventana.focus()
+    ventana.print()
+    // Reserva por si `afterprint` no llega (iOS no siempre lo emite). Un minuto
+    // deja tiempo de sobra al diálogo, que en iOS no bloquea este hilo.
+    temporizadorRetiroImpresion = setTimeout(() => {
+      if (iframeImpresion === iframe) retirarIframeImpresion()
+    }, 60000)
+  }
+  const fuentesListas = doc.fonts?.ready ?? Promise.resolve()
+  if (doc.readyState === 'complete') {
+    fuentesListas.then(imprimir, imprimir)
+  } else {
+    iframe.addEventListener('load', () => fuentesListas.then(imprimir, imprimir), { once: true })
+  }
+  // Por si `load` ya pasó durante `document.write` y no vuelve a dispararse.
+  setTimeout(imprimir, 1000)
 }
 
 onMounted(async () => {
@@ -1278,6 +1336,7 @@ onUnmounted(() => {
     scrollContainerMain = null
   }
   window.removeEventListener('scroll', handleScrollArriba)
+  retirarIframeImpresion()
 })
 </script>
 

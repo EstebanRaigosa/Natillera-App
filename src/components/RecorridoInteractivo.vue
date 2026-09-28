@@ -8,8 +8,8 @@
         aria-modal="true"
         aria-roledescription="recorrido guiado"
         :aria-label="pasoActual.titulo"
-        @wheel.prevent
-        @touchmove.prevent
+        @wheel="cortarDesplazamiento"
+        @touchmove="cortarDesplazamiento"
       >
         <!--
           Bloqueo total. Mientras dura el recorrido solo responde la tarjeta: tocar
@@ -235,6 +235,8 @@
  *   §5  Sin useBodyScrollLock: el `position: fixed` que pone en el body anula el
  *       scrollIntoView. Se cortan el dedo (touch-action + touchmove), la rueda y
  *       las teclas de desplazamiento; el scroll programado sigue funcionando.
+ *       Única salvedad: el cuerpo de la tarjeta, que en pantallas bajas (móvil en
+ *       horizontal) tiene scroll propio para que los botones no queden fuera.
  *   §7  Teleport a body.
  *   §4  Tarjeta con safe-area y, anclada abajo, `useTapadoInferior`.
  *   §10 Keyframes con -webkit-, translate3d y prefers-reduced-motion.
@@ -897,6 +899,16 @@ function alTeclado(e) {
   if (TECLAS_SCROLL.has(e.key) && !(enBoton && e.key === ' ')) e.preventDefault()
 }
 
+// Corta arrastre y rueda salvo dentro del cuerpo de la tarjeta cuando de verdad desborda:
+// en horizontal la tarjeta puede no caber, y sin ese scroll el usuario no alcanzaba
+// «Siguiente» ni «Saltar» y se quedaba atrapado en el recorrido.
+function cortarDesplazamiento(e) {
+  const zona = e.target instanceof Element ? e.target.closest('.rec__cuerpo') : null
+  const desborda = zona && tarjeta.value?.contains(zona) && zona.scrollHeight > zona.clientHeight + 1
+  if (desborda) return
+  if (e.cancelable) e.preventDefault()
+}
+
 function alEnfocar(e) {
   if (!props.activo || tarjeta.value?.contains(e.target)) return
   botonPrincipal.value?.focus({ preventScroll: true })
@@ -1111,6 +1123,12 @@ onBeforeUnmount(() => {
   position: absolute;
   z-index: 2;
   box-sizing: border-box;
+  /* Nunca más alta que la pantalla: en horizontal no cabía y los botones quedaban fuera.
+     Columna flexible para que lo que ceda sea el cuerpo (con scroll) y no las acciones. */
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   padding: 14px 16px 16px;
   border-radius: 24px;
   background: #ffffff;
@@ -1158,6 +1176,7 @@ onBeforeUnmount(() => {
 
 /* Progreso segmentado */
 .rec__progreso {
+  flex-shrink: 0;
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
@@ -1583,6 +1602,7 @@ onBeforeUnmount(() => {
 
 /* Acciones */
 .rec__acciones {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1917,6 +1937,31 @@ onBeforeUnmount(() => {
 @keyframes rec-alcancia {
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   62% { transform: translate3d(0, -3px, 0) scale(1.05); }
+}
+
+/* Cuerpo de la tarjeta: es lo que cede cuando no cabe. El scroll solo se activa en
+   pantallas bajas: con `overflow` siempre puesto, el confeti del final quedaría recortado.
+   Su propio scroll hace de contenedor para `touch-action`, así que el `none` de `.rec`
+   no le alcanza; `overscroll-behavior` evita que el gesto pase a la página. */
+.rec__cuerpo {
+  min-height: 0;
+  flex: 0 1 auto;
+}
+
+@media (max-height: 600px) {
+  .rec__cuerpo {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
+/* Móvil en horizontal: el héroe animado se come media pantalla; fuera. */
+@media (max-height: 420px) {
+  .rec__hero {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -314,16 +314,16 @@
                 type="button"
                 @click="aceptarInvitacionCompacta(inv)"
                 :disabled="procesandoInvitacionCompacta === inv.id"
-                class="inline-flex h-8 min-w-[4.5rem] items-center justify-center rounded-full bg-gradient-to-b from-emerald-600 to-emerald-800 px-3 text-[10px] font-bold text-white shadow-md shadow-emerald-900/30 ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50 sm:h-7 sm:min-w-[4.25rem] sm:px-2.5"
+                class="inline-flex h-11 min-w-[4.5rem] touch-manipulation items-center justify-center rounded-full bg-gradient-to-b from-emerald-600 to-emerald-800 px-3 text-[10px] font-bold text-white shadow-md shadow-emerald-900/30 ring-1 ring-white/20 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50 sm:min-w-[4.25rem] sm:px-2.5"
               >
                 <span v-if="procesandoInvitacionCompacta !== inv.id">Aceptar</span>
-                <span v-else class="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" aria-hidden="true" />
+                <CargaBoton v-else pequena />
               </button>
               <button
                 type="button"
                 @click="abrirModalRechazarInvitacionCompacta(inv)"
                 :disabled="procesandoInvitacionCompacta === inv.id"
-                class="inline-flex h-8 min-w-[4.5rem] items-center justify-center rounded-full border border-slate-300/90 bg-white/90 px-3 text-[10px] font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 sm:h-7 sm:min-w-[4.25rem] sm:px-2.5"
+                class="inline-flex h-11 min-w-[4.5rem] touch-manipulation items-center justify-center rounded-full border border-slate-300/90 bg-white/90 px-3 text-[10px] font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 sm:min-w-[4.25rem] sm:px-2.5"
               >
                 Rechazar
               </button>
@@ -685,11 +685,14 @@
       :show="!!modalDetalle"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] overflow-y-auto"
+      card-class="relative max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 max-h-[90vh] max-h-[90dvh] flex flex-col min-h-0"
       @close="modalDetalle = false"
     >
+        <!-- El scroll no puede vivir en la card: en iOS ModalWrapper la fuerza a overflow:hidden
+             en columna flex, y con el scroll ahí el contenido quedaba cortado sin poder deslizar.
+             Cabecera y pie fijos (flex-shrink-0) y el cuerpo es el único que desplaza. -->
         <!-- Header con gradiente -->
-        <div class="bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
+        <div class="flex-shrink-0 bg-gradient-to-br from-natillera-500 via-emerald-500 to-teal-600 p-6 text-white relative overflow-hidden">
           <!-- Efectos decorativos -->
           <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
           <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12 blur-xl"></div>
@@ -710,8 +713,10 @@
                 </div>
               </div>
               <button 
+                type="button"
                 @click="modalDetalle = false"
-                class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors"
+                aria-label="Cerrar detalle del socio"
+                class="w-11 h-11 flex-shrink-0 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors touch-manipulation"
               >
                 <XMarkIcon class="w-5 h-5" />
               </button>
@@ -719,7 +724,7 @@
           </div>
         </div>
         <!-- Contenido -->
-        <div class="p-6 space-y-5">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-6 space-y-5">
           <!-- Valor de la cuota -->
           <div class="relative bg-gradient-to-br from-natillera-50 to-emerald-50 p-5 rounded-xl border border-natillera-200 shadow-sm">
             <div class="flex items-center gap-3 mb-2">
@@ -760,8 +765,10 @@
                 v-if="socioSeleccionado?.socio?.telefono"
                 :href="`https://wa.me/${numeroWhatsApp(socioSeleccionado.socio.telefono.replace(/\D/g, ''))}`"
                 target="_blank"
-                class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors shadow-md hover:shadow-lg flex-shrink-0"
+                rel="noopener noreferrer"
+                class="btn-compartir btn-compartir--sm flex-shrink-0"
               >
+                <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
                 WhatsApp
               </a>
             </div>
@@ -791,7 +798,7 @@
           </div>
         </div>
         <!-- Footer -->
-        <div class="p-6 border-t border-gray-200 bg-gray-50">
+        <div class="flex-shrink-0 px-6 pt-6 pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] border-t border-gray-200 bg-gray-50">
           <button 
             @click="modalDetalle = false"
             class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
@@ -891,21 +898,7 @@
               @click="buscarComprobante"
             >
               <MagnifyingGlassIcon v-if="!buscandoComprobante" class="h-5 w-5" />
-              <svg
-                v-else
-                class="h-5 w-5 animate-spin"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+              <CargaBoton v-else pequena />
             </button>
           </div>
         </div>
@@ -1306,7 +1299,7 @@
             </div>
           </div>
 
-        <div class="border-t border-gray-200 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="border-t border-gray-200 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
             class="min-h-[48px] w-full rounded-full border-2 border-gray-300 bg-white px-4 py-3 font-semibold text-gray-800 transition-colors hover:bg-gray-50 touch-manipulation [-webkit-tap-highlight-color:transparent]"
@@ -1341,7 +1334,7 @@
                 :alt="socioParaCuotas.nombre"
                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 border-white/30 shadow-md object-cover flex-shrink-0"
               />
-              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0" v-else>
+              <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/30 flex-shrink-0" v-else>
                 <CalendarDaysIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div class="min-w-0 flex-1">
@@ -1356,16 +1349,20 @@
             <div class="flex items-center gap-2">
               <!-- Toggle Vista Simplificada -->
               <button 
+                type="button"
                 @click="vistaSimplificadaCuotas = !vistaSimplificadaCuotas"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+                class="flex h-11 w-11 items-center justify-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
                 :title="vistaSimplificadaCuotas ? 'Vista completa' : 'Vista simplificada'"
+                :aria-label="vistaSimplificadaCuotas ? 'Ver vista completa' : 'Ver vista simplificada'"
               >
                 <Squares2X2Icon v-if="!vistaSimplificadaCuotas" class="w-5 h-5" />
                 <Bars3Icon v-else class="w-5 h-5" />
               </button>
               <button 
+                type="button"
                 @click="cerrarModalCuotasSocio"
-                class="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+                aria-label="Cerrar cuotas del socio"
+                class="flex h-11 w-11 items-center justify-center text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors flex-shrink-0 touch-manipulation"
               >
                 <XMarkIcon class="w-5 h-5" />
               </button>
@@ -1393,7 +1390,7 @@
                 class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
               >
                 <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm">
+                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400">
                   <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
@@ -1567,12 +1564,14 @@
                   <!-- Botón WhatsApp (si aplica) -->
                   <button
                     v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.telefono"
+                    type="button"
                     @click="enviarWhatsAppCuota(cuotaData)"
-                    class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
+                    class="btn-compartir btn-compartir--sm w-full mt-2"
                     title="Enviar recordatorio por WhatsApp"
+                    aria-label="Enviar recordatorio por WhatsApp"
                   >
-                    <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                    <span class="text-sm font-semibold">Recordar cuota</span>
+                    <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
+                    <span>Recordar cuota</span>
                   </button>
                 </div>
                 <!-- Desktop: Layout horizontal original -->
@@ -1616,11 +1615,13 @@
                     <!-- Botón WhatsApp -->
                     <button
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                      type="button"
                       @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
+                      class="w-9 h-9 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
                       title="Enviar recordatorio por WhatsApp"
+                      aria-label="Enviar recordatorio por WhatsApp"
                     >
-                      <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
+                      <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
                     </button>
                   </div>
                   <!-- Fila media: Monto principal -->
@@ -1669,7 +1670,7 @@
                 class="bg-gradient-to-br from-natillera-50 via-white to-emerald-50 rounded-3xl border-4 border-natillera-300 shadow-2xl hover:shadow-3xl transition-all duration-300 overflow-hidden mb-6"
               >
                 <!-- Encabezado del mes -->
-                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400 backdrop-blur-sm">
+                <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-natillera-200 via-natillera-100 to-emerald-200 border-b-4 border-natillera-400">
                   <div class="w-10 h-10 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 border-2 border-blue-200 flex items-center justify-center text-xl sm:text-4xl shadow-md sm:shadow-xl flex-shrink-0">
                     {{ getMesEmoji(grupoMes.mes) }}
                   </div>
@@ -1838,12 +1839,14 @@
                     <!-- Botón WhatsApp (si aplica) -->
                     <button
                       v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.telefono"
+                      type="button"
                       @click="enviarWhatsAppCuota(cuotaData)"
-                      class="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2"
+                      class="btn-compartir btn-compartir--sm w-full mt-2"
                       title="Enviar recordatorio por WhatsApp"
+                      aria-label="Enviar recordatorio por WhatsApp"
                     >
-                      <ChatBubbleLeftIcon class="w-4 h-4 flex-shrink-0" />
-                      <span class="text-sm font-semibold">Recordar cuota</span>
+                      <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
+                      <span>Recordar cuota</span>
                     </button>
                   </div>
                   <!-- Desktop: Layout horizontal original -->
@@ -1887,11 +1890,13 @@
                       <!-- Botón WhatsApp -->
                       <button
                         v-if="(cuotaData.estado === 'pendiente' || cuotaData.estado === 'mora') && socioParaCuotas?.socio?.telefono"
+                        type="button"
                         @click="enviarWhatsAppCuota(cuotaData)"
-                        class="w-9 h-9 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center flex-shrink-0"
+                        class="w-9 h-9 rounded-lg text-[#1B5E37] hover:bg-[#E8F5E9] transition-colors flex items-center justify-center flex-shrink-0 touch-manipulation"
                         title="Enviar recordatorio por WhatsApp"
+                        aria-label="Enviar recordatorio por WhatsApp"
                       >
-                        <ChatBubbleLeftIcon class="w-5 h-5 flex-shrink-0" />
+                        <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
                       </button>
                     </div>
                     <!-- Fila media: Monto principal -->
@@ -1933,7 +1938,7 @@
           </div>
         </div>
         <!-- Footer -->
-        <div class="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
+        <div class="border-t border-gray-200 bg-gray-50 p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <button 
             @click="cerrarModalCuotasSocio"
             class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all text-sm sm:text-base"
@@ -1948,10 +1953,14 @@
       :z-index="50"
       align="bottom"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      card-class="card relative w-full sm:max-w-md max-h-[85vh] overflow-hidden rounded-t-3xl sm:rounded-2xl"
+      card-class="relative w-full sm:max-w-md max-h-[85vh] max-h-[85dvh] flex flex-col min-h-0 overflow-hidden rounded-t-3xl sm:rounded-2xl bg-white shadow-xl shadow-gray-900/5 border border-white/50"
       card-max-width="28rem"
       @close="modalConfigMeses = false"
     >
+      <!-- Sin la clase .card: su backdrop-blur y su fondo translúcido sobraban sobre el velo, y
+           el contenido no tenía dónde desplazar (card overflow:hidden en iOS). El cuerpo es el
+           único scroll y su último bloque lleva safe-area + barra de Safari (hoja inferior). -->
+      <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6">
         <div class="flex items-center gap-3 mb-6">
           <div class="w-12 h-12 bg-gradient-to-br from-natillera-500 to-natillera-700 rounded-xl flex items-center justify-center">
             <CalendarDaysIcon class="w-6 h-6 text-white" />
@@ -2014,7 +2023,7 @@
                 : 12 - formConfigMeses.mes_inicio + formConfigMeses.mes_fin + 1 }} meses
             </p>
           </div>
-          <div class="flex gap-3 pt-4">
+          <div class="flex gap-3 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+var(--tapado-inferior,0px))]">
             <button 
               type="button"
               @click="modalConfigMeses = false"
@@ -2031,6 +2040,7 @@
             </button>
           </div>
         </form>
+      </div>
     </ModalWrapper>
     <!-- Modal Socios en Mora -->
     <ModalWrapper
@@ -2050,7 +2060,7 @@
           
           <div class="relative z-10 flex items-start sm:items-center justify-between gap-2 sm:gap-3">
             <div class="flex items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div :class="['w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl flex items-center justify-center shadow-lg mt-0.5 sm:mt-0', sociosEnMora.length >= 3 ? 'bg-white/20 backdrop-blur-sm border border-white/30' : 'bg-white/20 backdrop-blur-sm border border-white/30']">
+              <div :class="['w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl flex items-center justify-center shadow-lg mt-0.5 sm:mt-0', sociosEnMora.length >= 3 ? 'bg-white/20 border border-white/30' : 'bg-white/20 border border-white/30']">
                 <ExclamationTriangleIcon class="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div class="min-w-0 flex-1">
@@ -2063,15 +2073,17 @@
               </div>
             </div>
             <button 
+              type="button"
               @click="modalSociosEnMora = false"
-              class="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 flex items-center justify-center transition-all mt-0.5 sm:mt-0"
+              aria-label="Cerrar socios en mora"
+              class="w-11 h-11 flex-shrink-0 rounded-lg bg-white/20 hover:bg-white/30 border border-white/30 flex items-center justify-center transition-all touch-manipulation"
             >
               <XMarkIcon class="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
           </div>
         </div>
         <!-- Contenido -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] p-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:p-6 sm:pb-[calc(1.5rem+var(--tapado-inferior,0px))] space-y-6">
           <!-- Resumen rápido -->
           <div :class="[
             'grid gap-3 sm:gap-4',
@@ -2082,7 +2094,7 @@
               : 'grid-cols-2 sm:grid-cols-2'
           ]">
             <div :class="[
-              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-white/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5',
               sociosEnMora.length >= 3 ? 'border-red-300/60 hover:border-red-400' : 'border-amber-300/60 hover:border-amber-400'
             ]">
@@ -2099,7 +2111,7 @@
             </div>
             <!-- Préstamos vencidos (solo si hay) -->
             <div v-if="totalPrestamosVencidos > 0" :class="[
-              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-white/80 rounded-2xl text-center border-2 border-purple-300/60 hover:border-purple-400 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
             ]">
               <p :class="[
@@ -2117,7 +2129,7 @@
             </div>
             <!-- Sanciones (solo si hay) -->
             <div v-if="totalSancionesMora > 0" :class="[
-              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-white/80 rounded-2xl text-center border-2 border-rose-300/60 hover:border-rose-400 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5' : 'p-4 sm:p-5'
             ]">
               <p :class="[
@@ -2130,7 +2142,7 @@
               ]">Total sanciones</p>
             </div>
             <div :class="[
-              'bg-white/80 backdrop-blur-sm rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
+              'bg-white/80 rounded-2xl text-center border-2 shadow-lg hover:shadow-xl transition-all duration-300',
               totalSancionesMora > 0 && totalPrestamosVencidos > 0 ? 'p-2 sm:p-2.5 sm:col-span-2' : 'p-4 sm:p-5',
               sociosEnMora.length >= 3 ? 'border-orange-300/60 hover:border-orange-400' : 'border-yellow-300/60 hover:border-yellow-400'
             ]">
@@ -2576,7 +2588,7 @@
         </div>
       </div>
       <div
-        class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-6 sm:pt-5"
+        class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] pt-4 [-webkit-overflow-scrolling:touch] sm:px-6 sm:pb-[calc(1.5rem+var(--tapado-inferior,0px))] sm:pt-5"
       >
         <!-- Vista detalle Rifas (al hacer clic en Rifas) -->
         <div v-if="detalleRifasAbierto" class="space-y-4">
@@ -3154,7 +3166,7 @@
 
       <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white [-webkit-overflow-scrolling:touch]">
         <!-- Filtros: chips sticky arriba -->
-        <div class="sticky top-0 z-[1] bg-white/95 backdrop-blur-sm border-b border-gray-100 px-4 py-3 sm:px-6">
+        <div class="sticky top-0 z-[1] bg-white/95 border-b border-gray-100 px-4 py-3 sm:px-6">
           <div class="flex items-center gap-2 overflow-x-auto">
             <FunnelIcon class="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
             <div class="flex items-center gap-2">
@@ -3221,7 +3233,7 @@
           </ul>
         </div>
 
-        <div class="h-[max(0.5rem,env(safe-area-inset-bottom))]" aria-hidden="true" />
+        <div class="h-[calc(max(0.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]" aria-hidden="true" />
       </div>
     </ModalWrapper>
 
@@ -3275,16 +3287,18 @@
                     <button
                       type="button"
                       @click="abrirRecordatorioParaEditar(idx)"
-                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 [-webkit-tap-highlight-color:transparent]"
+                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 [-webkit-tap-highlight-color:transparent]"
                       title="Editar"
+                      aria-label="Editar recordatorio"
                     >
                       <PencilSquareIcon class="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
                       @click="eliminarRecordatorio(item.id)"
-                      class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 [-webkit-tap-highlight-color:transparent]"
+                      class="inline-flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-md text-red-600 transition-colors hover:bg-red-50 [-webkit-tap-highlight-color:transparent]"
                       title="Eliminar"
+                      aria-label="Eliminar recordatorio"
                     >
                       <TrashIcon class="h-3.5 w-3.5" />
                     </button>
@@ -3299,7 +3313,7 @@
               Aún no tienes recordatorios. Pulsa <span class="font-semibold text-[#124d26]">Agregar recordatorio</span> para crear uno.
             </p>
           </div>
-          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 sm:gap-3 sm:p-4">
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
             <button
               type="button"
               @click="cerrarRecordatorioModal"
@@ -3329,11 +3343,11 @@
             <textarea
               v-model="recordatorioEdicion"
               rows="5"
-              class="w-full rounded-lg border border-emerald-200 bg-emerald-50/40 p-2.5 text-sm text-gray-900 placeholder-gray-500 focus:border-[#166534] focus:ring-2 focus:ring-[#166534]"
+              class="w-full rounded-lg border border-emerald-200 bg-emerald-50/40 p-2.5 text-base sm:text-sm text-gray-900 placeholder-gray-500 focus:border-[#166534] focus:ring-2 focus:ring-[#166534]"
               placeholder="Escribe aquí tu nota o recordatorio..."
             />
           </div>
-          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 sm:gap-3 sm:p-4">
+          <div class="flex flex-shrink-0 flex-row gap-2 border-t border-emerald-100/90 bg-emerald-50/95 p-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:gap-3 sm:p-4 sm:pb-[calc(1rem+var(--tapado-inferior,0px))]">
             <button
               type="button"
               @click="guardarRecordatorio"
@@ -3399,7 +3413,7 @@
             >
               <button
                 type="button"
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
                 aria-label="Cerrar"
                 @click="modalSinSocios = false"
               >
@@ -3445,7 +3459,7 @@
             </div>
           </div>
           <!-- Pie: safe-area para home indicator en iPhone -->
-          <div class="flex-shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 bg-white">
+          <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-white">
             <button
               type="button"
               @click="modalSinSocios = false; if (id && id !== 'undefined' && id !== 'null') { markPendingPrimerSocioNavTourFromModal(id); router.push(`/natilleras/${id}/socios?agregar=true`) } else { router.push('/dashboard') }"
@@ -3609,7 +3623,7 @@
         </div>
 
         <div
-          class="space-y-3 border-t border-gray-200 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+          class="space-y-3 border-t border-gray-200 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
         >
           <button
             type="button"
@@ -3641,6 +3655,8 @@
     />
 </template>
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import { numeroWhatsApp } from '../../utils/telefono'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -3722,6 +3738,7 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import { calcularEstadoRealCuota } from '../../composables/useEstadoSocio'
 import { actualizarFotoGananciasSiToca } from '../../composables/usePortalGanancias'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
+import { cerrarRecorridosDriver } from '../../composables/recorridoDriverSeguro'
 import { useModalStack } from '../../composables/useModalStack'
 import { useModalBodyScrollOverflow } from '../../composables/useModalBodyScrollOverflow'
 import {
@@ -4035,7 +4052,7 @@ const detalleOtrosAbierto = ref(false)
 const TIPOS_ACTIVIDAD_CON_DESGLOSE = ['otro', 'bingo', 'venta', 'evento', 'actividades_en_curso']
 /** Qué tipo de actividad se está desglosando: bingo, venta, evento u otro. */
 const detalleOtrosTipo = ref('otro')
-const ETIQUETAS_TIPO_ACTIVIDAD = { otro: 'Otros', bingo: 'Bingos', venta: 'Ventas', evento: 'Eventos', actividades_en_curso: 'Actividades en curso' }
+const ETIQUETAS_TIPO_ACTIVIDAD = { otro: 'Otras actividades', bingo: 'Bingos', venta: 'Ventas', evento: 'Eventos', actividades_en_curso: 'Actividades en curso' }
 const etiquetaDetalleOtros = computed(() => ETIQUETAS_TIPO_ACTIVIDAD[detalleOtrosTipo.value] || 'Actividades')
 const detalleOtros = ref({ loading: false, porActividad: [] })
 const otrosDesplegados = ref({})
@@ -4092,6 +4109,10 @@ const recordatorioEdicionId = ref(null) // uuid al editar, null al crear
 const listRecordatorios = ref([]) // { id, texto }[] desde Supabase
 const loadingRecordatorios = ref(false)
 const cargandoNatillera = ref(true) // Estado para la pantalla de carga completa
+// La pantalla de carga usa el mismo bloqueo que los modales: uno propio con position:fixed
+// en body pisaba el contador global (al terminar la carga con un modal abierto lo desbloqueaba)
+// y en iOS dejaba el documento saltando arriba al soltarlo.
+useBodyScrollLock(cargandoNatillera)
 /*
  * Se espera a que la pantalla tenga datos: arrancar la guía sobre una vista aún
  * cargando enfocaría esqueletos, o peor, secciones que todavía no existen y que
@@ -4221,17 +4242,6 @@ const formConfigMeses = ref({
   mes_fin: 11,
   anio: new Date().getFullYear()
 })
-// Funciones para controlar el scroll del body
-function bloquearScroll() {
-  document.body.style.overflow = 'hidden'
-  document.body.style.position = 'fixed'
-  document.body.style.width = '100%'
-}
-function desbloquearScroll() {
-  document.body.style.overflow = ''
-  document.body.style.position = ''
-  document.body.style.width = ''
-}
 // Función para iniciar la rotación de mensajes de carga (aleatoria)
 function iniciarRotacionMensajes() {
   // Limpiar intervalo anterior si existe
@@ -6765,7 +6775,7 @@ const { requestCloseTop: cerrarCapaDesglose } = useModalStack({
 })
 
 function labelConceptoEnDesarrollo(tipo) {
-  const labels = { sanciones: 'Sanciones', prestamos: 'Intereses de préstamos', bingo: 'Bingo', venta: 'Venta', evento: 'Evento', otro: 'Otro' }
+  const labels = { sanciones: 'Sanciones', prestamos: 'Intereses de préstamos', bingo: 'Bingo', venta: 'Venta', evento: 'Evento', otro: 'Otras actividades' }
   return labels[tipo] || tipo
 }
 function toggleRifaDesplegable(rifaId) {
@@ -6869,8 +6879,6 @@ watch(
   },
   { deep: true }
 )
-
-const esMobile = computed(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
 
 function toggleSeccion(seccion) {
   seccionActiva.value = seccionActiva.value === seccion ? null : seccion
@@ -7381,7 +7389,9 @@ watch(modalBuscarComprobante, async (isOpen) => {
     // Esperar a que el DOM se actualice y luego poner el foco
     await nextTick()
     if (inputBusquedaRef.value) {
-      inputBusquedaRef.value.focus()
+      // preventScroll: en la hoja inferior iOS desplaza el documento para "mostrar" el input
+      // mientras la hoja todavía entra, y la deja descolocada al abrirse el teclado.
+      inputBusquedaRef.value.focus({ preventScroll: true })
     }
   }
 })
@@ -7479,13 +7489,11 @@ watch(() => id.value, async (newId, oldId) => {
 // Watch para controlar el bloqueo de scroll cuando se muestra/oculta la animación
 watch(cargandoNatillera, (mostrando) => {
   if (mostrando) {
-    bloquearScroll()
     // Iniciar rotación con un pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
       iniciarRotacionMensajes()
     }, 100)
   } else {
-    desbloquearScroll()
     detenerRotacionMensajes()
   }
 }, { immediate: true })
@@ -7704,211 +7712,128 @@ onUnmounted(() => {
   }
   // Remover listener del botón atrás
   window.removeEventListener('popstate', handlePopState)
-  // Limpiar intervalos y desbloquear scroll
+  // Limpiar intervalos (el scroll lo suelta useBodyScrollLock al desmontar)
   detenerRotacionMensajes()
-  desbloquearScroll()
+  // El velo de driver.js vive en <body>: sin esto, el recorrido del menú sobrevive a la
+  // vista (p. ej. al volver deslizando en Safari) y tapa la pantalla siguiente.
+  cerrarRecorridosDriver()
 })
 </script>
 <style scoped>
-/* Animación de pulso lento para la sección de alertas */
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.92;
-  }
+/* Animaciones de la vista. Solo quedan las que usa la plantilla (las de la antigua pantalla
+   de carga, los tooltips y los float-* no tenían elementos). Llevan -webkit- y translate3d
+   porque Safari antiguo ignora @keyframes sin prefijo y, sin capa propia, las repinta en CPU
+   y tironean el scroll. Las infinitas quedan bajo prefers-reduced-motion: no-preference. */
+@-webkit-keyframes fade-in-up {
+  0% { opacity: 0; -webkit-transform: translate3d(0, 20px, 0); transform: translate3d(0, 20px, 0); }
+  100% { opacity: 1; -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
 }
-.animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
-}
-/* Estilos para tooltips - funcionan con hover y focus */
-.tooltip-container:hover .tooltip,
-.tooltip-container:focus-within .tooltip {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-/* Animación de rebote lento para el icono */
-@keyframes bounce-slow {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-.animate-bounce-slow {
-  animation: bounce-slow 2s ease-in-out infinite;
-}
-/* Efecto shimmer para llamar la atención */
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-.animate-shimmer {
-  animation: shimmer 3s ease-in-out infinite;
-}
-/* Animación de entrada para las cuotas */
 @keyframes fade-in-up {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  0% { opacity: 0; transform: translate3d(0, 20px, 0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 .animate-fade-in-up {
+  -webkit-animation: fade-in-up 0.5s ease-out forwards;
   animation: fade-in-up 0.5s ease-out forwards;
 }
-/* Animación de resaltado para cuotas en mora */
-@keyframes mora-highlight {
+/* Resaltado de cuotas en mora */
+@-webkit-keyframes mora-highlight {
   0%, 100% {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transform: scale(1);
+    -webkit-transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
     box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.6), 0 10px 10px -5px rgba(239, 68, 68, 0.4), 0 0 0 4px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.5);
-    transform: scale(1.03);
+    -webkit-transform: translate3d(0, 0, 0) scale(1.03);
+    transform: translate3d(0, 0, 0) scale(1.03);
   }
 }
-.animate-mora-highlight {
-  animation: mora-highlight 1.5s ease-in-out infinite;
-}
-/* Efecto shimmer especial para cuotas en mora */
-@keyframes shimmer-mora {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
-    opacity: 0;
-  }
-}
-.animate-shimmer-mora {
-  animation: shimmer-mora 2s ease-in-out infinite;
-}
-/* Animación de entrada elegante para la sección de alerta */
-@keyframes fade-in-alerta {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fade-in-alerta {
-  animation: fade-in-alerta 0.6s ease-out forwards;
-}
-/* Efecto de barrido automático (como hover periódico) */
-@keyframes sweep-hover {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-    opacity: 0;
-  }
-  5% {
-    opacity: 0.8;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  95% {
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateX(100%) skewX(-15deg);
-    opacity: 0;
-  }
-}
-.animate-sweep-hover {
-  animation: sweep-hover 3.5s ease-in-out infinite;
-  width: 80%;
-}
-/* Animaciones para la pantalla de carga */
-@keyframes spin-smooth {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin-smooth {
-  animation: spin-smooth 1s linear infinite;
-}
-.animate-spin-reverse {
-  animation: spin-smooth 0.8s linear infinite reverse;
-}
-@keyframes glow-pulse {
+@keyframes mora-highlight {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 0 40px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    box-shadow: 0 0 30px rgba(34, 197, 94, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.6), 0 10px 10px -5px rgba(239, 68, 68, 0.4), 0 0 0 4px rgba(239, 68, 68, 0.3), 0 0 20px rgba(239, 68, 68, 0.5);
+    transform: translate3d(0, 0, 0) scale(1.03);
   }
 }
-.animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
+@-webkit-keyframes shimmer-mora {
+  0% { -webkit-transform: translate3d(-100%, 0, 0) skewX(-15deg); transform: translate3d(-100%, 0, 0) skewX(-15deg); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { -webkit-transform: translate3d(200%, 0, 0) skewX(-15deg); transform: translate3d(200%, 0, 0) skewX(-15deg); opacity: 0; }
+}
+@keyframes shimmer-mora {
+  0% { transform: translate3d(-100%, 0, 0) skewX(-15deg); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translate3d(200%, 0, 0) skewX(-15deg); opacity: 0; }
 }
 
 /* Notificación compacta de invitación colaborador */
+@-webkit-keyframes fade-in-invite {
+  0% { opacity: 0; -webkit-transform: translate3d(0, -6px, 0) scale(0.98); transform: translate3d(0, -6px, 0) scale(0.98); }
+  100% { opacity: 1; -webkit-transform: translate3d(0, 0, 0) scale(1); transform: translate3d(0, 0, 0) scale(1); }
+}
 @keyframes fade-in-invite {
-  0% {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  0% { opacity: 0; transform: translate3d(0, -6px, 0) scale(0.98); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
 }
 .animate-fade-in-invite {
+  -webkit-animation: fade-in-invite 0.45s ease-out forwards;
   animation: fade-in-invite 0.45s ease-out forwards;
 }
-@keyframes sweep-invite {
-  0% {
-    transform: translateX(-120%) skewX(-12deg);
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.5;
-  }
-  35% {
-    opacity: 0.85;
-  }
-  100% {
-    transform: translateX(120%) skewX(-12deg);
-    opacity: 0;
-  }
+@-webkit-keyframes sweep-invite {
+  0% { -webkit-transform: translate3d(-120%, 0, 0) skewX(-12deg); transform: translate3d(-120%, 0, 0) skewX(-12deg); opacity: 0; }
+  12% { opacity: 0.5; }
+  35% { opacity: 0.85; }
+  100% { -webkit-transform: translate3d(120%, 0, 0) skewX(-12deg); transform: translate3d(120%, 0, 0) skewX(-12deg); opacity: 0; }
 }
-.animate-sweep-invite {
-  animation: sweep-invite 4s ease-in-out infinite;
+@keyframes sweep-invite {
+  0% { transform: translate3d(-120%, 0, 0) skewX(-12deg); opacity: 0; }
+  12% { opacity: 0.5; }
+  35% { opacity: 0.85; }
+  100% { transform: translate3d(120%, 0, 0) skewX(-12deg); opacity: 0; }
+}
+@-webkit-keyframes bounce-slow-invite {
+  0%, 100% { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+  50% { -webkit-transform: translate3d(0, -2px, 0); transform: translate3d(0, -2px, 0); }
 }
 @keyframes bounce-slow-invite {
-  0%,
-  100% {
-    transform: translateY(0);
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -2px, 0); }
+}
+
+/* Infinitas: solo si el usuario no pidió reducir movimiento. Sin animación el resaltado de
+   mora queda en reposo y los barridos se ocultan (quietos serían una franja fija). */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-mora-highlight {
+    -webkit-animation: mora-highlight 1.5s ease-in-out infinite;
+    animation: mora-highlight 1.5s ease-in-out infinite;
   }
-  50% {
-    transform: translateY(-2px);
+  .animate-shimmer-mora {
+    -webkit-animation: shimmer-mora 2s ease-in-out infinite;
+    animation: shimmer-mora 2s ease-in-out infinite;
+  }
+  .animate-sweep-invite {
+    -webkit-animation: sweep-invite 4s ease-in-out infinite;
+    animation: sweep-invite 4s ease-in-out infinite;
+  }
+  .animate-bounce-slow-invite {
+    -webkit-animation: bounce-slow-invite 2.2s ease-in-out infinite;
+    animation: bounce-slow-invite 2.2s ease-in-out infinite;
   }
 }
-.animate-bounce-slow-invite {
-  animation: bounce-slow-invite 2.2s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-fade-in-invite {
+    -webkit-animation: none;
+    animation: none;
+  }
+  .animate-shimmer-mora,
+  .animate-sweep-invite {
+    opacity: 0;
+  }
 }
 
 .invitacion-notify-card {
@@ -7919,59 +7844,6 @@ onUnmounted(() => {
     0 12px 28px -8px rgba(5, 80, 60, 0.18),
     0 4px 12px -4px rgba(16, 185, 129, 0.12),
     0 0 0 1px rgba(16, 185, 129, 0.12);
-}
-
-@keyframes float-1 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(10px, -15px) scale(1.2);
-    opacity: 1;
-  }
-}
-@keyframes float-2 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(-12px, 10px) scale(1.1);
-    opacity: 1;
-  }
-}
-@keyframes float-3 {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(8px, 12px) scale(1.15);
-    opacity: 1;
-  }
-}
-.animate-float-1 {
-  animation: float-1 2s ease-in-out infinite;
-}
-.animate-float-2 {
-  animation: float-2 2.5s ease-in-out infinite;
-  animation-delay: 0.5s;
-}
-.animate-float-3 {
-  animation: float-3 2.2s ease-in-out infinite;
-  animation-delay: 1s;
-}
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
 }
 
 /* ─── Empty state: sin movimientos (1 col móvil, 2 cols desktop) ─── */

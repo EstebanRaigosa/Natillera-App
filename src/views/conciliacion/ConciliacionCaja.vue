@@ -800,6 +800,7 @@
 </template>
 
 <script setup>
+import { cargarXlsx, guardarLibroXlsx, precargarXlsxEnIos, xlsxListo } from '../../utils/exportarXlsx'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
@@ -1496,17 +1497,21 @@ const exportando = ref(false)
 
 // xlsx-js-style pesa ~600 KB: se carga solo al exportar para no inflar el chunk de la vista.
 let XLSX = null
-async function asegurarXLSX() {
-  if (XLSX) return
-  const modulo = await import('xlsx-js-style')
-  XLSX = modulo.default || modulo
+// Devuelve null (sin nada que esperar) si ya está precargado: en iOS compartir el
+// archivo necesita que no haya ningún `await` entre el toque y `navigator.share`.
+function asegurarXLSX() {
+  XLSX = xlsxListo()
+  if (XLSX) return null
+  return cargarXlsx().then(m => { XLSX = m })
 }
+onMounted(precargarXlsxEnIos)
 
 const exportarExcel = async () => {
   if (apuntesVisibles.value.length === 0) return
   exportando.value = true
   try {
-    await asegurarXLSX()
+    const cargaXlsx = asegurarXLSX()
+    if (cargaXlsx) await cargaXlsx
     const filas = apuntesVisibles.value.map(a => ({
       Fecha: formatDate(a.fecha),
       Concepto: a.concepto,
@@ -1570,7 +1575,7 @@ const exportarExcel = async () => {
     const libro = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libro, hoja, 'Conciliación')
     const nombre = (natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')
-    XLSX.writeFile(libro, `Conciliacion_${nombre}_${filtroDesde.value}_a_${filtroHasta.value}.xlsx`)
+    guardarLibroXlsx(XLSX, libro, `Conciliacion_${nombre}_${filtroDesde.value}_a_${filtroHasta.value}.xlsx`)
     notificaciones.exito('Archivo descargado con los filtros aplicados.', 'Exportado')
   } catch (e) {
     console.error('Error exportando la conciliación:', e)
@@ -1591,12 +1596,16 @@ const cerrarDropdownFuera = (evento) => {
   dropdownConceptos.value = false
 }
 
+// Además de `click`, `touchstart`: Safari en iOS no emite click al tocar zonas no
+// interactivas (texto, fondos), y el desplegable se quedaba abierto.
 onMounted(() => {
   document.addEventListener('click', cerrarDropdownFuera)
+  document.addEventListener('touchstart', cerrarDropdownFuera, { passive: true })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', cerrarDropdownFuera)
+  document.removeEventListener('touchstart', cerrarDropdownFuera)
   clearTimeout(temporizadorGuiaConciliacion)
 })
 

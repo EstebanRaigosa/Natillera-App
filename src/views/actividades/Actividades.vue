@@ -170,7 +170,7 @@
           <NatiscrollHint :show="hayMasBienvenida" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="cerrarModalBienvenida" class="ds-btn ds-btn--primary w-full">
             Entendido
           </button>
@@ -264,10 +264,11 @@
             autocomplete="off"
             @keydown.esc="busquedaActividades = ''"
           />
+          <!-- La X se ve de 28px; el ::before la lleva a 44px de área táctil sin mover el diseño -->
           <button
             v-if="busquedaActividades"
             type="button"
-            class="ds-search__clear"
+            class="ds-search__clear relative before:absolute before:-inset-2 before:content-['']"
             aria-label="Limpiar búsqueda"
             @click="busquedaActividades = ''"
           >
@@ -330,6 +331,7 @@
           @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
           @eliminar="confirmarEliminarActividad(actividad)"
           @ver-desglose="abrirModalDesglosePagosRifa(actividad)"
+          @ver-por-pagar="abrirModalPorPagarRifa(actividad)"
           @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(actividad)"
           @ver-miembros="abrirModalMiembrosPagaron(actividad)"
           @registrar-gastos="abrirModalRegistrarGastos(actividad)"
@@ -467,6 +469,7 @@
                     @click="actividad.tipo === 'rifa' && actividad.estado === 'liquidada' ? abrirModalGanadorRifa(actividad) : (actividad.estado === 'en_curso' ? verDetalleActividad(actividad) : null)"
                     @eliminar="confirmarEliminarActividad(actividad)"
                     @ver-desglose="abrirModalDesglosePagosRifa(actividad)"
+                    @ver-por-pagar="abrirModalPorPagarRifa(actividad)"
                     @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(actividad)"
                     @ver-miembros="abrirModalMiembrosPagaron(actividad)"
                     @registrar-gastos="abrirModalRegistrarGastos(actividad)"
@@ -485,6 +488,7 @@
               @click="item.actividad.tipo === 'rifa' && item.actividad.estado === 'liquidada' ? abrirModalGanadorRifa(item.actividad) : (item.actividad.estado === 'en_curso' ? verDetalleActividad(item.actividad) : null)"
               @eliminar="confirmarEliminarActividad(item.actividad)"
               @ver-desglose="abrirModalDesglosePagosRifa(item.actividad)"
+              @ver-por-pagar="abrirModalPorPagarRifa(item.actividad)"
               @cambiar-forma-pago="abrirModalFormaPagoLiquidacion(item.actividad)"
               @ver-miembros="abrirModalMiembrosPagaron(item.actividad)"
               @registrar-gastos="abrirModalRegistrarGastos(item.actividad)"
@@ -512,6 +516,7 @@
       :show="!!modalCobroSocio"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -572,7 +577,7 @@
                 aria-label="Buscar socio"
                 autocomplete="off"
               />
-              <button v-if="busquedaSocioCobro" type="button" class="ds-search__clear" aria-label="Limpiar búsqueda" @click="busquedaSocioCobro = ''">
+              <button v-if="busquedaSocioCobro" type="button" class="ds-search__clear relative before:absolute before:-inset-2 before:content-['']" aria-label="Limpiar búsqueda" @click="busquedaSocioCobro = ''">
                 <XMarkIcon class="w-4 h-4" />
               </button>
             </div>
@@ -708,7 +713,7 @@
           <NatiscrollHint :show="hayMasCobroSocio" />
         </div>
 
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div v-if="pasoCobro === 'actividades' && pendientesSocioCobro.length" class="mb-2 flex items-baseline justify-between">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total a cobrar</span>
             <span class="text-lg font-bold tabular-nums text-natillera-600">${{ formatMoney(totalCobroSocio) }}</span>
@@ -823,24 +828,26 @@
           <NatiscrollHint :show="hayMasComprobante" />
         </div>
 
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button
               type="button"
-              class="btn-modal-secondary flex-1 disabled:opacity-50"
-              :disabled="generandoImagenComprobante"
+              class="btn-descargar flex-1"
+              :disabled="generandoImagenComprobante || !imagenComprobante"
               @click="descargarComprobanteActividad"
             >
-              <ArrowDownTrayIcon class="w-5 h-5" />
+              <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
               Descargar
             </button>
             <button
               type="button"
-              class="btn-modal-primary flex-1 disabled:opacity-50"
-              :disabled="generandoImagenComprobante"
+              class="btn-compartir flex-1"
+              :disabled="generandoImagenComprobante || !imagenComprobante"
               @click="compartirComprobanteActividad"
             >
-              {{ generandoImagenComprobante ? 'Generando…' : 'Compartir' }}
+              <CargaBoton v-if="generandoImagenComprobante" pequena />
+              <ShareIcon v-else class="w-5 h-5 flex-shrink-0" />
+              {{ generandoImagenComprobante ? 'Preparando…' : 'Compartir' }}
             </button>
           </div>
         </div>
@@ -850,6 +857,7 @@
       :show="!!modalNuevaActividad"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -925,7 +933,7 @@
             <!-- Paso «qué actividad es» del asistente -->
             <div v-show="pasoWizard === 'que'" class="space-y-4">
             <!-- Bloque: Tipo de proceso -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Tipo de proceso</label>
               <div class="flex gap-2 rounded-xl bg-slate-100 p-1.5 w-full">
                 <button
@@ -964,7 +972,7 @@
               </div>
             </div>
             <!-- Bloque: Actividad + Modo rifa (el modo solo existe para rifas en curso) -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5 relative" :class="{ 'z-[60]': dropdownTipoActividad }">
               <div class="grid gap-4" :class="muestraModoRifa ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
                 <!-- Columna: Tipo de actividad (dropdown personalizado con ítems estilizados) -->
                 <div class="flex flex-col sm:min-h-[7.5rem]" :class="{ 'sm:min-h-0': !muestraModoRifa }">
@@ -1090,7 +1098,7 @@
               </div>
             </div>
             <!-- Bloque: Descripción + Repetir -->
-            <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+            <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Descripción <span class="text-red-500">*</span></label>
               <textarea
                
@@ -1126,18 +1134,22 @@
             <!-- Período / Mes (solo en curso) - arriba -->
             <template v-if="formActividad.tipoProceso === 'en_curso'">
               <template v-if="!formActividad.esMultiplesMeses">
-                <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+                <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
                   <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Período y fecha</label>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="flex flex-col">
                       <label class="text-xs text-slate-500 mb-2 block">Período *</label>
-                      <select 
-                        v-model="periodoSeleccionadoValue" 
-                        class="w-full h-11 px-3 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white appearance-none cursor-pointer"
-                      >
-                        <option :value="null">Seleccione período</option>
-                        <option v-for="opcion in opcionesPeriodo" :key="opcion.value" :value="opcion.value">{{ opcion.label }}</option>
-                      </select>
+                      <!-- Con appearance-none iOS no dibuja flecha: va un chevron propio. text-base (16px) evita el zoom al enfocar -->
+                      <div class="relative">
+                        <select 
+                          v-model="periodoSeleccionadoValue" 
+                          class="w-full h-11 pl-3 pr-10 py-2.5 rounded-xl border-2 border-slate-200 bg-slate-50/50 text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-natillera-500/30 focus:border-natillera-400 focus:bg-white appearance-none cursor-pointer"
+                        >
+                          <option :value="null">Seleccione período</option>
+                          <option v-for="opcion in opcionesPeriodo" :key="opcion.value" :value="opcion.value">{{ opcion.label }}</option>
+                        </select>
+                        <ChevronDownIcon class="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                      </div>
                       <p v-if="opcionesPeriodo.length === 0" class="text-xs text-slate-500 mt-1.5">No hay períodos disponibles</p>
                     </div>
                     <div class="flex flex-col">
@@ -1203,7 +1215,7 @@
               </template>
               <!-- Panel para múltiples meses -->
               <template v-else>
-                <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5 space-y-4">
+                <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5 space-y-4">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Selecciona los meses *</label>
                     <!-- Par excluyente: el verde marca cuál está aplicado. Con una selección
@@ -1283,7 +1295,7 @@
               </template>
             </template>
             <!-- Fecha de juego de la rifa (solo rifas en curso) -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso'" class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Fecha de juego de la rifa *</label>
               <p class="text-xs text-slate-500 mb-3">Indica cuándo se jugará el sorteo. Si necesitas una fecha concreta, elige "Fecha específica" y asigna la fecha por mes.</p>
               <div class="space-y-3">
@@ -1336,7 +1348,7 @@
             <div v-show="pasoWizard === 'valores'" class="space-y-4">
             <!-- Números por socio: solo si reparte la app. Vendiéndolos tú, cada socio se
                  queda con los que compre, así que el campo no tiene sentido. -->
-            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.tipoRifa === 'aleatoria'" class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+            <div v-if="formActividad.tipo === 'rifa' && formActividad.tipoProceso === 'en_curso' && formActividad.tipoRifa === 'aleatoria'" class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Números por socio <span class="text-red-500">*</span></label>
               <input 
                 v-model.number="formActividad.cantidadNumerosPorSocio"
@@ -1355,7 +1367,7 @@
             </div>
             <!-- Bloque: Liquidar -->
             <template v-if="formActividad.tipoProceso === 'liquidar'">
-              <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
                 <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Valores de la actividad</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div class="flex flex-col">
@@ -1395,7 +1407,7 @@
             <!-- Formulario para Actividad en curso -->
             <template v-else>
               <!-- Bloque: Asignación y valores -->
-              <div class="rounded-xl border border-natillera-200/60 bg-white/90 backdrop-blur-sm p-4 shadow-md shadow-natillera-900/5">
+              <div class="rounded-xl border border-natillera-200/60 bg-white/90 p-4 shadow-md shadow-natillera-900/5">
                 <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">Asignación de valores</label>
                 <div class="flex rounded-xl bg-slate-100 p-1 mb-4 w-full">
                   <button type="button" @click="formActividad.tipoValores = 'iguales'; aplicarValorIgual()"
@@ -1477,7 +1489,7 @@
           <NatiscrollHint :show="hayMasNuevaActividad" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <!-- Qué falta para poder seguir; evita un «Siguiente» apagado sin explicación -->
           <p v-if="!esUltimoPasoWizard && faltaEnPasoWizard" class="mb-2 text-center text-xs text-slate-500">
             {{ faltaEnPasoWizard }}
@@ -1553,11 +1565,13 @@
             </button>
           </div>
         </div>
-        <!-- Cuerpo scrolleable + natiscroll -->
+        <!-- Cuerpo scrolleable + natiscroll. Sin pie (no rifa o solo lectura) el cuerpo es el
+             último bloque de la hoja: lleva él la safe-area y lo que tapa la barra de Safari -->
         <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="refScrollDetalle"
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-6"
+          :class="{ 'pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] sm:pb-[calc(max(1.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]': !(actividadSeleccionada?.tipo === 'rifa' && !soloLectura) }"
           @scroll.passive="onScrollDetalle"
         >
           <!-- Fechas (info secundaria: chips compactos) -->
@@ -1733,7 +1747,8 @@
                   <button
                     v-if="busquedaNumero.trim()"
                     type="button"
-                    class="pr-3 flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600"
+                    class="flex h-11 w-11 flex-shrink-0 items-center justify-center text-gray-400 hover:text-gray-600 touch-manipulation"
+                    aria-label="Limpiar búsqueda"
                     @click="busquedaNumero = ''"
                   >
                     <XMarkIcon class="w-4 h-4" />
@@ -2067,7 +2082,7 @@
         </div>
         <!-- Footer de acciones fijo -->
         <!-- Footer de liquidación: solo disponible (visible + habilitado) para actividades tipo rifa -->
-        <div v-if="actividadSeleccionada.tipo === 'rifa' && !soloLectura" class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div v-if="actividadSeleccionada.tipo === 'rifa' && !soloLectura" class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button
             type="button"
             @click="abrirModalLiquidar"
@@ -2083,6 +2098,7 @@
       :show="!!(modalLiquidarActividad && actividadSeleccionada)"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -2255,7 +2271,7 @@
           <NatiscrollHint :show="hayMasLiquidar" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalLiquidarActividad = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button
@@ -2365,7 +2381,7 @@
           <NatiscrollHint :show="hayMasConfirmarNegativa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalConfirmarLiquidacionNegativa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <!-- Acción destructiva/irreversible → rojo (excepción a btn-modal-primary verde marca) -->
@@ -2475,96 +2491,36 @@
           <div v-else-if="actividadSeleccionada.numero_ganador == null || actividadSeleccionada.numero_ganador === ''" class="text-center py-3">
             <p class="text-xs text-gray-500 italic">Datos del ganador no registrados para esta rifa.</p>
           </div>
-          <!-- Pagos de la rifa: quién ya pagó y quién falta -->
-          <div class="rounded-xl border border-gray-200 bg-white p-3">
-            <div class="flex items-baseline justify-between gap-2 mb-2">
-              <p class="font-bold text-sm text-gray-800">Pagos de la rifa</p>
-              <p v-if="saldoPendienteRifa > 0" class="text-xs text-red-600 font-semibold">Faltan ${{ formatMoney(saldoPendienteRifa) }}</p>
-            </div>
-            <CargaCaja v-if="cargandoPagosRifaLiquidada" texto="Cargando pagos de la rifa" />
-            <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-gray-500 italic py-2">No hay números asignados en esta rifa.</p>
-            <template v-else>
-              <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 mb-2" role="tablist">
-                <button
-                  type="button"
-                  role="tab"
-                  :aria-selected="vistaPagosRifa === 'faltan'"
-                  class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
-                  :class="vistaPagosRifa === 'faltan' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
-                  @click="vistaPagosRifa = 'faltan'"
-                >
-                  Faltan ({{ faltanPagarRifa.length }})
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  :aria-selected="vistaPagosRifa === 'pagaron'"
-                  class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
-                  :class="vistaPagosRifa === 'pagaron' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600'"
-                  @click="vistaPagosRifa = 'pagaron'"
-                >
-                  Pagaron ({{ yaPagaronRifa.length }})
-                </button>
-              </div>
-              <ul class="divide-y divide-gray-100">
-                <li
-                  v-for="p in (vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa)"
-                  :key="p.clave"
-                  class="flex items-center gap-3 py-2"
-                >
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-gray-800 truncate">{{ p.nombre }}</p>
-                    <p v-if="p.numeros.length" class="text-xs text-gray-500 truncate">Nº {{ p.numeros.join(', ') }}</p>
-                  </div>
-                  <div class="text-right flex-shrink-0">
-                    <template v-if="p.saldo > 0">
-                      <p class="text-sm font-bold text-red-600">${{ formatMoney(p.saldo) }}</p>
-                      <p v-if="p.valorPagado > 0" class="text-[0.6875rem] text-gray-500">abonó ${{ formatMoney(p.valorPagado) }}</p>
-                    </template>
-                    <p v-else class="text-sm font-bold text-emerald-700">${{ formatMoney(p.valorPagado) }}</p>
-                  </div>
-                </li>
-              </ul>
-              <p
-                v-if="(vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa).length === 0"
-                class="text-xs text-gray-500 italic py-2 text-center"
-              >
-                {{ vistaPagosRifa === 'faltan' ? 'Todos pagaron.' : 'Nadie ha pagado todavía.' }}
-              </p>
-            </template>
-          </div>
         </div>
           <NatiscrollHint :show="hayMasGanadorRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 sm:px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-2">
-          <div class="grid gap-2" :class="isMobile ? 'grid-cols-2' : 'grid-cols-1'">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 sm:px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
+          <div class="flex gap-3">
             <button 
               type="button"
               @click="descargarTarjetaGanador"
-              :disabled="compartiendoODescargando"
-              class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              :disabled="compartiendoODescargando || !imagenGanador"
+              class="btn-descargar flex-1"
             >
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              <span>{{ compartiendoODescargando ? '...' : 'Descargar' }}</span>
+              <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+              <span>Descargar</span>
             </button>
             <button 
               v-if="isMobile"
               type="button"
               @click="compartirGanadorWhatsApp"
-              :disabled="compartiendoODescargando"
-              class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#25D366] text-white font-semibold hover:bg-[#20bd5a] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+              :disabled="compartiendoODescargando || !imagenGanador"
+              class="btn-compartir flex-1"
             >
-              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              <span>{{ compartiendoODescargando ? '...' : 'WhatsApp' }}</span>
+              <CargaBoton v-if="compartiendoODescargando" pequena />
+              <IconoWhatsApp v-else class="w-5 h-5 flex-shrink-0" />
+              <span>{{ compartiendoODescargando ? 'Preparando…' : 'WhatsApp' }}</span>
             </button>
-            <p v-else class="text-center text-xs text-gray-500 py-1.5 px-2">
-              En móvil puedes compartir por WhatsApp desde este mismo modal.
-            </p>
           </div>
-          <button type="button" @click="modalGanadorRifa = false" class="btn-modal-primary w-full">
-            Cerrar
-          </button>
+          <p v-if="!isMobile" class="text-center text-xs text-gray-500 py-1.5 px-2">
+            En móvil puedes compartir por WhatsApp desde este mismo modal.
+          </p>
           <!-- Solo en desarrollo: revertir liquidación para pruebas -->
           <button 
             v-if="isDev && !soloLectura"
@@ -2649,7 +2605,7 @@
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="actividadParaFormaPago = null" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarFormaPagoLiquidacion" :disabled="guardandoFormaPago" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -2707,13 +2663,18 @@
           class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-5"
           @scroll.passive="onScrollDesglose"
         >
-        <div class="border border-gray-200 rounded-xl overflow-hidden">
+        <!--
+          Safari (< 17) ignora `sticky` en <thead>: va en cada <th>. Y un ancestro con
+          overflow:hidden se vuelve el contenedor del sticky y no lo deja pegarse: donde hay
+          overflow:clip (recorta igual sin crear contenedor de scroll) se usa ese.
+        -->
+        <div class="border border-gray-200 rounded-xl overflow-hidden supports-[overflow:clip]:overflow-clip">
           <table class="w-full text-sm">
-            <thead class="bg-gray-100 sticky top-0">
+            <thead class="bg-gray-100">
               <tr>
-                <th class="w-12 text-center py-2.5 px-2 font-semibold text-gray-700">Nº</th>
-                <th class="text-left py-2.5 px-3 font-semibold text-gray-700">Nombre del socio</th>
-                <th class="text-right py-2.5 px-3 font-semibold text-gray-700">Valor pagado</th>
+                <th class="sticky top-0 z-[1] bg-gray-100 w-12 text-center py-2.5 px-2 font-semibold text-gray-700">Nº</th>
+                <th class="sticky top-0 z-[1] bg-gray-100 text-left py-2.5 px-3 font-semibold text-gray-700">Nombre del socio</th>
+                <th class="sticky top-0 z-[1] bg-gray-100 text-right py-2.5 px-3 font-semibold text-gray-700">Valor pagado</th>
               </tr>
             </thead>
             <tbody>
@@ -2746,8 +2707,122 @@
           <NatiscrollHint :show="hayMasDesglose" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="actividadParaDesglosePagos = null" class="btn-modal-primary w-full">
+            Cerrar
+          </button>
+        </div>
+    </ModalWrapper>
+    <!-- Modal Por pagar (rifa liquidada): quién falta y quién ya pagó. Va aparte del
+         comprobante del ganador, que es lo que se descarga y comparte con el grupo. -->
+    <ModalWrapper
+      :show="!!actividadParaPorPagar"
+      :z-index="50"
+      align="bottom"
+      :ios-soft-backdrop="true"
+      overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
+      card-class="relative w-full sm:max-w-md max-h-[90dvh] sm:max-h-[90vh] flex flex-col min-h-0 rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200/60 bg-white"
+      card-max-width="28rem"
+      @close="actividadParaPorPagar = null"
+    >
+        <!-- Cabecera marca compacta: móvil = fila; sm+ = icono arriba + textos centrados; X por flex -->
+        <div class="relative w-full flex-shrink-0 bg-[#1B5E37] text-white overflow-hidden">
+          <div class="sm:hidden flex min-h-[4.2rem] items-center gap-2 pb-3 pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <div class="w-10 h-10 flex-shrink-0 rounded-xl border border-white/25 bg-white/15 flex items-center justify-center">
+                <UsersIcon class="w-5 h-5 text-white" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="truncate text-base font-display font-bold leading-tight">{{ actividadParaPorPagar?.descripcion }}</h3>
+                <p class="mt-0.5 truncate text-[0.6875rem] text-white/90">Pagos de la rifa</p>
+              </div>
+            </div>
+            <button type="button" class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15 touch-manipulation" aria-label="Cerrar" @click="actividadParaPorPagar = null">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+          <div class="hidden sm:flex items-start w-full px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
+            <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+            <div class="flex-1 min-w-0 flex flex-col items-center text-center">
+              <div class="w-[3.2rem] h-[3.2rem] bg-white/15 rounded-xl flex items-center justify-center border border-white/25">
+                <UsersIcon class="w-6 h-6 text-white" />
+              </div>
+              <h3 class="text-lg font-display font-bold mt-3 line-clamp-2">{{ actividadParaPorPagar?.descripcion }}</h3>
+              <p class="text-white/90 text-xs mt-1">Pagos de la rifa</p>
+            </div>
+            <button type="button" class="h-11 w-11 flex-shrink-0 flex items-center justify-center rounded-xl text-white/90 transition-colors hover:bg-white/15" aria-label="Cerrar" @click="actividadParaPorPagar = null">
+              <XMarkIcon class="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        <!-- Cuerpo scrolleable + natiscroll -->
+        <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          ref="refScrollPorPagar"
+          class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain [-webkit-overflow-scrolling:touch] p-4 sm:p-5"
+          @scroll.passive="onScrollPorPagar"
+        >
+          <p v-if="!cargandoPagosRifaLiquidada && saldoPendienteRifa > 0" class="mb-3 text-sm text-gray-600">
+            Faltan <span class="font-bold text-red-600">${{ formatMoney(saldoPendienteRifa) }}</span> por pagar.
+          </p>
+          <CargaCaja v-if="cargandoPagosRifaLiquidada" texto="Cargando pagos de la rifa" />
+          <p v-else-if="pagosRifaLiquidada.length === 0" class="text-xs text-gray-500 italic py-2">No hay números asignados en esta rifa.</p>
+          <template v-else>
+            <div class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-gray-100 mb-2" role="tablist">
+              <button
+                type="button"
+                role="tab"
+                :aria-selected="vistaPagosRifa === 'faltan'"
+                class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
+                :class="vistaPagosRifa === 'faltan' ? 'bg-white text-red-700 shadow-sm' : 'text-gray-600'"
+                @click="vistaPagosRifa = 'faltan'"
+              >
+                Faltan ({{ faltanPagarRifa.length }})
+              </button>
+              <button
+                type="button"
+                role="tab"
+                :aria-selected="vistaPagosRifa === 'pagaron'"
+                class="min-h-[44px] rounded-lg text-sm font-semibold transition-colors touch-manipulation"
+                :class="vistaPagosRifa === 'pagaron' ? 'bg-white text-emerald-700 shadow-sm' : 'text-gray-600'"
+                @click="vistaPagosRifa = 'pagaron'"
+              >
+                Pagaron ({{ yaPagaronRifa.length }})
+              </button>
+            </div>
+            <ul class="divide-y divide-gray-100">
+              <li
+                v-for="p in (vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa)"
+                :key="p.clave"
+                class="flex items-center gap-3 py-2"
+              >
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ p.nombre }}</p>
+                  <p v-if="p.numeros.length" class="text-xs text-gray-500 truncate">Nº {{ p.numeros.join(', ') }}</p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <template v-if="p.saldo > 0">
+                    <p class="text-sm font-bold text-red-600">${{ formatMoney(p.saldo) }}</p>
+                    <p v-if="p.valorPagado > 0" class="text-[0.6875rem] text-gray-500">abonó ${{ formatMoney(p.valorPagado) }}</p>
+                  </template>
+                  <p v-else class="text-sm font-bold text-emerald-700">${{ formatMoney(p.valorPagado) }}</p>
+                </div>
+              </li>
+            </ul>
+            <p
+              v-if="(vistaPagosRifa === 'faltan' ? faltanPagarRifa : yaPagaronRifa).length === 0"
+              class="text-xs text-gray-500 italic py-2 text-center"
+            >
+              {{ vistaPagosRifa === 'faltan' ? 'Todos pagaron.' : 'Nadie ha pagado todavía.' }}
+            </p>
+          </template>
+        </div>
+          <NatiscrollHint :show="hayMasPorPagar" />
+        </div>
+        <!-- Footer de acciones fijo -->
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
+          <button type="button" @click="actividadParaPorPagar = null" class="btn-modal-primary w-full">
             Cerrar
           </button>
         </div>
@@ -2757,6 +2832,7 @@
       :show="!!(modalRegistrarGastos && actividadParaGastos)"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -2827,7 +2903,7 @@
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalRegistrarGastos = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarGastos" :disabled="guardandoGastos" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -2946,7 +3022,7 @@
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-3 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <button type="button" @click="grupoGanadoresSeleccionado = null" class="btn-modal-primary w-full">
             Cerrar
           </button>
@@ -2957,6 +3033,7 @@
       :show="!!modalVentaRifa"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -3163,7 +3240,7 @@
           <NatiscrollHint :show="hayMasVentaRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalVentaRifa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarVentaRifa" class="btn-modal-primary flex-1">Guardar Venta</button>
@@ -3175,6 +3252,7 @@
       :show="!!modalPagarRifa"
       :z-index="50"
       align="bottom"
+      :persistent="true"
       :ios-soft-backdrop="true"
       overlay-class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       backdrop-class="absolute inset-0 bg-[#C8D9C8]/70 backdrop-blur-[2px]"
@@ -3278,7 +3356,7 @@
           <NatiscrollHint :show="hayMasPagarRifa" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalPagarRifa = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="guardarPagoRifa" class="btn-modal-primary flex-1">Guardar</button>
@@ -3361,7 +3439,7 @@
             </div>
           </div>
           <!-- Footer de acciones fijo -->
-          <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
             <div class="flex gap-3">
               <button type="button" @click="actividadAEliminar = null" :disabled="eliminando" class="btn-modal-secondary flex-1 disabled:opacity-50">Cancelar</button>
               <!-- Acción destructiva irreversible → rojo (excepción a btn-modal-primary) -->
@@ -3453,7 +3531,7 @@
           </div>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="grupoAEliminar = null" :disabled="eliminandoGrupo" class="btn-modal-secondary flex-1 disabled:opacity-50">Cancelar</button>
             <!-- Acción destructiva irreversible → rojo (excepción a btn-modal-primary) -->
@@ -3560,7 +3638,7 @@
           <NatiscrollHint :show="hayMasAsignarFaltante" />
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalAsignarFaltante = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button
@@ -3623,16 +3701,20 @@
           </p>
         </div>
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
           <div class="flex gap-3">
             <button type="button" @click="modalConfirmarAsignarFaltanteTodosMeses = false" class="btn-modal-secondary flex-1">Cancelar</button>
             <button type="button" @click="confirmarAsignarFaltanteTodosMeses" :disabled="asignandoFaltante" class="btn-modal-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">Aceptar</button>
           </div>
         </div>
   </ModalWrapper>
-  <!-- Tarjeta para captura (compartir/descargar): en viewport pero detrás del modal (z-40) para que se pinte y no salga en blanco -->
+  <!--
+    Tarjeta para captura (compartir/descargar): en viewport pero detrás del modal (z-40)
+    para que se pinte y no salga en blanco. Solo se muestra mientras se captura: en
+    escritorio el modal no la tapa y se veía detrás del velo como una segunda copia.
+  -->
   <div
-    v-show="modalGanadorRifa && actividadSeleccionada"
+    v-show="capturandoTarjetaGanador && modalGanadorRifa && actividadSeleccionada"
     ref="tarjetaGanadorRef"
     class="fixed left-0 top-0 w-[400px] bg-white rounded-2xl shadow-2xl overflow-hidden z-40"
     style="top: 0; left: 0"
@@ -3689,10 +3771,13 @@ import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useEliminarPagoActividad } from '../../composables/useEliminarPagoActividad'
 import ModalWrapper from '../../components/ModalWrapper.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import NatiscrollHint from '../../components/NatiscrollHint.vue'
 import ActividadCard from '../../components/ActividadCard.vue'
 import CargaCuadricula from '../../components/CargaCuadricula.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
+import CargaBoton from '../../components/carga/CargaBoton.vue'
+import { detectIosPlatform } from '../../composables/useIsIos'
 import { useRegistrarPagoActividad, generarComprobanteDirecto } from '../../composables/useRegistrarPagoActividad'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
@@ -3754,6 +3839,7 @@ import {
   RectangleStackIcon,
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ShareIcon,
   TrophyIcon,
   GiftIcon,
   BuildingLibraryIcon
@@ -3875,6 +3961,7 @@ const formCobroSocio = reactive({ formaPago: 'efectivo', fecha: hoyISO() })
 const registrandoCobroSocio = ref(false)
 const comprobanteActividad = ref(null)    // datos del recibo tras registrar
 const generandoImagenComprobante = ref(false)
+const imagenComprobante = ref(null)      // File del recibo, listo antes del toque
 const comprobanteActividadRef = ref(null)
 
 function hoyISO() {
@@ -4033,67 +4120,97 @@ async function registrarCobroSocio() {
   }
 }
 
-async function descargarComprobanteActividad() {
-  if (!comprobanteActividadRef.value) return
+/*
+ * iOS ignora `download` sobre data URLs (en la PWA no hace nada; en Safari abre la imagen
+ * en otra pestaña). Allí el archivo se entrega con la hoja de compartir, que trae
+ * «Guardar imagen» y «Guardar en Archivos». Hay que llamarla sin ningún `await` por
+ * delante desde el toque: Safari rechaza `navigator.share` si el gesto ya caducó.
+ */
+function entregarArchivo(archivo) {
+  if (!archivo) return
+  if (detectIosPlatform() && navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({ files: [archivo] }).catch(e => {
+      if (e?.name !== 'AbortError') console.error('Error entregando el archivo:', e)
+    })
+    return
+  }
+  const url = URL.createObjectURL(archivo)
+  const enlace = document.createElement('a')
+  enlace.download = archivo.name
+  enlace.href = url
+  document.body.appendChild(enlace)
+  enlace.click()
+  document.body.removeChild(enlace)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+async function aArchivoPng(dataUrl, nombre) {
+  const blob = await (await fetch(dataUrl)).blob()
+  return new File([blob], nombre, { type: 'image/png' })
+}
+
+/*
+ * La imagen del recibo se genera al abrirlo, no al tocar «Compartir»: el `await` de
+ * `toPng` antes de `navigator.share` hacía caducar el gesto en Safari y el menú no salía.
+ */
+let turnoImagenComprobante = 0
+async function prepararImagenComprobante() {
+  imagenComprobante.value = null
+  const recibo = comprobanteActividad.value
+  if (!recibo) {
+    generandoImagenComprobante.value = false
+    return
+  }
+  const turno = ++turnoImagenComprobante
   generandoImagenComprobante.value = true
   try {
+    await nextTick()
+    if (!comprobanteActividadRef.value) return
     const dataUrl = await toPng(comprobanteActividadRef.value, {
       backgroundColor: '#ecfdf5',
       pixelRatio: 2,
       quality: 1.0,
       cacheBust: true
     })
-    const enlace = document.createElement('a')
-    enlace.download = `comprobante-${(comprobanteActividad.value?.socioNombre || 'pago').replace(/\s+/g, '-')}-${Date.now()}.png`
-    enlace.href = dataUrl
-    document.body.appendChild(enlace)
-    enlace.click()
-    document.body.removeChild(enlace)
+    const nombre = `comprobante-${(recibo.socioNombre || 'pago').replace(/\s+/g, '-')}-${recibo.codigo || Date.now()}.png`
+    const archivo = await aArchivoPng(dataUrl, nombre)
+    if (turno !== turnoImagenComprobante) return
+    imagenComprobante.value = archivo
   } catch (e) {
     console.error('Error generando el comprobante:', e)
-    notificationStore.error('No se pudo generar la imagen del comprobante', 'Error')
+    if (turno === turnoImagenComprobante) notificationStore.error('No se pudo generar la imagen del comprobante', 'Error')
   } finally {
-    generandoImagenComprobante.value = false
+    if (turno === turnoImagenComprobante) generandoImagenComprobante.value = false
   }
+}
+watch(comprobanteActividad, prepararImagenComprobante)
+
+function descargarComprobanteActividad() {
+  entregarArchivo(imagenComprobante.value)
 }
 
 /* Compartir nativo si el navegador lo trae (iOS lo tiene); si no, se descarga y se abre
-   WhatsApp con el mensaje, igual que en Cuotas. */
-async function compartirComprobanteActividad() {
-  if (!comprobanteActividadRef.value) return
-  generandoImagenComprobante.value = true
-  try {
-    const dataUrl = await toPng(comprobanteActividadRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      quality: 1.0,
-      cacheBust: true
+   WhatsApp con el mensaje, igual que en Cuotas. Todo síncrono: el gesto no sobrevive a un await. */
+function compartirComprobanteActividad() {
+  const archivo = imagenComprobante.value
+  const recibo = comprobanteActividad.value
+  if (!archivo || !recibo) return
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: 'Comprobante de pago',
+      text: `${recibo.socioNombre} · ${recibo.codigo}`
+    }).catch(e => {
+      // Cancelar el menú no es un error; y abrir WhatsApp aquí ya no tendría gesto
+      if (e?.name !== 'AbortError') notificationStore.error('No se pudo compartir el comprobante', 'Error')
     })
-    const blob = await (await fetch(dataUrl)).blob()
-    const archivo = new File([blob], `comprobante-${comprobanteActividad.value?.codigo}.png`, { type: 'image/png' })
-    if (navigator.canShare?.({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: 'Comprobante de pago',
-        text: `${comprobanteActividad.value?.socioNombre} · ${comprobanteActividad.value?.codigo}`
-      })
-      return
-    }
-    await descargarComprobanteActividad()
-    const telefono = String(comprobanteActividad.value?.socioTelefono || '').replace(/\D/g, '')
-    if (telefono) {
-      const mensaje = `${comprobanteActividad.value?.socioNombre} · Comprobante ${comprobanteActividad.value?.codigo}`
-      window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
-    }
-  } catch (e) {
-    // El usuario cancelando el diálogo de compartir no es un error que reportar
-    if (e?.name !== 'AbortError') {
-      console.error('Error compartiendo el comprobante:', e)
-      notificationStore.error('No se pudo compartir el comprobante', 'Error')
-    }
-  } finally {
-    generandoImagenComprobante.value = false
+    return
   }
+  entregarArchivo(archivo)
+  const telefono = String(recibo.socioTelefono || '').replace(/\D/g, '')
+  if (!telefono) return
+  const mensaje = `${recibo.socioNombre} · Comprobante ${recibo.codigo}`
+  window.open(`https://wa.me/${numeroWhatsApp(telefono)}?text=${encodeURIComponent(mensaje)}`, '_blank')
 }
 const socios = ref([])
 const numerosAsignadosPorSocio = ref({}) // { socio_id: [numeros] } para rifa automática
@@ -4105,7 +4222,6 @@ const grupoAEliminar = ref(null)
 const eliminandoGrupo = ref(false)
 const natillera = ref(null)
 const mostrarModalBienvenida = ref(false)
-const tooltipVisible = ref(null) // 'liquidar' | 'en_curso' | null
 const numerosRifa = ref({}) // { '00': { estado: 'libre'|'vendido'|'pagado', ... }, ... }
 const modalVentaRifa = ref(false)
 const modalPagarRifa = ref(false)
@@ -4117,6 +4233,7 @@ const modalGanadorRifa = ref(false) // Modal para rifa liquidada: número ganado
 const grupoGanadoresSeleccionado = ref(null) // Grupo de rifas para modal "Ver ganadores"
 const actividadParaFormaPago = ref(null) // Rifa liquidada para editar forma de pago entrega premio
 const actividadParaDesglosePagos = ref(null) // Rifa liquidada para modal grilla valores pagados
+const actividadParaPorPagar = ref(null) // Rifa liquidada cuyo modal «Por pagar» está abierto
 const formFormaPagoLiquidacion = reactive({ forma_pago: 'efectivo' })
 const guardandoFormaPago = ref(false)
 // Registrar gastos (actividades finalizadas que no son rifa)
@@ -4147,6 +4264,8 @@ const isDev = import.meta.env.DEV
 const revertiendoLiquidacion = ref(false)
 const tarjetaGanadorRef = ref(null)
 const compartiendoODescargando = ref(false)
+const capturandoTarjetaGanador = ref(false)
+const imagenGanador = ref(null) // File de la tarjeta, listo antes del toque
 const isMobile = ref(false)
 function actualizarIsMobile() {
   isMobile.value = typeof window !== 'undefined' && (window.innerWidth <= 768 || 'ontouchstart' in window)
@@ -4214,6 +4333,7 @@ useBodyScrollLock(modalGanadorRifa)
 useBodyScrollLock(computed(() => !!grupoGanadoresSeleccionado.value))
 useBodyScrollLock(computed(() => !!actividadParaFormaPago.value))
 useBodyScrollLock(computed(() => !!actividadParaDesglosePagos.value))
+useBodyScrollLock(computed(() => !!actividadParaPorPagar.value))
 useBodyScrollLock(modalRegistrarGastos)
 useBodyScrollLock(modalAsignarFaltante)
 useBodyScrollLock(modalConfirmarAsignarFaltanteTodosMeses)
@@ -4243,7 +4363,7 @@ const hayModalAbiertaActividades = computed(() =>
   modalConfirmarLiquidacionNegativa.value || modalGanadorRifa.value || modalRegistrarGastos.value ||
   modalAsignarFaltante.value || modalConfirmarAsignarFaltanteTodosMeses.value ||
   !!grupoGanadoresSeleccionado.value || !!actividadParaFormaPago.value ||
-  !!actividadParaDesglosePagos.value || !!actividadAEliminar.value || !!grupoAEliminar.value
+  !!actividadParaDesglosePagos.value || !!actividadParaPorPagar.value || !!actividadAEliminar.value || !!grupoAEliminar.value
 )
 
 // Natiscroll por modal: velo + «Desliza para ver más» mientras el cuerpo tenga overflow
@@ -4254,6 +4374,7 @@ const { scrollRef: refScrollDetalle, hayMas: hayMasDetalle, onScroll: onScrollDe
 const { scrollRef: refScrollLiquidar, hayMas: hayMasLiquidar, onScroll: onScrollLiquidar } = useNatiscroll(modalLiquidarActividad)
 const { scrollRef: refScrollGanadorRifa, hayMas: hayMasGanadorRifa, onScroll: onScrollGanadorRifa } = useNatiscroll(modalGanadorRifa)
 const { scrollRef: refScrollDesglose, hayMas: hayMasDesglose, onScroll: onScrollDesglose } = useNatiscroll(computed(() => !!actividadParaDesglosePagos.value))
+const { scrollRef: refScrollPorPagar, hayMas: hayMasPorPagar, onScroll: onScrollPorPagar } = useNatiscroll(computed(() => !!actividadParaPorPagar.value))
 const { scrollRef: refScrollGanadoresGrupo, hayMas: hayMasGanadoresGrupo, onScroll: onScrollGanadoresGrupo } = useNatiscroll(computed(() => !!grupoGanadoresSeleccionado.value))
 const { scrollRef: refScrollVentaRifa, hayMas: hayMasVentaRifa, onScroll: onScrollVentaRifa } = useNatiscroll(modalVentaRifa)
 const { scrollRef: refScrollPagarRifa, hayMas: hayMasPagarRifa, onScroll: onScrollPagarRifa } = useNatiscroll(modalPagarRifa)
@@ -4953,6 +5074,31 @@ function isGrupoExpandido(serieId) {
   return gruposExpandidos.value[serieId] === true
 }
 // Función para exportar un grupo de actividades a Excel
+/*
+ * En iOS, `XLSX.writeFile` descarga con un enlace sobre un blob: en la PWA instalada no
+ * hace nada y en Safari abre una vista previa sin forma clara de guardar. Allí se intenta
+ * la hoja de compartir («Guardar en Archivos»). Esta exportación consulta Supabase actividad
+ * por actividad antes de armar el libro, así que el gesto del toque suele haber caducado
+ * cuando se llega aquí y Safari rechaza `share` con NotAllowedError: en ese caso se vuelve
+ * a `writeFile`, que es lo que había. Precargar los datos no es viable sin cambiar el flujo.
+ */
+function entregarLibroExcel(wb, nombreArchivo) {
+  if (!detectIosPlatform()) {
+    XLSX.writeFile(wb, nombreArchivo)
+    return
+  }
+  const datos = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+  const archivo = new File([datos], nombreArchivo, {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  })
+  if (!navigator.canShare?.({ files: [archivo] })) {
+    XLSX.writeFile(wb, nombreArchivo)
+    return
+  }
+  navigator.share({ files: [archivo] }).catch(e => {
+    if (e?.name !== 'AbortError') XLSX.writeFile(wb, nombreArchivo)
+  })
+}
 async function exportarGrupoAExcel(grupo) {
   try {
     await ensureXLSX()
@@ -5543,8 +5689,7 @@ async function exportarGrupoAExcel(grupo) {
     // Generar el nombre del archivo
     const nombreArchivo = `${grupo.descripcionBase.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`
     
-    // Descargar el archivo
-    XLSX.writeFile(wb, nombreArchivo)
+    entregarLibroExcel(wb, nombreArchivo)
     
     notificationStore.success('Grupo exportado a Excel exitosamente', 'Éxito')
   } catch (error) {
@@ -5894,12 +6039,13 @@ async function cargarPagosRifaLiquidada(actividadId) {
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
   cargandoPagosRifaLiquidada.value = false
 }
-watch(modalGanadorRifa, (abierto) => {
-  if (!abierto || !actividadSeleccionada.value?.id) return
+function abrirModalPorPagarRifa(actividad) {
+  if (!actividad?.id) return
+  actividadParaPorPagar.value = actividad
   pagosRifaLiquidada.value = []
   vistaPagosRifa.value = 'faltan'
-  cargarPagosRifaLiquidada(actividadSeleccionada.value.id)
-})
+  cargarPagosRifaLiquidada(actividad.id)
+}
 function abrirModalFormaPagoLiquidacion(actividad) {
   if (soloLectura.value) return
   actividadParaFormaPago.value = actividad
@@ -6069,70 +6215,86 @@ async function revertirLiquidacionRifa() {
 }
 async function generarImagenTarjetaGanador() {
   if (!tarjetaGanadorRef.value) return null
-  await nextTick()
-  await new Promise((r) => requestAnimationFrame(r))
-  await new Promise((r) => setTimeout(r, 50))
-  return await toPng(tarjetaGanadorRef.value, {
-    backgroundColor: '#ffffff',
-    pixelRatio: 2,
-    quality: 1,
-    cacheBust: true
-  })
-}
-async function descargarTarjetaGanador() {
-  const act = actividadSeleccionada.value
-  if (!act || !tarjetaGanadorRef.value) return
-  compartiendoODescargando.value = true
+  capturandoTarjetaGanador.value = true
   try {
-    const dataUrl = await generarImagenTarjetaGanador()
-    if (!dataUrl) throw new Error('No se pudo generar la imagen')
-    const nombre = `ganador-rifa-${(act.descripcion || 'rifa').replace(/\s+/g, '-').slice(0, 40)}.png`
-    const link = document.createElement('a')
-    link.download = nombre
-    link.href = dataUrl
-    link.click()
-    notificationStore.success('Imagen descargada', 'Listo')
-  } catch (e) {
-    console.error('Error descargando tarjeta ganador:', e)
-    notificationStore.error(e?.message || 'No se pudo descargar la imagen', 'Error')
+    await nextTick()
+    await new Promise((r) => requestAnimationFrame(r))
+    await new Promise((r) => setTimeout(r, 50))
+    return await toPng(tarjetaGanadorRef.value, {
+      backgroundColor: '#ffffff',
+      pixelRatio: 2,
+      quality: 1,
+      cacheBust: true
+    })
   } finally {
-    compartiendoODescargando.value = false
+    capturandoTarjetaGanador.value = false
   }
 }
-async function compartirGanadorWhatsApp() {
+function nombreArchivoGanador(act) {
+  return `ganador-rifa-${(act?.descripcion || 'rifa').replace(/\s+/g, '-').slice(0, 40)}.png`
+}
+/*
+ * La tarjeta se captura al abrir el modal del ganador y queda lista en `imagenGanador`:
+ * si se generara al tocar «WhatsApp», el `await` de `toPng` consumiría el gesto y Safari
+ * rechazaría `navigator.share`.
+ */
+let turnoImagenGanador = 0
+async function prepararImagenGanador() {
+  imagenGanador.value = null
   const act = actividadSeleccionada.value
-  if (!act || !tarjetaGanadorRef.value) return
+  if (!modalGanadorRifa.value || !act) {
+    compartiendoODescargando.value = false
+    return
+  }
+  const turno = ++turnoImagenGanador
   compartiendoODescargando.value = true
   try {
+    await nextTick()
     const dataUrl = await generarImagenTarjetaGanador()
     if (!dataUrl) throw new Error('No se pudo generar la imagen')
-    const response = await fetch(dataUrl)
-    const blob = await response.blob()
-    const nombre = `ganador-rifa-${(act.descripcion || 'rifa').replace(/\s+/g, '-').slice(0, 30)}.png`
-    const archivo = new File([blob], nombre, { type: 'image/png' })
-    const mensaje = `${act.descripcion || 'Rifa'}\n${act.ganador_es_faltante ? 'Ganamos todos! 💃🕺' : act.ganador_nombre ? `Felicitaciones!! 🎉\nGanador/a: ${act.ganador_nombre}` : 'Nº ganador: ' + (act.numero_ganador || '—')}`
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: `Ganador - ${act.descripcion || 'Rifa'}`,
-        text: mensaje
-      })
-      notificationStore.success('Compartido correctamente', 'Listo')
-    } else {
-      const link = document.createElement('a')
-      link.download = nombre
-      link.href = dataUrl
-      link.click()
-      const textoWa = encodeURIComponent(mensaje)
-      window.open(`https://wa.me/?text=${textoWa}`, '_blank')
-      notificationStore.success('Imagen descargada. Ábrela y compártela en WhatsApp.', 'Compartir')
-    }
+    const archivo = await aArchivoPng(dataUrl, nombreArchivoGanador(act))
+    if (turno !== turnoImagenGanador) return
+    imagenGanador.value = archivo
   } catch (e) {
-    console.error('Error compartiendo ganador:', e)
-    notificationStore.error(e?.message || 'No se pudo compartir', 'Error')
+    console.error('Error generando tarjeta ganador:', e)
+    if (turno === turnoImagenGanador) notificationStore.error(e?.message || 'No se pudo generar la imagen', 'Error')
   } finally {
-    compartiendoODescargando.value = false
+    if (turno === turnoImagenGanador) compartiendoODescargando.value = false
   }
+}
+watch(
+  () => [
+    modalGanadorRifa.value,
+    actividadSeleccionada.value?.id,
+    actividadSeleccionada.value?.numero_ganador,
+    actividadSeleccionada.value?.ganador_nombre,
+    actividadSeleccionada.value?.ganador_es_faltante
+  ],
+  prepararImagenGanador
+)
+function descargarTarjetaGanador() {
+  if (!imagenGanador.value) return
+  entregarArchivo(imagenGanador.value)
+}
+function compartirGanadorWhatsApp() {
+  const act = actividadSeleccionada.value
+  const archivo = imagenGanador.value
+  if (!act || !archivo) return
+  const mensaje = `${act.descripcion || 'Rifa'}\n${act.ganador_es_faltante ? 'Ganamos todos! 💃🕺' : act.ganador_nombre ? `Felicitaciones!! 🎉\nGanador/a: ${act.ganador_nombre}` : 'Nº ganador: ' + (act.numero_ganador || '—')}`
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: `Ganador - ${act.descripcion || 'Rifa'}`,
+      text: mensaje
+    }).catch(e => {
+      // Cancelar no es error, y abrir WhatsApp desde aquí ya no tendría gesto
+      if (e?.name !== 'AbortError') notificationStore.error(e?.message || 'No se pudo compartir', 'Error')
+    })
+    return
+  }
+  entregarArchivo(archivo)
+  window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank')
+  notificationStore.success('Imagen descargada. Ábrela y compártela en WhatsApp.', 'Compartir')
 }
 function abrirModalGanadoresGrupo(grupo) {
   grupoGanadoresSeleccionado.value = grupo
@@ -7723,48 +7885,74 @@ watch(modalNuevaActividad, (isOpen) => {
     dropdownTipoActividad.value = false
     formActividad.valoresPorSocio = {}
     formActividad.valorIgual = 0
-    tooltipVisible.value = null // Cerrar tooltip al cerrar modal
   }
 })
-// Cerrar dropdown tipo actividad al hacer clic fuera y posicionar panel por encima de todo
-let dropdownTipoActividadCloseHandler = null
-watch(dropdownTipoActividad, (isOpen) => {
-  if (dropdownTipoActividadCloseHandler) {
-    document.removeEventListener('click', dropdownTipoActividadCloseHandler)
-    dropdownTipoActividadCloseHandler = null
+/*
+ * Desplegable «Tipo de actividad»: el panel va con Teleport y `position: fixed`, así que su
+ * posición se mide respecto al botón y hay que volver a medirla cuando el botón se mueve.
+ * `window.resize` no basta: en iOS el teclado y el pinch-zoom mueven el viewport visual sin
+ * dispararlo, y el scroll del cuerpo del modal tampoco llega a `window`. Se re-mide en todos
+ * esos casos y se cierra al girar el teléfono.
+ * El cierre por fuera va en `pointerdown` (captura): iOS no dispara `click` en `document`
+ * al tocar zonas que no son clicables, y el panel se quedaba abierto.
+ */
+let rafTipoActividad = null
+function medirDropdownTipoActividad() {
+  const el = dropdownTipoActividadRef.value
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  dropdownTipoActividadStyle.value = {
+    left: `${rect.left}px`,
+    top: `${rect.bottom + 6}px`,
+    minWidth: `${rect.width}px`
   }
+}
+function programarMedidaTipoActividad() {
+  if (rafTipoActividad != null) return
+  rafTipoActividad = requestAnimationFrame(() => {
+    rafTipoActividad = null
+    medirDropdownTipoActividad()
+  })
+}
+function cerrarDropdownTipoActividad() {
+  dropdownTipoActividad.value = false
+}
+function alTocarFueraTipoActividad(e) {
+  const boton = dropdownTipoActividadRef.value
+  const panel = document.querySelector('[data-dropdown-tipo-actividad-panel]')
+  if (boton?.contains(e.target) || panel?.contains(e.target)) return
+  dropdownTipoActividad.value = false
+}
+let contenedorScrollTipoActividad = null
+function quitarEscuchasTipoActividad() {
+  document.removeEventListener('pointerdown', alTocarFueraTipoActividad, true)
+  window.removeEventListener('resize', programarMedidaTipoActividad)
+  window.removeEventListener('orientationchange', cerrarDropdownTipoActividad)
+  window.visualViewport?.removeEventListener('resize', programarMedidaTipoActividad)
+  window.visualViewport?.removeEventListener('scroll', programarMedidaTipoActividad)
+  contenedorScrollTipoActividad?.removeEventListener('scroll', programarMedidaTipoActividad)
+  contenedorScrollTipoActividad = null
+  if (rafTipoActividad != null) cancelAnimationFrame(rafTipoActividad)
+  rafTipoActividad = null
+}
+watch(dropdownTipoActividad, (isOpen) => {
+  quitarEscuchasTipoActividad()
   if (!isOpen) {
     dropdownTipoActividadStyle.value = {}
     return
   }
   nextTick(() => {
-    const el = dropdownTipoActividadRef.value
-    if (el) {
-      const rect = el.getBoundingClientRect()
-      dropdownTipoActividadStyle.value = {
-        left: `${rect.left}px`,
-        top: `${rect.bottom + 6}px`,
-        minWidth: `${rect.width}px`
-      }
-    }
-    dropdownTipoActividadCloseHandler = (e) => {
-      const panel = document.querySelector('[data-dropdown-tipo-actividad-panel]')
-      if (dropdownTipoActividadRef.value && !dropdownTipoActividadRef.value.contains(e.target) && panel && !panel.contains(e.target)) {
-        dropdownTipoActividad.value = false
-      }
-    }
-    // Retrasar el listener para que el clic que abrió el dropdown no lo cierre al burbujear
-    setTimeout(() => {
-      document.addEventListener('click', dropdownTipoActividadCloseHandler)
-    }, 0)
+    if (!dropdownTipoActividad.value) return
+    medirDropdownTipoActividad()
+    document.addEventListener('pointerdown', alTocarFueraTipoActividad, true)
+    window.addEventListener('resize', programarMedidaTipoActividad)
+    window.addEventListener('orientationchange', cerrarDropdownTipoActividad)
+    window.visualViewport?.addEventListener('resize', programarMedidaTipoActividad)
+    window.visualViewport?.addEventListener('scroll', programarMedidaTipoActividad)
+    contenedorScrollTipoActividad = refScrollNuevaActividad.value
+    contenedorScrollTipoActividad?.addEventListener('scroll', programarMedidaTipoActividad, { passive: true })
   })
 })
-// Cerrar tooltip al hacer clic fuera
-function handleClickOutside(event) {
-  if (tooltipVisible.value && !event.target.closest('[data-tooltip-container]')) {
-    tooltipVisible.value = null
-  }
-}
 // Observar cambios en socios para recalcular fecha límite
 watch(() => socios.value, () => {
   if (formActividad.tipoProceso === 'en_curso' && modalNuevaActividad.value) {
@@ -7908,17 +8096,18 @@ watch(modalVentaRifa, (isOpen) => {
     desplegableSocioAbierto.value = false
   }
 })
-// Cerrar desplegable al hacer clic fuera
+// Cerrar desplegable al tocar fuera. `pointerdown` en captura: iOS no dispara `click` en
+// document al tocar zonas no interactivas, y el `@click.stop` de la card del modal lo cortaba.
 function handleClickOutsideDesplegable(event) {
   if (desplegableSocioAbierto.value && !event.target.closest('[data-socio-desplegable]')) {
     desplegableSocioAbierto.value = false
   }
 }
 onMounted(() => {
-  document.addEventListener('click', handleClickOutsideDesplegable)
+  document.addEventListener('pointerdown', handleClickOutsideDesplegable, true)
 })
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutsideDesplegable)
+  document.removeEventListener('pointerdown', handleClickOutsideDesplegable, true)
 })
 function confirmarEliminarActividad(actividad) {
   if (soloLectura.value) return
@@ -8220,15 +8409,11 @@ onMounted(() => {
   verificarModalBienvenida()
   actualizarIsMobile()
   window.addEventListener('resize', actualizarIsMobile)
-  // Agregar listener para cerrar tooltip al hacer clic fuera
-  document.addEventListener('click', handleClickOutside)
-  document.addEventListener('touchstart', handleClickOutside) // Para móvil
 })
 onUnmounted(() => {
   headerObserver?.disconnect()
   window.removeEventListener('resize', actualizarIsMobile)
-  document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('touchstart', handleClickOutside)
+  quitarEscuchasTipoActividad()
 })
 </script>
 

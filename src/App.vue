@@ -64,10 +64,19 @@ function handleEnterKey(event) {
 }
 
 // Función para hacer scroll cuando un input recibe focus (móvil)
+// Tipos que no abren teclado: tocar una casilla o una fecha no debe hacer saltar la página.
+const TIPOS_SIN_TECLADO = new Set(['checkbox', 'radio', 'date', 'time', 'datetime-local', 'month', 'range', 'file', 'button', 'submit', 'reset', 'color'])
+
 function handleInputFocus(event) {
   const target = event.target
-  // Solo procesar inputs y textareas
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+  if (!target) return
+  const esTexto = target.tagName === 'TEXTAREA' ||
+    (target.tagName === 'INPUT' && !TIPOS_SIN_TECLADO.has((target.type || 'text').toLowerCase()))
+  if (!esTexto) return
+  // Dentro de un modal el scroll lo lleva su propio cuerpo; mover el documento en iOS
+  // (html con overflow hidden) desplaza el viewport de layout detrás del velo.
+  if (target.closest('.modal-wrapper-ios, [role="dialog"]')) return
+  {
     // Usar setTimeout para asegurar que el teclado se haya abierto
     setTimeout(() => {
       // Scroll suave al elemento, con un poco de padding superior para mejor visibilidad

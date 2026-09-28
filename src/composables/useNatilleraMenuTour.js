@@ -1,5 +1,6 @@
 import { driver } from 'driver.js'
 import { isTourEnabled } from '../config/toursEnabled'
+import { crearSesionRecorrido } from './recorridoDriverSeguro'
 
 const storageKey = (natilleraId) => `natillera_menu_acciones_tour_v3_${natilleraId}`
 
@@ -40,7 +41,8 @@ export function startNatilleraMenuTour(opts) {
   const itemCaja = document.querySelector('#tour-bottom-nav-caja')
   if (!hamburger || !acciones || !barraInferior || !itemCaja) return
 
-  const d = driver({
+  const sesion = crearSesionRecorrido({ alForzarCierre: () => closeSidebar?.() })
+  const d = sesion.usarDriver(driver({
     animate: true,
     allowClose: true,
     disableActiveInteraction: true,
@@ -56,6 +58,9 @@ export function startNatilleraMenuTour(opts) {
     doneBtnText: 'Entendido',
     popoverClass: 'driver-popover-natillera',
     onDestroyed: () => {
+      sesion.terminar()
+      // Cortado al salir de la vista: la limpieza va por alForzarCierre y no se da por visto.
+      if (sesion.cancelada) return
       closeSidebar?.()
       markNatilleraMenuTourDone(natilleraId)
     },
@@ -70,7 +75,7 @@ export function startNatilleraMenuTour(opts) {
           align: 'start',
           onNextClick: (_element, _step, { driver: drv }) => {
             openSidebar?.()
-            setTimeout(() => drv.moveNext(), 420)
+            sesion.esperar(() => drv.moveNext(), 420)
           }
         }
       },
@@ -84,11 +89,11 @@ export function startNatilleraMenuTour(opts) {
           align: 'start',
           onNextClick: (_element, _step, { driver: drv }) => {
             closeSidebar?.()
-            setTimeout(() => drv.moveNext(), 480)
+            sesion.esperar(() => drv.moveNext(), 480)
           },
           onPrevClick: (_element, _step, { driver: drv }) => {
             closeSidebar?.()
-            setTimeout(() => drv.movePrevious(), 200)
+            sesion.esperar(() => drv.movePrevious(), 200)
           }
         }
       },
@@ -102,7 +107,7 @@ export function startNatilleraMenuTour(opts) {
           align: 'center',
           onPrevClick: (_element, _step, { driver: drv }) => {
             openSidebar?.()
-            setTimeout(() => drv.movePrevious(), 450)
+            sesion.esperar(() => drv.movePrevious(), 450)
           }
         }
       },
@@ -117,7 +122,7 @@ export function startNatilleraMenuTour(opts) {
         }
       }
     ]
-  })
+  }))
 
   d.drive(0)
 }

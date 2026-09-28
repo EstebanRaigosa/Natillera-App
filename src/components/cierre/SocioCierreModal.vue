@@ -83,12 +83,12 @@
                 de ${{ formatMoney(dato.montoAhorradoMensual) }} · {{ periodicidad === 'quincenal' ? 'Quincenal' : 'Mensual' }}
               </span>
             </dt>
-            <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.ahorro) }}</dd>
+            <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.neto?.ahorro ?? dato.ahorro) }}</dd>
           </div>
           <div class="px-3 py-2.5">
             <div class="flex items-center justify-between gap-3">
               <dt class="text-sm text-gray-700">+ Utilidades</dt>
-              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.utilidades) }}</dd>
+              <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-gray-900">${{ formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidades) }}</dd>
             </div>
             <ul v-if="conceptos.length > 0" class="mt-1.5 space-y-0.5 border-l-2 border-[#E8F5E9] pl-3">
               <li v-for="concepto in conceptos" :key="concepto.tipo" class="flex items-center justify-between gap-3 text-xs">
@@ -96,14 +96,6 @@
                 <span class="flex-shrink-0 tabular-nums text-gray-600">${{ formatMoney(concepto.monto) }}</span>
               </li>
             </ul>
-          </div>
-          <!-- Solo cuando la administración no cupo en las utilidades y tocó su ahorro -->
-          <div v-if="(dato.aporteAdministracion || 0) > 0" class="flex items-start justify-between gap-3 px-3 py-2.5">
-            <dt class="min-w-0">
-              <span class="block text-sm text-gray-700">− Administración</span>
-              <span class="block text-xs text-gray-500">La parte que sale de su ahorro</span>
-            </dt>
-            <dd class="flex-shrink-0 font-display text-sm font-bold tabular-nums text-red-700">−${{ formatMoney(dato.aporteAdministracion) }}</dd>
           </div>
           <div v-if="(dato.descuentos || 0) > 0" class="px-3 py-2.5">
             <div class="flex items-center justify-between gap-3">
@@ -146,18 +138,17 @@
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <div class="flex gap-3">
-        <button type="button" class="btn-modal-secondary flex-1" @click="emit('descargar')">
-          <ArrowDownTrayIcon class="h-4 w-4" />
-          Comprobante
+        <button type="button" class="btn-descargar flex-1" @click="emit('descargar')">
+          <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+          Descargar
         </button>
-        <!-- WhatsApp conserva su verde propio (skill natillerapp-modals, excepciones) -->
         <button
           v-if="dato?.socio?.telefono"
           type="button"
-          class="inline-flex min-h-[48px] flex-1 touch-manipulation items-center justify-center gap-2 rounded-full bg-[#128C7E] px-4 text-sm font-bold text-white hover:bg-[#0f7a6e]"
+          class="btn-compartir flex-1"
           @click="emit('whatsapp')"
         >
-          <ChatBubbleLeftIcon class="h-4 w-4" />
+          <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
           WhatsApp
         </button>
       </div>
@@ -167,8 +158,9 @@
 
 <script setup>
 import { computed } from 'vue'
-import { ArrowDownTrayIcon, ChatBubbleLeftIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import ModalWrapper from '../ModalWrapper.vue'
+import IconoWhatsApp from '../iconos/IconoWhatsApp.vue'
 import NatiscrollHint from '../NatiscrollHint.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
@@ -204,7 +196,8 @@ const totalFinal = computed(() => parseFloat(props.dato?.totalFinal) || 0)
 const debe = computed(() => totalFinal.value < 0)
 
 const conceptos = computed(() => {
-  const porConcepto = props.dato?.utilidadesPorConcepto || {}
+  // Con la administración ya descontada: la liquidación del socio no la muestra aparte.
+  const porConcepto = props.dato?.neto?.utilidadesPorConcepto || props.dato?.utilidadesPorConcepto || {}
   return props.tiposUtilidad
     .filter(tipo => (porConcepto[tipo] || 0) > 0)
     .map(tipo => ({ tipo, label: props.etiquetasUtilidad[tipo] || tipo, monto: porConcepto[tipo] }))

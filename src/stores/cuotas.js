@@ -257,7 +257,7 @@ export const useCuotasStore = defineStore('cuotas', () => {
       const [sociosRes, cuotasRes] = await Promise.all([
         supabase
           .from('socios_natillera')
-          .select('id, valor_cuota_individual, periodicidad, estado, socio:socios(id, nombre, avatar_seed, avatar_style)')
+          .select('id, valor_cuota_individual, periodicidad, estado, socio:socios(id, nombre, telefono, avatar_seed, avatar_style)')
           .eq('natillera_id', natilleraId),
         supabase
           .from('cuotas')

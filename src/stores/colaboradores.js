@@ -663,6 +663,15 @@ export const useColaboradoresStore = defineStore('colaboradores', () => {
       }
       if (!user) return null
 
+      // El superusuario gestiona todas las natilleras, igual que `es_superusuario()` en
+      // las políticas. Sin esto, en las que no son suyas el router (que cae aquí cuando no
+      // existe `mis_niveles_natillera`) le cerraba rutas como el cierre.
+      if ((user.email || '').toLowerCase().trim() === 'raigo.16@gmail.com') {
+        const niveles = nivelesTodos('gestionar')
+        permisoActual.value = { rol: 'administrador', esAdmin: true, niveles, permisos: banderasDeNiveles(niveles) }
+        return permisoActual.value
+      }
+
       if (!skipAdminCheck) {
         const { data: natillera } = await supabase
           .from('natilleras')

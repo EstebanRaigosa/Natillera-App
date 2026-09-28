@@ -28,7 +28,7 @@
     >
       <div 
         v-if="isOpen"
-        class="absolute z-50 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 w-72"
+        class="absolute z-50 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 w-[min(21rem,calc(100vw-2rem))]"
         :class="dropdownPosition"
         :style="dropdownStyle"
       >
@@ -36,10 +36,11 @@
         <div class="flex items-center justify-between mb-4">
           <button 
             type="button"
+            aria-label="Mes anterior"
             @click="previousMonth"
-            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ChevronLeftIcon class="w-5 h-5 text-gray-600" />
+            <ChevronLeftIcon class="w-5 h-5 text-gray-600" aria-hidden="true" />
           </button>
           <div class="text-center">
             <span class="font-bold text-gray-800">{{ monthNames[currentMonth] }}</span>
@@ -47,15 +48,16 @@
           </div>
           <button 
             type="button"
+            aria-label="Mes siguiente"
             @click="nextMonth"
-            class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex h-11 w-11 touch-manipulation items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <ChevronRightIcon class="w-5 h-5 text-gray-600" />
+            <ChevronRightIcon class="w-5 h-5 text-gray-600" aria-hidden="true" />
           </button>
         </div>
 
         <!-- Días de la semana -->
-        <div class="grid grid-cols-7 gap-1 mb-2">
+        <div class="grid grid-cols-7 mb-2">
           <div 
             v-for="day in weekDays" 
             :key="day" 
@@ -65,8 +67,9 @@
           </div>
         </div>
 
-        <!-- Días del mes -->
-        <div class="grid grid-cols-7 gap-1">
+        <!-- Días del mes: la celda (botón) mide 44px de toque; el cuadro visible es el span
+             interior, del mismo tamaño que antes. Sin `gap` para que las áreas se toquen. -->
+        <div class="grid grid-cols-7">
           <button
             v-for="(day, index) in calendarDays"
             :key="index"
@@ -74,19 +77,26 @@
             @click="day.date && selectDate(day.date)"
             :disabled="!day.date || day.isDisabled"
             :class="[
-              'aspect-square flex items-center justify-center text-sm rounded-lg transition-all',
+              'flex h-11 items-center justify-center touch-manipulation',
               !day.date ? 'invisible' : '',
-              day.isSelected 
-                ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white font-bold shadow-lg shadow-natillera-500/30' 
-                : day.isToday 
-                  ? 'bg-natillera-100 text-natillera-700 font-semibold' 
-                  : day.isCurrentMonth 
-                    ? 'text-gray-700 hover:bg-gray-100' 
-                    : 'text-gray-300',
-              day.isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+              day.isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
             ]"
           >
-            {{ day.day }}
+            <span
+              :class="[
+                'flex h-9 w-9 items-center justify-center text-sm rounded-lg transition-all',
+                day.isSelected 
+                  ? 'bg-gradient-to-br from-natillera-500 to-natillera-600 text-white font-bold shadow-lg shadow-natillera-500/30' 
+                  : day.isToday 
+                    ? 'bg-natillera-100 text-natillera-700 font-semibold' 
+                    : day.isCurrentMonth 
+                      ? 'text-gray-700 hover:bg-gray-100' 
+                      : 'text-gray-300',
+                day.isDisabled ? 'opacity-50' : ''
+              ]"
+            >
+              {{ day.day }}
+            </span>
           </button>
         </div>
 
@@ -95,14 +105,14 @@
           <button 
             type="button"
             @click="selectToday"
-            class="flex-1 px-3 py-2 text-xs font-semibold text-natillera-600 bg-natillera-50 hover:bg-natillera-100 rounded-lg transition-colors"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-natillera-600 bg-natillera-50 hover:bg-natillera-100 rounded-lg transition-colors"
           >
             Hoy
           </button>
           <button 
             type="button"
             @click="clearDate"
-            class="flex-1 px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            class="flex-1 min-h-11 touch-manipulation px-3 py-2 text-xs font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Limpiar
           </button>
@@ -167,7 +177,7 @@ watch(isOpen, (open) => {
       
       const rect = containerRef.value.getBoundingClientRect()
       const viewportWidth = window.innerWidth
-      const calendarWidth = 288 // w-72 = 18rem = 288px
+      const calendarWidth = Math.min(336, viewportWidth - 32) // w-[min(21rem,100vw-2rem)]
       const spaceOnRight = viewportWidth - rect.right
       const spaceOnLeft = rect.left
       
@@ -292,12 +302,16 @@ function handleClickOutside(event) {
   }
 }
 
+// Además de `click`, `touchstart`: Safari en iOS no emite click al tocar zonas no
+// interactivas (texto, fondos), y el desplegable se quedaba abierto.
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  document.addEventListener('touchstart', handleClickOutside, { passive: true })
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('touchstart', handleClickOutside)
 })
 
 // Actualizar el mes/año cuando cambia el valor

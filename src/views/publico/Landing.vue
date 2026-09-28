@@ -11,7 +11,7 @@
     barras. Los resplandores son gradientes radiales, no filtros de desenfoque ni
     backdrop-filter, que en iOS cuestan caro.
   -->
-  <div class="min-h-screen min-h-[100dvh] bg-[#07170f] font-sans text-white" :class="{ 'lp-vivo': vivo }">
+  <div class="min-h-screen supports-[height:100dvh]:min-h-[100dvh] bg-[#07170f] font-sans text-white" :class="{ 'lp-vivo': vivo }">
     <!-- ===================== Hero ===================== -->
     <section class="relative overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#1B5E37]">
       <DestellosFondo />

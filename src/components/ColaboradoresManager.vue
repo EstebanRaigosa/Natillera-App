@@ -476,7 +476,7 @@
       </div>
 
       <!-- Pie de acciones fijo: siempre visible, con safe-area -->
-      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex flex-col-reverse sm:flex-row gap-2.5">
+      <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex flex-col-reverse sm:flex-row gap-2.5">
         <button
           type="button"
           class="btn-modal-secondary flex-1"

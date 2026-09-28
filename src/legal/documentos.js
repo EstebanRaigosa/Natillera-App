@@ -26,14 +26,17 @@ export const POLITICA_DATOS = {
       id: 'responsable',
       titulo: 'Quién es el responsable',
       bloques: [
+        `${R.nombre} es el responsable del tratamiento de los datos personales de quienes usan la aplicación y decide cómo se recogen, ` +
+          'usan, guardan y protegen, conforme a esta política.',
         { lista: [
-          `Nombre: ${R.nombre}`,
-          `Identificación: ${R.identificacion}`,
+          `Responsable: ${R.nombre}`,
           `Domicilio: ${R.domicilio}`,
-          `Dirección: ${R.direccion}`,
-          `Correo: ${R.correo}`,
-          `Teléfono: ${R.telefono}`
-        ] }
+          `Correo para temas de datos personales: ${R.correo}`,
+          'Chat de ayuda: el botón de soporte dentro de la aplicación',
+          `Sitio web: ${R.sitio}`
+        ] },
+        'Por cualquiera de estos canales puedes hacer consultas y reclamos sobre tus datos, y ejercer tus derechos a conocerlos, ' +
+          'actualizarlos, rectificarlos, suprimirlos o revocar la autorización.'
       ]
     },
     {

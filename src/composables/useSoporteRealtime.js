@@ -27,6 +27,8 @@ export function useSoporteRealtime({ alRecibir, alCambiarConversacion, alRefresc
 
   let canal = null
   let temporizador = null
+  let esperaSuscripcion = null
+  let ultimaRecarga = 0
 
   function iniciarRespaldo() {
     if (temporizador) return
@@ -38,6 +40,34 @@ export function useSoporteRealtime({ alRecibir, alCambiarConversacion, alRefresc
     if (!temporizador) return
     clearInterval(temporizador)
     temporizador = null
+  }
+
+  /*
+   * iOS suspende la página (y su WebSocket) al pasar a segundo plano o al
+   * bloquear el teléfono, y `postgres_changes` no reenvía lo que se emitió
+   * mientras tanto: al volver, el hilo se quedaría sin los mensajes de ese rato.
+   * Se recarga al volver a estar visible. `pageshow` cubre la vuelta desde la
+   * caché de páginas (bfcache), que no siempre dispara `visibilitychange`; como
+   * a veces llegan los dos seguidos, se ignora el segundo.
+   */
+  function alVolverVisible() {
+    if (document.visibilityState !== 'visible') return
+    const ahora = Date.now()
+    if (ahora - ultimaRecarga < 1000) return
+    ultimaRecarga = ahora
+    alRefrescar?.()
+  }
+
+  function escucharVisibilidad() {
+    if (typeof document === 'undefined') return
+    document.addEventListener('visibilitychange', alVolverVisible)
+    window.addEventListener('pageshow', alVolverVisible)
+  }
+
+  function dejarDeEscucharVisibilidad() {
+    if (typeof document === 'undefined') return
+    document.removeEventListener('visibilitychange', alVolverVisible)
+    window.removeEventListener('pageshow', alVolverVisible)
   }
 
   /**
@@ -75,7 +105,14 @@ export function useSoporteRealtime({ alRecibir, alCambiarConversacion, alRefresc
       (evento) => { alCambiarConversacion?.(evento.new) },
     )
 
-    canal.subscribe((estado) => {
+    // `removeChannel` es asíncrono: al completarse emite CLOSED sobre este mismo
+    // callback. Si para entonces el canal ya se cerró o se sustituyó por otro,
+    // hay que ignorarlo; si no, arrancaba un respaldo de 60 s que nadie paraba.
+    const este = canal
+    const vigente = () => canal === este
+
+    este.subscribe((estado) => {
+      if (!vigente()) return
       if (estado === 'SUBSCRIBED') {
         estadoCanal.value = 'en_vivo'
         pararRespaldo()
@@ -85,15 +122,26 @@ export function useSoporteRealtime({ alRecibir, alCambiarConversacion, alRefresc
     })
 
     // Si en 10 s no ha llegado el SUBSCRIBED, se asume que no va a llegar.
-    setTimeout(() => { if (estadoCanal.value === 'conectando') iniciarRespaldo() }, 10_000)
+    esperaSuscripcion = setTimeout(() => {
+      esperaSuscripcion = null
+      if (vigente() && estadoCanal.value === 'conectando') iniciarRespaldo()
+    }, 10_000)
+
+    escucharVisibilidad()
   }
 
   function cerrar() {
-    if (canal) {
-      supabase.removeChannel(canal)
-      canal = null
+    // `canal = null` antes de removeChannel: así el CLOSED que emite al
+    // terminar ya no es «vigente» y no reactiva el respaldo.
+    const anterior = canal
+    canal = null
+    if (anterior) supabase.removeChannel(anterior)
+    if (esperaSuscripcion) {
+      clearTimeout(esperaSuscripcion)
+      esperaSuscripcion = null
     }
     pararRespaldo()
+    dejarDeEscucharVisibilidad()
   }
 
   onUnmounted(cerrar)

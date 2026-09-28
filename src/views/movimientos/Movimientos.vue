@@ -418,7 +418,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { cargarXlsx, guardarLibroXlsx, precargarXlsxEnIos, xlsxListo } from '../../utils/exportarXlsx'
+import { ref, computed, watch, onMounted } from 'vue'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
 import { useRoute } from 'vue-router'
 import {
@@ -847,17 +848,21 @@ const exportando = ref(false)
 
 // xlsx-js-style pesa ~600 KB: se carga solo al exportar para no inflar el chunk de la vista.
 let XLSX = null
-async function asegurarXLSX() {
-  if (XLSX) return
-  const modulo = await import('xlsx-js-style')
-  XLSX = modulo.default || modulo
+// Devuelve null (sin nada que esperar) si ya está precargado: en iOS compartir el
+// archivo necesita que no haya ningún `await` entre el toque y `navigator.share`.
+function asegurarXLSX() {
+  XLSX = xlsxListo()
+  if (XLSX) return null
+  return cargarXlsx().then(m => { XLSX = m })
 }
+onMounted(precargarXlsxEnIos)
 
 const exportarExcel = async () => {
   if (visibles.value.length === 0) return
   exportando.value = true
   try {
-    await asegurarXLSX()
+    const cargaXlsx = asegurarXLSX()
+    if (cargaXlsx) await cargaXlsx
     const filas = visibles.value.map(g => ({
       Fecha: formatDate(g.fecha),
       Concepto: etiquetaConcepto(g.concepto),
@@ -900,7 +905,7 @@ const exportarExcel = async () => {
     const libro = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libro, hoja, 'Movimientos')
     const nombre = (natillera.value?.nombre || 'Natillera').replace(/[^a-zA-Z0-9]/g, '_')
-    XLSX.writeFile(libro, `Movimientos_${nombre}_${desde.value || 'inicio'}_a_${hasta.value || hoy}.xlsx`)
+    guardarLibroXlsx(XLSX, libro, `Movimientos_${nombre}_${desde.value || 'inicio'}_a_${hasta.value || hoy}.xlsx`)
     notificaciones.exito('Archivo descargado con los filtros aplicados.', 'Exportado')
   } catch (e) {
     console.error('Movimientos: error exportando.', e)

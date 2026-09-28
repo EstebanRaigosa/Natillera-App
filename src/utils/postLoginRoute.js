@@ -1,4 +1,4 @@
-import { getLastNatilleraId } from './lastNatillera'
+import { getLastNatilleraId, getUltimoLugar } from './lastNatillera'
 
 /**
  * Tras autenticación: si hay una última natillera visitada guardada en
@@ -46,6 +46,12 @@ export async function resolvePostLoginLocation(user) {
 
   const destino = tomarDestinoPendiente()
   if (destino) return destino
+
+  // Si lo último fue el portal del socio, se vuelve al portal (no al dashboard de administración).
+  const lugar = getUltimoLugar(user.id)
+  if (lugar?.tipo === 'portal') {
+    return { name: 'PortalSocio', params: { socioNatilleraId: lugar.id } }
+  }
 
   const last = getLastNatilleraId(user.id)
   if (!last || last === 'undefined' || last === 'null') {

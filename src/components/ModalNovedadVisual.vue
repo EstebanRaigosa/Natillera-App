@@ -161,9 +161,10 @@
       </div>
     </div>
 
-    <!-- Acciones. Safe-area abajo; `useTapadoInferior` no hace falta porque el botón no
-         está anclado con `fixed`: vive al final de la card (manual iOS §4.1). -->
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <!-- Acciones. Safe-area abajo y, además, `--tapado-inferior` (lo publica ModalWrapper):
+         en móvil la card es una hoja pegada al borde inferior, y la barra de Safari tapa
+         ese borde aunque el botón no sea `fixed` (manual iOS §4.1). -->
+    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <button type="button" class="novedad__cta btn-modal-primary w-full" @click="$emit('cerrar')">
         Ver qué cambió
       </button>

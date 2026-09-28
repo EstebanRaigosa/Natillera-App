@@ -24,6 +24,12 @@
         <stop offset="0%" stop-color="#1f6b43" />
         <stop offset="100%" stop-color="#0c2a1b" />
       </radialGradient>
+      <!-- Disco translúcido: centrado para que el borde se desvanezca parejo, sin línea de contorno -->
+      <radialGradient :id="`${uid}DiscoDifuso`" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#1f6b43" stop-opacity="0.45" />
+        <stop offset="65%" stop-color="#0c2a1b" stop-opacity="0.35" />
+        <stop offset="100%" stop-color="#0c2a1b" stop-opacity="0" />
+      </radialGradient>
       <linearGradient :id="`${uid}Cerdo`" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="#ffc9d6" />
         <stop offset="100%" stop-color="#f29bb4" />
@@ -49,7 +55,8 @@
       <circle cx="280" cy="260" r="172" fill="none" stroke="#b9f0cc" stroke-opacity="0.9" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="18 14 6 62" />
     </g>
     </template>
-    <circle cx="280" cy="260" r="138" :fill="`url(#${uid}Disco)`" stroke="#6fcf97" stroke-opacity="0.35" stroke-width="1.5" />
+    <circle v-if="discoTranslucido" cx="280" cy="260" r="138" :fill="`url(#${uid}DiscoDifuso)`" />
+    <circle v-else cx="280" cy="260" r="138" :fill="`url(#${uid}Disco)`" stroke="#6fcf97" stroke-opacity="0.35" stroke-width="1.5" />
 
     <!-- Conectores de las insignias al anillo -->
     <g v-if="!compacta" stroke="#9fd9b1" stroke-opacity="0.3" stroke-width="1.5" stroke-dasharray="3 5" fill="none">
@@ -164,7 +171,9 @@ import './animacionesPublico.css'
 
 defineProps({
   /** Solo la alcancía en su disco, sin insignias alrededor: para espacios chicos (cabecera del login en el celular). */
-  compacta: { type: Boolean, default: false }
+  compacta: { type: Boolean, default: false },
+  /** Disco de fondo translúcido y con el borde difuminado: en el login del celular la alcancía va sobre la escena verde y el disco sólido se veía como una mancha oscura. Las pantallas de carga lo dejan opaco. */
+  discoTranslucido: { type: Boolean, default: false }
 })
 
 /*

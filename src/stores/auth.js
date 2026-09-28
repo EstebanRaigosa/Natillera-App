@@ -4,6 +4,22 @@ import { supabase, setAuthStorageMode, clearAuthStorageMode } from '../lib/supab
 import { useAuditoria, registrarAuditoriaEnSegundoPlano } from '../composables/useAuditoria'
 import { BASE_URL, devLog } from '../config/environment'
 import { enviarOTP, verificarOTP, buscarUsuarioPorTelefono, formatearTelefono } from '../services/twilio'
+import { detectIosPlatform } from '../composables/useIsIos'
+
+export const AVISO_GOOGLE_IOS_INSTALADA =
+  'En la app instalada del iPhone entra con tu correo o teléfono; Google solo funciona desde Safari.'
+
+/*
+ * En la PWA instalada de iOS, el flujo OAuth sale a una hoja de Safari que tiene
+ * su propio almacenamiento: la sesión de Google se guarda allí y el usuario
+ * vuelve a la app sin sesión. No hay forma de pasarla de vuelta, así que ahí no
+ * se ofrece Google.
+ */
+export function googleNoDisponibleAqui() {
+  if (typeof window === 'undefined' || !detectIosPlatform()) return false
+  return window.matchMedia?.('(display-mode: standalone)').matches === true ||
+    window.navigator?.standalone === true
+}
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -351,6 +367,11 @@ async function register(email, password, nombre) {
   }
 
   async function loginWithGoogle(options = {}) {
+    // Red de seguridad por si alguna pantalla aún muestra el botón.
+    if (googleNoDisponibleAqui()) {
+      error.value = AVISO_GOOGLE_IOS_INSTALADA
+      return { success: false, error: AVISO_GOOGLE_IOS_INSTALADA }
+    }
     try {
       loading.value = true
       error.value = null

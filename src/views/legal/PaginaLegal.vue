@@ -88,7 +88,8 @@ function irA(id) {
 }
 .legal__pestana {
   display: inline-flex;
-  min-height: 2.5rem;
+  /* 44 px: el mínimo táctil de iOS (con 40 px se fallaba el toque en el borde) */
+  min-height: 2.75rem;
   align-items: center;
   padding: 0 0.875rem;
   border-radius: 9999px;

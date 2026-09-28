@@ -58,7 +58,12 @@
           <span>Volver al inicio de sesión</span>
         </button>
         
+        <!-- PWA instalada en iOS: reintentar con Google volvería a dejar la sesión en Safari -->
+        <p v-if="sinGoogle" class="text-center text-sm text-gray-600">
+          {{ AVISO_GOOGLE_IOS_INSTALADA }}
+        </p>
         <button 
+          v-else
           @click="retryGoogleLogin"
           :disabled="authStore.loading"
           class="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border-2 border-natillera-200 rounded-xl font-semibold text-natillera-900 hover:bg-natillera-50 hover:border-natillera-300 shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -177,7 +182,7 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore, AVISO_GOOGLE_IOS_INSTALADA, googleNoDisponibleAqui } from '../../stores/auth'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { supabase } from '../../lib/supabase'
 import { devLog } from '../../config/environment'
@@ -243,6 +248,8 @@ function detectOAuthError() {
   
   return null
 }
+
+const sinGoogle = googleNoDisponibleAqui()
 
 async function retryGoogleLogin() {
   const result = await authStore.loginWithGoogle()

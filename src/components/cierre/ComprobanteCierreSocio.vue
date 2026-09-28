@@ -45,13 +45,13 @@
               {{ dato.cantidadCuotasPagadas ?? 0 }} {{ (dato.cantidadCuotasPagadas || 0) === 1 ? 'cuota' : 'cuotas' }} de ${{ formatMoney(dato.montoAhorradoMensual) }}
             </span>
           </span>
-          <span style="font-size: 14px; font-weight: 700; white-space: nowrap;">${{ formatMoney(dato.ahorro) }}</span>
+          <span style="font-size: 14px; font-weight: 700; white-space: nowrap;">${{ formatMoney(dato.neto?.ahorro ?? dato.ahorro) }}</span>
         </div>
 
         <div style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
           <div style="display: flex; justify-content: space-between; gap: 12px;">
             <span style="font-size: 14px; color: #334155;">+ Utilidades</span>
-            <span style="font-size: 14px; font-weight: 700; white-space: nowrap;">${{ formatMoney(dato.utilidades) }}</span>
+            <span style="font-size: 14px; font-weight: 700; white-space: nowrap;">${{ formatMoney(dato.neto?.utilidadesTotal ?? dato.utilidades) }}</span>
           </div>
           <div v-if="conceptos.length > 0" style="margin-top: 6px; padding-left: 12px; border-left: 2px solid #E8F5E9;">
             <div
@@ -63,14 +63,6 @@
               <span style="white-space: nowrap;">${{ formatMoney(concepto.monto) }}</span>
             </div>
           </div>
-        </div>
-
-        <div
-          v-if="(dato.aporteAdministracion || 0) > 0"
-          style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9;"
-        >
-          <span style="font-size: 14px; color: #334155;">− Administración</span>
-          <span style="font-size: 14px; font-weight: 700; color: #b91c1c; white-space: nowrap;">−${{ formatMoney(dato.aporteAdministracion) }}</span>
         </div>
 
         <div v-if="(dato.descuentos || 0) > 0" style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
@@ -132,7 +124,8 @@ const totalFinal = computed(() => parseFloat(props.dato?.totalFinal) || 0)
 const debe = computed(() => totalFinal.value < 0)
 
 const conceptos = computed(() => {
-  const porConcepto = props.dato?.utilidadesPorConcepto || {}
+  // Con la administración ya descontada: la liquidación del socio no la muestra aparte.
+  const porConcepto = props.dato?.neto?.utilidadesPorConcepto || props.dato?.utilidadesPorConcepto || {}
   return props.tiposUtilidad
     .filter(tipo => (porConcepto[tipo] || 0) > 0)
     .map(tipo => ({ tipo, label: props.etiquetasUtilidad[tipo] || tipo, monto: porConcepto[tipo] }))

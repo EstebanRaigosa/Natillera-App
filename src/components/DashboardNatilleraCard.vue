@@ -416,9 +416,11 @@ function formatoMoneda(valor) {
 /*
  * Etiqueta de relación con la natillera (misma forma que «Socio» en la tarjeta de socio).
  * Paleta pensada contra el verde de marca: blanco para lo propio (lo normal), el acento
- * naranja de la marca para «Socio», azul cielo para «Compartida» (frío, vecino del verde,
- * no choca con el naranja) y pizarra para la vista interna de superadmin. Rellenos claros
- * con texto oscuro: se leen igual sobre la cabecera verde que sobre el blanco de la fila.
+ * naranja de la marca para «Socio», azul para «Compartida» (frío, vecino del verde, no
+ * choca con el naranja) y pizarra para la vista interna de superadmin. Solo «Propia» es
+ * clara: con «Compartida» en azul cielo pálido las dos eran píldoras casi blancas y no se
+ * distinguían de un vistazo. Relleno sólido contra relleno blanco sí se lee, sobre la
+ * cabecera verde y sobre el blanco de la fila (blanco sobre #0369a1: 5,9:1).
  */
 .etiqueta-natillera {
   display: inline-flex;
@@ -434,8 +436,9 @@ function formatoMoneda(valor) {
   white-space: nowrap;
 }
 .etiqueta-natillera--propia { background: #ffffff; color: #1B5E37; box-shadow: inset 0 0 0 1px rgba(27, 94, 55, 0.22); }
-.etiqueta-natillera--compartida { background: #e0f2fe; color: #0c4a6e; box-shadow: inset 0 0 0 1px rgba(12, 74, 110, 0.18); }
-.etiqueta-natillera--otro { background: #e2e8f0; color: #1e293b; box-shadow: inset 0 0 0 1px rgba(30, 41, 59, 0.15); }
-/* Sobre la cabecera verde, una sombra leve la despega del fondo. */
-.etiqueta-natillera--cabecera { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22); }
+.etiqueta-natillera--compartida { background: #0369a1; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(3, 105, 161, 0.4); }
+.etiqueta-natillera--otro { background: #475569; color: #ffffff; box-shadow: inset 0 0 0 1px rgba(71, 85, 105, 0.4); }
+/* Sobre la cabecera verde, una sombra leve la despega del fondo y un filo claro separa
+   el azul y la pizarra del verde oscuro. */
+.etiqueta-natillera--cabecera { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
 </style>

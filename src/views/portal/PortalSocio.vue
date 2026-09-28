@@ -45,7 +45,8 @@
 
     <div v-else-if="error" class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
       {{ error }}
-      <button type="button" class="ml-2 font-semibold underline" @click="cargar">Reintentar</button>
+      <!-- min-h-11 con margen negativo: 44 px táctiles sin engordar la línea del aviso -->
+      <button type="button" class="ml-2 -my-3 inline-flex min-h-11 items-center font-semibold underline touch-manipulation" @click="cargar">Reintentar</button>
     </div>
 
     <section v-else-if="!datos" class="ds-empty-state">
@@ -82,27 +83,26 @@
           <section class="tablero-talon">
             <div class="tablero-talon__ahorro">
               <span class="tablero-talon__circulo tablero-talon__circulo--a" aria-hidden="true" />
-              <!-- En móvil el nombre de la natillera vive aquí (no hay cabecera de página) -->
-              <div class="relative mb-2 flex items-center gap-2 lg:hidden">
-                <span class="min-w-0 truncate text-xs font-semibold text-white/80">{{ datos.natillera.nombre }}</span>
-                <span class="tablero-talon__socio">Socio</span>
+              <!-- El marranito de la portada y del login, asomado junto a lo ahorrado (celular) -->
+              <EscenaAlcancia compacta disco-translucido class="tablero-talon__alcancia" />
+              <!--
+                El saludo abre la tarjeta; en móvil el marranito va arriba a la derecha y, si esta
+                cuenta administra la natillera, «Administrar» junto al saludo. Actualizar queda
+                solo en escritorio (cabecera de la página). El nombre de la natillera va en la
+                cabecera de la app.
+              -->
+              <div class="tablero-talon__fila-hola relative flex items-center gap-2">
+                <p class="tablero-talon__hola min-w-0 flex-1 truncate">Hola, {{ primerNombre }}</p>
                 <router-link
                   v-if="natilleraQueAdministra"
                   :to="`/natilleras/${natilleraQueAdministra}`"
-                  class="tablero-talon__administrar"
-                  aria-label="Volver a la natillera"
+                  class="tablero-talon__boton lg:hidden"
                 >
-                  <span class="tablero-talon__administrar-pildora">
-                    <ArrowUturnLeftIcon class="h-3.5 w-3.5" aria-hidden="true" />
-                    Natillera
-                  </span>
+                  <ArrowUturnLeftIcon class="h-4 w-4" aria-hidden="true" />
+                  Administrar
                 </router-link>
-                <button type="button" class="tablero-talon__refrescar" :disabled="cargando" aria-label="Actualizar" @click="cargar">
-                  <ArrowPathIcon class="h-4 w-4" :class="{ 'animate-spin': cargando }" />
-                </button>
               </div>
-              <p class="tablero-talon__hola relative">Hola, {{ primerNombre }}</p>
-              <p class="tablero-etiqueta tablero-etiqueta--clara relative mt-3">Llevas ahorrado</p>
+              <p class="tablero-etiqueta tablero-etiqueta--clara relative mt-4">Llevas ahorrado</p>
               <p class="tablero-talon__valor relative mt-1 tabular-nums">${{ formatMoney(estado.totalAhorrado) }}</p>
               <!--
                 Una casilla por cuota, agrupadas por mes con el mes debajo: en quincenal las dos
@@ -136,41 +136,65 @@
             <!-- Perforación del talonario -->
             <div class="tablero-talon__corte" aria-hidden="true" />
 
+            <!--
+              Lo que debe, en tres partes que se leen de arriba abajo: de qué se trata (con su
+              estado y el botón al estado de cuenta), cuánto es, y de qué se compone en una lista
+              concepto → valor. Al día, solo el aviso con su ícono.
+            -->
             <div class="tablero-talon__deuda" :class="`tablero-talon__deuda--${nivelDeuda}`">
-              <div class="flex items-center gap-3">
-                <div class="min-w-0 flex-1">
-                  <template v-if="estado.totalAPagar > 0">
-                    <p class="tablero-etiqueta">{{ nivelDeuda === 'mora' ? 'Debes hoy · en mora' : 'Debes hoy' }}</p>
-                    <p class="tablero-talon__debe tabular-nums">${{ formatMoney(estado.totalAPagar) }}</p>
-                  </template>
-                  <template v-else>
-                    <p class="tablero-talon__debe tablero-talon__debe--ok">
-                      <CheckCircleIcon class="h-6 w-6 shrink-0" aria-hidden="true" /> Estás al día
-                    </p>
-                    <!-- El próximo pago ya tiene su propia línea abajo: aquí solo se cierra la idea -->
-                    <p class="mt-0.5 text-xs text-slate-500">
-                      {{ proximoPago ? 'No tienes nada vencido' : 'No debes nada a la fecha' }}
-                    </p>
-                  </template>
+              <!--
+                La onda del login y de la portada (misma curva): la parte de lo que debe sube
+                sobre el verde. Toma el color de su fondo (currentColor) y baja 1 px dentro para
+                que no quede costura de antialias. Solo en celular.
+              -->
+              <svg class="tablero-talon__onda" viewBox="0 0 100 22" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0 23 V12 C 14 2, 28 1, 44 9 S 76 21, 100 6 V23 Z" fill="currentColor" />
+              </svg>
+              <template v-if="estado.totalAPagar > 0">
+                <div class="deuda__cabecera">
+                  <span class="tablero-etiqueta deuda__titulo">Debes hoy</span>
+                  <span class="deuda__estado">{{ nivelDeuda === 'mora' ? 'En mora' : 'Pendiente' }}</span>
+                  <button type="button" class="tablero-talon__accion deuda__boton" @click="abrirEstado">
+                    <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
+                    Estado
+                  </button>
                 </div>
-                <button type="button" class="tablero-talon__accion" @click="abrirEstado">
-                  <DocumentTextIcon class="h-4 w-4" aria-hidden="true" />
-                  Estado
-                </button>
-              </div>
-              <div v-if="estado.totalAPagar > 0" class="tablero-mini-fila">
-                <span v-for="r in renglonesDeuda" :key="r.clave" class="tablero-mini">
-                  {{ r.corto }} <strong class="tabular-nums">${{ formatMoney(r.valor) }}</strong>
-                </span>
-              </div>
-              <p v-if="estado.totalAPagar > 0 && estado.valor4x1000 > 0" class="mt-1.5 text-[0.6875rem] text-slate-500">
-                Por transferencia: ${{ formatMoney(estado.totalAPagarCon4x1000) }} con 4×1000
-              </p>
+                <p class="tablero-talon__debe tabular-nums">${{ formatMoney(estado.totalAPagar) }}</p>
+                <!-- Lo que de verdad consigna si paga por transferencia: pegado a la cifra -->
+                <p v-if="estado.valor4x1000 > 0" class="deuda__4x1000">
+                  Por transferencia <strong class="tabular-nums">${{ formatMoney(estado.totalAPagarCon4x1000) }}</strong>
+                  <span class="deuda__4x1000-nota">incluye 4×1000</span>
+                </p>
+                <ul v-if="renglonesDeuda.length > 0" class="deuda__lista">
+                  <li v-for="r in renglonesDeuda" :key="r.clave" class="deuda__fila">
+                    <span>{{ r.corto }}</span>
+                    <strong class="tabular-nums">${{ formatMoney(r.valor) }}</strong>
+                  </li>
+                </ul>
+              </template>
+              <template v-else>
+                <div class="deuda__aldia">
+                  <span class="deuda__aldia-icono"><CheckCircleIcon class="h-6 w-6" aria-hidden="true" /></span>
+                  <span class="min-w-0">
+                    <span class="block font-display text-lg font-extrabold text-[#1B5E37]">Estás al día</span>
+                    <span class="block text-xs text-slate-500">{{ proximoPago ? 'No tienes nada vencido' : 'No debes nada a la fecha' }}</span>
+                  </span>
+                </div>
+                <!-- Al día, lo útil es saber qué sigue -->
+                <div v-if="proximoPago" class="deuda__proxima">
+                  <span class="min-w-0">
+                    <span class="block text-[0.6875rem] font-bold uppercase tracking-wide text-slate-500">Próxima cuota</span>
+                    <span class="block text-sm font-semibold text-slate-800">{{ proximoPago.fecha }} · {{ proximoPago.cuando }}</span>
+                  </span>
+                  <strong class="flex-shrink-0 font-display text-lg font-extrabold tabular-nums text-[#1B5E37]">${{ formatMoney(proximoPago.valor) }}</strong>
+                </div>
+              </template>
             </div>
           </section>
 
           <!-- 2. Próximo pago: una línea, no una tarjeta. Solo cuando queda algo por venir. -->
-          <section v-if="proximoPago" class="tablero-proximo">
+          <!-- Al día, la próxima cuota ya va dentro del talonario -->
+          <section v-if="proximoPago && estado.totalAPagar > 0" class="tablero-proximo">
             <span class="tablero-proximo__icono"><CalendarDaysIcon class="h-5 w-5" aria-hidden="true" /></span>
             <div class="min-w-0 flex-1">
               <p class="tablero-proximo__titulo">Próximo pago · {{ proximoPago.cuando }}</p>
@@ -292,8 +316,13 @@
                         <span class="portal-fila__titulo">{{ c.periodo }}</span>
                         <span class="portal-fila__sub">{{ textoFechaCuota(c) }}</span>
                       </span>
+                      <!-- Con pagos, lo que pagó en total en esta cuota (todos los conceptos); sin pagos, lo que vale -->
                       <span class="shrink-0 text-right">
-                        <span class="portal-fila__valor tabular-nums">${{ formatMoney(c.valor_cuota) }}</span>
+                        <template v-if="pagadoEnCuota(c).total > 0">
+                          <span class="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Pagaste</span>
+                          <span class="portal-fila__valor tabular-nums">${{ formatMoney(pagadoEnCuota(c).total) }}</span>
+                        </template>
+                        <span v-else class="portal-fila__valor tabular-nums">${{ formatMoney(c.valor_cuota) }}</span>
                         <span class="portal-estado" :class="`portal-estado--${c.estadoReal}`">{{ ETIQUETA_ESTADO[c.estadoReal] }}</span>
                       </span>
                       <ChevronDownIcon
@@ -309,7 +338,9 @@
                       <div v-if="num(c.valor_pagado_cuota) > 0" class="portal-dl"><dt>Cuota</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado_cuota) }}</dd></div>
                       <div v-if="num(c.valor_pagado_sancion) > 0" class="portal-dl"><dt>Sanción</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado_sancion) }}</dd></div>
                       <div v-if="num(c.valor_pagado_actividades) > 0" class="portal-dl"><dt>Actividades</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado_actividades) }}</dd></div>
+                      <div v-if="pagadoEnCuota(c).prestamo > 0" class="portal-dl"><dt>Préstamo</dt><dd class="tabular-nums">${{ formatMoney(pagadoEnCuota(c).prestamo) }}</dd></div>
                       <div v-if="num(c.impuesto_4x1000) > 0" class="portal-dl"><dt>4×1000</dt><dd class="tabular-nums">${{ formatMoney(c.impuesto_4x1000) }}</dd></div>
+                      <div v-if="pagadoEnCuota(c).total > 0" class="portal-dl portal-dl--total"><dt>Total pagado</dt><dd class="tabular-nums">${{ formatMoney(pagadoEnCuota(c).total) }}</dd></div>
                       <div v-if="num(c.valor_pagado_efectivo) > 0" class="portal-dl"><dt>En efectivo</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado_efectivo) }}</dd></div>
                       <div v-if="num(c.valor_pagado_transferencia) > 0" class="portal-dl"><dt>Por transferencia</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado_transferencia) }}</dd></div>
                       <div v-if="c.estadoReal !== 'pagada' && num(c.valor_pagado) > 0" class="portal-dl"><dt>Abonado</dt><dd class="tabular-nums">${{ formatMoney(c.valor_pagado) }}</dd></div>
@@ -362,10 +393,6 @@
               <dl class="mt-2 space-y-2">
                 <div class="portal-dl"><dt>Tu ahorro</dt><dd class="tabular-nums">${{ formatMoney(ganancias.ahorro) }}</dd></div>
                 <div class="portal-dl"><dt>+ Tus ganancias</dt><dd class="tabular-nums">${{ formatMoney(ganancias.utilidadesTotal) }}</dd></div>
-                <div v-if="num(ganancias.aporteAdministracion) > 0" class="portal-dl">
-                  <dt>− Administración{{ ganancias.administracion?.porcentaje ? ` (${ganancias.administracion.porcentaje} %)` : '' }}</dt>
-                  <dd class="tabular-nums">${{ formatMoney(ganancias.aporteAdministracion) }}</dd>
-                </div>
                 <div v-if="num(ganancias.descuentos) > 0" class="portal-dl"><dt>− Lo que debes</dt><dd class="tabular-nums">${{ formatMoney(ganancias.descuentos) }}</dd></div>
                 <div class="portal-dl portal-dl--total"><dt>Recibirías</dt><dd class="tabular-nums">${{ formatMoney(ganancias.totalFinal) }}</dd></div>
               </dl>
@@ -433,9 +460,28 @@
                 >
                   <span class="portal-fila__punto" :class="`portal-fila__punto--${c.colorPunto}`" aria-hidden="true" />
                   <span class="min-w-0 flex-1">
-                    Cuota {{ c.numero_cuota }} · {{ formatDate(c.fecha_proyectada) }}
-                    <span v-if="c.estadoCuota === 'mora'" class="portal-estado portal-estado--mora ml-1">Vencida</span>
-                    <span v-else-if="c.esSiguiente" class="portal-estado portal-estado--pendiente ml-1">Siguiente</span>
+                    <span class="block">
+                      Cuota {{ c.numero_cuota }} · {{ formatDate(c.fecha_proyectada) }}
+                      <span v-if="c.estadoCuota === 'mora'" class="portal-estado portal-estado--mora ml-1">Vencida</span>
+                      <span v-else-if="c.esSiguiente" class="portal-estado portal-estado--pendiente ml-1">Siguiente</span>
+                    </span>
+                    <!-- Cuándo se pagó (o cuánto se ha abonado) y el comprobante de cada abono -->
+                    <span v-if="c.pagada && c.fecha_pago" class="block text-xs font-semibold text-[#1B5E37]">Pagada el {{ formatDate(c.fecha_pago) }}</span>
+                    <span v-else-if="num(c.valor_pagado) > 0" class="block text-xs font-semibold text-amber-800">
+                      Abonado ${{ formatMoney(c.valor_pagado) }} · faltan ${{ formatMoney(c.pendiente) }}
+                    </span>
+                    <span v-if="c.abonos.length > 0" class="mt-1 flex flex-wrap gap-1.5">
+                      <button
+                        v-for="ab in c.abonos"
+                        :key="ab.id"
+                        type="button"
+                        class="portal-plan__comprobante"
+                        @click="abrirComprobanteAbono(p, ab)"
+                      >
+                        <ReceiptPercentIcon class="h-4 w-4" aria-hidden="true" />
+                        Comprobante<template v-if="c.abonos.length > 1"> · {{ formatDate(ab.fecha) }}</template>
+                      </button>
+                    </span>
                   </span>
                   <span class="tabular-nums font-semibold">${{ formatMoney(c.valor_cuota) }}</span>
                 </li>
@@ -445,64 +491,80 @@
 
           <!-- Actividades (RF-11): de la más antigua a la más reciente; las rifas, con su resultado -->
           <section v-else-if="pestana === 'actividades'">
-            <ol class="act-linea">
-              <li v-for="a in actividades" :key="a.clave" class="act-linea__item">
-                <span class="act-linea__fecha">
-                  <strong>{{ a.fechaDia }}</strong>
-                  <small>{{ a.fechaMes }}</small>
-                </span>
-
-                <!-- Rifa: una fila con la balota del número ganador, quién ganó y sus números -->
-                <article v-if="a.esRifa" class="rifa" :class="{ 'rifa--mia': a.soyGanador }">
-                  <div class="rifa__balota" :class="{ 'rifa__balota--pendiente': !a.jugada }" :aria-label="a.jugada ? `Número ganador ${a.numeroGanador}` : 'Aún sin número ganador'">
-                    {{ a.jugada ? a.numeroGanador : '?' }}
-                  </div>
+            <!--
+              Una tarjeta por actividad, con el estilo de las demás del portal. La fecha va dentro,
+              como línea pequeña (la columna aparte le quitaba ancho a todo en el celular). En las
+              rifas, la balota con el número y el resultado: el ganador como etiqueta + nombre,
+              con el trofeo en verde de marca, sin pastillas doradas.
+            -->
+            <ol class="act-lista">
+              <li
+                v-for="a in actividades"
+                :key="a.clave"
+                class="act-item"
+                :class="{ 'act-item--mia': a.esRifa && a.soyGanador }"
+              >
+                <div class="act-item__cabecera">
                   <div class="min-w-0 flex-1">
-                    <p class="rifa__titulo">{{ a.descripcion }}</p>
-                    <p class="rifa__resultado">
-                      <template v-if="a.soyGanador">
-                        <TrophyIcon class="rifa__icono text-[#1B5E37]" aria-hidden="true" /><strong class="text-[#1B5E37]">¡Ganaste!</strong>
-                      </template>
-                      <template v-else-if="a.ganaNatillera">
-                        <BuildingLibraryIcon class="rifa__icono" aria-hidden="true" />Ganó la natillera
-                      </template>
-                      <template v-else-if="a.jugada">
-                        <TrophyIcon class="rifa__icono" aria-hidden="true" /><strong>{{ a.ganadorNombre || 'Ganador no registrado' }}</strong>
-                      </template>
-                      <template v-else>Se juega {{ a.fechaJuego ? `el ${formatDate(a.fechaJuego)}` : 'pronto' }}</template>
-                    </p>
-                    <p v-if="a.misNumeros.length > 0" class="rifa__numeros">
-                      Tus números:
-                      <span
-                        v-for="n in a.misNumeros"
-                        :key="n"
-                        class="rifa__numero"
-                        :class="{ 'rifa__numero--ganador': a.jugada && n === a.numeroGanador }"
-                      >{{ n }}</span>
-                    </p>
+                    <p class="act-item__fecha">{{ a.fechaDia }} {{ a.fechaMes }}<template v-if="!a.esRifa && a.tipo"> · {{ a.tipo }}</template></p>
+                    <p class="act-item__titulo">{{ a.descripcion }}</p>
                   </div>
-                  <span
-                    class="portal-estado shrink-0 self-start"
-                    :class="a.pendiente > 0 ? 'portal-estado--pendiente' : 'portal-estado--pagada'"
-                    :title="a.loteria || undefined"
-                  >
-                    {{ a.pendiente > 0 ? `Debes $${formatMoney(a.pendiente)}` : 'Pagada' }}
-                  </span>
-                </article>
-
-                <!-- Otras actividades -->
-                <article v-else class="act-card">
-                  <div class="min-w-0 flex-1">
-                    <p class="act-card__titulo">{{ a.descripcion }}</p>
-                    <p class="act-card__sub">{{ a.tipo }}</p>
-                  </div>
-                  <span class="shrink-0 text-right">
-                    <span class="portal-fila__valor tabular-nums">${{ formatMoney(a.asignado) }}</span>
-                    <span class="portal-estado" :class="a.pendiente > 0 ? 'portal-estado--pendiente' : 'portal-estado--pagada'">
-                      {{ a.pendiente > 0 ? `Faltan $${formatMoney(a.pendiente)}` : 'Pagada' }}
+                  <span class="text-right">
+                    <span v-if="!a.esRifa" class="block text-sm font-extrabold tabular-nums text-gray-900">${{ formatMoney(a.asignado) }}</span>
+                    <span
+                      class="portal-estado"
+                      :class="a.pendiente > 0 ? 'portal-estado--pendiente' : 'portal-estado--pagada'"
+                      :title="a.loteria || undefined"
+                    >
+                      {{ a.pendiente > 0 ? `${a.esRifa ? 'Debes' : 'Faltan'} $${formatMoney(a.pendiente)}` : 'Pagada' }}
                     </span>
                   </span>
-                </article>
+                </div>
+
+                <template v-if="a.esRifa">
+                  <div class="act-rifa">
+                    <div
+                      class="rifa__balota"
+                      :class="{ 'rifa__balota--pendiente': !a.jugada }"
+                      :aria-label="a.jugada ? `Número ganador ${a.numeroGanador}` : 'Aún sin número ganador'"
+                    >
+                      {{ a.jugada ? a.numeroGanador : '?' }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <template v-if="a.soyGanador">
+                        <p class="act-rifa__etiqueta">Resultado</p>
+                        <p class="act-rifa__ganador act-rifa__ganador--mio">
+                          <TrophyIcon class="act-rifa__trofeo" aria-hidden="true" />¡Ganaste!
+                        </p>
+                      </template>
+                      <template v-else-if="a.ganaNatillera">
+                        <p class="act-rifa__etiqueta">Resultado</p>
+                        <p class="act-rifa__ganador">
+                          <BuildingLibraryIcon class="act-rifa__trofeo" aria-hidden="true" />Ganó la natillera
+                        </p>
+                      </template>
+                      <template v-else-if="a.jugada">
+                        <p class="act-rifa__etiqueta">Ganador</p>
+                        <p class="act-rifa__ganador">
+                          <TrophyIcon class="act-rifa__trofeo" aria-hidden="true" />{{ a.ganadorNombre || 'No registrado' }}
+                        </p>
+                      </template>
+                      <template v-else>
+                        <p class="act-rifa__etiqueta">Sorteo</p>
+                        <p class="act-rifa__ganador act-rifa__ganador--pendiente">Se juega {{ a.fechaJuego ? `el ${formatDate(a.fechaJuego)}` : 'pronto' }}</p>
+                      </template>
+                    </div>
+                  </div>
+                  <p v-if="a.misNumeros.length > 0" class="rifa__numeros">
+                    Tus números:
+                    <span
+                      v-for="n in a.misNumeros"
+                      :key="n"
+                      class="rifa__numero"
+                      :class="{ 'rifa__numero--ganador': a.jugada && n === a.numeroGanador }"
+                    >{{ n }}</span>
+                  </p>
+                </template>
               </li>
             </ol>
           </section>
@@ -602,16 +664,16 @@
 
       <!-- Pie fijo. `align="bottom"`: la barra de Safari lo tapa, se suma lo que mide (§4.1) -->
       <div
-        class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 flex flex-row gap-2.5"
+        class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-4 flex flex-row gap-3"
         :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
       >
-        <button type="button" class="btn-modal-primary flex-1" :disabled="!imagen" @click="descargarImagen">
-          <ArrowDownTrayIcon class="h-5 w-5" aria-hidden="true" />
+        <button type="button" class="btn-descargar flex-1" :disabled="!imagen" @click="descargarImagen">
+          <ArrowDownTrayIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true" />
           {{ imagen ? 'Descargar' : 'Preparando…' }}
         </button>
         <!-- Solo donde el navegador puede compartir archivos (móvil) -->
-        <button v-if="puedeCompartir" type="button" class="btn-modal-secondary flex-1" :disabled="!imagen" @click="compartirImagen">
-          <ShareIcon class="h-5 w-5" aria-hidden="true" />
+        <button v-if="puedeCompartir" type="button" class="btn-compartir flex-1" :disabled="!imagen" @click="compartirImagen">
+          <ShareIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true" />
           Compartir
         </button>
       </div>
@@ -628,6 +690,8 @@
 </template>
 
 <script setup>
+import EscenaAlcancia from '../../components/publico/EscenaAlcancia.vue'
+import { gananciasSinAdministracion } from '../../utils/gananciasPortal'
 import { ref, computed, watch, watchEffect, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import PortalBottomNav from '../../components/portal/PortalBottomNav.vue'
@@ -875,7 +939,13 @@ function textoFechaCuota(c) {
 
 // Ganancias: foto que guarda la app del admin (usePortalGanancias). Null si el admin las
 // oculta —entonces ni siquiera llegan— o si todavía no se han calculado.
-const ganancias = computed(() => datos.value?.ganancias?.datos || null)
+const ganancias = computed(() => {
+  const g = datos.value?.ganancias?.datos
+  if (!g) return null
+  // La administración no se le muestra al socio: va descontada de sus ganancias. Las fotos
+  // nuevas ya llegan así; esto cubre las guardadas antes, que aún traen el aporte aparte.
+  return { ...g, ...gananciasSinAdministracion(g), aporteAdministracion: 0, administracion: null }
+})
 const calculadoEnTexto = computed(() => {
   const f = datos.value?.ganancias?.calculado_en
   return f ? `el ${formatDate(f)}` : ''
@@ -895,17 +965,47 @@ const conceptosGanancia = computed(() => {
   }))
 })
 
+/*
+ * A qué cuotas se aplicó cada abono. Lo dice `numeros_cuota`; los abonos viejos no lo
+ * guardaron, y sin eso su cuota no tenía botón de comprobante. A esos se les asigna en
+ * orden —el abono más viejo a la cuota más vieja—, que es como la app aplica los abonos
+ * al plan (recalcularPlanPagosPrestamo).
+ */
+function abonosConCuotas(prestamo) {
+  const abonos = [...(prestamo.abonos || [])].sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+  if (abonos.every(a => Array.isArray(a.numeros_cuota) && a.numeros_cuota.length > 0)) return abonos
+  const cuotas = [...(prestamo.plan || [])].sort((a, b) => a.numero_cuota - b.numero_cuota)
+  const falta = cuotas.map(c => num(c.valor_cuota))
+  let i = 0
+  return abonos.map(a => {
+    let restante = num(a.valor)
+    const tocadas = []
+    while (restante > 0.5 && i < cuotas.length) {
+      const aplica = Math.min(restante, falta[i])
+      if (aplica > 0) tocadas.push(cuotas[i].numero_cuota)
+      falta[i] -= aplica
+      restante -= aplica
+      if (falta[i] <= 0.5) i++
+    }
+    if (Array.isArray(a.numeros_cuota) && a.numeros_cuota.length > 0) return a
+    return { ...a, numeros_cuota: tocadas }
+  })
+}
+
 const prestamos = computed(() => {
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
-  return (datos.value?.prestamos || []).map(p => {
+  return (datos.value?.prestamos || []).map(p0 => {
+    const p = { ...p0, abonos: abonosConCuotas(p0) }
     // Estado de cada cuota del plan: pagada, en mora (venció sin pagar) o por venir. La
     // primera que aún no vence es «la siguiente»; el resto quedan programadas.
     const plan = (p.plan || []).map(c => {
       const fecha = parseDateLocal(c.fecha_proyectada)
       const pendiente = Math.max(0, num(c.valor_cuota) - num(c.valor_pagado))
       const estadoCuota = c.pagada ? 'pagada' : fecha && fecha < hoy ? 'mora' : 'programada'
-      return { ...c, pendiente, estadoCuota, esSiguiente: false, colorPunto: estadoCuota }
+      // Abonos que se aplicaron a esta cuota: cada uno tiene su comprobante.
+      const abonos = (p.abonos || []).filter(a => Array.isArray(a.numeros_cuota) && a.numeros_cuota.includes(c.numero_cuota))
+      return { ...c, pendiente, estadoCuota, abonos, esSiguiente: false, colorPunto: estadoCuota }
     })
     const siguiente = plan.find(c => c.estadoCuota === 'programada')
     if (siguiente) {
@@ -1114,6 +1214,24 @@ const pagosPorCuota = computed(() => {
   return mapa
 })
 
+/*
+ * Lo que el socio pagó en una cuota, sumando todo lo que se cobró con ella: cuota, sanción,
+ * actividades, cuotas de préstamo y 4×1000. Sale de sus pagos (cada uno trae el total de su
+ * transacción); una cuota vieja sin historial se suma desde sus columnas, que no guardan el
+ * préstamo.
+ */
+function pagadoEnCuota(c) {
+  const lista = pagosPorCuota.value[c.id] || []
+  if (lista.length > 0) {
+    return {
+      total: lista.reduce((t, p) => t + num(p.total), 0),
+      prestamo: lista.reduce((t, p) => t + num(p.prestamo), 0)
+    }
+  }
+  const total = num(c.valor_pagado) + num(c.valor_pagado_sancion) + num(c.valor_pagado_actividades) + num(c.impuesto_4x1000)
+  return { total, prestamo: 0 }
+}
+
 // ─── Modal del comprobante ───
 const comprobante = ref(null) // { tipo: 'estado' } | { tipo: 'pago', pago }
 const ticketRef = ref(null)
@@ -1176,6 +1294,46 @@ function abrirPago(pago) {
       abonos,
       esParcial: !!cuota && cuota.estadoReal !== 'pagada',
       pendienteCuota: cuota ? Math.max(0, num(cuota.valor_cuota) - num(cuota.valor_pagado)) : 0
+    }
+  }
+}
+
+/*
+ * Comprobante de un abono a préstamo, con el mismo diseño que el de una cuota. Un abono
+ * puede cubrir varias cuotas y traer interés de mora (va aparte: no baja el saldo).
+ */
+function abrirComprobanteAbono(prestamo, abono) {
+  const numeros = Array.isArray(abono.numeros_cuota) ? [...abono.numeros_cuota].sort((a, b) => a - b) : []
+  const cuotasDelAbono = prestamo.plan.filter(c => numeros.includes(c.numero_cuota))
+  const mora = num(abono.mora_cobrada)
+  const valor = num(abono.valor)
+  const forma = num(abono.valor_transferencia) > 0 && num(abono.valor_efectivo) > 0
+    ? 'mixto'
+    : num(abono.valor_transferencia) > 0 ? 'transferencia' : 'efectivo'
+  const etiquetaCuotas = numeros.length === 1 ? `Cuota #${numeros[0]}` : `Cuotas #${numeros.join(', #')}`
+  const detalle = [{ nombre: `Préstamo · ${etiquetaCuotas}`, valor }]
+  if (mora > 0) detalle.push({ nombre: 'Interés de mora', valor: mora })
+  // Otros abonos de las mismas cuotas, para ver este dentro de la historia de la cuota.
+  const abonosCuota = (prestamo.abonos || [])
+    .filter(a => Array.isArray(a.numeros_cuota) && a.numeros_cuota.some(n => numeros.includes(n)))
+    .map(a => ({ fecha: formatDate(a.fecha), total: num(a.valor) + num(a.mora_cobrada), actual: a.id === abono.id }))
+  comprobante.value = {
+    tipo: 'pago',
+    pago: {
+      ...armarPago({
+        clave: abono.id,
+        cuotaId: null,
+        fecha: abono.fecha,
+        forma,
+        prestamo: valor + mora,
+        total: valor + mora,
+        codigo: abono.codigo_comprobante,
+        periodo: `Préstamo · ${etiquetaCuotas}`,
+        detalleCuotasPrestamo: detalle
+      }),
+      abonos: abonosCuota,
+      esParcial: cuotasDelAbono.some(c => !c.pagada),
+      pendienteCuota: cuotasDelAbono.reduce((t, c) => t + (c.pagada ? 0 : c.pendiente), 0)
     }
   }
 }
@@ -1379,7 +1537,7 @@ onUnmounted(darseDeBaja)
 }
 .tablero-talon__circulo { position: absolute; border-radius: 9999px; pointer-events: none; }
 .tablero-talon__circulo--a { width: 14rem; height: 14rem; right: -5rem; top: -7rem; background: rgba(255, 255, 255, 0.06); }
-.tablero-talon__hola { font-size: 0.9375rem; font-weight: 600; color: rgba(255, 255, 255, 0.92); }
+.tablero-talon__hola { font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; line-height: 1.2; color: #fff; }
 /*
   La cifra es lo que el socio viene a ver: grande, pero medida contra el ancho de la tarjeta
   (cqi) y no de la pantalla, porque en escritorio la tarjeta vive en una columna de 22 rem y
@@ -1504,23 +1662,114 @@ onUnmounted(darseDeBaja)
   letter-spacing: -0.02em;
 }
 .tablero-talon__deuda--mora .tablero-talon__debe { color: #b91c1c; }
-.tablero-talon__deuda--mora .tablero-etiqueta { color: #b91c1c; }
 .tablero-talon__deuda--pendiente .tablero-talon__debe { color: #b45309; }
-.tablero-talon__deuda--pendiente .tablero-etiqueta { color: #b45309; }
 .tablero-talon__debe--ok { display: flex; align-items: center; gap: 0.375rem; font-size: 1.375rem; color: #1B5E37; }
-.tablero-mini {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: #475569;
+/* Lo que debe: cabecera (título, estado, botón), valor y lista concepto → valor */
+.deuda__cabecera { display: flex; align-items: center; gap: 0.5rem; }
+.deuda__titulo { color: #475569; }
+.deuda__estado {
+  display: inline-flex; align-items: center; padding: 0.125rem 0.5rem; border-radius: 9999px;
+  font-size: 0.6875rem; font-weight: 800; background: #fef3c7; color: #92400e;
 }
-.tablero-talon__deuda--mora .tablero-mini { background: #fef2f2; color: #7f1d1d; }
-.tablero-talon__deuda--pendiente .tablero-mini { background: #fffbeb; color: #78350f; }
+.tablero-talon__deuda--mora .deuda__estado { background: #fee2e2; color: #991b1b; }
+.deuda__boton { margin-left: auto; }
+.tablero-talon__deuda .tablero-talon__debe { margin-top: 0.25rem; }
+.deuda__lista { margin-top: 0.625rem; border-top: 1px solid rgba(15, 23, 42, 0.08); }
+.deuda__fila {
+  display: flex; justify-content: space-between; gap: 0.75rem; padding: 0.4375rem 0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06); font-size: 0.8125rem; color: #475569;
+}
+.deuda__fila:last-child { border-bottom: 0; }
+.deuda__fila strong { color: #0f172a; font-weight: 800; }
+.tablero-talon__deuda--mora .deuda__fila strong { color: #991b1b; }
+.deuda__4x1000 {
+  display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.375rem;
+  margin-top: 0.375rem; padding: 0.3125rem 0.625rem; border-radius: 0.625rem;
+  background: #e0f2fe; border: 1px solid #bae6fd; color: #075985; font-size: 0.8125rem;
+}
+.deuda__4x1000 strong { font-weight: 800; color: #0c4a6e; }
+.deuda__4x1000-nota { font-size: 0.6875rem; font-weight: 700; color: #0369a1; }
+.deuda__proxima {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+.deuda__aldia { display: flex; align-items: center; gap: 0.75rem; }
+.deuda__aldia-icono {
+  display: flex; width: 2.75rem; height: 2.75rem; flex-shrink: 0; align-items: center; justify-content: center;
+  border-radius: 9999px; background: #E8F5E9; color: #1B5E37;
+}
+.tablero-talon__boton {
+  display: inline-flex;
+  flex-shrink: 0;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tablero-talon__boton:active { background: rgba(255, 255, 255, 0.22); }
+.tablero-talon__boton:disabled { opacity: 0.7; }
+/*
+  Móvil: una tarjeta, dos partes, con la identidad de la portada. El ahorro en verde, con el
+  marranito asomado a la derecha; lo que debe sube sobre el verde con la misma onda del
+  login y la portada, del color de su fondo (blanco, o un tinte muy leve según el estado).
+
+  Una sola escala de espacios: 20 px a los lados en las dos partes, 16–20 px entre grupos
+  (saludo → ahorro → casillas → botones; cabecera → cifra → desglose) y 4 px entre una
+  etiqueta y su cifra. Antes cada bloque tenía el suyo y no cuadraban.
+*/
+.tablero-talon__alcancia { display: none; }
+.tablero-talon__onda { display: none; }
+@media (max-width: 767px) {
+  .tablero-talon__corte { display: none; }
+  .tablero-talon__ahorro { padding: 1.25rem 1.25rem 3.25rem; }
+  /* El marranito arriba a la derecha, junto al saludo; la fila le deja su espacio */
+  .tablero-talon__alcancia {
+    display: block;
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    width: 5rem;
+    pointer-events: none;
+  }
+  .tablero-talon__fila-hola { padding-right: 4.75rem; min-height: 2.75rem; }
+  .tablero-casillas { margin-top: 1.25rem; }
+  .tablero-casillas__leyenda { margin-top: 0.625rem; }
+
+  .tablero-talon__deuda {
+    position: relative;
+    z-index: 1;
+    padding: 1rem 1.25rem 1.25rem;
+    background: #fff;
+  }
+  .tablero-talon__onda {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(-2.25rem + 1px);
+    width: 100%;
+    height: 2.25rem;
+    color: #fff;
+    pointer-events: none;
+  }
+  .tablero-talon__deuda .tablero-talon__debe { margin-top: 0.5rem; }
+  .deuda__4x1000 { margin-top: 0.625rem; }
+  .deuda__lista { margin-top: 1rem; }
+  .deuda__fila { padding: 0.5rem 0; }
+  .deuda__proxima { margin-top: 1rem; padding-top: 1rem; }
+  .tablero-talon__deuda--mora { background: #fff8f8; }
+  .tablero-talon__deuda--mora .tablero-talon__onda { color: #fff8f8; }
+  .tablero-talon__deuda--pendiente { background: #fffcf3; }
+  .tablero-talon__deuda--pendiente .tablero-talon__onda { color: #fffcf3; }
+}
 
 /* Encabezado de cada tarjeta: título a la izquierda, «Ver todo» a la derecha */
 .tablero-seccion { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
@@ -1538,51 +1787,8 @@ onUnmounted(darseDeBaja)
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.tablero-talon__socio {
-  flex-shrink: 0;
-  padding: 0.0625rem 0.5rem;
-  border-radius: 9999px;
-  background: var(--color-accent-200, #fed7aa);
-  font-size: 0.625rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-accent-900, #7c2d12);
-}
 /* Atajo «Natillera» (admin que también es socio): la píldora se ve pequeña, pero el área de
    toque es de 44 px de alto; el margen negativo evita que agrande la fila */
-.tablero-talon__administrar {
-  display: inline-flex;
-  flex-shrink: 0;
-  min-height: 2.75rem;
-  align-items: center;
-  margin: -0.625rem 0;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.tablero-talon__administrar-pildora {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.625rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.14);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #fff;
-}
-.tablero-talon__refrescar {
-  display: inline-flex;
-  width: 2.75rem;
-  height: 2.75rem;
-  margin: -0.625rem -0.625rem -0.625rem auto;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  color: rgba(255, 255, 255, 0.85);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
 .tablero-talon__accion {
   display: inline-flex;
   flex-shrink: 0;
@@ -1598,22 +1804,6 @@ onUnmounted(darseDeBaja)
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-/* Desglose de la deuda: en móvil una fila que se desliza, no un bloque que crece */
-.tablero-mini-fila {
-  display: flex;
-  gap: 0.375rem;
-  margin: 0.625rem -1.25rem 0;
-  padding: 0 1.25rem 0.125rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.tablero-mini-fila::-webkit-scrollbar { display: none; }
-.tablero-mini-fila .tablero-mini { flex-shrink: 0; white-space: nowrap; }
-@media (min-width: 768px) {
-  .tablero-mini-fila { flex-wrap: wrap; margin: 0.625rem 0 0; padding: 0; overflow: visible; }
-}
-
 /* Tarjetas del tablero */
 .tablero-card {
   padding: 1rem 1.125rem 1.125rem;
@@ -1740,54 +1930,36 @@ onUnmounted(darseDeBaja)
 }
 
 /* ─── Actividades: línea de tiempo ─── */
-.act-linea { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
-.act-linea__item { display: flex; gap: 0.5rem; align-items: stretch; }
-.act-linea__fecha {
-  display: flex;
-  width: 2.625rem;
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem 0;
-  border-radius: 0.875rem;
-  background: #fff;
+.act-lista { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.625rem; }
+.act-item {
+  padding: 0.875rem 1rem;
+  border-radius: 1rem;
   border: 1px solid var(--surface-divider);
-  line-height: 1.1;
+  background: #fff;
 }
-.act-linea__fecha strong { font-family: var(--font-display); font-size: 1rem; font-weight: 800; color: #1B5E37; }
-.act-linea__fecha small { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
-.act-card {
+.act-item--mia { border-color: #a7d7b5; background: #f4faf5; }
+.act-item__cabecera { display: flex; align-items: flex-start; gap: 0.75rem; }
+.act-item__fecha { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; }
+.act-item__titulo { margin-top: 0.125rem; font-weight: 800; font-size: 0.9375rem; line-height: 1.3; color: #0f172a; overflow-wrap: anywhere; }
+
+/* Rifa: la balota con el número y el resultado, bajo la cabecera */
+.act-rifa {
   display: flex;
-  flex: 1 1 0%;
-  min-width: 0;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.875rem;
-  border: 1px solid var(--surface-divider);
-  background: #fff;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-divider);
 }
-.act-card__titulo { font-weight: 700; font-size: 0.9375rem; color: #0f172a; }
-.act-card__sub { font-size: 0.75rem; color: #64748b; }
-
-/* Rifa: fila compacta con balota dorada */
-.rifa {
-  display: flex;
-  flex: 1 1 0%;
-  min-width: 0;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 0.75rem 0.5rem 0.5rem;
-  border-radius: 0.875rem;
-  border: 1px solid #ecd9a0;
-  background: #fffdf6;
-}
-.rifa--mia { border-color: #e0b84a; background: #fff4cc; }
+.act-rifa__etiqueta { font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; }
+.act-rifa__ganador { display: flex; align-items: flex-start; gap: 0.375rem; margin-top: 0.125rem; font-size: 0.9375rem; font-weight: 800; line-height: 1.3; color: #0f172a; overflow-wrap: anywhere; }
+.act-rifa__ganador--mio { color: #1B5E37; }
+.act-rifa__ganador--pendiente { font-weight: 600; color: #475569; }
+.act-rifa__trofeo { width: 1.125rem; height: 1.125rem; flex-shrink: 0; margin-top: 0.0625rem; color: #1B5E37; }
 .rifa__balota {
   display: flex;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -1796,29 +1968,26 @@ onUnmounted(darseDeBaja)
   background: radial-gradient(circle at 32% 28%, #fff6c9 0%, #f6d266 40%, #d9a521 100%);
   box-shadow: inset 0 -3px 6px rgba(138, 106, 18, 0.3);
   font-family: var(--font-display);
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
   font-weight: 800;
   color: #5c4308;
 }
 .rifa__balota--pendiente { background: #f1f5f9; box-shadow: inset 0 0 0 2px #cbd5e1; color: #94a3b8; }
-.rifa__titulo { font-weight: 700; font-size: 0.875rem; line-height: 1.25; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rifa__resultado { font-size: 0.8125rem; line-height: 1.3; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rifa__icono { display: inline-block; width: 0.875rem; height: 0.875rem; margin-right: 0.25rem; vertical-align: -0.125rem; color: #64748b; }
-.rifa__numeros { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-top: 0.1875rem; font-size: 0.6875rem; color: #94a3b8; }
+.rifa__numeros { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; margin-top: 0.625rem; font-size: 0.75rem; color: #64748b; }
 .rifa__numero {
   display: inline-flex;
-  min-width: 1.5rem;
-  height: 1.25rem;
+  min-width: 1.75rem;
+  height: 1.5rem;
   align-items: center;
   justify-content: center;
-  padding: 0 0.25rem;
+  padding: 0 0.375rem;
   border-radius: 9999px;
   background: #f1f5f9;
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   font-weight: 800;
   color: #475569;
 }
-.rifa__numero--ganador { background: #f6d266; color: #5c4308; }
+.rifa__numero--ganador { background: #1B5E37; color: #fff; }
 
 /* ─── Barras ─── */
 .portal-barra {
@@ -1976,6 +2145,22 @@ onUnmounted(darseDeBaja)
 .portal-filtro.is-activo .portal-filtro__n { background: rgba(255, 255, 255, 0.2); }
 
 /* ─── Préstamos ─── */
+.portal-plan__comprobante {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(27, 94, 55, 0.3);
+  background: #fff;
+  color: #1B5E37;
+  font-size: 0.75rem;
+  font-weight: 700;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.portal-plan__comprobante:hover { background: #E8F5E9; }
 .portal-ver-plan {
   display: inline-flex;
   align-items: center;

@@ -78,26 +78,31 @@
       :style="{ paddingBottom: `calc(max(1.25rem, env(safe-area-inset-bottom, 0px)) + ${tapado}px)` }"
     >
       <p v-if="errorImagen" class="text-center text-xs text-red-700">{{ errorImagen }}</p>
+      <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
+           `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
+      <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-900" role="status">
+        No se pudo abrir el menú de compartir. Descarga la imagen y adjúntala en el chat.
+        <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline">Abrir WhatsApp</a>
+      </p>
       <div class="flex gap-3">
         <button
           type="button"
-          class="btn-modal-secondary flex-1"
+          class="btn-descargar flex-1"
           :disabled="!archivo"
           @click="descargar"
         >
-          <ArrowDownTrayIcon class="h-4 w-4" />
+          <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
           Descargar
         </button>
-        <!-- WhatsApp conserva su verde propio (skill natillerapp-modals, excepciones) -->
         <button
           v-if="telefono"
           type="button"
-          class="inline-flex min-h-[48px] flex-[1.3] touch-manipulation items-center justify-center gap-2 rounded-full bg-[#128C7E] px-4 text-sm font-bold text-white hover:bg-[#0f7a6e] disabled:opacity-60"
+          class="btn-compartir flex-1"
           :disabled="!archivo"
           @click="enviarWhatsApp"
         >
-          <ChatBubbleLeftIcon class="h-4 w-4" />
-          {{ archivo ? 'Enviar por WhatsApp' : 'Preparando…' }}
+          <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+          {{ archivo ? 'WhatsApp' : 'Preparando…' }}
         </button>
       </div>
     </div>
@@ -121,10 +126,12 @@
 
 <script setup>
 import { numeroWhatsApp } from '../../utils/telefono'
+import { detectIosPlatform } from '../../composables/useIsIos'
 import { computed, nextTick, ref, watch } from 'vue'
 import { toPng } from 'html-to-image'
-import { ArrowDownTrayIcon, ChatBubbleLeftIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ArrowDownTrayIcon, DocumentTextIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import ModalWrapper from '../ModalWrapper.vue'
+import IconoWhatsApp from '../iconos/IconoWhatsApp.vue'
 import NatiscrollHint from '../NatiscrollHint.vue'
 import ComprobanteCierreSocio from './ComprobanteCierreSocio.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
@@ -153,6 +160,8 @@ const capturaRef = ref(null)
 const dataUrl = ref('')
 const archivo = ref(null)
 const errorImagen = ref('')
+/** Enlace a WhatsApp que se ofrece si el menú de compartir falla. */
+const reservaWhatsApp = ref(null)
 
 const nombre = computed(() => props.dato?.socio?.nombre || 'el socio')
 const telefono = computed(() => (props.dato?.socio?.telefono || '').replace(/\D/g, ''))
@@ -172,6 +181,7 @@ watch(
     dataUrl.value = ''
     archivo.value = null
     errorImagen.value = ''
+    reservaWhatsApp.value = null
     if (!abierto || !props.dato) return
     const turno = ++generacion
     await nextTick()
@@ -192,6 +202,13 @@ watch(
 
 function descargar() {
   if (!dataUrl.value) return
+  // En iOS `a.download` con un data URL abre la imagen en otra pestaña en lugar de
+  // guardarla; la hoja de compartir ofrece «Guardar imagen». Sin `await` antes: gesto.
+  const archivos = archivo.value ? { files: [archivo.value] } : null
+  if (archivos && detectIosPlatform() && navigator.canShare?.(archivos)) {
+    navigator.share(archivos).then(() => emit('descargado'), () => {})
+    return
+  }
   const enlace = document.createElement('a')
   enlace.download = nombreArchivo.value
   enlace.href = dataUrl.value
@@ -204,9 +221,11 @@ function enviarWhatsApp() {
   const datos = { files: [archivo.value], title: 'Comprobante de cierre', text: props.texto }
   // Sin nada asíncrono antes: ver el comentario de la generación.
   if (navigator.canShare?.(datos)) {
+    reservaWhatsApp.value = null
     navigator.share(datos).catch(error => {
       // Cancelar el menú de compartir no es un error.
-      if (error?.name !== 'AbortError') abrirWhatsAppConTexto()
+      if (error?.name === 'AbortError') return
+      reservaWhatsApp.value = `https://wa.me/${numeroWhatsApp(telefono.value)}?text=${encodeURIComponent(props.texto)}`
     })
     return
   }

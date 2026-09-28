@@ -454,6 +454,7 @@
 </template>
 
 <script setup>
+import { cargarXlsx, guardarLibroXlsx, precargarXlsxEnIos, xlsxListo } from '../../utils/exportarXlsx'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
@@ -815,11 +816,14 @@ watch([agrupacion, unSoloSocio], () => {
 
 // xlsx-js-style pesa ~600 KB: se carga solo al exportar para no inflar el chunk de la vista.
 let XLSX = null
-async function asegurarXLSX() {
-  if (XLSX) return
-  const modulo = await import('xlsx-js-style')
-  XLSX = modulo.default || modulo
+// Devuelve null (sin nada que esperar) si ya está precargado: en iOS compartir el
+// archivo necesita que no haya ningún `await` entre el toque y `navigator.share`.
+function asegurarXLSX() {
+  XLSX = xlsxListo()
+  if (XLSX) return null
+  return cargarXlsx().then(m => { XLSX = m })
 }
+onMounted(precargarXlsxEnIos)
 
 const exportando = ref(false)
 
@@ -827,7 +831,8 @@ async function exportarExcel() {
   if (visibles.value.length === 0) return
   exportando.value = true
   try {
-    await asegurarXLSX()
+    const cargaXlsx = asegurarXLSX()
+    if (cargaXlsx) await cargaXlsx
     const filas = visibles.value.map(p => ({
       Socio: p.socio,
       Fecha: p.fecha ? formatDate(p.fecha) : 'Sin fecha',
@@ -870,7 +875,7 @@ async function exportarExcel() {
     const libro = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(libro, hoja, 'Pagos por socio')
     const nombre = (natillera.value?.nombre || 'natillera').replace(/[^\w\sáéíóúñÁÉÍÓÚÑ-]/g, '').trim()
-    XLSX.writeFile(libro, `Pagos ${nombre} ${hoy}.xlsx`)
+    guardarLibroXlsx(XLSX, libro, `Pagos ${nombre} ${hoy}.xlsx`)
   } catch (e) {
     console.error('No se pudo exportar los pagos:', e)
     notificaciones.error('No se pudo generar el archivo', 'Exportar')

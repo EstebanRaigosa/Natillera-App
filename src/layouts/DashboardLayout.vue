@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen min-h-[100dvh] flex max-lg:h-[100dvh] max-lg:max-h-[100dvh] max-lg:overflow-hidden">
+  <div class="min-h-screen supports-[height:100dvh]:min-h-[100dvh] flex max-lg:h-[100dvh] max-lg:max-h-[100dvh] max-lg:overflow-hidden">
     <!-- Área de activación hover (solo en lg, 1024px-1279px) -->
     <div 
       v-if="isLgScreen && !sidebarHover"
@@ -321,10 +321,13 @@
       </div>
     </aside>
 
-    <!-- Usuario - Siempre visible fijo en la parte inferior izquierda -->
+    <!-- Usuario - Siempre visible fijo en la parte inferior izquierda.
+         En móvil sale con el cajón abierto: sin el padding de safe-area + barra de Safari,
+         «Mi cuenta» y «Cerrar sesión» quedaban bajo el home indicator o la barra. -->
     <div 
       @mouseenter="handleUserPanelMouseEnter"
       @mouseleave="handleUserPanelMouseLeave"
+      :style="{ paddingBottom: `calc(max(0.625rem, env(safe-area-inset-bottom, 0px)) + ${tapadoInferior}px)` }"
       :class="[
         'fixed bottom-0 left-0 w-72 p-2.5 z-50 transition-all duration-300',
         // En xl (1280px+): siempre visible
@@ -443,12 +446,12 @@
 
     <!-- Wrapper del contenido: z-50 cuando hay modal abierta para que quede por encima de la barra inferior (z-40) -->
     <div
-      class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen lg:min-h-[100dvh] relative"
+      class="flex-1 flex flex-col min-w-0 min-h-0 lg:min-h-screen lg:supports-[height:100dvh]:min-h-[100dvh] relative"
       :class="{ 'z-50': isBodyScrollLocked }"
     >
       <!-- Contenido principal: en <lg el scroll es interno para que el header sticky quede fijo al hacer scroll -->
       <main
-        class="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden overflow-y-auto lg:min-h-screen lg:min-h-[100dvh]"
+        class="flex-1 flex flex-col min-h-0 w-full overflow-x-hidden overflow-y-auto lg:min-h-screen lg:supports-[height:100dvh]:min-h-[100dvh]"
         :class="sidebarOpen && esViewportMovil ? 'max-lg:!overflow-y-hidden max-lg:touch-none' : ''"
       >
         <!-- Header móvil -->
@@ -465,7 +468,20 @@
             >
               <Bars3Icon class="w-6 h-6" />
             </button>
-            <div class="flex flex-1 items-center gap-1.5 min-w-0 justify-center px-1">
+            <!--
+              Portal del socio: la cabecera dice dónde está (su natillera) en vez de la marca
+              centrada. El resto de la app sigue con el logo.
+            -->
+            <div v-if="esPortal" class="flex min-w-0 flex-1 items-center gap-2.5 px-1">
+              <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
+                <WalletIcon class="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span class="min-w-0">
+                <span class="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#1B5E37]">Mi natillera</span>
+                <span class="block truncate font-display text-base font-bold leading-tight text-gray-900">{{ nombreNatilleraPortal || 'Portal del socio' }}</span>
+              </span>
+            </div>
+            <div v-else class="flex flex-1 items-center gap-1.5 min-w-0 justify-center px-1">
               <img
                 src="/favicon-512x512.png"
                 alt=""
@@ -680,6 +696,12 @@ const modulosOcultos = computed(() =>
 // ─── Portal del socio en la barra lateral ───
 const portalNav = usePortalNavegacion()
 const esPortal = computed(() => route.name === 'PortalSocio')
+// Nombre de la natillera del portal abierto, para la cabecera móvil.
+const nombreNatilleraPortal = computed(() => {
+  if (!esPortal.value) return ''
+  const id = String(route.params.socioNatilleraId || '')
+  return portalNav.misNatilleras.value.find(n => String(n.socio_natillera_id) === id)?.natillera_nombre || ''
+})
 const ICONOS_PORTAL = {
   aportes: CurrencyDollarIcon,
   ganancias: SparklesIcon,

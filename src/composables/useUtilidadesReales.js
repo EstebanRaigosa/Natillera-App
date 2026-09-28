@@ -177,3 +177,98 @@ export async function calcularUtilidadesReales(natilleraId, opciones = {}) {
     return { porTipo, total: 0, registrado: 0, diferencia: 0, error: e.message }
   }
 }
+
+/**
+ * Desglose de los intereses ganados por préstamos, préstamo por préstamo, con las MISMAS
+ * reglas que `calcularUtilidadesReales` (así la suma del desglose es la cifra del indicador):
+ *
+ *   · Anticipado: cuenta el interés total del préstamo desde que se crea.
+ *   · Con cada cuota: cuenta el interés de las cuotas ya pagadas.
+ *   · Mora: la cobrada en los abonos, que no se asocia a un préstamo (va en su propia fila).
+ *
+ * Solo préstamos activos o pagados, igual que el total.
+ *
+ * @returns {Promise<{ prestamos: object[], mora: { efectivo: number, transferencia: number, total: number }, total: number, error?: string }>}
+ */
+export async function desgloseInteresesPrestamos(natilleraId) {
+  const vacio = { prestamos: [], mora: { efectivo: 0, transferencia: 0, total: 0 }, total: 0 }
+  if (!natilleraId) return vacio
+  try {
+    const { data: socios, error: errSocios } = await supabase
+      .from('socios_natillera')
+      .select('id, socio:socios(nombre)')
+      .eq('natillera_id', natilleraId)
+    if (errSocios) throw errSocios
+    const ids = (socios || []).map(s => s.id)
+    const nombres = new Map((socios || []).map(s => [s.id, s.socio?.nombre || null]))
+    if (ids.length === 0) return vacio
+
+    const [prestamosRes, moraRes] = await Promise.all([
+      supabase
+        .from('prestamos')
+        .select('id, socio_natillera_id, nombre_socio, monto, estado, interes, tipo_interes, interes_anticipado, interes_total, numero_cuotas, periodicidad, created_at')
+        .in('socio_natillera_id', ids)
+        .in('estado', ['activo', 'pagado'])
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('utilidades_clasificadas')
+        .select('monto, forma_pago')
+        .eq('natillera_id', natilleraId)
+        .eq('tipo', 'prestamos')
+        .is('id_actividad', null)
+        .is('fecha_cierre', null)
+        .filter('detalles->>subtipo', 'eq', 'mora')
+    ])
+    if (prestamosRes.error) throw prestamosRes.error
+    if (moraRes.error) throw moraRes.error
+
+    const lista = prestamosRes.data || []
+    let plan = []
+    if (lista.length > 0) {
+      const { data, error } = await supabase
+        .from('plan_pagos_prestamo')
+        .select('prestamo_id, interes, pagada, numero_cuota')
+        .in('prestamo_id', lista.map(p => p.id))
+      if (error) throw error
+      plan = data || []
+    }
+
+    const prestamos = lista.map(p => {
+      const cuotas = plan.filter(c => c.prestamo_id === p.id)
+      const pagadas = cuotas.filter(c => c.pagada)
+      const interesRecibido = pagadas.reduce((s, c) => s + aNumero(c.interes), 0)
+      const interesTotal = aNumero(p.interes_total) || cuotas.reduce((s, c) => s + aNumero(c.interes), 0)
+      const cuenta = p.interes_anticipado ? aNumero(p.interes_total) : interesRecibido
+      return {
+        id: p.id,
+        socio: p.nombre_socio || nombres.get(p.socio_natillera_id) || 'Socio',
+        fecha: p.created_at,
+        monto: aNumero(p.monto),
+        estado: p.estado,
+        tasa: aNumero(p.interes),
+        tipoInteres: p.tipo_interes === 'compuesto' ? 'Compuesto' : 'Simple',
+        anticipado: !!p.interes_anticipado,
+        cuotas: cuotas.length,
+        cuotasPagadas: pagadas.length,
+        interesTotal,
+        interesRecibido,
+        interesGanado: cuenta,
+        // Contado como ganado pero todavía no recibido en cuotas (solo pasa con anticipados)
+        porRecibir: Math.max(0, cuenta - interesRecibido)
+      }
+    })
+
+    const mora = { efectivo: 0, transferencia: 0, total: 0 }
+    for (const fila of moraRes.data || []) {
+      const v = aNumero(fila.monto)
+      if (fila.forma_pago === 'transferencia') mora.transferencia += v
+      else mora.efectivo += v
+      mora.total += v
+    }
+
+    const total = prestamos.reduce((s, p) => s + p.interesGanado, 0) + mora.total
+    return { prestamos, mora, total }
+  } catch (e) {
+    return { ...vacio, error: e?.message || 'No se pudo calcular el desglose' }
+  }
+}

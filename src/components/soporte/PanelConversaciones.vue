@@ -78,10 +78,11 @@
           </li>
         </ul>
 
-        <!-- En el panel flotante la acción vive abajo, al alcance del pulgar -->
+        <!-- En el panel flotante la acción vive abajo, al alcance del pulgar.
+             `--tapado-inferior`: la barra de Safari, que publica ModalWrapper (0 fuera). -->
         <div
           v-if="compacto"
-          class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+          class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-3 pb-[calc(max(0.75rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
         >
           <button type="button" class="btn-modal-primary w-full !min-h-[44px] text-sm" @click="abrirNueva">
             <PlusIcon class="mr-1.5 h-4 w-4" />

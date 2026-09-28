@@ -228,7 +228,7 @@ Tuteo, frases cortas, verbo de acción delante, sin tecnicismos. Emoji solo el �
 | Tras plegar el panel, el scroll se quedaba abajo y no se veía el paso siguiente | Se medía el objetivo a mitad de la animación de pliegue | Si el paso anterior deshizo algo al salir, `esperarQuieto(objetivo)` antes de encuadrar. |
 | La apertura de configuración se veía brusca | Se desplegaba en `antes`, antes de llegar el foco | `alLlegar` + panel con altura animada. |
 | Pasos apuntando a secciones inexistentes | Pasos en un `computed` evaluado antes de pintar | Construirlos al abrir. |
-| El recorrido «saltaba» por detrás | `useBodyScrollLock` pone `position: fixed` en el body y anula `scrollIntoView` | No usarlo: bloquear con `touch-action: none`, `@touchmove.prevent`, `@wheel.prevent` y las teclas de desplazamiento. |
+| El recorrido «saltaba» por detrás | `useBodyScrollLock` pone `position: fixed` en el body y anula `scrollIntoView` | No usarlo: bloquear con `touch-action: none`, un handler de `touchmove`/`wheel` que hace `preventDefault` salvo dentro de un cuerpo de tarjeta que desborda (`cortarDesplazamiento` en `RecorridoInteractivo`), y las teclas de desplazamiento. La tarjeta tiene `max-height` en `dvh` y su cuerpo scrollea: en horizontal no cabe y sin eso el usuario queda atrapado. |
 | El usuario avanzaba sin leer | Tocar fuera avanzaba | Tocar fuera avisa, no avanza. |
 | Explicaba la barra lateral en el teléfono | Mismos pasos en todos los tamaños | Ramificar por `lg`. |
 | Modales («sin socios», recordatorio) tapando lo señalado | Se abrían a los 300 ms, debajo del recorrido | Retenerlos y liberarlos al cerrar. |

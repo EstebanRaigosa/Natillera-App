@@ -11,7 +11,12 @@
  */
 
 /** Tipos que se pintan como imagen dentro de la burbuja. */
-export const MIMES_IMAGEN = ['image/png', 'image/jpeg', 'image/webp', 'image/heic']
+export const MIMES_IMAGEN = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif']
+
+/** Formato de las fotos de iPhone: solo Safari lo pinta, así que se convierte. */
+export function esHeic(mime) {
+  return mime === 'image/heic' || mime === 'image/heif'
+}
 
 /** Tipos cuyo contenido se puede asomar en el propio hilo. */
 export const MIMES_TEXTO = ['text/plain']
@@ -94,13 +99,18 @@ async function decodificar(archivo) {
  */
 export async function comprimirImagen(archivo) {
   if (!esImagen(archivo?.type)) return archivo
-  if (archivo.size < BYTES_MINIMOS_PARA_COMPRIMIR) return archivo
   if (typeof document === 'undefined') return archivo
+  // HEIC se convierte siempre, pese poco o no: quien lo abra desde Chrome o
+  // Android no lo vería. Para el resto, por debajo del umbral no compensa.
+  const heic = esHeic(archivo.type)
+  if (!heic && archivo.size < BYTES_MINIMOS_PARA_COMPRIMIR) return archivo
 
-  // PNG sin WebP disponible se queda como está: pasarlo a JPEG le quitaría la
-  // transparencia, y una captura de pantalla con fondo transparente saldría
-  // con manchas negras.
-  const destino = admiteWebp() ? 'image/webp' : (archivo.type === 'image/jpeg' ? 'image/jpeg' : null)
+  // Safari no codifica WebP en canvas (`admiteWebp()` es false), así que allí
+  // el destino es JPEG. Solo PNG (y GIF) se quedan como están sin WebP:
+  // pasarlos a JPEG les quitaría la transparencia, y una captura con fondo
+  // transparente saldría con manchas negras.
+  const conTransparencia = archivo.type === 'image/png' || archivo.type === 'image/gif'
+  const destino = admiteWebp() ? 'image/webp' : (conTransparencia ? null : 'image/jpeg')
   if (!destino) return archivo
 
   let recurso = null
@@ -123,13 +133,17 @@ export async function comprimirImagen(archivo) {
     contexto.drawImage(fuente, 0, 0, ancho, alto)
 
     const blob = await new Promise((resolver) => lienzo.toBlob(resolver, destino, CALIDAD))
-    // Si el resultado no es más pequeño, el original ya estaba bien.
-    if (!blob || blob.size >= archivo.size) return archivo
+    if (!blob) return archivo
+    // Si el resultado no es más pequeño, el original ya estaba bien (salvo
+    // HEIC, que se cambia aunque pese más: lo que importa es que se vea).
+    if (!heic && blob.size >= archivo.size) return archivo
 
     const extension = destino === 'image/webp' ? 'webp' : 'jpg'
     const nombre = `${archivo.name.replace(/\.[^.]+$/, '')}.${extension}`
     return new File([blob], nombre, { type: destino, lastModified: Date.now() })
   } catch {
+    // Incluye el HEIC que el navegador no sabe decodificar (Safari < 17,
+    // Chrome): vuelve tal cual y quien llama decide qué decir.
     return archivo
   } finally {
     try {

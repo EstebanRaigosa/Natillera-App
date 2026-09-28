@@ -82,7 +82,7 @@
       </div>
     </div>
 
-    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+    <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
       <div class="flex gap-3">
         <button type="button" class="btn-modal-secondary flex-1" :disabled="borrando" @click="cerrar">
           Cancelar

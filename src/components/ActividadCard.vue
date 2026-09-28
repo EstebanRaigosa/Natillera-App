@@ -103,6 +103,15 @@
           Ver valores
         </button>
         <button
+          v-if="esRifaLiquidada"
+          type="button"
+          @click.stop="$emit('ver-por-pagar')"
+          class="inline-flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100 active:scale-95 touch-manipulation"
+        >
+          <UsersIcon class="w-4 h-4 flex-shrink-0" />
+          Por pagar
+        </button>
+        <button
           v-if="(esRifaLiquidada) && !soloLectura"
           type="button"
           @click.stop="$emit('cambiar-forma-pago')"
@@ -181,8 +190,9 @@
           v-if="!soloLectura"
           type="button"
           @click.stop="$emit('eliminar')"
-          class="-m-1 p-2 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex-shrink-0 touch-manipulation"
+          class="-m-2 p-3 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors flex-shrink-0 touch-manipulation"
           title="Eliminar actividad"
+          aria-label="Eliminar actividad"
         >
           <TrashIcon class="w-5 h-5" />
         </button>
@@ -225,7 +235,8 @@
         </template>
       </div>
 
-      <!-- Premio entregado (solo rifas liquidadas) -->
+      <!-- Premio entregado (solo rifas liquidadas).
+           Los chips miden 26px de alto: el ::before amplía el área táctil a 44px sin cambiar su aspecto -->
       <div
         v-if="esRifaLiquidada"
         class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 border border-slate-100 px-3 py-2"
@@ -237,18 +248,30 @@
           <button
             type="button"
             @click.stop="$emit('ver-desglose')"
-            class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors touch-manipulation"
+            class="relative inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors touch-manipulation before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']"
             title="Ver valores pagados"
+            aria-label="Ver valores pagados"
           >
             <CurrencyDollarIcon class="w-3.5 h-3.5" />
             Valores
           </button>
           <button
+            type="button"
+            @click.stop="$emit('ver-por-pagar')"
+            class="relative inline-flex items-center gap-1 rounded-lg bg-red-50 text-red-700 border border-red-200 px-2 py-1 text-xs font-semibold hover:bg-red-100 transition-colors touch-manipulation before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']"
+            title="Ver quién falta por pagar"
+            aria-label="Ver quién falta por pagar"
+          >
+            <UsersIcon class="w-3.5 h-3.5" />
+            Por pagar
+          </button>
+          <button
           v-if="!soloLectura"
             type="button"
             @click.stop="$emit('cambiar-forma-pago')"
-            class="inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
+            class="relative inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']"
             title="Cambiar forma de pago"
+            aria-label="Cambiar forma de pago"
           >
             <PencilSquareIcon class="w-3.5 h-3.5" />
             Cambiar
@@ -261,8 +284,9 @@
         <button
           type="button"
           @click.stop="$emit('ver-miembros')"
-          class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors touch-manipulation"
+          class="relative inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-semibold hover:bg-emerald-100 transition-colors touch-manipulation before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']"
           title="Ver miembros que pagaron"
+          aria-label="Ver miembros que pagaron"
         >
           <UsersIcon class="w-3.5 h-3.5" />
           Miembros
@@ -271,8 +295,9 @@
           v-if="!soloLectura"
           type="button"
           @click.stop="$emit('registrar-gastos')"
-          class="inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation"
+          class="relative inline-flex items-center gap-1 rounded-lg bg-white text-gray-600 border border-gray-300 px-2 py-1 text-xs font-semibold hover:bg-gray-50 transition-colors touch-manipulation before:absolute before:inset-x-0 before:-inset-y-[9px] before:content-['']"
           title="Registrar gastos"
+          aria-label="Registrar gastos"
         >
           <PencilSquareIcon class="w-3.5 h-3.5" />
           Gastos
@@ -309,7 +334,7 @@ const props = defineProps({
   soloLectura: { type: Boolean, default: false },
 })
 
-defineEmits(['click', 'eliminar', 'ver-desglose', 'cambiar-forma-pago', 'ver-miembros', 'registrar-gastos'])
+defineEmits(['click', 'eliminar', 'ver-desglose', 'ver-por-pagar', 'cambiar-forma-pago', 'ver-miembros', 'registrar-gastos'])
 
 const esLiquidada = computed(
   () => props.actividad.estado === 'liquidada' || !props.actividad.estado

@@ -37,6 +37,11 @@
       <p class="text-gray-600 mb-6">
         Tu contraseña ha sido actualizada correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.
       </p>
+      <!-- El enlace del correo abre el navegador, no la app instalada (en iOS, con
+           almacenamiento aparte): la sesión de aquí no pasa a la app. -->
+      <p v-if="!enAppInstalada" class="-mt-3 mb-6 text-sm text-gray-500">
+        Si tienes la app instalada, vuelve a ella e inicia sesión allí.
+      </p>
       <router-link
         to="/auth/login"
         class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-natillera-500 to-emerald-600 text-white rounded-xl hover:from-natillera-600 hover:to-emerald-700 transition-all font-semibold shadow-md hover:shadow-lg"
@@ -92,14 +97,15 @@
           </svg>
           Nueva contraseña
         </label>
-        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:scale-[1.02] focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
           <input 
             v-model="password"
             :type="showPassword ? 'text' : 'password'" 
-            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-base text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Mínimo 6 caracteres"
             minlength="6"
             required
+            autocomplete="new-password"
           />
           <button 
             type="button"
@@ -122,14 +128,15 @@
           </svg>
           Confirmar nueva contraseña
         </label>
-        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:scale-[1.02] focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
+        <div class="relative flex w-full min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white/70 transition-all duration-300 hover:shadow-md hover:border-natillera-300 focus-within:shadow-lg focus-within:shadow-natillera-500/20 focus-within:ring-2 focus-within:ring-natillera-500/50 focus-within:border-natillera-500">
           <input 
             v-model="confirmPassword"
             :type="showConfirmPassword ? 'text' : 'password'" 
-            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
+            class="flex-1 min-w-0 border-0 bg-transparent px-4 py-3 pr-12 text-base text-gray-900 placeholder:text-gray-400 focus:ring-0 focus:outline-none"
             placeholder="Repite tu contraseña"
             minlength="6"
             required
+            autocomplete="new-password"
           />
           <button 
             type="button"
@@ -171,12 +178,7 @@
         :disabled="authStore.loading || !isFormValid"
       >
         <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-        <span v-if="authStore.loading" class="relative z-10 animate-spin">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </span>
+        <CargaBoton v-if="authStore.loading" texto="Guardando contraseña" class="relative z-10" />
         <span v-else class="relative z-10 flex items-center gap-2">
           <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -206,6 +208,7 @@
 </template>
 
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
@@ -221,6 +224,18 @@ const password = ref('')
 const confirmPassword = ref('')
 const errorMessage = ref('')
 const success = ref(false)
+
+const enAppInstalada = typeof window !== 'undefined' &&
+  (window.matchMedia?.('(display-mode: standalone)').matches === true || window.navigator?.standalone === true)
+
+let temporizadorRedireccion = null
+function redirigirAlLogin() {
+  if (temporizadorRedireccion) clearTimeout(temporizadorRedireccion)
+  temporizadorRedireccion = setTimeout(() => {
+    temporizadorRedireccion = null
+    router.push('/auth/login')
+  }, 5000)
+}
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const isValidSession = ref(false)
@@ -266,9 +281,7 @@ onMounted(async () => {
       ? decodeURIComponent(errorDescription.replace(/\+/g, ' '))
       : 'El enlace de restablecimiento no es válido o ha expirado.'
     
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 5000)
+    redirigirAlLogin()
     return
   }
   
@@ -341,9 +354,7 @@ onMounted(async () => {
         } else {
           isLoading.value = false
           errorMessage.value = 'El enlace de restablecimiento ha expirado o no es válido. Por favor, solicita uno nuevo.'
-          setTimeout(() => {
-            router.push('/auth/login')
-          }, 5000)
+          redirigirAlLogin()
         }
       }
     }, 500) // Verificar cada 500ms
@@ -353,13 +364,14 @@ onMounted(async () => {
     isLoading.value = false
     errorMessage.value = 'No se encontró un enlace de restablecimiento válido. Por favor, solicita un nuevo enlace desde la página de inicio de sesión.'
     
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 5000)
+    redirigirAlLogin()
   }
 })
 
 onUnmounted(() => {
+  // Si el usuario se va antes de los 5 s, la redirección no debe perseguirle
+  // a la pantalla a la que haya ido.
+  if (temporizadorRedireccion) clearTimeout(temporizadorRedireccion)
   // Limpiar el listener al desmontar
   if (authListener) {
     authListener.unsubscribe()

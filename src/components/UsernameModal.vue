@@ -61,14 +61,14 @@
       </form>
     </div>
 
-    <div class="flex-shrink-0 px-6 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3 bg-white border-t border-gray-100/90">
+    <div class="flex-shrink-0 px-6 pt-2 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3 bg-white border-t border-gray-100/90">
       <button
         type="button"
         :disabled="loading || !username.trim() || username.trim().length < 2"
         class="btn-modal-primary w-full inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         @click="handleSubmit"
       >
-        <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        <CargaBoton v-if="loading" pequena />
         <span v-else>Guardar</span>
       </button>
     </div>
@@ -76,6 +76,7 @@
 </template>
 
 <script setup>
+import CargaBoton from './carga/CargaBoton.vue'
 import { ref, watch, onMounted, onUnmounted, toRef } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'

@@ -1629,15 +1629,17 @@
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                   Seleccionar Nuevo Administrador
                 </label>
-                <div class="relative">
+                <!-- Lupa por flex, no por `absolute`: en iOS el campo cambia de alto al enfocar -->
+                <div class="flex items-center rounded-xl border border-gray-300 bg-white focus-within:border-natillera-500 focus-within:ring-2 focus-within:ring-natillera-500">
                   <input
                     v-model="busquedaUsuario"
                     type="text"
                     placeholder="Buscar usuario por email o nombre (o ver todos los usuarios abajo)..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-natillera-500 focus:border-natillera-500"
+                    aria-label="Buscar usuario por email o nombre"
+                    class="min-w-0 flex-1 border-none bg-transparent px-4 py-3 outline-none focus:ring-0"
                     @input="buscarUsuarios"
                   />
-                  <MagnifyingGlassIcon class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <span class="flex-shrink-0 pr-3 text-gray-400"><MagnifyingGlassIcon class="w-5 h-5" aria-hidden="true" /></span>
                 </div>
 
                 <!-- Lista de usuarios -->
@@ -2169,7 +2171,7 @@ const tiposActividades = [
   { valor: 'bingo', label: '🎱 Bingos', descripcion: 'Utilidades generadas por bingos' },
   { valor: 'venta', label: '🛒 Ventas', descripcion: 'Utilidades generadas por ventas' },
   { valor: 'evento', label: '🎉 Eventos', descripcion: 'Utilidades generadas por eventos' },
-  { valor: 'otro', label: '📋 Otros', descripcion: 'Utilidades de otras actividades' }
+  { valor: 'otro', label: '📋 Otras actividades', descripcion: 'Utilidades de otras actividades' }
 ]
 
 // Generar lista de años (desde 2 años atrás hasta 5 años adelante)

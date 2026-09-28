@@ -93,13 +93,23 @@
         <p class="ds-stat-card__label">Total Pagado</p>
       </div>
 
-      <div data-guia="prestamos-resumen-intereses" class="ds-stat-card">
+      <!-- Se toca para ver de dónde sale: préstamo por préstamo y la mora cobrada -->
+      <button
+        type="button"
+        data-guia="prestamos-resumen-intereses"
+        class="ds-stat-card w-full touch-manipulation text-left transition hover:border-[color:var(--brand-primary)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand-primary)]"
+        aria-label="Ver el desglose de los intereses ganados"
+        @click="modalInteresesGanados = true"
+      >
         <div class="ds-stat-card__icon">
           <CurrencyDollarIcon class="w-5 h-5" />
         </div>
         <p class="ds-stat-card__value">${{ formatMoney(totalIntereses) }}</p>
-        <p class="ds-stat-card__label">Intereses Ganados</p>
-      </div>
+        <p class="ds-stat-card__label inline-flex items-center gap-1">
+          Intereses Ganados
+          <ChevronRightIcon class="h-3.5 w-3.5 flex-shrink-0" />
+        </p>
+      </button>
     </div>
 
     <!-- Empty state: sin préstamos registrados (DS) -->
@@ -190,13 +200,23 @@
           se apretaban y el nombre del socio se truncaba; a lo ancho la tarjeta se parte en
           dos y el bloque de mora se lee sin romperse.
         -->
-        <div v-else class="grid grid-cols-1 items-start gap-4">
+        <!--
+          Pagados: en escritorio van en cuadrícula y apilados por dentro. Una tarjeta pagada no
+          tiene saldo, mora ni próximo pago; a todo el ancho, su columna izquierda quedaba casi
+          vacía. En móvil es la misma pila de siempre.
+        -->
+        <div
+          v-else
+          class="grid grid-cols-1 items-start gap-4"
+          :class="{ 'md:grid-cols-2 xl:grid-cols-3': tabPrestamos === 'pagados' }"
+        >
         <div
           v-for="(prestamo, idx) in prestamosFiltrados"
           :key="prestamo.id"
           :data-guia="idx === 0 ? 'prestamos-tarjeta' : undefined"
           @click="abrirModalDetalle(prestamo)"
-          class="ds-card ds-card--hover cursor-pointer lg:flex lg:items-start lg:gap-6"
+          class="ds-card ds-card--hover cursor-pointer"
+          :class="{ 'lg:flex lg:items-start lg:gap-6': prestamo.estado !== 'pagado' }"
         >
           <!-- Jerarquía de la tarjeta, de más a menos importante:
                1. quién y cómo va       → nombre + badge de estado
@@ -222,9 +242,10 @@
                 {{ prestamo.cuotasTotales }} {{ prestamo.cuotasTotales === 1 ? 'cuota' : 'cuotas' }}
               </p>
             </div>
-            <span v-if="prestamo.tieneCuotasVencidas" data-guia-parte="estado" class="ds-badge ds-badge--danger flex-shrink-0 whitespace-nowrap">
+            <span v-if="prestamo.enMora" data-guia-parte="estado" class="ds-badge ds-badge--danger flex-shrink-0 whitespace-nowrap">
               <ExclamationTriangleIcon class="h-3.5 w-3.5" />
-              En mora · {{ prestamo.diasMora }} {{ prestamo.diasMora === 1 ? 'día' : 'días' }}
+              <template v-if="prestamo.tieneCuotasVencidas">En mora · {{ prestamo.diasMora }} {{ prestamo.diasMora === 1 ? 'día' : 'días' }}</template>
+              <template v-else>En mora · intereses</template>
             </span>
             <span v-else-if="prestamo.estado === 'activo'" data-guia-parte="estado" class="ds-badge ds-badge--success flex-shrink-0 whitespace-nowrap">
               <CheckCircleIcon class="h-3.5 w-3.5" />
@@ -243,7 +264,7 @@
               <span class="text-sm text-slate-500">Saldo</span>
               <span
                 class="font-display text-2xl font-extrabold leading-none tabular-nums"
-                :class="prestamo.tieneCuotasVencidas ? 'text-[color:var(--brand-danger)]' : 'text-slate-900'"
+                :class="prestamo.enMora ? 'text-[color:var(--brand-danger)]' : 'text-slate-900'"
               >
                 ${{ formatMoney(saldoConMora(prestamo)) }}
               </span>
@@ -272,7 +293,7 @@
 
           <!-- 3a. En mora: lo que se paga hoy para ponerse al día (cuotas vencidas + interés
                de mora). Absorbe el próximo pago como línea menor para no partir la atención. -->
-          <div v-if="prestamo.tieneCuotasVencidas" class="ds-callout prestamo-callout--mora !block tabular-nums">
+          <div v-if="prestamo.enMora" class="ds-callout prestamo-callout--mora !block tabular-nums">
             <div class="flex items-baseline justify-between gap-2">
               <span class="font-semibold">Para ponerse al día</span>
               <span class="font-display text-base font-bold text-[color:var(--brand-danger)]">
@@ -280,8 +301,8 @@
               </span>
             </div>
             <p class="text-xs">
-              Vencido ${{ formatMoney(prestamo.valorCuotasEnDeuda || 0) }}
-              <strong v-if="prestamo.moraAcumulada > 0" class="font-bold">+ mora ${{ formatMoney(prestamo.moraAcumulada) }}</strong>
+              <template v-if="prestamo.tieneCuotasVencidas">Vencido ${{ formatMoney(prestamo.valorCuotasEnDeuda || 0) }}</template>
+              <strong v-if="prestamo.moraAcumulada > 0" class="font-bold">{{ prestamo.tieneCuotasVencidas ? '+ ' : '' }}mora pendiente ${{ formatMoney(prestamo.moraAcumulada) }}</strong>
             </p>
             <p v-if="prestamo.proximoPago" class="mt-1 border-t border-[color:rgba(153,27,27,0.15)] pt-1 text-xs opacity-90">
               Siguiente cuota {{ formatDate(prestamo.proximoPago.fechaLimite) }} ·
@@ -317,7 +338,10 @@
             en escritorio se recogen en un panel lateral de ancho fijo separado por una
             línea. En móvil vuelve todo a la pila de siempre.
           -->
-          <div class="mt-3 flex flex-col gap-3 border-t border-[color:var(--surface-divider)] pt-3 lg:mt-0 lg:w-72 lg:flex-shrink-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <div
+            class="mt-3 flex flex-col gap-3 border-t border-[color:var(--surface-divider)] pt-3"
+            :class="{ 'lg:mt-0 lg:w-72 lg:flex-shrink-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0': prestamo.estado !== 'pagado' }"
+          >
 
           <!-- 4. Condiciones del crédito: referencia, no protagonismo -->
           <div data-guia-parte="cifras" class="grid grid-cols-2 gap-2">
@@ -408,6 +432,13 @@
       </div>
     </section>
     </template>
+
+    <InteresesGanadosModal
+      :show="!!modalInteresesGanados"
+      :natillera-id="id"
+      :natillera-nombre="natillerasStore.natilleraActual?.nombre || ''"
+      @cerrar="requestCloseTopModal"
+    />
 
     <!-- Ayuda «¿Cómo se calcula el interés?» (se abre desde crear o refinanciar; la pila de modales oculta el formulario y lo restaura al cerrar) -->
     <ExplicacionInteresPrestamo
@@ -558,7 +589,7 @@
                     v-model="busquedaSocio"
                     type="text"
                     placeholder="Buscar socio..."
-                    class="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-colors"
+                    class="w-full px-3 py-2 text-base border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none transition-colors"
                     @click.stop
                   />
                 </div>
@@ -673,7 +704,7 @@
           <div>
             <label class="block text-sm font-medium text-gray-600 mb-1.5">Monto del préstamo</label>
             <div class="relative">
-              <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-lg z-10">$</div>
+              <div class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-lg z-10" aria-hidden="true">$</div>
               <input 
                 :value="montoFormateado"
                 @input="actualizarMonto"
@@ -788,7 +819,7 @@
               input-class="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-medium focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 outline-none"
               :required="true"
             />
-            <p class="mt-1 text-xs text-gray-500">Siguientes cuotas {{ formPrestamo.periodicidad === 'quincenal' ? 'cada 15 días' : 'cada mes' }}.</p>
+            <p class="mt-1 text-xs text-gray-500">Siguientes cuotas {{ formPrestamo.periodicidad === 'quincenal' ? 'cada quincena (si eliges el 15 o fin de mes: el 15 y el último día de cada mes)' : 'cada mes' }}.</p>
           </div>
 
           <!-- Medio de entrega -->
@@ -864,10 +895,10 @@
                 v-if="socioSeleccionado"
                 type="button"
                 @click="abrirModalCompartirPrestamoWhatsApp"
-                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
+                class="btn-compartir w-full"
               >
-                <ChatBubbleLeftIcon class="w-5 h-5" />
-                Compartir por WhatsApp
+                <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                WhatsApp
               </button>
             </template>
 
@@ -929,30 +960,30 @@
                 </div>
               </div>
               <p class="text-xs text-gray-500 text-center">Préstamo creado. Puedes descargar o compartir el comprobante.</p>
-              <div class="flex flex-col gap-3 sm:flex-row sm:gap-3">
+              <div class="flex gap-3">
                 <button
                   type="button"
                   @click="descargarResumenPrestamoNuevo"
-                  :disabled="generandoResumenPrestamo"
-                  class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-full border-2 border-emerald-500/80 bg-white px-4 py-3 text-sm font-semibold text-emerald-800 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50/90 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-55"
+                  :disabled="generandoResumenPrestamo || !archivoImagenResumenPrestamo"
+                  class="btn-descargar flex-1"
                 >
-                  <ArrowDownTrayIcon class="w-5 h-5 text-emerald-600 shrink-0" />
-                  {{ generandoResumenPrestamo ? 'Generando…' : 'Descargar' }}
+                  <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+                  {{ generandoResumenPrestamo ? 'Preparando…' : 'Descargar' }}
                 </button>
                 <button
                   type="button"
                   @click="abrirModalCompartirPrestamoWhatsApp"
-                  class="flex-1 min-h-[48px] inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#1B5E37] to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-emerald-600/25 transition-all hover:from-[#164a2c] hover:to-emerald-700 active:scale-[0.99]"
+                  class="btn-compartir flex-1"
                 >
-                  <ChatBubbleLeftIcon class="w-5 h-5 shrink-0 opacity-95" />
-                  Enviar por WhatsApp
+                  <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                  WhatsApp
                 </button>
               </div>
             </template>
           </div>
 
           <!-- Acciones por paso (dentro del scroll; pie fijo eliminado) -->
-          <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+          <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
             <div v-if="pasoNuevoPrestamo === 0" class="flex gap-2">
               <button type="button" @click="requestCloseTopModal" class="btn-modal-secondary flex-1">Cancelar</button>
               <button type="button" @click="pasoNuevoPrestamo++" :disabled="!formPrestamo.socio_natillera_id || formPrestamo.monto < 10000" class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente <ChevronRightIcon class="w-4 h-4" /></button>
@@ -984,7 +1015,7 @@
             />
             <!-- Pastilla siempre por encima de la sombra -->
             <div
-              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+              class="relative z-[2] flex justify-center px-5 pb-[calc(max(0.85rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] pt-12"
             >
               <div
                 class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
@@ -1121,6 +1152,7 @@
               </div>
               <p class="mt-1.5 text-xs text-gray-500">Puedes modificar el valor a mano.</p>
 
+
               <div
                 v-if="prestamoSeleccionado?.saldo_actual && formAbono.valor"
                 class="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-3"
@@ -1192,7 +1224,7 @@
               <p class="mt-1 text-xs text-gray-500">Fecha en que se hizo el pago.</p>
             </div>
 
-            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+            <div class="mt-6 pt-4 border-t border-gray-100 space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
               <div class="flex gap-2">
                 <button
                   type="button"
@@ -1207,8 +1239,7 @@
                   class="btn-modal-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   :disabled="loading || !formAbono.valor || formAbono.valor < 1000 || parseFloat(formAbono.valor) > totalAPagarConMora || abonoACapitalAbono <= 0"
                 >
-                  <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <CurrencyDollarIcon v-else class="w-5 h-5" />
+                  <CurrencyDollarIcon class="w-5 h-5" />
                   {{ loading ? 'Registrando…' : 'Registrar abono' }}
                 </button>
               </div>
@@ -1226,7 +1257,7 @@
               aria-hidden="true"
             />
             <div
-              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+              class="relative z-[2] flex justify-center px-5 pb-[calc(max(0.85rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] pt-12"
             >
               <div
                 class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
@@ -1309,7 +1340,7 @@
             style="width: 100%; position: relative; background: #ffffff; border-radius: 22px; overflow: hidden; font-family: 'Mulish', system-ui, -apple-system, 'Segoe UI', sans-serif; box-shadow: 0 22px 44px -18px rgba(20,71,42,0.45); border: 1px solid rgba(20,71,42,0.10);"
           >
             <!-- Cabecera marca verde + hero del valor -->
-            <div style="background: #1B5E37; padding: 22px 22px 22px; color: #ffffff;">
+            <div style="background: #1B5E37; padding: 14px 20px 16px; color: #ffffff;">
               <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
@@ -1320,10 +1351,18 @@
                 </div>
               </div>
 
-              <div style="text-align: center; margin-top: 20px;">
-                <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Valor del abono</p>
-                <p style="margin: 7px 0 0; font-size: 40px; font-weight: 800; letter-spacing: -1.8px; line-height: 1;">${{ formatMoney(comprobanteAbono.valor) }}</p>
-                <div style="display: inline-flex; align-items: center; gap: 6px; margin-top: 13px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.26); border-radius: 9999px; padding: 5px 13px;">
+              <div style="text-align: center; margin-top: 10px;">
+                <p style="margin: 0; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.72);">Valor pagado</p>
+                <p style="margin: 4px 0 0; font-size: 32px; font-weight: 800; letter-spacing: -1.4px; line-height: 1;">${{ formatMoney(comprobanteAbono.valor) }}</p>
+                <!-- Si la cuota no quedó completa, se dice desde arriba: no es un pago completo -->
+                <div
+                  v-if="(comprobanteAbono.cuotasPendientes || []).length > 0"
+                  style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; background: #fef3c7; border: 1px solid #fcd34d; border-radius: 9999px; padding: 5px 13px;"
+                >
+                  <span style="width: 6px; height: 6px; border-radius: 50%; background: #d97706; display: inline-block;"></span>
+                  <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.3px; color: #92400e;">Pago incompleto</span>
+                </div>
+                <div v-else style="display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.26); border-radius: 9999px; padding: 5px 13px;">
                   <span style="width: 6px; height: 6px; border-radius: 50%; background: #6ee7b7; display: inline-block;"></span>
                   <span style="font-size: 11px; font-weight: 700; letter-spacing: 0.3px; color: #d1fae5;">Registrado</span>
                 </div>
@@ -1345,27 +1384,56 @@
               </div>
               <div style="height: 1px; background: #eef2ee;"></div>
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
-                <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Concepto</span>
-                <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">Abono a préstamo</span>
-              </div>
-              <div style="height: 1px; background: #eef2ee;"></div>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
                 <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Fecha</span>
                 <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">{{ comprobanteAbono.fecha }}</span>
               </div>
-              <!-- Desglose si el pago incluyó mora -->
-              <template v-if="comprobanteAbono.moraPagada > 0">
+              <!-- Pago completo y sin mora: el concepto dice todo, no hace falta desglose -->
+              <template v-if="!(comprobanteAbono.moraPagada > 0) && !(comprobanteAbono.cuotasPendientes || []).length">
                 <div style="height: 1px; background: #eef2ee;"></div>
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
-                  <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Abono al préstamo</span>
-                  <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">${{ formatMoney(comprobanteAbono.abonoAPrestamo) }}</span>
-                </div>
-                <div style="height: 1px; background: #eef2ee;"></div>
-                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0;">
-                  <span style="font-size: 12px; font-weight: 600; color: #b91c1c;">Interés de mora</span>
-                  <span style="font-size: 13px; font-weight: 700; color: #dc2626; text-align: right;">${{ formatMoney(comprobanteAbono.moraPagada) }}</span>
+                  <span style="font-size: 12px; font-weight: 600; color: #8a938a;">Concepto</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #1f2937; text-align: right;">Abono a préstamo</span>
                 </div>
               </template>
+              <!-- 1. Lo que se pagó: solo si hubo mora o quedó pendiente (si no, basta el concepto de arriba) -->
+              <div v-if="comprobanteAbono.moraPagada > 0 || (comprobanteAbono.cuotasPendientes || []).length > 0" style="margin-top: 14px;">
+                <p style="margin: 0 0 5px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #1B5E37;">Lo que se pagó</p>
+                <div style="padding: 5px 12px; border-left: 3px solid #81c784; background: #f6fbf7; border-radius: 0 10px 10px 0;">
+                  <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #334155;">
+                    <span>Abono al préstamo</span>
+                    <span style="font-weight: 700; white-space: nowrap;">${{ formatMoney(comprobanteAbono.abonoAPrestamo ?? comprobanteAbono.valor) }}</span>
+                  </div>
+                  <div v-if="comprobanteAbono.moraPagada > 0" style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #334155;">
+                    <span>Interés de mora</span>
+                    <span style="font-weight: 700; white-space: nowrap;">${{ formatMoney(comprobanteAbono.moraPagada) }}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #1B5E37;">
+                    <span style="font-weight: 800;">Total pagado</span>
+                    <span style="font-weight: 800; white-space: nowrap;">${{ formatMoney(comprobanteAbono.valor) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!--
+                2. Lo que queda pendiente de la(s) cuota(s) que tocó el abono. La mora se cobra
+                primero, así que pagar justo el valor de la cuota la deja corta en lo que fue a mora.
+              -->
+              <div v-if="(comprobanteAbono.cuotasPendientes || []).length > 0" style="margin-top: 12px;">
+                <p style="margin: 0 0 5px; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #c2410c;">Queda pendiente</p>
+                <div style="padding: 5px 12px; border-left: 3px solid #fb923c; background: #fff7ed; border-radius: 0 10px 10px 0;">
+                  <div
+                    v-for="cp in comprobanteAbono.cuotasPendientes"
+                    :key="cp.numero"
+                    style="display: flex; justify-content: space-between; gap: 12px; font-size: 13px; line-height: 1.8; color: #9a3412;"
+                  >
+                    <span>Cuota #{{ cp.numero }}</span>
+                    <span style="font-weight: 700; white-space: nowrap;">${{ formatMoney(cp.pendiente) }}</span>
+                  </div>
+                  <p style="margin: 2px 0 0; font-size: 11px; line-height: 1.4; color: #9a3412;">
+                    El pago no alcanzó para completar {{ comprobanteAbono.cuotasPendientes.length === 1 ? 'la cuota' : 'las cuotas' }}<template v-if="comprobanteAbono.moraPagada > 0">: primero se cobró el interés de mora</template>. Mientras no se pague, sigue en mora.
+                  </p>
+                </div>
+              </div>
 
               <!-- Saldos -->
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;">
@@ -1379,60 +1447,42 @@
                 </div>
               </div>
 
-              <!-- Código -->
-              <div v-if="comprobanteAbono.codigoComprobante" style="margin-top: 16px; padding-top: 16px; border-top: 2px dashed #e6efe6; text-align: center;">
-                <p style="margin: 0 0 7px; font-size: 9.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #9aa39a;">Código de comprobante</p>
-                <div style="display: inline-block; background: #f3f6f3; border: 1px solid #e2eae2; border-radius: 9px; padding: 8px 14px;">
-                  <span style="font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; letter-spacing: 2px; color: #1B5E37;">{{ comprobanteAbono.codigoComprobante }}</span>
-                </div>
-              </div>
-
-              <!-- Firma de marca -->
-              <p style="margin: 16px 0 0; text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.2px; color: #adb5ad;">Generado con Natillerapp</p>
+              <!-- Código y marca en una sola línea discreta: es referencia, no lo que se viene a mirar -->
+              <p style="margin: 12px 0 0; padding-top: 10px; border-top: 2px dashed #e6efe6; text-align: center; font-size: 10px; font-weight: 600; color: #adb5ad;">
+                <template v-if="comprobanteAbono.codigoComprobante">Código <span style="font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 1px; color: #6b7a6b;">{{ comprobanteAbono.codigoComprobante }}</span> · </template>Generado con Natillerapp</p>
             </div>
           </div>
           </div>
         </div>
 
-        <!-- Footer fijo con botones de acción -->
-        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] flex-shrink-0 space-y-3">
-          <div class="space-y-3">
-            <button 
+        <!-- Footer fijo: Descargar y WhatsApp en una fila. Sin botón «Cerrar»: la X de la
+             cabecera ya lo hace. WhatsApp solo en celular; en escritorio Descargar ocupa la fila. -->
+        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0 space-y-3">
+          <div class="flex gap-3">
+            <button
+              type="button"
               @click="descargarComprobanteAbono"
-              :disabled="generandoImagenComprobante"
-              class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="generandoImagenComprobante || !archivoImagenAbono"
+              class="btn-descargar flex-1"
             >
-              <ArrowDownTrayIcon v-if="!generandoImagenComprobante" class="w-5 h-5" />
-              <span v-if="generandoImagenComprobante" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              {{ generandoImagenComprobante ? 'Generando...' : 'Descargar Imagen' }}
+              <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+              <span class="truncate">{{ generandoImagenComprobante ? 'Preparando…' : 'Descargar' }}</span>
             </button>
 
-            <button 
+            <button
+              type="button"
               @click="compartirWhatsAppAbono"
-              :disabled="generandoImagenComprobante"
-              :class="[
-                'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl transition-all',
-                generandoImagenComprobante
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-500 hover:bg-green-600 text-white'
-              ]"
+              :disabled="generandoImagenComprobante || !archivoImagenAbono"
+              class="btn-compartir flex sm:hidden flex-1"
             >
-              <ChatBubbleLeftIcon class="w-5 h-5" />
-              <span v-if="generandoImagenComprobante">Preparando...</span>
-              <span v-else>📲 Compartir por WhatsApp</span>
+              <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+              <span class="truncate">{{ generandoImagenComprobante ? 'Preparando…' : 'WhatsApp' }}</span>
             </button>
           </div>
 
           <p class="hidden sm:block text-xs text-gray-400 text-center">
             💡 En celular podrás enviar la imagen directamente a WhatsApp
           </p>
-
-          <button 
-            @click="requestCloseTopModal"
-            class="w-full px-4 py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all"
-          >
-            Cerrar
-          </button>
         </div>
     </ModalWrapper>
 
@@ -1569,41 +1619,32 @@
         </div>
 
         <!-- Footer de acciones fijo -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
-          <button
-            type="button"
-            @click="descargarComprobantePagado"
-            :disabled="generandoImagenComprobantePagado"
-            class="btn-modal-primary w-full"
-          >
-            <ArrowDownTrayIcon v-if="!generandoImagenComprobantePagado" class="w-5 h-5" />
-            <span v-if="generandoImagenComprobantePagado" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            {{ generandoImagenComprobantePagado ? 'Generando...' : 'Descargar imagen' }}
-          </button>
-
-          <!-- WhatsApp: comparte imagen con Web Share (móvil) -->
-          <button
-            type="button"
-            @click="compartirWhatsAppComprobantePagado"
-            :disabled="generandoImagenComprobantePagado"
-            :class="[
-              'block sm:hidden w-full flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-full transition-colors min-h-[48px]',
-              generandoImagenComprobantePagado
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-green-500 hover:bg-green-600 text-white'
-            ]"
-          >
-            <ChatBubbleLeftIcon class="w-5 h-5" />
-            <span>📲 Compartir por WhatsApp</span>
-          </button>
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
+          <!-- WhatsApp comparte la imagen con Web Share: solo en celular; en escritorio Descargar ocupa la fila -->
+          <div class="flex gap-3">
+            <button
+              type="button"
+              @click="descargarComprobantePagado"
+              :disabled="generandoImagenComprobantePagado || !archivoImagenPagado"
+              class="btn-descargar flex-1"
+            >
+              <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+              {{ generandoImagenComprobantePagado ? 'Preparando…' : 'Descargar' }}
+            </button>
+            <button
+              type="button"
+              @click="compartirWhatsAppComprobantePagado"
+              :disabled="generandoImagenComprobantePagado || !archivoImagenPagado"
+              class="btn-compartir flex sm:hidden flex-1"
+            >
+              <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+              {{ generandoImagenComprobantePagado ? 'Preparando…' : 'WhatsApp' }}
+            </button>
+          </div>
 
           <p class="hidden sm:block text-xs text-gray-400 text-center">
             💡 En celular podrás enviar la imagen directamente a WhatsApp
           </p>
-
-          <button type="button" class="btn-modal-secondary w-full" @click="requestCloseTopModal">
-            Cerrar
-          </button>
         </div>
     </ModalWrapper>
 
@@ -1752,7 +1793,7 @@
         </div>
 
         <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-white px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex-shrink-0">
+        <div class="border-t border-gray-200 bg-white px-5 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <div class="flex gap-3">
             <button
               type="button"
@@ -1767,8 +1808,7 @@
               class="btn-modal-primary flex-1"
               :disabled="loading || !abonoAEditar?.valor || abonoAEditar.valor < 1000 || abonoAEditar.valor === parseFloat(abonoAEditar.valorOriginal || abonoAEditar.valor)"
             >
-              <PencilIcon v-if="!loading" class="w-5 h-5" />
-              <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <PencilIcon class="w-5 h-5" />
               <span>{{ loading ? 'Guardando...' : 'Guardar Cambios' }}</span>
             </button>
           </div>
@@ -2093,7 +2133,7 @@
         </div>
 
         <!-- Footer fijo -->
-        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex-shrink-0">
+        <div class="border-t border-gray-200 bg-white px-4 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex-shrink-0">
           <div class="flex gap-3">
             <button
               type="button"
@@ -2108,8 +2148,7 @@
               class="btn-modal-primary flex-1"
               :disabled="loading || !formRefinanciar.fecha_pago || !formRefinanciar.numero_cuotas_nuevo || formRefinanciar.numero_cuotas_nuevo <= 0 || !vistaPreviaRefinanciacion"
             >
-              <ArrowPathIcon v-if="!loading" class="w-5 h-5" />
-              <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <ArrowPathIcon class="w-5 h-5" />
               <span>{{ loading ? 'Refinanciando...' : 'Refinanciar' }}</span>
             </button>
           </div>
@@ -2176,98 +2215,83 @@
           class="scrollbar-thin flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#f6f8f6] overscroll-contain [-webkit-overflow-scrolling:touch]"
           @scroll.passive="actualizarIndicadorScrollModalDetalle"
         >
-          <div v-if="prestamoDetalle" class="space-y-4 px-4 pb-0 pt-4 sm:px-6 sm:pt-5">
-            <!--
-              Resumen: quién, en qué estado y cuánto debe. El estado se dice en palabras
-              («Pendiente» / «Pagado»), no con el valor crudo de la base, y la mora va
-              aparte porque un préstamo pendiente puede estar al día o atrasado.
-            -->
+          <!--
+            Detalle en tres niveles, de lo que se viene a mirar a lo de referencia:
+              1. Quién y en qué estado (una sola etiqueta).
+              2. Las tres cifras: prestado, pagado y saldo, con el avance.
+              3. Pestañas: plan de pagos, abonos y condiciones. Antes todo iba en una sola
+                 columna larga y el total pagado o el conteo de cuotas salían dos o tres veces.
+          -->
+          <div v-if="prestamoDetalle" class="space-y-4 px-4 pb-6 pt-4 sm:px-6 sm:pt-5">
+            <!-- 1. Socio y estado -->
+            <section class="flex items-center gap-3">
+              <img
+                :src="getAvatarUrl(
+                  prestamoDetalle.socio_natillera?.socio?.nombre || prestamoDetalle.socio_natillera?.id,
+                  prestamoDetalle.socio_natillera?.socio?.avatar_seed,
+                  prestamoDetalle.socio_natillera?.socio?.avatar_style
+                )"
+                :alt="prestamoDetalle.socio_natillera?.socio?.nombre || 'Socio'"
+                class="h-12 w-12 flex-shrink-0 rounded-full border border-gray-200 bg-[#E8F5E9] object-cover"
+              />
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-display text-base font-extrabold leading-tight text-gray-900 sm:text-lg">
+                  {{ prestamoDetalle.socio_natillera?.socio?.nombre || '—' }}
+                </p>
+                <span :class="['ds-badge mt-1 max-w-full whitespace-normal text-left leading-snug', estadoResumenDetalle.clase]">
+                  <ExclamationTriangleIcon v-if="estadoResumenDetalle.alerta" class="h-3.5 w-3.5" />
+                  {{ estadoResumenDetalle.texto }}
+                </span>
+              </div>
+              <button
+                type="button"
+                class="btn-compartir btn-compartir--sm flex-shrink-0"
+                aria-label="Enviar información del préstamo por WhatsApp"
+                @click.stop="abrirModalCompartirPrestamo"
+              >
+                <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
+                <span class="hidden sm:inline">WhatsApp</span>
+              </button>
+            </section>
+
+            <!-- 2. Las tres cifras del préstamo -->
             <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <div class="flex items-center gap-3 p-4">
-                <img
-                  :src="getAvatarUrl(
-                    prestamoDetalle.socio_natillera?.socio?.nombre || prestamoDetalle.socio_natillera?.id,
-                    prestamoDetalle.socio_natillera?.socio?.avatar_seed,
-                    prestamoDetalle.socio_natillera?.socio?.avatar_style
-                  )"
-                  :alt="prestamoDetalle.socio_natillera?.socio?.nombre || 'Socio'"
-                  class="h-12 w-12 flex-shrink-0 rounded-full border border-gray-200 bg-[#E8F5E9] object-cover"
-                />
-                <div class="min-w-0 flex-1">
-                  <p class="truncate font-display text-base font-extrabold leading-tight text-gray-900 sm:text-lg">
-                    {{ prestamoDetalle.socio_natillera?.socio?.nombre || '—' }}
-                  </p>
-                  <p v-if="prestamoDetalle.socio_natillera?.socio?.telefono" class="truncate text-xs text-gray-500">
-                    {{ prestamoDetalle.socio_natillera.socio.telefono }}
-                  </p>
+              <dl class="grid grid-cols-3 divide-x divide-gray-100">
+                <!-- En 360 px caben tres cifras de 7 dígitos: letra 15 px y relleno corto -->
+                <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Prestado</dt>
+                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-gray-900 sm:text-lg">${{ formatMoney(prestamoDetalle.monto) }}</dd>
+                  <dd class="text-[10px] leading-tight tabular-nums text-gray-500 sm:text-[11px]">+ interés ${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
                 </div>
-                <button
-                  type="button"
-                  class="inline-flex h-11 flex-shrink-0 touch-manipulation items-center justify-center gap-1.5 rounded-full border border-gray-200 px-3 text-sm font-bold text-[#1B5E37] hover:bg-[#E8F5E9]"
-                  aria-label="Enviar información del préstamo por WhatsApp"
-                  @click.stop="abrirModalCompartirPrestamo"
-                >
-                  <ChatBubbleLeftIcon class="h-4 w-4" />
-                  <span class="hidden sm:inline">WhatsApp</span>
-                </button>
+                <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Pagado</dt>
+                  <dd class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums text-[#1B5E37] sm:text-lg">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</dd>
+                  <dd class="text-[10px] leading-tight tabular-nums text-gray-500 sm:text-[11px]">{{ pagosCicloActual.length }} {{ pagosCicloActual.length === 1 ? 'abono' : 'abonos' }}</dd>
+                </div>
+                <div class="min-w-0 px-1.5 py-3 text-center sm:px-3">
+                  <dt class="text-[10px] font-bold uppercase tracking-wide text-gray-500 sm:text-[11px]">Saldo</dt>
+                  <dd
+                    class="mt-0.5 font-display text-[15px] font-extrabold tabular-nums sm:text-lg"
+                    :class="prestamoDetalle.estado === 'pagado' ? 'text-gray-400' : (estadoResumenDetalle.alerta ? 'text-[color:var(--brand-danger)]' : 'text-gray-900')"
+                  >${{ formatMoney(prestamoDetalle.estado === 'pagado' ? 0 : saldoConMora(prestamoDetalle)) }}</dd>
+                  <dd v-if="prestamoDetalle.estado !== 'pagado' && prestamoDetalle.moraAcumulada > 0" class="text-[10px] leading-tight tabular-nums text-[color:var(--brand-danger)] sm:text-[11px]">
+                    incluye mora ${{ formatMoney(prestamoDetalle.moraAcumulada) }}
+                  </dd>
+                  <dd v-else class="text-[10px] leading-tight text-gray-500 sm:text-[11px]">{{ prestamoDetalle.estado === 'pagado' ? 'Pagado' : 'por pagar' }}</dd>
+                </div>
+              </dl>
+              <div class="border-t border-gray-100 px-4 py-3">
+                <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div class="h-full rounded-full bg-[#1B5E37]" :style="{ width: porcentajePagadoPrestamo(prestamoDetalle) + '%' }" />
+                </div>
+                <p class="mt-1.5 flex justify-between gap-2 text-xs tabular-nums text-gray-600">
+                  <span>{{ porcentajePagadoPrestamo(prestamoDetalle) }}% pagado</span>
+                  <span v-if="planPagosPrestamo.length > 0">{{ cuotasPagadasDetalle }} de {{ planPagosPrestamo.length }} cuotas</span>
+                </p>
               </div>
 
-              <div class="border-t border-gray-100 bg-[#f6fbf7] px-4 pb-4 pt-3">
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span :class="['ds-badge', estadoPrestamoDetalle.clase]">{{ estadoPrestamoDetalle.texto }}</span>
-                  <span v-if="cuotasVencidasDetalle > 0" class="ds-badge ds-badge--danger">
-                    <ExclamationTriangleIcon class="h-3.5 w-3.5" />
-                    {{ cuotasVencidasDetalle }} {{ cuotasVencidasDetalle === 1 ? 'cuota vencida' : 'cuotas vencidas' }}
-                  </span>
-                  <span v-if="prestamoDetalle.medio_entrega" class="ds-badge ds-badge--muted">
-                    Entregado en {{ prestamoDetalle.medio_entrega === 'efectivo' ? 'efectivo' : 'transferencia' }}
-                  </span>
-                </div>
-                <div class="mt-3 flex items-end justify-between gap-3">
-                  <div>
-                    <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
-                      {{ prestamoDetalle.estado === 'pagado' ? 'Total pagado' : 'Saldo pendiente' }}
-                    </p>
-                    <p
-                      class="font-display text-3xl font-extrabold leading-tight tabular-nums"
-                      :class="prestamoDetalle.estado === 'pagado' ? 'text-[#1B5E37]' : (cuotasVencidasDetalle > 0 ? 'text-[color:var(--brand-danger)]' : 'text-gray-900')"
-                    >
-                      ${{ formatMoney(prestamoDetalle.estado === 'pagado' ? calcularValorPagadoDetalle(prestamoDetalle) : saldoConMora(prestamoDetalle)) }}
-                    </p>
-                    <p
-                      v-if="prestamoDetalle.estado !== 'pagado' && desgloseSaldoPrestamo(prestamoDetalle.id)"
-                      class="text-xs tabular-nums text-gray-500"
-                    >
-                      Capital ${{ formatMoney(desgloseSaldoPrestamo(prestamoDetalle.id).capital) }}
-                      · Intereses <span class="font-semibold text-[color:var(--brand-warning)]">${{ formatMoney(desgloseSaldoPrestamo(prestamoDetalle.id).interes) }}</span>
-                      <template v-if="desgloseSaldoPrestamo(prestamoDetalle.id).mora > 0">
-                        · Mora <span class="font-semibold text-[color:var(--brand-danger)]">${{ formatMoney(desgloseSaldoPrestamo(prestamoDetalle.id).mora) }}</span>
-                      </template>
-                    </p>
-                  </div>
-                  <button
-                    v-if="planPagosPrestamo.length > 0"
-                    type="button"
-                    class="inline-flex min-h-[44px] flex-shrink-0 touch-manipulation items-center gap-1.5 rounded-full px-3 text-sm font-bold text-[#1B5E37] hover:bg-[#E8F5E9]"
-                    @click="abrirPlanPagosYDesplazarDetalle"
-                  >
-                    <CalendarDaysIcon class="h-5 w-5" />
-                    Ver plan
-                  </button>
-                </div>
-                <div v-if="planPagosPrestamo.length > 0" class="mt-2">
-                  <div class="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                    <div class="h-full rounded-full bg-[#1B5E37]" :style="{ width: porcentajeCuotasDetalle + '%' }" />
-                  </div>
-                  <p class="mt-1 flex justify-between text-xs tabular-nums text-gray-500">
-                    <span>{{ cuotasPagadasDetalle }} de {{ planPagosPrestamo.length }} cuotas pagadas</span>
-                    <span>{{ porcentajeCuotasDetalle }}%</span>
-                  </p>
-                </div>
-              </div>
-
-              <!-- Mora: lo que hay que pagar hoy para ponerse al día -->
-              <div v-if="prestamoDetalle.moraAcumulada > 0" class="border-t border-red-100 bg-red-50 px-4 py-3 tabular-nums">
+              <!-- En mora: lo que hay que pagar hoy para ponerse al día -->
+              <div v-if="prestamoDetalle.estado !== 'pagado' && (prestamoDetalle.moraAcumulada > 0 || cuotasVencidasDetalle > 0)" class="border-t border-red-100 bg-red-50 px-4 py-3 tabular-nums">
                 <div class="flex items-center justify-between gap-3">
                   <span class="text-sm font-bold text-red-900">Para ponerse al día</span>
                   <span class="font-display text-lg font-extrabold text-[color:var(--brand-danger)]">
@@ -2275,123 +2299,39 @@
                   </span>
                 </div>
                 <p class="text-xs text-red-800">
-                  Cuotas vencidas ${{ formatMoney(prestamoDetalle.valorCuotasEnDeuda || 0) }} + mora ${{ formatMoney(prestamoDetalle.moraAcumulada) }}
+                  Cuotas vencidas ${{ formatMoney(prestamoDetalle.valorCuotasEnDeuda || 0) }} + mora ${{ formatMoney(prestamoDetalle.moraAcumulada || 0) }}
                 </p>
               </div>
-            </section>
-
-            <!-- Condiciones del crédito: referencia, en una sola rejilla -->
-            <section class="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm">
-              <h4 class="mb-3 font-display text-sm font-extrabold text-gray-900">Condiciones</h4>
-              <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Monto prestado</dt>
-                  <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney(prestamoDetalle.monto) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés mensual</dt>
-                  <dd class="font-bold tabular-nums text-gray-900">{{ prestamoDetalle.interes }}%</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés generado</dt>
-                  <dd class="font-bold tabular-nums text-[color:var(--brand-warning)]">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Total a pagar</dt>
-                  <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Cuotas</dt>
-                  <dd class="font-bold tabular-nums text-gray-900">
-                    {{ prestamoDetalle.numero_cuotas || 1 }} × ${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}
-                  </dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Total pagado</dt>
-                  <dd class="font-bold tabular-nums text-[#1B5E37]">${{ formatMoney(calcularValorPagadoDetalle(prestamoDetalle)) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Creado el</dt>
-                  <dd class="font-semibold text-gray-700">{{ formatDate(prestamoDetalle.created_at) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[11px] uppercase tracking-wide text-gray-500">Abonos</dt>
-                  <dd class="font-semibold tabular-nums text-gray-700">
-                    {{ pagosCicloActual.length }} · ${{ formatMoney(pagosCicloActual.reduce((sum, p) => sum + (parseFloat(p.valor) || 0), 0)) }}
-                  </dd>
-                </div>
-              </dl>
-            </section>
-
-            <!-- Aviso: este préstamo fue refinanciado (lleva a la sección de refinanciación) -->
-            <button
-              v-if="historialRefinanciaciones.length > 0"
-              type="button"
-              class="flex w-full touch-manipulation items-center gap-3 rounded-2xl border border-gray-200/80 bg-white p-4 text-left shadow-sm hover:bg-[#f6fbf7]"
-              @click="irASeccionRefinanciacion"
-            >
-              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
-                <ArrowPathIcon class="h-5 w-5" />
-              </span>
-              <span class="min-w-0 flex-1">
-                <span class="block text-sm font-bold text-gray-900">Este préstamo fue refinanciado</span>
-                <span class="block text-xs text-gray-500">
-                  {{ historialRefinanciaciones.length }} {{ historialRefinanciaciones.length === 1 ? 'refinanciación' : 'refinanciaciones' }} · Toca para ver el detalle
-                </span>
-              </span>
-              <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" />
-            </button>
-
-            <!-- Plan de pagos: una sola lista para móvil y escritorio -->
-            <section
-              v-if="planPagosPrestamo.length > 0"
-              ref="modalDetallePlanPagosSectionRef"
-              class="scroll-mt-4 rounded-2xl border border-gray-200/80 bg-white shadow-sm"
-              tabindex="-1"
-            >
-              <div class="flex items-center justify-between gap-3 px-4 pb-2 pt-4">
-                <h4 class="font-display text-sm font-extrabold text-gray-900">
-                  Plan de pagos
-                  <span class="font-normal text-gray-500">· {{ planPagosPrestamo.length }} {{ planPagosPrestamo.length === 1 ? 'cuota' : 'cuotas' }}</span>
-                </h4>
-                <span class="text-xs tabular-nums text-gray-500">
-                  Total ${{ formatMoney(planPagosPrestamo.reduce((sum, c) => sum + (parseFloat(c.valor_cuota) || 0), 0)) }}
-                </span>
-              </div>
-
-              <!-- Resumen por estado, siempre visible -->
-              <div class="grid grid-cols-3 gap-2 px-4 pb-3">
-                <div class="rounded-xl bg-[#E8F5E9] px-2 py-2 text-center">
-                  <p class="font-display text-lg font-extrabold text-[#1B5E37]">{{ cuotasPagadasDetalle }}</p>
-                  <p class="text-[11px] font-semibold text-[#1B5E37]">Pagadas</p>
-                </div>
-                <div class="rounded-xl bg-red-50 px-2 py-2 text-center">
-                  <p class="font-display text-lg font-extrabold text-red-700">{{ cuotasVencidasDetalle }}</p>
-                  <p class="text-[11px] font-semibold text-red-700">Vencidas</p>
-                </div>
-                <div class="rounded-xl bg-gray-100 px-2 py-2 text-center">
-                  <p class="font-display text-lg font-extrabold text-gray-700">
-                    {{ planPagosPrestamo.length - cuotasPagadasDetalle - cuotasVencidasDetalle }}
-                  </p>
-                  <p class="text-[11px] font-semibold text-gray-600">Pendientes</p>
-                </div>
-              </div>
-
-              <div
-                v-if="proximaCuotaPago && !planPagosExpandido && planPagosPrestamo.length > 1"
-                class="mx-4 mb-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-2.5"
-              >
+              <!-- Al día: cuándo toca la próxima -->
+              <div v-else-if="prestamoDetalle.estado !== 'pagado' && proximaCuotaPago" class="flex items-center justify-between gap-3 border-t border-gray-100 bg-[#f6fbf7] px-4 py-3">
                 <span class="min-w-0">
                   <span class="block text-xs text-gray-500">Próxima cuota · #{{ proximaCuotaPago.numero_cuota }}</span>
                   <span class="block text-sm font-bold text-gray-900">{{ formatDate(proximaCuotaPago.fecha_proyectada) }}</span>
                 </span>
                 <span class="font-display text-base font-extrabold tabular-nums text-[#1B5E37]">
-                  ${{ formatMoney(proximaCuotaPago.valor_cuota || 0) }}
+                  ${{ formatMoney(Math.max(0, (parseFloat(proximaCuotaPago.valor_cuota) || 0) - (parseFloat(proximaCuotaPago.valor_pagado) || 0))) }}
                 </span>
               </div>
+            </section>
 
-              <ul v-if="planPagosExpandido || planPagosPrestamo.length === 1" class="divide-y divide-gray-100 border-t border-gray-100">
-                <li v-for="cuota in planPagosPrestamo" :key="cuota.id" class="flex items-center gap-3 px-4 py-3">
+            <!-- 3. Lo demás, en pestañas -->
+            <SwitchSegmentado v-model="pestanaDetalle" :opciones="opcionesPestanaDetalle" aria-label="Información del préstamo" />
+
+            <!-- Plan de pagos: completo, con lo que falta de cada cuota -->
+            <section
+              v-if="pestanaDetalle === 'plan'"
+              ref="modalDetallePlanPagosSectionRef"
+              class="scroll-mt-4 overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm"
+              tabindex="-1"
+            >
+              <p v-if="planPagosPrestamo.length === 0" class="px-4 py-5 text-sm text-gray-500">Este préstamo no tiene plan de pagos.</p>
+              <ul v-else class="divide-y divide-gray-100">
+                <li
+                  v-for="cuota in planPagosPrestamo"
+                  :key="cuota.id"
+                  class="flex items-center gap-3 px-4 py-3"
+                  :class="proximaCuotaPago && cuota.id === proximaCuotaPago.id ? 'bg-[#f6fbf7]' : ''"
+                >
                   <span
                     :class="[
                       'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-extrabold',
@@ -2399,9 +2339,21 @@
                     ]"
                   >{{ cuota.numero_cuota }}</span>
                   <span class="min-w-0 flex-1">
-                    <span class="block text-sm font-semibold text-gray-900">{{ formatDate(cuota.fecha_proyectada) }}</span>
+                    <span class="block text-sm font-semibold text-gray-900">
+                      {{ formatDate(cuota.fecha_proyectada) }}
+                      <span v-if="proximaCuotaPago && cuota.id === proximaCuotaPago.id" class="ml-1 text-[11px] font-bold text-[#1B5E37]">· próxima</span>
+                    </span>
                     <span class="block text-xs tabular-nums text-gray-500">
                       Capital ${{ formatMoney(cuota.capital) }} · Interés ${{ formatMoney(cuota.interes) }}
+                    </span>
+                    <span
+                      v-if="!cuota.pagada && (parseFloat(cuota.valor_pagado) || 0) > 0"
+                      class="mt-0.5 block text-xs font-semibold tabular-nums text-amber-800"
+                    >
+                      Pagó ${{ formatMoney(cuota.valor_pagado) }} · faltan ${{ formatMoney((parseFloat(cuota.valor_cuota) || 0) - (parseFloat(cuota.valor_pagado) || 0)) }}
+                    </span>
+                    <span v-if="!cuota.pagada && moraCuotaComprobante(cuota) > 0" class="mt-0.5 block text-xs font-semibold tabular-nums text-rose-700">
+                      Mora a hoy ${{ formatMoney(moraCuotaComprobante(cuota)) }}
                     </span>
                   </span>
                   <span class="flex flex-shrink-0 flex-col items-end gap-1">
@@ -2410,17 +2362,130 @@
                   </span>
                 </li>
               </ul>
-
-              <button
-                v-if="planPagosPrestamo.length > 1"
-                type="button"
-                class="flex min-h-[48px] w-full touch-manipulation items-center justify-center gap-1.5 border-t border-gray-100 text-sm font-bold text-[#1B5E37] hover:bg-[#f6fbf7]"
-                @click="planPagosExpandido = !planPagosExpandido"
-              >
-                {{ planPagosExpandido ? 'Ocultar cuotas' : 'Ver todas las cuotas' }}
-                <ChevronDownIcon :class="['h-4 w-4 transition-transform motion-reduce:transition-none', planPagosExpandido ? 'rotate-180' : '']" />
-              </button>
             </section>
+
+            <!-- Abonos -->
+            <section v-if="pestanaDetalle === 'abonos'" class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
+              <p v-if="pagosCicloActual.length === 0" class="px-4 py-5 text-sm text-gray-500">Todavía no hay abonos registrados.</p>
+              <ul v-else class="divide-y divide-gray-100">
+                <!--
+                  Móvil primero: valor y fecha arriba, periodo en una etiqueta, forma de pago y
+                  origen como texto (antes eran tres etiquetas que se amontonaban), y las acciones
+                  como botones con nombre en su propia fila (antes, tres íconos grises sueltos).
+                -->
+                <li v-for="pago in pagosCicloActual" :key="pago.id" class="px-4 py-3">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <!-- Lo que pagó el socio. Si incluyó mora, se separa: esa parte fue a utilidades y no bajó el saldo. -->
+                      <p class="font-display text-lg font-extrabold leading-tight tabular-nums text-gray-900">${{ formatMoney((parseFloat(pago.valor) || 0) + (parseFloat(pago.mora_cobrada) || 0)) }}</p>
+                      <p v-if="(parseFloat(pago.mora_cobrada) || 0) > 0" class="text-xs tabular-nums text-gray-600">
+                        ${{ formatMoney(pago.valor) }} al préstamo · <span class="font-semibold text-rose-700">${{ formatMoney(pago.mora_cobrada) }} mora</span>
+                      </p>
+                    </div>
+                    <span class="flex-shrink-0 pt-1 text-xs font-semibold text-gray-500">{{ formatDate(pago.fecha) }}</span>
+                  </div>
+
+                  <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <template v-if="Array.isArray(pago.numeros_cuota) && pago.numeros_cuota.length > 0">
+                      <span
+                        v-for="(periodo, idx) in periodosDeNumerosCuota(pago.numeros_cuota)"
+                        :key="`${pago.id}-periodo-${idx}`"
+                        class="inline-flex items-center whitespace-nowrap rounded-full bg-[#E8F5E9] px-2 py-0.5 text-[11px] font-bold text-[#1B5E37]"
+                        :title="`Cuota correspondiente al período ${periodo}`"
+                      >{{ periodo }}</span>
+                    </template>
+                    <span class="text-[11px] text-gray-500">
+                      <template v-if="formaPagoAbono(pago)">{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }} · </template>{{ pago.origen === 'cuota_natillera' ? 'desde Cuotas' : 'desde Préstamos' }}
+                    </span>
+                  </div>
+
+                  <div v-if="pago.codigo_comprobante || !soloLectura" class="mt-2.5 grid grid-cols-3 gap-2">
+                    <button
+                      v-if="pago.codigo_comprobante"
+                      type="button"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-[#1B5E37]/30 bg-white px-2 text-xs font-bold text-[#1B5E37] hover:bg-[#E8F5E9] active:bg-[#E8F5E9]"
+                      aria-label="Reenviar comprobante"
+                      @click.stop="reenviarComprobanteAbono(pago)"
+                    >
+                      <PaperAirplaneIcon class="h-4 w-4 flex-shrink-0" />
+                      Reenviar
+                    </button>
+                    <button
+                      v-if="!soloLectura"
+                      type="button"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-gray-300 bg-white px-2 text-xs font-bold text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+                      aria-label="Editar abono"
+                      @click.stop="abrirModalEditarAbono(pago)"
+                    >
+                      <PencilIcon class="h-4 w-4 flex-shrink-0" />
+                      Editar
+                    </button>
+                    <button
+                      v-if="!soloLectura"
+                      type="button"
+                      class="inline-flex min-h-[44px] touch-manipulation items-center justify-center gap-1.5 rounded-full border border-red-200 bg-white px-2 text-xs font-bold text-red-700 hover:bg-red-50 active:bg-red-50"
+                      aria-label="Eliminar abono"
+                      @click.stop="confirmarEliminarAbono(pago)"
+                    >
+                      <TrashIcon class="h-4 w-4 flex-shrink-0" />
+                      Eliminar
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            <!-- Condiciones del crédito y refinanciaciones: referencia -->
+            <template v-if="pestanaDetalle === 'condiciones'">
+              <section class="rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm">
+                <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Monto prestado</dt>
+                    <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney(prestamoDetalle.monto) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés mensual</dt>
+                    <dd class="font-bold tabular-nums text-gray-900">{{ prestamoDetalle.interes }}%</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Tipo de interés</dt>
+                    <dd class="font-bold text-gray-900">{{ prestamoDetalle.tipo_interes === 'compuesto' ? 'Compuesto' : 'Simple' }}</dd>
+                  </div>
+                  <!-- Anticipado: el interés se descontó al entregar el préstamo; si no, va dentro de cada cuota -->
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Cobro del interés</dt>
+                    <dd class="font-bold" :class="interesAnticipadoDetalle ? 'text-[color:var(--brand-warning)]' : 'text-gray-900'">
+                      {{ interesAnticipadoDetalle ? 'Anticipado' : 'Con cada cuota' }}
+                    </dd>
+                    <dd class="text-[11px] leading-tight text-gray-500">
+                      {{ interesAnticipadoDetalle ? 'Se descontó al entregar el préstamo' : 'Normal: va dentro de cada cuota' }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Interés generado</dt>
+                    <dd class="font-bold tabular-nums text-[color:var(--brand-warning)]">${{ formatMoney(calcularInteresGeneradoDetalle(prestamoDetalle)) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Total a pagar</dt>
+                    <dd class="font-bold tabular-nums text-gray-900">${{ formatMoney((prestamoDetalle.monto || 0) + (calcularInteresGeneradoDetalle(prestamoDetalle) || 0)) }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Cuotas</dt>
+                    <dd class="font-bold tabular-nums text-gray-900">
+                      {{ prestamoDetalle.numero_cuotas || 1 }} × ${{ formatMoney(calcularCuotaMensualDetalle(prestamoDetalle)) }}
+                      <span v-if="prestamoDetalle.periodicidad" class="font-normal text-gray-500">· {{ prestamoDetalle.periodicidad }}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Creado el</dt>
+                    <dd class="font-semibold text-gray-700">{{ formatDate(prestamoDetalle.created_at) }}</dd>
+                  </div>
+                  <div v-if="prestamoDetalle.medio_entrega">
+                    <dt class="text-[11px] uppercase tracking-wide text-gray-500">Entregado en</dt>
+                    <dd class="font-semibold text-gray-700">{{ prestamoDetalle.medio_entrega === 'efectivo' ? 'Efectivo' : 'Transferencia' }}</dd>
+                  </div>
+                </dl>
+              </section>
 
             <!-- Historial de refinanciaciones -->
             <section
@@ -2521,91 +2586,7 @@
               </div>
             </section>
 
-            <!-- Historial de abonos -->
-            <section class="rounded-2xl border border-gray-200/80 bg-white shadow-sm">
-              <h4 class="px-4 pb-2 pt-4 font-display text-sm font-extrabold text-gray-900">
-                Abonos <span class="font-normal text-gray-500">· {{ pagosCicloActual.length }}</span>
-              </h4>
-              <p v-if="pagosCicloActual.length === 0" class="px-4 pb-5 pt-1 text-sm text-gray-500">Todavía no hay abonos registrados.</p>
-              <ul v-else class="divide-y divide-gray-100 border-t border-gray-100">
-                <li v-for="pago in pagosCicloActual" :key="pago.id" class="flex items-start gap-3 px-4 py-3">
-                  <span class="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#E8F5E9] text-[#1B5E37]">
-                    <CurrencyDollarIcon class="h-5 w-5" />
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <p class="font-display text-base font-extrabold tabular-nums text-gray-900">${{ formatMoney(pago.valor) }}</p>
-                    <p class="text-xs text-gray-500">{{ formatDate(pago.fecha) }}</p>
-                    <div class="mt-1.5 flex flex-wrap gap-1.5">
-                      <template v-if="Array.isArray(pago.numeros_cuota) && pago.numeros_cuota.length > 0">
-                        <span
-                          v-for="(periodo, idx) in periodosDeNumerosCuota(pago.numeros_cuota)"
-                          :key="`${pago.id}-periodo-${idx}`"
-                          class="ds-badge ds-badge--brand"
-                          :title="`Cuota correspondiente al período ${periodo}`"
-                        >{{ periodo }}</span>
-                      </template>
-                      <span
-                        v-if="formaPagoAbono(pago)"
-                        class="ds-badge ds-badge--muted"
-                        :title="formaPagoAbono(pago) === 'mixto'
-                          ? `Pago mixto · Efectivo: $${formatMoney(pago.valor_efectivo)} · Transferencia: $${formatMoney(pago.valor_transferencia)}`
-                          : `Pagado en ${FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label.toLowerCase()}`"
-                      >{{ FORMA_PAGO_ABONO_ESTILO[formaPagoAbono(pago)].label }}</span>
-                      <span class="ds-badge ds-badge--muted">{{ pago.origen === 'cuota_natillera' ? 'Desde Cuotas' : 'Desde Préstamos' }}</span>
-                    </div>
-                    <p v-if="pago.codigo_comprobante" class="mt-1 font-mono text-[11px] text-gray-400">{{ pago.codigo_comprobante }}</p>
-                  </div>
-                  <div class="flex flex-shrink-0 items-center">
-                    <button
-                      v-if="pago.codigo_comprobante"
-                      type="button"
-                      class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-gray-500 hover:bg-[#E8F5E9] hover:text-[#1B5E37]"
-                      aria-label="Reenviar comprobante"
-                      title="Reenviar comprobante"
-                      @click.stop="reenviarComprobanteAbono(pago)"
-                    >
-                      <ArrowPathIcon class="h-5 w-5" />
-                    </button>
-                    <button
-                      v-if="!soloLectura"
-                      type="button"
-                      class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                      aria-label="Editar abono"
-                      title="Editar abono"
-                      @click.stop="abrirModalEditarAbono(pago)"
-                    >
-                      <PencilIcon class="h-5 w-5" />
-                    </button>
-                    <button
-                      v-if="!soloLectura"
-                      type="button"
-                      class="flex h-11 w-11 touch-manipulation items-center justify-center rounded-full text-gray-500 hover:bg-red-50 hover:text-red-700"
-                      aria-label="Eliminar abono"
-                      title="Eliminar abono"
-                      @click.stop="confirmarEliminarAbono(pago)"
-                    >
-                      <TrashIcon class="h-5 w-5" />
-                    </button>
-                  </div>
-                </li>
-              </ul>
-            </section>
-
-            <div class="space-y-3 border-t border-gray-200 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-4">
-              <div class="flex flex-col-reverse gap-2 sm:flex-row">
-                <button type="button" class="btn-modal-secondary w-full sm:flex-1" @click="requestCloseTopModal">
-                  Cerrar
-                </button>
-                <button
-                  v-if="prestamoDetalle.estado === 'activo' && !soloLectura"
-                  type="button"
-                  class="btn-modal-primary w-full sm:flex-1"
-                  @click="abrirModalAbono(prestamoDetalle)"
-                >
-                  Registrar abono
-                </button>
-              </div>
-            </div>
+            </template>
           </div>
         </div>
 
@@ -2631,6 +2612,23 @@
               </div>
             </div>
           </div>
+        </div>
+        <!-- Acciones fijas: siempre a la vista, sin bajar hasta el final -->
+        <div
+          class="flex flex-shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-white px-4 pt-3 sm:flex-row sm:px-6"
+          :style="{ paddingBottom: `calc(max(1rem, env(safe-area-inset-bottom, 0px)) + ${tapadoDetalle}px)` }"
+        >
+          <button type="button" class="btn-modal-secondary w-full sm:flex-1" @click="requestCloseTopModal">
+            Cerrar
+          </button>
+          <button
+            v-if="prestamoDetalle?.estado === 'activo' && !soloLectura"
+            type="button"
+            class="btn-modal-primary w-full sm:flex-1"
+            @click="abrirModalAbono(prestamoDetalle)"
+          >
+            Registrar abono
+          </button>
         </div>
     </ModalWrapper>
 
@@ -2903,40 +2901,30 @@
             </div>
             </div>
 
-            <div class="space-y-3 border-t border-gray-200 pt-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-              <!-- Descargar: primario marca (excepción posible: azul solo si se prioriza semántica «archivo») -->
-              <button
-                type="button"
-                @click="descargarPrestamo"
-                :disabled="generandoImagenPrestamo"
-                class="btn-modal-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ArrowDownTrayIcon class="w-5 h-5" />
-                {{ generandoImagenPrestamo ? 'Generando…' : 'Descargar imagen' }}
-              </button>
-              <button
-                type="button"
-                @click="compartirPrestamoWhatsApp"
-                :disabled="generandoImagenPrestamo"
-                :class="[
-                  'btn-modal-primary w-full',
-                  generandoImagenPrestamo ? 'opacity-50 cursor-not-allowed' : ''
-                ]"
-              >
-                <ChatBubbleLeftIcon class="w-5 h-5" />
-                <span v-if="generandoImagenPrestamo">Preparando…</span>
-                <span v-else>Compartir por WhatsApp</span>
-              </button>
+            <div class="space-y-3 border-t border-gray-200 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))]">
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  @click="descargarPrestamo"
+                  :disabled="generandoImagenPrestamo || !archivoImagenPrestamo"
+                  class="btn-descargar flex-1"
+                >
+                  <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+                  {{ generandoImagenPrestamo ? 'Preparando…' : 'Descargar' }}
+                </button>
+                <button
+                  type="button"
+                  @click="compartirPrestamoWhatsApp"
+                  :disabled="generandoImagenPrestamo || !archivoImagenPrestamo"
+                  class="btn-compartir flex-1"
+                >
+                  <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                  {{ generandoImagenPrestamo ? 'Preparando…' : 'WhatsApp' }}
+                </button>
+              </div>
               <p class="text-center text-xs text-gray-500">
                 En celular puedes enviar la imagen directamente desde el menú compartir.
               </p>
-              <button
-                type="button"
-                @click="requestCloseTopModal"
-                class="btn-modal-secondary w-full"
-              >
-                Cerrar
-              </button>
             </div>
           </div>
 
@@ -2950,7 +2938,7 @@
               aria-hidden="true"
             />
             <div
-              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+              class="relative z-[2] flex justify-center px-5 pb-[calc(max(0.85rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] pt-12"
             >
               <div
                 class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
@@ -3100,36 +3088,27 @@
             </div>
           </div>
 
-          <div class="space-y-3 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-1">
-            <button
-              type="button"
-              @click="descargarPrestamoNuevo"
-              :disabled="generandoImagenPrestamoNuevo"
-              class="btn-modal-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowDownTrayIcon class="w-5 h-5" />
-              {{ generandoImagenPrestamoNuevo ? 'Generando...' : 'Descargar imagen' }}
-            </button>
-            <button
-              type="button"
-              @click="compartirPrestamoNuevoWhatsApp"
-              :disabled="generandoImagenPrestamoNuevo"
-              :class="[
-                'btn-modal-primary w-full',
-                generandoImagenPrestamoNuevo ? 'opacity-50 cursor-not-allowed' : ''
-              ]"
-            >
-              <ChatBubbleLeftIcon class="w-5 h-5" />
-              <span v-if="generandoImagenPrestamoNuevo">Preparando...</span>
-              <span v-else>Compartir por WhatsApp</span>
-            </button>
-            <button
-              type="button"
-              @click="requestCloseTopModal"
-              class="btn-modal-secondary w-full"
-            >
-              Cerrar
-            </button>
+          <div class="space-y-3 pb-[calc(max(1rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] pt-1">
+            <div class="flex gap-3">
+              <button
+                type="button"
+                @click="descargarPrestamoNuevo"
+                :disabled="generandoImagenPrestamoNuevo || !archivoImagenPrestamoNuevo"
+                class="btn-descargar flex-1"
+              >
+                <ArrowDownTrayIcon class="w-5 h-5 flex-shrink-0" />
+                {{ generandoImagenPrestamoNuevo ? 'Preparando…' : 'Descargar' }}
+              </button>
+              <button
+                type="button"
+                @click="compartirPrestamoNuevoWhatsApp"
+                :disabled="generandoImagenPrestamoNuevo || !archivoImagenPrestamoNuevo"
+                class="btn-compartir flex-1"
+              >
+                <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
+                {{ generandoImagenPrestamoNuevo ? 'Preparando…' : 'WhatsApp' }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -3144,7 +3123,7 @@
               aria-hidden="true"
             />
             <div
-              class="relative z-[2] flex justify-center px-5 pb-[max(0.85rem,env(safe-area-inset-bottom,0px))] pt-12"
+              class="relative z-[2] flex justify-center px-5 pb-[calc(max(0.85rem,env(safe-area-inset-bottom,0px))+var(--tapado-inferior,0px))] pt-12"
             >
               <div
                 class="desliza-modal-hint inline-flex max-w-[min(100%,17.5rem)] shrink-0 flex-row items-center gap-2.5 rounded-full border border-white/35 bg-[#1B5E37]/82 px-5 py-2.5 shadow-[0_8px_24px_-6px_rgba(27,94,55,0.45)] ring-1 ring-white/20 sm:max-w-[min(100%,19rem)] sm:gap-3 sm:px-6 sm:py-3"
@@ -3246,7 +3225,7 @@
         </div>
 
         <!-- Footer de acciones fijo (destructivo → botón ámbar, excepción de color permitida) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex gap-3">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
           <button type="button" class="btn-modal-secondary flex-1" @click="requestCloseTopModal">Cancelar</button>
           <button
             type="button"
@@ -3254,8 +3233,7 @@
             :disabled="loading"
             class="flex-1 inline-flex items-center justify-center gap-2 rounded-full min-h-[48px] px-4 font-semibold text-white bg-amber-600 hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <TrashIcon v-if="!loading" class="w-5 h-5" />
-            <span v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <TrashIcon class="w-5 h-5" />
             <span>{{ loading ? 'Eliminando...' : 'Sí, Eliminar' }}</span>
           </button>
         </div>
@@ -3351,7 +3329,7 @@
         </div>
 
         <!-- Footer de acciones fijo (destructivo → botón rojo, excepción de color permitida) -->
-        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] flex gap-3">
+        <div class="flex-shrink-0 border-t border-gray-200 bg-white px-5 sm:px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] flex gap-3">
           <button type="button" class="btn-modal-secondary flex-1" @click="requestCloseTopModal">Cancelar</button>
           <button
             type="button"
@@ -3359,7 +3337,7 @@
             :disabled="loading"
             class="flex-1 inline-flex items-center justify-center gap-2 rounded-full min-h-[48px] px-4 font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <TrashIcon v-if="!loading" class="w-5 h-5" />
+            <TrashIcon class="w-5 h-5" />
             <span>{{ loading ? 'Eliminando...' : 'Sí, Eliminar' }}</span>
           </button>
         </div>
@@ -3372,11 +3350,22 @@
       texto="Generando préstamo"
       detalle="Creando el plan de pagos y registrando el préstamo."
     />
+    <!--
+      Abonos, refinanciación, eliminaciones e imágenes: en Préstamos la espera se ve con la
+      caja flotante, no dentro del botón. El botón solo se deshabilita y cambia su texto.
+    -->
+    <CargaCaja
+      :visible="!!cargaOperacion"
+      flotante
+      :texto="cargaOperacion?.texto"
+      :detalle="cargaOperacion?.detalle"
+    />
   </div>
 </template>
 
 <script setup>
 import { numeroWhatsApp } from '../../utils/telefono'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { supabase } from '../../lib/supabase'
@@ -3388,6 +3377,11 @@ import {
   calcularMoraCuota,
   calcularMoraPrestamo,
   desglosarAbonoConMora,
+  desglosarAbono,
+  aplicarMovimientosMora,
+  moraPendienteGuardada,
+  cuotasConMoraPendienteDe,
+  registrarMoraCobradaEnFondoNegativa,
   registrarMoraCobradaEnFondo,
   guardarInteresPrestamo,
   recalcularPlanPagosPrestamo
@@ -3436,6 +3430,10 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import PrestamosSkeleton from '../../components/PrestamosSkeleton.vue'
 import ExplicacionInteresPrestamo from '../../components/ExplicacionInteresPrestamo.vue'
 import RecorridoInteractivo from '../../components/RecorridoInteractivo.vue'
+import SwitchSegmentado from '../../components/SwitchSegmentado.vue'
+import InteresesGanadosModal from '../../components/prestamos/InteresesGanadosModal.vue'
+import { useTapadoInferior } from '../../composables/useTapadoInferior'
+import { detectIosPlatform } from '../../composables/useIsIos'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { crearContadorGuia } from '../../composables/useContadorGuia'
 import { usePermisosNatillera } from '../../composables/usePermisosNatillera'
@@ -3496,6 +3494,12 @@ const prestamoDetalle = ref(null)
 const pagosPrestamo = ref([])
 const planPagosPrestamo = ref([])
 const planPagosExpandido = ref(false)
+// Pestaña del detalle del préstamo: plan de pagos, abonos o condiciones.
+const pestanaDetalle = ref('plan')
+// Desglose del indicador «Intereses ganados»
+const modalInteresesGanados = ref(false)
+// La barra de Safari tapa el pie fijo de la hoja inferior: se suma al padding.
+const { tapado: tapadoDetalle } = useTapadoInferior()
 // Abonos del ciclo vigente (los ya "cerrados" por una refinanciación quedan excluidos).
 // El resumen de pagos del detalle solo debe contar estos.
 const pagosCicloActual = computed(() => pagosPrestamo.value.filter(p => !p.refinanciacion_id))
@@ -3570,6 +3574,20 @@ const mostrarFab = computed(() =>
 const generandoImagenPrestamo = ref(false)
 const generandoImagenPrestamoNuevo = ref(false)
 const generandoPrestamo = ref(false)
+
+// Qué operación está esperando, según el modal abierto: `loading` es uno solo para todas.
+// Va del modal más alto al más bajo, porque eliminar un abono se abre sobre el detalle.
+const cargaOperacion = computed(() => {
+  // La imagen de los comprobantes se prepara sola al abrirlos (ver crearImagenPreparada): no es
+  // una operación del usuario y la carga flotante taparía el comprobante que se quiere ver.
+  if (!loading.value) return null
+  if (prestamoAEliminar.value) return { texto: 'Eliminando préstamo', detalle: 'Borrando el préstamo y sus pagos.' }
+  if (abonoAEliminar.value) return { texto: 'Eliminando abono', detalle: 'Recalculando el saldo del préstamo.' }
+  if (modalEditarAbono.value) return { texto: 'Guardando abono', detalle: 'Recalculando el saldo del préstamo.' }
+  if (modalRefinanciar.value) return { texto: 'Refinanciando préstamo', detalle: 'Creando el nuevo plan de pagos.' }
+  if (modalAbono.value) return { texto: 'Registrando abono', detalle: 'Actualizando el saldo del préstamo.' }
+  return null
+})
 const contactoSeleccionadoWhatsApp = ref(null)
 const historialRefinanciaciones = ref([])
 const prestamoRef = ref(null)
@@ -3614,49 +3632,73 @@ function programarActualizarIndicadorScrollModalDetalle() {
   })
 }
 
+/*
+ * Desplazar el cuerpo del detalle hasta una sección. No con `scrollIntoView`: en iOS mueve
+ * también los ancestros (la card y el overlay fijos), y la hoja quedaba corrida o con un
+ * hueco. Se calcula el destino y se desplaza solo el contenedor scrolleable.
+ */
+let temporizadorScrollDetalle = null
+let rafScrollDetalle = null
+function cancelarScrollDetalle() {
+  clearTimeout(temporizadorScrollDetalle)
+  temporizadorScrollDetalle = null
+  if (rafScrollDetalle != null) cancelAnimationFrame(rafScrollDetalle)
+  rafScrollDetalle = null
+}
+function desplazarDetalleHasta(el) {
+  const contenedor = modalDetalleScrollRef.value
+  if (!el || !contenedor) return
+  const destino = el.getBoundingClientRect().top - contenedor.getBoundingClientRect().top + contenedor.scrollTop
+  contenedor.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' })
+  el.focus({ preventScroll: true })
+  programarActualizarIndicadorScrollModalDetalle()
+}
+// Dos frames: el primero aplica el cambio de pestaña, el segundo ya tiene el layout final.
+function desplazarDetalleEnDosFrames(obtenerEl) {
+  cancelarScrollDetalle()
+  rafScrollDetalle = requestAnimationFrame(() => {
+    rafScrollDetalle = requestAnimationFrame(() => {
+      rafScrollDetalle = null
+      desplazarDetalleHasta(obtenerEl())
+    })
+  })
+}
+
 /** Expande el plan si hay varias cuotas y desplaza el scroll del modal hasta la tabla/grid. */
 async function abrirPlanPagosYDesplazarDetalle() {
   if (!planPagosPrestamo.value.length) return
+  pestanaDetalle.value = 'plan'
   const variasCuotas = planPagosPrestamo.value.length > 1
   if (variasCuotas) {
     planPagosExpandido.value = true
   }
   await nextTick()
   await nextTick()
-  const ejecutarScroll = () => {
-    const el = modalDetallePlanPagosSectionRef.value
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    el?.focus({ preventScroll: true })
-    programarActualizarIndicadorScrollModalDetalle()
+  if (!variasCuotas) {
+    desplazarDetalleEnDosFrames(() => modalDetallePlanPagosSectionRef.value)
+    return
   }
-  if (variasCuotas) {
-    window.setTimeout(ejecutarScroll, 340)
-  } else {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(ejecutarScroll)
-    })
-  }
+  // Espera a que termine la animación de expandir el plan
+  cancelarScrollDetalle()
+  temporizadorScrollDetalle = window.setTimeout(() => {
+    temporizadorScrollDetalle = null
+    desplazarDetalleHasta(modalDetallePlanPagosSectionRef.value)
+  }, 340)
 }
 
 // Desplaza el detalle hasta la sección de refinanciaciones.
 async function irASeccionRefinanciacion() {
   if (!historialRefinanciaciones.value.length) return
+  pestanaDetalle.value = 'condiciones'
   await nextTick()
-  const ejecutarScroll = () => {
-    const el = modalDetalleRefinanciacionSectionRef.value
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    el?.focus({ preventScroll: true })
-    programarActualizarIndicadorScrollModalDetalle()
-  }
-  requestAnimationFrame(() => {
-    requestAnimationFrame(ejecutarScroll)
-  })
+  desplazarDetalleEnDosFrames(() => modalDetalleRefinanciacionSectionRef.value)
 }
 
 watch(
   [
     modalDetalle,
     planPagosExpandido,
+    pestanaDetalle,
     () => pagosPrestamo.value.length,
     () => planPagosPrestamo.value.length,
     () => historialRefinanciaciones.value.length
@@ -3670,6 +3712,7 @@ watch(modalDetalle, async (abierto) => {
     hayMasContenidoAbajoModalDetalle.value = false
     return
   }
+  pestanaDetalle.value = 'plan'
   await nextTick()
   await nextTick()
   programarActualizarIndicadorScrollModalDetalle()
@@ -3979,25 +4022,28 @@ const fechaCorteAbono = computed(() => {
   corte.setHours(0, 0, 0, 0)
   return corte
 })
-// Mora del préstamo a la fecha de pago (no la acumulada «a hoy» del listado).
+// Mora del préstamo a la fecha de pago (no la acumulada «a hoy» del listado), más la que
+// quedó pendiente de abonos anteriores.
 const moraPrestamoAbono = computed(() => Math.round(calcularMoraPrestamo(
   prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
   reglasInteresNatillera.value.tasa_mora,
   fechaCorteAbono.value,
   diasGraciaPrestamos.value
-)))
+)) + moraPendienteGuardada(prestamoSeleccionado.value?.cuotasConMoraPendiente))
 const saldoPrestamoAbono = computed(() => parseFloat(prestamoSeleccionado.value?.saldo_actual) || 0)
 // Total a pagar (dinámico): saldo pendiente + mora a la fecha de pago
 const totalAPagarConMora = computed(() => saldoPrestamoAbono.value + moraPrestamoAbono.value)
-// Desglose del abono: la mora se cobra PROPORCIONAL a la(s) cuota(s) que se pagan
-// (recorriendo las vencidas de la más antigua a la más nueva), no toda de golpe.
-const desgloseAbono = computed(() => desglosarAbonoConMora(
-  formAbono.valor,
-  prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
-  reglasInteresNatillera.value.tasa_mora,
-  fechaCorteAbono.value,
-  diasGraciaPrestamos.value
-))
+// Desglose del abono: primero el interés de mora (va a utilidades), proporcional a la(s)
+// cuota(s) que se pagan; el resto se abona al préstamo.
+const desgloseAbono = computed(() => desglosarAbono({
+  valor: formAbono.valor,
+  cuotasVencidasOrdenadas: prestamoSeleccionado.value?.cuotasVencidasOrdenadas,
+  cuotasConMoraPendiente: prestamoSeleccionado.value?.cuotasConMoraPendiente,
+  tasaMora: reglasInteresNatillera.value.tasa_mora,
+  fechaCorte: fechaCorteAbono.value,
+  diasGracia: diasGraciaPrestamos.value,
+  cobrarMora: true
+}))
 const moraPagadaAbono = computed(() => desgloseAbono.value.moraPagada)
 const abonoACapitalAbono = computed(() => desgloseAbono.value.abonoAPrestamo)
 const saldoDespuesAbono = computed(() => Math.max(0, saldoPrestamoAbono.value - abonoACapitalAbono.value))
@@ -4603,6 +4649,36 @@ function desgloseSaldoPrestamo(prestamoId) {
 }
 
 /** Etiqueta y colores de una cuota del plan en el detalle (lista y círculo del número). */
+/*
+ * Un solo estado para el detalle, en palabras: pagado, en mora (con cuántas cuotas) o al día.
+ * Antes había tres etiquetas a la vez (estado, cuotas vencidas, medio de entrega).
+ */
+const estadoResumenDetalle = computed(() => {
+  const p = prestamoDetalle.value
+  if (!p) return { texto: '', clase: 'ds-badge--muted', alerta: false }
+  if (p.estado === 'pagado') return { texto: 'Pagado', clase: 'ds-badge--success', alerta: false }
+  const vencidas = cuotasVencidasDetalle.value
+  if (vencidas > 0) {
+    return { texto: `En mora · ${vencidas} ${vencidas === 1 ? 'cuota vencida' : 'cuotas vencidas'}`, clase: 'ds-badge--danger', alerta: true }
+  }
+  if ((p.moraAcumulada || 0) > 0) return { texto: 'En mora · intereses', clase: 'ds-badge--danger', alerta: true }
+  return { texto: 'Al día', clase: 'ds-badge--success', alerta: false }
+})
+
+// Si el préstamo fue refinanciado, lo que manda es cómo se pactó al inicio.
+const interesAnticipadoDetalle = computed(() => {
+  const p = prestamoDetalle.value
+  if (!p) return false
+  if (typeof p.interes_anticipado_inicial === 'boolean') return p.interes_anticipado_inicial || !!p.interes_anticipado
+  return !!p.interes_anticipado
+})
+
+const opcionesPestanaDetalle = computed(() => [
+  { value: 'plan', label: `Plan (${planPagosPrestamo.value.length})` },
+  { value: 'abonos', label: `Abonos (${pagosCicloActual.value.length})` },
+  { value: 'condiciones', label: 'Condiciones' }
+])
+
 function estadoCuotaDetalle(cuota) {
   if (cuota.pagada) return { texto: 'Pagada', clase: 'ds-badge--success', circulo: 'bg-[#E8F5E9] text-[#1B5E37]' }
   if (parseFloat(cuota.valor_pagado || 0) > 0) return { texto: 'Parcial', clase: 'ds-badge--warning', circulo: 'bg-amber-100 text-amber-800' }
@@ -4688,6 +4764,9 @@ const resumenMoraComprobanteExistente = computed(() => {
       cuotasMora
     }
   }
+  // Sin cuotas vencidas pero con intereses de mora sin pagar: sigue en mora.
+  const moraPend = (plan.length > 0 ? plan : []).reduce((t, c) => t + (parseFloat(c.mora_pendiente) || 0), 0)
+  if (moraPend > 0) return { tipo: 'mora', texto: 'En mora · intereses', cuotasMora: 0 }
   return { tipo: 'aldia', texto: 'Al día', cuotasMora: 0 }
 })
 
@@ -5203,14 +5282,17 @@ async function fetchPrestamos() {
         interesesCuotasPagadas = cuotasPagadas.reduce((sum, cuota) => sum + (parseFloat(cuota.interes || 0)), 0)
       }
 
-      // Interés de mora acumulado a hoy (solo capital pendiente, por cuota vencida)
+      // Mora pendiente guardada: la de cuotas que se pagaron sin cobrarles la mora.
+      const cuotasConMoraPendiente = cuotasConMoraPendienteDe(planPagosPrestamo)
+      // Interés de mora a hoy (capital pendiente de cuotas vencidas) + la pendiente guardada
       const moraAcumulada = Math.round(
         calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual, diasGraciaPrestamos.value)
-      )
-      // Cuotas vencidas (de la más antigua a la más nueva) para desglosar el abono con mora
+      ) + moraPendienteGuardada(cuotasConMoraPendiente)
+      // Cuotas vencidas (de la más antigua a la más nueva) para desglosar el abono con mora.
+      // Con `id` para poder guardar su mora si el abono no la cobra.
       const cuotasVencidasOrdenadas = [...cuotasVencidasArray]
         .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
-        .map(c => ({ valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada }))
+        .map(c => ({ id: c.id, valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada }))
 
       return {
         ...prestamo,
@@ -5224,6 +5306,9 @@ async function fetchPrestamos() {
         valorCuotasEnDeuda,
         moraAcumulada,
         cuotasVencidasOrdenadas,
+        cuotasConMoraPendiente,
+        // En mora: cuotas vencidas o intereses de mora sin pagar.
+        enMora: tieneCuotasVencidas || moraAcumulada > 0,
         valorUnaCuotaVencida,
         fechaPagoCuotaVencida,
         // Guardar el interés total original para el cálculo de intereses ganados
@@ -5398,10 +5483,12 @@ async function actualizarPrestamoEnLista(prestamoId) {
         valorCuotasEnDeuda,
         moraAcumulada: Math.round(
           calcularMoraPrestamo(cuotasVencidasArray, reglasInteresNatillera.value.tasa_mora, fechaActual, diasGraciaPrestamos.value)
-        ),
+        ) + moraPendienteGuardada(cuotasConMoraPendienteDe(planPagosPrestamo)),
         cuotasVencidasOrdenadas: [...cuotasVencidasArray]
           .sort((a, b) => parseDateLocal(a.fecha_proyectada) - parseDateLocal(b.fecha_proyectada))
-          .map(c => ({ valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada })),
+          .map(c => ({ id: c.id, valor_cuota: c.valor_cuota, valor_pagado: c.valor_pagado, capital: c.capital, fecha_proyectada: c.fecha_proyectada })),
+        cuotasConMoraPendiente: cuotasConMoraPendienteDe(planPagosPrestamo),
+        enMora: tieneCuotasVencidas || moraPendienteGuardada(cuotasConMoraPendienteDe(planPagosPrestamo)) > 0,
         valorUnaCuotaVencida,
         fechaPagoCuotaVencida,
         // Guardar el interés total original para el cálculo de intereses ganados
@@ -5417,11 +5504,37 @@ async function actualizarPrestamoEnLista(prestamoId) {
   }
 }
 
+/*
+ * Valor sugerido: si hay cuotas vencidas, la más antigua (pendiente + su mora) para
+ * liquidarla exacto según el plan; si no, la cuota estándar acotada al saldo.
+ */
+/**
+ * Cuotas que tocó un abono y siguen sin completarse, con lo que les falta. Sale del plan
+ * actual: si después se completaron, ya no aparecen.
+ */
+async function cuotasPendientesDelAbono(prestamoId, pagoId) {
+  try {
+    const { data: pago } = await supabase.from('pagos_prestamo').select('numeros_cuota').eq('id', pagoId).maybeSingle()
+    const numeros = Array.isArray(pago?.numeros_cuota) ? pago.numeros_cuota : []
+    if (numeros.length === 0) return []
+    const { data: plan } = await supabase
+      .from('plan_pagos_prestamo')
+      .select('numero_cuota, valor_cuota, valor_pagado, pagada')
+      .eq('prestamo_id', prestamoId)
+      .in('numero_cuota', numeros)
+    return (plan || [])
+      .filter(c => !c.pagada)
+      .map(c => ({ numero: c.numero_cuota, pendiente: Math.round((parseFloat(c.valor_cuota) || 0) - (parseFloat(c.valor_pagado) || 0)) }))
+      .filter(c => c.pendiente > 0)
+      .sort((a, b) => a.numero - b.numero)
+  } catch {
+    return []
+  }
+}
+
 function abrirModalAbono(prestamo) {
   if (soloLectura.value) return
   prestamoSeleccionado.value = prestamo
-  // Valor sugerido: si hay cuotas vencidas, la más antigua (pendiente + su mora) para
-  // liquidarla exacto según el plan; si no, la cuota estándar acotada al saldo.
   const overdue = prestamo.cuotasVencidasOrdenadas || []
   let valorInicial
   if (overdue.length > 0) {
@@ -5437,10 +5550,6 @@ function abrirModalAbono(prestamo) {
   formAbono.fecha_pago = getCurrentDateISO() // Fecha actual por defecto
   valorAbonoFormateado.value = formatMoney(valorInicial)
   modalAbono.value = true
-  // Guardar si el modal de detalle estaba abierto para este préstamo
-  if (prestamoDetalle.value && prestamoDetalle.value.id === prestamo.id) {
-    // No cerrar el modal de detalle, solo abrir el modal de abono encima
-  }
 }
 
 function actualizarValorAbono(event) {
@@ -5533,97 +5642,115 @@ function cerrarModalRefinanciar() {
   if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
 }
 
-// Genera la imagen del comprobante capturando el ticket del DOM (#comprobante-abono)
-// con toPng. Así el preview y la imagen descargada/compartida son idénticos.
-// Devuelve un <canvas> para no cambiar los callers (toDataURL / toBlob).
-function generarImagenComprobanteAbono() {
-  return new Promise((resolve) => {
-    try {
-      if (!comprobanteAbono.value || !comprobanteRef.value) {
-        resolve(null)
-        return
+/*
+ * Imágenes de comprobantes listas ANTES del toque. Safari solo abre el menú de compartir si
+ * `navigator.share` sale directo del gesto: cualquier `await` antes (toPng, fetch, consultar
+ * Supabase) lo hace caducar y el menú no aparece. Por eso cada imagen se genera al abrir su
+ * modal (o al cambiar lo que muestra) y los botones esperan deshabilitados. La espera corta
+ * agrupa los cambios que llegan justo después de abrir (p. ej. las cuotas pendientes del
+ * abono) para no capturar dos veces.
+ */
+const descartesImagenes = []
+function crearImagenPreparada({ preparando, capturar, nombre }) {
+  const archivo = ref(null)
+  let turno = 0
+  let temporizador = null
+  function descartar() {
+    clearTimeout(temporizador)
+    temporizador = null
+    turno++
+    archivo.value = null
+    preparando.value = false
+  }
+  function programar() {
+    descartar()
+    preparando.value = true
+    const mio = turno
+    temporizador = setTimeout(async () => {
+      temporizador = null
+      try {
+        await nextTick()
+        const dataUrl = await capturar()
+        if (mio !== turno) return
+        if (!dataUrl) throw new Error('No se pudo generar la imagen')
+        const blob = await (await fetch(dataUrl)).blob()
+        if (mio !== turno) return
+        archivo.value = new File([blob], nombre(), { type: 'image/png' })
+      } catch (e) {
+        if (mio !== turno) return
+        console.error('Error preparando la imagen:', e)
+        notificationStore.error('No se pudo generar la imagen. Cierra y vuelve a abrir el comprobante.', 'Error')
+      } finally {
+        if (mio === turno) preparando.value = false
       }
-
-      // #eef1f4 = fondo neutro claro: iguala el fondo del modal y las muescas del
-      // ticket, de modo que el corte perforado se ve limpio en la imagen final.
-      toPng(comprobanteRef.value, {
-        pixelRatio: 3,
-        cacheBust: true,
-        backgroundColor: '#eef1f4',
-      })
-        .then((dataUrl) => {
-          const img = new Image()
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.naturalWidth
-            canvas.height = img.naturalHeight
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0)
-            resolve(canvas)
-          }
-          img.onerror = () => resolve(null)
-          img.src = dataUrl
-        })
-        .catch((e) => {
-          console.error('Error generando imagen del comprobante:', e)
-          resolve(null)
-        })
-    } catch (e) {
-      console.error('Error generando imagen del comprobante:', e)
-      resolve(null)
-    }
-  })
+    }, 250)
+  }
+  descartesImagenes.push(descartar)
+  return { archivo, programar, descartar }
 }
+onUnmounted(() => descartesImagenes.forEach(descartar => descartar()))
 
-async function descargarComprobanteAbono() {
-  if (!comprobanteAbono.value) {
-    notificationStore.error('El comprobante no está listo. Intenta de nuevo.', 'Error')
+/*
+ * iOS ignora `download` sobre data URLs (en la PWA no hace nada; en Safari abre la imagen en
+ * otra pestaña): allí se entrega con la hoja de compartir, que trae «Guardar imagen». Se llama
+ * sin ningún `await` por delante, dentro del toque. Si el navegador no comparte archivos, se
+ * descarga con un enlace, como antes.
+ */
+function entregarArchivo(archivo) {
+  if (!archivo) return
+  if (detectIosPlatform() && navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({ files: [archivo] }).catch(e => {
+      if (e?.name !== 'AbortError') console.error('Error entregando el archivo:', e)
+    })
     return
   }
-  
-  generandoImagenComprobante.value = true
-  
-  try {
-    const canvas = await generarImagenComprobanteAbono()
-    
-    if (!canvas) {
-      throw new Error('No se pudo generar el canvas')
+  const url = URL.createObjectURL(archivo)
+  const enlace = document.createElement('a')
+  enlace.download = archivo.name
+  enlace.href = url
+  document.body.appendChild(enlace)
+  enlace.click()
+  document.body.removeChild(enlace)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+// Comprobante de abono: captura del ticket del DOM (#comprobante-abono). #eef1f4 iguala el
+// fondo del modal y las muescas del ticket, así el corte perforado se ve limpio en la imagen.
+const imagenAbono = crearImagenPreparada({
+  preparando: generandoImagenComprobante,
+  capturar: () => (comprobanteAbono.value && comprobanteRef.value
+    ? toPng(comprobanteRef.value, { pixelRatio: 3, cacheBust: true, backgroundColor: '#eef1f4' })
+    : null),
+  nombre: () => `comprobante-abono-${comprobanteAbono.value?.socioNombre?.replace(/\s+/g, '-') || 'abono'}-${Date.now()}.png`
+})
+const archivoImagenAbono = imagenAbono.archivo
+watch([modalComprobanteAbono, comprobanteAbono], ([abierto, datos]) => {
+  if (abierto && datos) imagenAbono.programar()
+  else imagenAbono.descartar()
+})
+
+function descargarComprobanteAbono() {
+  const c = comprobanteAbono.value
+  if (!c || !archivoImagenAbono.value) return
+  entregarArchivo(archivoImagenAbono.value)
+
+  // Registrar auditoría de descarga de comprobante
+  if (!c.pagoPrestamoId) return
+  const auditoria = useAuditoria()
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'DOWNLOAD',
+    entidad: 'comprobante',
+    entidadId: c.pagoPrestamoId,
+    descripcion: `Se descargó comprobante de abono a préstamo de ${c.socioNombre || 'socio'} (Código: ${c.codigoComprobante || 'N/A'})`,
+    natilleraId: id,
+    detalles: {
+      tipo_comprobante: 'abono_prestamo',
+      codigo_comprobante: c.codigoComprobante,
+      socio_nombre: c.socioNombre,
+      valor: c.valor,
+      prestamo_id: c.prestamoId
     }
-    
-    const dataUrl = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `comprobante-abono-${comprobanteAbono.value?.socioNombre?.replace(/\s+/g, '-') || 'abono'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    notificationStore.success('Comprobante descargado exitosamente', 'Éxito')
-    
-    // Registrar auditoría de descarga de comprobante
-    if (comprobanteAbono.value?.pagoPrestamoId) {
-      const auditoria = useAuditoria()
-      registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-        tipoAccion: 'DOWNLOAD',
-        entidad: 'comprobante',
-        entidadId: comprobanteAbono.value.pagoPrestamoId,
-        descripcion: `Se descargó comprobante de abono a préstamo de ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
-        natilleraId: id,
-        detalles: {
-          tipo_comprobante: 'abono_prestamo',
-          codigo_comprobante: comprobanteAbono.value.codigoComprobante,
-          socio_nombre: comprobanteAbono.value.socioNombre,
-          valor: comprobanteAbono.value.valor,
-          prestamo_id: comprobanteAbono.value.prestamoId
-        }
-      }))
-    }
-  } catch (e) {
-    console.error('Error al generar imagen:', e)
-    notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
-  } finally {
-    generandoImagenComprobante.value = false
-  }
+  }))
 }
 
 async function reenviarComprobanteAbono(pago) {
@@ -5643,15 +5770,20 @@ async function reenviarComprobanteAbono(pago) {
     const socioNombre = prestamo.socio_natillera?.socio?.nombre || 'Socio'
     const socioTelefono = prestamo.socio_natillera?.socio?.telefono || null
     
-    // Calcular saldo anterior (sumando el valor del abono al saldo actual)
-    const saldoAnterior = (prestamo.saldo_actual || 0) + (parseFloat(pago.valor) || 0)
-    const saldoNuevo = prestamo.saldo_actual || 0
+    // Saldo anterior = saldo nuevo + lo que se abonó + la mora que se cobró: lo que debía
+    // antes del pago, mora incluida, para que la resta cuadre con el valor pagado.
+    const saldoNuevo = parseFloat(prestamo.saldo_actual) || 0
+    const saldoAnterior = saldoNuevo + (parseFloat(pago.valor) || 0) + (Math.round(parseFloat(pago.mora_cobrada) || 0))
     
     // Preparar datos del comprobante
+    // Mora cobrada en el abono: va aparte del valor que bajó el saldo.
+    const moraCobradaPago = Math.round(parseFloat(pago.mora_cobrada) || 0)
     comprobanteAbono.value = {
       pagoPrestamoId: pago.id, // ID del pago de préstamo para auditoría
       prestamoId: prestamo.id, // ID del préstamo para auditoría
-      valor: parseFloat(pago.valor) || 0,
+      valor: (parseFloat(pago.valor) || 0) + moraCobradaPago,
+      moraPagada: moraCobradaPago,
+      abonoAPrestamo: parseFloat(pago.valor) || 0,
       codigoComprobante: pago.codigo_comprobante,
       socioNombre: socioNombre,
       socioTelefono: socioTelefono,
@@ -5682,6 +5814,9 @@ async function reenviarComprobanteAbono(pago) {
     
     // Abrir modal de comprobante
     modalComprobanteAbono.value = true
+    cuotasPendientesDelAbono(prestamo.id, pago.id).then(lista => {
+      if (comprobanteAbono.value?.pagoPrestamoId === pago.id) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasPendientes: lista }
+    })
   } catch (e) {
     console.error('Error al preparar comprobante:', e)
     notificationStore.error('Error al preparar el comprobante: ' + e.message, 'Error')
@@ -5702,122 +5837,53 @@ function abrirWhatsAppConMensaje(telefonoCrudo, mensaje) {
   window.open(t ? `https://wa.me/${numeroWhatsApp(t)}?text=${texto}` : `https://wa.me/?text=${texto}`, '_blank')
 }
 
-async function compartirWhatsAppAbono() {
-  if (!comprobanteAbono.value) return
-  
-  generandoImagenComprobante.value = true
-  
-  try {
-    const canvas = await generarImagenComprobanteAbono()
-    if (!canvas) throw new Error('No se pudo generar la imagen')
-    
-    // Convertir canvas a blob
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-    
-    // Incluir el nombre del socio en el nombre del archivo para mejor identificación
-    const nombreArchivo = `comprobante-abono-${comprobanteAbono.value.socioNombre?.replace(/\s+/g, '-') || 'abono'}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
-    
-    // Crear mensaje con el nombre del socio
-    const mensajeCompartir = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
-    
-    // Verificar si el navegador soporta Web Share API con archivos
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: `Comprobante de Abono - ${comprobanteAbono.value.socioNombre}`,
-        text: mensajeCompartir
+function auditarEnvioAbono(c, metodo, etiqueta) {
+  if (!c?.pagoPrestamoId) return
+  const auditoria = useAuditoria()
+  registrarAuditoriaEnSegundoPlano(auditoria.registrar({
+    tipoAccion: 'SEND',
+    entidad: 'comprobante',
+    entidadId: c.pagoPrestamoId,
+    descripcion: `Se envió comprobante de abono a préstamo por WhatsApp${etiqueta} a ${c.socioNombre || 'socio'} (Código: ${c.codigoComprobante || 'N/A'})`,
+    natilleraId: id,
+    detalles: {
+      tipo_comprobante: 'abono_prestamo',
+      metodo_envio: metodo,
+      codigo_comprobante: c.codigoComprobante,
+      socio_nombre: c.socioNombre,
+      socio_telefono: c.socioTelefono,
+      valor: c.valor,
+      prestamo_id: c.prestamoId
+    }
+  }))
+}
+
+// Síncrono de principio a fin: la imagen ya está lista y `share`/`window.open` salen del toque.
+function compartirWhatsAppAbono() {
+  const c = comprobanteAbono.value
+  const archivo = archivoImagenAbono.value
+  if (!c || !archivo) return
+  const mensajeCompartir = `Hola ${c.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: `Comprobante de Abono - ${c.socioNombre}`,
+      text: mensajeCompartir
+    })
+      .then(() => auditarEnvioAbono(c, 'whatsapp', ''))
+      .catch(e => {
+        // Cancelar el menú no es error. Y abrir WhatsApp desde aquí ya no tendría gesto:
+        // Safari bloquearía la ventana.
+        if (e?.name === 'AbortError') return
+        console.error('Error compartiendo por WhatsApp:', e)
+        notificationStore.error('No se pudo compartir el comprobante', 'Error')
       })
-      
-      // Registrar auditoría de envío de comprobante
-      if (comprobanteAbono.value?.pagoPrestamoId) {
-        const auditoria = useAuditoria()
-        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-          tipoAccion: 'SEND',
-          entidad: 'comprobante',
-          entidadId: comprobanteAbono.value.pagoPrestamoId,
-          descripcion: `Se envió comprobante de abono a préstamo por WhatsApp a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
-          natilleraId: id,
-          detalles: {
-            tipo_comprobante: 'abono_prestamo',
-            metodo_envio: 'whatsapp',
-            codigo_comprobante: comprobanteAbono.value.codigoComprobante,
-            socio_nombre: comprobanteAbono.value.socioNombre,
-            socio_telefono: comprobanteAbono.value.socioTelefono,
-            valor: comprobanteAbono.value.valor,
-            prestamo_id: comprobanteAbono.value.prestamoId
-          }
-        }))
-      }
-    } else {
-      // Fallback: descargar y abrir WhatsApp con mensaje
-      const link = document.createElement('a')
-      link.download = `comprobante-abono-${comprobanteAbono.value.socioNombre?.replace(/\s+/g, '-')}.png`
-      link.href = canvas.toDataURL('image/png')
-      link.click()
-      
-      // Esperar un poco y abrir WhatsApp
-      setTimeout(() => {
-        const telefono = comprobanteAbono.value.socioTelefono?.replace(/\D/g, '')
-        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-          const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo. ¡Gracias por estar al día! 🙌`
-          abrirWhatsAppConMensaje(telefono, mensaje)
-          
-          // Registrar auditoría de envío de comprobante (fallback)
-          if (comprobanteAbono.value?.pagoPrestamoId) {
-            const auditoria = useAuditoria()
-            registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-              tipoAccion: 'SEND',
-              entidad: 'comprobante',
-              entidadId: comprobanteAbono.value.pagoPrestamoId,
-              descripcion: `Se envió comprobante de abono a préstamo por WhatsApp (fallback) a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
-              natilleraId: id,
-              detalles: {
-                tipo_comprobante: 'abono_prestamo',
-                metodo_envio: 'whatsapp_fallback',
-                codigo_comprobante: comprobanteAbono.value.codigoComprobante,
-                socio_nombre: comprobanteAbono.value.socioNombre,
-                socio_telefono: comprobanteAbono.value.socioTelefono,
-                valor: comprobanteAbono.value.valor,
-                prestamo_id: comprobanteAbono.value.prestamoId
-              }
-            }))
-          }
-        }
-      }, 500)
-    }
-  } catch (e) {
-    console.error('Error compartiendo por WhatsApp:', e)
-    // Si falla el share API, intentar abrir WhatsApp directamente
-    const telefono = comprobanteAbono.value.socioTelefono?.replace(/\D/g, '')
-    { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-      const mensaje = `Hola ${comprobanteAbono.value.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo en la natillera.\n\n¡Gracias por estar al día! 🙌`
-      abrirWhatsAppConMensaje(telefono, mensaje)
-      
-      // Registrar auditoría de envío de comprobante (solo texto)
-      if (comprobanteAbono.value?.pagoPrestamoId) {
-        const auditoria = useAuditoria()
-        registrarAuditoriaEnSegundoPlano(auditoria.registrar({
-          tipoAccion: 'SEND',
-          entidad: 'comprobante',
-          entidadId: comprobanteAbono.value.pagoPrestamoId,
-          descripcion: `Se envió comprobante de abono a préstamo por WhatsApp (solo texto) a ${comprobanteAbono.value.socioNombre || 'socio'} (Código: ${comprobanteAbono.value.codigoComprobante || 'N/A'})`,
-          natilleraId: id,
-          detalles: {
-            tipo_comprobante: 'abono_prestamo',
-            metodo_envio: 'whatsapp_texto',
-            codigo_comprobante: comprobanteAbono.value.codigoComprobante,
-            socio_nombre: comprobanteAbono.value.socioNombre,
-            socio_telefono: comprobanteAbono.value.socioTelefono,
-            valor: comprobanteAbono.value.valor,
-            prestamo_id: comprobanteAbono.value.prestamoId
-          }
-        }))
-      }
-    }
-  } finally {
-    generandoImagenComprobante.value = false
+    return
   }
+  // Sin menú de compartir archivos (escritorio): descarga y chat de WhatsApp en el mismo toque
+  entregarArchivo(archivo)
+  abrirWhatsAppConMensaje(c.socioTelefono, `Hola ${c.socioNombre} 👋\n\nTe envío el comprobante de tu abono al préstamo. ¡Gracias por estar al día! 🙌`)
+  auditarEnvioAbono(c, 'whatsapp_fallback', ' (fallback)')
 }
 
 // ============================================================
@@ -5878,123 +5944,65 @@ async function enviarComprobantePagado(prestamo) {
   }
 }
 
-function generarImagenComprobantePagado() {
-  return new Promise((resolve) => {
-    try {
-      if (!comprobantePagado.value || !comprobantePagadoRef.value) {
-        resolve(null)
-        return
-      }
-      toPng(comprobantePagadoRef.value, {
-        pixelRatio: 3,
-        cacheBust: true,
-        backgroundColor: '#eef1f4',
-      })
-        .then((dataUrl) => {
-          const img = new Image()
-          img.onload = () => {
-            const canvas = document.createElement('canvas')
-            canvas.width = img.naturalWidth
-            canvas.height = img.naturalHeight
-            const ctx = canvas.getContext('2d')
-            ctx.drawImage(img, 0, 0)
-            resolve(canvas)
-          }
-          img.onerror = () => resolve(null)
-          img.src = dataUrl
-        })
-        .catch((e) => {
-          console.error('Error generando imagen del comprobante pagado:', e)
-          resolve(null)
-        })
-    } catch (e) {
-      console.error('Error generando imagen del comprobante pagado:', e)
-      resolve(null)
-    }
-  })
+const imagenPagado = crearImagenPreparada({
+  preparando: generandoImagenComprobantePagado,
+  capturar: () => (comprobantePagado.value && comprobantePagadoRef.value
+    ? toPng(comprobantePagadoRef.value, { pixelRatio: 3, cacheBust: true, backgroundColor: '#eef1f4' })
+    : null),
+  nombre: () => `comprobante-pagado-${comprobantePagado.value?.socioNombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
+})
+const archivoImagenPagado = imagenPagado.archivo
+watch([modalComprobantePagado, comprobantePagado], ([abierto, datos]) => {
+  if (abierto && datos) imagenPagado.programar()
+  else imagenPagado.descartar()
+})
+
+function descargarComprobantePagado() {
+  if (!comprobantePagado.value || !archivoImagenPagado.value) return
+  entregarArchivo(archivoImagenPagado.value)
 }
 
-async function descargarComprobantePagado() {
-  if (!comprobantePagado.value) {
-    notificationStore.error('El comprobante no está listo. Intenta de nuevo.', 'Error')
-    return
-  }
-  generandoImagenComprobantePagado.value = true
-  try {
-    const canvas = await generarImagenComprobantePagado()
-    if (!canvas) throw new Error('No se pudo generar el canvas')
-    const dataUrl = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.download = `comprobante-pagado-${comprobantePagado.value?.socioNombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    notificationStore.success('Comprobante descargado exitosamente', 'Éxito')
-  } catch (e) {
-    console.error('Error al generar imagen:', e)
-    notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
-  } finally {
-    generandoImagenComprobantePagado.value = false
-  }
-}
-
-async function compartirWhatsAppComprobantePagado() {
-  if (!comprobantePagado.value) return
-  generandoImagenComprobantePagado.value = true
-  try {
-    const canvas = await generarImagenComprobantePagado()
-    if (!canvas) throw new Error('No se pudo generar la imagen')
-
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-    const nombreArchivo = `comprobante-pagado-${comprobantePagado.value.socioNombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
-    const mensajeCompartir = `¡Felicidades ${comprobantePagado.value.socioNombre}! 🎉\n\nTu préstamo en la natillera quedó *totalmente pagado*. Te envío el comprobante.\n\n¡Gracias por tu compromiso! 🙌`
-
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: `Comprobante de préstamo pagado - ${comprobantePagado.value.socioNombre}`,
-        text: mensajeCompartir,
-      })
-    } else {
-      const link = document.createElement('a')
-      link.download = nombreArchivo
-      link.href = canvas.toDataURL('image/png')
-      link.click()
-      setTimeout(() => {
-        const telefono = comprobantePagado.value.socioTelefono?.replace(/\D/g, '')
-        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-          abrirWhatsAppConMensaje(telefono, mensajeCompartir)
-        }
-      }, 500)
-    }
-
-    // Auditoría de envío
+// Síncrono: la imagen ya está lista y `share`/`window.open` salen del toque.
+function compartirWhatsAppComprobantePagado() {
+  const c = comprobantePagado.value
+  const archivo = archivoImagenPagado.value
+  if (!c || !archivo) return
+  const mensajeCompartir = `¡Felicidades ${c.socioNombre}! 🎉\n\nTu préstamo en la natillera quedó *totalmente pagado*. Te envío el comprobante.\n\n¡Gracias por tu compromiso! 🙌`
+  const auditarEnvio = () => {
     const auditoria = useAuditoria()
     registrarAuditoriaEnSegundoPlano(auditoria.registrar({
       tipoAccion: 'SEND',
       entidad: 'comprobante',
-      entidadId: comprobantePagado.value.prestamoId,
-      descripcion: `Se envió comprobante de préstamo pagado por WhatsApp a ${comprobantePagado.value.socioNombre}`,
+      entidadId: c.prestamoId,
+      descripcion: `Se envió comprobante de préstamo pagado por WhatsApp a ${c.socioNombre}`,
       natilleraId: id,
       detalles: {
         tipo_comprobante: 'prestamo_pagado',
         metodo_envio: 'whatsapp',
-        socio_nombre: comprobantePagado.value.socioNombre,
-        socio_telefono: comprobantePagado.value.socioTelefono,
-        total_pagado: comprobantePagado.value.totalPagado,
-        prestamo_id: comprobantePagado.value.prestamoId,
+        socio_nombre: c.socioNombre,
+        socio_telefono: c.socioTelefono,
+        total_pagado: c.totalPagado,
+        prestamo_id: c.prestamoId,
       },
     }))
-  } catch (e) {
-    if (e?.name !== 'AbortError') {
-      console.error('Error compartiendo comprobante pagado:', e)
-      notificationStore.error('No se pudo compartir el comprobante', 'Error')
-    }
-  } finally {
-    generandoImagenComprobantePagado.value = false
   }
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: `Comprobante de préstamo pagado - ${c.socioNombre}`,
+      text: mensajeCompartir,
+    })
+      .then(auditarEnvio)
+      .catch(e => {
+        if (e?.name === 'AbortError') return
+        console.error('Error compartiendo comprobante pagado:', e)
+        notificationStore.error('No se pudo compartir el comprobante', 'Error')
+      })
+    return
+  }
+  entregarArchivo(archivo)
+  abrirWhatsAppConMensaje(c.socioTelefono, mensajeCompartir)
+  auditarEnvio()
 }
 
 async function abrirModalDetalle(prestamo) {
@@ -6264,15 +6272,55 @@ async function actualizarPlanPagosDespuesDeEditarAbono(prestamoId, diferenciaAbo
   await fetchPagosPrestamo(prestamoId)
 }
 
-// Fecha de la cuota i del plan: quincenal cada 15 días; mensual el mismo día de cada mes
-// (si el mes no tiene ese día, el último del mes).
+// Fecha de la cuota i del plan: quincenal por quincenas del calendario; mensual el mismo
+// día de cada mes (si el mes no tiene ese día, el último del mes).
 function fechaCuotaDelPlan(fechaInicio, periodicidad, i) {
-  if (periodicidad === 'quincenal') {
-    const fecha = new Date(fechaInicio)
-    fecha.setDate(fecha.getDate() + (15 * (i - 1)))
-    return fecha
-  }
+  if (periodicidad === 'quincenal') return fechaProyectadaQuincenal(fechaInicio, i)
   return fechaProyectadaMensual(fechaInicio, i)
+}
+
+/*
+ * Cuota quincenal i: dos fechas fijas por mes, como las quincenas de la natillera.
+ *
+ * Antes era «la anterior + 15 días», y como los meses no tienen 30 días las fechas se iban
+ * corriendo: 30 ago → 14 sep → 29 sep → 14 oct, cuando las quincenas son el 15 y el último
+ * día. La mora cuenta desde esa fecha, así que un día corrido cobraba un día de más.
+ *
+ * El par de días del mes sale de la primera cuota:
+ *   · el 15, o del 28 en adelante (fin de mes) → 15 y último día del mes;
+ *   · antes del 15 (p. ej. 10)                  → 10 y 25;
+ *   · entre el 16 y el 27 (p. ej. 20)           → 5 y 20.
+ * La primera cuota queda en la fecha que se eligió; las demás alternan entre los dos días.
+ */
+function fechaProyectadaQuincenal(fechaInicio, numeroCuota) {
+  const inicio = new Date(fechaInicio)
+  if (numeroCuota <= 1) return inicio
+  const dia = inicio.getDate()
+  const ultimoDe = (anio, mes) => new Date(anio, mes + 1, 0).getDate()
+  const finDeMes = dia >= 28 || dia === ultimoDe(inicio.getFullYear(), inicio.getMonth())
+
+  let primero, segundo, posicion
+  if (dia === 15 || finDeMes) {
+    primero = 15
+    segundo = null // último día del mes
+    posicion = dia === 15 ? 0 : 1
+  } else if (dia < 15) {
+    primero = dia
+    segundo = dia + 15
+    posicion = 0
+  } else {
+    primero = dia - 15
+    segundo = dia
+    posicion = 1
+  }
+
+  const k = posicion + (numeroCuota - 1)
+  const mesAbs = inicio.getMonth() + Math.floor(k / 2)
+  const anio = inicio.getFullYear() + Math.floor(mesAbs / 12)
+  const mes = ((mesAbs % 12) + 12) % 12
+  const ultimo = ultimoDe(anio, mes)
+  const diaCuota = k % 2 === 0 ? Math.min(primero, ultimo) : (segundo == null ? ultimo : Math.min(segundo, ultimo))
+  return new Date(anio, mes, diaCuota, inicio.getHours(), inicio.getMinutes(), inicio.getSeconds(), inicio.getMilliseconds())
 }
 
 // Función para generar el plan de pagos (préstamo nuevo). Los montos salen de
@@ -6895,6 +6943,15 @@ let stashAbonoEliminar = null
 let stashPrestamoEliminar = null
 
 const { requestCloseTop: requestCloseTopModal, hasOpenModal } = useModalStack({
+  interesesGanados: {
+    isOpen: computed(() => !!modalInteresesGanados.value),
+    hide: () => { modalInteresesGanados.value = false },
+    show: () => { modalInteresesGanados.value = true },
+    dismiss: () => {
+      modalInteresesGanados.value = false
+      if (!__modalStackSync.skip) __modalStackSync.afterDismiss?.()
+    }
+  },
   nuevoPrestamo: {
     isOpen: computed(() => !!modalNuevoPrestamo.value),
     hide: () => {
@@ -7200,14 +7257,19 @@ watch(pantallaPrestamosLista, (lista) => {
 
 onUnmounted(() => clearTimeout(temporizadorGuiaPrestamos))
 
+/*
+ * Cierre del selector de socio al tocar fuera. En `pointerdown` y en fase de captura: el
+ * `click` en document nunca llegaba desde dentro del modal (la card lo corta con
+ * `@click.stop`), y iOS ni siquiera dispara `click` al tocar zonas que no son clicables.
+ */
 function handleClickOutside(event) {
-  if (mostrarSelectorSocio.value && !event.target.closest('.selector-socio-container')) {
+  if (mostrarSelectorSocio.value && !event.target.closest?.('.selector-socio-container')) {
     cerrarSelectorSocio()
   }
 }
 
 onMounted(async () => {
-  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('pointerdown', handleClickOutside, true)
 
   // Observer de la cabecera para mostrar/ocultar el FAB
   if (typeof IntersectionObserver !== 'undefined' && headerRef.value) {
@@ -7243,7 +7305,18 @@ onMounted(async () => {
 
 onUnmounted(() => {
   headerObserver?.disconnect()
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('pointerdown', handleClickOutside, true)
+  // Frames y temporizadores pendientes no deben tocar refs de una vista ya desmontada
+  cancelarScrollDetalle()
+  for (const raf of [
+    rafIndicadorScrollModalDetalle,
+    rafIndicadorScrollModalNuevoPrestamo,
+    rafNatiscrollModalProyeccion,
+    rafNatiscrollModalCompartirPrestamo,
+    rafIndicadorScrollModalAbono
+  ]) {
+    if (raf != null) cancelAnimationFrame(raf)
+  }
 })
 
 async function handleRegistrarAbono() {
@@ -7271,15 +7344,19 @@ async function handleRegistrarAbono() {
     // Split: la mora se cobra PROPORCIONAL a la(s) cuota(s) que se pagan (recorriendo
     // las vencidas de la más antigua a la más nueva); va al fondo, no baja el saldo. El
     // resto es el abono al préstamo (capital+interés) que sí reduce el saldo.
-    const desgloseAbonoReg = desglosarAbonoConMora(
-      formAbono.valor,
-      prestamoSeleccionado.value.cuotasVencidasOrdenadas,
-      reglasInteresNatillera.value.tasa_mora,
-      fechaCorteAbono.value,       // la misma fecha que vio el usuario en el desglose
-      diasGraciaPrestamos.value
-    )
+    // Primero el interés de mora (a utilidades); el resto se abona al préstamo.
+    const desgloseAbonoReg = desglosarAbono({
+      valor: formAbono.valor,
+      cuotasVencidasOrdenadas: prestamoSeleccionado.value.cuotasVencidasOrdenadas,
+      cuotasConMoraPendiente: prestamoSeleccionado.value.cuotasConMoraPendiente,
+      tasaMora: reglasInteresNatillera.value.tasa_mora,
+      fechaCorte: fechaCorteAbono.value,       // la misma fecha que vio el usuario en el desglose
+      diasGracia: diasGraciaPrestamos.value,
+      cobrarMora: true
+    })
     const moraPagada = desgloseAbonoReg.moraPagada
     const abonoAPrestamo = desgloseAbonoReg.abonoAPrestamo
+    const movimientosMora = desgloseAbonoReg.movimientos
 
     const nuevoSaldo = prestamoSeleccionado.value.saldo_actual - abonoAPrestamo
     const nuevoEstado = nuevoSaldo <= 0 ? 'pagado' : 'activo'
@@ -7361,7 +7438,9 @@ async function handleRegistrarAbono() {
         prestamoSeleccionado.value?.socio_natillera?.nombre ||
         null,
       nombre_natillera: natilleraAbono?.nombre || null,
-      origen: 'prestamos'
+      origen: 'prestamos',
+      mora_cobrada: moraPagada,
+      mora_movimientos: movimientosMora.length ? movimientosMora : null
     }
     
     console.log('💾 Registrando abono con datos:', datosPago)
@@ -7460,6 +7539,8 @@ async function handleRegistrarAbono() {
     // Actualizar plan de pagos PRIMERO: recalcular todo desde cero con todos los pagos
     // Esto debe hacerse antes de actualizar el préstamo en la lista para que tenga los datos correctos
     await actualizarPlanPagosDespuesDeEditarAbono(prestamoIdAbonado, 0) // 0 porque es un nuevo abono, no una diferencia
+    // Mora que el abono dejó pendiente (o que cobró de la pendiente) en cada cuota del plan.
+    await aplicarMovimientosMora(movimientosMora, 1)
     
     // Actualizar el préstamo en la lista DESPUÉS de actualizar el plan de pagos
     // para que use los datos actualizados del plan de pagos (con valor_pagado actualizado)
@@ -7495,7 +7576,9 @@ async function handleRegistrarAbono() {
       socioNombre: nombreSocio,
       socioTelefono: socioTelefono,
       fecha: fechaPagoComprobante,
-      saldoAnterior: datosAnteriores.saldo_actual,
+      // Lo que debía antes del pago incluye la mora que se cobró: así saldo anterior − valor
+      // pagado = saldo nuevo. La mora no está en `saldo_actual` (se cobra aparte, a utilidades).
+      saldoAnterior: (parseFloat(datosAnteriores.saldo_actual) || 0) + moraPagada,
       saldoNuevo: Math.max(0, nuevoSaldo),
       prestamo: prestamoSeleccionado.value
     }
@@ -7504,6 +7587,11 @@ async function handleRegistrarAbono() {
     
     // Abrir modal de comprobante
     modalComprobanteAbono.value = true
+    // El plan ya se recalculó: se ve qué quedó debiendo de las cuotas que tocó el abono.
+    const pagoIdComprobante = pagoInsertado[0].id
+    cuotasPendientesDelAbono(prestamoIdAbonado, pagoIdComprobante).then(lista => {
+      if (comprobanteAbono.value?.pagoPrestamoId === pagoIdComprobante) comprobanteAbono.value = { ...comprobanteAbono.value, cuotasPendientes: lista }
+    })
     
     // SIEMPRE recargar los pagos si el modal de detalle está abierto para este préstamo
     if (estabaEnDetalle) {
@@ -7837,6 +7925,14 @@ async function eliminarAbonoConfirmado() {
       }
     }
     
+    // Lo que el abono hizo con la mora, para deshacerlo: la que dejó pendiente (o cobró de
+    // la pendiente) en cada cuota, y la que cobró y fue al fondo.
+    const { data: moraDelAbono } = await supabase
+      .from('pagos_prestamo')
+      .select('mora_cobrada, mora_movimientos, valor_transferencia')
+      .eq('id', abonoAEliminar.value.id)
+      .maybeSingle()
+
     // Eliminar el abono
     const { error: errorEliminar } = await supabase
       .from('pagos_prestamo')
@@ -7844,6 +7940,18 @@ async function eliminarAbonoConfirmado() {
       .eq('id', abonoAEliminar.value.id)
     
     if (errorEliminar) throw errorEliminar
+
+    await aplicarMovimientosMora(moraDelAbono?.mora_movimientos, -1)
+    const moraCobradaAbono = parseFloat(moraDelAbono?.mora_cobrada) || 0
+    if (moraCobradaAbono > 0) {
+      const fpMora = (parseFloat(moraDelAbono?.valor_transferencia) || 0) > 0 ? 'transferencia' : 'efectivo'
+      try {
+        await registrarMoraCobradaEnFondoNegativa(id, moraCobradaAbono, fpMora)
+      } catch (e) {
+        console.error(e)
+        notificationStore.warning(`No se pudo quitar de utilidades la mora de este abono ($${formatMoney(moraCobradaAbono)}).`, 'Revisar mora', 8000)
+      }
+    }
     
     // Actualizar el saldo del préstamo
     const { data: prestamoActualizado, error: errorActualizar } = await supabase
@@ -7911,6 +8019,14 @@ async function eliminarPrestamoConfirmado() {
       natilleraId = socioNatillera?.natillera_id || null
     }
     
+    // La mora que cobraron sus abonos está en el fondo de utilidades: al borrar el préstamo
+    // hay que quitarla, o queda contada (y si el préstamo se vuelve a crear, dos veces).
+    const { data: moraDeAbonos } = await supabase
+      .from('pagos_prestamo')
+      .select('mora_cobrada, valor_transferencia')
+      .eq('prestamo_id', prestamoAEliminar.value.id)
+      .gt('mora_cobrada', 0)
+
     // Primero eliminar todos los pagos relacionados
     const { error: errorPagos } = await supabase
       .from('pagos_prestamo')
@@ -7920,6 +8036,16 @@ async function eliminarPrestamoConfirmado() {
     if (errorPagos) {
       console.error('Error eliminando pagos:', errorPagos)
       // Continuar aunque haya error en pagos, puede que no haya pagos
+    } else if (natilleraId) {
+      for (const pago of moraDeAbonos || []) {
+        const fpMora = (parseFloat(pago.valor_transferencia) || 0) > 0 ? 'transferencia' : 'efectivo'
+        try {
+          await registrarMoraCobradaEnFondoNegativa(natilleraId, Math.round(parseFloat(pago.mora_cobrada) || 0), fpMora)
+        } catch (e) {
+          console.error(e)
+          notificationStore.warning('No se pudo quitar de utilidades la mora de los abonos de este préstamo.', 'Revisar mora', 8000)
+        }
+      }
     }
 
     // Eliminar el interés del préstamo de utilidades_clasificadas antes de eliminar el préstamo
@@ -7977,120 +8103,53 @@ async function abrirModalCompartirPrestamo() {
   await nextTick()
   await nextTick()
   programarNatiscrollModalCompartirPrestamo()
-  await new Promise((resolve) => setTimeout(resolve, 80))
+  // La imagen se captura cuando el plan y el historial ya están pintados
+  if (modalCompartirPrestamo.value) imagenPrestamo.programar()
 }
 
-async function generarImagenPrestamo() {
-  if (!prestamoDetalle.value || !prestamoRef.value) return null
-  try {
-    await nextTick()
-    return await toPng(prestamoRef.value, {
-      backgroundColor: '#eef1f4',
-      pixelRatio: 3,
-      cacheBust: true
+const imagenPrestamo = crearImagenPreparada({
+  preparando: generandoImagenPrestamo,
+  capturar: () => (prestamoDetalle.value && prestamoRef.value
+    ? toPng(prestamoRef.value, { backgroundColor: '#eef1f4', pixelRatio: 3, cacheBust: true })
+    : null),
+  nombre: () => `prestamo-${prestamoDetalle.value?.socio_natillera?.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
+})
+const archivoImagenPrestamo = imagenPrestamo.archivo
+// Al volver de la pila de modales (false→true) no pasa por abrirModalCompartirPrestamo
+watch(modalCompartirPrestamo, abierto => {
+  if (abierto) imagenPrestamo.programar()
+  else imagenPrestamo.descartar()
+})
+
+function descargarPrestamo() {
+  if (!prestamoDetalle.value || !archivoImagenPrestamo.value) return
+  entregarArchivo(archivoImagenPrestamo.value)
+}
+
+// Síncrono: antes esperaba a abrir el modal (consulta a Supabase + 80 ms) y a toPng, y en
+// Safari el menú de compartir ya no salía. Los botones viven en el modal, que ya está abierto.
+function compartirPrestamoWhatsApp() {
+  const prestamo = prestamoDetalle.value
+  const archivo = archivoImagenPrestamo.value
+  if (!prestamo || !archivo) return
+  const nombreSocio = prestamo.socio_natillera?.socio?.nombre || 'prestamo'
+  const telefono = prestamo.socio_natillera?.socio?.telefono
+  const mensajeCompartir = `Hola ${nombreSocio} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: `Información del Préstamo - ${nombreSocio}`,
+      text: mensajeCompartir
+    }).catch(e => {
+      if (e?.name === 'AbortError') return
+      console.error('Error compartiendo:', e)
+      notificationStore.error('No se pudo compartir la imagen', 'Error')
     })
-  } catch (e) {
-    console.error('Error generando imagen préstamo:', e)
-    return null
-  }
-}
-
-async function descargarPrestamo() {
-  if (!prestamoDetalle.value) {
-    notificationStore.error('No hay información del préstamo disponible.', 'Error')
     return
   }
-  
-  // Asegurar que el modal esté abierto
-  if (!modalCompartirPrestamo.value) {
-    await abrirModalCompartirPrestamo()
-  }
-  
-  generandoImagenPrestamo.value = true
-  
-  try {
-    const dataUrl = await generarImagenPrestamo()
-    
-    if (!dataUrl) {
-      throw new Error('No se pudo generar la imagen')
-    }
-    
-    const link = document.createElement('a')
-    link.download = `prestamo-${prestamoDetalle.value?.socio_natillera?.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    notificationStore.success('Imagen descargada exitosamente', 'Éxito')
-  } catch (e) {
-    console.error('Error completo:', e)
-    notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
-  } finally {
-    generandoImagenPrestamo.value = false
-  }
-}
-
-async function compartirPrestamoWhatsApp() {
-  if (!prestamoDetalle.value) return
-  
-  // Asegurar que el modal esté abierto
-  if (!modalCompartirPrestamo.value) {
-    await abrirModalCompartirPrestamo()
-  }
-  
-  generandoImagenPrestamo.value = true
-  
-  try {
-    const dataUrl = await generarImagenPrestamo()
-    if (!dataUrl) throw new Error('No se pudo generar la imagen')
-    
-    const blob = await fetch(dataUrl).then(r => r.blob())
-    const nombreSocio = prestamoDetalle.value.socio_natillera?.socio?.nombre || 'prestamo'
-    const nombreArchivo = `prestamo-${nombreSocio.replace(/\s+/g, '-')}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
-    
-    // Crear mensaje con el nombre del socio
-    const mensajeCompartir = `Hola ${nombreSocio} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
-    
-    // Verificar si el navegador soporta Web Share API con archivos
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: `Información del Préstamo - ${nombreSocio}`,
-        text: mensajeCompartir
-      })
-    } else {
-      // Fallback: descargar y abrir WhatsApp con mensaje
-      const link = document.createElement('a')
-      link.download = `prestamo-${prestamoDetalle.value?.socio_natillera?.socio?.nombre?.replace(/\s+/g, '-')}.png`
-      link.href = dataUrl
-      link.click()
-      
-      // Esperar un poco y abrir WhatsApp
-      setTimeout(() => {
-        const telefono = prestamoDetalle.value.socio_natillera?.socio?.telefono?.replace(/\D/g, '')
-        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-          const mensaje = `Hola ${prestamoDetalle.value.socio_natillera?.socio?.nombre} 👋\n\nTe envío la información de tu préstamo. ¡Gracias por confiar en nosotros! 🙌`
-          abrirWhatsAppConMensaje(telefono, mensaje)
-        }
-      }, 500)
-      
-      notificationStore.info('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.', 'Descargado')
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error('Error compartiendo:', e)
-      // Fallback: solo abrir WhatsApp con texto
-      const telefono = prestamoDetalle.value.socio_natillera?.socio?.telefono?.replace(/\D/g, '')
-      { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-        const mensaje = `Hola ${prestamoDetalle.value.socio_natillera?.socio?.nombre} 👋\n\nTe envío la información de tu préstamo en la natillera.\n\n¡Gracias por confiar en nosotros! 🙌`
-        abrirWhatsAppConMensaje(telefono, mensaje)
-      }
-    }
-  } finally {
-    generandoImagenPrestamo.value = false
-  }
+  entregarArchivo(archivo)
+  abrirWhatsAppConMensaje(telefono, `Hola ${nombreSocio} 👋\n\nTe envío la información de tu préstamo. ¡Gracias por confiar en nosotros! 🙌`)
+  notificationStore.info('📱 La imagen se descargó. Ahora adjúntala en WhatsApp.', 'Descargado')
 }
 
 // Función para abrir el modal de compartir préstamo nuevo
@@ -8113,162 +8172,92 @@ function abrirModalCompartirPrestamoWhatsApp() {
   modalCompartirPrestamoNuevo.value = true
 }
 
-// Función para generar imagen del préstamo nuevo (captura el comprobante del DOM)
-async function generarImagenPrestamoNuevo() {
-  if (!socioSeleccionado.value || !prestamoNuevoRef.value) return null
-  try {
-    await nextTick()
-    return await toPng(prestamoNuevoRef.value, {
-      backgroundColor: '#ecfdf5',
-      pixelRatio: 2,
-      cacheBust: true
-    })
-  } catch (e) {
-    console.error('Error generando imagen préstamo nuevo:', e)
-    return null
+// Comprobante (o proyección) del préstamo nuevo, capturado al abrir su modal
+const imagenPrestamoNuevo = crearImagenPreparada({
+  preparando: generandoImagenPrestamoNuevo,
+  capturar: () => (socioSeleccionado.value && prestamoNuevoRef.value
+    ? toPng(prestamoNuevoRef.value, { backgroundColor: '#ecfdf5', pixelRatio: 2, cacheBust: true })
+    : null),
+  nombre: () => {
+    const prefijo = esComprobanteRealCompartir.value ? 'comprobante-prestamo' : 'proyeccion-prestamo'
+    const nombreContacto = contactoSeleccionadoWhatsApp.value?.nombre || socioSeleccionado.value?.socio?.nombre || 'prestamo'
+    return `${prefijo}-${nombreContacto.replace(/\s+/g, '-')}-${Date.now()}.png`
   }
-}
+})
+const archivoImagenPrestamoNuevo = imagenPrestamoNuevo.archivo
+watch(modalCompartirPrestamoNuevo, abierto => {
+  if (abierto) imagenPrestamoNuevo.programar()
+  else imagenPrestamoNuevo.descartar()
+})
 
-// Descargar resumen del préstamo (paso Resumen del modal Crear Préstamo) como imagen
-async function descargarResumenPrestamoNuevo() {
-  if (!resumenPrestamoNuevoRef.value) return
-  generandoResumenPrestamo.value = true
-  try {
-    await nextTick()
-    const dataUrl = await toPng(resumenPrestamoNuevoRef.value, {
-      backgroundColor: '#ffffff',
-      pixelRatio: 2,
-      cacheBust: true
-    })
-    if (!dataUrl) throw new Error('No se pudo generar la imagen')
-    const link = document.createElement('a')
-    const nombre = socioSeleccionado.value?.socio?.nombre?.replace(/\s+/g, '-') || 'resumen-prestamo'
-    link.download = `resumen-prestamo-${nombre}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    notificationStore.success('Resumen descargado', 'Éxito')
-  } catch (e) {
-    console.error('Error al descargar resumen:', e)
-    notificationStore.error(e.message || 'No se pudo descargar el resumen', 'Error')
-  } finally {
-    generandoResumenPrestamo.value = false
-  }
-}
-
-// Función para descargar imagen del préstamo nuevo
-async function descargarPrestamoNuevo() {
-  if (!socioSeleccionado.value) {
-    notificationStore.error('No hay información del préstamo disponible', 'Error')
+// Resumen del paso final de «Crear préstamo»: se captura en cuanto el préstamo queda creado
+const imagenResumenPrestamo = crearImagenPreparada({
+  preparando: generandoResumenPrestamo,
+  capturar: () => (resumenPrestamoNuevoRef.value
+    ? toPng(resumenPrestamoNuevoRef.value, { backgroundColor: '#ffffff', pixelRatio: 2, cacheBust: true })
+    : null),
+  nombre: () => `resumen-prestamo-${socioSeleccionado.value?.socio?.nombre?.replace(/\s+/g, '-') || 'resumen-prestamo'}-${Date.now()}.png`
+})
+const archivoImagenResumenPrestamo = imagenResumenPrestamo.archivo
+watch([modalNuevoPrestamo, datosComprobanteCreado, pasoNuevoPrestamo], ([abierto, creado, paso]) => {
+  if (abierto && creado && paso === 2) {
+    if (!archivoImagenResumenPrestamo.value) imagenResumenPrestamo.programar()
     return
   }
-  
-  generandoImagenPrestamoNuevo.value = true
-  
-  try {
-    const dataUrl = await generarImagenPrestamoNuevo()
-    
-    if (!dataUrl) {
-      throw new Error('No se pudo generar la imagen')
-    }
-    
-    const prefijo = esComprobanteRealCompartir.value ? 'comprobante-prestamo' : 'proyeccion-prestamo'
-    const link = document.createElement('a')
-    link.download = `${prefijo}-${socioSeleccionado.value.socio?.nombre?.replace(/\s+/g, '-') || 'prestamo'}-${Date.now()}.png`
-    link.href = dataUrl
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  imagenResumenPrestamo.descartar()
+})
 
-    notificationStore.success(esComprobanteRealCompartir.value ? 'Imagen del comprobante descargada' : 'Imagen de proyección descargada', 'Éxito')
-  } catch (e) {
-    console.error('Error al generar imagen:', e)
-    notificationStore.error('Error al generar la imagen: ' + e.message, 'Error')
-  } finally {
-    generandoImagenPrestamoNuevo.value = false
-  }
+function descargarResumenPrestamoNuevo() {
+  if (!archivoImagenResumenPrestamo.value) return
+  entregarArchivo(archivoImagenResumenPrestamo.value)
 }
 
-// Función para compartir préstamo nuevo por WhatsApp
-async function compartirPrestamoNuevoWhatsApp() {
+function descargarPrestamoNuevo() {
+  if (!socioSeleccionado.value || !archivoImagenPrestamoNuevo.value) return
+  entregarArchivo(archivoImagenPrestamoNuevo.value)
+}
+
+// Síncrono: la imagen ya está lista y `share`/`window.open` salen del toque.
+function compartirPrestamoNuevoWhatsApp() {
   // Sin número no se corta: se comparte igual y es WhatsApp quien pregunta a
   // quién enviarlo. Exigirlo aquí dejaba el botón activo pero la acción muerta.
   if (!socioSeleccionado.value) {
     notificationStore.error('Debes seleccionar un socio', 'Error')
     return
   }
-  
-  generandoImagenPrestamoNuevo.value = true
-  
-  try {
-    const dataUrl = await generarImagenPrestamoNuevo()
-    if (!dataUrl) throw new Error('No se pudo generar la imagen')
-    
-    const blob = await fetch(dataUrl).then(r => r.blob())
-    
-    // El préstamo ya está creado → comprobante real; si no, proyección (simulación)
-    const esReal = esComprobanteRealCompartir.value
+  const archivo = archivoImagenPrestamoNuevo.value
+  if (!archivo) return
 
-    // Nombre del archivo
-    const nombreContacto = contactoSeleccionadoWhatsApp.value.nombre || 'contacto'
-    const prefijoArchivo = esReal ? 'comprobante-prestamo' : 'proyeccion-prestamo'
-    const nombreArchivo = `${prefijoArchivo}-${nombreContacto.replace(/\s+/g, '-')}-${Date.now()}.png`
-    const archivo = new File([blob], nombreArchivo, { type: 'image/png' })
+  // El préstamo ya está creado → comprobante real; si no, proyección (simulación)
+  const esReal = esComprobanteRealCompartir.value
+  const contacto = contactoSeleccionadoWhatsApp.value || { nombre: '', telefono: '' }
+  const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
+  const mensajeCompartir = esReal
+    ? `Hola ${contacto.nombre || nombreSocio} 👋\n\nTe envío el *comprobante* del préstamo de ${nombreSocio} en la natillera, ya registrado en el sistema.\n\n¡Gracias por confiar en nosotros! 🙌`
+    : `Hola ${contacto.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera (simulación con los datos actuales). *Aún no está registrado ni generado en el sistema*; al confirmarlo en la app recibirás el comprobante oficial.\n\n¡Gracias por confiar en nosotros! 🙌`
 
-    // Crear mensaje personalizado según si es comprobante real o proyección
-    const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
-    const mensajeCompartir = esReal
-      ? `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío el *comprobante* del préstamo de ${nombreSocio} en la natillera, ya registrado en el sistema.\n\n¡Gracias por confiar en nosotros! 🙌`
-      : `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera (simulación con los datos actuales). *Aún no está registrado ni generado en el sistema*; al confirmarlo en la app recibirás el comprobante oficial.\n\n¡Gracias por confiar en nosotros! 🙌`
-
-    // Verificar si el navegador soporta Web Share API con archivos
-    if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-      await navigator.share({
-        files: [archivo],
-        title: esReal ? `Comprobante de préstamo — ${nombreSocio}` : `Proyección de préstamo (no oficial) — ${nombreSocio}`,
-        text: mensajeCompartir
+  if (navigator.canShare?.({ files: [archivo] })) {
+    navigator.share({
+      files: [archivo],
+      title: esReal ? `Comprobante de préstamo — ${nombreSocio}` : `Proyección de préstamo (no oficial) — ${nombreSocio}`,
+      text: mensajeCompartir
+    })
+      .then(() => notificationStore.success(esReal ? 'Comprobante compartido' : 'Proyección compartida', 'Éxito'))
+      .catch(e => {
+        if (e?.name === 'AbortError') return
+        console.error('Error compartiendo:', e)
+        notificationStore.error('No se pudo compartir la imagen', 'Error')
       })
-
-      notificationStore.success(esReal ? 'Comprobante compartido' : 'Proyección compartida', 'Éxito')
-    } else {
-      // Fallback: descargar y abrir WhatsApp con mensaje
-      const link = document.createElement('a')
-      link.download = nombreArchivo
-      link.href = dataUrl
-      link.click()
-      
-      // Esperar un poco y abrir WhatsApp
-      setTimeout(() => {
-        const telefono = contactoSeleccionadoWhatsApp.value.telefono.replace(/\D/g, '')
-        { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-          abrirWhatsAppConMensaje(telefono, mensajeCompartir)
-        }
-      }, 500)
-      
-      notificationStore.info(
-        esReal
-          ? '📱 Imagen del comprobante descargada. Adjúntala en WhatsApp.'
-          : '📱 Imagen de proyección descargada. Adjunta en WhatsApp; aún no es préstamo creado.',
-        'Descargado'
-      )
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error('Error compartiendo:', e)
-      // Fallback: solo abrir WhatsApp con texto
-      const telefono = contactoSeleccionadoWhatsApp.value.telefono?.replace(/\D/g, '')
-      { // sin número, el ayudante deja que la persona elija el contacto en WhatsApp
-        const nombreSocio = socioSeleccionado.value.socio?.nombre || 'Socio'
-        const mensaje = esComprobanteRealCompartir.value
-          ? `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío el *comprobante* del préstamo de ${nombreSocio} en la natillera, ya registrado en el sistema.\n\n¡Gracias por confiar en nosotros! 🙌`
-          : `Hola ${contactoSeleccionadoWhatsApp.value.nombre || nombreSocio} 👋\n\nTe envío una *proyección* del posible préstamo de ${nombreSocio} en la natillera. *Aún no está generado en el sistema*; el comprobante oficial sale al confirmar en la app.\n\n¡Gracias por confiar en nosotros! 🙌`
-        abrirWhatsAppConMensaje(telefono, mensaje)
-      }
-    }
-  } finally {
-    generandoImagenPrestamoNuevo.value = false
+    return
   }
+  entregarArchivo(archivo)
+  abrirWhatsAppConMensaje(contacto.telefono, mensajeCompartir)
+  notificationStore.info(
+    esReal
+      ? '📱 Imagen del comprobante descargada. Adjúntala en WhatsApp.'
+      : '📱 Imagen de proyección descargada. Adjunta en WhatsApp; aún no es préstamo creado.',
+    'Descargado'
+  )
 }
 </script>
 

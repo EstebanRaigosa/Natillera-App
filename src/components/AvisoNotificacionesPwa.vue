@@ -128,7 +128,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { BellAlertIcon, DevicePhoneMobileIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 import ModalWrapper from './ModalWrapper.vue'
 import NatiscrollHint from './NatiscrollHint.vue'
-import { usePush } from '../composables/usePush'
+import { comoPermitirAvisos, usePush } from '../composables/usePush'
 import { useBodyScrollLock } from '../composables/useBodyScrollLock'
 import { useNatiscroll } from '../composables/useNatiscroll'
 import { useTapadoInferior } from '../composables/useTapadoInferior'
@@ -300,7 +300,7 @@ async function aceptar() {
 
   if (estado.value === 'denegado') {
     visible.value = false
-    notificaciones.alerta('El navegador bloqueó los avisos. Puedes permitirlos desde los ajustes del sitio.')
+    notificaciones.alerta(comoPermitirAvisos())
     return
   }
 

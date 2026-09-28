@@ -338,6 +338,64 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  /**
+   * Compartir y descargar comprobantes — el mismo par en toda la app (cuotas, préstamos,
+   * cierre, socios, actividades, portal). Antes cada pantalla traía su color (azul, degradados
+   * esmeralda, tres verdes de WhatsApp distintos). Ahora:
+   *   · `.btn-compartir`: la acción principal (WhatsApp o compartir), verde marca sólido. Para
+   *     WhatsApp lleva el logo (`IconoWhatsApp`), que es lo que lo identifica, no el color.
+   *   · `.btn-descargar`: secundaria, blanca con borde y texto verde marca.
+   * En fila: Descargar a la izquierda y Compartir a la derecha, ambos `flex-1`.
+   */
+  .btn-compartir,
+  .btn-descargar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+    border-radius: 9999px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  }
+  .btn-compartir {
+    color: #fff;
+    background: #1b5e37;
+    border: 2px solid #1b5e37;
+    box-shadow:
+      0 4px 6px -1px rgba(27, 94, 55, 0.2),
+      0 2px 4px -2px rgba(27, 94, 55, 0.12);
+  }
+  .btn-compartir:hover:not(:disabled) { background: #155a32; border-color: #155a32; }
+  .btn-compartir:active:not(:disabled) { background: #134d2b; border-color: #134d2b; }
+  .btn-descargar {
+    color: #1b5e37;
+    background: #fff;
+    border: 2px solid rgba(27, 94, 55, 0.3);
+  }
+  .btn-descargar:hover:not(:disabled) { background: #e8f5e9; border-color: #1b5e37; }
+  .btn-compartir:disabled,
+  .btn-descargar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  /* Versión chica para filas y tarjetas (no pies de modal): 44 px, el mínimo táctil de iOS; texto 13 px. */
+  .btn-compartir--sm,
+  .btn-descargar--sm {
+    min-height: 44px;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
   
   .btn-accent {
     @apply px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 text-white font-semibold rounded-xl 
@@ -586,23 +644,6 @@
 input[type="date"] {
   position: relative;
   cursor: pointer;
-}
-
-/* Forzar formato de fecha para Colombia (dd/MM/yyyy) */
-input[type="date"][lang="es-CO"] {
-  color-scheme: light;
-}
-
-/* Estilo para mostrar el formato correcto en el placeholder */
-input[type="date"][lang="es-CO"]::before {
-  content: attr(placeholder);
-  color: #9ca3af;
-  position: absolute;
-  pointer-events: none;
-}
-
-input[type="date"][lang="es-CO"]:valid::before {
-  display: none;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
@@ -1669,8 +1710,9 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Mejorar rendimiento de scroll y animaciones */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Prevenir zoom accidental en doble tap */
-    touch-action: pan-x pan-y;
+    /* Evita el zoom por doble toque sin quitar el pellizco: `pan-x pan-y` también lo
+       bloqueaba, y el viewport declara user-scalable=yes a propósito (accesibilidad). */
+    touch-action: manipulation;
   }
   
   /* Optimización de botones para mejor respuesta táctil en iOS */
@@ -1710,24 +1752,51 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     backface-visibility: hidden;
   }
   
-  /* Mejorar respuesta de cards y elementos interactivos */
-  .card,
-  .card-hover,
-  [class*="card"] {
-    /* Optimizar renderizado */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    /* Mejorar scroll dentro de cards */
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Optimización de inputs para iOS */
-  input,
+  /*
+    Aquí había `transform: translateZ(0)` sobre todo `[class*="card"]`, `[class*="overflow"]`,
+    `img` y `svg`. Cada uno creaba una capa de composición (cientos en Cuotas o Socios, más
+    memoria y más descartes de pestaña) y convertía el elemento en bloque contenedor de sus
+    hijos `fixed`: con él, `<main>` hacía que un «Volver arriba» sin Teleport scrolleara con
+    la lista. Si un elemento concreto necesita capa propia, se le pone a esa clase.
+  */
+
+  /* Optimización de inputs para iOS.
+     Sin `appearance: none` en casillas, radios, fechas ni rangos: sin plugin de forms y con el
+     reset de Tailwind (border 0, fondo transparente) las casillas quedaban invisibles y los
+     date perdían el picker con su altura. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="date"]):not([type="time"]):not([type="datetime-local"]):not([type="month"]):not([type="range"]):not([type="file"]),
   textarea {
     -webkit-appearance: none;
     appearance: none;
+  }
+
+  input,
+  textarea {
     -webkit-font-smoothing: antialiased;
     font-size: 16px;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    -webkit-appearance: auto;
+    appearance: auto;
+    accent-color: #1B5E37;
+  }
+
+  /* Fechas: con valor vacío iOS aplasta el campo al padding y centra el texto */
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"] {
+    min-height: 2.75rem;
+    min-width: 0;
+  }
+
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value {
+    text-align: left;
   }
 
   /* Selects: mantener apariencia nativa (picker wheel) en iOS; solo forzar 16px para prevenir zoom */
@@ -1769,25 +1838,6 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     /* Reducir uso de backdrop-filter en iOS para mejor rendimiento */
     -webkit-backdrop-filter: blur(4px);
     backdrop-filter: blur(4px);
-    /* Forzar aceleración por hardware */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-  }
-  
-  /* Mejorar scroll en contenedores con overflow */
-  [class*="overflow"],
-  .scrollbar-hide,
-  .scrollbar-thin {
-    -webkit-overflow-scrolling: touch;
-    /* Optimizar scroll */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-  }
-  
-  /* Optimización de modales y overlays (sin will-change para evitar capas excesivas) */
-  [class*="fixed"].inset-0 {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
   }
   
   /* Overlays de cierre al tocar (backdrop): que reciban tap en iOS */
@@ -1810,23 +1860,12 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     }
   }
   
-  /* Optimización de imágenes y SVGs */
+  /* Imágenes y SVGs: sin selección accidental ni menú de mantener pulsado */
   img,
   svg {
-    /* Mejorar renderizado */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    /* Prevenir selección accidental */
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
-  }
-  
-  /* Mejorar rendimiento de transiciones */
-  * {
-    /* Optimizar transiciones en iOS */
-    -webkit-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   /* Reducir animaciones complejas en iOS para mejor rendimiento */
@@ -1926,8 +1965,9 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
 
 /* Optimizaciones para dispositivos lentos */
 .slow-device {
-  /* Reducir animaciones complejas */
-  * {
+  /* Reducir animaciones complejas. Los anillos de carga quedan fuera: son el indicador de
+     progreso, y congelados parece que la app se colgó. */
+  *:not(.carga__anillo):not(.figura-alcancia__anillo):not(.carga-boton__anillo):not(.animate-spin) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -1977,54 +2017,15 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: -webkit-fill-available;
   }
 
-  /* Pantallas de carga y modales full-screen: altura real en iOS (evita que se corten) */
-  .fixed.inset-0,
-  [class*="fixed"][class*="inset-0"],
-  .fixed.inset-0[class*="z-"],
-  [class*="fixed"].inset-0[class*="z-"] {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    min-height: -webkit-fill-available !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    height: -webkit-fill-available !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
+  /*
+    Aquí vivía un bloque de ~300 líneas que forzaba `transform`, `padding: 0 !important`,
+    `position: relative !important` y alturas sobre todo `.fixed.inset-0` y todo `[class*="fixed"]`.
+    Era para los modales hechos a mano con <div>, que ya no existen: en iOS ModalWrapper pinta
+    `.modal-wrapper-ios` con sus propias reglas. Lo único que seguía alcanzando era CargaCaja
+    flotante (le pisaba el padding con safe-area y el ancho máximo) y, peor, el `transform` sobre
+    cualquier clase con «fixed» convertía esos elementos en bloque contenedor de sus hijos `fixed`.
+  */
 
-  /* Pantallas de carga específicamente: asegurar centrado perfecto en iOS */
-  .fixed.inset-0.flex.items-center.justify-center,
-  [class*="fixed"].inset-0.flex.items-center.justify-center,
-  .fixed.inset-0[class*="flex"][class*="items-center"][class*="justify-center"] {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-direction: column !important;
-  }
-
-  /* Contenido dentro de pantallas de carga: centrado y visible */
-  .fixed.inset-0 .relative.z-10,
-  .fixed.inset-0 > .relative,
-  [class*="fixed"].inset-0 .relative.z-10,
-  [class*="fixed"].inset-0 > .relative {
-    position: relative !important;
-    z-index: 10 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto !important;
-    padding: 1rem !important;
-  }
-  
   /* Contenedores con h-screen: usar altura real en iOS */
   .h-screen,
   [class~="h-screen"] {
@@ -2032,137 +2033,15 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: 100dvh;
     min-height: -webkit-fill-available;
   }
-  
-  /* NO usar * { max-width: 100% } - rompe flex/grid y botones en iOS y Android */
-  
-  /* Mejorar renderizado de elementos fijos en iOS */
-  [class*="fixed"] {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-  }
-  
-  /* Optimizar modales y overlays en iOS: asegurar que reciban tap y se rendericen correctamente */
-  [class*="fixed"].inset-0,
-  .fixed.inset-0 {
-    -webkit-overflow-scrolling: touch;
-    -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    position: fixed !important;
-    isolation: isolate;
-  }
-  
-  /* Contenedores de modales en iOS: asegurar renderizado correcto */
-  [class*="fixed"].inset-0 > * {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    position: relative;
-    z-index: 1;
-    pointer-events: auto !important;
-  }
-  
-  /* Overlays de fondo en modales iOS: asegurar que sean clickeables */
-  [class*="fixed"].inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
-  [class*="fixed"].inset-0 > .absolute.inset-0[class*="bg-black"],
-  .fixed.inset-0 > .absolute.inset-0[class*="bg-black"],
-  .fixed.inset-0 > [class*="absolute"].inset-0[class*="bg-black"],
-  .fixed.inset-0 > .absolute.inset-0,
-  [class*="fixed"].inset-0 > .absolute.inset-0,
-  .fixed.inset-0 > [class*="absolute"].inset-0 {
-    z-index: 0 !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    cursor: pointer !important;
-    -webkit-tap-highlight-color: transparent !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
 
-  /* Overlays de fondo en pantallas de carga: asegurar cobertura completa */
-  .fixed.inset-0 > .absolute.inset-0,
-  [class*="fixed"].inset-0 > .absolute.inset-0,
-  .fixed.inset-0 > [class*="absolute"].inset-0 {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
-  /* Contenido de la modal (card, div con contenido): asegurar que se muestre en iPhone */
-  [class*="fixed"].inset-0 > .card,
-  [class*="fixed"].inset-0 > .relative,
-  [class*="fixed"].inset-0 > [class*="max-w"],
-  [class*="fixed"].inset-0 > div:not([class*="absolute"]) {
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    position: relative;
-    z-index: 10 !important;
-    pointer-events: auto !important;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-
-  /* Modales en Safari: que se vean completas en pantalla y el scroll funcione */
-  .fixed.inset-0:has(> div[class*="max-w"]),
-  [class*="fixed"].inset-0:has(> div[class*="max-w"]) {
-    padding-top: env(safe-area-inset-top, 0) !important;
-    padding-right: env(safe-area-inset-right, 0) !important;
-    padding-bottom: env(safe-area-inset-bottom, 0) !important;
-    padding-left: env(safe-area-inset-left, 0) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y;
-    box-sizing: border-box;
-  }
-
-  /* Card de la modal: altura máxima que quepa en pantalla (safe area + margen) */
-  .fixed.inset-0 > div[class*="max-w"][class*="max-h"],
-  .fixed.inset-0 > div[class*="max-w"].relative {
-    max-height: min(90vh, 90dvh, calc(100dvh - env(safe-area-inset-top, 0) - env(safe-area-inset-bottom, 0) - 2rem)) !important;
-    flex-shrink: 0;
-  }
-
-  /* Scroll interno en modales: habilitar scroll táctil en Safari */
-  .fixed.inset-0 [class*="overflow-y-auto"] {
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y;
-    overflow-x: hidden;
-  }
-
-  /* Overlay del sidebar móvil: que el tap cierre el menú en iOS */
-  .sidebar-overlay,
-  .fixed.inset-0.bg-black\/20,
-  .fixed.inset-0[class*="bg-black"] {
-    cursor: pointer !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
-    pointer-events: auto !important;
-  }
-
-  /* Sidebar overlay: z-index fijo debajo del aside (z-50), sin backdrop-filter ni composición agresiva */
+  /* Overlay del sidebar móvil: que el tap cierre el menú en iOS, debajo del aside (z-50) */
   .sidebar-overlay {
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    pointer-events: auto !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
-    will-change: auto !important;
-    isolation: auto !important;
     z-index: 45 !important;
   }
 
@@ -2172,8 +2051,6 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent;
     z-index: 50 !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
   }
 
   aside.fixed[class*="inset-y"] button,
@@ -2184,32 +2061,6 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     min-height: 44px;
   }
 
-  /* Botones de cerrar en modales: asegurar que sean fácilmente clickeables en iOS */
-  .fixed.inset-0 button[class*="btn"],
-  .fixed.inset-0 button[type="button"],
-  [class*="fixed"].inset-0 button[class*="btn"],
-  [class*="fixed"].inset-0 button[type="button"] {
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25) !important;
-    min-height: 44px !important;
-    min-width: 44px !important;
-    z-index: 20 !important;
-    position: relative !important;
-  }
-
-  /* Botones X de cerrar en modales */
-  .fixed.inset-0 button[class*="w-10"][class*="h-10"],
-  [class*="fixed"].inset-0 button[class*="w-10"][class*="h-10"] {
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3) !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
-    z-index: 20 !important;
-    position: relative !important;
-  }
-  
   /* Barra inferior móvil: área táctil mínima 44pt en iOS */
   .mobile-bottom-nav .nav-item,
   .mobile-bottom-nav a,
@@ -2221,12 +2072,12 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     justify-content: center;
     -webkit-tap-highlight-color: rgba(34, 197, 94, 0.25);
   }
-  
+
   /* Fondo deslizante del selector Email/Teléfono en login: no capturar taps en iOS */
   .login-form-container .relative.flex > div.absolute[class*="bg-gradient"] {
     pointer-events: none;
   }
-  
+
   /* Botón cerrar de notificaciones: área táctil 44pt en iOS */
   [aria-label="Cerrar notificación"] {
     min-width: 44px;
@@ -2234,68 +2085,6 @@ input[type="date"]:focus::-webkit-calendar-picker-indicator {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  /* Inputs en modales/overlays: 16px para evitar zoom al enfocar en iOS */
-  .fixed.inset-0 input,
-  .fixed.inset-0 textarea,
-  .fixed.inset-0 select {
-    font-size: 16px !important;
-  }
-  
-  /* FIX ESPECÍFICO PARA IPHONE: Asegurar que las modales se muestren correctamente */
-  /* Cuando el body tiene position: fixed (por useBodyScrollLock), las modales pueden no renderizarse */
-  /* Esta regla fuerza el renderizado correcto solo en iPhone */
-  @media screen and (max-width: 768px) {
-    /* Contenedor principal de la modal (excluir sidebar-overlay para que el menú lateral quede encima) */
-    [class*="fixed"].inset-0[class*="z-"]:not(.sidebar-overlay),
-    .fixed.inset-0[class*="z-"]:not(.sidebar-overlay) {
-      transform: translate3d(0, 0, 0) !important;
-      -webkit-transform: translate3d(0, 0, 0) !important;
-      pointer-events: auto !important;
-    }
-    
-    /* Overlay de fondo: debe estar visible pero por debajo del contenido */
-    [class*="fixed"].inset-0 > [class*="absolute"].inset-0,
-    [class*="fixed"].inset-0 > .absolute.inset-0 {
-      transform: translate3d(0, 0, 0) !important;
-      -webkit-transform: translate3d(0, 0, 0) !important;
-      z-index: 0 !important;
-      pointer-events: auto !important;
-    }
-    
-    /* Contenido de la modal: debe estar visible y por encima del overlay */
-    [class*="fixed"].inset-0 > .card,
-    [class*="fixed"].inset-0 > .relative:not([class*="absolute"]),
-    [class*="fixed"].inset-0 > [class*="max-w"]:not([class*="absolute"]),
-    [class*="fixed"].inset-0 > div.relative,
-    [class*="fixed"].inset-0 > div[class*="bg-white"]:not([class*="absolute"]) {
-      transform: translate3d(0, 0, 0) !important;
-      -webkit-transform: translate3d(0, 0, 0) !important;
-      position: relative !important;
-      z-index: 10 !important;
-      pointer-events: auto !important;
-      -webkit-backface-visibility: hidden !important;
-      backface-visibility: hidden !important;
-    }
-    
-    /* Botones dentro de modales: asegurar que sean clickeables */
-    [class*="fixed"].inset-0 button,
-    [class*="fixed"].inset-0 a,
-    [class*="fixed"].inset-0 [role="button"] {
-      pointer-events: auto !important;
-      z-index: 20 !important;
-      position: relative;
-    }
-    
-    /* Inputs y formularios dentro de modales */
-    [class*="fixed"].inset-0 input,
-    [class*="fixed"].inset-0 textarea,
-    [class*="fixed"].inset-0 select {
-      pointer-events: auto !important;
-      z-index: 20 !important;
-      position: relative;
-    }
   }
 }
 
@@ -3301,7 +3090,7 @@ html[data-theme='forest'] body {
     z-index: 40;
     right: max(1rem, env(safe-area-inset-right, 0px));
     /* Sobre la barra inferior de navegación en móvil */
-    bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+    bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px) + var(--tapado-inferior, 0px));
     width: 56px;
     height: 56px;
     border-radius: 9999px;

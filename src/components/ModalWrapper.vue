@@ -5,18 +5,24 @@
       <div
         v-if="isIos"
         :class="['modal-wrapper-ios', align === 'bottom' ? 'modal-wrapper-ios--bottom' : '']"
-        :style="{ zIndex: zIndex }"
+        :style="{ zIndex: zIndex, '--tapado-inferior': `${tapado}px` }"
         @click.self="tryClose"
       >
+        <!--
+          Cierra con `click`, no con `touchstart`: si el modal desaparece al posar el dedo, el
+          click que iOS sintetiza al levantarlo cae sobre lo que haya debajo (clic fantasma), y
+          empezar un deslizamiento sobre el velo lo cerraba. `touch-action: manipulation` ya
+          quita el retardo de 300 ms.
+        -->
         <div
           :class="['modal-wrapper-ios__backdrop', iosSoftBackdrop ? 'modal-wrapper-ios__backdrop--sage' : '']"
           aria-hidden="true"
           @click="tryClose"
-          @touchstart.passive="tryClose"
         />
+        <!-- Ancho por variable: un `max-width` en línea pierde contra el `!important` de la clase -->
         <div
           :class="['modal-wrapper-ios__card', cardClass]"
-          :style="cardMaxWidth ? { maxWidth: cardMaxWidth } : undefined"
+          :style="cardMaxWidth ? { '--ancho-card': cardMaxWidth } : undefined"
           @click.stop
         >
           <slot />
@@ -33,7 +39,6 @@
           style="pointer-events: auto !important; touch-action: manipulation !important; cursor: pointer !important; -webkit-tap-highlight-color: transparent; z-index: 0 !important;"
           aria-hidden="true"
           @click="tryClose"
-          @touchstart.passive="tryClose"
         />
         <div
           :class="cardClass"
@@ -50,6 +55,7 @@
 <script setup>
 import { watch, onBeforeUnmount } from 'vue'
 import { useIsIos } from '../composables/useIsIos'
+import { useTapadoInferior } from '../composables/useTapadoInferior'
 
 /**
  * Pila global de modales abiertas (ModalWrapper). Permite que la tecla Esc
@@ -141,6 +147,12 @@ watch(
 onBeforeUnmount(unregister)
 
 const isIos = useIsIos()
+
+// La barra de Safari (iOS 15+) se dibuja abajo, encima del contenido, y no es safe-area.
+// Se publica como `--tapado-inferior` en el contenedor iOS para que el pie de una hoja
+// inferior la sume a su padding: `pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]`.
+// Fuera de iOS en Safari vale 0 y el CSS queda igual que siempre.
+const { tapado } = useTapadoInferior()
 </script>
 
 <style scoped>
@@ -179,6 +191,9 @@ const isIos = useIsIos()
 
 .modal-wrapper-ios--bottom {
   justify-content: flex-end !important;
+  /* La hoja va pegada al borde; la safe-area (y la barra de Safari) la pone su pie.
+     Con el padding aquí además, se sumaba dos veces y quedaba una franja salvia debajo. */
+  padding-bottom: 0 !important;
 }
 
 .modal-wrapper-ios--bottom .modal-wrapper-ios__card {
@@ -210,7 +225,7 @@ const isIos = useIsIos()
   position: relative !important;
   z-index: 10 !important;
   width: 100% !important;
-  max-width: 28rem !important;
+  max-width: var(--ancho-card, 28rem) !important;
   background: #fff !important;
   border-radius: 1rem 1rem 0 0 !important;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15) !important;

@@ -89,7 +89,9 @@ Referencia visual y técnica: modal **Registrar pago** en `src/views/cuotas/Cuot
 
 Combinar con utilidades de layout según el modal: `flex-1`, `w-full`, `gap-2` en el contenedor, `inline-flex` ya está cubierto por las clases.
 
-**Excepciones (no usar verde marca como primario):** acciones **destructivas** (eliminar, rechazar irreversible) → rojo u otro color semántico; **advertencia** fuerte → ámbar; botones cuyo significado depende del color (p. ej. **Descargar** en azul, **WhatsApp** en verde propio) pueden mantener estilo específico; dejar un comentario corto en el template si no es `btn-modal-*`.
+**Excepciones (no usar verde marca como primario):** acciones **destructivas** (eliminar, rechazar irreversible) → rojo u otro color semántico; **advertencia** fuerte → ámbar; dejar un comentario corto en el template si no es `btn-modal-*`.
+
+**Descargar / Compartir / WhatsApp (comprobantes en cualquier pantalla):** siempre `.btn-descargar` (blanco, borde y texto verde marca) y `.btn-compartir` (verde marca sólido), definidos en `src/style.css`, con `--sm` para filas y tarjetas. En una fila `flex gap-3`: Descargar a la izquierda y Compartir o WhatsApp a la derecha, los dos `flex-1`. WhatsApp se reconoce por su logo (`src/components/iconos/IconoWhatsApp.vue`), no por el color: **nada** de `#25D366`, `#128C7E`, azules ni degradados propios. Sin botón «Cerrar» en el pie si la X de la cabecera ya cierra.
 
 ```html
 <!-- Ejemplo: dos CTAs en fila -->
@@ -112,7 +114,7 @@ Patrón **por defecto**: la card es `flex flex-col` con **tres áreas hermanas**
 
 1. **Cabecera** (`flex-shrink-0`): cabecera marca compacta (sección anterior).
 2. **Cuerpo scrolleable** (`flex-1 min-h-0 overflow-y-auto`): fondo blanco, tipografía gris para lectura. Caja informativa opcional: fondo `#E8F5E9`, borde suave, icono Heroicons. Clases scroll iOS: `overscroll-contain [-webkit-overflow-scrolling:touch]`. Aquí va **todo el contenido** (formulario, lista, tablas, etc.).
-3. **Footer de acciones fijo** (`flex-shrink-0`): bloque hermano del cuerpo, con `border-t border-gray-200`, `bg-white`, `pt-4`, `px-*` consistente con el cuerpo y **`pb-[max(1.25rem,env(safe-area-inset-bottom))]`** para respetar el home indicator. Contiene los botones primario/secundario y queda **siempre visible** mientras el cuerpo se desplaza por encima.
+3. **Footer de acciones fijo** (`flex-shrink-0`): bloque hermano del cuerpo, con `border-t border-gray-200`, `bg-white`, `pt-4`, `px-*` consistente con el cuerpo y **`pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]`** para respetar el home indicator y la barra de Safari (`ModalWrapper` publica `--tapado-inferior` en iOS; fuera de iOS vale 0). **En iOS el scroll nunca va en `card-class`**: la card es `overflow: hidden` y sin el cuerpo `flex-1 min-h-0 overflow-y-auto` el final del modal queda cortado. Contiene los botones primario/secundario y queda **siempre visible** mientras el cuerpo se desplaza por encima.
 
 **Por qué**: evita que el usuario tenga que hacer scroll hasta el final para encontrar «Confirmar» / «Guardar» / «Cerrar». Es especialmente útil en formularios largos, listas (cuotas, socios, préstamos), tablas y modales de detalle.
 
@@ -200,7 +202,7 @@ En el repo conviven dos enfoques; elige el que encaje con el modal:
   </div>
 
   <!-- Footer de acciones: flex-shrink-0, siempre visible. Hereda safe-area-bottom. -->
-  <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-3">
+  <div class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-3">
     <!-- btn-modal-secondary + btn-modal-primary (+ flex-1 / w-full según layout); ver sección «Botones del pie de modal» -->
   </div>
 </ModalWrapper>
@@ -258,3 +260,5 @@ Los detalles de viewport, `ModalWrapper` interno y scroll están en **`docs/comp
 Un modal anclado abajo se alinea al borde inferior del viewport de **layout**, y desde iOS 15 Safari dibuja su barra de direcciones justo encima de esa zona. El **pie de acciones puede quedar tapado** aunque lleve `env(safe-area-inset-bottom)`: ese inset describe el home indicator, no el navegador.
 
 Si al probar en iPhone el botón primario aparece cortado o debajo del chrome de Safari, no es el `env()` que falta: es este caso. Se resuelve midiendo el visual viewport con `useTapadoInferior` y **sumando el valor al `padding-bottom`** del pie (nunca moviendo `bottom`, que despega la card y deja un hueco). Detalle y motivos en `docs/compatibilidad-ios-safari.md` §4.1.
+
+`ModalWrapper` ya hace la medición y la publica como `--tapado-inferior` en su contenedor iOS, así que basta con el `calc(… + var(--tapado-inferior, 0px))` del pie. En iOS el contenedor de una hoja `align="bottom"` **no** pone padding inferior (la hoja va pegada al borde): si el último bloque de la hoja no lleva safe-area, queda bajo el home indicator. El velo cierra con `click`, nunca con `touchstart` (clic fantasma).

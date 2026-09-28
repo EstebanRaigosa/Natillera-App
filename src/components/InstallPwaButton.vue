@@ -154,7 +154,7 @@
 
     <!-- Footer de acciones fijo (safe-area) -->
     <div
-      class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+      class="flex-shrink-0 border-t border-gray-200 bg-white px-6 pt-4 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]"
     >
       <button type="button" class="btn-modal-primary w-full" @click="cerrarInstrucciones">
         Entendido

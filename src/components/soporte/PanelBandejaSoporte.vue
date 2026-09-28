@@ -90,7 +90,7 @@
         <ul
           v-else
           class="min-h-0 flex-1 divide-y divide-gray-100 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
-          :class="compacto || !esEscritorio ? 'pb-[max(0.5rem,env(safe-area-inset-bottom))]' : ''"
+          :class="compacto || !esEscritorio ? 'pb-[calc(max(0.5rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]' : ''"
         >
           <li v-for="conversacion in soporte.bandeja" :key="conversacion.id">
             <button
@@ -139,7 +139,7 @@
         <div
           v-if="totalPaginas > 1"
           class="flex shrink-0 items-center justify-between border-t border-gray-200 px-4 py-2.5"
-          :class="compacto ? 'pb-[max(0.625rem,env(safe-area-inset-bottom))]' : ''"
+          :class="compacto ? 'pb-[calc(max(0.625rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]' : ''"
         >
           <button
             type="button"

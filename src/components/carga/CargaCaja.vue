@@ -28,16 +28,7 @@
           aria-live="polite"
         >
           <slot name="figura">
-            <div :class="['carga-caja__figura', flotante ? 'h-24 w-24' : 'h-16 w-16']" aria-hidden="true">
-              <svg class="carga-caja__anillo" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="46" fill="none" stroke="#1B5E37" stroke-opacity="0.12" stroke-width="5" />
-                <circle
-                  cx="50" cy="50" r="46" fill="none" stroke="#1B5E37" stroke-width="5" stroke-linecap="round"
-                  pathLength="100" stroke-dasharray="26 74"
-                />
-              </svg>
-              <EscenaAlcancia compacta class="carga-caja__alcancia" />
-            </div>
+            <FiguraAlcancia :class="flotante ? 'h-24 w-24' : 'h-16 w-16'" />
           </slot>
           <p :class="['font-display font-bold text-gray-800', flotante ? 'mt-4 text-base' : 'mt-3 text-sm']">{{ texto || 'Cargando' }}</p>
           <p v-if="detalle" class="mt-1 text-xs leading-relaxed text-gray-500">{{ detalle }}</p>
@@ -48,7 +39,7 @@
 </template>
 
 <script setup>
-import EscenaAlcancia from '../publico/EscenaAlcancia.vue'
+import FiguraAlcancia from './FiguraAlcancia.vue'
 
 defineProps({
   visible: { type: Boolean, default: true },
@@ -69,35 +60,8 @@ defineProps({
     max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
 }
 
-.carga-caja__figura {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.carga-caja__anillo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  -webkit-animation: carga-caja-girar 1.2s linear infinite;
-  animation: carga-caja-girar 1.2s linear infinite;
-}
-
-.carga-caja__alcancia {
-  position: absolute;
-  inset: 12%;
-  width: 76%;
-}
-
-@-webkit-keyframes carga-caja-girar { to { -webkit-transform: translate3d(0, 0, 0) rotate(360deg); } }
-@keyframes carga-caja-girar { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(0, 0, 0) rotate(360deg); } }
-
 .carga-caja-fundido-enter-active { transition: opacity 0.2s ease-out; }
 .carga-caja-fundido-leave-active { transition: opacity 0.25s ease-in; pointer-events: none; }
 .carga-caja-fundido-enter-from,
 .carga-caja-fundido-leave-to { opacity: 0; }
-
-@media (prefers-reduced-motion: reduce) {
-  .carga-caja__anillo { -webkit-animation-duration: 3s; animation-duration: 3s; }
-}
 </style>

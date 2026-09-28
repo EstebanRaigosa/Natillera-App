@@ -5,7 +5,7 @@
         <router-link
           v-if="index < breadcrumbs.length - 1 && crumb.to"
           :to="crumb.to"
-          class="group inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200"
+          class="group relative inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 touch-manipulation before:absolute before:inset-x-0 before:-inset-y-1.5 before:content-[''] bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:text-gray-900 font-medium rounded-lg hover:bg-white hover:border-natillera-200 hover:shadow-sm transition-all duration-200"
         >
           <HomeIcon v-if="index === 0" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-natillera-600" />
           <span class="whitespace-nowrap">{{ crumb.label }}</span>

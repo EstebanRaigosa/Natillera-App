@@ -322,7 +322,7 @@ import { supabase } from '../../lib/supabase'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import { useNatiscroll } from '../../composables/useNatiscroll'
 import { useTapadoInferior } from '../../composables/useTapadoInferior'
-import { pagarActividadesDeCuota, pagarCuotasPrestamoDeCuota } from '../../composables/usePagoConceptosCuota'
+import { registrarPagoCompletoDeCuota } from '../../composables/usePagoCuotaCompleto'
 import { useCuotasStore, capitalCuotaCompleto } from '../../stores/cuotas'
 import { formatMoney } from '../../utils/formatMoney'
 
@@ -784,83 +784,17 @@ function repartirPagos(p) {
 
 // ---------------------------------------------------------------- Registrar
 
+// El registro de cada pago es el compartido con el pago rápido (usePagoCuotaCompleto).
 async function registrarPagoDe(pago, socio) {
-  const totalActs = pago.actividades.reduce((s, a) => s + a.valor_pendiente, 0)
-  const totalPrest = pago.prestamo.reduce((s, cp) => s + cp.valor_pendiente, 0)
-  const efectivo = formaPago.value === 'efectivo'
-  const res = await cuotasStore.registrarPago(pago.cuota.id, pago.valorPagado, null, formaPago.value, totalActs, {
-    valorEfectivo: efectivo ? pago.valorPagado : 0,
-    valorTransferencia: efectivo ? 0 : pago.valorPagado,
-    impuesto4x1000: aplica4x1000.value ? calcular4x1000(pago.valorPagado) : 0,
-    fechaPago: pago.fecha,
-    sancionAFecha: pago.multa,
-    valorCuotasPrestamos: totalPrest,
-    totalAPagar: pago.valorPagado,
-    detalleActividades: pago.actividades.map(a => ({
-      socio_actividad_id: a.id,
-      nombre: a.actividad?.descripcion || 'Actividad',
-      tipo: a.actividad?.tipo || 'otro',
-      valor: a.valor_pendiente
-    })),
-    detalleCuotasPrestamos: pago.prestamo.map(cp => ({
-      nombre: `Cuota préstamo #${cp.numero_cuota}`,
-      valor: cp.valor_pendiente,
-      numero_cuota: cp.numero_cuota,
-      prestamo_id: cp.prestamo_id,
-      pagado: true
-    })),
-    omitirRecalculoMora: true,
-    _socioNombre: socio?.nombre,
-    _natilleraNombre: props.natilleraNombre || null,
-    _socioNatilleraId: pago.cuota.socio_natillera_id,
-    _natilleraId: props.natilleraId,
-    _periodicidadSocio: socio?.periodicidad
+  const { ok } = await registrarPagoCompletoDeCuota({
+    pago,
+    socio,
+    natilleraId: props.natilleraId,
+    natilleraNombre: props.natilleraNombre || null,
+    formaPago: formaPago.value,
+    cobrar4x1000: cobrar4x1000.value
   })
-  if (!res?.success) return false
-
-  const opciones = {
-    fechaPago: pago.fecha,
-    valorPagado: pago.valorPagado,
-    valorEfectivo: efectivo ? pago.valorPagado : 0,
-    valorTransferencia: efectivo ? 0 : pago.valorPagado,
-    historialPagoIdPromise: res.historialPagoIdPromise
-  }
-  await Promise.all([
-    totalActs > 0 && pagarActividadesDeCuota({
-      natilleraId: props.natilleraId,
-      actividades: pago.actividades.map(a => ({
-        id: a.id,
-        actividad_id: a.actividad_id,
-        actividad: a.actividad,
-        valor_pendiente: a.valor_pendiente,
-        valor_pagado_actual: parseFloat(a.valor_pagado) || 0,
-        valor_asignado: parseFloat(a.valor_asignado) || 0
-      })),
-      valorTotal: totalActs,
-      tipoPago: formaPago.value,
-      options: opciones
-    }),
-    totalPrest > 0 && pagarCuotasPrestamoDeCuota({
-      cuotaId: pago.cuota.id,
-      nombreSocio: socio?.nombre || null,
-      nombreNatillera: props.natilleraNombre || null,
-      cuotasPrestamo: pago.prestamo.map(cp => ({
-        id: cp.id,
-        prestamo_id: cp.prestamo_id,
-        numero_cuota: cp.numero_cuota,
-        valor_cuota: cp.valor_cuota,
-        valor_pagado_actual: parseFloat(cp.valor_pagado) || 0,
-        valor_pagado_efectivo_actual: parseFloat(cp.valor_pagado_efectivo) || 0,
-        valor_pagado_transferencia_actual: parseFloat(cp.valor_pagado_transferencia) || 0,
-        valor_pendiente: cp.valor_pendiente,
-        fecha_proyectada: cp.fecha_proyectada
-      })),
-      valorTotal: totalPrest,
-      tipoPago: formaPago.value,
-      options: opciones
-    })
-  ])
-  return true
+  return ok
 }
 
 async function registrar() {
@@ -923,13 +857,13 @@ async function cargarConceptos() {
   if (socioIds.length === 0) return
 
   const [natRes, saRes, prestRes] = await Promise.all([
-    supabase.from('natilleras').select('reglas_multas, dias_gracia').eq('id', props.natilleraId).single(),
+    supabase.from('natilleras').select('reglas_multas').eq('id', props.natilleraId).single(),
     supabase.from('socios_actividad').select('*').in('socio_natillera_id', socioIds).in('estado', ['pendiente', 'parcial', 'mora']),
     supabase.from('prestamos').select('id, socio_natillera_id').in('socio_natillera_id', socioIds).eq('estado', 'activo')
   ])
 
   configSanciones.value = natRes.data?.reglas_multas?.sanciones || null
-  diasGracia.value = natRes.data?.dias_gracia ?? 3
+  diasGracia.value = natRes.data?.reglas_multas?.dias_gracia ?? 3
 
   // Actividades: con saldo y ya cobrables (su mes de pago no es futuro), como en el pago normal.
   const pendientes = (saRes.data || [])

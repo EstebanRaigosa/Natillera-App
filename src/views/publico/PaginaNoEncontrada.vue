@@ -3,7 +3,7 @@
     Dirección que no existe. Mismo mundo visual que la portada (fondo verde noche con
     destellos) y dos salidas claras. Va con noindex (no tiene `meta.publico`).
   -->
-  <div class="relative flex min-h-screen min-h-[100dvh] flex-col overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#1B5E37] px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] text-white sm:px-6">
+  <div class="relative flex min-h-screen supports-[height:100dvh]:min-h-[100dvh] flex-col overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#1B5E37] px-4 pb-[max(2rem,env(safe-area-inset-bottom,0px))] pt-[max(1.25rem,env(safe-area-inset-top,0px))] text-white sm:px-6">
     <DestellosFondo />
 
     <RouterLink to="/" class="relative z-10 mx-auto inline-flex min-h-[44px] touch-manipulation items-center gap-2.5 sm:mx-0" aria-label="Natillerapp, ir al inicio">

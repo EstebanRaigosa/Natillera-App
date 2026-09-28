@@ -77,6 +77,8 @@
                     <option value="prestamo">Préstamo</option>
                     <option value="actividad">Actividad</option>
                   </select>
+                  <!-- `appearance-none` quita la flecha nativa (en iOS no queda ninguna): se pone una propia. -->
+                  <ChevronDownIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -104,6 +106,8 @@
                     <option value="GENERATE">Generar</option>
                     <option value="REGISTER">Registrar</option>
                   </select>
+                  <!-- `appearance-none` quita la flecha nativa (en iOS no queda ninguna): se pone una propia. -->
+                  <ChevronDownIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -168,6 +172,8 @@
                       {{ natillera.nombre }}
                     </option>
                   </select>
+                  <!-- `appearance-none` quita la flecha nativa (en iOS no queda ninguna): se pone una propia. -->
+                  <ChevronDownIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
@@ -193,6 +199,8 @@
                       {{ usuario.email }}
                     </option>
                   </select>
+                  <!-- `appearance-none` quita la flecha nativa (en iOS no queda ninguna): se pone una propia. -->
+                  <ChevronDownIcon class="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" aria-hidden="true" />
                   <div class="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -377,27 +385,30 @@
       :show="!!registroSeleccionado"
       :z-index="50"
       overlay-class="fixed inset-0 z-50 flex items-center justify-center p-4"
-      card-class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl w-full max-w-4xl"
+      card-class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl w-full max-w-4xl flex flex-col min-h-0 max-h-[90vh] supports-[height:100dvh]:max-h-[90dvh]"
       card-max-width="56rem"
       @close="cerrarDetalle"
     >
             <!-- Header del Modal -->
-            <div class="bg-gradient-to-r from-natillera-500 to-natillera-600 px-6 py-5">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xl font-bold text-white">
+            <div class="flex-shrink-0 bg-gradient-to-r from-natillera-500 to-natillera-600 px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+              <div class="flex items-center justify-between gap-3">
+                <h3 class="min-w-0 text-xl font-bold text-white">
                   Detalle del Registro de Auditoría
                 </h3>
                 <button
+                  type="button"
+                  aria-label="Cerrar detalle"
                   @click="cerrarDetalle"
-                  class="text-white hover:text-gray-200 transition-colors"
+                  class="-mr-2 flex h-11 w-11 flex-shrink-0 touch-manipulation items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 hover:text-gray-200"
                 >
-                  <XMarkIcon class="w-6 h-6" />
+                  <XMarkIcon class="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
-            <!-- Contenido del Modal -->
-            <div class="px-6 py-6 max-h-[70vh] overflow-y-auto">
+            <!-- Contenido del Modal: el scroll lo lleva este bloque y no un `max-h-[70vh]`
+                 fijo, que en iOS (vh = alto con la barra recogida) dejaba el pie fuera de pantalla. -->
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] px-6 py-6">
               <!-- Información General -->
               <div class="grid grid-cols-2 gap-4 mb-6">
                 <div class="bg-gray-50 rounded-xl p-4">
@@ -545,10 +556,11 @@
             </div>
 
             <!-- Footer del Modal -->
-            <div class="bg-gray-50 px-6 py-4 flex justify-end">
+            <div class="flex flex-shrink-0 justify-end bg-gray-50 px-6 pt-4 pb-[calc(max(1rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))]">
               <button
+                type="button"
                 @click="cerrarDetalle"
-                class="px-6 py-2 bg-natillera-500 text-white rounded-xl hover:bg-natillera-600 transition-all font-medium"
+                class="min-h-11 touch-manipulation px-6 py-2 bg-natillera-500 text-white rounded-xl hover:bg-natillera-600 transition-all font-medium"
               >
                 Cerrar
               </button>
@@ -567,6 +579,7 @@ import ModalWrapper from '../../components/ModalWrapper.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import { useBodyScrollLock } from '../../composables/useBodyScrollLock'
 import {
+  ChevronDownIcon,
   ClipboardDocumentListIcon,
   FunnelIcon,
   XMarkIcon

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { calcularCierreNatillera, getModoDistribucion, TIPOS_UTILIDAD } from './useCierreNatillera'
+import { gananciasSinAdministracion } from '../utils/gananciasPortal'
 
 /*
  * Foto de las ganancias de cada socio para el portal.
@@ -21,28 +22,30 @@ export async function guardarFotoGanancias(natilleraId, resultadoCierre, configC
   if (!natilleraId || socios.length === 0) return
   // Cómo se reparte cada concepto: el portal lo muestra junto a la cifra (RF-09).
   const modos = Object.fromEntries(TIPOS_UTILIDAD.map(tipo => [tipo, getModoDistribucion(configCierre, tipo)]))
-  const administracion = resultadoCierre.administracion
-    ? { porcentaje: resultadoCierre.administracion.porcentaje, base: resultadoCierre.administracion.base }
-    : null
-
   const filas = socios
     .filter(s => s.socioNatillera?.id)
-    .map(s => ({
-      socio_natillera_id: s.socioNatillera.id,
-      natillera_id: natilleraId,
-      calculado_en: new Date().toISOString(),
-      datos: {
-        ahorro: s.ahorro || 0,
-        utilidadesTotal: s.utilidadesTotal || 0,
-        utilidadesPorConcepto: s.utilidadesPorConcepto || {},
-        aporteAdministracion: s.aporteAdministracion || 0,
-        descuentos: s.descuentos || 0,
-        totalAEntregar: s.totalAEntregar || 0,
-        totalFinal: s.totalFinal || 0,
-        modos,
-        administracion
+    .map(s => {
+      /*
+       * La administración no viaja al portal: el socio no la ve. Se guardan sus ganancias
+       * ya con ella descontada (gananciasPortal.js), así que ni el porcentaje ni el monto
+       * llegan a su celular, y aun así ahorro + ganancias − deudas = lo que recibe.
+       */
+      const netas = gananciasSinAdministracion(s)
+      return {
+        socio_natillera_id: s.socioNatillera.id,
+        natillera_id: natilleraId,
+        calculado_en: new Date().toISOString(),
+        datos: {
+          ahorro: s.ahorro || 0,
+          utilidadesTotal: netas.utilidadesTotal,
+          utilidadesPorConcepto: netas.utilidadesPorConcepto,
+          descuentos: s.descuentos || 0,
+          totalAEntregar: s.totalAEntregar || 0,
+          totalFinal: s.totalFinal || 0,
+          modos
+        }
       }
-    }))
+    })
   if (filas.length === 0) return
   const { error } = await supabase.from('portal_ganancias').upsert(filas, { onConflict: 'socio_natillera_id' })
   if (error) throw error

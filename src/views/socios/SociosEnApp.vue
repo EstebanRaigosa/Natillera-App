@@ -200,10 +200,10 @@
                     :href="enlaceWhatsAppSocio(s)"
                     target="_blank"
                     rel="noopener"
-                    class="app-invitar-uno"
+                    class="btn-compartir btn-compartir--sm flex-shrink-0"
                     :aria-label="`Invitar a ${s.nombre} por WhatsApp`"
                   >
-                    <ChatBubbleLeftIcon class="h-4 w-4" aria-hidden="true" />
+                    <IconoWhatsApp class="w-4 h-4 flex-shrink-0" />
                     <span>Invitar</span>
                   </a>
                 </div>
@@ -228,16 +228,21 @@
                 {{ enlaceCopiado ? 'Copiado' : 'Copiar' }}
               </button>
             </div>
-            <!-- Verde WhatsApp propio: el color dice a dónde va -->
             <button
               type="button"
-              class="ds-btn ds-btn--block app-btn-whatsapp"
+              class="btn-compartir w-full"
               :disabled="!codigo || !puedeGestionar"
               @click="compartirAlGrupo"
             >
-              <ChatBubbleLeftIcon class="h-4 w-4" aria-hidden="true" />
+              <IconoWhatsApp class="w-5 h-5 flex-shrink-0" />
               Compartir en WhatsApp
             </button>
+            <!-- Reserva si falla el menú de compartir: desde el `.catch` Safari bloquea el
+                 `window.open` (ya no hay toque), así que se ofrece un enlace para tocar. -->
+            <p v-if="reservaWhatsApp" class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+              No se pudo abrir el menú de compartir.
+              <a :href="reservaWhatsApp" target="_blank" rel="noopener" class="inline-flex min-h-11 touch-manipulation items-center font-semibold text-[#1B5E37] underline" @click="reservaWhatsApp = null">Abrir WhatsApp</a>
+            </p>
 
             <div v-if="qr" class="app-qr">
               <img :src="qr" alt="Código QR del enlace de invitación" width="160" height="160" />
@@ -271,7 +276,6 @@ import { numeroWhatsApp, esTelefonoValido } from '../../utils/telefono'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   ArrowsRightLeftIcon,
-  ChatBubbleLeftIcon,
   ClipboardDocumentIcon,
   UserPlusIcon,
   ExclamationTriangleIcon,
@@ -281,6 +285,7 @@ import {
   XMarkIcon
 } from '@heroicons/vue/24/outline'
 import BackButton from '../../components/BackButton.vue'
+import IconoWhatsApp from '../../components/iconos/IconoWhatsApp.vue'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import SolicitudVinculoItem from '../../components/vinculo/SolicitudVinculoItem.vue'
 import { supabase } from '../../lib/supabase'
@@ -465,17 +470,23 @@ function textoInvitacion(nombreSocio = '') {
  * wa.me sin número abre WhatsApp para escoger el chat. Nada asíncrono antes de
  * `navigator.share`: Safari exige que vaya pegado al toque.
  */
+/** Enlace a WhatsApp que se ofrece si el menú de compartir falla. */
+const reservaWhatsApp = ref(null)
+
 function compartirAlGrupo() {
   if (!urlInvitacion.value) return
   const texto = textoInvitacion()
-  const abrirWhatsApp = () => window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
+  const url = `https://wa.me/?text=${encodeURIComponent(texto)}`
+  reservaWhatsApp.value = null
   if (navigator.share) {
     navigator.share({ text: texto }).catch(err => {
-      if (err?.name !== 'AbortError') abrirWhatsApp()
+      if (err?.name === 'AbortError') return
+      reservaWhatsApp.value = url
     })
     return
   }
-  abrirWhatsApp()
+  // Sin menú del sistema (escritorio) el `window.open` sí va dentro del toque.
+  window.open(url, '_blank')
 }
 
 // A uno: un <a> y no window.open, para que Safari no lo trate como ventana emergente.
@@ -798,22 +809,6 @@ onUnmounted(() => {
 .app-icono:hover { background: var(--brand-primary-soft); }
 .app-icono--peligro { color: #b91c1c; }
 .app-icono--peligro:hover { background: #fef2f2; }
-.app-invitar-uno {
-  display: inline-flex;
-  flex-shrink: 0;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0 0.875rem;
-  border-radius: 9999px;
-  background: #dcfce7;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #166534;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.app-invitar-uno:hover { background: #bbf7d0; }
 
 /* ─── Paneles en línea (cambiar / desvincular / cambiar enlace) ─── */
 .app-panel { margin-top: 0.625rem; padding: 0.75rem; border-radius: 0.875rem; background: #f4f8f5; }
@@ -881,13 +876,6 @@ onUnmounted(() => {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.app-btn-whatsapp {
-  background: #16a34a;
-  color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(22, 163, 74, 0.32);
-}
-.app-btn-whatsapp:hover:not(:disabled) { background: #15803d; }
-.app-btn-whatsapp:disabled { background: #e2e8f0; color: #94a3b8; box-shadow: none; }
 .app-qr { display: flex; flex-direction: column; align-items: center; gap: 0.375rem; text-align: center; }
 .app-qr img {
   width: 10rem;

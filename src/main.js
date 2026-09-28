@@ -7,6 +7,7 @@ import './style.css'
 import 'driver.js/dist/driver.css'
 import { setupPwaInstall } from './composables/usePwaInstall'
 import { aplicarModoLigero } from './composables/useModoLigero'
+import { detectIosPlatform } from './composables/useIsIos'
 
 // Antes de montar: si el equipo o la red son modestos, se marca el documento y
 // el CSS cambia los efectos caros por otros baratos. Va aquí, y no dentro de un
@@ -123,17 +124,11 @@ if (typeof window !== 'undefined' && !isDevelopment) {
 
 // Optimizaciones específicas para iOS/iPhone (no afectan Android)
 if (typeof window !== 'undefined') {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  
-  if (isIOS) {
+  // `slow-device` ya no se marca en iOS: WebKit fija `hardwareConcurrency` (2 en iOS
+  // antiguos) sin relación con el chip y `deviceMemory` no existe, así que la señal
+  // marcaba como lentos a todos los iPhone viejos y a ninguno de los nuevos.
+  if (detectIosPlatform()) {
     document.body.classList.add('ios-device')
-
-    const isSlowDevice = navigator.hardwareConcurrency <= 2 ||
-                        (navigator.deviceMemory && navigator.deviceMemory <= 2)
-    if (isSlowDevice) {
-      document.body.classList.add('slow-device')
-    }
   }
 
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {

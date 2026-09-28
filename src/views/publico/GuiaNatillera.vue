@@ -11,7 +11,7 @@
 
     Lo que se dice de la app sale de contenidoPublico.js (FUNCIONES): no inventar funciones.
   -->
-  <div class="min-h-screen min-h-[100dvh] bg-[#07170f] font-sans text-white">
+  <div class="min-h-screen supports-[height:100dvh]:min-h-[100dvh] bg-[#07170f] font-sans text-white">
     <!-- ===================== Hero ===================== -->
     <section class="relative overflow-hidden bg-gradient-to-b from-[#04110a] via-[#0b2a1a] to-[#1B5E37]">
       <DestellosFondo />

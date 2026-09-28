@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { isDev, isLocalhost, devLog } from '../config/environment'
 import { resolvePostLoginLocation, guardarDestinoPendiente } from '../utils/postLoginRoute'
-import { setLastNatilleraId } from '../utils/lastNatillera'
+import { setLastNatilleraId, setUltimoLugar } from '../utils/lastNatillera'
 import { aplicarSeoRuta } from '../utils/seoRuta'
 import { esModoStandalone } from '../composables/usePwaInstall'
 import { MODULO_DE_RUTA, MODULOS } from '../permisos/modulos'
@@ -523,7 +523,13 @@ router.afterEach((to, from) => {
   if (uid && idParam && idParam !== 'undefined' && idParam !== 'null' && idParam !== '') {
     if (to.path.startsWith(`/natilleras/${idParam}`)) {
       setLastNatilleraId(uid, String(idParam))
+      setUltimoLugar(uid, { tipo: 'natillera', id: String(idParam) })
     }
+  }
+  // Portal del socio: al volver a entrar se abre de nuevo aquí.
+  const socioPortal = Array.isArray(to.params?.socioNatilleraId) ? to.params.socioNatilleraId[0] : to.params?.socioNatilleraId
+  if (uid && to.name === 'PortalSocio' && socioPortal && socioPortal !== 'undefined' && socioPortal !== 'null') {
+    setUltimoLugar(uid, { tipo: 'portal', id: String(socioPortal) })
   }
 
   // No hacer scroll si es la misma ruta (solo cambio de query params)
@@ -546,6 +552,47 @@ router.afterEach((to, from) => {
     left: 0,
     behavior: 'instant' // Usar 'instant' para evitar animaciones raras
   })
+})
+
+/*
+ * Un chunk que ya no existe (despliegue nuevo con la pestaña abierta, o la caché del SW
+ * desalojada por Safari tras días sin usar la web) hace fallar el `import()` de la vista:
+ * «Importing a module script failed.» en Safari, «Failed to fetch dynamically imported
+ * module» en Chrome. Sin esto la navegación se quedaba en nada, sin mensaje. Se recarga
+ * una sola vez hacia la ruta pedida; la marca en sessionStorage evita un bucle si el
+ * fallo es de red y no de versión.
+ */
+const CLAVE_RECARGA_CHUNK = 'natillerapp:recarga-chunk'
+
+function esErrorDeChunk(error) {
+  const mensaje = String(error?.message || error || '')
+  return /Importing a module script failed|Failed to fetch dynamically imported module|error loading dynamically imported module|Unable to preload CSS/i.test(mensaje)
+}
+
+function recargarUnaVez(destino) {
+  try {
+    if (sessionStorage.getItem(CLAVE_RECARGA_CHUNK)) return false
+    sessionStorage.setItem(CLAVE_RECARGA_CHUNK, '1')
+  } catch {
+    // Sin storage (Safari con cookies bloqueadas): recargar igual; el peor caso es otro fallo.
+  }
+  window.location.assign(destino || window.location.href)
+  return true
+}
+
+router.onError((error, to) => {
+  if (!esErrorDeChunk(error)) return
+  recargarUnaVez(to?.fullPath)
+})
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('vite:preloadError', (evento) => {
+    if (recargarUnaVez()) evento.preventDefault()
+  })
+}
+
+router.afterEach(() => {
+  try { sessionStorage.removeItem(CLAVE_RECARGA_CHUNK) } catch { /* sin storage */ }
 })
 
 export default router

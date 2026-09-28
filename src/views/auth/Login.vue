@@ -16,7 +16,7 @@
         <div v-if="telefonoYaRegistrado && loginMethod === 'email'" class="nova-alert nova-alert--info mb-4">
           <p class="font-semibold mb-1">Cuenta ya registrada</p>
           <p class="text-sm opacity-95 mb-2">
-            Este número ya está asociado a una cuenta. Inicia sesión con correo o Google.
+            Este número ya está asociado a una cuenta. Inicia sesión con {{ sinGoogle ? 'tu correo' : 'correo o Google' }}.
           </p>
           <p v-if="emailTelefonoRegistrado" class="text-xs opacity-90">
             Email asociado: <strong>{{ enmascararEmail(emailTelefonoRegistrado) }}</strong>
@@ -34,7 +34,7 @@
               class="login-input"
               placeholder="Usuario"
               required
-              autocomplete="email"
+              autocomplete="username"
             />
           </div>
         </div>
@@ -74,7 +74,7 @@
           <button
             type="button"
             @click="showForgotPasswordModal = true"
-            class="text-sm font-semibold bg-transparent border-0 cursor-pointer p-0 transition-opacity hover:opacity-80"
+            class="-my-3 inline-flex min-h-11 items-center text-sm font-semibold bg-transparent border-0 cursor-pointer p-0 transition-opacity hover:opacity-80 touch-manipulation"
             style="color: hsl(var(--primary))"
           >
             Olvidaste tu contraseña?
@@ -91,12 +91,7 @@
 
         <!-- Login button -->
         <button type="submit" class="login-btn-primary w-full" :disabled="cargaAuthVisible">
-          <span v-if="cargaAuthVisible" class="animate-spin inline-flex">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-          </span>
+          <CargaBoton v-if="cargaAuthVisible" texto="Iniciando sesión" />
           <span v-else class="inline-flex items-center gap-2 font-bold">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -127,12 +122,7 @@
             :disabled="authStore.loading || !telefono.trim()"
             class="login-btn-primary w-full"
           >
-            <span v-if="authStore.loading" class="animate-spin inline-flex">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            </span>
+            <CargaBoton v-if="authStore.loading" texto="Enviando código" />
             <span v-else class="inline-flex items-center gap-2 font-bold">Enviar código</span>
           </button>
         </div>
@@ -168,7 +158,7 @@
                 type="button"
                 @click="handleReenviarOTP"
                 :disabled="authStore.loading || contadorReenvio > 0"
-                class="nova-link text-sm bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="nova-link -my-3 inline-flex min-h-11 items-center text-sm bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
               >
                 {{ contadorReenvio > 0 ? `Reenviar código en ${contadorReenvio}s` : 'Reenviar código' }}
               </button>
@@ -180,18 +170,13 @@
             :disabled="cargaAuthVisible || codigoOTP.length !== 6"
             class="login-btn-primary w-full"
           >
-            <span v-if="cargaAuthVisible" class="animate-spin inline-flex">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            </span>
+            <CargaBoton v-if="cargaAuthVisible" texto="Verificando" />
             <span v-else class="font-bold">Verificar código</span>
           </button>
           <button
             type="button"
             @click="otpStep = 'telefono'; codigoOTP = ''"
-            class="w-full text-sm font-medium bg-transparent border-0 cursor-pointer p-0"
+            class="-my-3 w-full min-h-11 text-sm font-medium bg-transparent border-0 cursor-pointer p-0 touch-manipulation"
             style="color: hsl(var(--muted-foreground))"
           >
             ← Cambiar número de teléfono
@@ -207,15 +192,20 @@
       </div>
 
       <!-- Divider -->
-      <div v-if="loginMethod === 'email'" class="login-divider">
+      <div v-if="loginMethod === 'email' && !sinGoogle" class="login-divider">
         <div class="login-divider__line" />
         <span class="login-divider__text">O CONTINUAR CON</span>
         <div class="login-divider__line" />
       </div>
 
+      <!-- En la PWA instalada de iOS la sesión de Google se queda en Safari: se explica en una frase -->
+      <p v-if="loginMethod === 'email' && sinGoogle" class="mt-5 text-center text-xs" style="color: hsl(var(--muted-foreground))">
+        {{ AVISO_GOOGLE_IOS_INSTALADA }}
+      </p>
+
       <!-- Google button -->
       <button
-        v-if="loginMethod === 'email'"
+        v-if="loginMethod === 'email' && !sinGoogle"
         type="button"
         @click="handleGoogleLogin"
         :disabled="cargaAuthVisible"
@@ -354,7 +344,7 @@
               :disabled="authStore.loading || !forgotPasswordEmail.trim()"
               class="login-btn-primary flex-1 !w-auto min-h-[48px] disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
             >
-              <span v-if="authStore.loading" class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <CargaBoton v-if="authStore.loading" pequena />
               <span v-else>Enviar enlace</span>
             </button>
           </div>
@@ -387,7 +377,7 @@
       <div class="p-6 space-y-4" style="color: hsl(var(--card-foreground))">
         <div class="text-center space-y-2">
           <p class="text-sm" style="color: hsl(var(--muted-foreground))">
-            Tu número fue verificado. Continúa con correo o Google.
+            {{ sinGoogle ? 'Tu número fue verificado. Continúa con tu correo.' : 'Tu número fue verificado. Continúa con correo o Google.' }}
           </p>
           <p class="text-xs" style="color: hsl(var(--muted-foreground))">
             Teléfono: <span class="font-semibold" style="color: hsl(var(--foreground))">{{ telefono }}</span>
@@ -403,13 +393,14 @@
             Registrarse con correo
           </router-link>
 
-          <div class="relative my-1 flex items-center gap-3">
+          <div v-if="!sinGoogle" class="relative my-1 flex items-center gap-3">
             <div class="flex-1 h-px bg-[hsl(var(--border))]" />
             <span class="text-xs font-semibold shrink-0" style="color: hsl(var(--muted-foreground))">O</span>
             <div class="flex-1 h-px bg-[hsl(var(--border))]" />
           </div>
 
           <button
+            v-if="!sinGoogle"
             type="button"
             @click="handleGoogleLoginFromModal"
             :disabled="cargaAuthVisible"
@@ -430,9 +421,10 @@
 </template>
 
 <script setup>
+import CargaBoton from '../../components/carga/CargaBoton.vue'
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../../stores/auth'
+import { useAuthStore, AVISO_GOOGLE_IOS_INSTALADA, googleNoDisponibleAqui } from '../../stores/auth'
 import { useNatillerasStore } from '../../stores/natilleras'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline'
 import { isDev, isLocalhost } from '../../config/environment'
@@ -454,6 +446,9 @@ const cargaAuthVisible = computed(() => authStore.loading || sesionEnProceso.val
 
 const isDevMode = isDev || isLocalhost
 
+// PWA instalada en iOS: Google no puede devolver la sesión (ver auth.js).
+const sinGoogle = googleNoDisponibleAqui()
+
 const screenInfo = ref({ resolution: '', browser: '' })
 
 function detectarNavegador() {
@@ -466,12 +461,13 @@ function detectarNavegador() {
   return 'Desconocido'
 }
 
+// Solo en desarrollo: en producción era un console.log por cada resize, y en
+// iOS el teclado y la barra de Safari disparan muchos.
 function actualizarInfoPantalla() {
+  if (!isDevMode) return
   const resolution = `${window.innerWidth} x ${window.innerHeight}`
   const browser = detectarNavegador()
-  if (isDevMode) {
-    screenInfo.value = { resolution, browser }
-  }
+  screenInfo.value = { resolution, browser }
   console.log('%c📱 Información del Sistema', 'color: #22c55e; font-weight: bold; font-size: 14px;')
   console.log(`%cResolución: %c${resolution}`, 'color: #86efac; font-weight: bold;', 'color: #ffffff;')
   console.log(`%cNavegador: %c${browser}`, 'color: #86efac; font-weight: bold;', 'color: #ffffff;')
@@ -524,8 +520,10 @@ onMounted(() => {
   } catch {
     /* ignore */
   }
-  actualizarInfoPantalla()
-  window.addEventListener('resize', actualizarInfoPantalla)
+  if (isDevMode) {
+    actualizarInfoPantalla()
+    window.addEventListener('resize', actualizarInfoPantalla)
+  }
 })
 
 watch(rememberMe, (v) => {

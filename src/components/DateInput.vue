@@ -36,7 +36,8 @@
         :value="isoValue"
         @change="handleDateChange"
         type="date"
-        class="date-input-hidden"
+        :class="['date-input-hidden', esIos && !disabled ? 'date-input-hidden--ios' : '']"
+        :aria-label="esIos ? 'Abrir calendario' : undefined"
         :required="required && !disabled"
         :disabled="disabled"
       />
@@ -63,7 +64,13 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { detectIosPlatform } from '../composables/useIsIos'
+
+// En iOS < 16 no hay `showPicker()`, y un `click()` por código sobre un input con
+// `pointer-events: none` no abre nada. Allí el input date queda transparente encima del
+// botón del calendario para que el propio toque del usuario abra el selector nativo.
+const esIos = detectIosPlatform()
 
 const props = defineProps({
   modelValue: {
@@ -185,52 +192,18 @@ function handleBlur(event) {
   }
 }
 
-// Abrir el calendario nativo
+// Abrir el calendario nativo. Fuera de iOS el botón llama a `showPicker()`, que devuelve
+// undefined (no una promesa: el `.then` de antes lanzaba TypeError) y lanza si no hay gesto
+// o el navegador no lo permite; entonces al menos se enfoca el input.
 function openDatePicker(event) {
   event.preventDefault()
   event.stopPropagation()
-  
-  if (dateInputRef.value && !props.disabled) {
-    // Hacer el input date accesible temporalmente
-    dateInputRef.value.style.pointerEvents = 'auto'
-    dateInputRef.value.style.zIndex = '30'
-    
-    nextTick(() => {
-      if (dateInputRef.value) {
-        // Intentar usar showPicker() si está disponible
-        if (typeof dateInputRef.value.showPicker === 'function') {
-          dateInputRef.value.showPicker()
-            .then(() => {
-              // Restaurar después de abrir
-              setTimeout(() => {
-                if (dateInputRef.value) {
-                  dateInputRef.value.style.pointerEvents = 'none'
-                  dateInputRef.value.style.zIndex = '1'
-                }
-              }, 100)
-            })
-            .catch(() => {
-              // Si falla, usar click directo
-              dateInputRef.value.click()
-              setTimeout(() => {
-                if (dateInputRef.value) {
-                  dateInputRef.value.style.pointerEvents = 'none'
-                  dateInputRef.value.style.zIndex = '1'
-                }
-              }, 100)
-            })
-        } else {
-          // Fallback: hacer click directo en el input date
-          dateInputRef.value.click()
-          setTimeout(() => {
-            if (dateInputRef.value) {
-              dateInputRef.value.style.pointerEvents = 'none'
-              dateInputRef.value.style.zIndex = '1'
-            }
-          }, 100)
-        }
-      }
-    })
+  const input = dateInputRef.value
+  if (!input || props.disabled) return
+  try {
+    input.showPicker()
+  } catch {
+    input.focus()
   }
 }
 
@@ -260,12 +233,14 @@ watch(() => props.modelValue, (newValue) => {
 <style scoped>
 .date-input-calendar-button {
   position: absolute !important;
-  right: 0.5rem !important;
+  right: 0.25rem !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
   z-index: 20 !important;
-  width: 2rem !important;
-  height: 2rem !important;
+  /* 44px de área táctil (el icono sigue siendo de 20px) */
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  touch-action: manipulation;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -276,13 +251,7 @@ watch(() => props.modelValue, (newValue) => {
   padding: 0;
 }
 
-@media (min-width: 640px) {
-  .date-input-calendar-button {
-    right: 0.75rem !important;
-    width: 1.75rem !important;
-    height: 1.75rem !important;
-  }
-}.date-input-hidden {
+.date-input-hidden {
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
@@ -292,5 +261,24 @@ watch(() => props.modelValue, (newValue) => {
   pointer-events: none !important;
   z-index: 1 !important;
   cursor: pointer !important;
+}
+
+/* iOS: el input date, transparente, cubre justo el botón del calendario y recibe el toque.
+   Solo el botón: sobre todo el campo impediría escribir la fecha a mano. */
+.date-input-hidden.date-input-hidden--ios {
+  left: auto !important;
+  right: 0.25rem !important;
+  top: 50% !important;
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  min-height: 0 !important;
+  -webkit-transform: translateY(-50%) !important;
+  transform: translateY(-50%) !important;
+  pointer-events: auto !important;
+  z-index: 25 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  font-size: 16px !important;
+  touch-action: manipulation;
 }
 </style>
