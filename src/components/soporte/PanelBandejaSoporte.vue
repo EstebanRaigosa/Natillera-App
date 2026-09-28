@@ -230,6 +230,18 @@
                 <LockClosedIcon class="h-4 w-4 text-gray-500" />
                 Nota interna
               </button>
+
+              <!-- Manda por correo la última respuesta del soporte, aunque el usuario
+                   tenga push. Solo superadmin (lo comprueba la Edge Function). -->
+              <button
+                type="button"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-2.5 py-2 text-sm text-gray-700 transition hover:bg-gray-50 disabled:opacity-50 touch-manipulation"
+                :disabled="enviandoCorreo"
+                @click="reenviarPorCorreo"
+              >
+                <EnvelopeIcon class="h-4 w-4 text-gray-500" />
+                {{ enviandoCorreo ? 'Enviando…' : 'Reenviar por correo' }}
+              </button>
             </div>
 
             <!-- Nota interna: privada del soporte (RN-11). El usuario no la
@@ -316,7 +328,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  ArrowLeftIcon, ExclamationTriangleIcon, InboxIcon, LockClosedIcon,
+  ArrowLeftIcon, EnvelopeIcon, ExclamationTriangleIcon, InboxIcon, LockClosedIcon,
   MagnifyingGlassIcon, TrashIcon, XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import HiloMensajes from './HiloMensajes.vue'
@@ -352,6 +364,7 @@ const pagina = ref(0)
 const mostrarNota = ref(false)
 const notaInterna = ref('')
 const guardandoNota = ref(false)
+const enviandoCorreo = ref(false)
 const guardandoEstado = ref(false)
 const conversacionABorrar = ref(null)
 const borrando = ref(false)
@@ -505,6 +518,23 @@ async function cambiarEstado(nuevoEstado) {
     await recargarBandeja({ conservarPagina: true })
   } finally {
     guardandoEstado.value = false
+  }
+}
+
+/*
+ * Reenvío por correo de la última respuesta. El aviso dice lo que contestó Resend:
+ * así se sabe al momento si el correo salió o por qué no (dominio sin verificar,
+ * clave que falta…), cosa que el correo automático de respaldo no muestra.
+ */
+async function reenviarPorCorreo() {
+  if (!idActivo.value || enviandoCorreo.value) return
+  enviandoCorreo.value = true
+  try {
+    const r = await soporte.reenviarPorCorreo(idActivo.value)
+    if (r?.ok) notificaciones.exito(`Correo enviado a ${r.para}.`)
+    else notificaciones.critica(`No se envió el correo: ${r?.error || 'error desconocido'}`)
+  } finally {
+    enviandoCorreo.value = false
   }
 }
 

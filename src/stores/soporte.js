@@ -855,6 +855,24 @@ export const useSoporteStore = defineStore('soporte', () => {
     return data
   }
 
+  /**
+   * Reenvía por correo al usuario una respuesta del soporte —la indicada o la
+   * última—, aunque tenga el push activo. Solo el superadmin: la Edge Function
+   * lo comprueba en la base con la sesión de quien llama. Devuelve lo que dijo
+   * Resend: `{ ok, para, error }`.
+   */
+  async function reenviarPorCorreo(conversacionId, mensajeId = null) {
+    const { data, error: e } = await supabase.functions.invoke('soporte-notificar', {
+      body: { modo: 'reenviar_correo', conversacion_id: conversacionId, mensaje_id: mensajeId },
+    })
+    if (e) {
+      // 401/403 y similares traen el motivo en el cuerpo de la respuesta.
+      const detalle = await e.context?.json?.().catch(() => null)
+      return { ok: false, error: detalle?.error || e.message }
+    }
+    return data ?? { ok: false, error: 'sin respuesta de la función' }
+  }
+
   async function leerNotaInterna(conversacionId) {
     const { data, error: e } = await supabase.rpc('soporte_nota_interna', { p_conversacion_id: conversacionId })
     if (e) throw new Error(traducirError(e).mensaje)
@@ -960,7 +978,7 @@ export const useSoporteStore = defineStore('soporte', () => {
     // escritura
     enviar, procesarCola, cancelarEnvio,
     // panel
-    actualizarConversacion, leerNotaInterna, eliminarConversacion,
+    actualizarConversacion, leerNotaInterna, eliminarConversacion, reenviarPorCorreo,
     // realtime
     recibirMensaje, aplicarCambioConversacion,
     // constantes
