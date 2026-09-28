@@ -548,7 +548,7 @@
       @close="modalDetalle = false"
     >
       <!-- Cabecera marca: avatar redondo blanco, nombre, badge de estado, X en flex -->
-      <div class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
+      <div ref="cabeceraDetalleSocio" class="flex-shrink-0 bg-[color:var(--brand-primary)] text-white">
         <!-- Móvil: una sola fila [avatar | nombre+estado | X] -->
         <div class="sm:hidden flex items-center gap-3 pl-4 pr-2 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 min-h-[4.2rem]">
           <img
@@ -566,9 +566,21 @@
               {{ labelEstado(socioSeleccionado?.estado) }}
             </span>
           </div>
+          <!-- Solo superusuario: imagen del modal completo para soporte (useCapturaCompleta) -->
+          <button
+            v-if="puedeCapturarDetalle"
+            type="button"
+            class="no-captura h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-50"
+            aria-label="Capturar el detalle completo"
+            title="Capturar el detalle completo"
+            :disabled="capturaDetalle.generando"
+            @click="capturarDetalleSocio"
+          >
+            <CameraIcon class="h-5 w-5" />
+          </button>
           <button
             type="button"
-            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            class="no-captura h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
             aria-label="Cerrar"
             @click="modalDetalle = false"
           >
@@ -577,7 +589,21 @@
         </div>
         <!-- Desktop: avatar arriba centrado, nombre y badge debajo, X en flex (no absolute) -->
         <div class="hidden sm:flex items-start px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-5">
-          <div class="w-11 flex-shrink-0" aria-hidden="true"></div>
+          <!-- Columna izquierda: la captura (superusuario) o vacía por simetría con la X -->
+          <div class="w-11 flex-shrink-0">
+            <!-- Solo superusuario: imagen del modal completo para soporte (useCapturaCompleta) -->
+            <button
+              v-if="puedeCapturarDetalle"
+              type="button"
+              class="no-captura h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation disabled:opacity-50"
+              aria-label="Capturar el detalle completo"
+              title="Capturar el detalle completo"
+              :disabled="capturaDetalle.generando"
+              @click="capturarDetalleSocio"
+            >
+              <CameraIcon class="h-5 w-5" />
+            </button>
+          </div>
           <div class="flex-1 min-w-0 flex flex-col items-center text-center">
             <img
               v-if="socioSeleccionado"
@@ -595,7 +621,7 @@
           </div>
           <button
             type="button"
-            class="h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
+            class="no-captura h-11 w-11 flex-shrink-0 inline-flex items-center justify-center rounded-full text-white/95 hover:bg-white/15 active:bg-white/25 transition-colors [-webkit-tap-highlight-color:transparent] touch-manipulation"
             aria-label="Cerrar"
             @click="modalDetalle = false"
           >
@@ -607,9 +633,27 @@
       <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <div
           ref="scrollAreaModalDetalleSocio"
+          data-captura-expandir
           class="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-white overscroll-contain [-webkit-overflow-scrolling:touch] px-5 sm:px-6 pt-5 pb-5 space-y-4"
           @scroll.passive="programarNatiscrollModalDetalleSocio"
         >
+          <!--
+            Captura lista (superusuario). Descargar y compartir van en un segundo toque:
+            Safari solo abre el menú de compartir pegado a un toque, y generar la imagen
+            tarda. No sale en la imagen.
+          -->
+          <div v-if="capturaDetalle.archivo" class="captura-lista no-captura">
+            <CameraIcon class="h-5 w-5 flex-shrink-0 text-[color:var(--brand-primary)]" aria-hidden="true" />
+            <p class="min-w-0 flex-1 text-sm font-semibold text-slate-700">Captura lista</p>
+            <button type="button" class="btn-descargar btn-descargar--sm" @click="descargarCapturaDetalle">
+              <ArrowDownTrayIcon class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              Descargar
+            </button>
+            <button v-if="puedeCompartirCaptura" type="button" class="btn-compartir btn-compartir--sm" @click="compartirCapturaDetalle">
+              <ShareIcon class="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              Compartir
+            </button>
+          </div>
           <!-- Estado de pagos: callout verde (al día) o ámbar (pendientes) -->
           <div
             class="ds-callout"
@@ -638,7 +682,7 @@
               <button
                 v-if="!resumenSocio.alDia && !esVisor && !alDiaDetalle.abierto"
                 type="button"
-                class="poner-al-dia__abrir"
+                class="poner-al-dia__abrir no-captura"
                 @click="abrirPonerAlDia"
               >
                 <CheckCircleIcon class="h-4 w-4" aria-hidden="true" />
@@ -651,7 +695,7 @@
             Poner al día, dentro del mismo detalle: cuántas cuotas vencidas se registran, cuánto
             suman y cómo pagó. Cada una queda pagada en su fecha límite, sin multa (usePonerAlDia).
           -->
-          <div v-if="alDiaDetalle.abierto" class="poner-al-dia">
+          <div v-if="alDiaDetalle.abierto" class="poner-al-dia no-captura">
             <CargaCaja v-if="alDiaDetalle.cargando" texto="Buscando cuotas vencidas" />
             <template v-else-if="alDiaDetalle.cuotas.length > 0">
               <div class="flex items-center gap-2.5">
@@ -699,6 +743,7 @@
               <button type="button" class="btn-modal-secondary mt-3 w-full" @click="cerrarPonerAlDia">Entendido</button>
             </template>
           </div>
+          <CargaCaja :visible="capturaDetalle.generando" flotante texto="Preparando la captura" detalle="El detalle completo del socio" />
           <CargaCaja
             :visible="alDiaDetalle.guardando"
             flotante
@@ -726,7 +771,7 @@
             <button
               v-if="socioSeleccionado?.socio?.usuario_id && !esVisor"
               type="button"
-              class="socio-cuenta__accion"
+              class="socio-cuenta__accion no-captura"
               :disabled="desvinculando"
               @click="desvincularSocio(socioSeleccionado)"
             >
@@ -888,7 +933,7 @@
         <!-- Natiscroll: overlay absoluto sobre el cuerpo, justo arriba del footer fijo -->
         <div
           v-show="hayNatiscrollModalDetalleSocio"
-          class="pointer-events-none absolute inset-x-0 bottom-0 z-10"
+          class="no-captura pointer-events-none absolute inset-x-0 bottom-0 z-10"
           aria-hidden="true"
         >
           <div
@@ -909,7 +954,7 @@
       </div>
 
       <!-- Footer fijo: 2 filas con jerarquía clara. Siempre visible. Hereda safe-area-bottom. -->
-      <div class="flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
+      <div class="no-captura flex-shrink-0 border-t border-[color:var(--surface-divider)] bg-white px-5 sm:px-6 pt-3 pb-[calc(max(1.25rem,env(safe-area-inset-bottom))+var(--tapado-inferior,0px))] space-y-2">
         <!-- Fila 1: acciones principales (peso fuerte) -->
         <div class="flex flex-col-reverse sm:flex-row gap-2">
           <button
@@ -2601,6 +2646,8 @@ import { pedirGuiaDetalle } from '../../composables/useTourDetalleNatillera'
 import { toPng } from 'html-to-image'
 import CargaCaja from '../../components/carga/CargaCaja.vue'
 import FiguraAlcancia from '../../components/carga/FiguraAlcancia.vue'
+import { useSoporteStore } from '../../stores/soporte'
+import { capturarCompleto } from '../../composables/useCapturaCompleta'
 import SwitchSegmentado from '../../components/SwitchSegmentado.vue'
 import PonerAlDiaMasivoModal from '../../components/socios/PonerAlDiaMasivoModal.vue'
 import { cuotasParaPonerAlDia, ponerSocioAlDia, total4x1000DeCuotas } from '../../composables/usePonerAlDia'
@@ -2636,6 +2683,7 @@ import {
   MagnifyingGlassIcon,
   ArrowUpTrayIcon,
   ArrowDownTrayIcon,
+  CameraIcon,
   DocumentArrowDownIcon,
   DocumentTextIcon,
   CalendarIcon,
@@ -5412,8 +5460,66 @@ async function confirmarPonerAlDia() {
   }
 }
 
+/*
+ * Captura del detalle completo, solo para el superusuario: imágenes para soporte. El
+ * rol lo decide la base (`es_super_admin`, vía el store de soporte), no el correo.
+ */
+const soporteStore = useSoporteStore()
+const puedeCapturarDetalle = computed(() => soporteStore.esSoporte)
+const cabeceraDetalleSocio = ref(null)
+const capturaDetalle = reactive({ generando: false, archivo: null, dataUrl: '' })
+const puedeCompartirCaptura = computed(() => {
+  const archivo = capturaDetalle.archivo
+  return !!archivo && typeof navigator !== 'undefined' && !!navigator.canShare?.({ files: [archivo] })
+})
+
+function limpiarCapturaDetalle() {
+  Object.assign(capturaDetalle, { generando: false, archivo: null, dataUrl: '' })
+}
+
+async function capturarDetalleSocio() {
+  // La cabecera está dentro de la tarjeta del modal: esa es la que se captura entera.
+  const tarjeta = cabeceraDetalleSocio.value?.parentElement
+  if (!tarjeta || capturaDetalle.generando) return
+  capturaDetalle.generando = true
+  capturaDetalle.archivo = null
+  try {
+    const nombre = (socioSeleccionado.value?.socio?.nombre || 'socio').trim().replace(/\s+/g, '-')
+    const { dataUrl, archivo } = await capturarCompleto(tarjeta, `detalle-${nombre}.png`)
+    Object.assign(capturaDetalle, { dataUrl, archivo })
+  } catch (e) {
+    console.error('Captura del detalle del socio:', e)
+    notificationStore.error('No se pudo preparar la captura. Intenta de nuevo.')
+  } finally {
+    capturaDetalle.generando = false
+  }
+}
+
+function descargarCapturaDetalle() {
+  if (!capturaDetalle.dataUrl) return
+  // En iOS `a.download` con data URL abre otra pestaña: la hoja de compartir trae «Guardar imagen».
+  const archivos = capturaDetalle.archivo ? { files: [capturaDetalle.archivo] } : null
+  if (archivos && detectIosPlatform() && navigator.canShare?.(archivos)) {
+    navigator.share(archivos).catch(() => {})
+    return
+  }
+  const enlace = document.createElement('a')
+  enlace.download = capturaDetalle.archivo?.name || 'detalle-socio.png'
+  enlace.href = capturaDetalle.dataUrl
+  enlace.click()
+}
+
+function compartirCapturaDetalle() {
+  if (!capturaDetalle.archivo) return
+  // Sin nada asíncrono antes: Safari exige el gesto del toque.
+  navigator.share({ files: [capturaDetalle.archivo], title: 'Detalle del socio' }).catch(() => {})
+}
+
 async function verDetalleSocio(sn) {
   cerrarPonerAlDia()
+  limpiarCapturaDetalle()
+  // Resolver el rol (queda en caché): así el botón de captura ya está al abrir.
+  soporteStore.comprobarRol().catch(() => {})
   socioSeleccionado.value = sn
   loadingDetalle.value = true
   modalDetalle.value = true
@@ -5803,6 +5909,17 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Captura lista (superusuario): franja con descargar y compartir; no sale en la imagen */
+.captura-lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-lg, 0.875rem);
+  border: 1px solid rgba(27, 94, 55, 0.2);
+  background: #f0f7f2;
+}
 /* Poner al día (detalle del socio): botón dentro del aviso ámbar y panel de confirmación */
 .poner-al-dia__abrir {
   display: inline-flex;
