@@ -90,14 +90,31 @@ async function decodificar(archivo) {
   }
 }
 
+/*
+ * Tope para comprimir. Decodificar y recodificar una foto tarda como mucho un par de
+ * segundos; si un navegador se queda colgado en ello (una foto rara, un `toBlob` que
+ * nunca responde), pasado el tope se sube el original en vez de esperar para siempre.
+ */
+const TOPE_COMPRIMIR_MS = 15000
+
 /**
  * Devuelve una versión ligera de la imagen, o el archivo original si comprimir
- * no aporta nada o no se puede.
+ * no aporta nada, no se puede o tarda demasiado.
  *
  * Nunca lanza: un adjunto que no se deja recodificar se sube tal cual. Perder
  * el mensaje por no poder encoger una foto sería mucho peor que subirla grande.
  */
 export async function comprimirImagen(archivo) {
+  let tope = null
+  const vencido = new Promise(resolver => { tope = setTimeout(() => resolver(archivo), TOPE_COMPRIMIR_MS) })
+  try {
+    return await Promise.race([comprimirSinTope(archivo), vencido])
+  } finally {
+    clearTimeout(tope)
+  }
+}
+
+async function comprimirSinTope(archivo) {
   if (!esImagen(archivo?.type)) return archivo
   if (typeof document === 'undefined') return archivo
   // HEIC se convierte siempre, pese poco o no: quien lo abra desde Chrome o

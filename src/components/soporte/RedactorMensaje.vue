@@ -156,7 +156,7 @@
 
 <script setup>
 import CargaBoton from '../carga/CargaBoton.vue'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import {
   ExclamationTriangleIcon, LockClosedIcon, PaperAirplaneIcon,
   PaperClipIcon, PlusIcon, XMarkIcon,
@@ -241,7 +241,13 @@ function elegirArchivos(evento) {
       continue
     }
 
-    const entrada = { archivo, previa: crearVistaPrevia(archivo), preparando: esImagen(archivo.type) }
+    /*
+     * `reactive` y no un objeto suelto: `prepararImagen` lo modifica al terminar de
+     * comprimir. Sobre un objeto normal (guardado en la lista como está) Vue no se
+     * enteraba de `preparando = false`: la miniatura se quedaba «cargando» y el botón de
+     * enviar bloqueado para siempre, aunque la foto ya estuviera lista.
+     */
+    const entrada = reactive({ archivo, previa: crearVistaPrevia(archivo), preparando: esImagen(archivo.type) })
     archivos.value.push(entrada)
 
     if (entrada.preparando) prepararImagen(entrada)
