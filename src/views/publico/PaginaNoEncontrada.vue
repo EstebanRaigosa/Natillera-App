@@ -12,8 +12,10 @@
     </RouterLink>
 
     <main class="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center py-10 text-center">
-      <p class="font-display text-7xl font-extrabold tracking-tight text-[#b9f0cc] sm:text-8xl">404</p>
-      <h1 class="mt-4 font-display text-2xl font-extrabold sm:text-3xl">No encontramos esta página</h1>
+      <!-- La alcancía de la marca, rota: se nos cayó la página -->
+      <AlcanciaRota class="w-56 sm:w-64" />
+      <p class="mt-2 font-display text-5xl font-extrabold tracking-tight text-[#b9f0cc] sm:text-6xl">404</p>
+      <h1 class="mt-2 font-display text-2xl font-extrabold sm:text-3xl">No encontramos esta página</h1>
       <p class="mt-3 text-base leading-relaxed text-white/75">
         Puede que el enlace esté incompleto o que la página ya no exista. Tu natillera y tus datos siguen donde estaban.
       </p>
@@ -40,6 +42,7 @@
 import { RouterLink } from 'vue-router'
 import { esModoStandalone } from '../../composables/usePwaInstall'
 import DestellosFondo from '../../components/publico/DestellosFondo.vue'
+import AlcanciaRota from '../../components/publico/AlcanciaRota.vue'
 
 // En la PWA instalada la portada no existe («/» manda al login): una sola salida, al login,
 // que con sesión sigue sola a la última natillera.
